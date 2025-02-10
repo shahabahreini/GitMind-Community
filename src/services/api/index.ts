@@ -26,15 +26,14 @@ export async function generateCommitMessage(config: ApiConfig, diff: string): Pr
                 return await callHuggingFaceAPI(config.apiKey, config.model, diff);
 
             case "ollama":
-                if (!config.ollamaUrl) {
+                if (!config.url) {
                     throw new Error("Ollama URL not configured. Please check the extension settings.");
                 }
                 if (!config.model) {
                     throw new Error("Ollama model not specified. Please select a model in the extension settings.");
                 }
 
-                // Check if Ollama is running
-                const isOllamaAvailable = await checkOllamaAvailability(config.ollamaUrl);
+                const isOllamaAvailable = await checkOllamaAvailability(config.url);
                 if (!isOllamaAvailable) {
                     const instructions = getOllamaInstallInstructions();
                     await vscode.window.showErrorMessage("Ollama Connection Error", {
@@ -44,12 +43,14 @@ export async function generateCommitMessage(config: ApiConfig, diff: string): Pr
                     throw new Error("Ollama is not running. Please start Ollama and try again.");
                 }
 
-                return await callOllamaAPI(config.ollamaUrl, config.model, diff);
+                return await callOllamaAPI(config.url, config.model, diff);
 
             default:
-                throw new Error(`Unsupported API provider: ${config.type}`);
+                const _exhaustiveCheck: never = config;
+                throw new Error(`Unsupported API provider: ${(config as any).type}`);
         }
-    } catch (error) {
+    }
+    catch (error) {
         debugLog("API Error:", error);
 
         // Format the error message for display

@@ -5,6 +5,7 @@ import { generateCommitMessage } from "./services/api";
 import { validateGitRepository, getDiff, setCommitMessage } from "./services/git/repository";
 import { initializeLogger, debugLog } from "./services/debug/logger";
 import { processResponse } from "./utils/commitFormatter";
+import { SettingsWebview } from './webview/settings/SettingsWebview';
 
 const state: ExtensionState = {
   debugChannel: vscode.window.createOutputChannel("AI Commit Assistant Debug"),
@@ -141,6 +142,12 @@ export async function activate(context: vscode.ExtensionContext) {
     generateCommitCommand,
     acceptInputCommand
   );
+
+  let settingsCommand = vscode.commands.registerCommand('ai-commit-assistant.openSettings', () => {
+    SettingsWebview.createOrShow(context.extensionUri);
+  });
+
+  context.subscriptions.push(settingsCommand);
 
   // Show SCM status bar item if Git is active
   const gitExtension = vscode.extensions.getExtension('vscode.git');

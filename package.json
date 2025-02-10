@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "AI Commit Assistant",
   "description": "Generate meaningful git commit messages using AI (Gemini, Hugging Face, or Ollama) to improve commit quality and consistency",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "publisher": "ShahabBahreiniJangjoo",
   "icon": "images/logo.png",
   "engines": {
@@ -33,45 +33,56 @@
             "Use local Ollama models for generating commit messages"
           ],
           "default": "huggingface",
-          "description": "Select which AI provider to use for generating commit messages"
+          "description": "Select which AI provider to use for generating commit messages",
+          "order": 1
         },
         "aiCommitAssistant.debug": {
           "type": "boolean",
           "default": false,
-          "description": "Enable debug mode to show detailed LLM responses and API interactions"
+          "description": "Enable debug mode to show detailed LLM responses and API interactions",
+          "order": 2
         },
-        "aiCommitAssistant.geminiApiKey": {
+        "aiCommitAssistant.gemini.apiKey": {
           "type": "string",
-          "description": "API key for Google's Gemini AI"
+          "markdownDescription": "API key for Google's Gemini AI [Learn more](https://aistudio.google.com/app/apikey)",
+          "order": 3
         },
-        "aiCommitAssistant.huggingfaceApiKey": {
+        "aiCommitAssistant.huggingface.apiKey": {
           "type": "string",
-          "description": "API key for Hugging Face"
+          "markdownDescription": "API key for Hugging Face [Learn more](https://huggingface.co/settings/tokens)",
+          "order": 4
         },
-        "aiCommitAssistant.huggingfaceModel": {
+        "aiCommitAssistant.huggingface.model": {
           "type": "string",
           "default": "mistralai/Mistral-7B-Instruct-v0.3",
-          "description": "Model ID for Hugging Face (e.g., 'mistralai/Mistral-7B-Instruct-v0.3', 'facebook/bart-large-cnn')",
+          "description": "Model ID for Hugging Face",
+          "markdownDescription": "Model ID for Hugging Face. [Learn more](https://huggingface.co/models)",
           "examples": [
             "mistralai/Mistral-7B-Instruct-v0.3",
             "facebook/bart-large-cnn",
             "microsoft/DialoGPT-medium"
-          ]
+          ],
+          "order": 5
         },
-        "aiCommitAssistant.ollamaUrl": {
+        "aiCommitAssistant.ollama.url": {
           "type": "string",
           "default": "http://localhost:11434",
-          "description": "URL for Ollama API server"
+          "description": "URL for Ollama API server",
+          "order": 6
         },
-        "aiCommitAssistant.ollamaModel": {
+        "aiCommitAssistant.ollama.model": {
           "type": "string",
           "default": "phi4",
-          "description": "Model name for Ollama (e.g., 'mistral:latest', 'phi4', 'qwen2.5-coder:latest')",
+          "description": "Model name for Ollama",
+          "markdownDescription": "Model name for Ollama. [Available models](https://ollama.ai/library)",
           "examples": [
             "mistral",
             "llama2",
-            "codellama"
-          ]
+            "codellama",
+            "phi4",
+            "qwen2.5-coder"
+          ],
+          "order": 7
         }
       }
     },
@@ -86,11 +97,6 @@
         }
       },
       {
-        "command": "ai-commit-assistant.configureSettings",
-        "title": "Configure AI Commit Assistant Settings",
-        "category": "AI Commit Assistant"
-      },
-      {
         "command": "ai-commit-assistant.toggleDebug",
         "title": "Toggle Debug Mode",
         "category": "AI Commit Assistant"
@@ -101,6 +107,15 @@
         "icon": {
           "light": "resources/light/loading.svg",
           "dark": "resources/dark/loading.svg"
+        }
+      },
+      {
+        "command": "ai-commit-assistant.openSettings",
+        "title": "Open Settings UI",
+        "category": "AI Commit Assistant",
+        "icon": {
+          "light": "resources/light/settings.svg",
+          "dark": "resources/dark/settings.svg"
         }
       }
     ],
@@ -115,6 +130,11 @@
           "command": "ai-commit-assistant.loadingIndicator",
           "group": "navigation",
           "when": "scmProvider == git && ai-commit-assistant.isGenerating"
+        },
+        {
+          "command": "ai-commit-assistant.openSettings",
+          "group": "navigation",
+          "when": "scmProvider == git"
         }
       ],
       "commandPalette": [
@@ -127,6 +147,17 @@
         },
         {
           "command": "ai-commit-assistant.toggleDebug"
+        },
+        {
+          "command": "ai-commit-assistant.openSettings",
+          "when": "scmProvider == git"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "ai-commit-assistant.openSettings",
+          "group": "navigation",
+          "when": "scmProvider == git"
         }
       ]
     }

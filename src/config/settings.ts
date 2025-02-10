@@ -1,39 +1,92 @@
 import * as vscode from "vscode";
-import { ApiConfig } from "./types";
-import { ExtensionConfig } from './types';
+import { ApiConfig, ExtensionConfig, CommitConfig, ProviderConfig } from './types';
 
 export function getConfiguration(): ExtensionConfig {
-    const config = vscode.workspace.getConfiguration('aiCommitAssistant');
+    const config = vscode.workspace.getConfiguration("aiCommitAssistant");
 
     return {
-        apiProvider: config.get<"gemini" | "huggingface" | "ollama">('apiProvider', 'gemini'),
-        geminiApiKey: config.get<string>('geminiApiKey'),
-        huggingfaceApiKey: config.get<string>('huggingfaceApiKey'),
-        huggingfaceModel: config.get<string>('huggingfaceModel'),
-        ollamaModel: config.get<string>('ollamaModel'),
-        ollamaUrl: config.get<string>('ollamaUrl', 'http://localhost:11434')
+        provider: config.get('apiProvider', 'huggingface'),
+        debug: config.get('debug', false),
+        gemini: {
+            enabled: config.get('gemini.enabled', false),
+            apiKey: config.get('gemini.apiKey'),
+        },
+        huggingface: {
+            enabled: config.get('huggingface.enabled', true),
+            apiKey: config.get('huggingface.apiKey'),
+            model: config.get('huggingface.model', 'mistralai/Mistral-7B-Instruct-v0.3'),
+            customModel: config.get('huggingface.customModel', ''),
+            temperature: config.get('huggingface.temperature', 0.7),
+        },
+        ollama: {
+            enabled: config.get('ollama.enabled', false),
+            url: config.get('ollama.url', 'http://localhost:11434'),
+            model: config.get('ollama.model', 'phi4'),
+            customModel: config.get('ollama.customModel', ''),
+        },
+        commit: {
+            style: config.get('commit.style', 'conventional'),
+            maxLength: config.get('commit.maxLength', 72),
+            includeScope: config.get('commit.includeScope', true),
+            addBulletPoints: config.get('commit.addBulletPoints', true),
+        }
     };
 }
 
 export function getApiConfig(): ApiConfig {
     const config = getConfiguration();
+    const selectedProvider = config.provider;
 
-    switch (config.apiProvider) {
+    switch (selectedProvider) {
         case "gemini":
-            return { type: "gemini", apiKey: config.geminiApiKey };
+            if (!config.gemini.apiKey) {
+                throw new Error("Gemini API key is required but not configured");
+            }
+            return {
+                type: "gemini",
+                apiKey: config.gemini.apiKey
+            };
+
         case "huggingface":
+            if (!config.huggingface.apiKey) {
+                throw new Error("Hugging Face API key is required but not configured");
+            }
+            const hfModel = config.huggingface.model === 'custom'
+                ? config.huggingface.customModel
+                : config.huggingface.model;
+
+            if (!hfModel) {
+                throw new Error("Hugging Face model is required but not configured");
+            }
+
             return {
                 type: "huggingface",
-                apiKey: config.huggingfaceApiKey,
-                model: config.huggingfaceModel
+                apiKey: config.huggingface.apiKey,
+                model: hfModel,
+                temperature: config.huggingface.temperature
             };
+
         case "ollama":
+            const ollamaModel = config.ollama.model === 'custom'
+                ? config.ollama.customModel
+                : config.ollama.model;
+
+            if (!ollamaModel) {
+                throw new Error("Ollama model is required but not configured");
+            }
+
+            // Add validation for URL
+            if (!config.ollama.url) {
+                throw new Error("Ollama URL is required but not configured");
+            }
+
             return {
                 type: "ollama",
-                ollamaUrl: config.ollamaUrl,
-                model: config.ollamaModel
+                url: config.ollama.url,
+                model: ollamaModel
             };
+
         default:
-            return { type: "gemini" };
+            throw new Error(`Unsupported provider: ${selectedProvider}`);
     }
 }
