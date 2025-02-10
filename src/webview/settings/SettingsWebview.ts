@@ -134,177 +134,209 @@ export class SettingsWebview {
         const nonce = getNonce();
 
         return `
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>AI Commit Assistant Settings</title>
-                <style>
-                    body {
-                        padding: 20px;
-                        color: var(--vscode-foreground);
-                        font-family: var(--vscode-font-family);
-                        background-color: var(--vscode-editor-background);
-                    }
-                    .settings-section {
-                        margin-bottom: 20px;
-                    }
-                    .form-group {
-                        margin-bottom: 15px;
-                    }
-                    label {
-                        display: block;
-                        margin-bottom: 5px;
-                        color: var(--vscode-foreground);
-                    }
-                    input, select {
-                        width: 100%;
-                        padding: 8px;
-                        background-color: var(--vscode-input-background);
-                        color: var(--vscode-input-foreground);
-                        border: 1px solid var(--vscode-input-border);
-                        border-radius: 2px;
-                    }
-                    select {
-                        height: 32px;
-                        appearance: none;
-                        padding-right: 30px;
-                        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M7.41%208.59L12%2013.17l4.59-4.58L18%2010l-6%206-6-6z%22%2F%3E%3C%2Fsvg%3E");
-                        background-repeat: no-repeat;
-                        background-position: right 8px center;
-                        background-size: 16px;
-                    }
-                    select:focus, input:focus {
-                        outline: 1px solid var(--vscode-focusBorder);
-                        outline-offset: -1px;
-                    }
-                    select option {
-                        background-color: var(--vscode-dropdown-background);
-                        color: var(--vscode-dropdown-foreground);
-                    }
-                    button {
-                        background: var(--vscode-button-background);
-                        color: var(--vscode-button-foreground);
-                        border: none;
-                        padding: 8px 16px;
-                        cursor: pointer;
-                        border-radius: 2px;
-                    }
-                    button:hover {
-                        background: var(--vscode-button-hoverBackground);
-                    }
-                    .settings-container {
-                        max-width: 800px;
-                        margin: 0 auto;
-                    }
-                    h2, h3 {
-                        color: var(--vscode-foreground);
-                        border-bottom: 1px solid var(--vscode-input-border);
-                        padding-bottom: 8px;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="settings-container">
-                    <h2>AI Commit Assistant Settings</h2>
-                    
-                    <div class="settings-section">
-                        <h3>General Settings</h3>
-                        <div class="form-group">
-                            <label for="apiProvider">API Provider</label>
-                            <select id="apiProvider">
-                                <option value="gemini">Gemini</option>
-                                <option value="huggingface">Hugging Face</option>
-                                <option value="ollama">Ollama</option>
-                            </select>
-                        </div>
-                    </div>
-    
-                    <div id="geminiSettings" class="settings-section">
-                        <h3>Gemini Settings</h3>
-                        <div class="form-group">
-                            <label for="geminiApiKey">API Key</label>
-                            <input type="password" id="geminiApiKey" />
-                        </div>
-                    </div>
-    
-                    <div id="huggingfaceSettings" class="settings-section">
-                        <h3>Hugging Face Settings</h3>
-                        <div class="form-group">
-                            <label for="huggingfaceApiKey">API Key</label>
-                            <input type="password" id="huggingfaceApiKey" />
-                        </div>
-                        <div class="form-group">
-                            <label for="huggingfaceModel">Model</label>
-                            <input type="text" id="huggingfaceModel" placeholder="e.g., mistralai/Mistral-7B-Instruct-v0.3" />
-                        </div>
-                    </div>
-    
-                    <div id="ollamaSettings" class="settings-section">
-                        <h3>Ollama Settings</h3>
-                        <div class="form-group">
-                            <label for="ollamaUrl">URL</label>
-                            <input type="text" id="ollamaUrl" placeholder="http://localhost:11434" />
-                        </div>
-                        <div class="form-group">
-                            <label for="ollamaModel">Model</label>
-                            <input type="text" id="ollamaModel" placeholder="e.g., phi4" />
-                        </div>
-                    </div>
-    
-                    <button onclick="saveSettings()">Save Settings</button>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>AI Commit Assistant Settings</title>
+        <style>
+            body {
+                padding: 20px;
+                color: var(--vscode-foreground);
+                font-family: var(--vscode-font-family);
+                background-color: var(--vscode-editor-background);
+            }
+            .settings-section {
+                margin-bottom: 20px;
+            }
+            .form-group {
+                margin-bottom: 15px;
+            }
+            .label-container {
+                display: flex;
+                align-items: center;
+                margin-bottom: 5px;
+            }
+            label {
+                display: block;
+                color: var(--vscode-foreground);
+            }
+            .learn-more {
+                color: var(--vscode-textLink-foreground);
+                text-decoration: none;
+                font-size: 12px;
+                margin-left: 8px;
+            }
+            .learn-more:hover {
+                text-decoration: underline;
+            }
+            input, select {
+                width: 100%;
+                padding: 8px;
+                background-color: var(--vscode-input-background);
+                color: var(--vscode-input-foreground);
+                border: 1px solid var(--vscode-input-border);
+                border-radius: 2px;
+            }
+            select {
+                height: 32px;
+                appearance: none;
+                padding-right: 30px;
+                background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M7.41%208.59L12%2013.17l4.59-4.58L18%2010l-6%206-6-6z%22%2F%3E%3C%2Fsvg%3E");
+                background-repeat: no-repeat;
+                background-position: right 8px center;
+                background-size: 16px;
+            }
+            select:focus, input:focus {
+                outline: 1px solid var(--vscode-focusBorder);
+                outline-offset: -1px;
+            }
+            select option {
+                background-color: var(--vscode-dropdown-background);
+                color: var(--vscode-dropdown-foreground);
+            }
+            button {
+                background: var(--vscode-button-background);
+                color: var(--vscode-button-foreground);
+                border: none;
+                padding: 8px 16px;
+                cursor: pointer;
+                border-radius: 2px;
+            }
+            button:hover {
+                background: var(--vscode-button-hoverBackground);
+            }
+            .settings-container {
+                max-width: 800px;
+                margin: 0 auto;
+            }
+            h2, h3 {
+                color: var(--vscode-foreground);
+                border-bottom: 1px solid var(--vscode-input-border);
+                padding-bottom: 8px;
+            }
+            .description {
+                font-size: 12px;
+                color: var(--vscode-descriptionForeground);
+                margin-top: 4px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="settings-container">
+            <h2>AI Commit Assistant Settings</h2>
+            
+            <div class="settings-section">
+                <h3>General Settings</h3>
+                <div class="form-group">
+                    <label for="apiProvider">API Provider</label>
+                    <select id="apiProvider">
+                        <option value="gemini">Gemini</option>
+                        <option value="huggingface">Hugging Face</option>
+                        <option value="ollama">Ollama</option>
+                    </select>
                 </div>
-    
-                <script nonce="${nonce}">
-                    const vscode = acquireVsCodeApi();
-                    const currentSettings = ${JSON.stringify(settings)};
-    
-                    // Initialize form with current settings
-                    document.getElementById('apiProvider').value = currentSettings.apiProvider;
-                    document.getElementById('geminiApiKey').value = currentSettings.gemini.apiKey || '';
-                    document.getElementById('huggingfaceApiKey').value = currentSettings.huggingface.apiKey || '';
-                    document.getElementById('huggingfaceModel').value = currentSettings.huggingface.model || '';
-                    document.getElementById('ollamaUrl').value = currentSettings.ollama.url || '';
-                    document.getElementById('ollamaModel').value = currentSettings.ollama.model || '';
-    
-                    // Show/hide sections based on selected provider
-                    function updateVisibleSettings() {
-                        const provider = document.getElementById('apiProvider').value;
-                        document.getElementById('geminiSettings').style.display = provider === 'gemini' ? 'block' : 'none';
-                        document.getElementById('huggingfaceSettings').style.display = provider === 'huggingface' ? 'block' : 'none';
-                        document.getElementById('ollamaSettings').style.display = provider === 'ollama' ? 'block' : 'none';
+            </div>
+
+            <div id="geminiSettings" class="settings-section">
+                <h3>Gemini Settings</h3>
+                <div class="form-group">
+                    <div class="label-container">
+                        <label for="geminiApiKey">API Key</label>
+                        <a href="https://aistudio.google.com/app/apikey" class="learn-more" target="_blank">Learn more</a>
+                    </div>
+                    <input type="password" id="geminiApiKey" />
+                </div>
+            </div>
+
+            <div id="huggingfaceSettings" class="settings-section">
+                <h3>Hugging Face Settings</h3>
+                <div class="form-group">
+                    <div class="label-container">
+                        <label for="huggingfaceApiKey">API Key</label>
+                        <a href="https://huggingface.co/settings/tokens" class="learn-more" target="_blank">Learn more</a>
+                    </div>
+                    <input type="password" id="huggingfaceApiKey" />
+                </div>
+                <div class="form-group">
+                    <div class="label-container">
+                        <label for="huggingfaceModel">Model</label>
+                        <a href="https://huggingface.co/models" class="learn-more" target="_blank">Learn more</a>
+                    </div>
+                    <input type="text" id="huggingfaceModel" placeholder="e.g., mistralai/Mistral-7B-Instruct-v0.3" />
+                    <div class="description">Examples: mistralai/Mistral-7B-Instruct-v0.3, facebook/bart-large-cnn</div>
+                </div>
+            </div>
+
+            <div id="ollamaSettings" class="settings-section">
+                <h3>Ollama Settings</h3>
+                <div class="form-group">
+                    <label for="ollamaUrl">URL</label>
+                    <input type="text" id="ollamaUrl" placeholder="http://localhost:11434" />
+                </div>
+                <div class="form-group">
+                    <div class="label-container">
+                        <label for="ollamaModel">Model</label>
+                        <a href="https://ollama.ai/library" class="learn-more" target="_blank">Learn more</a>
+                    </div>
+                    <input type="text" id="ollamaModel" placeholder="e.g., phi4" />
+                    <div class="description">Examples: mistral, llama2, codellama, phi4, qwen2.5-coder</div>
+                </div>
+            </div>
+
+            <button onclick="saveSettings()">Save Settings</button>
+        </div>
+
+        <script nonce="${nonce}">
+            const vscode = acquireVsCodeApi();
+            const currentSettings = ${JSON.stringify(settings)};
+
+            // Initialize form with current settings
+            document.getElementById('apiProvider').value = currentSettings.apiProvider;
+            document.getElementById('geminiApiKey').value = currentSettings.gemini.apiKey || '';
+            document.getElementById('huggingfaceApiKey').value = currentSettings.huggingface.apiKey || '';
+            document.getElementById('huggingfaceModel').value = currentSettings.huggingface.model || '';
+            document.getElementById('ollamaUrl').value = currentSettings.ollama.url || '';
+            document.getElementById('ollamaModel').value = currentSettings.ollama.model || '';
+
+            // Show/hide sections based on selected provider
+            function updateVisibleSettings() {
+                const provider = document.getElementById('apiProvider').value;
+                document.getElementById('geminiSettings').style.display = provider === 'gemini' ? 'block' : 'none';
+                document.getElementById('huggingfaceSettings').style.display = provider === 'huggingface' ? 'block' : 'none';
+                document.getElementById('ollamaSettings').style.display = provider === 'ollama' ? 'block' : 'none';
+            }
+
+            document.getElementById('apiProvider').addEventListener('change', updateVisibleSettings);
+            updateVisibleSettings(); // Call initially to set correct visibility
+
+            function saveSettings() {
+                const newSettings = {
+                    apiProvider: document.getElementById('apiProvider').value,
+                    debug: currentSettings.debug,
+                    gemini: {
+                        apiKey: document.getElementById('geminiApiKey').value
+                    },
+                    huggingface: {
+                        apiKey: document.getElementById('huggingfaceApiKey').value,
+                        model: document.getElementById('huggingfaceModel').value
+                    },
+                    ollama: {
+                        url: document.getElementById('ollamaUrl').value,
+                        model: document.getElementById('ollamaModel').value
                     }
-    
-                    document.getElementById('apiProvider').addEventListener('change', updateVisibleSettings);
-                    updateVisibleSettings(); // Call initially to set correct visibility
-    
-                    function saveSettings() {
-                        const newSettings = {
-                            apiProvider: document.getElementById('apiProvider').value,
-                            debug: currentSettings.debug,
-                            gemini: {
-                                apiKey: document.getElementById('geminiApiKey').value
-                            },
-                            huggingface: {
-                                apiKey: document.getElementById('huggingfaceApiKey').value,
-                                model: document.getElementById('huggingfaceModel').value
-                            },
-                            ollama: {
-                                url: document.getElementById('ollamaUrl').value,
-                                model: document.getElementById('ollamaModel').value
-                            }
-                        };
-    
-                        vscode.postMessage({
-                            command: 'saveSettings',
-                            settings: newSettings
-                        });
-                    }
-                </script>
-            </body>
-            </html>
-        `;
+                };
+
+                vscode.postMessage({
+                    command: 'saveSettings',
+                    settings: newSettings
+                });
+            }
+        </script>
+    </body>
+    </html>
+`;
     }
 
     public dispose() {
