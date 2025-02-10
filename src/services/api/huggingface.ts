@@ -11,21 +11,30 @@ export async function callHuggingFaceAPI(
 Git Diff:
 ${diff}
 
-Requirements:
-1. Generate ONLY ONE commit message
-2. First line must:
-   - Start with one of: feat|fix|docs|style|refactor|test|chore
-   - Be under 72 characters
-   - Use imperative mood
-   - Be technical and to the point
+## Requirements
 
-3. Format your response EXACTLY as:
-<type>: <brief description>
+### Subject Line (First Line)
+- Must start with one of these types:
+  - feat: New feature
+  - fix: Bug fix
+  - docs: Documentation changes
+  - style: Code style/formatting changes (no code change)
+  - refactor: Code refactoring (no functional change)
+  - test: Adding/modifying tests
+  - chore: Maintenance tasks, build changes, etc.
+- Maximum 72 characters
+- Use imperative mood ("Add" not "Added")
+- No period at the end
+- Must be technical and specific
 
-- <bullet point about the changes>
-- <another bullet point if needed>
 
-Do not include multiple examples or explanations. Just generate one specific commit message for this diff.`;
+## Expected Format
+<type>: <concise description>
+
+- <detailed change explanation>
+- <additional context if needed>
+
+Generate exactly ONE commit message following this format. No alternatives or explanations.`;
 
     debugLog("Calling Hugging Face API", { model });
     debugLog("Prompt:", prompt);
