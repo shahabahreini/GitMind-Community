@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "AI Commit Assistant",
   "description": "Generate meaningful git commit messages using AI (Gemini, Hugging Face, or Ollama) to improve commit quality and consistency",
-  "version": "0.1.12",
+  "version": "1.0.0",
   "publisher": "ShahabBahreiniJangjoo",
   "icon": "images/logo.png",
   "engines": {
