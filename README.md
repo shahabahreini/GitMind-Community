@@ -2,7 +2,7 @@
 
 Generate meaningful and consistent git commit messages using AI. This extension leverages multiple AI providers, focusing on those offering free tier API tokens, to help you create conventional commit messages that are clear, consistent, and informative.
 
-![GitMind Demo](images/tutorial.gif)
+![GitMind Demo](https://shahabahreini.com/wp-content/uploads/toturial.gif)
 
 ## Features
 
