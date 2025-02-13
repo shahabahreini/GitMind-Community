@@ -1,8 +1,8 @@
 {
   "name": "ai-commit-assistant",
-  "displayName": "AI Commit Assistant",
+  "displayName": "GitMind: AI Commit Assistant",
   "description": "Generate meaningful git commit messages using AI (Gemini, Hugging Face, or Ollama) to improve commit quality and consistency",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "publisher": "ShahabBahreiniJangjoo",
   "icon": "images/logo.png",
   "engines": {
@@ -18,7 +18,7 @@
   "main": "./dist/extension.js",
   "contributes": {
     "configuration": {
-      "title": "AI Commit Assistant",
+      "title": "GitMind: AI Commit Assistant",
       "properties": {
         "aiCommitAssistant.apiProvider": {
           "type": "string",

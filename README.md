@@ -1,9 +1,8 @@
-# AI Commit Assistant for VS Code
+# GitMind: AI Commit Assistant for VS Code
 
 Generate meaningful and consistent git commit messages using AI. This extension leverages multiple AI providers, focusing on those offering free tier API tokens, to help you create conventional commit messages that are clear, consistent, and informative.
 
-https://github.com/user-attachments/assets/8c8871f0-7413-4f9e-af6a-aa68751fdf78
-
+<https://github.com/user-attachments/assets/8c8871f0-7413-4f9e-af6a-aa68751fdf78>
 
 ## Features
 
