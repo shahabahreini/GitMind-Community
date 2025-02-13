@@ -5,6 +5,22 @@ All notable changes to the "AI Commit Assistant" extension will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 2024-02-13
+
+### Changed
+
+- Updated README demo link to use external URL instead of local GIF
+- Removed obsolete local demo GIF from images directory
+- Updated package.json version to 1.1.3
+
+## [1.1.2] - 2024-02-13
+
+### Changed
+
+- Renamed extension from "AI Commit Assistant" to "GitMind: AI Commit Assistant" in README.md and package.json
+- Standardized URL format in README.md
+- Updated package.json version to 1.1.2
+
 ## [1.1.1] - 2024-02-12
 
 ### Added
