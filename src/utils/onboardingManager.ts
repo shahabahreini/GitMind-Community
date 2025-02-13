@@ -77,6 +77,7 @@ export class OnboardingManager {
 
         const apiKey = config.get<string>(settingPath);
         if (!apiKey) {
+            // First show the modal asking if they want to configure
             const result = await vscode.window.showInformationMessage(
                 `${provider} API key is required. Would you like to configure it now?`,
                 { modal: true },
@@ -86,10 +87,21 @@ export class OnboardingManager {
             );
 
             if (result === 'Configure Now') {
-                const newApiKey = await this.promptForApiKey(provider);
+                // Show input box for API key
+                const newApiKey = await vscode.window.showInputBox({
+                    prompt: `Enter your ${provider} API key`,
+                    password: true, // Masks the input
+                    placeHolder: 'Paste your API key here',
+                    ignoreFocusOut: true, // Keeps input box open when focus is lost
+                    validateInput: text => {
+                        return text && text.trim().length > 0 ? null : 'API key cannot be empty';
+                    }
+                });
+
                 if (newApiKey) {
-                    await config.update(settingPath, newApiKey, vscode.ConfigurationTarget.Global);
-                    return newApiKey;
+                    await config.update(settingPath, newApiKey.trim(), vscode.ConfigurationTarget.Global);
+                    await vscode.window.showInformationMessage(`${provider} API key has been saved successfully!`);
+                    return newApiKey.trim();
                 }
             } else if (result === 'Get API Key') {
                 const providerUrl = this.PROVIDER_DOCS[provider];

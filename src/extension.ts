@@ -93,12 +93,16 @@ export async function activate(context: vscode.ExtensionContext) {
         inputBox.value = formattedMessage;
 
       } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
         debugLog("Command Error:", error);
-
-        if (!errorMessage.includes("Please configure your") &&
-          !errorMessage.includes("API key")) {
-          vscode.window.showErrorMessage(`Error: ${errorMessage}`);
+        // Don't suppress API key configuration errors
+        if (error instanceof Error) {
+          if (error.message.includes("API key") || error.message.includes("Please configure")) {
+            // Let handleApiError in the API service handle this
+            return;
+          }
+          vscode.window.showErrorMessage(`Error: ${error.message}`);
+        } else {
+          vscode.window.showErrorMessage("An unknown error occurred");
         }
       } finally {
         await vscode.commands.executeCommand(
@@ -111,6 +115,7 @@ export async function activate(context: vscode.ExtensionContext) {
       }
     }
   );
+
 
   // Handle SCM visibility changes
   context.subscriptions.push(

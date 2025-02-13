@@ -23,14 +23,16 @@ export async function generateCommitMessage(config: ApiConfig, diff: string): Pr
         // First validate and potentially update the configuration
         const validatedConfig = await validateAndUpdateConfig(config);
         if (!validatedConfig) {
-            throw new Error('Failed to validate API configuration');
+            throw new Error(`Please configure your ${getProviderName(config.type)} API key`);
         }
 
         // Then generate the message with the validated config
         return await generateMessageWithConfig(validatedConfig, diff);
     } catch (error) {
+        debugLog("Generate Commit Message Error:", error);
+        // Make sure to properly propagate the error after handling it
         await handleApiError(error, config);
-        throw error;
+        throw error; // Re-throw the error after handling
     }
 }
 
