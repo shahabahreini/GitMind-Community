@@ -1,6 +1,6 @@
 // src/services/api/index.ts
 import * as vscode from "vscode";
-import { ApiConfig } from "../../config/types";
+import { ApiConfig, GeminiApiConfig, HuggingFaceApiConfig, OllamaApiConfig, MistralApiConfig } from "../../config/types";
 import { callGeminiAPI } from "./gemini";
 import { callHuggingFaceAPI } from "./huggingface";
 import { callOllamaAPI } from "./ollama";
@@ -14,43 +14,45 @@ export async function generateCommitMessage(config: ApiConfig, diff: string): Pr
     try {
         switch (config.type) {
             case "gemini":
-                if (!config.apiKey) {
+                const geminiConfig = config as GeminiApiConfig;
+                if (!geminiConfig.apiKey) {
                     const configured = await OnboardingManager.validateConfiguration('Gemini');
                     if (!configured) {
                         throw new Error('Gemini API key is required but not configured');
                     }
-                    // Get updated config after key input
-                    const updatedConfig = getApiConfig();
+                    const updatedConfig = getApiConfig() as GeminiApiConfig;
                     return await callGeminiAPI(updatedConfig.apiKey, diff);
                 }
-                return await callGeminiAPI(config.apiKey, diff);
+                return await callGeminiAPI(geminiConfig.apiKey, diff);
 
             case "huggingface":
-                if (!config.apiKey) {
+                const huggingFaceConfig = config as HuggingFaceApiConfig;
+                if (!huggingFaceConfig.apiKey) {
                     const configured = await OnboardingManager.validateConfiguration('Hugging Face');
                     if (!configured) {
                         throw new Error('Hugging Face API key is required but not configured');
                     }
-                    const updatedConfig = getApiConfig();
+                    const updatedConfig = getApiConfig() as HuggingFaceApiConfig;
                     if (!updatedConfig.model) {
                         throw new Error("Please select a Hugging Face model in the settings.");
                     }
                     return await callHuggingFaceAPI(updatedConfig.apiKey, updatedConfig.model, diff);
                 }
-                if (!config.model) {
+                if (!huggingFaceConfig.model) {
                     throw new Error("Please select a Hugging Face model in the settings.");
                 }
-                return await callHuggingFaceAPI(config.apiKey, config.model, diff);
+                return await callHuggingFaceAPI(huggingFaceConfig.apiKey, huggingFaceConfig.model, diff);
 
             case "ollama":
-                if (!config.url) {
+                const ollamaConfig = config as OllamaApiConfig;
+                if (!ollamaConfig.url) {
                     throw new Error("Ollama URL not configured. Please check the extension settings.");
                 }
-                if (!config.model) {
+                if (!ollamaConfig.model) {
                     throw new Error("Ollama model not specified. Please select a model in the extension settings.");
                 }
 
-                const isOllamaAvailable = await checkOllamaAvailability(config.url);
+                const isOllamaAvailable = await checkOllamaAvailability(ollamaConfig.url);
                 if (!isOllamaAvailable) {
                     const instructions = getOllamaInstallInstructions();
                     await vscode.window.showErrorMessage("Ollama Connection Error", {
@@ -60,24 +62,25 @@ export async function generateCommitMessage(config: ApiConfig, diff: string): Pr
                     throw new Error("Ollama is not running. Please start Ollama and try again.");
                 }
 
-                return await callOllamaAPI(config.url, config.model, diff);
+                return await callOllamaAPI(ollamaConfig.url, ollamaConfig.model, diff);
 
             case "mistral":
-                if (!config.apiKey) {
+                const mistralConfig = config as MistralApiConfig;
+                if (!mistralConfig.apiKey) {
                     const configured = await OnboardingManager.validateConfiguration('Mistral');
                     if (!configured) {
                         throw new Error('Mistral API key is required but not configured');
                     }
-                    const updatedConfig = getApiConfig();
+                    const updatedConfig = getApiConfig() as MistralApiConfig;
                     if (!updatedConfig.model) {
                         throw new Error("Please select a Mistral model in the settings.");
                     }
                     return await callMistralAPI(updatedConfig.apiKey, updatedConfig.model, diff);
                 }
-                if (!config.model) {
+                if (!mistralConfig.model) {
                     throw new Error("Please select a Mistral model in the settings.");
                 }
-                return await callMistralAPI(config.apiKey, config.model, diff);
+                return await callMistralAPI(mistralConfig.apiKey, mistralConfig.model, diff);
 
             default:
                 const _exhaustiveCheck: never = config;
