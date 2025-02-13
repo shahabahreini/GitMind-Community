@@ -5,6 +5,38 @@ All notable changes to the "AI Commit Assistant" extension will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.4] - 2024-02-13
+
+### Added
+
+- Interactive API key input prompt for missing configurations
+- Direct links to provider API key pages
+- Centralized method for API configuration validation and updates
+- Debug logging for API key validation
+- Loading indicators for API operations
+- Helper functions for API configuration validation and updates
+
+### Changed
+
+- Enhanced error handling system for API configurations
+- Improved API key configuration workflow and user experience
+- Updated error messages to be more user-friendly
+- Implemented specific API config types for each service:
+  - GeminiApiConfig
+  - HuggingFaceApiConfig
+  - OllamaApiConfig
+  - MistralApiConfig
+- Refactored API call functions for better readability
+- Updated package.json version to 1.1.4
+
+### Fixed
+
+- Prevented duplicate error messages for API configuration issues
+- Improved error propagation and handling for API-related errors
+- Enhanced validation of API responses
+- Better handling of missing API configurations with empty string returns
+- Streamlined error handling for Ollama configuration issues
+
 ## [1.1.3] - 2024-02-13
 
 ### Changed
