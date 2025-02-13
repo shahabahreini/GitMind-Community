@@ -5,6 +5,20 @@ All notable changes to the "AI Commit Assistant" extension will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2024-02-12
+
+### Added
+
+- Updated visual assets with new designs:
+  - New icon-dark.png
+  - New icon-light.png
+  - New logo.png
+
+### Changed
+
+- Enhanced documentation to highlight free tier availability of AI providers
+- Updated package.json version to 1.1.1
+
 ## [1.1.0] - 2024-02-12
 
 ### Added
@@ -47,5 +61,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added fallback mechanisms for error handling when JSON parsing fails
 - Enhanced error context preservation during error propagation
 
+[1.1.1]: https://github.com/shahabahreini/AI-Commit-Assistant/releases/tag/v1.1.1
 [1.1.0]: https://github.com/shahabahreini/AI-Commit-Assistant/releases/tag/v1.1.0
 [0.1.8]: https://github.com/shahabahreini/AI-Commit-Assistant/releases/tag/v0.1.8-beta
