@@ -44,7 +44,7 @@ Generate meaningful and consistent git commit messages using AI. This extension 
   - Detailed API interaction logs
   - Response tracking
   - Error diagnostics
-- **Rate Limit Handling**:
+- **Rate Limit Handling (only Mistral)**:
   - Smart API quota management
   - Clear feedback on limits
   - Automatic retries (where applicable)
