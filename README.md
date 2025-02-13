@@ -1,15 +1,15 @@
 # AI Commit Assistant for VS Code
 
-Generate meaningful and consistent git commit messages using AI. This extension leverages multiple AI providers to help you create conventional commit messages that are clear, consistent, and informative.
+Generate meaningful and consistent git commit messages using AI. This extension leverages multiple AI providers, focusing on those offering free tier API tokens, to help you create conventional commit messages that are clear, consistent, and informative.
 
 ## Features
 
 ### Multiple AI Provider Support
 
 - **Google's Gemini AI**: Advanced language model for precise commit messages
-- **Hugging Face**: Access to various open-source language models
-- **Ollama**: Local inference for privacy-focused development
-- **Mistral AI**: High-performance language model with multiple tiers
+- **Hugging Face**: Access to various open-source language models with free tier options
+- **Ollama**: A completely free, locally installed engine for privacy-focused development
+- **Mistral AI**: High-performance language model with multiple tiers, including free options
 
 ### Smart Git Integration
 
@@ -54,10 +54,10 @@ Generate meaningful and consistent git commit messages using AI. This extension 
 - Visual Studio Code ^1.75.0
 - Git installed and initialized
 - One of the following configurations:
-  - Gemini API key
-  - Hugging Face API key
-  - Ollama installation
-  - Mistral API key
+  - Gemini API key (free tier available)
+  - Hugging Face API key (free tier available)
+  - Ollama installation (completely free)
+  - Mistral API key (free tier available)
 
 ## Installation
 
