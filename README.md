@@ -2,7 +2,7 @@
 
 Generate meaningful and consistent git commit messages using AI. This extension leverages multiple AI providers, focusing on those offering free tier API tokens, to help you create conventional commit messages that are clear, consistent, and informative.
 
-<https://github.com/user-attachments/assets/8c8871f0-7413-4f9e-af6a-aa68751fdf78>
+![GitMind Demo](images/tutorial.gif)
 
 ## Features
 
@@ -82,27 +82,27 @@ Access the settings UI through:
 {
   "aiCommitAssistant.apiProvider": "mistral",
   "aiCommitAssistant.debug": false,
-  
+
   // Gemini Settings
   "aiCommitAssistant.gemini.apiKey": "",
   "aiCommitAssistant.gemini.enabled": true,
-  
+
   // Hugging Face Settings
   "aiCommitAssistant.huggingface.apiKey": "",
   "aiCommitAssistant.huggingface.model": "mistralai/Mistral-7B-Instruct-v0.3",
   "aiCommitAssistant.huggingface.enabled": true,
   "aiCommitAssistant.huggingface.temperature": 0.7,
-  
+
   // Ollama Settings
   "aiCommitAssistant.ollama.url": "http://localhost:11434",
   "aiCommitAssistant.ollama.model": "phi4",
   "aiCommitAssistant.ollama.enabled": true,
-  
+
   // Mistral Settings
   "aiCommitAssistant.mistral.apiKey": "",
   "aiCommitAssistant.mistral.model": "mistral-large-latest",
   "aiCommitAssistant.mistral.enabled": true,
-  
+
   // Commit Settings
   "aiCommitAssistant.commit.style": "conventional",
   "aiCommitAssistant.commit.maxLength": 72,

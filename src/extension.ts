@@ -6,6 +6,7 @@ import { validateGitRepository, getDiff, setCommitMessage } from "./services/git
 import { initializeLogger, debugLog } from "./services/debug/logger";
 import { processResponse } from "./utils/commitFormatter";
 import { SettingsWebview } from './webview/settings/SettingsWebview';
+import { OnboardingManager } from './utils/onboardingManager';
 
 const state: ExtensionState = {
   debugChannel: vscode.window.createOutputChannel("AI Commit Assistant Debug"),
@@ -148,6 +149,9 @@ export async function activate(context: vscode.ExtensionContext) {
   });
 
   context.subscriptions.push(settingsCommand);
+
+  // Show onboarding for new users
+  await OnboardingManager.showOnboarding(context);
 
   // Show SCM status bar item if Git is active
   const gitExtension = vscode.extensions.getExtension('vscode.git');
