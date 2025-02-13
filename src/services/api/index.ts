@@ -8,21 +8,34 @@ import { callMistralAPI } from "./mistral";
 import { OnboardingManager } from '../../utils/onboardingManager';
 import { checkOllamaAvailability, getOllamaInstallInstructions } from "../../utils/ollamaHelper";
 import { debugLog } from "../debug/logger";
+import { getApiConfig } from "../../config/settings";
 
 export async function generateCommitMessage(config: ApiConfig, diff: string): Promise<string> {
     try {
         switch (config.type) {
             case "gemini":
                 if (!config.apiKey) {
-                    await OnboardingManager.showAPIUnavailableNotification('Gemini');
-                    throw new Error("Please configure your Gemini API key in the settings.");
+                    const configured = await OnboardingManager.validateConfiguration('Gemini');
+                    if (!configured) {
+                        throw new Error('Gemini API key is required but not configured');
+                    }
+                    // Get updated config after key input
+                    const updatedConfig = getApiConfig();
+                    return await callGeminiAPI(updatedConfig.apiKey, diff);
                 }
                 return await callGeminiAPI(config.apiKey, diff);
 
             case "huggingface":
                 if (!config.apiKey) {
-                    await OnboardingManager.showAPIUnavailableNotification('Hugging Face');
-                    throw new Error("Please configure your Hugging Face API key in the settings.");
+                    const configured = await OnboardingManager.validateConfiguration('Hugging Face');
+                    if (!configured) {
+                        throw new Error('Hugging Face API key is required but not configured');
+                    }
+                    const updatedConfig = getApiConfig();
+                    if (!updatedConfig.model) {
+                        throw new Error("Please select a Hugging Face model in the settings.");
+                    }
+                    return await callHuggingFaceAPI(updatedConfig.apiKey, updatedConfig.model, diff);
                 }
                 if (!config.model) {
                     throw new Error("Please select a Hugging Face model in the settings.");
@@ -48,10 +61,18 @@ export async function generateCommitMessage(config: ApiConfig, diff: string): Pr
                 }
 
                 return await callOllamaAPI(config.url, config.model, diff);
+
             case "mistral":
                 if (!config.apiKey) {
-                    await OnboardingManager.showAPIUnavailableNotification('Mistral');
-                    throw new Error("Please configure your Mistral API key in the settings.");
+                    const configured = await OnboardingManager.validateConfiguration('Mistral');
+                    if (!configured) {
+                        throw new Error('Mistral API key is required but not configured');
+                    }
+                    const updatedConfig = getApiConfig();
+                    if (!updatedConfig.model) {
+                        throw new Error("Please select a Mistral model in the settings.");
+                    }
+                    return await callMistralAPI(updatedConfig.apiKey, updatedConfig.model, diff);
                 }
                 if (!config.model) {
                     throw new Error("Please select a Mistral model in the settings.");
@@ -66,6 +87,13 @@ export async function generateCommitMessage(config: ApiConfig, diff: string): Pr
     catch (error) {
         debugLog("API Error:", error);
 
+        // If the error is related to API key configuration, let it propagate
+        if (error instanceof Error &&
+            (error.message.includes('API key is required') ||
+                error.message.includes('Please configure'))) {
+            throw error;
+        }
+
         // Format the error message for display
         let errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
 
@@ -76,9 +104,31 @@ export async function generateCommitMessage(config: ApiConfig, diff: string): Pr
                 modal: true,
                 detail: instructions
             });
+        } else {
+            // For other errors, show a regular error message
+            vscode.window.showErrorMessage(`Error generating commit message: ${errorMessage}`);
         }
 
-        // Don't show another error message, just throw the error
         throw error;
     }
+}
+
+// Helper function to validate and potentially update API configuration
+async function validateAndUpdateConfig(config: ApiConfig): Promise<ApiConfig> {
+    const updatedConfig = { ...config };
+
+    switch (config.type) {
+        case "gemini":
+        case "huggingface":
+        case "mistral":
+            if (!config.apiKey) {
+                const configured = await OnboardingManager.validateConfiguration(config.type);
+                if (configured) {
+                    return getApiConfig();
+                }
+            }
+            break;
+    }
+
+    return updatedConfig;
 }

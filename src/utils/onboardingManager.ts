@@ -52,7 +52,7 @@ export class OnboardingManager {
         }
     }
 
-    public static async showAPIUnavailableNotification(provider: string): Promise<void> {
+    public static async showAPIUnavailableNotification(provider: string): Promise<boolean> {
         const providerDocs: { [key: string]: string } = {
             'Gemini': 'https://aistudio.google.com/app/apikey',
             'Hugging Face': 'https://huggingface.co/settings/tokens',
@@ -60,20 +60,80 @@ export class OnboardingManager {
             'Mistral': 'https://console.mistral.ai/api-keys/'
         };
 
-        const configureAction = 'Configure Now';
+        const enterKeyAction = 'Enter API Key';
         const getKeyAction = 'Get API Key';
 
         const result = await vscode.window.showWarningMessage(
-            `${provider} API key is not configured. You need to set up your API key to use this provider.`,
+            `${provider} API key is not configured. Would you like to enter it now?`,
             { modal: true },
-            configureAction,
+            enterKeyAction,
             getKeyAction
         );
 
-        if (result === configureAction) {
-            await vscode.commands.executeCommand('ai-commit-assistant.openSettings');
+        if (result === enterKeyAction) {
+            return await this.promptForApiKey(provider);
         } else if (result === getKeyAction && providerDocs[provider]) {
             await vscode.env.openExternal(vscode.Uri.parse(providerDocs[provider]));
         }
+
+        return false;
+    }
+
+    private static async promptForApiKey(provider: string): Promise<boolean> {
+        const apiKey = await vscode.window.showInputBox({
+            prompt: `Enter your ${provider} API key`,
+            password: true,
+            placeHolder: 'Paste your API key here',
+            ignoreFocusOut: true,
+            validateInput: text => {
+                return text && text.trim().length > 0 ? null : 'API key cannot be empty';
+            }
+        });
+
+        if (apiKey) {
+            try {
+                const config = vscode.workspace.getConfiguration('aiCommitAssistant');
+                const settingPath = this.getProviderSettingPath(provider);
+
+                if (settingPath) {
+                    await config.update(settingPath, apiKey, vscode.ConfigurationTarget.Global);
+                    vscode.window.showInformationMessage(`${provider} API key has been saved successfully!`);
+                    return true;
+                }
+            } catch (error) {
+                vscode.window.showErrorMessage(`Failed to save ${provider} API key: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            }
+        }
+
+        return false;
+    }
+
+    private static getProviderSettingPath(provider: string): string {
+        switch (provider) {
+            case 'Gemini':
+                return 'gemini.apiKey';
+            case 'Hugging Face':
+                return 'huggingface.apiKey';
+            case 'Mistral':
+                return 'mistral.apiKey';
+            default:
+                return '';
+        }
+    }
+
+    public static async validateConfiguration(provider: string): Promise<boolean> {
+        const config = vscode.workspace.getConfiguration('aiCommitAssistant');
+        const settingPath = this.getProviderSettingPath(provider);
+
+        if (!settingPath) {
+            return true; // For providers that don't require API key (like Ollama)
+        }
+
+        const apiKey = config.get<string>(settingPath);
+        if (!apiKey) {
+            return await this.showAPIUnavailableNotification(provider);
+        }
+
+        return true;
     }
 }
