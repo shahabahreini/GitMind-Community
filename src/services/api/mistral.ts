@@ -1,4 +1,14 @@
 import { debugLog } from "../debug/logger";
+import { MistralResponse, MistralRateLimit } from "../../config/types";
+
+function extractRateLimits(headers: Headers): MistralRateLimit {
+    return {
+        reset: parseInt(headers.get('ratelimitbysize-reset') || '0'),
+        limit: parseInt(headers.get('ratelimitbysize-limit') || '0'),
+        remaining: parseInt(headers.get('ratelimitbysize-remaining') || '0'),
+        queryCost: parseInt(headers.get('ratelimitbysize-query-cost') || '0')
+    };
+}
 
 export async function callMistralAPI(apiKey: string, model: string, diff: string): Promise<string> {
     const prompt = `As a Git commit message generator, analyze this specific diff and create ONE commit message that accurately describes these changes:
@@ -49,6 +59,16 @@ Generate exactly ONE commit message following this format. No alternatives or ex
             })
         });
 
+        // Extract and log rate limits
+        const rateLimits = extractRateLimits(response.headers);
+        debugLog("Mistral API Rate Limits:", rateLimits);
+
+        // Check rate limits
+        if (rateLimits.remaining <= 0) {
+            const resetTime = new Date(rateLimits.reset * 1000);
+            throw new Error(`Rate limit exceeded. Reset at ${resetTime.toLocaleString()}`);
+        }
+
         if (!response.ok) {
             let errorMessage: string;
             try {
@@ -60,7 +80,7 @@ Generate exactly ONE commit message following this format. No alternatives or ex
             throw new Error(`Mistral API error (${response.status}): ${errorMessage}`);
         }
 
-        const result = await response.json();
+        const result = await response.json() as MistralResponse;
         const generatedText = result.choices[0]?.message?.content;
 
         if (!generatedText) {

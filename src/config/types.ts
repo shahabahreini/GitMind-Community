@@ -92,4 +92,36 @@ export interface OllamaApiConfig extends BaseApiConfig {
     model: string;
 }
 
-export type ApiConfig = GeminiApiConfig | HuggingFaceApiConfig | OllamaApiConfig | MistralApiConfig;
+export interface MistralResponse {
+    id: string;
+    object: string;
+    created: number;
+    model: string;
+    choices: {
+        index: number;
+        message: {
+            role: string;
+            tool_calls: null | any;
+            content: string;
+        };
+        finish_reason: string;
+    }[];
+    usage: {
+        prompt_tokens: number;
+        total_tokens: number;
+        completion_tokens: number;
+    };
+}
+
+export interface MistralRateLimit {
+    reset: number;
+    limit: number;
+    remaining: number;
+    queryCost: number;
+}
+
+export type ApiConfig =
+    | GeminiApiConfig
+    | HuggingFaceApiConfig
+    | OllamaApiConfig
+    | MistralApiConfig;
