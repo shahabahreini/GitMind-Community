@@ -20,6 +20,7 @@ export async function activate(context: vscode.ExtensionContext) {
   initializeLogger(state.debugChannel);
   debugLog('AI Commit Assistant is now active');
   debugLog('Extension configuration:', vscode.workspace.getConfiguration("aiCommitAssistant"));
+
   // Initialize SCM provider
   const scmProvider = vscode.scm.createSourceControl('ai-commit-assistant', 'AI Commit Assistant');
   const inputBox = scmProvider.inputBox;
@@ -34,6 +35,9 @@ export async function activate(context: vscode.ExtensionContext) {
     command: 'ai-commit-assistant.generateCommitMessage',
     title: 'Generate AI Commit Message'
   };
+
+  // Create loading indicator
+  let loadingItem: vscode.StatusBarItem | undefined;
 
   // Create SCM-specific status bar item
   const scmStatusBarItem = vscode.window.createStatusBarItem(
@@ -65,15 +69,16 @@ export async function activate(context: vscode.ExtensionContext) {
       try {
         debugLog("Command Started: generateCommitMessage");
 
+        // Create and show loading indicator
+        loadingItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
+        loadingItem.text = "$(sync~spin) Generating commit message...";
+        loadingItem.show();
+
         await vscode.commands.executeCommand(
           "setContext",
           "ai-commit-assistant.isGenerating",
           true
         );
-        scmStatusBarItem.text = "$(sync~spin) Generating commit message...";
-        state.statusBarItem.text = "$(sync~spin) Generating commit message...";
-        state.statusBarItem.show();
-        scmStatusBarItem.show();
 
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         if (!workspaceFolder) {
@@ -82,40 +87,54 @@ export async function activate(context: vscode.ExtensionContext) {
 
         await validateGitRepository(workspaceFolder);
         const diff = await getDiff(workspaceFolder);
+
+        if (!diff) {
+          vscode.window.showInformationMessage("No changes detected to generate commit message.");
+          return;
+        }
+
         const apiConfig = getApiConfig();
-
         const rawResponse = await generateCommitMessage(apiConfig, diff);
-        const commitMessage = await processResponse(rawResponse);
-        await setCommitMessage(commitMessage);
 
-        // Update SCM input box
-        const formattedMessage = commitMessage.summary + (commitMessage.description ? '\n\n' + commitMessage.description : '');
-        inputBox.value = formattedMessage;
+        // Only process and set the commit message if we got a response
+        if (rawResponse) {
+          const commitMessage = await processResponse(rawResponse);
+          if (commitMessage) {
+            await setCommitMessage(commitMessage);
+          }
+        }
 
       } catch (error: unknown) {
         debugLog("Command Error:", error);
-        // Don't suppress API key configuration errors
         if (error instanceof Error) {
-          if (error.message.includes("API key") || error.message.includes("Please configure")) {
-            // Let handleApiError in the API service handle this
-            return;
+          // Only show error message if it's not an API configuration error
+          if (!error.message.includes('API configuration required')) {
+            vscode.window.showErrorMessage(`Error: ${error.message}`);
           }
-          vscode.window.showErrorMessage(`Error: ${error.message}`);
         } else {
           vscode.window.showErrorMessage("An unknown error occurred");
         }
       } finally {
+        // Clean up loading indicator
+        if (loadingItem) {
+          loadingItem.dispose();
+        }
         await vscode.commands.executeCommand(
           "setContext",
           "ai-commit-assistant.isGenerating",
           false
         );
-        scmStatusBarItem.text = "$(github-action) Generate Commit";
-        state.statusBarItem.hide();
       }
     }
   );
 
+  // Register settings command
+  let settingsCommand = vscode.commands.registerCommand(
+    'ai-commit-assistant.openSettings',
+    () => {
+      SettingsWebview.createOrShow(context.extensionUri);
+    }
+  );
 
   // Handle SCM visibility changes
   context.subscriptions.push(
@@ -148,14 +167,9 @@ export async function activate(context: vscode.ExtensionContext) {
     scmProvider,
     toggleDebugCommand,
     generateCommitCommand,
-    acceptInputCommand
+    acceptInputCommand,
+    settingsCommand
   );
-
-  let settingsCommand = vscode.commands.registerCommand('ai-commit-assistant.openSettings', () => {
-    SettingsWebview.createOrShow(context.extensionUri);
-  });
-
-  context.subscriptions.push(settingsCommand);
 
   // Show onboarding for new users
   await OnboardingManager.showOnboarding(context);

@@ -23,18 +23,45 @@ export async function generateCommitMessage(config: ApiConfig, diff: string): Pr
         // First validate and potentially update the configuration
         const validatedConfig = await validateAndUpdateConfig(config);
         if (!validatedConfig) {
-            throw new Error(`Please configure your ${getProviderName(config.type)} API key`);
+            const provider = getProviderName(config.type);
+            const result = await vscode.window.showErrorMessage(
+                `${provider} API key is not configured. Would you like to configure it now?`,
+                'Configure Now',
+                'Get API Key',
+                'Cancel'
+            );
+
+            if (result === 'Configure Now') {
+                await vscode.commands.executeCommand('ai-commit-assistant.openSettings');
+                // After settings are opened, we should return to prevent further execution
+                return ''; // Return empty string to indicate no message was generated
+            } else if (result === 'Get API Key') {
+                const providerDocs = {
+                    'Gemini': 'https://aistudio.google.com/app/apikey',
+                    'Hugging Face': 'https://huggingface.co/settings/tokens',
+                    'Mistral': 'https://console.mistral.ai/api-keys/'
+                };
+
+                if (provider in providerDocs) {
+                    await vscode.env.openExternal(vscode.Uri.parse(providerDocs[provider as keyof typeof providerDocs]));
+                }
+                return ''; // Return empty string to indicate no message was generated
+            }
+            // If user cancels, throw error to be caught by error handler
+            throw new Error(`${provider} API configuration required`);
         }
 
         // Then generate the message with the validated config
         return await generateMessageWithConfig(validatedConfig, diff);
     } catch (error) {
         debugLog("Generate Commit Message Error:", error);
-        // Make sure to properly propagate the error after handling it
+        // Handle the error but don't rethrow
         await handleApiError(error, config);
-        throw error; // Re-throw the error after handling
+        return ''; // Return empty string to indicate no message was generated
     }
 }
+
+
 
 async function generateMessageWithConfig(config: ApiConfig, diff: string): Promise<string> {
     switch (config.type) {
@@ -128,53 +155,59 @@ async function handleApiError(error: unknown, config: ApiConfig): Promise<void> 
     const errorMessage = error.message;
 
     // Handle API key configuration errors
-    if (errorMessage.includes('API key is required') || errorMessage.includes('Please configure')) {
+    if (errorMessage.includes('API key is required') ||
+        errorMessage.includes('Please configure') ||
+        errorMessage.includes('API configuration required')) {
+
         const provider = getProviderName(config.type);
 
         // Skip API key configuration for Ollama
         if (provider === 'Ollama') {
-            await vscode.window.showErrorMessage(errorMessage);
+            const result = await vscode.window.showErrorMessage(
+                'Ollama is not configured properly. Would you like to configure it now?',
+                'Configure Now',
+                'Installation Guide'
+            );
+
+            if (result === 'Configure Now') {
+                await vscode.commands.executeCommand('ai-commit-assistant.openSettings');
+            } else if (result === 'Installation Guide') {
+                const instructions = getOllamaInstallInstructions();
+                await vscode.window.showInformationMessage(instructions, { modal: true });
+            }
             return;
         }
 
+        // For other providers, show configuration options
         const result = await vscode.window.showErrorMessage(
-            errorMessage,
+            `${provider} API key is not configured. Would you like to configure it now?`,
             'Configure Now',
             'Get API Key',
             'Cancel'
         );
 
         if (result === 'Configure Now') {
-            await OnboardingManager.validateAndPromptForApiKey(provider);
+            await vscode.commands.executeCommand('ai-commit-assistant.openSettings');
         } else if (result === 'Get API Key') {
-            const providerDocs: Record<Exclude<ApiProvider, 'Ollama'>, string> = {
+            const providerDocs = {
                 'Gemini': 'https://aistudio.google.com/app/apikey',
                 'Hugging Face': 'https://huggingface.co/settings/tokens',
                 'Mistral': 'https://console.mistral.ai/api-keys/'
             };
 
-            // We know provider isn't 'Ollama' at this point
-            const url = providerDocs[provider as Exclude<ApiProvider, 'Ollama'>];
-            if (url) {
-                await vscode.env.openExternal(vscode.Uri.parse(url));
+            if (provider in providerDocs) {
+                await vscode.env.openExternal(
+                    vscode.Uri.parse(providerDocs[provider as keyof typeof providerDocs])
+                );
             }
         }
-        return;
-    }
-
-    // Handle Ollama-specific errors
-    if (config.type === "ollama" && errorMessage.includes("Ollama is not running")) {
-        const instructions = getOllamaInstallInstructions();
-        await vscode.window.showErrorMessage("Ollama Connection Error", {
-            modal: true,
-            detail: instructions
-        });
         return;
     }
 
     // Handle all other errors
     await vscode.window.showErrorMessage(`Error generating commit message: ${errorMessage}`);
 }
+
 
 
 async function validateAndUpdateConfig(config: ApiConfig): Promise<ApiConfig | null> {
