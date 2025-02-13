@@ -3,7 +3,7 @@
 import * as vscode from "vscode";
 
 // Provider types
-export type ApiProvider = "gemini" | "huggingface" | "ollama";
+export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral";
 export type CommitStyle = "conventional" | "gitmoji" | "basic";
 
 // Base configurations
@@ -33,6 +33,11 @@ export interface ExtensionConfig {
     };
     ollama: ProviderConfig;
     commit: CommitConfig;
+    mistral: {
+        enabled: boolean;
+        apiKey?: string;
+        model: string;
+    };
 }
 
 // API responses
@@ -43,6 +48,12 @@ export interface HuggingFaceResponse {
 export interface OllamaResponse {
     response: string;
     done: boolean;
+}
+
+export interface MistralApiConfig extends BaseApiConfig {
+    type: "mistral";
+    apiKey: string;
+    model: string;
 }
 
 // Commit related types
@@ -81,4 +92,4 @@ export interface OllamaApiConfig extends BaseApiConfig {
     model: string;
 }
 
-export type ApiConfig = GeminiApiConfig | HuggingFaceApiConfig | OllamaApiConfig;
+export type ApiConfig = GeminiApiConfig | HuggingFaceApiConfig | OllamaApiConfig | MistralApiConfig;

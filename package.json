@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "AI Commit Assistant",
   "description": "Generate meaningful git commit messages using AI (Gemini, Hugging Face, or Ollama) to improve commit quality and consistency",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "publisher": "ShahabBahreiniJangjoo",
   "icon": "images/logo.png",
   "engines": {
@@ -25,12 +25,14 @@
           "enum": [
             "gemini",
             "huggingface",
-            "ollama"
+            "ollama",
+            "mistral"
           ],
           "enumDescriptions": [
             "Use Google's Gemini AI for generating commit messages",
             "Use Hugging Face models for generating commit messages",
-            "Use local Ollama models for generating commit messages"
+            "Use local Ollama models for generating commit messages",
+            "Use Mistral AI for generating commit messages"
           ],
           "default": "huggingface",
           "description": "Select which AI provider to use for generating commit messages",
@@ -83,6 +85,23 @@
             "qwen2.5-coder"
           ],
           "order": 7
+        },
+        "aiCommitAssistant.mistral.apiKey": {
+          "type": "string",
+          "markdownDescription": "API key for Mistral AI [Learn more](https://console.mistral.ai/api-keys/)",
+          "order": 8
+        },
+        "aiCommitAssistant.mistral.model": {
+          "type": "string",
+          "default": "mistral-large-latest",
+          "description": "Model name for Mistral AI",
+          "examples": [
+            "mistral-tiny",
+            "mistral-small",
+            "mistral-medium",
+            "mistral-large-latest"
+          ],
+          "order": 9
         }
       }
     },

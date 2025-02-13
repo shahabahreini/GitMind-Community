@@ -4,6 +4,7 @@ import { ApiConfig } from "../../config/types";
 import { callGeminiAPI } from "./gemini";
 import { callHuggingFaceAPI } from "./huggingface";
 import { callOllamaAPI } from "./ollama";
+import { callMistralAPI } from "./mistral";
 import { checkOllamaAvailability, getOllamaInstallInstructions } from "../../utils/ollamaHelper";
 import { debugLog } from "../debug/logger";
 
@@ -44,7 +45,14 @@ export async function generateCommitMessage(config: ApiConfig, diff: string): Pr
                 }
 
                 return await callOllamaAPI(config.url, config.model, diff);
-
+            case "mistral":
+                if (!config.apiKey) {
+                    throw new Error("Mistral API key not configured. Please add your API key in the extension settings.");
+                }
+                if (!config.model) {
+                    throw new Error("Mistral model not specified. Please select a model in the extension settings.");
+                }
+                return await callMistralAPI(config.apiKey, config.model, diff);
             default:
                 const _exhaustiveCheck: never = config;
                 throw new Error(`Unsupported API provider: ${(config as any).type}`);

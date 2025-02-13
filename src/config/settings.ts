@@ -29,6 +29,11 @@ export function getConfiguration(): ExtensionConfig {
             maxLength: config.get('commit.maxLength', 72),
             includeScope: config.get('commit.includeScope', true),
             addBulletPoints: config.get('commit.addBulletPoints', true),
+        },
+        mistral: {
+            enabled: config.get('mistral.enabled', false),
+            apiKey: config.get('mistral.apiKey'),
+            model: config.get('mistral.model', 'mistral-large-latest'),
         }
     };
 }
@@ -85,7 +90,15 @@ export function getApiConfig(): ApiConfig {
                 url: config.ollama.url,
                 model: ollamaModel
             };
-
+        case "mistral":
+            if (!config.mistral.apiKey) {
+                throw new Error("Mistral API key is required but not configured");
+            }
+            return {
+                type: "mistral",
+                apiKey: config.mistral.apiKey,
+                model: config.mistral.model
+            };
         default:
             throw new Error(`Unsupported provider: ${selectedProvider}`);
     }

@@ -104,6 +104,16 @@ export class SettingsWebview {
             settings.ollama.model,
             vscode.ConfigurationTarget.Global
         );
+        await config.update(
+            "mistral.apiKey",
+            settings.mistral.apiKey,
+            vscode.ConfigurationTarget.Global
+        );
+        await config.update(
+            "mistral.model",
+            settings.mistral.model,
+            vscode.ConfigurationTarget.Global
+        );
 
         vscode.window.showInformationMessage("Settings saved successfully!");
     }
@@ -128,6 +138,10 @@ export class SettingsWebview {
             ollama: {
                 url: config.get("ollama.url") || "",
                 model: config.get("ollama.model") || "",
+            },
+            mistral: {
+                apiKey: config.get("mistral.apiKey") || "",
+                model: config.get("mistral.model") || "mistral-large-latest",
             },
         };
 
@@ -235,6 +249,7 @@ export class SettingsWebview {
                         <option value="gemini">Gemini</option>
                         <option value="huggingface">Hugging Face</option>
                         <option value="ollama">Ollama</option>
+                        <option value="mistral">Mistral</option>
                     </select>
                 </div>
             </div>
@@ -285,6 +300,26 @@ export class SettingsWebview {
                 </div>
             </div>
 
+            <div id="mistralSettings" class="settings-section">
+    <h3>Mistral Settings</h3>
+    <div class="form-group">
+        <div class="label-container">
+            <label for="mistralApiKey">API Key</label>
+            <a href="https://console.mistral.ai/api-keys/" class="learn-more" target="_blank">Learn more</a>
+        </div>
+        <input type="password" id="mistralApiKey" />
+    </div>
+    <div class="form-group">
+        <label for="mistralModel">Model</label>
+        <select id="mistralModel">
+            <option value="mistral-tiny">Mistral Tiny</option>
+            <option value="mistral-small">Mistral Small</option>
+            <option value="mistral-medium">Mistral Medium</option>
+            <option value="mistral-large-latest">Mistral Large (Latest)</option>
+        </select>
+    </div>
+</div>
+
             <button onclick="saveSettings()">Save Settings</button>
         </div>
 
@@ -299,6 +334,8 @@ export class SettingsWebview {
             document.getElementById('huggingfaceModel').value = currentSettings.huggingface.model || '';
             document.getElementById('ollamaUrl').value = currentSettings.ollama.url || '';
             document.getElementById('ollamaModel').value = currentSettings.ollama.model || '';
+            document.getElementById('mistralApiKey').value = currentSettings.mistral?.apiKey || '';
+            document.getElementById('mistralModel').value = currentSettings.mistral?.model || 'mistral-large-latest';
 
             // Show/hide sections based on selected provider
             function updateVisibleSettings() {
@@ -306,6 +343,7 @@ export class SettingsWebview {
                 document.getElementById('geminiSettings').style.display = provider === 'gemini' ? 'block' : 'none';
                 document.getElementById('huggingfaceSettings').style.display = provider === 'huggingface' ? 'block' : 'none';
                 document.getElementById('ollamaSettings').style.display = provider === 'ollama' ? 'block' : 'none';
+                document.getElementById('mistralSettings').style.display = provider === 'mistral' ? 'block' : 'none';
             }
 
             document.getElementById('apiProvider').addEventListener('change', updateVisibleSettings);
@@ -325,6 +363,10 @@ export class SettingsWebview {
                     ollama: {
                         url: document.getElementById('ollamaUrl').value,
                         model: document.getElementById('ollamaModel').value
+                    },
+                    mistral: {
+                        apiKey: document.getElementById('mistralApiKey').value,
+                        model: document.getElementById('mistralModel').value
                     }
                 };
 
