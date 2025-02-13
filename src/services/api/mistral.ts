@@ -36,9 +36,7 @@ ${diff}
 <type>: <concise description>
 
 - <detailed change explanation>
-- <additional context if needed>
-
-Generate exactly ONE commit message following this format. No alternatives or explanations.`;
+- <additional context if needed>`;
 
     debugLog("Calling Mistral API", { model });
     debugLog("Prompt:", prompt);
