@@ -53,25 +53,27 @@ export class OnboardingManager {
     }
 
     public static async showAPIUnavailableNotification(provider: string): Promise<void> {
-        const action = await vscode.window.showErrorMessage(
-            `Unable to connect to ${provider} API. Would you like to configure the API settings?`,
-            'Open Settings',
-            'Learn More'
+        const providerDocs: { [key: string]: string } = {
+            'Gemini': 'https://aistudio.google.com/app/apikey',
+            'Hugging Face': 'https://huggingface.co/settings/tokens',
+            'Ollama': 'https://ollama.ai/download',
+            'Mistral': 'https://console.mistral.ai/api-keys/'
+        };
+
+        const configureAction = 'Configure Now';
+        const getKeyAction = 'Get API Key';
+
+        const result = await vscode.window.showWarningMessage(
+            `${provider} API key is not configured. You need to set up your API key to use this provider.`,
+            { modal: true },
+            configureAction,
+            getKeyAction
         );
 
-        if (action === 'Open Settings') {
+        if (result === configureAction) {
             await vscode.commands.executeCommand('ai-commit-assistant.openSettings');
-        } else if (action === 'Learn More') {
-            const providerDocs: { [key: string]: string } = {
-                'Gemini': 'https://aistudio.google.com/app/apikey',
-                'Hugging Face': 'https://huggingface.co/settings/tokens',
-                'Ollama': 'https://ollama.ai/download',
-                'Mistral': 'https://console.mistral.ai/api-keys/'
-            };
-
-            if (providerDocs[provider]) {
-                await vscode.env.openExternal(vscode.Uri.parse(providerDocs[provider]));
-            }
+        } else if (result === getKeyAction && providerDocs[provider]) {
+            await vscode.env.openExternal(vscode.Uri.parse(providerDocs[provider]));
         }
     }
 }

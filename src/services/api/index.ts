@@ -5,6 +5,7 @@ import { callGeminiAPI } from "./gemini";
 import { callHuggingFaceAPI } from "./huggingface";
 import { callOllamaAPI } from "./ollama";
 import { callMistralAPI } from "./mistral";
+import { OnboardingManager } from '../../utils/onboardingManager';
 import { checkOllamaAvailability, getOllamaInstallInstructions } from "../../utils/ollamaHelper";
 import { debugLog } from "../debug/logger";
 
@@ -13,16 +14,18 @@ export async function generateCommitMessage(config: ApiConfig, diff: string): Pr
         switch (config.type) {
             case "gemini":
                 if (!config.apiKey) {
-                    throw new Error("Gemini API key not configured. Please add your API key in the extension settings.");
+                    await OnboardingManager.showAPIUnavailableNotification('Gemini');
+                    throw new Error("Please configure your Gemini API key in the settings.");
                 }
                 return await callGeminiAPI(config.apiKey, diff);
 
             case "huggingface":
                 if (!config.apiKey) {
-                    throw new Error("Hugging Face API key not configured. Please add your API key in the extension settings.");
+                    await OnboardingManager.showAPIUnavailableNotification('Hugging Face');
+                    throw new Error("Please configure your Hugging Face API key in the settings.");
                 }
                 if (!config.model) {
-                    throw new Error("Hugging Face model not specified. Please select a model in the extension settings.");
+                    throw new Error("Please select a Hugging Face model in the settings.");
                 }
                 return await callHuggingFaceAPI(config.apiKey, config.model, diff);
 
@@ -47,12 +50,14 @@ export async function generateCommitMessage(config: ApiConfig, diff: string): Pr
                 return await callOllamaAPI(config.url, config.model, diff);
             case "mistral":
                 if (!config.apiKey) {
-                    throw new Error("Mistral API key not configured. Please add your API key in the extension settings.");
+                    await OnboardingManager.showAPIUnavailableNotification('Mistral');
+                    throw new Error("Please configure your Mistral API key in the settings.");
                 }
                 if (!config.model) {
-                    throw new Error("Mistral model not specified. Please select a model in the extension settings.");
+                    throw new Error("Please select a Mistral model in the settings.");
                 }
                 return await callMistralAPI(config.apiKey, config.model, diff);
+
             default:
                 const _exhaustiveCheck: never = config;
                 throw new Error(`Unsupported API provider: ${(config as any).type}`);
