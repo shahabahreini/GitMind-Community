@@ -178,25 +178,33 @@ async function handleApiError(error: unknown, config: ApiConfig): Promise<void> 
 
 
 async function validateAndUpdateConfig(config: ApiConfig): Promise<ApiConfig | null> {
+    debugLog("Validating API configuration for provider:", config.type);
+
     // Skip validation for Ollama as it doesn't require an API key
     if (config.type === "ollama") {
         return config;
     }
 
     const provider = getProviderName(config.type);
+    debugLog("Checking API key for provider:", provider);
 
     // Check if API key is missing
     if (!config.apiKey) {
+        debugLog("API key missing, prompting user for input");
         const apiKey = await OnboardingManager.validateAndPromptForApiKey(provider);
         if (apiKey) {
+            debugLog("New API key received, updating configuration");
             // Get the updated configuration after the API key has been set
             return getApiConfig();
         }
+        debugLog("No API key provided");
         return null;
     }
 
+    debugLog("API configuration validated successfully");
     return config;
 }
+
 
 function getProviderName(type: string): ApiProvider {
     switch (type) {

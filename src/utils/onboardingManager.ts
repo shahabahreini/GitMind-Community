@@ -1,6 +1,7 @@
 // src/utils/onboardingManager.ts
 
 import * as vscode from 'vscode';
+import { debugLog } from "../services/debug/logger";
 
 interface OnboardingStep {
     title: string;
@@ -68,48 +69,60 @@ export class OnboardingManager {
     }
 
     public static async validateAndPromptForApiKey(provider: string): Promise<string | undefined> {
+        debugLog(`Validating API key for ${provider}`);
         const config = vscode.workspace.getConfiguration('aiCommitAssistant');
         const settingPath = this.getProviderSettingPath(provider);
 
         if (!settingPath) {
-            return undefined; // For providers that don't require API key
+            debugLog(`No setting path found for ${provider}`);
+            return undefined;
         }
 
         const apiKey = config.get<string>(settingPath);
         if (!apiKey) {
-            // First show the modal asking if they want to configure
-            const result = await vscode.window.showInformationMessage(
-                `${provider} API key is required. Would you like to configure it now?`,
-                { modal: true },
-                'Configure Now',
-                'Get API Key',
-                'Cancel'
-            );
-
-            if (result === 'Configure Now') {
-                // Show input box for API key
-                const newApiKey = await vscode.window.showInputBox({
-                    prompt: `Enter your ${provider} API key`,
-                    password: true, // Masks the input
-                    placeHolder: 'Paste your API key here',
-                    ignoreFocusOut: true, // Keeps input box open when focus is lost
-                    validateInput: text => {
-                        return text && text.trim().length > 0 ? null : 'API key cannot be empty';
-                    }
-                });
-
-                if (newApiKey) {
-                    await config.update(settingPath, newApiKey.trim(), vscode.ConfigurationTarget.Global);
-                    await vscode.window.showInformationMessage(`${provider} API key has been saved successfully!`);
-                    return newApiKey.trim();
+            debugLog(`No API key found for ${provider}, showing input prompt`);
+            // Directly show the input box without showing the modal first
+            const newApiKey = await vscode.window.showInputBox({
+                title: `${provider} API Key Required`,
+                prompt: `Please enter your ${provider} API key to continue`,
+                password: true,
+                placeHolder: 'Paste your API key here',
+                ignoreFocusOut: true,
+                validateInput: text => {
+                    return text && text.trim().length > 0 ? null : 'API key cannot be empty';
                 }
-            } else if (result === 'Get API Key') {
-                const providerUrl = this.PROVIDER_DOCS[provider];
-                if (providerUrl) {
-                    await vscode.env.openExternal(vscode.Uri.parse(providerUrl));
+            });
+
+            debugLog(`Input result for ${provider}: ${newApiKey ? 'received' : 'cancelled'}`);
+
+            if (newApiKey?.trim()) {
+                try {
+                    await config.update(settingPath, newApiKey.trim(), vscode.ConfigurationTarget.Global);
+                    debugLog(`Successfully saved API key for ${provider}`);
+
+                    // After saving, show the "Get API Key" option in case user wants to learn more
+                    const getKeyResult = await vscode.window.showInformationMessage(
+                        `Need to get a ${provider} API key?`,
+                        'Get API Key',
+                        'Close'
+                    );
+
+                    if (getKeyResult === 'Get API Key') {
+                        const providerUrl = this.PROVIDER_DOCS[provider];
+                        if (providerUrl) {
+                            await vscode.env.openExternal(vscode.Uri.parse(providerUrl));
+                        }
+                    }
+
+                    return newApiKey.trim();
+                } catch (error) {
+                    debugLog(`Error saving API key for ${provider}:`, error);
+                    throw new Error(`Failed to save ${provider} API key: ${error instanceof Error ? error.message : 'Unknown error'}`);
                 }
             }
-            return undefined;
+
+            debugLog(`No API key provided for ${provider}`);
+            throw new Error(`${provider} API key is required but not configured`);
         }
 
         return apiKey;

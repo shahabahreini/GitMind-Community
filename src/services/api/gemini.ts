@@ -2,10 +2,18 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { debugLog } from "../debug/logger";
 
 export async function callGeminiAPI(apiKey: string, diff: string): Promise<string> {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    // Validate API key
+    if (!apiKey || apiKey.trim() === '') {
+        debugLog("Error: Gemini API key is missing or empty");
+        throw new Error("Gemini API key is required but not configured");
+    }
 
-    const promptText = `As a Git commit message generator, analyze this specific diff and create ONE commit message that accurately describes these changes:
+    try {
+        debugLog("Initializing Gemini AI with provided API key");
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+        const promptText = `As a Git commit message generator, analyze this specific diff and create ONE commit message that accurately describes these changes:
 
 Git Diff:
 ${diff}
@@ -35,14 +43,49 @@ ${diff}
 
 Generate exactly ONE commit message following this format. No alternatives or explanations.`;
 
-    debugLog("Prompt:", promptText);
+        debugLog("Sending prompt to Gemini API");
+        debugLog("Prompt:", promptText);
 
-    const result = await model.generateContent({
-        contents: [{ role: "user", parts: [{ text: promptText }] }],
-    });
+        try {
+            const result = await model.generateContent({
+                contents: [{ role: "user", parts: [{ text: promptText }] }],
+            });
 
-    const response = await result.response;
-    debugLog("Gemini Response:", response.text());
+            if (!result || !result.response) {
+                throw new Error("Empty response from Gemini API");
+            }
 
-    return response.text();
+            const response = await result.response;
+            debugLog("Gemini Response:", response.text());
+
+            if (!response.text()) {
+                throw new Error("No text in Gemini API response");
+            }
+
+            return response.text();
+        } catch (apiError) {
+            debugLog("Gemini API Generation Error:", apiError);
+            // Check for specific API errors
+            if (apiError instanceof Error) {
+                if (apiError.message.includes('API key')) {
+                    throw new Error("Invalid Gemini API key. Please check your configuration.");
+                }
+                throw new Error(`Gemini API error: ${apiError.message}`);
+            }
+            throw new Error("Failed to generate content with Gemini API");
+        }
+    } catch (error) {
+        debugLog("Gemini API Call Failed:", error);
+        // Propagate the error with clear context
+        if (error instanceof Error) {
+            // If it's already our error message, just throw it
+            if (error.message.includes("Gemini API")) {
+                throw error;
+            }
+            // Otherwise, wrap it with context
+            throw new Error(`Gemini API call failed: ${error.message}`);
+        }
+        // For unknown error types
+        throw new Error(`Unexpected error during Gemini API call: ${String(error)}`);
+    }
 }
