@@ -23,32 +23,8 @@ export async function generateCommitMessage(config: ApiConfig, diff: string): Pr
         // First validate and potentially update the configuration
         const validatedConfig = await validateAndUpdateConfig(config);
         if (!validatedConfig) {
-            const provider = getProviderName(config.type);
-            const result = await vscode.window.showErrorMessage(
-                `${provider} API key is not configured. Would you like to configure it now?`,
-                'Configure Now',
-                'Get API Key',
-                'Cancel'
-            );
-
-            if (result === 'Configure Now') {
-                await vscode.commands.executeCommand('ai-commit-assistant.openSettings');
-                // After settings are opened, we should return to prevent further execution
-                return ''; // Return empty string to indicate no message was generated
-            } else if (result === 'Get API Key') {
-                const providerDocs = {
-                    'Gemini': 'https://aistudio.google.com/app/apikey',
-                    'Hugging Face': 'https://huggingface.co/settings/tokens',
-                    'Mistral': 'https://console.mistral.ai/api-keys/'
-                };
-
-                if (provider in providerDocs) {
-                    await vscode.env.openExternal(vscode.Uri.parse(providerDocs[provider as keyof typeof providerDocs]));
-                }
-                return ''; // Return empty string to indicate no message was generated
-            }
-            // If user cancels, throw error to be caught by error handler
-            throw new Error(`${provider} API configuration required`);
+            debugLog("No valid configuration available");
+            return ''; // Return empty string to indicate no message was generated
         }
 
         // Then generate the message with the validated config
@@ -62,17 +38,51 @@ export async function generateCommitMessage(config: ApiConfig, diff: string): Pr
 }
 
 
-
 async function generateMessageWithConfig(config: ApiConfig, diff: string): Promise<string> {
     switch (config.type) {
         case "gemini": {
             const geminiConfig = config as GeminiApiConfig;
             if (!geminiConfig.apiKey) {
-                const apiKey = await OnboardingManager.validateAndPromptForApiKey('Gemini');
-                if (!apiKey) {
-                    throw new Error('Gemini API key is required but not configured');
+                const result = await vscode.window.showWarningMessage(
+                    'Gemini API key is required. Would you like to configure it now?',
+                    'Enter API Key',
+                    'Get API Key',
+                    'Cancel'
+                );
+
+                if (result === 'Enter API Key') {
+                    const apiKey = await vscode.window.showInputBox({
+                        title: 'Gemini API Key',
+                        prompt: 'Please enter your Gemini API key',
+                        password: true,
+                        placeHolder: 'Paste your API key here',
+                        ignoreFocusOut: true,
+                        validateInput: text => text?.trim() ? null : 'API key cannot be empty'
+                    });
+
+                    if (apiKey) {
+                        const config = vscode.workspace.getConfiguration('aiCommitAssistant');
+                        await config.update('gemini.apiKey', apiKey.trim(), vscode.ConfigurationTarget.Global);
+                        return await callGeminiAPI(apiKey.trim(), diff);
+                    }
+                } else if (result === 'Get API Key') {
+                    await vscode.env.openExternal(vscode.Uri.parse('https://aistudio.google.com/app/apikey'));
+                    const apiKey = await vscode.window.showInputBox({
+                        title: 'Gemini API Key',
+                        prompt: 'Please enter your Gemini API key after getting it from the website',
+                        password: true,
+                        placeHolder: 'Paste your API key here',
+                        ignoreFocusOut: true,
+                        validateInput: text => text?.trim() ? null : 'API key cannot be empty'
+                    });
+
+                    if (apiKey) {
+                        const config = vscode.workspace.getConfiguration('aiCommitAssistant');
+                        await config.update('gemini.apiKey', apiKey.trim(), vscode.ConfigurationTarget.Global);
+                        return await callGeminiAPI(apiKey.trim(), diff);
+                    }
                 }
-                return await callGeminiAPI(apiKey, diff);
+                return ''; // Return empty if user cancels
             }
             return await callGeminiAPI(geminiConfig.apiKey, diff);
         }
@@ -80,29 +90,138 @@ async function generateMessageWithConfig(config: ApiConfig, diff: string): Promi
         case "huggingface": {
             const hfConfig = config as HuggingFaceApiConfig;
             if (!hfConfig.apiKey) {
-                const apiKey = await OnboardingManager.validateAndPromptForApiKey('Hugging Face');
-                if (!apiKey) {
-                    throw new Error('Hugging Face API key is required but not configured');
+                const result = await vscode.window.showWarningMessage(
+                    'Hugging Face API key is required. Would you like to configure it now?',
+                    'Enter API Key',
+                    'Get API Key',
+                    'Cancel'
+                );
+
+                if (result === 'Enter API Key') {
+                    const apiKey = await vscode.window.showInputBox({
+                        title: 'Hugging Face API Key',
+                        prompt: 'Please enter your Hugging Face API key',
+                        password: true,
+                        placeHolder: 'Paste your API key here',
+                        ignoreFocusOut: true,
+                        validateInput: text => text?.trim() ? null : 'API key cannot be empty'
+                    });
+
+                    if (apiKey) {
+                        const config = vscode.workspace.getConfiguration('aiCommitAssistant');
+                        await config.update('huggingface.apiKey', apiKey.trim(), vscode.ConfigurationTarget.Global);
+
+                        if (!hfConfig.model) {
+                            await vscode.commands.executeCommand('ai-commit-assistant.openSettings');
+                            return '';
+                        }
+                        return await callHuggingFaceAPI(apiKey.trim(), hfConfig.model, diff);
+                    }
+                } else if (result === 'Get API Key') {
+                    await vscode.env.openExternal(vscode.Uri.parse('https://huggingface.co/settings/tokens'));
+                    const apiKey = await vscode.window.showInputBox({
+                        title: 'Hugging Face API Key',
+                        prompt: 'Please enter your Hugging Face API key after getting it from the website',
+                        password: true,
+                        placeHolder: 'Paste your API key here',
+                        ignoreFocusOut: true,
+                        validateInput: text => text?.trim() ? null : 'API key cannot be empty'
+                    });
+
+                    if (apiKey) {
+                        const config = vscode.workspace.getConfiguration('aiCommitAssistant');
+                        await config.update('huggingface.apiKey', apiKey.trim(), vscode.ConfigurationTarget.Global);
+
+                        if (!hfConfig.model) {
+                            await vscode.commands.executeCommand('ai-commit-assistant.openSettings');
+                            return '';
+                        }
+                        return await callHuggingFaceAPI(apiKey.trim(), hfConfig.model, diff);
+                    }
                 }
-                const updatedConfig = getApiConfig() as HuggingFaceApiConfig;
-                if (!updatedConfig.model) {
-                    throw new Error("Please select a Hugging Face model in the settings.");
-                }
-                return await callHuggingFaceAPI(apiKey, updatedConfig.model, diff);
+                return '';
             }
             if (!hfConfig.model) {
-                throw new Error("Please select a Hugging Face model in the settings.");
+                await vscode.window.showErrorMessage('Please select a Hugging Face model in the settings.');
+                await vscode.commands.executeCommand('ai-commit-assistant.openSettings');
+                return '';
             }
             return await callHuggingFaceAPI(hfConfig.apiKey, hfConfig.model, diff);
+        }
+
+        case "mistral": {
+            const mistralConfig = config as MistralApiConfig;
+            if (!mistralConfig.apiKey) {
+                const result = await vscode.window.showWarningMessage(
+                    'Mistral API key is required. Would you like to configure it now?',
+                    'Enter API Key',
+                    'Get API Key',
+                    'Cancel'
+                );
+
+                if (result === 'Enter API Key') {
+                    const apiKey = await vscode.window.showInputBox({
+                        title: 'Mistral API Key',
+                        prompt: 'Please enter your Mistral API key',
+                        password: true,
+                        placeHolder: 'Paste your API key here',
+                        ignoreFocusOut: true,
+                        validateInput: text => text?.trim() ? null : 'API key cannot be empty'
+                    });
+
+                    if (apiKey) {
+                        const config = vscode.workspace.getConfiguration('aiCommitAssistant');
+                        await config.update('mistral.apiKey', apiKey.trim(), vscode.ConfigurationTarget.Global);
+
+                        if (!mistralConfig.model) {
+                            await vscode.commands.executeCommand('ai-commit-assistant.openSettings');
+                            return '';
+                        }
+                        return await callMistralAPI(apiKey.trim(), mistralConfig.model, diff);
+                    }
+                } else if (result === 'Get API Key') {
+                    await vscode.env.openExternal(vscode.Uri.parse('https://console.mistral.ai/api-keys/'));
+                    const apiKey = await vscode.window.showInputBox({
+                        title: 'Mistral API Key',
+                        prompt: 'Please enter your Mistral API key after getting it from the website',
+                        password: true,
+                        placeHolder: 'Paste your API key here',
+                        ignoreFocusOut: true,
+                        validateInput: text => text?.trim() ? null : 'API key cannot be empty'
+                    });
+
+                    if (apiKey) {
+                        const config = vscode.workspace.getConfiguration('aiCommitAssistant');
+                        await config.update('mistral.apiKey', apiKey.trim(), vscode.ConfigurationTarget.Global);
+
+                        if (!mistralConfig.model) {
+                            await vscode.commands.executeCommand('ai-commit-assistant.openSettings');
+                            return '';
+                        }
+                        return await callMistralAPI(apiKey.trim(), mistralConfig.model, diff);
+                    }
+                }
+                return '';
+            }
+            if (!mistralConfig.model) {
+                await vscode.window.showErrorMessage('Please select a Mistral model in the settings.');
+                await vscode.commands.executeCommand('ai-commit-assistant.openSettings');
+                return '';
+            }
+            return await callMistralAPI(mistralConfig.apiKey, mistralConfig.model, diff);
         }
 
         case "ollama": {
             const ollamaConfig = config as OllamaApiConfig;
             if (!ollamaConfig.url) {
-                throw new Error("Ollama URL not configured. Please check the extension settings.");
+                await vscode.window.showErrorMessage('Ollama URL not configured. Please check the extension settings.');
+                await vscode.commands.executeCommand('ai-commit-assistant.openSettings');
+                return '';
             }
             if (!ollamaConfig.model) {
-                throw new Error("Ollama model not specified. Please select a model in the extension settings.");
+                await vscode.window.showErrorMessage('Ollama model not specified. Please select a model in the extension settings.');
+                await vscode.commands.executeCommand('ai-commit-assistant.openSettings');
+                return '';
             }
 
             const isOllamaAvailable = await checkOllamaAvailability(ollamaConfig.url);
@@ -112,29 +231,10 @@ async function generateMessageWithConfig(config: ApiConfig, diff: string): Promi
                     modal: true,
                     detail: instructions
                 });
-                throw new Error("Ollama is not running. Please start Ollama and try again.");
+                return '';
             }
 
             return await callOllamaAPI(ollamaConfig.url, ollamaConfig.model, diff);
-        }
-
-        case "mistral": {
-            const mistralConfig = config as MistralApiConfig;
-            if (!mistralConfig.apiKey) {
-                const apiKey = await OnboardingManager.validateAndPromptForApiKey('Mistral');
-                if (!apiKey) {
-                    throw new Error('Mistral API key is required but not configured');
-                }
-                const updatedConfig = getApiConfig() as MistralApiConfig;
-                if (!updatedConfig.model) {
-                    throw new Error("Please select a Mistral model in the settings.");
-                }
-                return await callMistralAPI(apiKey, updatedConfig.model, diff);
-            }
-            if (!mistralConfig.model) {
-                throw new Error("Please select a Mistral model in the settings.");
-            }
-            return await callMistralAPI(mistralConfig.apiKey, mistralConfig.model, diff);
         }
 
         default: {
@@ -143,6 +243,7 @@ async function generateMessageWithConfig(config: ApiConfig, diff: string): Promi
         }
     }
 }
+
 
 async function handleApiError(error: unknown, config: ApiConfig): Promise<void> {
     debugLog("API Error:", error);
@@ -153,53 +254,23 @@ async function handleApiError(error: unknown, config: ApiConfig): Promise<void> 
     }
 
     const errorMessage = error.message;
+    const provider = getProviderName(config.type);
 
-    // Handle API key configuration errors
-    if (errorMessage.includes('API key is required') ||
-        errorMessage.includes('Please configure') ||
-        errorMessage.includes('API configuration required')) {
-
-        const provider = getProviderName(config.type);
-
-        // Skip API key configuration for Ollama
-        if (provider === 'Ollama') {
-            const result = await vscode.window.showErrorMessage(
-                'Ollama is not configured properly. Would you like to configure it now?',
-                'Configure Now',
-                'Installation Guide'
-            );
-
-            if (result === 'Configure Now') {
-                await vscode.commands.executeCommand('ai-commit-assistant.openSettings');
-            } else if (result === 'Installation Guide') {
-                const instructions = getOllamaInstallInstructions();
-                await vscode.window.showInformationMessage(instructions, { modal: true });
-            }
-            return;
-        }
-
-        // For other providers, show configuration options
+    // Handle Ollama-specific errors
+    if (provider === 'Ollama' && (
+        errorMessage.includes('not configured') ||
+        errorMessage.includes('not running'))) {
         const result = await vscode.window.showErrorMessage(
-            `${provider} API key is not configured. Would you like to configure it now?`,
+            'Ollama is not configured properly. Would you like to configure it now?',
             'Configure Now',
-            'Get API Key',
-            'Cancel'
+            'Installation Guide'
         );
 
         if (result === 'Configure Now') {
             await vscode.commands.executeCommand('ai-commit-assistant.openSettings');
-        } else if (result === 'Get API Key') {
-            const providerDocs = {
-                'Gemini': 'https://aistudio.google.com/app/apikey',
-                'Hugging Face': 'https://huggingface.co/settings/tokens',
-                'Mistral': 'https://console.mistral.ai/api-keys/'
-            };
-
-            if (provider in providerDocs) {
-                await vscode.env.openExternal(
-                    vscode.Uri.parse(providerDocs[provider as keyof typeof providerDocs])
-                );
-            }
+        } else if (result === 'Installation Guide') {
+            const instructions = getOllamaInstallInstructions();
+            await vscode.window.showInformationMessage(instructions, { modal: true });
         }
         return;
     }
@@ -207,6 +278,18 @@ async function handleApiError(error: unknown, config: ApiConfig): Promise<void> 
     // Handle all other errors
     await vscode.window.showErrorMessage(`Error generating commit message: ${errorMessage}`);
 }
+
+
+// Helper function to get the settings path for a provider
+function getProviderSettingPath(provider: string): string {
+    const paths: Record<string, string> = {
+        'Gemini': 'gemini.apiKey',
+        'Hugging Face': 'huggingface.apiKey',
+        'Mistral': 'mistral.apiKey'
+    };
+    return paths[provider] || '';
+}
+
 
 
 
@@ -223,20 +306,79 @@ async function validateAndUpdateConfig(config: ApiConfig): Promise<ApiConfig | n
 
     // Check if API key is missing
     if (!config.apiKey) {
-        debugLog("API key missing, prompting user for input");
-        const apiKey = await OnboardingManager.validateAndPromptForApiKey(provider);
-        if (apiKey) {
-            debugLog("New API key received, updating configuration");
-            // Get the updated configuration after the API key has been set
-            return getApiConfig();
+        debugLog("API key missing, showing configuration options");
+
+        const result = await vscode.window.showWarningMessage(
+            `${provider} API key is required. Would you like to configure it now?`,
+            'Enter API Key',
+            'Get API Key',
+            'Cancel'
+        );
+
+        if (result === 'Enter API Key') {
+            const apiKey = await vscode.window.showInputBox({
+                title: `${provider} API Key`,
+                prompt: `Please enter your ${provider} API key`,
+                password: true,
+                placeHolder: 'Paste your API key here',
+                ignoreFocusOut: true,
+                validateInput: text => {
+                    return text && text.trim().length > 0 ? null : 'API key cannot be empty';
+                }
+            });
+
+            if (apiKey) {
+                const settingPath = getProviderSettingPath(provider);
+                if (settingPath) {
+                    const config = vscode.workspace.getConfiguration('aiCommitAssistant');
+                    await config.update(settingPath, apiKey.trim(), vscode.ConfigurationTarget.Global);
+                    debugLog("API key saved, returning updated configuration");
+                    return getApiConfig();
+                }
+            }
+        } else if (result === 'Get API Key') {
+            const providerDocs = {
+                'Gemini': 'https://aistudio.google.com/app/apikey',
+                'Hugging Face': 'https://huggingface.co/settings/tokens',
+                'Mistral': 'https://console.mistral.ai/api-keys/'
+            };
+
+            if (provider in providerDocs) {
+                await vscode.env.openExternal(
+                    vscode.Uri.parse(providerDocs[provider as keyof typeof providerDocs])
+                );
+                // After opening the website, prompt for API key input
+                const apiKey = await vscode.window.showInputBox({
+                    title: `${provider} API Key`,
+                    prompt: `Please enter your ${provider} API key after getting it from the website`,
+                    password: true,
+                    placeHolder: 'Paste your API key here',
+                    ignoreFocusOut: true,
+                    validateInput: text => {
+                        return text && text.trim().length > 0 ? null : 'API key cannot be empty';
+                    }
+                });
+
+                if (apiKey) {
+                    const settingPath = getProviderSettingPath(provider);
+                    if (settingPath) {
+                        const config = vscode.workspace.getConfiguration('aiCommitAssistant');
+                        await config.update(settingPath, apiKey.trim(), vscode.ConfigurationTarget.Global);
+                        debugLog("API key saved after website visit, returning updated configuration");
+                        return getApiConfig();
+                    }
+                }
+            }
         }
-        debugLog("No API key provided");
+
+        debugLog("No API key provided, returning null");
         return null;
     }
 
     debugLog("API configuration validated successfully");
     return config;
 }
+
 
 
 function getProviderName(type: string): ApiProvider {

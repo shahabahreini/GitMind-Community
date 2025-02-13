@@ -44,62 +44,45 @@ export function getApiConfig(): ApiConfig {
 
     switch (selectedProvider) {
         case "gemini":
-            if (!config.gemini.apiKey) {
-                throw new Error("Gemini API key is required but not configured");
-            }
             return {
                 type: "gemini",
-                apiKey: config.gemini.apiKey
+                apiKey: config.gemini.apiKey || '' // Return empty string instead of throwing
             };
 
-        case "huggingface":
-            if (!config.huggingface.apiKey) {
-                throw new Error("Hugging Face API key is required but not configured");
-            }
+        case "huggingface": {
             const hfModel = config.huggingface.model === 'custom'
                 ? config.huggingface.customModel
                 : config.huggingface.model;
 
-            if (!hfModel) {
-                throw new Error("Hugging Face model is required but not configured");
-            }
-
             return {
                 type: "huggingface",
-                apiKey: config.huggingface.apiKey,
-                model: hfModel,
+                apiKey: config.huggingface.apiKey || '', // Return empty string instead of throwing
+                model: hfModel || '', // Return empty string instead of throwing
                 temperature: config.huggingface.temperature
             };
+        }
 
-        case "ollama":
+        case "ollama": {
             const ollamaModel = config.ollama.model === 'custom'
                 ? config.ollama.customModel
                 : config.ollama.model;
 
-            if (!ollamaModel) {
-                throw new Error("Ollama model is required but not configured");
-            }
-
-            // Add validation for URL
-            if (!config.ollama.url) {
-                throw new Error("Ollama URL is required but not configured");
-            }
-
             return {
                 type: "ollama",
-                url: config.ollama.url,
-                model: ollamaModel
+                url: config.ollama.url || '', // Return empty string instead of throwing
+                model: ollamaModel || '' // Return empty string instead of throwing
             };
+        }
+
         case "mistral":
-            if (!config.mistral.apiKey) {
-                throw new Error("Mistral API key is required but not configured");
-            }
             return {
                 type: "mistral",
-                apiKey: config.mistral.apiKey,
-                model: config.mistral.model
+                apiKey: config.mistral.apiKey || '', // Return empty string instead of throwing
+                model: config.mistral.model || '' // Return empty string instead of throwing
             };
+
         default:
+            // For unsupported providers, we should still throw as this is a programming error
             throw new Error(`Unsupported provider: ${selectedProvider}`);
     }
 }

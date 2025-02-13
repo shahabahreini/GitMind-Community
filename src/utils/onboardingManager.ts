@@ -81,43 +81,43 @@ export class OnboardingManager {
         const apiKey = config.get<string>(settingPath);
         if (!apiKey) {
             debugLog(`No API key found for ${provider}, showing input prompt`);
-            // Directly show the input box without showing the modal first
-            const newApiKey = await vscode.window.showInputBox({
-                title: `${provider} API Key Required`,
-                prompt: `Please enter your ${provider} API key to continue`,
-                password: true,
-                placeHolder: 'Paste your API key here',
-                ignoreFocusOut: true,
-                validateInput: text => {
-                    return text && text.trim().length > 0 ? null : 'API key cannot be empty';
-                }
-            });
 
-            debugLog(`Input result for ${provider}: ${newApiKey ? 'received' : 'cancelled'}`);
+            // Show the input box with "Get API Key" button
+            const result = await vscode.window.showWarningMessage(
+                `${provider} API key is required. Would you like to configure it now?`,
+                'Enter API Key',
+                'Get API Key',
+                'Cancel'
+            );
 
-            if (newApiKey?.trim()) {
-                try {
-                    await config.update(settingPath, newApiKey.trim(), vscode.ConfigurationTarget.Global);
-                    debugLog(`Successfully saved API key for ${provider}`);
-
-                    // After saving, show the "Get API Key" option in case user wants to learn more
-                    const getKeyResult = await vscode.window.showInformationMessage(
-                        `Need to get a ${provider} API key?`,
-                        'Get API Key',
-                        'Close'
-                    );
-
-                    if (getKeyResult === 'Get API Key') {
-                        const providerUrl = this.PROVIDER_DOCS[provider];
-                        if (providerUrl) {
-                            await vscode.env.openExternal(vscode.Uri.parse(providerUrl));
-                        }
+            if (result === 'Enter API Key') {
+                const newApiKey = await vscode.window.showInputBox({
+                    title: `${provider} API Key`,
+                    prompt: `Please enter your ${provider} API key`,
+                    password: true,
+                    placeHolder: 'Paste your API key here',
+                    ignoreFocusOut: true,
+                    validateInput: text => {
+                        return text && text.trim().length > 0 ? null : 'API key cannot be empty';
                     }
+                });
 
-                    return newApiKey.trim();
-                } catch (error) {
-                    debugLog(`Error saving API key for ${provider}:`, error);
-                    throw new Error(`Failed to save ${provider} API key: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                if (newApiKey?.trim()) {
+                    try {
+                        await config.update(settingPath, newApiKey.trim(), vscode.ConfigurationTarget.Global);
+                        debugLog(`Successfully saved API key for ${provider}`);
+                        return newApiKey.trim();
+                    } catch (error) {
+                        debugLog(`Error saving API key for ${provider}:`, error);
+                        throw new Error(`Failed to save ${provider} API key: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                    }
+                }
+            } else if (result === 'Get API Key') {
+                const providerUrl = this.PROVIDER_DOCS[provider];
+                if (providerUrl) {
+                    await vscode.env.openExternal(vscode.Uri.parse(providerUrl));
+                    // After opening the website, prompt for API key input
+                    return await this.validateAndPromptForApiKey(provider);
                 }
             }
 
@@ -127,6 +127,7 @@ export class OnboardingManager {
 
         return apiKey;
     }
+
 
     private static async promptForApiKey(provider: string): Promise<string | undefined> {
         const apiKey = await vscode.window.showInputBox({
