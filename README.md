@@ -8,10 +8,10 @@ Generate meaningful and consistent git commit messages using AI. This extension 
 
 ### Multiple AI Provider Support
 
+- **Mistral AI** (Recommended): High-performance language model with multiple tiers, including free options
 - **Google's Gemini AI**: Advanced language model for precise commit messages
 - **Hugging Face**: Access to various open-source language models with free tier options
 - **Ollama**: A completely free, locally installed engine for privacy-focused development
-- **Mistral AI**: High-performance language model with multiple tiers, including free options
 
 ### Smart Git Integration
 
