@@ -18,6 +18,8 @@ import {
 } from "../../utils/ollamaHelper";
 import { debugLog } from "../debug/logger";
 import { getApiConfig } from "../../config/settings";
+import { estimateTokens } from "../../utils/tokenCounter";
+import { workspace } from "vscode";
 
 type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral";
 
@@ -47,6 +49,8 @@ async function generateMessageWithConfig(
     config: ApiConfig,
     diff: string
 ): Promise<string> {
+    // Show diagnostics before proceeding
+    await showDiagnosticsInfo(config, diff);
     // Show which model is being used
     showModelInfo(config);
 
@@ -383,6 +387,46 @@ async function handleApiError(
     await vscode.window.showErrorMessage(
         `Error generating commit message: ${errorMessage}`
     );
+}
+
+async function showDiagnosticsInfo(config: ApiConfig, diff: string) {
+    const showDiagnostics = vscode.workspace.getConfiguration('aiCommitAssistant').get('showDiagnostics');
+
+    if (!showDiagnostics) {
+        return;
+    }
+
+    const estimatedTokens = estimateTokens(diff);
+
+    let modelInfo = '';
+    switch (config.type) {
+        case 'mistral':
+            modelInfo = `Model: Mistral AI (${config.model})`;
+            break;
+        case 'gemini':
+            modelInfo = 'Model: Gemini Pro';
+            break;
+        case 'huggingface':
+            modelInfo = `Model: Hugging Face (${config.model})`;
+            break;
+        case 'ollama':
+            modelInfo = `Model: Ollama (${config.model})`;
+            break;
+    }
+
+    const message = `${modelInfo}\nEstimated tokens to be sent: ${estimatedTokens}`;
+
+    // Show information message and wait for user confirmation
+    const proceed = await vscode.window.showInformationMessage(
+        message,
+        { modal: true },
+        'Proceed',
+        'Cancel'
+    );
+
+    if (proceed !== 'Proceed') {
+        throw new Error('Operation cancelled by user');
+    }
 }
 
 // Helper function to get the settings path for a provider

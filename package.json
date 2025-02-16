@@ -102,6 +102,12 @@
             "mistral-large-latest"
           ],
           "order": 9
+        },
+        "aiCommitAssistant.showDiagnostics": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show model and token information before generating commit messages",
+          "order": 3
         }
       }
     },
