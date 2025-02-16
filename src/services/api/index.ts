@@ -20,6 +20,7 @@ import { debugLog } from "../debug/logger";
 import { getApiConfig } from "../../config/settings";
 import { estimateTokens } from "../../utils/tokenCounter";
 import { workspace } from "vscode";
+import { DiagnosticsWebview } from "../../webview/diagnostics/DiagnosticsWebview";
 
 type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral";
 
@@ -428,6 +429,40 @@ async function showDiagnosticsInfo(config: ApiConfig, diff: string) {
         throw new Error('Operation cancelled by user');
     }
 }
+
+
+// async function showDiagnosticsInfo(config: ApiConfig, diff: string) {
+//     const showDiagnostics = workspace.getConfiguration('aiCommitAssistant').get('showDiagnostics');
+
+//     if (!showDiagnostics) {
+//         return;
+//     }
+
+//     const estimatedTokens = estimateTokens(diff);
+
+//     let modelInfo = '';
+//     switch (config.type) {
+//         case 'mistral':
+//             modelInfo = `Mistral AI (${config.model})`;
+//             break;
+//         case 'gemini':
+//             modelInfo = 'Gemini Pro';
+//             break;
+//         case 'huggingface':
+//             modelInfo = `Hugging Face (${config.model})`;
+//             break;
+//         case 'ollama':
+//             modelInfo = `Ollama (${config.model})`;
+//             break;
+//     }
+
+//     const proceed = await DiagnosticsWebview.show(modelInfo, estimatedTokens);
+
+//     if (!proceed) {
+//         throw new Error('Operation cancelled by user');
+//     }
+// }
+
 
 // Helper function to get the settings path for a provider
 function getProviderSettingPath(provider: string): string {
