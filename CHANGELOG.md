@@ -5,6 +5,27 @@ All notable changes to the "AI Commit Assistant" extension will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.5] - 2024-02-16
+
+### Changed
+
+- Set Mistral AI as the default and recommended AI provider
+- Updated README.md to highlight Mistral AI as the recommended provider
+- Added status bar notification showing active model during generation
+- Updated default configuration in settings.ts to prioritize Mistral
+- Improved code organization and readability in API service modules
+
+### Added
+
+- Model information display in status bar during commit message generation
+- Enhanced documentation emphasizing Mistral AI capabilities
+
+### Technical
+
+- Bumped version in package.json to 1.1.5
+- Refactored API provider configuration for better maintainability
+- Standardized model selection handling across providers
+
 ## [1.1.4] - 2024-02-13
 
 ### Added
