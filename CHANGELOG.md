@@ -5,6 +5,22 @@ All notable changes to the "AI Commit Assistant" extension will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.7] - 2024-02-18
+
+### Added
+
+- New configuration option "aiCommitAssistant.commit.verbose" for controlling commit message verbosity
+- Enhanced commit message formatting based on verbosity setting
+- Updated settings UI with verbose mode checkbox
+
+### Technical
+
+- Modified configuration schema in package.json to include verbose commit option
+- Updated settings.ts to handle verbose configuration retrieval
+- Enhanced types.ts with CommitConfig verbose property
+- Improved repository.ts to support verbose commit message formatting
+- Updated SettingsWebview.ts with verbose mode UI controls
+
 ## [1.1.6] - 2024-02-18
 
 ### Added
