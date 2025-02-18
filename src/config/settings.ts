@@ -37,6 +37,7 @@ export function getConfiguration(): ExtensionConfig {
             maxLength: config.get("commit.maxLength", 72),
             includeScope: config.get("commit.includeScope", true),
             addBulletPoints: config.get("commit.addBulletPoints", true),
+            verbose: config.get("commit.verbose", true),
         },
         mistral: {
             enabled: config.get("mistral.enabled", false),

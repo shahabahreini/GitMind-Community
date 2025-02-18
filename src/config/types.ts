@@ -120,6 +120,14 @@ export interface MistralRateLimit {
     queryCost: number;
 }
 
+export interface CommitConfig {
+    style: CommitStyle;
+    maxLength: number;
+    includeScope: boolean;
+    addBulletPoints: boolean;
+    verbose: boolean; // Add this line
+}
+
 export type ApiConfig =
     | GeminiApiConfig
     | HuggingFaceApiConfig

@@ -108,6 +108,12 @@
           "default": false,
           "description": "Show model and token information before generating commit messages",
           "order": 3
+        },
+        "aiCommitAssistant.commit.verbose": {
+          "type": "boolean",
+          "default": true,
+          "description": "Generate verbose commit messages with detailed descriptions. When disabled, only generates the summary line.",
+          "order": 10
         }
       }
     },

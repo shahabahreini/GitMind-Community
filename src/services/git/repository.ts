@@ -64,8 +64,16 @@ export async function setCommitMessage(message: CommitMessage) {
 
     const repository = repositories[0];
     if (repository) {
-        const formattedMessage = message.summary + (message.description ? '\n\n' + message.description : '');
+        const config = vscode.workspace.getConfiguration("aiCommitAssistant");
+        const isVerbose = config.get("commit.verbose", true);
+
+        // Format message based on verbose setting
+        const formattedMessage = isVerbose
+            ? message.summary + '\n\n' + message.description
+            : message.summary;
+
         repository.inputBox.value = formattedMessage;
     }
 }
+
 
