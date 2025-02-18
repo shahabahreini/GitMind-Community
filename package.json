@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Assistant",
   "description": "Generate meaningful git commit messages using Free/Paid AI (Mistral, Gemini, Hugging Face, or Ollama) to improve commit quality and consistency",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "publisher": "ShahabBahreiniJangjoo",
   "icon": "images/logo.png",
   "engines": {
