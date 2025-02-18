@@ -27,6 +27,14 @@ Generate meaningful and consistent git commit messages using AI. This extension 
   - Works with staged and unstaged changes
   - Compatible with all Git operations
   - Preserves manual edits
+- **Verbosity Control**:
+  - Toggle between detailed and concise commit messages
+  - Detailed mode includes bullet points and context
+  - Concise mode shows only the summary line
+- **Diagnostic Information**:
+  - Optional token count estimation
+  - Model information display
+  - Generation status in status bar
 
 ### Commit Message Generation
 
@@ -39,6 +47,17 @@ Generate meaningful and consistent git commit messages using AI. This extension 
   - Detailed bullet-point descriptions
   - Proper imperative mood
   - Technical accuracy
+
+### Token Management
+
+- **Token Estimation**:
+  - Pre-generation token count estimates
+  - Smart content optimization
+  - Rate limit monitoring (Mistral)
+- **Usage Tracking**:
+  - Real-time token consumption display
+  - Rate limit status indicators
+  - Quota management helpers
 
 ### Advanced Features
 
@@ -75,6 +94,11 @@ Access the settings UI through:
 
 - Command Palette: `AI Commit Assistant: Open Settings`
 - ⚙️ icon in Source Control panel
+- Verbose commit message toggle
+- Diagnostic information toggle
+- Provider-specific model selection
+- Real-time validation
+- Direct links to API documentation
 
 ### Via settings.json
 
@@ -107,7 +131,10 @@ Access the settings UI through:
   "aiCommitAssistant.commit.style": "conventional",
   "aiCommitAssistant.commit.maxLength": 72,
   "aiCommitAssistant.commit.includeScope": true,
-  "aiCommitAssistant.commit.addBulletPoints": true
+  "aiCommitAssistant.commit.addBulletPoints": true,
+
+  "aiCommitAssistant.showDiagnostics": false,   // Show model and token information before generating messages
+  "aiCommitAssistant.commit.verbose": true,    // Generate detailed messages with bullet points
 }
 ```
 
