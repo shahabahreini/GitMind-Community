@@ -5,6 +5,23 @@ All notable changes to the "AI Commit Assistant" extension will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.6] - 2024-02-18
+
+### Added
+
+- New configuration option "aiCommitAssistant.showDiagnostics" for displaying model and token information
+- Diagnostic information display before commit message generation
+- Token estimation functionality for better resource management
+- New utility functions:
+  - showDiagnosticsInfo in api/index.ts for diagnostic display
+  - estimateTokens in utils/tokenCounter.ts for token count estimation
+
+### Technical
+
+- Implemented token counting utility in utils/tokenCounter.ts
+- Added configuration schema updates in package.json
+- Enhanced API module with diagnostic display capabilities
+
 ## [1.1.5] - 2024-02-16
 
 ### Changed
