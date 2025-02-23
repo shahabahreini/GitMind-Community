@@ -4,6 +4,7 @@ import {
     ExtensionConfig,
     CommitConfig,
     ProviderConfig,
+    GeminiModel, // Added this import
 } from "./types";
 
 export function getConfiguration(): ExtensionConfig {
@@ -15,6 +16,7 @@ export function getConfiguration(): ExtensionConfig {
         gemini: {
             enabled: config.get("gemini.enabled", false),
             apiKey: config.get("gemini.apiKey"),
+            model: config.get("gemini.model", GeminiModel.GEMINI_2_FLASH), // Updated default
         },
         huggingface: {
             enabled: config.get("huggingface.enabled", true),
@@ -55,7 +57,8 @@ export function getApiConfig(): ApiConfig {
         case "gemini":
             return {
                 type: "gemini",
-                apiKey: config.gemini.apiKey || "", // Return empty string instead of throwing
+                apiKey: config.gemini.apiKey || "",
+                model: config.gemini.model as GeminiModel || GeminiModel.GEMINI_2_FLASH, // Updated default
             };
 
         case "huggingface": {

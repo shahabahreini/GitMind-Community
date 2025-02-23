@@ -152,11 +152,11 @@ Guidelines:
       body: JSON.stringify({
         inputs: prompt,
         parameters: {
-          max_length: 500,
-          temperature: 0.1,
+          max_length: 1024,
+          //temperature: 0.1,
           top_p: 0.95,
           return_full_text: false,
-          do_sample: false,
+          do_sample: true,
         },
       }),
     }

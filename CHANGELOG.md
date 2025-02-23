@@ -5,6 +5,34 @@ All notable changes to the "AI Commit Assistant" extension will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.9] - 2024-02-23
+
+### Added
+
+- Added Gemini model configuration option in settings.json
+- Enhanced documentation with updated configuration examples
+- Improved settings.json schema with Gemini model settings
+
+### Changed
+
+- Updated README.md with comprehensive configuration options
+- Standardized model configuration across all providers
+- Enhanced documentation clarity for configuration options
+
+### Technical
+
+- Added "aiCommitAssistant.gemini.model" to configuration schema
+- Updated settings validation for Gemini model configuration
+- Improved configuration consistency across providers
+
+## [1.1.8] - 2024-02-20
+
+### Fixed
+
+- Minor bug fixes and improvements
+- Enhanced stability of API interactions
+- Resolved configuration loading issues
+
 ## [1.1.7] - 2024-02-18
 
 ### Added
@@ -42,8 +70,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Set Mistral AI as the default and recommended AI provider
-- Updated README.md to highlight Mistral AI as the recommended provider
 - Added status bar notification showing active model during generation
 - Updated default configuration in settings.ts to prioritize Mistral
 - Improved code organization and readability in API service modules
@@ -57,9 +83,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bumped version in package.json to 1.1.5
 - Refactored API provider configuration for better maintainability
-- Standardized model selection handling across providers
-
-## [1.1.4] - 2024-02-13
 
 ### Added
 
@@ -67,13 +90,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Direct links to provider API key pages
 - Centralized method for API configuration validation and updates
 - Debug logging for API key validation
-- Loading indicators for API operations
-- Helper functions for API configuration validation and updates
-
-### Changed
 
 - Enhanced error handling system for API configurations
-- Improved API key configuration workflow and user experience
 - Updated error messages to be more user-friendly
 - Implemented specific API config types for each service:
   - GeminiApiConfig
@@ -120,49 +138,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Enhanced documentation to highlight free tier availability of AI providers
 - Updated package.json version to 1.1.1
-
-## [1.1.0] - 2024-02-12
-
-### Added
-
-- **Mistral AI Integration**
-  - New provider option with configurable API key and model selection
-  - Support for multiple model tiers: tiny, small, medium, and large-latest
-  - Comprehensive rate limit handling with header extraction
-  - Type-safe implementations with MistralResponse and MistralRateLimit interfaces
-
-### Changed
-
-- Enhanced documentation with Mistral API configuration details
-- Improved rate limit management and quota handling
-- Updated configuration types and settings UI
-
-### Fixed
-
-- Code cleanup in mistral.ts for better readability
-- Removed redundant commit message templates
-- Eliminated unnecessary whitespace
-
-## [0.1.8] - 2024-02-10
-
-### Changed
-
-- Updated default Ollama model from "mistral" to "phi4" in aiCommitAssistant.ollamaModel settings
-- Enhanced error message display system for better user experience
-- Improved API error handling and user feedback mechanisms
-
-### Added
-
-- Selective modal display for Ollama connection issues with installation instructions
-- More detailed API error diagnostics in Hugging Face integration
-- JSON parsing capability for Hugging Face API error messages
-
-### Fixed
-
-- Improved error handling in huggingface.ts with better error message formatting
-- Added fallback mechanisms for error handling when JSON parsing fails
-- Enhanced error context preservation during error propagation
-
-[1.1.1]: https://github.com/shahabahreini/AI-Commit-Assistant/releases/tag/v1.1.1
-[1.1.0]: https://github.com/shahabahreini/AI-Commit-Assistant/releases/tag/v1.1.0
-[0.1.8]: https://github.com/shahabahreini/AI-Commit-Assistant/releases/tag/v0.1.8-beta

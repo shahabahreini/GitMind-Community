@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Assistant",
   "description": "Generate meaningful git commit messages using Free/Paid AI (Mistral, Gemini, Hugging Face, or Ollama) to improve commit quality and consistency",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "publisher": "ShahabBahreiniJangjoo",
   "icon": "images/logo.png",
   "engines": {
@@ -114,6 +114,25 @@
           "default": true,
           "description": "Generate verbose commit messages with detailed descriptions. When disabled, only generates the summary line.",
           "order": 10
+        },
+        "aiCommitAssistant.gemini.model": {
+          "type": "string",
+          "enum": [
+            "gemini-2.0-flash",
+            "gemini-2.0-flash-lite",
+            "gemini-1.5-flash",
+            "gemini-1.5-flash-8b",
+            "gemini-1.5-pro"
+          ],
+          "default": "gemini-2.0-flash",
+          "description": "Select which Gemini model to use",
+          "enumDescriptions": [
+            "Gemini 2.0 Flash - Latest and fastest model with high performance",
+            "Gemini 2.0 Flash-Lite - Lightweight version of Gemini 2.0 Flash",
+            "Gemini 1.5 Flash - Fast and efficient model",
+            "Gemini 1.5 Flash-8B - 8B parameter version for faster inference",
+            "Gemini 1.5 Pro - Base model with comprehensive capabilities"
+          ]
         }
       }
     },

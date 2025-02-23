@@ -76,7 +76,22 @@ export interface BaseApiConfig {
 
 export interface GeminiApiConfig extends BaseApiConfig {
     type: "gemini";
-    apiKey: string;
+    apiKey?: string;
+    model: GeminiModel;
+}
+
+export interface GeminiProviderConfig {
+    enabled: boolean;
+    apiKey?: string;
+    model: GeminiModel;
+}
+
+export enum GeminiModel {
+    GEMINI_2_FLASH = "gemini-2.0-flash",
+    GEMINI_2_FLASH_LITE = "gemini-2.0-flash-lite",
+    GEMINI_1_5_FLASH = "gemini-1.5-flash",
+    GEMINI_1_5_FLASH_8B = "gemini-1.5-flash-8b",
+    GEMINI_1_5_PRO = "gemini-1.5-pro"
 }
 
 export interface HuggingFaceApiConfig extends BaseApiConfig {
@@ -133,3 +148,4 @@ export type ApiConfig =
     | HuggingFaceApiConfig
     | OllamaApiConfig
     | MistralApiConfig;
+

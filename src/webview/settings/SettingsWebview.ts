@@ -3,182 +3,184 @@ import * as vscode from "vscode";
 import { getNonce } from "../../utils/getNonce";
 
 interface ExtensionSettings {
-    apiProvider: string;
-    debug: boolean;
-    gemini: {
-        apiKey: string;
-    };
-    huggingface: {
-        apiKey: string;
-        model: string;
-    };
-    ollama: {
-        url: string;
-        model: string;
-    };
-    mistral: {
-        apiKey: string;
-        model: string;
-    };
-    commit: {
-        verbose: boolean;
-    };
+  apiProvider: string;
+  debug: boolean;
+  gemini: {
+    apiKey: string;
+    model: string;
+  };
+  huggingface: {
+    apiKey: string;
+    model: string;
+  };
+  ollama: {
+    url: string;
+    model: string;
+  };
+  mistral: {
+    apiKey: string;
+    model: string;
+  };
+  commit: {
+    verbose: boolean;
+  };
 }
 
 export class SettingsWebview {
-    public static readonly viewType = "aiCommitAssistant.settings";
-    private readonly _panel: vscode.WebviewPanel;
-    private readonly _extensionUri: vscode.Uri;
-    private _disposables: vscode.Disposable[] = [];
+  public static readonly viewType = "aiCommitAssistant.settings";
+  private readonly _panel: vscode.WebviewPanel;
+  private readonly _extensionUri: vscode.Uri;
+  private _disposables: vscode.Disposable[] = [];
 
-    public static createOrShow(extensionUri: vscode.Uri) {
-        const column = vscode.window.activeTextEditor
-            ? vscode.window.activeTextEditor.viewColumn
-            : undefined;
+  public static createOrShow(extensionUri: vscode.Uri) {
+    const column = vscode.window.activeTextEditor
+      ? vscode.window.activeTextEditor.viewColumn
+      : undefined;
 
-        // If we already have a panel, show it.
-        if (SettingsWebview.currentPanel) {
-            SettingsWebview.currentPanel._panel.reveal(column);
-            return;
+    // If we already have a panel, show it.
+    if (SettingsWebview.currentPanel) {
+      SettingsWebview.currentPanel._panel.reveal(column);
+      return;
+    }
+
+    // Otherwise, create a new panel.
+    const panel = vscode.window.createWebviewPanel(
+      SettingsWebview.viewType,
+      "AI Commit Assistant Settings",
+      column || vscode.ViewColumn.One,
+      {
+        enableScripts: true,
+        localResourceRoots: [
+          vscode.Uri.joinPath(extensionUri, "media"),
+          vscode.Uri.joinPath(extensionUri, "dist"),
+        ],
+      }
+    );
+
+    new SettingsWebview(panel, extensionUri);
+  }
+
+  private static currentPanel: SettingsWebview | undefined;
+
+  private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
+    this._panel = panel;
+    this._extensionUri = extensionUri;
+
+    // Set the webview's initial html content
+    this._update();
+
+    // Listen for when the panel is disposed
+    // This happens when the user closes the panel or when the panel is closed programmatically
+    this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
+
+    // Handle messages from the webview
+    this._panel.webview.onDidReceiveMessage(
+      async (message) => {
+        switch (message.command) {
+          case "saveSettings":
+            await this._saveSettings(message.settings);
+            break;
         }
+      },
+      null,
+      this._disposables
+    );
 
-        // Otherwise, create a new panel.
-        const panel = vscode.window.createWebviewPanel(
-            SettingsWebview.viewType,
-            "AI Commit Assistant Settings",
-            column || vscode.ViewColumn.One,
-            {
-                enableScripts: true,
-                localResourceRoots: [
-                    vscode.Uri.joinPath(extensionUri, "media"),
-                    vscode.Uri.joinPath(extensionUri, "dist"),
-                ],
-            }
-        );
+    SettingsWebview.currentPanel = this;
+  }
 
-        new SettingsWebview(panel, extensionUri);
-    }
+  private async _saveSettings(settings: ExtensionSettings) {
+    const config = vscode.workspace.getConfiguration("aiCommitAssistant");
 
-    private static currentPanel: SettingsWebview | undefined;
+    // Update settings one by one
+    await config.update(
+      "apiProvider",
+      settings.apiProvider,
+      vscode.ConfigurationTarget.Global
+    );
+    await config.update(
+      "debug",
+      settings.debug,
+      vscode.ConfigurationTarget.Global
+    );
+    await config.update(
+      "gemini.apiKey",
+      settings.gemini.apiKey,
+      vscode.ConfigurationTarget.Global
+    );
+    await config.update(
+      "huggingface.apiKey",
+      settings.huggingface.apiKey,
+      vscode.ConfigurationTarget.Global
+    );
+    await config.update(
+      "huggingface.model",
+      settings.huggingface.model,
+      vscode.ConfigurationTarget.Global
+    );
+    await config.update(
+      "ollama.url",
+      settings.ollama.url,
+      vscode.ConfigurationTarget.Global
+    );
+    await config.update(
+      "ollama.model",
+      settings.ollama.model,
+      vscode.ConfigurationTarget.Global
+    );
+    await config.update(
+      "mistral.apiKey",
+      settings.mistral.apiKey,
+      vscode.ConfigurationTarget.Global
+    );
+    await config.update(
+      "mistral.model",
+      settings.mistral.model,
+      vscode.ConfigurationTarget.Global
+    );
+    await config.update(
+      "commit.verbose",
+      settings.commit.verbose,
+      vscode.ConfigurationTarget.Global
+    );
 
-    private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
-        this._panel = panel;
-        this._extensionUri = extensionUri;
+    vscode.window.showInformationMessage("Settings saved successfully!");
+  }
 
-        // Set the webview's initial html content
-        this._update();
+  private _update() {
+    const webview = this._panel.webview;
+    this._panel.webview.html = this._getHtmlForWebview(webview);
+  }
 
-        // Listen for when the panel is disposed
-        // This happens when the user closes the panel or when the panel is closed programmatically
-        this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
+  private _getHtmlForWebview(webview: vscode.Webview) {
+    const config = vscode.workspace.getConfiguration("aiCommitAssistant");
+    const settings: ExtensionSettings = {
+      apiProvider: config.get("apiProvider") || "huggingface",
+      debug: config.get("debug") || false,
+      gemini: {
+        apiKey: config.get("gemini.apiKey") || "",
+        model: config.get("gemini.model") || "gemini-2.0-flash",
+      },
+      huggingface: {
+        apiKey: config.get("huggingface.apiKey") || "",
+        model: config.get("huggingface.model") || "",
+      },
+      ollama: {
+        url: config.get("ollama.url") || "",
+        model: config.get("ollama.model") || "",
+      },
+      mistral: {
+        apiKey: config.get("mistral.apiKey") || "",
+        model: config.get("mistral.model") || "mistral-large-latest",
+      },
+      commit: {
+        verbose: config.get("commit.verbose") || true,
+      },
+    };
 
-        // Handle messages from the webview
-        this._panel.webview.onDidReceiveMessage(
-            async (message) => {
-                switch (message.command) {
-                    case "saveSettings":
-                        await this._saveSettings(message.settings);
-                        break;
-                }
-            },
-            null,
-            this._disposables
-        );
+    const nonce = getNonce();
 
-        SettingsWebview.currentPanel = this;
-    }
-
-    private async _saveSettings(settings: ExtensionSettings) {
-        const config = vscode.workspace.getConfiguration("aiCommitAssistant");
-
-        // Update settings one by one
-        await config.update(
-            "apiProvider",
-            settings.apiProvider,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "debug",
-            settings.debug,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "gemini.apiKey",
-            settings.gemini.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "huggingface.apiKey",
-            settings.huggingface.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "huggingface.model",
-            settings.huggingface.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "ollama.url",
-            settings.ollama.url,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "ollama.model",
-            settings.ollama.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "mistral.apiKey",
-            settings.mistral.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "mistral.model",
-            settings.mistral.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "commit.verbose",
-            settings.commit.verbose,
-            vscode.ConfigurationTarget.Global
-        );
-
-        vscode.window.showInformationMessage("Settings saved successfully!");
-    }
-
-    private _update() {
-        const webview = this._panel.webview;
-        this._panel.webview.html = this._getHtmlForWebview(webview);
-    }
-
-    private _getHtmlForWebview(webview: vscode.Webview) {
-        const config = vscode.workspace.getConfiguration("aiCommitAssistant");
-        const settings: ExtensionSettings = {
-            apiProvider: config.get("apiProvider") || "huggingface",
-            debug: config.get("debug") || false,
-            gemini: {
-                apiKey: config.get("gemini.apiKey") || "",
-            },
-            huggingface: {
-                apiKey: config.get("huggingface.apiKey") || "",
-                model: config.get("huggingface.model") || "",
-            },
-            ollama: {
-                url: config.get("ollama.url") || "",
-                model: config.get("ollama.model") || "",
-            },
-            mistral: {
-                apiKey: config.get("mistral.apiKey") || "",
-                model: config.get("mistral.model") || "mistral-large-latest",
-            },
-            commit: {
-                verbose: config.get("commit.verbose") || true,
-            },
-        };
-
-        const nonce = getNonce();
-
-        return `
+    return `
     <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -318,19 +320,28 @@ export class SettingsWebview {
       </div>
 
       <div id="geminiSettings" class="settings-section">
-        <h3>Gemini Settings</h3>
-        <div class="form-group">
-          <div class="label-container">
-            <label for="geminiApiKey">API Key</label>
-            <a
-              href="https://aistudio.google.com/app/apikey"
-              class="learn-more"
-              target="_blank"
-              >Learn more</a
-            >
+          <h3>Gemini Settings</h3>
+          <div class="form-group">
+              <div class="label-container">
+                  <label for="geminiApiKey">API Key</label>
+                  <a href="https://aistudio.google.com/app/apikey" class="learn-more" target="_blank">Learn more</a>
+              </div>
+              <input type="password" id="geminiApiKey" />
           </div>
-          <input type="password" id="geminiApiKey" />
-        </div>
+          <div class="form-group">
+              <label for="geminiModel">Model</label>
+              <select id="geminiModel">
+                  <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                  <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash-Lite</option>
+                  <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                  <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash-8B</option>
+                  <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+              </select>
+              <div class="description">
+                  Gemini 2.0 Flash is recommended for optimal performance and speed.
+                  Flash models are optimized for faster response times.
+              </div>
+          </div>
       </div>
 
       <div id="huggingfaceSettings" class="settings-section">
@@ -438,6 +449,7 @@ export class SettingsWebview {
       document.getElementById('ollamaModel').value = currentSettings.ollama.model || '';
       document.getElementById('mistralApiKey').value = currentSettings.mistral?.apiKey || '';
       document.getElementById('mistralModel').value = currentSettings.mistral?.model || 'mistral-large-latest';
+      document.getElementById('geminiModel').value = currentSettings.gemini.model || 'gemini-2.0-flash';
 
       // Show/hide sections based on selected provider
       function updateVisibleSettings() {
@@ -460,7 +472,8 @@ export class SettingsWebview {
           apiProvider: document.getElementById('apiProvider').value,
           debug: currentSettings.debug,
           gemini: {
-            apiKey: document.getElementById('geminiApiKey').value
+            apiKey: document.getElementById('geminiApiKey').value,
+            model: document.getElementById('geminiModel').value
           },
           huggingface: {
             apiKey: document.getElementById('huggingfaceApiKey').value,
@@ -488,18 +501,18 @@ export class SettingsWebview {
   </body>
 </html>
 `;
+  }
+
+  public dispose() {
+    SettingsWebview.currentPanel = undefined;
+
+    this._panel.dispose();
+
+    while (this._disposables.length) {
+      const disposable = this._disposables.pop();
+      if (disposable) {
+        disposable.dispose();
+      }
     }
-
-    public dispose() {
-        SettingsWebview.currentPanel = undefined;
-
-        this._panel.dispose();
-
-        while (this._disposables.length) {
-            const disposable = this._disposables.pop();
-            if (disposable) {
-                disposable.dispose();
-            }
-        }
-    }
+  }
 }

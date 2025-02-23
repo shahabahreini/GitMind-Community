@@ -110,6 +110,7 @@ Access the settings UI through:
   // Gemini Settings
   "aiCommitAssistant.gemini.apiKey": "",
   "aiCommitAssistant.gemini.enabled": true,
+  "aiCommitAssistant.gemini.model": "gemini-pro",
 
   // Hugging Face Settings
   "aiCommitAssistant.huggingface.apiKey": "",
@@ -134,78 +135,6 @@ Access the settings UI through:
   "aiCommitAssistant.commit.addBulletPoints": true,
 
   "aiCommitAssistant.showDiagnostics": false,   // Show model and token information before generating messages
-  "aiCommitAssistant.commit.verbose": true,    // Generate detailed messages with bullet points
+  "aiCommitAssistant.commit.verbose": true     // Generate detailed messages with bullet points
 }
 ```
-
-### Default Models
-
-- **Gemini**: `gemini-pro`
-- **Hugging Face**: `mistralai/Mistral-7B-Instruct-v0.3`
-- **Ollama**: `phi4`
-- **Mistral**: `mistral-large-latest`
-
-## Usage
-
-### Via Source Control Panel
-
-1. Make your changes
-2. Stage files (optional)
-3. Click the ✨ (sparkle) icon in the Source Control panel
-4. Review and edit the generated message
-5. Commit as usual
-
-### Via Command Palette
-
-1. `Ctrl+Shift+P` / `Cmd+Shift+P`
-2. Type "Generate AI Commit Message"
-3. Review and edit the generated message
-
-### Generated Commit Structure
-
-```
-<type>[optional scope]: <description>
-
-- Detailed change explanation
-- Impact or reasoning
-- Breaking changes (if any)
-```
-
-## Visual Elements
-
-The extension adds these icons to your Source Control panel:
-
-- ✨ (Sparkle): Generate commit message
-- 🔄 (Loading): Shows during generation
-- ⚙️ (Settings): Open settings UI
-
-## Privacy & Security
-
-- All API calls are made directly to chosen provider
-- No data storage except local debug logs
-- Ollama option for complete local processing
-- API keys stored in VS Code's secure storage
-
-## Development
-
-### Building from Source
-
-```bash
-npm install
-npm run compile
-npm run package
-```
-
-### Testing
-
-```bash
-npm run test
-```
-
-## License
-
-MIT License - See LICENSE.md for details
-
----
-
-**Note**: First-time setup requires configuring an API provider and key through the Settings UI (⚙️ icon) or settings.json.

@@ -85,7 +85,7 @@ async function generateMessageWithConfig(
                             apiKey.trim(),
                             vscode.ConfigurationTarget.Global
                         );
-                        return await callGeminiAPI(apiKey.trim(), diff);
+                        return await callGeminiAPI(apiKey.trim(), geminiConfig.model, diff);
                     }
                 } else if (result === "Get API Key") {
                     await vscode.env.openExternal(
@@ -110,12 +110,12 @@ async function generateMessageWithConfig(
                             apiKey.trim(),
                             vscode.ConfigurationTarget.Global
                         );
-                        return await callGeminiAPI(apiKey.trim(), diff);
+                        return await callGeminiAPI(apiKey.trim(), geminiConfig.model, diff);
                     }
                 }
                 return ""; // Return empty if user cancels
             }
-            return await callGeminiAPI(geminiConfig.apiKey, diff);
+            return await callGeminiAPI(geminiConfig.apiKey, geminiConfig.model, diff);
         }
 
         case "huggingface": {
