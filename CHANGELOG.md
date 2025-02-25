@@ -5,6 +5,26 @@ All notable changes to the "AI Commit Assistant" extension will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-02-25
+
+### Added
+
+- New API validation features:
+  - Added "Check API Setup" command to validate API configurations
+  - Added "Check Rate Limits" command to monitor API usage limits
+- Enhanced Settings UI with API validation buttons
+- New API validation service with provider-specific checks
+- Rate limit monitoring for Mistral API
+
+### Technical
+
+- Added new commands to package.json:
+  - ai-commit-assistant.checkApiSetup
+  - ai-commit-assistant.checkRateLimits
+- Implemented validation.ts service for API checks
+- Enhanced SettingsWebview with API validation functionality
+- Added rate limit tracking for Mistral API
+
 ## [1.1.9] - 2024-02-23
 
 ### Added
