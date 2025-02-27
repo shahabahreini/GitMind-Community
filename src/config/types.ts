@@ -129,10 +129,12 @@ export interface MistralResponse {
 }
 
 export interface MistralRateLimit {
-    reset: number;
-    limit: number;
-    remaining: number;
-    queryCost: number;
+    reset: number;        // Seconds until rate limit resets
+    limit: number;        // Rate limit per minute
+    remaining: number;    // Remaining tokens in current period
+    queryCost: number;    // Cost of the current query
+    monthlyLimit: number;     // Monthly rate limit
+    monthlyRemaining: number; // Remaining tokens for the month
 }
 
 export interface CommitConfig {

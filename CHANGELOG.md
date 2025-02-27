@@ -5,6 +5,80 @@ All notable changes to the "AI Commit Assistant" extension will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2025-03-01
+
+### Added
+
+- Added support for loading and selecting Mistral models dynamically
+  - New "Load Available Models" button in settings
+  - Dynamic population of model selection dropdown
+  - Improved error handling for model loading scenarios
+- Introduced monthly rate limit tracking for Mistral API
+  - Added monthly limit and remaining quota display
+  - Enhanced rate limit reset time calculations
+- Enhanced settings UI with configurable API options
+  - New settings webview with comprehensive API configuration
+  - Status banner showing current configuration state
+  - Modular component architecture for better maintainability
+
+### Enhanced
+
+- Improved rate limit checks and notifications
+  - Optimized token usage during rate limit checks
+  - Added query cost information
+  - Enhanced UI with human-readable rate limit information
+  - Added warning notifications about token consumption
+- Upgraded API validation system
+  - Better timeout mechanisms
+  - Improved error handling
+  - Enhanced Hugging Face API key validation using models endpoint
+  - More detailed feedback in settings webview
+
+### Changed
+
+- Migrated to singleton logger class for debug logging
+  - Centralized configuration and data handling
+  - More consistent debug output across the extension
+- Refactored settings management for improved modularity
+  - Separated component classes for settings generator
+  - Extracted CSS styles into separate modules
+  - Created dedicated script files for API and UI logic
+
+### Technical
+
+- Code optimization and architecture improvements
+- Updated package version to 1.3.1
+
+## [1.3.0] - 2025-02-27
+
+### Added
+
+- New settings webview with configurable options for API providers, API keys, and models
+- Status banner in settings view displaying current configuration status
+- Enhanced API and rate limit checks with detailed feedback in settings webview
+- Improved API setup validation with timeouts and better error handling
+- New Hugging Face API key validation using models endpoint
+
+### Changed
+
+- Refactored settings management for better modularity:
+  - Modularized settings generator with separate component classes
+  - Extracted CSS styles into separate modules
+  - Created separate script files for managing API and UI logic
+- Enhanced API setup and rate limit checks:
+  - Added 15-second timeouts to prevent indefinite hanging
+  - Improved error handling with specific messages
+  - Added troubleshooting tips for API issues
+- Updated Hugging Face API key validation to use models endpoint for better authentication
+
+### Technical
+
+- Implemented new settings webview architecture with modular components
+- Added status banner component for configuration visibility
+- Enhanced API validation with timeout mechanisms
+- Improved error handling and user feedback systems
+- Updated Hugging Face API validation endpoint to `/api/models?limit=1`
+
 ## [1.2.2] - 2025-02-27
 
 ### Added

@@ -133,7 +133,8 @@ export async function checkRateLimits(): Promise<RateLimitsCheckResult> {
                     if (rateLimits) {
                         result.success = true;
                         result.limits = rateLimits;
-                        result.notes = `Rate limits retrieved successfully for Mistral API`;
+                        // Add warning about rate limit checks affecting quota
+                        result.notes = `Rate limits retrieved successfully. Note: Checking rate limits consumes API tokens (${rateLimits.queryCost} tokens for this request).`;
                     } else {
                         result.error = "Failed to retrieve rate limits";
                         result.notes = "Please check your API key and try again";
@@ -206,22 +207,36 @@ async function validateHuggingFaceApiKey(apiKey: string): Promise<boolean> {
 
 async function checkMistralRateLimits(apiKey: string): Promise<MistralRateLimit | null> {
     try {
-        const response = await fetch("https://api.mistral.ai/v1/models", {
+        // Send a minimal request to get rate limits from headers
+        const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
+            method: "POST",
             headers: {
-                Authorization: `Bearer ${apiKey}`,
-                Accept: "application/json",
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${apiKey}`
             },
+            body: JSON.stringify({
+                model: "mistral-tiny",  // Use the smallest model to minimize token usage
+                messages: [{ role: "user", content: "Hello" }]  // Minimal prompt
+            })
         });
 
         if (!response.ok) {
             return null;
         }
 
+        // Extract rate limit information from headers
         return {
             reset: parseInt(response.headers.get('ratelimitbysize-reset') || '0'),
             limit: parseInt(response.headers.get('ratelimitbysize-limit') || '0'),
             remaining: parseInt(response.headers.get('ratelimitbysize-remaining') || '0'),
-            queryCost: parseInt(response.headers.get('ratelimitbysize-query-cost') || '0')
+            queryCost: parseInt(response.headers.get('ratelimitbysize-query-cost') || '0'),
+<<<<<<< HEAD
+            monthlyLimit: parseInt(response.headers.get('ratelimitbysize-monthly-limit') || '0'),
+            monthlyRemaining: parseInt(response.headers.get('ratelimitbysize-monthly-remaining') || '0')
+=======
+            monthlyLimit: parseInt(response.headers.get('x-ratelimitbysize-limit-month') || '0'),
+            monthlyRemaining: parseInt(response.headers.get('x-ratelimitbysize-remaining-month') || '0')
+>>>>>>> 21c43f784307392313d40cc19bbf664f96494e4c
         };
     } catch (error) {
         debugLog("Mistral rate limit check error:", error);

@@ -1,15 +1,41 @@
 // src/webview/settings/components/MistralSettings.ts
+
 import { ExtensionSettings } from "../../../models/ExtensionSettings";
 
 export class MistralSettings {
-    private _settings: ExtensionSettings;
+  private _settings: ExtensionSettings;
 
-    constructor(settings: ExtensionSettings) {
-        this._settings = settings;
+  constructor(settings: ExtensionSettings) {
+    this._settings = settings;
+  }
+
+  public render(): string {
+    // Define common Mistral models to show by default
+    const defaultModels = [
+      'mistral-tiny',
+      'mistral-small',
+      'mistral-medium',
+      'mistral-large-latest',
+      'open-mixtral-8x7b',
+      'open-mistral-7b',
+      'mistral-small-latest'
+    ];
+
+    // Build the options HTML
+    let optionsHtml = '';
+
+    // Add the current saved model if it's not in the default list
+    const currentModel = this._settings.mistral?.model || 'mistral-large-latest';
+    if (!defaultModels.includes(currentModel)) {
+      optionsHtml += `<option value="${currentModel}" selected>${currentModel}</option>`;
     }
 
-    public render(): string {
-        return `
+    // Add the default models
+    defaultModels.forEach(model => {
+      optionsHtml += `<option value="${model}" ${model === currentModel ? 'selected' : ''}>${model}</option>`;
+    });
+
+    return `
     <div id="mistralSettings" class="settings-section">
       <h3>Mistral Settings</h3>
       <div class="form-group">
@@ -22,12 +48,13 @@ export class MistralSettings {
       <div class="form-group">
         <label for="mistralModel">Model</label>
         <select id="mistralModel">
-          <option value="mistral-tiny" ${this._settings.mistral?.model === "mistral-tiny" ? "selected" : ""}>Mistral Tiny</option>
-          <option value="mistral-small" ${this._settings.mistral?.model === "mistral-small" ? "selected" : ""}>Mistral Small</option>
-          <option value="mistral-medium" ${this._settings.mistral?.model === "mistral-medium" ? "selected" : ""}>Mistral Medium</option>
-          <option value="mistral-large-latest" ${this._settings.mistral?.model === "mistral-large-latest" ? "selected" : ""}>Mistral Large (Latest)</option>
+          ${optionsHtml}
         </select>
+        <button id="loadMistralModels" class="button small" style="margin-top: 8px;">Load Available Models</button>
+        <div class="description">
+          Default models shown. Click "Load Available Models" to fetch all models that support chat completion.
+        </div>
       </div>
     </div>`;
-    }
+  }
 }

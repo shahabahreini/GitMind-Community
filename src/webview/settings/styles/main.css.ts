@@ -210,6 +210,19 @@ export function getMainStyles(): string {
       margin-bottom: 0;
     }
 
+    .rate-limit-note {
+      margin-top: 12px;
+      padding: 8px 12px;
+      background-color: var(--vscode-inputValidation-infoBackground, rgba(100, 150, 255, 0.1));
+      border-left: 4px solid var(--vscode-inputValidation-infoBorder, #3794ff);
+      border-radius: 3px;
+    }
+
+    .rate-limit-note p {
+      margin: 0;
+      color: var(--vscode-inputValidation-infoForeground, var(--vscode-foreground));
+    }
+
     ${getFormStyles()}
     ${getButtonStyles()}
     ${getStatusBannerStyles()}

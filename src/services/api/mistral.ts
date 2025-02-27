@@ -7,7 +7,9 @@ function extractRateLimits(headers: Headers): MistralRateLimit {
         reset: parseInt(headers.get('ratelimitbysize-reset') || '0'),
         limit: parseInt(headers.get('ratelimitbysize-limit') || '0'),
         remaining: parseInt(headers.get('ratelimitbysize-remaining') || '0'),
-        queryCost: parseInt(headers.get('ratelimitbysize-query-cost') || '0')
+        queryCost: parseInt(headers.get('ratelimitbysize-query-cost') || '0'),
+        monthlyLimit: parseInt(headers.get('x-ratelimitbysize-limit-month') || '0'),
+        monthlyRemaining: parseInt(headers.get('x-ratelimitbysize-remaining-month') || '0')
     };
 }
 
@@ -62,7 +64,7 @@ export async function callMistralAPI(apiKey: string, model: string, diff: string
 
         // Check rate limits
         if (rateLimits.remaining <= 0) {
-            const resetTime = new Date(rateLimits.reset * 1000);
+            const resetTime = new Date(Date.now() + rateLimits.reset * 1000);
             throw new Error(`Rate limit exceeded. Reset at ${resetTime.toLocaleString()}`);
         }
 
@@ -97,5 +99,34 @@ export async function callMistralAPI(apiKey: string, model: string, diff: string
             throw new Error(`Mistral API call failed: ${error.message}`);
         }
         throw new Error(`Unexpected error during Mistral API call: ${String(error)}`);
+    }
+}
+
+export async function fetchMistralModels(apiKey: string): Promise<string[]> {
+    try {
+        const response = await fetch("https://api.mistral.ai/v1/models", {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${apiKey}`,
+                "Accept": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch models: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        // Filter models that have completion_chat capability set to true
+        const chatModels = data.data
+            .filter((model: any) => model.capabilities?.completion_chat === true)
+            .map((model: any) => model.id);
+
+        debugLog("Available Mistral chat models:", chatModels);
+        return chatModels;
+    } catch (error) {
+        debugLog("Error fetching Mistral models:", error);
+        throw error;
     }
 }

@@ -1,11 +1,16 @@
 // src/webview/settings/styles/buttons.css.ts
 export function getButtonStyles(): string {
-    return `
+  return `
       .button-group {
         display: flex;
         gap: 10px;
         margin-top: 20px;
         justify-content: flex-end;
+      }
+
+      button.small {
+        padding: 4px 8px;
+        font-size: 12px;
       }
   
       button {
