@@ -1,3 +1,4 @@
+// src/webview/settings/scripts/apiManager.ts
 export function getApiManagerScript(): string {
   return `
     // Check API setup
@@ -69,21 +70,25 @@ export function getApiManagerScript(): string {
               <div id="apiStatusDetails" class="status-details"></div>
             </div>
           </div>
-                \`;
+        \`;
         document.body.appendChild(dialog);
-    } else {
+      } else {
         document.getElementById('apiStatusMessage').textContent = \`Testing connection to \${getProviderDisplayName(provider)}...\`;
         document.getElementById('apiStatusDetails').innerHTML = '';
         document.getElementById('apiStatusDetails').className = 'status-details';
+        // Make sure spinner is visible
+        const spinner = dialog.querySelector('.status-spinner');
+        if (spinner) {
+          spinner.style.display = 'inline-block';
+        }
       }
       
       dialog.style.display = 'flex';
       
-      // Send message to extension
+      // Send message to extension to execute the command
       vscode.postMessage({
-        command: 'checkApiSetup',
-        provider: provider,
-        settings: apiSettings
+        command: 'executeCommand',
+        commandId: 'ai-commit-assistant.checkApiSetup'
       });
     }
     
@@ -118,38 +123,41 @@ export function getApiManagerScript(): string {
       const dialogId = 'rateLimitsDialog';
       let dialog = document.getElementById(dialogId);
       
-        // For the API Status Dialog
-    if (!dialog) {
+      if (!dialog) {
         dialog = document.createElement('div');
         dialog.id = dialogId;
         dialog.className = 'status-dialog';
         dialog.innerHTML = \`
           <div class="status-dialog-content">
             <div class="status-dialog-header">
-              <h3>API Connection Status</h3>
-              <button class="close-button" onclick="closeStatusDialog('apiStatusDialog')">×</button>
+              <h3>Rate Limits Status</h3>
+              <button class="close-button" onclick="closeStatusDialog('rateLimitsDialog')">×</button>
             </div>
             <div class="status-dialog-body">
               <div class="status-spinner"></div>
-              <div id="apiStatusMessage">Testing connection to \${getProviderDisplayName(provider)}...</div>
-              <div id="apiStatusDetails" class="status-details"></div>
+              <div id="rateLimitsMessage">Checking rate limits for \${getProviderDisplayName(provider)}...</div>
+              <div id="rateLimitsDetails" class="status-details"></div>
             </div>
           </div>
-                \`;
+        \`;
         document.body.appendChild(dialog);
-    } else {
+      } else {
         document.getElementById('rateLimitsMessage').textContent = \`Checking rate limits for \${getProviderDisplayName(provider)}...\`;
         document.getElementById('rateLimitsDetails').innerHTML = '';
         document.getElementById('rateLimitsDetails').className = 'status-details';
+        // Make sure spinner is visible
+        const spinner = dialog.querySelector('.status-spinner');
+        if (spinner) {
+          spinner.style.display = 'inline-block';
+        }
       }
       
       dialog.style.display = 'flex';
       
-      // Send message to extension
+      // Send message to extension to execute the command
       vscode.postMessage({
-        command: 'checkRateLimits',
-        provider: provider,
-        settings: apiSettings
+        command: 'executeCommand',
+        commandId: 'ai-commit-assistant.checkRateLimits'
       });
     }
     

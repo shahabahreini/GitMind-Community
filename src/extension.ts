@@ -198,32 +198,54 @@ export async function activate(context: vscode.ExtensionContext) {
             cancellable: false
           },
           async () => {
-            const result = await checkApiSetup();
+            try {
+              const result = await Promise.race([
+                checkApiSetup(),
+                new Promise<never>((_, reject) =>
+                  setTimeout(() => reject(new Error("Connection test timed out after 15 seconds")), 15000)
+                )
+              ]);
 
-            // Send results to webview
-            SettingsWebview.postMessageToWebview({
-              command: 'apiCheckResult',
-              success: result.success,
-              provider: provider,
-              model: result.model,
-              responseTime: result.responseTime,
-              details: result.details,
-              error: result.error,
-              troubleshooting: result.troubleshooting
-            });
-
-            // Show a notification if webview isn't open
-            if (!SettingsWebview.isWebviewOpen()) {
-              if (result.success) {
-                vscode.window.showInformationMessage(`${provider} API connection successful!`);
+              // Send results to webview
+              if (SettingsWebview.isWebviewOpen()) {
+                SettingsWebview.postMessageToWebview({
+                  command: 'apiCheckResult',
+                  success: result.success,
+                  provider: provider,
+                  model: result.model,
+                  responseTime: result.responseTime,
+                  details: result.details,
+                  error: result.error,
+                  troubleshooting: result.troubleshooting
+                });
               } else {
-                vscode.window.showErrorMessage(`${provider} API connection failed: ${result.error}`);
+                // Show a notification if webview isn't open
+                if (result.success) {
+                  vscode.window.showInformationMessage(`${provider} API connection successful!`);
+                } else {
+                  vscode.window.showErrorMessage(`${provider} API connection failed: ${result.error}`);
+                }
+              }
+            } catch (error) {
+              debugLog("API Check Error (inner):", error);
+
+              // Send error to webview
+              if (SettingsWebview.isWebviewOpen()) {
+                SettingsWebview.postMessageToWebview({
+                  command: 'apiCheckResult',
+                  success: false,
+                  provider: provider,
+                  error: error instanceof Error ? error.message : 'Unknown error',
+                  troubleshooting: "Please check your API key and network connection."
+                });
+              } else {
+                vscode.window.showErrorMessage(`API connection test failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
               }
             }
           }
         );
       } catch (error) {
-        debugLog("API Check Error:", error);
+        debugLog("API Check Error (outer):", error);
         vscode.window.showErrorMessage(`Error checking API: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
@@ -236,39 +258,60 @@ export async function activate(context: vscode.ExtensionContext) {
       try {
         // Get the current provider from settings
         const apiConfig = getApiConfig();
-        const provider = apiConfig.type;  // Changed from provider to type
+        const provider = apiConfig.type;
 
         // Show a progress notification
         await vscode.window.withProgress(
           {
             location: vscode.ProgressLocation.Notification,
-            title: `Testing ${provider} API connection...`,
+            title: `Checking ${provider} rate limits...`,
             cancellable: false
           },
           async () => {
-            const result = await checkRateLimits();
+            try {
+              const result = await Promise.race([
+                checkRateLimits(),
+                new Promise<never>((_, reject) =>
+                  setTimeout(() => reject(new Error("Rate limits check timed out after 15 seconds")), 15000)
+                )
+              ]);
 
-            // Send results to webview
-            SettingsWebview.postMessageToWebview({
-              command: 'rateLimitsResult',
-              success: result.success,
-              limits: result.limits,
-              notes: result.notes,
-              error: result.error
-            });
-
-            // Show a notification if webview isn't open
-            if (!SettingsWebview.isWebviewOpen()) {
-              if (result.success) {
-                vscode.window.showInformationMessage(`${provider} rate limits retrieved successfully`);
+              // Send results to webview
+              if (SettingsWebview.isWebviewOpen()) {
+                SettingsWebview.postMessageToWebview({
+                  command: 'rateLimitsResult',
+                  success: result.success,
+                  limits: result.limits,
+                  notes: result.notes,
+                  error: result.error
+                });
               } else {
-                vscode.window.showErrorMessage(`Failed to retrieve ${provider} rate limits: ${result.error}`);
+                // Show a notification if webview isn't open
+                if (result.success) {
+                  vscode.window.showInformationMessage(`${provider} rate limits retrieved successfully`);
+                } else {
+                  vscode.window.showErrorMessage(`Failed to retrieve ${provider} rate limits: ${result.error}`);
+                }
+              }
+            } catch (error) {
+              debugLog("Rate Limits Check Error (inner):", error);
+
+              // Send error to webview
+              if (SettingsWebview.isWebviewOpen()) {
+                SettingsWebview.postMessageToWebview({
+                  command: 'rateLimitsResult',
+                  success: false,
+                  provider: provider,
+                  error: error instanceof Error ? error.message : 'Unknown error'
+                });
+              } else {
+                vscode.window.showErrorMessage(`Rate limits check failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
               }
             }
           }
         );
       } catch (error) {
-        debugLog("Rate Limits Check Error:", error);
+        debugLog("Rate Limits Check Error (outer):", error);
         vscode.window.showErrorMessage(`Error checking rate limits: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
