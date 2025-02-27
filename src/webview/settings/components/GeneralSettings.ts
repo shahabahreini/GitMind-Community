@@ -1,0 +1,36 @@
+// src/webview/settings/components/GeneralSettings.ts
+import { ExtensionSettings } from "../../../models/ExtensionSettings";
+
+export class GeneralSettings {
+    private _settings: ExtensionSettings;
+
+    constructor(settings: ExtensionSettings) {
+        this._settings = settings;
+    }
+
+    public render(): string {
+        return `
+    <div class="settings-section">
+      <h3>General Settings</h3>
+      <div class="form-group">
+        <div class="checkbox-container">
+          <input type="checkbox" id="commitVerbose" ${this._settings.commit?.verbose ? "checked" : ""} />
+          <label for="commitVerbose">Verbose Commit Messages</label>
+        </div>
+        <div class="description">
+          When enabled, generates detailed commit messages with bullet points.
+          When disabled, only generates the summary line.
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="apiProvider">API Provider</label>
+        <select id="apiProvider">
+          <option value="gemini" ${this._settings.apiProvider === "gemini" ? "selected" : ""}>Gemini</option>
+          <option value="huggingface" ${this._settings.apiProvider === "huggingface" ? "selected" : ""}>Hugging Face</option>
+          <option value="ollama" ${this._settings.apiProvider === "ollama" ? "selected" : ""}>Ollama</option>
+          <option value="mistral" ${this._settings.apiProvider === "mistral" ? "selected" : ""}>Mistral</option>
+        </select>
+      </div>
+    </div>`;
+    }
+}

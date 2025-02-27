@@ -181,6 +181,142 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  // Register API check command with enhanced feedback
+  let checkApiSetupCommand = vscode.commands.registerCommand(
+    "ai-commit-assistant.checkApiSetup",
+    async () => {
+      try {
+        // Get the current provider from settings
+        const apiConfig = getApiConfig();
+        const provider = apiConfig.type;
+
+        // Show a progress notification
+        await vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title: `Testing ${provider} API connection...`,
+            cancellable: false
+          },
+          async () => {
+            try {
+              const result = await Promise.race([
+                checkApiSetup(),
+                new Promise<never>((_, reject) =>
+                  setTimeout(() => reject(new Error("Connection test timed out after 15 seconds")), 15000)
+                )
+              ]);
+
+              // Send results to webview
+              if (SettingsWebview.isWebviewOpen()) {
+                SettingsWebview.postMessageToWebview({
+                  command: 'apiCheckResult',
+                  success: result.success,
+                  provider: provider,
+                  model: result.model,
+                  responseTime: result.responseTime,
+                  details: result.details,
+                  error: result.error,
+                  troubleshooting: result.troubleshooting
+                });
+              } else {
+                // Show a notification if webview isn't open
+                if (result.success) {
+                  vscode.window.showInformationMessage(`${provider} API connection successful!`);
+                } else {
+                  vscode.window.showErrorMessage(`${provider} API connection failed: ${result.error}`);
+                }
+              }
+            } catch (error) {
+              debugLog("API Check Error (inner):", error);
+
+              // Send error to webview
+              if (SettingsWebview.isWebviewOpen()) {
+                SettingsWebview.postMessageToWebview({
+                  command: 'apiCheckResult',
+                  success: false,
+                  provider: provider,
+                  error: error instanceof Error ? error.message : 'Unknown error',
+                  troubleshooting: "Please check your API key and network connection."
+                });
+              } else {
+                vscode.window.showErrorMessage(`API connection test failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+              }
+            }
+          }
+        );
+      } catch (error) {
+        debugLog("API Check Error (outer):", error);
+        vscode.window.showErrorMessage(`Error checking API: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+  );
+
+  // Register rate limits check command with enhanced feedback
+  let checkRateLimitsCommand = vscode.commands.registerCommand(
+    "ai-commit-assistant.checkRateLimits",
+    async () => {
+      try {
+        // Get the current provider from settings
+        const apiConfig = getApiConfig();
+        const provider = apiConfig.type;
+
+        // Show a progress notification
+        await vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title: `Checking ${provider} rate limits...`,
+            cancellable: false
+          },
+          async () => {
+            try {
+              const result = await Promise.race([
+                checkRateLimits(),
+                new Promise<never>((_, reject) =>
+                  setTimeout(() => reject(new Error("Rate limits check timed out after 15 seconds")), 15000)
+                )
+              ]);
+
+              // Send results to webview
+              if (SettingsWebview.isWebviewOpen()) {
+                SettingsWebview.postMessageToWebview({
+                  command: 'rateLimitsResult',
+                  success: result.success,
+                  limits: result.limits,
+                  notes: result.notes,
+                  error: result.error
+                });
+              } else {
+                // Show a notification if webview isn't open
+                if (result.success) {
+                  vscode.window.showInformationMessage(`${provider} rate limits retrieved successfully`);
+                } else {
+                  vscode.window.showErrorMessage(`Failed to retrieve ${provider} rate limits: ${result.error}`);
+                }
+              }
+            } catch (error) {
+              debugLog("Rate Limits Check Error (inner):", error);
+
+              // Send error to webview
+              if (SettingsWebview.isWebviewOpen()) {
+                SettingsWebview.postMessageToWebview({
+                  command: 'rateLimitsResult',
+                  success: false,
+                  provider: provider,
+                  error: error instanceof Error ? error.message : 'Unknown error'
+                });
+              } else {
+                vscode.window.showErrorMessage(`Rate limits check failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+              }
+            }
+          }
+        );
+      } catch (error) {
+        debugLog("Rate Limits Check Error (outer):", error);
+        vscode.window.showErrorMessage(`Error checking rate limits: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+  );
+
   // Register all disposables
   context.subscriptions.push(
     state.debugChannel,
@@ -190,26 +326,7 @@ export async function activate(context: vscode.ExtensionContext) {
     toggleDebugCommand,
     generateCommitCommand,
     acceptInputCommand,
-    settingsCommand
-  );
-
-  // Activate API check and limit rate check
-  let checkApiSetupCommand = vscode.commands.registerCommand(
-    "ai-commit-assistant.checkApiSetup",
-    async () => {
-      await checkApiSetup();
-    }
-  );
-
-  let checkRateLimitsCommand = vscode.commands.registerCommand(
-    "ai-commit-assistant.checkRateLimits",
-    async () => {
-      await checkRateLimits();
-    }
-  );
-  context.subscriptions.push(
-    checkApiSetupCommand,
-    checkRateLimitsCommand,
+    settingsCommand,
     checkApiSetupCommand,
     checkRateLimitsCommand
   );
