@@ -186,25 +186,23 @@ export async function checkRateLimits(): Promise<RateLimitsCheckResult> {
 
 async function validateHuggingFaceApiKey(apiKey: string): Promise<boolean> {
     try {
-        // Using the same endpoint pattern that's working for rate limits
-        const response = await fetch("https://huggingface.co/api/whoami", {
+        // Use the models endpoint which requires authentication
+        const response = await fetch("https://huggingface.co/api/models?limit=1", {
             headers: {
                 Authorization: `Bearer ${apiKey}`,
                 "Content-Type": "application/json"
             },
         });
 
-        if (response.ok) {
-            const data = await response.json();
-            // If we can get the user data, the API key is valid
-            return !!data;
-        }
-        return false;
+        // If we get a successful response, the API key is valid
+        return response.ok;
     } catch (error) {
         debugLog("Hugging Face API validation error:", error);
         return false;
     }
 }
+
+
 
 async function checkMistralRateLimits(apiKey: string): Promise<MistralRateLimit | null> {
     try {
