@@ -1,19 +1,27 @@
 {
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Assistant",
-  "description": "Generate meaningful git commit messages using Free/Paid AI (Mistral, Gemini, Hugging Face, or Ollama) to improve commit quality and consistency",
-  "version": "1.2.2",
+  "description": "Generate meaningful git commit messages using Free/Paid AI (Mistral, Gemini, Hugging Face, or Ollama) with support for conventional commits and multiple LLM models",
+  "version": "1.2.3",
   "publisher": "ShahabBahreiniJangjoo",
+  "private": false,
   "icon": "images/logo.png",
   "engines": {
-    "vscode": "^1.75.0"
+    "vscode": "^1.75.0",
+    "node": ">=16.0.0"
   },
   "categories": [
     "SCM Providers",
+    "Machine Learning",
+    "Formatters",
     "Other"
   ],
   "extensionDependencies": [
     "vscode.git"
+  ],
+  "activationEvents": [
+    "onCommand:ai-commit-assistant.generateCommitMessage",
+    "onCommand:ai-commit-assistant.openSettings"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -220,7 +228,15 @@
           "when": "scmProvider == git"
         }
       ]
-    }
+    },
+    "keybindings": [
+      {
+        "command": "ai-commit-assistant.generateCommitMessage",
+        "key": "ctrl+alt+g",
+        "mac": "cmd+alt+g",
+        "when": "scmProvider == git"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
@@ -228,13 +244,15 @@
     "watch": "npm-run-all -p watch:*",
     "watch:esbuild": "node esbuild.js --watch",
     "watch:tsc": "tsc --noEmit --watch",
-    "package": "npm run check-types && npm run lint && node esbuild.js --production",
+    "package": "npm run clean && npm run check-types && npm run lint && node esbuild.js --production",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "check-types": "tsc --noEmit",
-    "lint": "eslint src",
-    "test": "vscode-test"
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "test": "vscode-test",
+    "clean": "rimraf dist out",
+    "prepare": "npm run compile"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
@@ -247,6 +265,7 @@
     "esbuild": "^0.20.0",
     "eslint": "^8.56.0",
     "npm-run-all": "^4.1.5",
+    "rimraf": "^5.0.5",
     "typescript": "~5.3.3"
   },
   "dependencies": {
@@ -258,22 +277,79 @@
     "type": "git",
     "url": "https://github.com/shahabahreini/AI-Commit-Assistant.git"
   },
+  "bugs": {
+    "url": "https://github.com/shahabahreini/AI-Commit-Assistant/issues",
+    "email": "shahab.ahreini@gmail.com"
+  },
+  "homepage": "https://github.com/shahabahreini/AI-Commit-Assistant#readme",
   "keywords": [
     "git",
     "commit",
     "ai",
+    "artificial-intelligence",
     "gemini",
+    "gemini-ai",
+    "google-ai",
     "huggingface",
     "ollama",
-    "conventional commits",
-    "commit message",
-    "git message",
-    "debug"
+    "mistral",
+    "mistral-ai",
+    "conventional-commits",
+    "commit-message",
+    "git-message",
+    "commit-generator",
+    "git-automation",
+    "ai-assistant",
+    "semantic-commits",
+    "vscode-extension",
+    "vscode-git",
+    "code-quality",
+    "developer-tools",
+    "local-ai",
+    "llm",
+    "large-language-model",
+    "phi",
+    "llama",
+    "codellama",
+    "git-workflow",
+    "productivity"
   ],
-  "author": "Shahab Ahreini",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/shahabahreini/AI-Commit-Assistant/issues"
+  "author": {
+    "name": "Shahab Bahreini",
+    "email": "shahabahreini@hotmail.com",
+    "url": "https://github.com/shahabahreini"
   },
-  "homepage": "https://github.com/shahabahreini/AI-Commit-Assistant#readme"
+  "license": "MIT",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/shahabahreini"
+  },
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "badges": [
+    {
+      "url": "https://img.shields.io/visual-studio-marketplace/v/ShahabBahreiniJangjoo.ai-commit-assistant",
+      "href": "https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant",
+      "description": "VS Code Marketplace Version"
+    },
+    {
+      "url": "https://img.shields.io/visual-studio-marketplace/d/ShahabBahreiniJangjoo.ai-commit-assistant",
+      "href": "https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant",
+      "description": "VS Code Marketplace Downloads"
+    },
+    {
+      "url": "https://img.shields.io/visual-studio-marketplace/r/ShahabBahreiniJangjoo.ai-commit-assistant",
+      "href": "https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant",
+      "description": "Rating"
+    }
+  ],
+  "capabilities": {
+    "virtualWorkspaces": true,
+    "untrustedWorkspaces": {
+      "supported": true,
+      "description": "This extension requires API keys to be configured for full functionality."
+    }
+  }
 }
