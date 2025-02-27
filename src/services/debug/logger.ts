@@ -1,31 +1,72 @@
 // src/services/debug/logger.ts
 import * as vscode from "vscode";
 
-let debugChannel: vscode.OutputChannel | undefined;
+const EXTENSION_CONFIG_KEY = "aiCommitAssistant";
 
-export function initializeLogger(channel: vscode.OutputChannel) {
-    debugChannel = channel;
-    debugLog('Debug logger initialized');
-}
+class Logger {
+    private static instance: Logger;
+    private debugChannel?: vscode.OutputChannel;
 
-export function debugLog(message: string, data?: any) {
-    const config = vscode.workspace.getConfiguration("aiCommitAssistant");
-    const isDebugMode = config.get<boolean>("debug") || false;
+    private constructor() { }
 
-    if (isDebugMode && debugChannel) {
-        const timestamp = new Date().toISOString();
-        debugChannel.appendLine(`[${timestamp}] ${message}`);
-        if (data !== undefined) {
-            if (typeof data === 'string') {
-                debugChannel.appendLine(data);
-            } else {
-                try {
-                    debugChannel.appendLine(JSON.stringify(data, null, 2));
-                } catch (error) {
-                    debugChannel.appendLine(`[Error serializing data: ${error}]`);
-                }
-            }
+    static getInstance(): Logger {
+        if (!Logger.instance) {
+            Logger.instance = new Logger();
         }
-        debugChannel.show(true); // Force the debug channel to show
+        return Logger.instance;
+    }
+
+    initialize(channel: vscode.OutputChannel): void {
+        this.debugChannel = channel;
+        this.log('Debug logger initialized');
+    }
+
+    log(message: string, data?: unknown): void {
+        const config = vscode.workspace.getConfiguration(EXTENSION_CONFIG_KEY);
+        const isDebugMode = config.get<boolean>("debug") ?? false;
+
+        if (!isDebugMode || !this.debugChannel) {
+            return;
+        }
+
+        const timestamp = new Date().toISOString();
+        this.debugChannel.appendLine(`[${timestamp}] ${message}`);
+
+        if (data !== undefined) {
+            this.logData(data);
+        }
+
+        this.debugChannel.show(true);
+    }
+
+    private logData(data: unknown): void {
+        if (!this.debugChannel) {
+            return;
+        }
+
+        if (typeof data === 'string') {
+            this.debugChannel.appendLine(data);
+            return;
+        }
+
+        try {
+            const serializedData = JSON.stringify(data, null, 2);
+            this.debugChannel.appendLine(serializedData);
+        } catch (error) {
+            this.debugChannel.appendLine(
+                `[Error serializing data: ${error instanceof Error ? error.message : 'Unknown error'}]`
+            );
+        }
     }
 }
+
+// Export a singleton instance
+const logger = Logger.getInstance();
+
+export const initializeLogger = (channel: vscode.OutputChannel): void => {
+    logger.initialize(channel);
+};
+
+export const debugLog = (message: string, data?: unknown): void => {
+    logger.log(message, data);
+};
