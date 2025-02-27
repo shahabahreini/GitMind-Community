@@ -4,7 +4,7 @@ import { getButtonStyles } from "./buttons.css";
 import { getStatusBannerStyles } from "./statusBanner.css";
 
 export function getMainStyles(): string {
-    return `<style>
+  return `<style>
     body {
       padding: 20px;
       color: var(--vscode-foreground);
@@ -92,6 +92,122 @@ export function getMainStyles(): string {
       .button-group button {
         width: 100%;
       }
+    }
+
+    /* Status Dialog */
+    .status-dialog {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .status-dialog-content {
+      background-color: var(--vscode-editor-background);
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .status-dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .status-dialog-header h3 {
+      margin: 0;
+      padding: 0;
+      border-bottom: none;
+    }
+
+    .close-button {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: var(--vscode-foreground);
+    }
+
+    .status-dialog-body {
+      padding: 16px;
+    }
+
+    .status-spinner {
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      margin: 0 auto 16px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--vscode-textLink-foreground);
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .status-details {
+      margin-top: 16px;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .status-details.success {
+      border-left: 4px solid #28a745;
+    }
+
+    .status-details.error {
+      border-left: 4px solid #dc3545;
+    }
+
+    .status-success,
+    .status-error {
+      display: flex;
+      gap: 16px;
+      padding: 16px;
+      background-color: var(--vscode-editor-inactiveSelectionBackground);
+    }
+
+    .status-success svg {
+      color: #28a745;
+      flex-shrink: 0;
+    }
+
+    .status-error svg {
+      color: #dc3545;
+      flex-shrink: 0;
+    }
+
+    .status-success h4,
+    .status-error h4 {
+      margin-top: 0;
+      margin-bottom: 8px;
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .status-success ul,
+    .status-error ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .status-success p,
+    .status-error p {
+      margin-bottom: 0;
     }
 
     ${getFormStyles()}

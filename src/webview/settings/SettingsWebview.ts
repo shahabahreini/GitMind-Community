@@ -14,6 +14,16 @@ export class SettingsWebview {
   private _settingsManager: SettingsManager;
   private _messageHandler: MessageHandler;
 
+  public static postMessageToWebview(message: any): void {
+    if (SettingsWebview.currentPanel) {
+      SettingsWebview.currentPanel._panel.webview.postMessage(message);
+    }
+  }
+
+  public static isWebviewOpen(): boolean {
+    return !!SettingsWebview.currentPanel;
+  }
+
   public static createOrShow(extensionUri: vscode.Uri) {
     const column = vscode.window.activeTextEditor
       ? vscode.window.activeTextEditor.viewColumn

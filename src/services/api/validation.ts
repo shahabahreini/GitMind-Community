@@ -4,94 +4,145 @@ import { debugLog } from "../debug/logger";
 import { validateGeminiAPIKey } from "./gemini";
 import { getApiConfig } from "../../config/settings";
 
-export async function checkApiSetup(): Promise<void> {
+interface ApiCheckResult {
+    success: boolean;
+    provider: string;
+    model?: string;
+    responseTime?: number;
+    details?: string;
+    error?: string;
+    troubleshooting?: string;
+}
+
+interface RateLimitsCheckResult {
+    success: boolean;
+    limits?: {
+        reset: number;
+        limit: number;
+        remaining: number;
+        queryCost: number;
+    };
+    notes?: string;
+    error?: string;
+}
+
+
+export async function checkApiSetup(): Promise<ApiCheckResult> {
     const config = getApiConfig();
-    let status = "API Setup Check Results:\n\n";
+    let result: ApiCheckResult = {
+        success: false,
+        provider: config.type,
+        details: '',
+    };
 
     try {
         switch (config.type) {
             case "gemini":
                 if (!config.apiKey) {
-                    status += "❌ Gemini: API key not configured\n";
+                    result.error = "API key not configured";
                 } else {
                     const isValid = await validateGeminiAPIKey(config.apiKey);
-                    status += isValid
-                        ? "✅ Gemini: API key valid\n"
-                        : "❌ Gemini: Invalid API key\n";
+                    result.success = isValid;
+                    if (!isValid) {
+                        result.error = "Invalid API key";
+                        result.troubleshooting = "Please check your Gemini API key configuration";
+                    }
                 }
                 break;
 
             case "mistral":
                 if (!config.apiKey) {
-                    status += "❌ Mistral: API key not configured\n";
+                    result.error = "API key not configured";
                 } else {
                     const rateLimits = await checkMistralRateLimits(config.apiKey);
+                    result.success = !!rateLimits;
                     if (rateLimits) {
-                        status += "✅ Mistral: API key valid\n";
-                        status += `   Remaining requests: ${rateLimits.remaining}\n`;
-                        status += `   Reset time: ${new Date(rateLimits.reset * 1000).toLocaleString()}\n`;
+                        result.details = `Remaining requests: ${rateLimits.remaining}`;
                     } else {
-                        status += "❌ Mistral: Invalid API key\n";
+                        result.error = "Invalid API key";
+                        result.troubleshooting = "Please check your Mistral API key configuration";
                     }
                 }
                 break;
 
             case "huggingface":
                 if (!config.apiKey) {
-                    status += "❌ Hugging Face: API key not configured\n";
+                    result.error = "API key not configured";
                 } else {
                     const isValid = await validateHuggingFaceApiKey(config.apiKey);
-                    status += isValid
-                        ? "✅ Hugging Face: API key valid\n"
-                        : "❌ Hugging Face: Invalid API key\n";
+                    result.success = isValid;
+                    if (!isValid) {
+                        result.error = "Invalid API key";
+                        result.troubleshooting = "Please check your Hugging Face API key configuration";
+                    }
                 }
                 break;
 
             case "ollama":
                 const isAvailable = await checkOllamaAvailability(config.url || "http://localhost:11434");
-                status += isAvailable
-                    ? "✅ Ollama: Service available\n"
-                    : "❌ Ollama: Service not available\n";
+                result.success = isAvailable;
+                if (!isAvailable) {
+                    result.error = "Service not available";
+                    result.troubleshooting = "Please check if Ollama is running and accessible";
+                }
                 break;
         }
     } catch (error) {
-        status += `❌ Error during check: ${error instanceof Error ? error.message : String(error)}\n`;
+        result.success = false;
+        result.error = error instanceof Error ? error.message : String(error);
+        result.troubleshooting = "An unexpected error occurred during the API check";
     }
 
-    // Show results in information message
+    // Still show results in information message
+    const status = `API Setup Check Results:\n\n${result.success ? '✅' : '❌'} ${result.provider}: ${result.success ? 'Success' : result.error}`;
     await vscode.window.showInformationMessage(status, { modal: true });
+
+    return result;
 }
 
-export async function checkRateLimits(): Promise<void> {
+export async function checkRateLimits(): Promise<RateLimitsCheckResult> {
     const config = getApiConfig();
-    let status = "Rate Limits Status:\n\n";
+    let result: RateLimitsCheckResult = {
+        success: false
+    };
 
     try {
         switch (config.type) {
             case "mistral":
                 if (!config.apiKey) {
-                    status += "❌ Mistral: API key not configured\n";
+                    result.success = false;
+                    result.error = "API key not configured";
+                    result.notes = "Please configure your Mistral API key";
                 } else {
                     const rateLimits = await checkMistralRateLimits(config.apiKey);
                     if (rateLimits) {
-                        status += "Mistral API:\n";
-                        status += `- Remaining requests: ${rateLimits.remaining}\n`;
-                        status += `- Rate limit: ${rateLimits.limit}\n`;
-                        status += `- Reset time: ${new Date(rateLimits.reset * 1000).toLocaleString()}\n`;
-                        status += `- Query cost: ${rateLimits.queryCost}\n`;
+                        result.success = true;
+                        result.limits = rateLimits;
+                        result.notes = `Rate limits retrieved successfully for Mistral API`;
+                    } else {
+                        result.success = false;
+                        result.error = "Failed to retrieve rate limits";
+                        result.notes = "Please check your API key and try again";
                     }
                 }
                 break;
 
             default:
-                status += `${config.type}: Rate limits not available for this provider\n`;
+                result.success = false;
+                result.notes = `${config.type}: Rate limits not available for this provider`;
                 break;
         }
     } catch (error) {
-        status += `Error checking rate limits: ${error instanceof Error ? error.message : String(error)}\n`;
+        result.success = false;
+        result.error = error instanceof Error ? error.message : String(error);
+        result.notes = "An unexpected error occurred while checking rate limits";
     }
 
+    // Still show results in information message
+    const status = `Rate Limits Status:\n\n${result.success ? '✅' : '❌'} ${result.notes}`;
     await vscode.window.showInformationMessage(status, { modal: true });
+
+    return result;
 }
 
 async function validateHuggingFaceApiKey(apiKey: string): Promise<boolean> {
