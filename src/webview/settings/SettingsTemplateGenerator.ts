@@ -22,6 +22,7 @@ export class SettingsTemplateGenerator {
     </head>
     <body>
       <div class="settings-container">
+        ${this._getStatusBanner()}
         <h2>AI Commit Assistant Settings</h2>
         ${this._getGeneralSettings()}
         ${this._getGeminiSettings()}
@@ -153,7 +154,144 @@ export class SettingsTemplateGenerator {
         color: var(--vscode-descriptionForeground);
         margin-top: 4px;
       }
+      
+      /* Status Banner Styles */
+      .status-banner {
+        background-color: var(--vscode-editor-inactiveSelectionBackground);
+        border-radius: 6px;
+        padding: 16px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        border-left: 4px solid var(--vscode-activityBarBadge-background);
+      }
+      
+      .status-banner h3 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        border-bottom: none;
+        padding-bottom: 0;
+        color: var(--vscode-activityBarBadge-background);
+        font-size: 16px;
+      }
+      
+      .status-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 12px;
+      }
+      
+      .status-item {
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .status-label {
+        font-size: 12px;
+        color: var(--vscode-descriptionForeground);
+        margin-bottom: 4px;
+      }
+      
+      .status-value {
+        font-weight: 500;
+        color: var(--vscode-foreground);
+      }
+      
+      .status-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+        background-color: var(--vscode-activityBarBadge-background);
+        color: var(--vscode-activityBarBadge-foreground);
+      }
+      
+      .status-badge.gemini {
+        background-color: #1a73e8;
+      }
+      
+      .status-badge.huggingface {
+        background-color: #ffbd59;
+        color: #000;
+      }
+      
+      .status-badge.ollama {
+        background-color: #7c3aed;
+      }
+      
+      .status-badge.mistral {
+        background-color: #10b981;
+      }
     </style>`;
+  }
+
+  private _getStatusBanner(): string {
+    // Get provider-specific model info
+    let modelInfo = "";
+    switch (this._settings.apiProvider) {
+      case "gemini":
+        modelInfo = this._settings.gemini.model || "gemini-2.0-flash";
+        break;
+      case "huggingface":
+        modelInfo = this._settings.huggingface.model || "Not configured";
+        break;
+      case "ollama":
+        modelInfo = this._settings.ollama.model || "Not configured";
+        break;
+      case "mistral":
+        modelInfo = this._settings.mistral.model || "mistral-large-latest";
+        break;
+    }
+
+    // Get API configuration status
+    let apiConfigured = false;
+    switch (this._settings.apiProvider) {
+      case "gemini":
+        apiConfigured = !!this._settings.gemini.apiKey;
+        break;
+      case "huggingface":
+        apiConfigured = !!this._settings.huggingface.apiKey;
+        break;
+      case "ollama":
+        apiConfigured = !!this._settings.ollama.url;
+        break;
+      case "mistral":
+        apiConfigured = !!this._settings.mistral.apiKey;
+        break;
+    }
+
+    // Format provider name for display
+    const providerDisplay = {
+      gemini: "Gemini",
+      huggingface: "Hugging Face",
+      ollama: "Ollama",
+      mistral: "Mistral"
+    }[this._settings.apiProvider] || this._settings.apiProvider;
+
+    return `
+    <div class="status-banner">
+      <h3>Current Configuration</h3>
+      <div class="status-grid">
+        <div class="status-item">
+          <span class="status-label">Active Provider</span>
+          <span class="status-value">
+            <span class="status-badge ${this._settings.apiProvider}">${providerDisplay}</span>
+          </span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Model</span>
+          <span class="status-value">${modelInfo}</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">API Status</span>
+          <span class="status-value">${apiConfigured ? "Configured" : "Not Configured"}</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Commit Style</span>
+          <span class="status-value">${this._settings.commit?.verbose ? "Verbose" : "Concise"}</span>
+        </div>
+      </div>
+    </div>`;
   }
 
   private _getGeneralSettings(): string {
@@ -173,17 +311,16 @@ export class SettingsTemplateGenerator {
       <div class="form-group">
         <label for="apiProvider">API Provider</label>
         <select id="apiProvider">
-          <option value="gemini">Gemini</option>
-          <option value="huggingface">Hugging Face</option>
-          <option value="ollama">Ollama</option>
-          <option value="mistral">Mistral</option>
+          <option value="gemini" ${this._settings.apiProvider === "gemini" ? "selected" : ""}>Gemini</option>
+          <option value="huggingface" ${this._settings.apiProvider === "huggingface" ? "selected" : ""}>Hugging Face</option>
+          <option value="ollama" ${this._settings.apiProvider === "ollama" ? "selected" : ""}>Ollama</option>
+          <option value="mistral" ${this._settings.apiProvider === "mistral" ? "selected" : ""}>Mistral</option>
         </select>
       </div>
     </div>`;
   }
 
-  // src/webview/settings/SettingsTemplateGenerator.ts (continued)
-
+  // The rest of your methods remain the same...
   private _getGeminiSettings(): string {
     return `
     <div id="geminiSettings" class="settings-section">
@@ -193,16 +330,16 @@ export class SettingsTemplateGenerator {
           <label for="geminiApiKey">API Key</label>
           <a href="https://aistudio.google.com/app/apikey" class="learn-more" target="_blank">Learn more</a>
         </div>
-        <input type="password" id="geminiApiKey" />
+        <input type="password" id="geminiApiKey" value="${this._settings.gemini?.apiKey || ''}" />
       </div>
       <div class="form-group">
         <label for="geminiModel">Model</label>
         <select id="geminiModel">
-          <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-          <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash-Lite</option>
-          <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-          <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash-8B</option>
-          <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+          <option value="gemini-2.0-flash" ${this._settings.gemini?.model === "gemini-2.0-flash" ? "selected" : ""}>Gemini 2.0 Flash</option>
+          <option value="gemini-2.0-flash-lite" ${this._settings.gemini?.model === "gemini-2.0-flash-lite" ? "selected" : ""}>Gemini 2.0 Flash-Lite</option>
+          <option value="gemini-1.5-flash" ${this._settings.gemini?.model === "gemini-1.5-flash" ? "selected" : ""}>Gemini 1.5 Flash</option>
+          <option value="gemini-1.5-flash-8b" ${this._settings.gemini?.model === "gemini-1.5-flash-8b" ? "selected" : ""}>Gemini 1.5 Flash-8B</option>
+          <option value="gemini-1.5-pro" ${this._settings.gemini?.model === "gemini-1.5-pro" ? "selected" : ""}>Gemini 1.5 Pro</option>
         </select>
         <div class="description">
           Gemini 2.0 Flash is recommended for optimal performance and speed.
@@ -221,14 +358,14 @@ export class SettingsTemplateGenerator {
           <label for="huggingfaceApiKey">API Key</label>
           <a href="https://huggingface.co/settings/tokens" class="learn-more" target="_blank">Learn more</a>
         </div>
-        <input type="password" id="huggingfaceApiKey" />
+        <input type="password" id="huggingfaceApiKey" value="${this._settings.huggingface?.apiKey || ''}" />
       </div>
       <div class="form-group">
         <div class="label-container">
           <label for="huggingfaceModel">Model</label>
           <a href="https://huggingface.co/models" class="learn-more" target="_blank">Learn more</a>
         </div>
-        <input type="text" id="huggingfaceModel" placeholder="e.g., mistralai/Mistral-7B-Instruct-v0.3" />
+        <input type="text" id="huggingfaceModel" placeholder="e.g., mistralai/Mistral-7B-Instruct-v0.3" value="${this._settings.huggingface?.model || ''}" />
         <div class="description">
           Examples: mistralai/Mistral-7B-Instruct-v0.3,
           facebook/bart-large-cnn
@@ -242,15 +379,15 @@ export class SettingsTemplateGenerator {
     <div id="ollamaSettings" class="settings-section">
       <h3>Ollama Settings</h3>
       <div class="form-group">
-        <label for="ollamaUrl">URL</label>
-        <input type="text" id="ollamaUrl" placeholder="http://localhost:11434" />
+                <label for="ollamaUrl">URL</label>
+        <input type="text" id="ollamaUrl" placeholder="http://localhost:11434" value="${this._settings.ollama?.url || ''}" />
       </div>
       <div class="form-group">
         <div class="label-container">
           <label for="ollamaModel">Model</label>
           <a href="https://ollama.ai/library" class="learn-more" target="_blank">Learn more</a>
         </div>
-        <input type="text" id="ollamaModel" placeholder="e.g., phi4" />
+        <input type="text" id="ollamaModel" placeholder="e.g., phi4" value="${this._settings.ollama?.model || ''}" />
         <div class="description">
           Examples: mistral, llama2, codellama, phi4, qwen2.5-coder
         </div>
@@ -267,15 +404,15 @@ export class SettingsTemplateGenerator {
           <label for="mistralApiKey">API Key</label>
           <a href="https://console.mistral.ai/api-keys/" class="learn-more" target="_blank">Learn more</a>
         </div>
-        <input type="password" id="mistralApiKey" />
+        <input type="password" id="mistralApiKey" value="${this._settings.mistral?.apiKey || ''}" />
       </div>
       <div class="form-group">
         <label for="mistralModel">Model</label>
         <select id="mistralModel">
-          <option value="mistral-tiny">Mistral Tiny</option>
-          <option value="mistral-small">Mistral Small</option>
-          <option value="mistral-medium">Mistral Medium</option>
-          <option value="mistral-large-latest">Mistral Large (Latest)</option>
+          <option value="mistral-tiny" ${this._settings.mistral?.model === "mistral-tiny" ? "selected" : ""}>Mistral Tiny</option>
+          <option value="mistral-small" ${this._settings.mistral?.model === "mistral-small" ? "selected" : ""}>Mistral Small</option>
+          <option value="mistral-medium" ${this._settings.mistral?.model === "mistral-medium" ? "selected" : ""}>Mistral Medium</option>
+          <option value="mistral-large-latest" ${this._settings.mistral?.model === "mistral-large-latest" ? "selected" : ""}>Mistral Large (Latest)</option>
         </select>
       </div>
     </div>`;
