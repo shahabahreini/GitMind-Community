@@ -5,6 +5,36 @@ All notable changes to the "AI Commit Assistant" extension will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-02-27
+
+### Added
+
+- New settings webview with configurable options for API providers, API keys, and models
+- Status banner in settings view displaying current configuration status
+- Enhanced API and rate limit checks with detailed feedback in settings webview
+- Improved API setup validation with timeouts and better error handling
+- New Hugging Face API key validation using models endpoint
+
+### Changed
+
+- Refactored settings management for better modularity:
+  - Modularized settings generator with separate component classes
+  - Extracted CSS styles into separate modules
+  - Created separate script files for managing API and UI logic
+- Enhanced API setup and rate limit checks:
+  - Added 15-second timeouts to prevent indefinite hanging
+  - Improved error handling with specific messages
+  - Added troubleshooting tips for API issues
+- Updated Hugging Face API key validation to use models endpoint for better authentication
+
+### Technical
+
+- Implemented new settings webview architecture with modular components
+- Added status banner component for configuration visibility
+- Enhanced API validation with timeout mechanisms
+- Improved error handling and user feedback systems
+- Updated Hugging Face API validation endpoint to `/api/models?limit=1`
+
 ## [1.2.2] - 2025-02-27
 
 ### Added
