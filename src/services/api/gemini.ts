@@ -49,6 +49,30 @@ const MODEL_CONFIGS: Record<GeminiModel, GenerationConfig> = {
     },
 };
 
+function enforceCommitMessageFormat(message: string): string {
+    // Split the message into lines
+    const lines = message.split('\n');
+
+    if (lines.length === 0) {
+        return message;
+    }
+
+    // Get the first line (subject line)
+    let subjectLine = lines[0].trim();
+
+    // Truncate the subject line if it exceeds 72 characters
+    if (subjectLine.length > 72) {
+        subjectLine = subjectLine.substring(0, 72);
+        // Ensure we don't cut in the middle of a word
+        if (subjectLine.lastIndexOf(' ') > 0) {
+            subjectLine = subjectLine.substring(0, subjectLine.lastIndexOf(' '));
+        }
+    }
+
+    // Reconstruct the message with the truncated subject line
+    return [subjectLine, ...lines.slice(1)].join('\n');
+}
+
 export async function callGeminiAPI(apiKey: string, model: string, diff: string): Promise<string> {
     if (!apiKey || apiKey.trim() === '') {
         debugLog("Error: Gemini API key is missing or empty");
@@ -105,22 +129,16 @@ export async function callGeminiAPI(apiKey: string, model: string, diff: string)
             throw new Error("Empty response from Gemini API");
         }
 
-        const response = result.response;
+        const response = await result.response;
+        const generatedText = response.text();
 
-        // Check for blocked response
-        if (response.promptFeedback?.blockReason) {
-            throw new Error(`Response blocked: ${response.promptFeedback.blockReason}`);
+        if (!generatedText) {
+            throw new Error("No generated text in response");
         }
 
-        const commitMessage = response.text().trim();
-        debugLog("Gemini Response:", commitMessage);
-
-        // Validate commit message format
-        if (!commitMessage.match(/^(feat|fix|docs|style|refactor|test|chore|ci|pref):/)) {
-            throw new Error("Invalid commit message format: Missing or invalid type prefix");
-        }
-
-        return commitMessage;
+        const formattedMessage = enforceCommitMessageFormat(generatedText);
+        debugLog("Gemini API Response:", formattedMessage);
+        return formattedMessage;
     } catch (error) {
         debugLog("Gemini API Call Failed:", error);
 
@@ -137,6 +155,11 @@ export async function callGeminiAPI(apiKey: string, model: string, diff: string)
         // Handle invalid API key
         if (error instanceof Error && error.message.includes("INVALID_ARGUMENT")) {
             throw new Error("Invalid API key or configuration. Please check your settings.");
+        }
+
+        // Add specific handling for response processing errors
+        if (error instanceof Error && error.message.includes("text")) {
+            throw new Error("Failed to process Gemini response: " + error.message);
         }
 
         // Handle other errors
