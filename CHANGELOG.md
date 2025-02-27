@@ -5,6 +5,28 @@ All notable changes to the "AI Commit Assistant" extension will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2025-02-27
+
+### Added
+
+- Unified prompt system across all AI providers
+- Standardized commit message format with configurable options
+- Enhanced token management with increased output token limits
+
+### Changed
+
+- Refactored API services to use a centralized prompt generator
+- Increased Gemini model output token limit to 7000
+- Improved commit message formatting consistency across providers
+- Enhanced type validation for commit message prefixes
+
+### Technical
+
+- Added new `prompts.ts` module for centralized prompt management
+- Implemented `PromptConfig` interface for flexible prompt configuration
+- Added scope support in commit message format
+- Enhanced commit message format validation
+
 ## [1.2.0] - 2025-02-25
 
 ### Added

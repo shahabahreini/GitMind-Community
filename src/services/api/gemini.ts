@@ -7,6 +7,7 @@ import {
 } from "@google/generative-ai";
 import { debugLog } from "../debug/logger";
 import { GeminiModel } from "../../config/types";
+import { generateCommitPrompt } from './prompts';
 
 interface GenerationConfig {
     temperature: number;
@@ -20,31 +21,31 @@ const MODEL_CONFIGS: Record<GeminiModel, GenerationConfig> = {
         temperature: 0.2,
         topK: 40,
         topP: 0.9,
-        maxOutputTokens: 1024,
+        maxOutputTokens: 7000,
     },
     [GeminiModel.GEMINI_2_FLASH_LITE]: {
         temperature: 0.2,
         topK: 40,
         topP: 0.9,
-        maxOutputTokens: 1024,
+        maxOutputTokens: 7000,
     },
     [GeminiModel.GEMINI_1_5_FLASH]: {
         temperature: 0.2,
         topK: 40,
         topP: 0.9,
-        maxOutputTokens: 1024,
+        maxOutputTokens: 7000,
     },
     [GeminiModel.GEMINI_1_5_FLASH_8B]: {
         temperature: 0.2,
         topK: 40,
         topP: 0.9,
-        maxOutputTokens: 1024,
+        maxOutputTokens: 7000,
     },
     [GeminiModel.GEMINI_1_5_PRO]: {
         temperature: 0.2,
         topK: 40,
         topP: 0.9,
-        maxOutputTokens: 1024,
+        maxOutputTokens: 7000,
     },
 };
 
@@ -69,37 +70,7 @@ export async function callGeminiAPI(apiKey: string, model: string, diff: string)
         const generationConfig = MODEL_CONFIGS[model as GeminiModel];
         debugLog("Using generation config", { generationConfig });
 
-        const promptText = `You are a Git commit message generator. Analyze the following diff and create ONE commit message that accurately describes these changes.
-
-Git Diff:
-${diff}
-
-Requirements:
-
-1. Subject Line (First Line):
-   - Must start with one of: feat|fix|docs|style|refactor|test|chore
-   - Maximum 72 characters
-   - Use imperative mood ("Add" not "Added")
-   - No period at the end
-   - Must be technical and specific
-
-2. Type Definitions:
-   - feat: New feature or significant enhancement
-   - fix: Bug fix
-   - docs: Documentation changes only
-   - style: Code style/formatting changes (no code change)
-   - refactor: Code refactoring (no functional change)
-   - test: Adding/modifying tests
-   - chore: Maintenance tasks, build changes, etc.
-
-3. Format:
-<type>: <concise description>
-
-- <detailed change explanation>
-- <additional context if needed>
-
-Generate exactly ONE commit message following this format. Be concise and technical. No alternatives or explanations.`;
-
+        const promptText = generateCommitPrompt(diff);
         debugLog("Sending prompt to Gemini API");
         debugLog("Prompt:", promptText);
 
@@ -145,7 +116,7 @@ Generate exactly ONE commit message following this format. Be concise and techni
         debugLog("Gemini Response:", commitMessage);
 
         // Validate commit message format
-        if (!commitMessage.match(/^(feat|fix|docs|style|refactor|test|chore):/)) {
+        if (!commitMessage.match(/^(feat|fix|docs|style|refactor|test|chore|ci|pref):/)) {
             throw new Error("Invalid commit message format: Missing or invalid type prefix");
         }
 

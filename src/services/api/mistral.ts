@@ -1,5 +1,6 @@
 import { debugLog } from "../debug/logger";
 import { MistralResponse, MistralRateLimit } from "../../config/types";
+import { generateCommitPrompt } from './prompts';
 
 function extractRateLimits(headers: Headers): MistralRateLimit {
     return {
@@ -10,34 +11,32 @@ function extractRateLimits(headers: Headers): MistralRateLimit {
     };
 }
 
+function enforceCommitMessageFormat(message: string): string {
+    // Split the message into lines
+    const lines = message.split('\n');
+
+    if (lines.length === 0) {
+        return message;
+    }
+
+    // Get the first line (subject line)
+    let subjectLine = lines[0].trim();
+
+    // Truncate the subject line if it exceeds 72 characters
+    if (subjectLine.length > 72) {
+        subjectLine = subjectLine.substring(0, 72);
+        // Ensure we don't cut in the middle of a word
+        if (subjectLine.lastIndexOf(' ') > 0) {
+            subjectLine = subjectLine.substring(0, subjectLine.lastIndexOf(' '));
+        }
+    }
+
+    // Reconstruct the message with the truncated subject line
+    return [subjectLine, ...lines.slice(1)].join('\n');
+}
+
 export async function callMistralAPI(apiKey: string, model: string, diff: string): Promise<string> {
-    const prompt = `As a Git commit message generator, analyze this specific diff and create ONE commit message that accurately describes these changes:
-
-Git Diff:
-${diff}
-
-## Requirements
-
-### Subject Line (First Line)
-- Must start with one of these types:
-  - feat: New feature
-  - fix: Bug fix
-  - docs: Documentation changes
-  - style: Code style/formatting changes (no code change)
-  - refactor: Code refactoring (no functional change)
-  - test: Adding/modifying tests
-  - chore: Maintenance tasks, build changes, etc.
-- Maximum 72 characters
-- Use imperative mood ("Add" not "Added")
-- No period at the end
-- Must be technical and specific
-
-## Expected Format
-<type>: <concise description>
-
-- <detailed change explanation>
-- <additional context if needed>`;
-
+    const prompt = generateCommitPrompt(diff);
     debugLog("Calling Mistral API", { model });
     debugLog("Prompt:", prompt);
 
@@ -85,8 +84,10 @@ ${diff}
             throw new Error("No generated text in response");
         }
 
-        debugLog("Mistral API Response:", generatedText);
-        return generatedText;
+        // Apply the commit message formatting rules
+        const formattedMessage = enforceCommitMessageFormat(generatedText);
+        debugLog("Mistral API Response:", formattedMessage);
+        return formattedMessage;
 
     } catch (error) {
         if (error instanceof Error) {
