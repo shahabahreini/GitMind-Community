@@ -221,7 +221,9 @@ async function checkMistralRateLimits(apiKey: string): Promise<MistralRateLimit 
             reset: parseInt(response.headers.get('ratelimitbysize-reset') || '0'),
             limit: parseInt(response.headers.get('ratelimitbysize-limit') || '0'),
             remaining: parseInt(response.headers.get('ratelimitbysize-remaining') || '0'),
-            queryCost: parseInt(response.headers.get('ratelimitbysize-query-cost') || '0')
+            queryCost: parseInt(response.headers.get('ratelimitbysize-query-cost') || '0'),
+            monthlyLimit: parseInt(response.headers.get('ratelimitbysize-monthly-limit') || '0'),
+            monthlyRemaining: parseInt(response.headers.get('ratelimitbysize-monthly-remaining') || '0')
         };
     } catch (error) {
         debugLog("Mistral rate limit check error:", error);

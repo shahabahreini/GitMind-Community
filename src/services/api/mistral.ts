@@ -7,7 +7,9 @@ function extractRateLimits(headers: Headers): MistralRateLimit {
         reset: parseInt(headers.get('ratelimitbysize-reset') || '0'),
         limit: parseInt(headers.get('ratelimitbysize-limit') || '0'),
         remaining: parseInt(headers.get('ratelimitbysize-remaining') || '0'),
-        queryCost: parseInt(headers.get('ratelimitbysize-query-cost') || '0')
+        queryCost: parseInt(headers.get('ratelimitbysize-query-cost') || '0'),
+        monthlyLimit: parseInt(headers.get('x-ratelimitbysize-limit-month') || '0'),
+        monthlyRemaining: parseInt(headers.get('x-ratelimitbysize-remaining-month') || '0')
     };
 }
 
@@ -62,7 +64,7 @@ export async function callMistralAPI(apiKey: string, model: string, diff: string
 
         // Check rate limits
         if (rateLimits.remaining <= 0) {
-            const resetTime = new Date(rateLimits.reset * 1000);
+            const resetTime = new Date(Date.now() + rateLimits.reset * 1000);
             throw new Error(`Rate limit exceeded. Reset at ${resetTime.toLocaleString()}`);
         }
 
