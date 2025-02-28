@@ -66,6 +66,84 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
       // Show success message
       showToast('Settings saved successfully', 'success');
     }
+
+    // Listen for messages from the extension
+    window.addEventListener('message', event => {
+      const message = event.data;
+      
+      switch (message.command) {
+        // ... existing cases
+        
+        case 'mistralModelsLoaded':
+          const mistralModelSelect = document.getElementById('mistralModel');
+          if (mistralModelSelect) {
+            // Store the currently selected value
+            const currentValue = mistralModelSelect.value;
+            
+            // Clear existing options
+            mistralModelSelect.innerHTML = '';
+            
+            if (message.success && message.models && message.models.length > 0) {
+              // Add models to dropdown
+              message.models.forEach(modelId => {
+                const option = document.createElement('option');
+                option.value = modelId;
+                option.textContent = modelId;
+                // Select the option if it matches the current settings or was previously selected
+                option.selected = modelId === currentValue || 
+                                  (currentValue === '' && modelId === currentSettings.mistral.model);
+                mistralModelSelect.appendChild(option);
+              });
+              
+              showToast('Mistral models loaded successfully', 'success');
+            } else {
+              // Add default options if loading failed
+              const defaultModels = ['mistral-tiny', 'mistral-small', 'mistral-medium', 'mistral-large-latest'];
+              
+              // Add the current model from settings if it's not in default models
+              if (currentSettings.mistral.model && !defaultModels.includes(currentSettings.mistral.model)) {
+                const option = document.createElement('option');
+                option.value = currentSettings.mistral.model;
+                option.textContent = currentSettings.mistral.model;
+                option.selected = true;
+                mistralModelSelect.appendChild(option);
+              }
+              
+              // Add default models
+              defaultModels.forEach(modelId => {
+                const option = document.createElement('option');
+                option.value = modelId;
+                option.textContent = modelId;
+                option.selected = modelId === currentSettings.mistral.model;
+                mistralModelSelect.appendChild(option);
+              });
+              
+              showToast('Failed to load Mistral models: ' + (message.error || 'Unknown error'), 'error');
+            }
+              
+            // Reset the load button
+            const loadButton = document.getElementById('loadMistralModels');
+            if (loadButton) {
+              loadButton.textContent = 'Load Available Models';
+              loadButton.disabled = false;
+            }
+          }
+          break;
+      }
+    });
+
+    // Add event listener for the load models button
+    document.getElementById('loadMistralModels').addEventListener('click', function() {
+      // Show loading state
+      const mistralModelSelect = document.getElementById('mistralModel');
+      mistralModelSelect.innerHTML = '<option value="">Loading models...</option>';
+      
+      // Send message to extension to load models
+      vscode.postMessage({
+        command: 'executeCommand',
+        commandId: 'ai-commit-assistant.loadMistralModels'
+      });
+    });
     
     // Listen for messages from the extension
     window.addEventListener('message', event => {

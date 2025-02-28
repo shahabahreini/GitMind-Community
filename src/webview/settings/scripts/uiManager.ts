@@ -1,6 +1,6 @@
 // src/webview/settings/scripts/uiManager.ts
 export function getUiManagerScript(): string {
-    return `
+  return `
       // Show/hide sections based on selected provider
       function updateVisibleSettings() {
         const provider = document.getElementById('apiProvider').value;
@@ -20,6 +20,18 @@ export function getUiManagerScript(): string {
       // Add event listener for future changes
       document.getElementById('apiProvider').addEventListener('change', updateVisibleSettings);
       
+      // Add event listener for API key change
+      document.getElementById('mistralApiKey').addEventListener('change', function() {
+        const apiKey = this.value.trim();
+        if (apiKey && apiKey.length > 10) {
+          // If we have what looks like a valid API key, try loading models
+          vscode.postMessage({
+            command: 'executeCommand',
+            commandId: 'ai-commit-assistant.loadMistralModels'
+          });
+        }
+      });
+
       // Toast notification system
       function showToast(message, type = 'success') {
         const toast = document.getElementById('toast');

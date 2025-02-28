@@ -12,6 +12,7 @@ import { initializeLogger, debugLog } from "./services/debug/logger";
 import { processResponse } from "./utils/commitFormatter";
 import { SettingsWebview } from "./webview/settings/SettingsWebview";
 import { OnboardingManager } from "./utils/onboardingManager";
+import { fetchMistralModels } from "./services/api/mistral";
 
 const state: ExtensionState = {
   debugChannel: vscode.window.createOutputChannel("AI Commit Assistant Debug"),
@@ -317,6 +318,56 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  // Register command to load Mistral models
+  let loadMistralModelsCommand = vscode.commands.registerCommand(
+    "ai-commit-assistant.loadMistralModels",
+    async () => {
+      try {
+        const config = getApiConfig();
+        if (config.type !== "mistral" || !config.apiKey) {
+          throw new Error("Mistral API key is required to load models");
+        }
+
+        // Show progress notification
+        await vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title: "Loading Mistral models...",
+            cancellable: false
+          },
+          async () => {
+            try {
+              const models = await fetchMistralModels(config.apiKey);
+
+              // Send models to webview
+              if (SettingsWebview.isWebviewOpen()) {
+                SettingsWebview.postMessageToWebview({
+                  command: 'mistralModelsLoaded',
+                  success: true,
+                  models: models
+                });
+              }
+            } catch (error) {
+              debugLog("Load Mistral Models Error:", error);
+
+              // Send error to webview
+              if (SettingsWebview.isWebviewOpen()) {
+                SettingsWebview.postMessageToWebview({
+                  command: 'mistralModelsLoaded',
+                  success: false,
+                  error: error instanceof Error ? error.message : 'Unknown error'
+                });
+              }
+            }
+          }
+        );
+      } catch (error) {
+        debugLog("Load Mistral Models Error:", error);
+        vscode.window.showErrorMessage(`Error loading Mistral models: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+  );
+
   // Register all disposables
   context.subscriptions.push(
     state.debugChannel,
@@ -328,7 +379,8 @@ export async function activate(context: vscode.ExtensionContext) {
     acceptInputCommand,
     settingsCommand,
     checkApiSetupCommand,
-    checkRateLimitsCommand
+    checkRateLimitsCommand,
+    loadMistralModelsCommand
   );
 
   // Show onboarding for new users

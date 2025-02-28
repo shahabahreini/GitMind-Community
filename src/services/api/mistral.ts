@@ -99,3 +99,32 @@ export async function callMistralAPI(apiKey: string, model: string, diff: string
         throw new Error(`Unexpected error during Mistral API call: ${String(error)}`);
     }
 }
+
+export async function fetchMistralModels(apiKey: string): Promise<string[]> {
+    try {
+        const response = await fetch("https://api.mistral.ai/v1/models", {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${apiKey}`,
+                "Accept": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch models: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        // Filter models that have completion_chat capability set to true
+        const chatModels = data.data
+            .filter((model: any) => model.capabilities?.completion_chat === true)
+            .map((model: any) => model.id);
+
+        debugLog("Available Mistral chat models:", chatModels);
+        return chatModels;
+    } catch (error) {
+        debugLog("Error fetching Mistral models:", error);
+        throw error;
+    }
+}
