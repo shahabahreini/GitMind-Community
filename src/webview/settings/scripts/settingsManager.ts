@@ -238,16 +238,39 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
               
               if (typeof message.limits === 'object') {
                 limitsHtml += '<ul>';
-                for (const [key, value] of Object.entries(message.limits)) {
-                  limitsHtml += \`<li><strong>\${key}:</strong> \${value}</li>\`;
+                
+                // Format reset time as human-readable
+                if (message.limits.reset) {
+                  const resetDate = new Date();
+                  resetDate.setSeconds(resetDate.getSeconds() + message.limits.reset);
+                  limitsHtml += \`<li><strong>Reset in:</strong> \${message.limits.reset} seconds (\${resetDate.toLocaleTimeString()})</li>\`;
                 }
+                
+                // Add other limit information
+                if (message.limits.limit) {
+                  limitsHtml += \`<li><strong>Per-minute limit:</strong> \${message.limits.limit} tokens</li>\`;
+                }
+                if (message.limits.remaining) {
+                  limitsHtml += \`<li><strong>Remaining:</strong> \${message.limits.remaining} tokens</li>\`;
+                }
+                if (message.limits.queryCost) {
+                  limitsHtml += \`<li><strong>This request cost:</strong> \${message.limits.queryCost} tokens</li>\`;
+                }
+                if (message.limits.monthlyLimit) {
+                  limitsHtml += \`<li><strong>Monthly limit:</strong> \${message.limits.monthlyLimit} tokens</li>\`;
+                }
+                if (message.limits.monthlyRemaining) {
+                  limitsHtml += \`<li><strong>Monthly remaining:</strong> \${message.limits.monthlyRemaining} tokens</li>\`;
+                }
+
+                
                 limitsHtml += '</ul>';
               } else {
                 limitsHtml += \`<p>\${message.limits || 'No specific limits reported'}</p>\`;
               }
               
               if (message.notes) {
-                limitsHtml += \`<h4>Notes</h4><p>\${message.notes}</p>\`;
+                limitsHtml += \`<div class="rate-limit-note"><p><strong>Note:</strong> \${message.notes}</p></div>\`;
               }
               
               limitsHtml += '</div></div>';
