@@ -1,5 +1,6 @@
 import { CommitMessage } from "../config/types";
 import { debugLog } from "../services/debug/logger";
+import sanitizeHtml from 'sanitize-html';
 
 export function parseMarkdownContent(content: string): CommitMessage {
     const summaryMatch = content.match(/# Commit Summary\s*\n([^\n#]*)/);
@@ -27,11 +28,21 @@ export function cleanDeepSeekResponse(response: string): string {
         }
     }
 
-    return response
-        .replace(/<think>[\s\S]*?<\/think>/g, '')
-        .replace(/<[^>]*>/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
+    let previous;
+    do {
+        previous = response;
+        response = response
+            .replace(/<think>[\s\S]*?<\/think>/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    } while (response !== previous);
+
+    response = sanitizeHtml(response, {
+        allowedTags: [],
+        allowedAttributes: {}
+    });
+
+    return response;
 }
 
 export function cleanGeminiResponse(response: string): string {
