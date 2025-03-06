@@ -60,11 +60,15 @@ export async function processResponse(response: string): Promise<CommitMessage> 
         let previousSummary;
         do {
             previousSummary = summary;
-            summary = summary
-                .replace(/\[.*?\]/g, "")
-                .replace(/<[^>]+>/g, "")
-                .replace(/\s+/g, " ")
-                .trim();
+            let previousSummary;
+            do {
+                previousSummary = summary;
+                summary = summary
+                    .replace(/\[.*?\]/g, "")
+                    .replace(/<[^>]+>/g, "")
+                    .replace(/\s+/g, " ")
+                    .trim();
+            } while (summary !== previousSummary);
         } while (summary !== previousSummary);
 
         if (summary.length > 72) {
