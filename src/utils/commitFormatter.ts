@@ -57,21 +57,17 @@ export async function processResponse(response: string): Promise<CommitMessage> 
             }
         }
 
-        let previousSummary;
+        let previousSummary: string;
         do {
             previousSummary = summary;
-            let previousSummary;
-            do {
-                previousSummary = summary;
-                summary = summary
-                    .replace(/\[.*?\]/g, "")
-                    .replace(/<[^>]+>/g, "")
-                    .replace(/\s+/g, " ")
-                    .trim();
-            } while (summary !== previousSummary);
+            summary = summary
+                .replace(/\[.*?\]/g, "")
+                .replace(/<[^>]+>/g, "")
+                .replace(/\s+/g, " ")
+                .trim();
         } while (summary !== previousSummary);
 
-        if (summary.length > 72) {
+        if (typeof summary === 'string' && summary.length > 72) {
             summary = summary.substring(0, 69) + "...";
         }
 

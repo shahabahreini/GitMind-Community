@@ -175,9 +175,21 @@ export async function activate(context: vscode.ExtensionContext) {
     async () => {
       const message = inputBox.value;
       if (message) {
-        await vscode.commands.executeCommand(
-          "ai-commit-assistant.generateCommitMessage"
-        );
+        debugLog("Accepting input message:", message);
+        try {
+          // If there's already a message in the input box, use it directly
+          // This allows users to manually edit or accept the generated message
+          await vscode.commands.executeCommand("git.commit");
+          vscode.window.showInformationMessage("Commit created successfully!");
+        } catch (error) {
+          debugLog("Accept Input Error:", error);
+          vscode.window.showErrorMessage(`Error creating commit: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          // If direct commit fails, fall back to generating a message
+          await vscode.commands.executeCommand("ai-commit-assistant.generateCommitMessage");
+        }
+      } else {
+        // If no message exists, generate one
+        await vscode.commands.executeCommand("ai-commit-assistant.generateCommitMessage");
       }
     }
   );

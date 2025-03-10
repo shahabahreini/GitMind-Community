@@ -2,12 +2,18 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Assistant",
   "description": "Generate meaningful git commit messages using Free/Paid AI (Mistral, Gemini, Hugging Face, or Ollama) with support for conventional commits and multiple LLM models",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
   "engines": {
-    "vscode": "^1.75.0",
+    "vscode": "^1.75.0"
+  },
+  "vsce": {
+    "dependencies": false,
+    "yarn": true
+  },
+  "volta": {
     "node": ">=16.0.0"
   },
   "categories": [
@@ -20,8 +26,8 @@
     "vscode.git"
   ],
   "activationEvents": [
-    "onCommand:ai-commit-assistant.generateCommitMessage",
-    "onCommand:ai-commit-assistant.openSettings"
+    "onStartupFinished",
+    "workspaceContains:.git"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -160,14 +166,6 @@
         "category": "AI Commit Assistant"
       },
       {
-        "command": "ai-commit-assistant.loadingIndicator",
-        "title": "Generating...",
-        "icon": {
-          "light": "resources/light/loading.svg",
-          "dark": "resources/dark/loading.svg"
-        }
-      },
-      {
         "command": "ai-commit-assistant.openSettings",
         "title": "Open Settings UI",
         "category": "AI Commit Assistant",
@@ -189,6 +187,11 @@
       {
         "command": "ai-commit-assistant.loadMistralModels",
         "title": "Load Mistral Models",
+        "category": "AI Commit Assistant"
+      },
+      {
+        "command": "ai-commit-assistant.acceptInput",
+        "title": "Accept Input",
         "category": "AI Commit Assistant"
       }
     ],
@@ -262,11 +265,13 @@
   "devDependencies": {
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.11.16",
+    "@types/sanitize-html": "^2.13.0",
     "@types/vscode": "^1.75.0",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "@vscode/test-cli": "^0.0.4",
     "@vscode/test-electron": "^2.3.8",
+    "@vscode/vsce": "^3.2.2",
     "esbuild": "^0.20.0",
     "eslint": "^8.56.0",
     "npm-run-all": "^4.1.5",
