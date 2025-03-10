@@ -5,8 +5,20 @@ All notable changes to the "AI Commit Assistant" extension will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-<<<<<<< HEAD
-=======
+## [1.3.2] - 2025-03-10
+
+### Changed
+
+- Enhanced input handling for commit messages
+- Improved summary processing in commit formatter
+- Updated activation events for better performance
+
+### Technical
+
+- Updated package version to 1.3.2
+- Configured npm to disable version control warnings and use Yarn
+- Added volta configuration for node version management
+
 ## [1.3.1] - 2025-03-01
 
 ### Added
@@ -51,7 +63,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Code optimization and architecture improvements
 - Updated package version to 1.3.1
 
->>>>>>> 01dfacd74af0c03be7e213d3ffecc013890ccee2
 ## [1.3.0] - 2025-02-27
 
 ### Added
