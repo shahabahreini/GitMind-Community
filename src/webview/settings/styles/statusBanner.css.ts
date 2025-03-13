@@ -1,6 +1,6 @@
 // src/webview/settings/styles/statusBanner.css.ts
 export function getStatusBannerStyles(): string {
-    return `
+  return `
       .status-banner {
         background-color: var(--vscode-editor-inactiveSelectionBackground);
         border-radius: 6px;
@@ -67,6 +67,10 @@ export function getStatusBannerStyles(): string {
       
       .status-badge.mistral {
         background-color: #10b981;
+      }
+      
+      .status-badge.cohere {
+        background-color:rgb(179, 240, 24);
       }
     `;
 }

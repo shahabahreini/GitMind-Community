@@ -3,56 +3,63 @@ import { ExtensionSettings } from "../../../models/ExtensionSettings";
 import { getStatusBannerStyles } from "../styles/statusBanner.css";
 
 export class StatusBanner {
-    private _settings: ExtensionSettings;
+  private _settings: ExtensionSettings;
 
-    constructor(settings: ExtensionSettings) {
-        this._settings = settings;
+  constructor(settings: ExtensionSettings) {
+    this._settings = settings;
+  }
+
+  public render(): string {
+    // Get provider-specific model info
+    let modelInfo = "";
+    switch (this._settings.apiProvider) {
+      case "gemini":
+        modelInfo = this._settings.gemini.model || "gemini-2.0-flash";
+        break;
+      case "huggingface":
+        modelInfo = this._settings.huggingface.model || "Not configured";
+        break;
+      case "ollama":
+        modelInfo = this._settings.ollama.model || "Not configured";
+        break;
+      case "mistral":
+        modelInfo = this._settings.mistral.model || "mistral-large-latest";
+        break;
+      case "cohere":
+        modelInfo = this._settings.cohere.model || "command-r-plus";
+        break;
     }
 
-    public render(): string {
-        // Get provider-specific model info
-        let modelInfo = "";
-        switch (this._settings.apiProvider) {
-            case "gemini":
-                modelInfo = this._settings.gemini.model || "gemini-2.0-flash";
-                break;
-            case "huggingface":
-                modelInfo = this._settings.huggingface.model || "Not configured";
-                break;
-            case "ollama":
-                modelInfo = this._settings.ollama.model || "Not configured";
-                break;
-            case "mistral":
-                modelInfo = this._settings.mistral.model || "mistral-large-latest";
-                break;
-        }
+    // Get API configuration status
+    let apiConfigured = false;
+    switch (this._settings.apiProvider) {
+      case "gemini":
+        apiConfigured = !!this._settings.gemini.apiKey;
+        break;
+      case "huggingface":
+        apiConfigured = !!this._settings.huggingface.apiKey;
+        break;
+      case "ollama":
+        apiConfigured = !!this._settings.ollama.url;
+        break;
+      case "mistral":
+        apiConfigured = !!this._settings.mistral.apiKey;
+        break;
+      case "cohere":
+        apiConfigured = !!this._settings.cohere.apiKey;
+        break;
+    }
 
-        // Get API configuration status
-        let apiConfigured = false;
-        switch (this._settings.apiProvider) {
-            case "gemini":
-                apiConfigured = !!this._settings.gemini.apiKey;
-                break;
-            case "huggingface":
-                apiConfigured = !!this._settings.huggingface.apiKey;
-                break;
-            case "ollama":
-                apiConfigured = !!this._settings.ollama.url;
-                break;
-            case "mistral":
-                apiConfigured = !!this._settings.mistral.apiKey;
-                break;
-        }
+    // Format provider name for display
+    const providerDisplay = {
+      gemini: "Gemini",
+      huggingface: "Hugging Face",
+      ollama: "Ollama",
+      mistral: "Mistral",
+      cohere: "Cohere"
+    }[this._settings.apiProvider] || this._settings.apiProvider;
 
-        // Format provider name for display
-        const providerDisplay = {
-            gemini: "Gemini",
-            huggingface: "Hugging Face",
-            ollama: "Ollama",
-            mistral: "Mistral"
-        }[this._settings.apiProvider] || this._settings.apiProvider;
-
-        return `
+    return `
     <div class="status-banner">
       <h3>Current Configuration</h3>
       <div class="status-grid">
@@ -76,5 +83,5 @@ export class StatusBanner {
         </div>
       </div>
     </div>`;
-    }
+  }
 }

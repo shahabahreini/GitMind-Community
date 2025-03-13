@@ -1,8 +1,8 @@
 {
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Assistant",
-  "description": "Generate meaningful git commit messages using Free/Paid AI (Mistral, Gemini, Hugging Face, or Ollama) with support for conventional commits and multiple LLM models",
-  "version": "1.3.2",
+  "description": "Generate meaningful git commit messages using Free/Paid AI (Mistral, Gemini, Hugging Face, Cohere, or Ollama) with support for conventional commits and multiple LLM models",
+  "version": "1.4.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -40,15 +40,17 @@
             "gemini",
             "huggingface",
             "ollama",
-            "mistral"
+            "mistral",
+            "cohere"
           ],
           "enumDescriptions": [
             "Use Google's Gemini AI for generating commit messages",
             "Use Hugging Face models for generating commit messages",
             "Use local Ollama models for generating commit messages",
-            "Use Mistral AI for generating commit messages"
+            "Use Mistral AI for generating commit messages",
+            "Use Cohere AI for generating commit messages"
           ],
-          "default": "mistral",
+          "default": "gemini",
           "description": "Select which AI provider to use for generating commit messages",
           "order": 1
         },
@@ -147,6 +149,22 @@
             "Gemini 1.5 Flash-8B - 8B parameter version for faster inference",
             "Gemini 1.5 Pro - Base model with comprehensive capabilities"
           ]
+        },
+        "aiCommitAssistant.cohere.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for Cohere"
+        },
+        "aiCommitAssistant.cohere.model": {
+          "type": "string",
+          "enum": [
+            "command",
+            "command-light",
+            "command-nightly",
+            "command-r"
+          ],
+          "default": "command",
+          "description": "Cohere model to use for generating commit messages"
         }
       }
     },
@@ -307,6 +325,7 @@
     "ollama",
     "mistral",
     "mistral-ai",
+    "cohere",
     "conventional-commits",
     "commit-message",
     "git-message",

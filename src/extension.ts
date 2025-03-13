@@ -13,6 +13,8 @@ import { processResponse } from "./utils/commitFormatter";
 import { SettingsWebview } from "./webview/settings/SettingsWebview";
 import { OnboardingManager } from "./utils/onboardingManager";
 import { fetchMistralModels } from "./services/api/mistral";
+// Add import for Cohere (if needed in the future)
+// import { fetchCohereModels } from "./services/api/cohere";
 
 const state: ExtensionState = {
   debugChannel: vscode.window.createOutputChannel("AI Commit Assistant Debug"),
@@ -32,6 +34,9 @@ export async function activate(context: vscode.ExtensionContext) {
     "Extension configuration:",
     vscode.workspace.getConfiguration("aiCommitAssistant")
   );
+
+  // Log supported API providers, now including Cohere
+  debugLog("Supported API providers: Gemini, Hugging Face, Ollama, Mistral, Cohere");
 
   // Initialize SCM provider
   const scmProvider = vscode.scm.createSourceControl(

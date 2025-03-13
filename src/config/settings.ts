@@ -46,6 +46,11 @@ export function getConfiguration(): ExtensionConfig {
             apiKey: config.get("mistral.apiKey"),
             model: config.get("mistral.model", "mistral-large-latest"),
         },
+        cohere: {
+            enabled: config.get("cohere.enabled", false),
+            apiKey: config.get("cohere.apiKey"),
+            model: config.get("cohere.model", "command"),
+        },
     };
 }
 
@@ -93,6 +98,13 @@ export function getApiConfig(): ApiConfig {
                 type: "mistral",
                 apiKey: config.mistral.apiKey || "", // Return empty string instead of throwing
                 model: config.mistral.model || "", // Return empty string instead of throwing
+            };
+
+        case "cohere":
+            return {
+                type: "cohere",
+                apiKey: config.cohere.apiKey || "",
+                model: config.cohere.model || "command",
             };
 
         default:

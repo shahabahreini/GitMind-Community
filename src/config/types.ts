@@ -3,7 +3,7 @@
 import * as vscode from "vscode";
 
 // Provider types
-export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral";
+export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere";
 export type CommitStyle = "conventional" | "gitmoji" | "basic";
 
 // Base configurations
@@ -21,6 +21,7 @@ export interface CommitConfig {
     maxLength: number;
     includeScope: boolean;
     addBulletPoints: boolean;
+    verbose: boolean;
 }
 
 // Extension configuration
@@ -34,6 +35,11 @@ export interface ExtensionConfig {
     ollama: ProviderConfig;
     commit: CommitConfig;
     mistral: {
+        enabled: boolean;
+        apiKey?: string;
+        model: string;
+    };
+    cohere: {
         enabled: boolean;
         apiKey?: string;
         model: string;
@@ -52,6 +58,12 @@ export interface OllamaResponse {
 
 export interface MistralApiConfig extends BaseApiConfig {
     type: "mistral";
+    apiKey: string;
+    model: string;
+}
+
+export interface CohereApiConfig extends BaseApiConfig {
+    type: "cohere";
     apiKey: string;
     model: string;
 }
@@ -137,17 +149,10 @@ export interface MistralRateLimit {
     monthlyRemaining: number; // Remaining tokens for the month
 }
 
-export interface CommitConfig {
-    style: CommitStyle;
-    maxLength: number;
-    includeScope: boolean;
-    addBulletPoints: boolean;
-    verbose: boolean; // Add this line
-}
-
 export type ApiConfig =
     | GeminiApiConfig
     | HuggingFaceApiConfig
     | OllamaApiConfig
-    | MistralApiConfig;
+    | MistralApiConfig
+    | CohereApiConfig;
 

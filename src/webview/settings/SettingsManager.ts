@@ -28,6 +28,10 @@ export class SettingsManager {
                 apiKey: config.get<string>("mistral.apiKey") || "",
                 model: config.get<string>("mistral.model") || "mistral-large-latest",
             },
+            cohere: {
+                apiKey: config.get<string>("cohere.apiKey") || "",
+                model: config.get<string>("cohere.model") || "command",
+            },
             commit: {
                 verbose: config.get<boolean>("commit.verbose") ?? true,
             },
@@ -89,8 +93,18 @@ export class SettingsManager {
             vscode.ConfigurationTarget.Global
         );
         await config.update(
+            "cohere.apiKey",
+            settings.cohere.apiKey,
+            vscode.ConfigurationTarget.Global
+        );
+        await config.update(
+            "cohere.model",
+            settings.cohere.model,
+            vscode.ConfigurationTarget.Global
+        );
+        await config.update(
             "commit.verbose",
-            settings.commit.verbose,
+            settings.commit?.verbose ?? true,
             vscode.ConfigurationTarget.Global
         );
 

@@ -21,6 +21,8 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     document.getElementById('ollamaModel').value = currentSettings.ollama?.model || '';
     document.getElementById('mistralApiKey').value = currentSettings.mistral?.apiKey || '';
     document.getElementById('mistralModel').value = currentSettings.mistral?.model || 'mistral-large-latest';
+    document.getElementById('cohereApiKey').value = currentSettings.cohere?.apiKey || '';
+    document.getElementById('cohereModel').value = currentSettings.cohere?.model || 'command-r-plus';
     
     ${getUiManagerScript()}
     ${getApiManagerScript()}
@@ -45,6 +47,10 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
         mistral: {
           apiKey: document.getElementById('mistralApiKey').value,
           model: document.getElementById('mistralModel').value
+        },
+        cohere: {
+          apiKey: document.getElementById('cohereApiKey').value,
+          model: document.getElementById('cohereModel').value
         },
         commit: {
           verbose: document.getElementById('commitVerbose').checked
@@ -339,6 +345,11 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           if (currentSettings.mistral) {
             document.getElementById('mistralApiKey').value = currentSettings.mistral.apiKey || '';
             document.getElementById('mistralModel').value = currentSettings.mistral.model || 'mistral-large-latest';
+          }
+          
+          if (currentSettings.cohere) {
+            document.getElementById('cohereApiKey').value = currentSettings.cohere.apiKey || '';
+            document.getElementById('cohereModel').value = currentSettings.cohere.model || 'command-r-plus';
           }
           
           // Update UI state

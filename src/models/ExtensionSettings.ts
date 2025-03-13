@@ -1,7 +1,7 @@
 // src/models/ExtensionSettings.ts
 export interface ExtensionSettings {
     apiProvider: string;
-    debug: boolean;
+    debug?: boolean;
     gemini: {
         apiKey: string;
         model: string;
@@ -18,7 +18,11 @@ export interface ExtensionSettings {
         apiKey: string;
         model: string;
     };
-    commit: {
+    cohere: {
+        apiKey: string;
+        model: string;
+    };
+    commit?: {
         verbose: boolean;
     };
 }

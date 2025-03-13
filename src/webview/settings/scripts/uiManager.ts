@@ -12,6 +12,8 @@ export function getUiManagerScript(): string {
           provider === 'ollama' ? 'block' : 'none';
         document.getElementById('mistralSettings').style.display =
           provider === 'mistral' ? 'block' : 'none';
+        document.getElementById('cohereSettings').style.display =
+          provider === 'cohere' ? 'block' : 'none';
       }
       
       // Initialize UI state immediately
@@ -62,6 +64,9 @@ export function getUiManagerScript(): string {
           case "mistral":
             modelInfo = settings.mistral.model || "mistral-large-latest";
             break;
+          case "cohere":
+            modelInfo = settings.cohere.model || "command-r-plus";
+            break;
         }
         
         // Get API configuration status
@@ -79,6 +84,9 @@ export function getUiManagerScript(): string {
           case "mistral":
             apiConfigured = !!settings.mistral.apiKey;
             break;
+          case "cohere":
+            apiConfigured = !!settings.cohere.apiKey;
+            break;
         }
         
         // Format provider name for display
@@ -86,7 +94,8 @@ export function getUiManagerScript(): string {
           gemini: "Gemini",
           huggingface: "Hugging Face",
           ollama: "Ollama",
-          mistral: "Mistral"
+          mistral: "Mistral",
+          cohere: "Cohere"
         }[settings.apiProvider] || settings.apiProvider;
         
         const bannerHTML = \`

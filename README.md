@@ -12,6 +12,7 @@ Generate meaningful and consistent git commit messages using AI. This extension 
 - **Google's Gemini AI**: Advanced language model for precise commit messages
 - **Hugging Face**: Access to various open-source language models with free tier options
 - **Ollama**: A completely free, locally installed engine for privacy-focused development
+- **Cohere**: Added in v1.3.3
 
 ### Smart Git Integration
 
@@ -79,6 +80,7 @@ Generate meaningful and consistent git commit messages using AI. This extension 
   - Hugging Face API key (free tier available)
   - Ollama installation (completely free)
   - Mistral API key (free tier available)
+  - Cohere API key (free tier available)
 
 ## Installation
 
@@ -128,6 +130,11 @@ Access the settings UI through:
   "aiCommitAssistant.mistral.model": "mistral-large-latest",
   "aiCommitAssistant.mistral.enabled": true,
 
+  // Cohere Settings
+  "aiCommitAssistant.cohere.apiKey": "",
+  "aiCommitAssistant.cohere.model": "command",
+  "aiCommitAssistant.cohere.enabled": true,
+
   // Commit Settings
   "aiCommitAssistant.commit.style": "conventional",
   "aiCommitAssistant.commit.maxLength": 72,
@@ -138,3 +145,23 @@ Access the settings UI through:
   "aiCommitAssistant.commit.verbose": true     // Generate detailed messages with bullet points
 }
 ```
+
+## AI Provider Setup
+
+### Cohere
+
+1. Sign up for an account at [Cohere](https://dashboard.cohere.com/)
+2. Create an API key in your Cohere dashboard
+3. Configure the extension:
+   - Set "Cohere" as your provider
+   - Enter your API key
+   - Select your preferred model (command, command-light, command-nightly, or command-r)
+
+## Available Models
+
+### Cohere Models
+
+- **command**: Optimized for instructions with excellent reasoning capabilities
+- **command-light**: Lighter, faster version of command with lower cost
+- **command-nightly**: Latest build with newest improvements (may be less stable)
+- **command-r**: Optimized for retrieval and RAG applications

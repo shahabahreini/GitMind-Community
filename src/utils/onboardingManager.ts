@@ -15,7 +15,8 @@ export class OnboardingManager {
         'Gemini': 'https://aistudio.google.com/app/apikey',
         'Hugging Face': 'https://huggingface.co/settings/tokens',
         'Ollama': 'https://ollama.ai/download',
-        'Mistral': 'https://console.mistral.ai/api-keys/'
+        'Mistral': 'https://console.mistral.ai/api-keys/',
+        'Cohere': 'https://dashboard.cohere.com/api-keys'
     };
 
     public static async showOnboarding(context: vscode.ExtensionContext): Promise<void> {
@@ -164,7 +165,8 @@ export class OnboardingManager {
         const paths: Record<string, string> = {
             'Gemini': 'gemini.apiKey',
             'Hugging Face': 'huggingface.apiKey',
-            'Mistral': 'mistral.apiKey'
+            'Mistral': 'mistral.apiKey',
+            'Cohere': 'cohere.apiKey'
         };
         return paths[provider] || '';
     }

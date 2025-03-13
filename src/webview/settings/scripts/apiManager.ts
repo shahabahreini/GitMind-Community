@@ -28,6 +28,11 @@ export function getApiManagerScript(): string {
           apiKey: document.getElementById('mistralApiKey').value,
           model: document.getElementById('mistralModel').value
         };
+      } else if (provider === 'cohere') {
+        apiSettings = {
+          apiKey: document.getElementById('cohereApiKey').value,
+          model: document.getElementById('cohereModel').value
+        };
       }
       
       // Validate required fields before sending
@@ -43,6 +48,8 @@ export function getApiManagerScript(): string {
         if (!apiSettings.model) missingFields.push('Ollama Model');
       } else if (provider === 'mistral' && !apiSettings.apiKey) {
         missingFields.push('Mistral API Key');
+      } else if (provider === 'cohere' && !apiSettings.apiKey) {
+        missingFields.push('Cohere API Key');
       }
       
       if (missingFields.length > 0) {
@@ -112,6 +119,9 @@ export function getApiManagerScript(): string {
       } else if (provider === 'mistral') {
         apiSettings.apiKey = document.getElementById('mistralApiKey').value;
         if (!apiSettings.apiKey) missingFields.push('Mistral API Key');
+      } else if (provider === 'cohere') {
+        apiSettings.apiKey = document.getElementById('cohereApiKey').value;
+        if (!apiSettings.apiKey) missingFields.push('Cohere API Key');
       }
       
       if (missingFields.length > 0) {
@@ -167,7 +177,8 @@ export function getApiManagerScript(): string {
         'gemini': 'Gemini',
         'huggingface': 'Hugging Face',
         'ollama': 'Ollama',
-        'mistral': 'Mistral'
+        'mistral': 'Mistral',
+        'cohere': 'Cohere'
       };
       
       return displayNames[provider] || provider;
