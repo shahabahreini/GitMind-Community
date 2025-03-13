@@ -8,11 +8,21 @@ Generate meaningful and consistent git commit messages using AI. This extension 
 
 ### Multiple AI Provider Support
 
-- **Mistral AI** (Recommended): High-performance language model with multiple tiers, including free options
-- **Google's Gemini AI**: Advanced language model for precise commit messages
-- **Hugging Face**: Access to various open-source language models with free tier options
-- **Ollama**: A completely free, locally installed engine for privacy-focused development
-- **Cohere**: Added in v1.3.3
+- **[Google's Gemini AI](https://cloud.google.com/ai-platform/)** (Recommended): Advanced language model for precise commit messages
+- **[Mistral AI](https://mistral.ai/)**: High-performance language model with multiple tiers, including free options
+- **[Hugging Face](https://huggingface.co/)**: Access to various open-source language models with free tier options
+- **[Ollama](https://ollama.com/)**: A completely free, locally installed engine for privacy-focused development
+- **[Cohere](https://cohere.com/)**: High-quality language models with a focus on command and retrieval tasks, offering various models and a free tier
+- **[OpenAI](https://openai.com/)**: High-quality GPT models for professional results
+
+| Provider            | Free Plan | Paid Plan |
+|---------------------|-----------|-----------|
+| Google's Gemini AI  | Yes       | Yes       |
+| Mistral AI          | Yes       | Yes       |
+| Hugging Face        | Yes       | Yes       |
+| Ollama              | Yes       | No        |
+| Cohere              | Yes       | Yes       |
+| OpenAI              | No        | Yes       |
 
 ### Smart Git Integration
 
@@ -157,6 +167,15 @@ Access the settings UI through:
    - Enter your API key
    - Select your preferred model (command, command-light, command-nightly, or command-r)
 
+### OpenAI
+
+1. Sign up for an account at [OpenAI](https://platform.openai.com/)
+2. Create an API key in your OpenAI dashboard
+3. Configure the extension:
+   - Set "OpenAI" as your provider
+   - Enter your API key
+   - Select your preferred model (GPT-4o, GPT-4-turbo, or GPT-3.5-turbo)
+
 ## Available Models
 
 ### Cohere Models
@@ -165,3 +184,9 @@ Access the settings UI through:
 - **command-light**: Lighter, faster version of command with lower cost
 - **command-nightly**: Latest build with newest improvements (may be less stable)
 - **command-r**: Optimized for retrieval and RAG applications
+
+### OpenAI Models
+
+- **gpt-4o**: Latest GPT-4o model with enhanced capabilities
+- **gpt-4-turbo**: High-performance GPT-4 model with fast inference
+- **gpt-3.5-turbo**: Efficient and cost-effective GPT-3.5 model

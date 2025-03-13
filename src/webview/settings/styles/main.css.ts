@@ -223,6 +223,10 @@ export function getMainStyles(): string {
       color: var(--vscode-inputValidation-infoForeground, var(--vscode-foreground));
     }
 
+    .api-settings.hidden {
+      display: none !important;
+    }
+
     ${getFormStyles()}
     ${getButtonStyles()}
     ${getStatusBannerStyles()}

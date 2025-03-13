@@ -30,6 +30,7 @@ export class GeneralSettings {
           <option value="ollama" ${this._settings.apiProvider === "ollama" ? "selected" : ""}>Ollama</option>
           <option value="mistral" ${this._settings.apiProvider === "mistral" ? "selected" : ""}>Mistral</option>
           <option value="cohere" ${this._settings.apiProvider === "cohere" ? "selected" : ""}>Cohere</option>
+          <option value="openai" ${this._settings.apiProvider === "openai" ? "selected" : ""}>OpenAI</option>
         </select>
       </div>
     </div>`;

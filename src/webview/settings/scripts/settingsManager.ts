@@ -22,7 +22,9 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     document.getElementById('mistralApiKey').value = currentSettings.mistral?.apiKey || '';
     document.getElementById('mistralModel').value = currentSettings.mistral?.model || 'mistral-large-latest';
     document.getElementById('cohereApiKey').value = currentSettings.cohere?.apiKey || '';
-    document.getElementById('cohereModel').value = currentSettings.cohere?.model || 'command-r-plus';
+    document.getElementById('cohereModel').value = currentSettings.cohere?.model || 'command';
+    document.getElementById('openaiApiKey').value = currentSettings.openai?.apiKey || '';
+    document.getElementById('openaiModel').value = currentSettings.openai?.model || 'gpt-3.5-turbo';
     
     ${getUiManagerScript()}
     ${getApiManagerScript()}
@@ -51,6 +53,10 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
         cohere: {
           apiKey: document.getElementById('cohereApiKey').value,
           model: document.getElementById('cohereModel').value
+        },
+        openai: {
+          apiKey: document.getElementById('openaiApiKey').value,
+          model: document.getElementById('openaiModel').value
         },
         commit: {
           verbose: document.getElementById('commitVerbose').checked
@@ -349,7 +355,12 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           
           if (currentSettings.cohere) {
             document.getElementById('cohereApiKey').value = currentSettings.cohere.apiKey || '';
-            document.getElementById('cohereModel').value = currentSettings.cohere.model || 'command-r-plus';
+            document.getElementById('cohereModel').value = currentSettings.cohere.model || 'command-r';
+          }
+          
+          if (currentSettings.openai) {
+            document.getElementById('openaiApiKey').value = currentSettings.openai.apiKey || '';
+            document.getElementById('openaiModel').value = currentSettings.openai.model || 'gpt-3.5-turbo';
           }
           
           // Update UI state
@@ -359,6 +370,25 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           updateStatusBanner(currentSettings);
           break;
       }
+    });
+
+    // Handle API provider change
+    document.getElementById('apiProvider').addEventListener('change', function() {
+      const provider = this.value;
+      
+      // Hide all provider settings
+      document.querySelectorAll('.api-settings').forEach(el => {
+        el.classList.add('hidden');
+      });
+      
+      // Show only the selected provider settings
+      const selectedProviderSettings = document.getElementById(provider + 'Settings');
+      if (selectedProviderSettings) {
+        selectedProviderSettings.classList.remove('hidden');
+      }
+      
+      // Update status banner
+      updateStatusBanner();
     });
   </script>`;
 }

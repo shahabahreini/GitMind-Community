@@ -51,6 +51,11 @@ export function getConfiguration(): ExtensionConfig {
             apiKey: config.get("cohere.apiKey"),
             model: config.get("cohere.model", "command"),
         },
+        openai: {
+            enabled: config.get("openai.enabled", false),
+            apiKey: config.get("openai.apiKey"),
+            model: config.get("openai.model", "gpt-3.5-turbo"),
+        },
     };
 }
 
@@ -105,6 +110,13 @@ export function getApiConfig(): ApiConfig {
                 type: "cohere",
                 apiKey: config.cohere.apiKey || "",
                 model: config.cohere.model || "command",
+            };
+
+        case "openai":
+            return {
+                type: "openai",
+                apiKey: config.openai.apiKey || "",
+                model: config.openai.model || "gpt-3.5-turbo",
             };
 
         default:

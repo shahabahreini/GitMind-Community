@@ -16,7 +16,8 @@ export class OnboardingManager {
         'Hugging Face': 'https://huggingface.co/settings/tokens',
         'Ollama': 'https://ollama.ai/download',
         'Mistral': 'https://console.mistral.ai/api-keys/',
-        'Cohere': 'https://dashboard.cohere.com/api-keys'
+        'Cohere': 'https://dashboard.cohere.com/api-keys',
+        'OpenAI': 'https://platform.openai.com/api-keys'
     };
 
     public static async showOnboarding(context: vscode.ExtensionContext): Promise<void> {
@@ -41,7 +42,7 @@ export class OnboardingManager {
         const steps: OnboardingStep[] = [
             {
                 title: 'Step 1: Choose an AI Provider',
-                content: 'GitMind supports multiple AI providers:\n• Gemini (Google)\n• Hugging Face\n• Ollama (Local)\n• Mistral AI\n\nClick Next to learn how to configure your chosen provider.',
+                content: 'GitMind supports multiple AI providers:\n• Gemini (Google)\n• Hugging Face\n• Ollama (Local)\n• Mistral AI\n• Cohere\n• OpenAI\n\nClick Next to learn how to configure your chosen provider.',
             },
             {
                 title: 'Step 2: Configure API Settings',
@@ -166,7 +167,8 @@ export class OnboardingManager {
             'Gemini': 'gemini.apiKey',
             'Hugging Face': 'huggingface.apiKey',
             'Mistral': 'mistral.apiKey',
-            'Cohere': 'cohere.apiKey'
+            'Cohere': 'cohere.apiKey',
+            'OpenAI': 'openai.apiKey'
         };
         return paths[provider] || '';
     }

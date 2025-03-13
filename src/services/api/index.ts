@@ -7,6 +7,7 @@ import {
     OllamaApiConfig,
     MistralApiConfig,
     CohereApiConfig,
+    OpenAIApiConfig,
 } from "../../config/types";
 import { callGeminiAPI } from "./gemini";
 import { callHuggingFaceAPI } from "./huggingface";
@@ -23,8 +24,9 @@ import { getApiConfig } from "../../config/settings";
 import { estimateTokens } from "../../utils/tokenCounter";
 import { workspace } from "vscode";
 import { DiagnosticsWebview } from "../../webview/diagnostics/DiagnosticsWebview";
+import { callOpenAIAPI } from "./openai";
 
-type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere";
+type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI";
 
 export async function generateCommitMessage(
     config: ApiConfig,
@@ -441,6 +443,103 @@ async function generateMessageWithConfig(
             );
         }
 
+        case "openai": {
+            const openaiConfig = config as OpenAIApiConfig;
+            if (!openaiConfig.apiKey) {
+                const result = await vscode.window.showWarningMessage(
+                    "OpenAI API key is required. Would you like to configure it now?",
+                    "Enter API Key",
+                    "Get API Key",
+                    "Cancel"
+                );
+
+                if (result === "Enter API Key") {
+                    const apiKey = await vscode.window.showInputBox({
+                        title: "OpenAI API Key",
+                        prompt: "Please enter your OpenAI API key",
+                        password: true,
+                        placeHolder: "Paste your API key here",
+                        ignoreFocusOut: true,
+                        validateInput: (text) =>
+                            text?.trim() ? null : "API key cannot be empty",
+                    });
+
+                    if (apiKey) {
+                        const config =
+                            vscode.workspace.getConfiguration("aiCommitAssistant");
+                        await config.update(
+                            "openai.apiKey",
+                            apiKey.trim(),
+                            vscode.ConfigurationTarget.Global
+                        );
+
+                        if (!openaiConfig.model) {
+                            await vscode.commands.executeCommand(
+                                "ai-commit-assistant.openSettings"
+                            );
+                            return "";
+                        }
+                        return await callOpenAIAPI(
+                            apiKey.trim(),
+                            openaiConfig.model,
+                            diff
+                        );
+                    }
+                } else if (result === "Get API Key") {
+                    await vscode.env.openExternal(
+                        vscode.Uri.parse("https://platform.openai.com/api-keys")
+                    );
+                    const apiKey = await vscode.window.showInputBox({
+                        title: "OpenAI API Key",
+                        prompt:
+                            "Please enter your OpenAI API key after getting it from the website",
+                        password: true,
+                        placeHolder: "Paste your API key here",
+                        ignoreFocusOut: true,
+                        validateInput: (text) =>
+                            text?.trim() ? null : "API key cannot be empty",
+                    });
+
+                    if (apiKey) {
+                        const config =
+                            vscode.workspace.getConfiguration("aiCommitAssistant");
+                        await config.update(
+                            "openai.apiKey",
+                            apiKey.trim(),
+                            vscode.ConfigurationTarget.Global
+                        );
+
+                        if (!openaiConfig.model) {
+                            await vscode.commands.executeCommand(
+                                "ai-commit-assistant.openSettings"
+                            );
+                            return "";
+                        }
+                        return await callOpenAIAPI(
+                            apiKey.trim(),
+                            openaiConfig.model,
+                            diff
+                        );
+                    }
+                }
+                return "";
+            }
+            if (!openaiConfig.model) {
+                await vscode.window.showErrorMessage(
+                    "Please select an OpenAI model in the settings."
+                );
+                await vscode.commands.executeCommand(
+                    "ai-commit-assistant.openSettings"
+                );
+                return "";
+            }
+            return await callOpenAIAPI(
+                openaiConfig.apiKey,
+                openaiConfig.model,
+                diff
+            );
+        }
+
         default: {
             const _exhaustiveCheck: never = config;
             throw new Error(`Unsupported API provider: ${(config as any).type}`);
@@ -572,7 +671,8 @@ function getProviderSettingPath(provider: string): string {
         Gemini: "gemini.apiKey",
         "Hugging Face": "huggingface.apiKey",
         Mistral: "mistral.apiKey",
-        Cohere: "cohere.apiKey"
+        Cohere: "cohere.apiKey",
+        OpenAI: "openai.apiKey"
     };
     return paths[provider] || "";
 }
@@ -698,6 +798,9 @@ function showModelInfo(config: ApiConfig) {
         case "cohere":
             modelInfo = `Using Cohere (${config.model})`;
             break;
+        case "openai":
+            modelInfo = `Using OpenAI (${config.model})`;
+            break;
     }
     vscode.window.setStatusBarMessage(modelInfo, 3000);
 }
@@ -714,6 +817,8 @@ function getProviderName(type: string): ApiProvider {
             return "Mistral";
         case "cohere":
             return "Cohere";
+        case "openai":
+            return "OpenAI";
         default:
             throw new Error(`Unknown provider type: ${type}`);
     }

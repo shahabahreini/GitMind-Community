@@ -5,6 +5,20 @@ All notable changes to the "AI Commit Assistant" extension will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - Unreleased
+
+### Added
+
+- Added support for [OpenAI](https://platform.openai.com/) as a provider
+- Added OpenAI models: GPT-4o, GPT-4-turbo, and GPT-3.5-turbo
+- Added OpenAI API validation and settings UI
+
+### Changed
+
+- Updated onboarding to include OpenAI as a provider option
+- Enhanced provider selection UI with OpenAI option
+- Updated diagnostics to support OpenAI models
+
 ## [1.4.0] - Unreleased
 
 ### Added

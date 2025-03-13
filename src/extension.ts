@@ -35,8 +35,8 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.workspace.getConfiguration("aiCommitAssistant")
   );
 
-  // Log supported API providers, now including Cohere
-  debugLog("Supported API providers: Gemini, Hugging Face, Ollama, Mistral, Cohere");
+  // Log supported API providers, now including OpenAI
+  debugLog("Supported API providers: Gemini, Hugging Face, Ollama, Mistral, Cohere, OpenAI");
 
   // Initialize SCM provider
   const scmProvider = vscode.scm.createSourceControl(

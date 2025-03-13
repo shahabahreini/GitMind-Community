@@ -8,6 +8,7 @@ import { HuggingFaceSettings } from "./components/HuggingFaceSettings";
 import { OllamaSettings } from "./components/OllamaSettings";
 import { MistralSettings } from "./components/MistralSettings";
 import { CohereSettings } from "./components/CohereSettings";
+import { OpenAISettings } from "./components/OpenAISettings";
 import { ButtonGroup } from "./components/ButtonGroup";
 import { getSettingsScript } from "./scripts/settingsManager";
 
@@ -28,6 +29,7 @@ export class SettingsTemplateGenerator {
     const ollamaSettings = new OllamaSettings(this._settings);
     const mistralSettings = new MistralSettings(this._settings);
     const cohereSettings = new CohereSettings(this._settings);
+    const openaiSettings = new OpenAISettings(this._settings);
     const buttonGroup = new ButtonGroup();
 
     return `
@@ -51,6 +53,7 @@ export class SettingsTemplateGenerator {
         ${ollamaSettings.render()}
         ${mistralSettings.render()}
         ${cohereSettings.render()}
+        ${openaiSettings.render()}
         ${buttonGroup.render()}
       </div>
       ${getSettingsScript(this._settings, this._nonce)}

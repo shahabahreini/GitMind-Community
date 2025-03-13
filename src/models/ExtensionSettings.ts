@@ -22,6 +22,10 @@ export interface ExtensionSettings {
         apiKey: string;
         model: string;
     };
+    openai: {
+        apiKey: string;
+        model: string;
+    };
     commit?: {
         verbose: boolean;
     };

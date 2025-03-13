@@ -32,6 +32,10 @@ export class SettingsManager {
                 apiKey: config.get<string>("cohere.apiKey") || "",
                 model: config.get<string>("cohere.model") || "command",
             },
+            openai: {
+                apiKey: config.get<string>("openai.apiKey") || "",
+                model: config.get<string>("openai.model") || "gpt-3.5-turbo",
+            },
             commit: {
                 verbose: config.get<boolean>("commit.verbose") ?? true,
             },
@@ -100,6 +104,16 @@ export class SettingsManager {
         await config.update(
             "cohere.model",
             settings.cohere.model,
+            vscode.ConfigurationTarget.Global
+        );
+        await config.update(
+            "openai.apiKey",
+            settings.openai.apiKey,
+            vscode.ConfigurationTarget.Global
+        );
+        await config.update(
+            "openai.model",
+            settings.openai.model,
             vscode.ConfigurationTarget.Global
         );
         await config.update(

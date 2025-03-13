@@ -3,7 +3,7 @@
 import * as vscode from "vscode";
 
 // Provider types
-export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere";
+export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai";
 export type CommitStyle = "conventional" | "gitmoji" | "basic";
 
 // Base configurations
@@ -40,6 +40,11 @@ export interface ExtensionConfig {
         model: string;
     };
     cohere: {
+        enabled: boolean;
+        apiKey?: string;
+        model: string;
+    };
+    openai: {
         enabled: boolean;
         apiKey?: string;
         model: string;
@@ -119,6 +124,12 @@ export interface OllamaApiConfig extends BaseApiConfig {
     model: string;
 }
 
+export interface OpenAIApiConfig extends BaseApiConfig {
+    type: "openai";
+    apiKey: string;
+    model: string;
+}
+
 export interface MistralResponse {
     id: string;
     object: string;
@@ -154,5 +165,6 @@ export type ApiConfig =
     | HuggingFaceApiConfig
     | OllamaApiConfig
     | MistralApiConfig
-    | CohereApiConfig;
+    | CohereApiConfig
+    | OpenAIApiConfig;
 
