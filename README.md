@@ -112,51 +112,43 @@ Access the settings UI through:
 - Real-time validation
 - Direct links to API documentation
 
-### Via settings.json
-
-```json
-{
-  "aiCommitAssistant.apiProvider": "mistral",
-  "aiCommitAssistant.debug": false,
-
-  // Gemini Settings
-  "aiCommitAssistant.gemini.apiKey": "",
-  "aiCommitAssistant.gemini.enabled": true,
-  "aiCommitAssistant.gemini.model": "gemini-pro",
-
-  // Hugging Face Settings
-  "aiCommitAssistant.huggingface.apiKey": "",
-  "aiCommitAssistant.huggingface.model": "mistralai/Mistral-7B-Instruct-v0.3",
-  "aiCommitAssistant.huggingface.enabled": true,
-  "aiCommitAssistant.huggingface.temperature": 0.7,
-
-  // Ollama Settings
-  "aiCommitAssistant.ollama.url": "http://localhost:11434",
-  "aiCommitAssistant.ollama.model": "phi4",
-  "aiCommitAssistant.ollama.enabled": true,
-
-  // Mistral Settings
-  "aiCommitAssistant.mistral.apiKey": "",
-  "aiCommitAssistant.mistral.model": "mistral-large-latest",
-  "aiCommitAssistant.mistral.enabled": true,
-
-  // Cohere Settings
-  "aiCommitAssistant.cohere.apiKey": "",
-  "aiCommitAssistant.cohere.model": "command",
-  "aiCommitAssistant.cohere.enabled": true,
-
-  // Commit Settings
-  "aiCommitAssistant.commit.style": "conventional",
-  "aiCommitAssistant.commit.maxLength": 72,
-  "aiCommitAssistant.commit.includeScope": true,
-  "aiCommitAssistant.commit.addBulletPoints": true,
-
-  "aiCommitAssistant.showDiagnostics": false,   // Show model and token information before generating messages
-  "aiCommitAssistant.commit.verbose": true     // Generate detailed messages with bullet points
-}
-```
-
 ## AI Provider Setup
+
+### Google's Gemini AI
+
+1. Sign up for a Google Cloud account at [Google AI Studio](https://makersuite.google.com/)
+2. Create an API key in your Google AI Studio dashboard
+3. Configure the extension:
+   - Set "Gemini" as your provider
+   - Enter your API key
+   - Select your preferred model (gemini-pro)
+
+### Mistral AI
+
+1. Sign up for an account at [Mistral AI](https://console.mistral.ai/)
+2. Create an API key in your Mistral AI dashboard
+3. Configure the extension:
+   - Set "Mistral" as your provider
+   - Enter your API key
+   - Select your preferred model (mistral-large-latest, mistral-medium, etc.)
+
+### Hugging Face
+
+1. Sign up for an account at [Hugging Face](https://huggingface.co/)
+2. Create an API key in your Hugging Face dashboard
+3. Configure the extension:
+   - Set "Hugging Face" as your provider
+   - Enter your API key
+   - Select or enter your preferred model identifier
+
+### Ollama
+
+1. Install [Ollama](https://ollama.com/) on your local machine
+2. Pull your preferred model (e.g., `ollama pull phi4`)
+3. Configure the extension:
+   - Set "Ollama" as your provider
+   - Configure the Ollama URL (default is <http://localhost:11434>)
+   - Select your preferred model from those you've pulled
 
 ### Cohere
 
@@ -177,6 +169,30 @@ Access the settings UI through:
    - Select your preferred model (GPT-4o, GPT-4-turbo, or GPT-3.5-turbo)
 
 ## Available Models
+
+### Gemini Models
+
+- **gemini-pro**: Advanced language model with strong reasoning capabilities and code understanding
+
+### Mistral Models
+
+- **mistral-large-latest**: Most powerful Mistral model with excellent reasoning capabilities
+- **mistral-medium**: Balanced model offering good performance at lower cost
+- **mistral-small**: Lightweight model for basic tasks with minimal token usage
+
+### Hugging Face Models
+
+- **mistralai/Mistral-7B-Instruct-v0.3**: State-of-the-art open-source 7B parameter model
+- **meta-llama/Llama-2-7b-chat-hf**: Meta's Llama 2 conversational model
+- **google/flan-t5-xxl**: Google's instruction-tuned T5 model
+- And many other open-source models available on Hugging Face
+
+### Ollama Models
+
+- **phi4**: Microsoft's advanced model with excellent reasoning capabilities
+- **llama3**: Meta's latest Llama model
+- **mistral**: Mistral AI's 7B model running locally
+- **codellama**: Specialized for code understanding and generation
 
 ### Cohere Models
 
