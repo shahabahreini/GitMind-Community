@@ -4,6 +4,13 @@ Generate meaningful and consistent git commit messages using AI. This extension 
 
 ![GitMind Demo](https://shahabahreini.com/wp-content/uploads/toturial.gif)
 
+## Installation
+
+Install directly from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant)
+
+Or launch VS Code Quick Open (Ctrl+P), paste the following command, and press enter:
+```ext install ShahabBahreiniJangjoo.ai-commit-assistant```
+
 ## Features
 
 ### Multiple AI Provider Support
@@ -108,12 +115,6 @@ Enable prompt customization to provide additional context when generating commit
   - Ollama installation (completely free)
   - Mistral API key (free tier available)
   - Cohere API key (free tier available)
-
-## Installation
-
-1. Install from VS Code Marketplace
-2. Configure via Command Palette or Settings UI
-3. Start generating commits!
 
 ## Configuration
 
