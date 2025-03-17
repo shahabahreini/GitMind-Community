@@ -5,6 +5,26 @@ All notable changes to the "AI Commit Assistant" extension will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.2] - 2025-03-17
+
+### Added
+
+- Added prompt customization feature to enhance commit message generation
+  - New setting `aiCommitAssistant.promptCustomization.enabled` to toggle the feature
+  - Custom context input dialog when generating commit messages
+  - Enhanced prompt handling across all AI providers
+- Enhanced AI provider integrations with custom context support
+  - Updated all API services to handle custom context in prompts
+  - Improved prompt generation with context awareness
+  - Better commit message formatting with user context
+
+### Technical
+
+- Added prompt customization configuration to settings schema
+- Updated API services to support custom context in prompts
+- Enhanced settings UI with prompt customization toggle
+- Improved prompt generation system across all providers
+
 ## [1.5.0] - 2025-03-13
 
 ### Added

@@ -13,6 +13,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     // Initialize form with current settings
     document.getElementById('apiProvider').value = currentSettings.apiProvider || 'huggingface';
     document.getElementById('commitVerbose').checked = currentSettings.commit?.verbose ?? true;
+    document.getElementById('promptCustomizationEnabled').checked = currentSettings.promptCustomization?.enabled ?? false;
     document.getElementById('geminiApiKey').value = currentSettings.gemini?.apiKey || '';
     document.getElementById('geminiModel').value = currentSettings.gemini?.model || 'gemini-2.0-flash';
     document.getElementById('huggingfaceApiKey').value = currentSettings.huggingface?.apiKey || '';
@@ -57,6 +58,9 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
         openai: {
           apiKey: document.getElementById('openaiApiKey').value,
           model: document.getElementById('openaiModel').value
+        },
+        promptCustomization: {
+          enabled: document.getElementById('promptCustomizationEnabled').checked
         },
         commit: {
           verbose: document.getElementById('commitVerbose').checked
@@ -332,6 +336,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           // Update form fields
           document.getElementById('apiProvider').value = currentSettings.apiProvider || 'huggingface';
           document.getElementById('commitVerbose').checked = currentSettings.commit?.verbose ?? true;
+          document.getElementById('promptCustomizationEnabled').checked = currentSettings.promptCustomization?.enabled ?? false;
           
           if (currentSettings.gemini) {
             document.getElementById('geminiApiKey').value = currentSettings.gemini.apiKey || '';

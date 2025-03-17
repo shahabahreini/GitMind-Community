@@ -81,6 +81,10 @@ export class StatusBanner {
           <span class="status-label">Commit Style</span>
           <span class="status-value">${this._settings.commit?.verbose ? "Verbose" : "Concise"}</span>
         </div>
+        <div class="status-item">
+          <span class="status-label">Prompt Customization</span>
+          <span class="status-value">${this._settings.promptCustomization?.enabled ? "Enabled" : "Disabled"}</span>
+        </div>
       </div>
     </div>`;
   }

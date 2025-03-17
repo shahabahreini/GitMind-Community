@@ -49,6 +49,9 @@ export interface ExtensionConfig {
         apiKey?: string;
         model: string;
     };
+    promptCustomization: {
+        enabled: boolean;
+    };
 }
 
 // API responses

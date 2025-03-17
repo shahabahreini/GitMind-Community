@@ -73,7 +73,7 @@ function enforceCommitMessageFormat(message: string): string {
     return [subjectLine, ...lines.slice(1)].join('\n');
 }
 
-export async function callGeminiAPI(apiKey: string, model: string, diff: string): Promise<string> {
+export async function callGeminiAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
     if (!apiKey || apiKey.trim() === '') {
         debugLog("Error: Gemini API key is missing or empty");
         throw new Error("Gemini API key is required but not configured");
@@ -94,7 +94,7 @@ export async function callGeminiAPI(apiKey: string, model: string, diff: string)
         const generationConfig = MODEL_CONFIGS[model as GeminiModel];
         debugLog("Using generation config", { generationConfig });
 
-        const promptText = generateCommitPrompt(diff);
+        const promptText = generateCommitPrompt(diff, undefined, customContext);
         debugLog("Sending prompt to Gemini API");
         debugLog("Prompt:", promptText);
 

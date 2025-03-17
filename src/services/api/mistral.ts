@@ -37,8 +37,8 @@ function enforceCommitMessageFormat(message: string): string {
     return [subjectLine, ...lines.slice(1)].join('\n');
 }
 
-export async function callMistralAPI(apiKey: string, model: string, diff: string): Promise<string> {
-    const prompt = generateCommitPrompt(diff);
+export async function callMistralAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
+    const prompt = generateCommitPrompt(diff, undefined, customContext);
     debugLog("Calling Mistral API", { model });
     debugLog("Prompt:", prompt);
 

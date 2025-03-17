@@ -11,10 +11,19 @@ export const DEFAULT_PROMPT_CONFIG: PromptConfig = {
     includeScope: true
 };
 
-export function generateCommitPrompt(diff: string, config: PromptConfig = DEFAULT_PROMPT_CONFIG): string {
-    return `As a Git commit message generator, analyze this specific diff and create ONE commit message that accurately describes these changes:
+export function generateCommitPrompt(
+    diff: string,
+    config: PromptConfig = DEFAULT_PROMPT_CONFIG,
+    customContext: string = ""
+): string {
+    let prompt = `As a Git commit message generator, analyze this specific diff and create ONE commit message that accurately describes these changes:`;
 
-Git diff content:
+    // Add custom context if provided
+    if (customContext.trim()) {
+        prompt += `\n\nAdditional context from the user: ${customContext.trim()}`;
+    }
+
+    prompt += `\n\nGit diff content:
 ${diff}
 
 ## Expected Format
@@ -65,4 +74,6 @@ fix${config.includeScope ? '(data)' : ''}: resolve race condition in concurrent 
 """
 
 Generate exactly ONE commit message following this format. No alternatives or explanations.`;
+
+    return prompt;
 }

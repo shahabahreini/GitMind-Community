@@ -30,6 +30,10 @@ Generate meaningful and consistent git commit messages using AI. This extension 
   - Analyzes staged changes automatically
   - Handles unstaged changes with user confirmation
   - Supports both single and multiple file changes
+- **Custom Context Support**:
+  - Optional prompt customization for better context
+  - User-provided additional information for commit messages
+  - Enhanced commit message accuracy with custom context
 - **VS Code SCM Integration**:
   - AI icon in Source Control panel for quick access
   - ⚙️ Settings icon for quick configuration
@@ -69,6 +73,19 @@ Generate meaningful and consistent git commit messages using AI. This extension 
   - Real-time token consumption display
   - Rate limit status indicators
   - Quota management helpers
+
+### Prompt Customization
+
+Enable prompt customization to provide additional context when generating commit messages:
+
+1. Enable via Settings:
+   - Open VS Code settings
+   - Search for "AI Commit Assistant"
+   - Enable "Prompt Customization"
+2. Usage:
+   - When generating a commit message, you'll be prompted for additional context
+   - Enter relevant information about the changes
+   - The AI will incorporate your context into the commit message
 
 ### Advanced Features
 

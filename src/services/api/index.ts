@@ -30,7 +30,8 @@ type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" |
 
 export async function generateCommitMessage(
     config: ApiConfig,
-    diff: string
+    diff: string,
+    customContext: string = ""
 ): Promise<string> {
     try {
         // First validate and potentially update the configuration
@@ -41,7 +42,7 @@ export async function generateCommitMessage(
         }
 
         // Then generate the message with the validated config
-        return await generateMessageWithConfig(validatedConfig, diff);
+        return await generateMessageWithConfig(validatedConfig, diff, customContext);
     } catch (error) {
         debugLog("Generate Commit Message Error:", error);
         // Handle the error but don't rethrow
@@ -52,7 +53,8 @@ export async function generateCommitMessage(
 
 async function generateMessageWithConfig(
     config: ApiConfig,
-    diff: string
+    diff: string,
+    customContext: string = ""
 ): Promise<string> {
     // Show diagnostics before proceeding
     await showDiagnosticsInfo(config, diff);
@@ -89,7 +91,7 @@ async function generateMessageWithConfig(
                             apiKey.trim(),
                             vscode.ConfigurationTarget.Global
                         );
-                        return await callGeminiAPI(apiKey.trim(), geminiConfig.model, diff);
+                        return await callGeminiAPI(apiKey.trim(), geminiConfig.model, diff, customContext);
                     }
                 } else if (result === "Get API Key") {
                     await vscode.env.openExternal(
@@ -114,12 +116,12 @@ async function generateMessageWithConfig(
                             apiKey.trim(),
                             vscode.ConfigurationTarget.Global
                         );
-                        return await callGeminiAPI(apiKey.trim(), geminiConfig.model, diff);
+                        return await callGeminiAPI(apiKey.trim(), geminiConfig.model, diff, customContext);
                     }
                 }
                 return ""; // Return empty if user cancels
             }
-            return await callGeminiAPI(geminiConfig.apiKey, geminiConfig.model, diff);
+            return await callGeminiAPI(geminiConfig.apiKey, geminiConfig.model, diff, customContext);
         }
 
         case "huggingface": {
@@ -161,7 +163,8 @@ async function generateMessageWithConfig(
                         return await callHuggingFaceAPI(
                             apiKey.trim(),
                             hfConfig.model,
-                            diff
+                            diff,
+                            customContext
                         );
                     }
                 } else if (result === "Get API Key") {
@@ -197,7 +200,8 @@ async function generateMessageWithConfig(
                         return await callHuggingFaceAPI(
                             apiKey.trim(),
                             hfConfig.model,
-                            diff
+                            diff,
+                            customContext
                         );
                     }
                 }
@@ -212,7 +216,7 @@ async function generateMessageWithConfig(
                 );
                 return "";
             }
-            return await callHuggingFaceAPI(hfConfig.apiKey, hfConfig.model, diff);
+            return await callHuggingFaceAPI(hfConfig.apiKey, hfConfig.model, diff, customContext);
         }
 
         case "mistral": {
@@ -254,7 +258,8 @@ async function generateMessageWithConfig(
                         return await callMistralAPI(
                             apiKey.trim(),
                             mistralConfig.model,
-                            diff
+                            diff,
+                            customContext
                         );
                     }
                 } else if (result === "Get API Key") {
@@ -290,7 +295,8 @@ async function generateMessageWithConfig(
                         return await callMistralAPI(
                             apiKey.trim(),
                             mistralConfig.model,
-                            diff
+                            diff,
+                            customContext
                         );
                     }
                 }
@@ -308,7 +314,8 @@ async function generateMessageWithConfig(
             return await callMistralAPI(
                 mistralConfig.apiKey,
                 mistralConfig.model,
-                diff
+                diff,
+                customContext
             );
         }
 
@@ -343,7 +350,7 @@ async function generateMessageWithConfig(
                 return "";
             }
 
-            return await callOllamaAPI(ollamaConfig.url, ollamaConfig.model, diff);
+            return await callOllamaAPI(ollamaConfig.url, ollamaConfig.model, diff, customContext);
         }
 
         case "cohere": {
@@ -385,7 +392,8 @@ async function generateMessageWithConfig(
                         return await callCohereAPI(
                             apiKey.trim(),
                             cohereConfig.model,
-                            diff
+                            diff,
+                            customContext
                         );
                     }
                 } else if (result === "Get API Key") {
@@ -421,7 +429,8 @@ async function generateMessageWithConfig(
                         return await callCohereAPI(
                             apiKey.trim(),
                             cohereConfig.model,
-                            diff
+                            diff,
+                            customContext
                         );
                     }
                 }
@@ -439,7 +448,8 @@ async function generateMessageWithConfig(
             return await callCohereAPI(
                 cohereConfig.apiKey,
                 cohereConfig.model,
-                diff
+                diff,
+                customContext
             );
         }
 
@@ -482,7 +492,8 @@ async function generateMessageWithConfig(
                         return await callOpenAIAPI(
                             apiKey.trim(),
                             openaiConfig.model,
-                            diff
+                            diff,
+                            customContext
                         );
                     }
                 } else if (result === "Get API Key") {
@@ -518,7 +529,8 @@ async function generateMessageWithConfig(
                         return await callOpenAIAPI(
                             apiKey.trim(),
                             openaiConfig.model,
-                            diff
+                            diff,
+                            customContext
                         );
                     }
                 }
@@ -536,7 +548,8 @@ async function generateMessageWithConfig(
             return await callOpenAIAPI(
                 openaiConfig.apiKey,
                 openaiConfig.model,
-                diff
+                diff,
+                customContext
             );
         }
 

@@ -5,12 +5,13 @@ import { debugLog } from "../debug/logger";
  * @param apiKey The OpenAI API key
  * @param model The model to use (e.g., "gpt-3.5-turbo")
  * @param diff Git diff to analyze
+ * @param customContext Additional context provided by the user
  * @returns Generated commit message
  */
-export async function callOpenAIAPI(apiKey: string, model: string, diff: string): Promise<string> {
+export async function callOpenAIAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
     try {
         debugLog(`Calling OpenAI API with model: ${model}`);
-        const prompt = createPromptFromDiff(diff);
+        const prompt = createPromptFromDiff(diff, customContext);
 
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
@@ -53,19 +54,29 @@ export async function callOpenAIAPI(apiKey: string, model: string, diff: string)
 
 /**
  * Creates a prompt from the git diff to send to the model
+ * @param diff Git diff to analyze
+ * @param customContext Additional context provided by the user
+ * @returns Generated prompt
  */
-function createPromptFromDiff(diff: string): string {
-    return `Generate a concise and informative git commit message based on the following changes.
+function createPromptFromDiff(diff: string, customContext: string = ""): string {
+    let prompt = `Generate a concise and informative git commit message based on the following changes.
 Focus on what was changed and why. Keep the message under 72 characters for the summary line.
-If verbose mode is needed, add bullet points explaining key changes.
+If verbose mode is needed, add bullet points explaining key changes.`;
 
-Here are the changes:
+    // Add custom context if provided
+    if (customContext.trim()) {
+        prompt += `\n\nAdditional context from the user: ${customContext.trim()}`;
+    }
+
+    prompt += `\n\nHere are the changes:
 
 \`\`\`
 ${diff}
 \`\`\`
 
 Git Commit Message:`;
+
+    return prompt;
 }
 
 /**

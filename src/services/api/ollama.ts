@@ -6,9 +6,10 @@ import { generateCommitPrompt } from './prompts';
 export async function callOllamaAPI(
     baseUrl: string,
     model: string,
-    diff: string
+    diff: string,
+    customContext: string = ""
 ): Promise<string> {
-    const prompt = generateCommitPrompt(diff);
+    const prompt = generateCommitPrompt(diff, undefined, customContext);
     debugLog("Calling Ollama API", { baseUrl, model });
     debugLog("Prompt:", prompt);
 

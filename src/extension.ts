@@ -120,8 +120,22 @@ export async function activate(context: vscode.ExtensionContext) {
           return;
         }
 
+        // Check if prompt customization is enabled
+        const config = vscode.workspace.getConfiguration("aiCommitAssistant");
+        const promptCustomizationEnabled = config.get("promptCustomization.enabled", false);
+
+        // Get custom context if enabled
+        let customContext = "";
+        if (promptCustomizationEnabled) {
+          customContext = await vscode.window.showInputBox({
+            prompt: "Add any additional context to help generate a better commit message",
+            placeHolder: "e.g., Fixing the login bug, Implementing feature X, etc.",
+            ignoreFocusOut: true
+          }) || "";
+        }
+
         const apiConfig = getApiConfig();
-        const rawResponse = await generateCommitMessage(apiConfig, diff);
+        const rawResponse = await generateCommitMessage(apiConfig, diff, customContext);
 
         // Only process and set the commit message if we got a response
         if (rawResponse) {

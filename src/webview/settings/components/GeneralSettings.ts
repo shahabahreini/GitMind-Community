@@ -23,6 +23,15 @@ export class GeneralSettings {
         </div>
       </div>
       <div class="form-group">
+        <div class="checkbox-container">
+          <input type="checkbox" id="promptCustomizationEnabled" ${this._settings.promptCustomization?.enabled ? "checked" : ""} />
+          <label for="promptCustomizationEnabled">Enable Prompt Customization</label>
+        </div>
+        <div class="description">
+          When enabled, shows a dialog to add custom context when generating commit messages.
+        </div>
+      </div>
+      <div class="form-group">
         <label for="apiProvider">API Provider</label>
         <select id="apiProvider">
           <option value="gemini" ${this._settings.apiProvider === "gemini" ? "selected" : ""}>Gemini</option>

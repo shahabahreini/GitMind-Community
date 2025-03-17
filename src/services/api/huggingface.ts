@@ -5,9 +5,10 @@ import { generateCommitPrompt } from './prompts';
 export async function callHuggingFaceAPI(
     apiKey: string,
     model: string,
-    diff: string
+    diff: string,
+    customContext: string = ""
 ): Promise<string> {
-    const prompt = generateCommitPrompt(diff);
+    const prompt = generateCommitPrompt(diff, undefined, customContext);
     debugLog("Calling Hugging Face API", { model });
     debugLog("Prompt:", prompt);
 

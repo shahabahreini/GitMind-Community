@@ -36,6 +36,9 @@ export class SettingsManager {
                 apiKey: config.get<string>("openai.apiKey") || "",
                 model: config.get<string>("openai.model") || "gpt-3.5-turbo",
             },
+            promptCustomization: {
+                enabled: config.get<boolean>("promptCustomization.enabled") || false,
+            },
             commit: {
                 verbose: config.get<boolean>("commit.verbose") ?? true,
             },
@@ -114,6 +117,11 @@ export class SettingsManager {
         await config.update(
             "openai.model",
             settings.openai.model,
+            vscode.ConfigurationTarget.Global
+        );
+        await config.update(
+            "promptCustomization.enabled",
+            settings.promptCustomization?.enabled ?? false,
             vscode.ConfigurationTarget.Global
         );
         await config.update(

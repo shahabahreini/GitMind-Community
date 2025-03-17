@@ -26,6 +26,9 @@ export interface ExtensionSettings {
         apiKey: string;
         model: string;
     };
+    promptCustomization?: {
+        enabled: boolean;
+    };
     commit?: {
         verbose: boolean;
     };
