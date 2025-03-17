@@ -28,6 +28,8 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     document.getElementById('openaiModel').value = currentSettings.openai?.model || 'gpt-3.5-turbo';
     document.getElementById('togetherApiKey').value = currentSettings.together?.apiKey || '';
     document.getElementById('togetherModel').value = currentSettings.together?.model || 'meta-llama/Llama-3.3-70B-Instruct-Turbo';
+    document.getElementById('openrouterApiKey').value = currentSettings.openrouter?.apiKey || '';
+    document.getElementById('openrouterModel').value = currentSettings.openrouter?.model || 'anthropic/claude-3-opus:beta';
     
     ${getUiManagerScript()}
     ${getApiManagerScript()}
@@ -64,6 +66,10 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
         together: {
           apiKey: document.getElementById('togetherApiKey').value,
           model: document.getElementById('togetherModel').value
+        },
+        openrouter: {
+          apiKey: document.getElementById('openrouterApiKey').value,
+          model: document.getElementById('openrouterModel').value
         },
         promptCustomization: {
           enabled: document.getElementById('promptCustomizationEnabled').checked
@@ -377,6 +383,11 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           if (currentSettings.together) {
             document.getElementById('togetherApiKey').value = currentSettings.together.apiKey || '';
             document.getElementById('togetherModel').value = currentSettings.together.model || 'meta-llama/Llama-3.3-70B-Instruct-Turbo';
+          }
+
+          if (currentSettings.openrouter) {
+            document.getElementById('openrouterApiKey').value = currentSettings.openrouter.apiKey || '';
+            document.getElementById('openrouterModel').value = currentSettings.openrouter.model || 'anthropic/claude-3-opus:beta';
           }
           
           // Update UI state
