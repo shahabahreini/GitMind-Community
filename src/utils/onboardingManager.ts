@@ -3,7 +3,7 @@
 import * as vscode from 'vscode';
 import { debugLog } from "../services/debug/logger";
 
-interface OnboardingStep {
+export interface OnboardingStep {
     title: string;
     content: string;
 }
@@ -17,56 +17,36 @@ export class OnboardingManager {
         'Ollama': 'https://ollama.ai/download',
         'Mistral': 'https://console.mistral.ai/api-keys/',
         'Cohere': 'https://dashboard.cohere.com/api-keys',
-        'OpenAI': 'https://platform.openai.com/api-keys'
+        'OpenAI': 'https://platform.openai.com/api-keys',
+        'Together AI': 'https://api.together.xyz/settings/api-keys'
     };
+
+    private static steps: OnboardingStep[] = [];
+
+    /**
+     * Register onboarding steps to be shown to users
+     */
+    public static registerSteps(steps: OnboardingStep[]): void {
+        OnboardingManager.steps = steps;
+    }
 
     public static async showOnboarding(context: vscode.ExtensionContext): Promise<void> {
         const hasShownOnboarding = context.globalState.get<boolean>(this.ONBOARDING_SHOWN_KEY);
 
-        if (!hasShownOnboarding) {
-            const response = await vscode.window.showInformationMessage(
-                'Welcome to GitMind: AI Commit Assistant! Would you like to see a quick setup guide?',
-                'Yes, show me',
-                'No, thanks'
-            );
+        if (!hasShownOnboarding && OnboardingManager.steps.length > 0) {
+            for (const step of OnboardingManager.steps) {
+                const result = await vscode.window.showInformationMessage(
+                    step.content,
+                    { modal: true, detail: step.title },
+                    'Next'
+                );
 
-            if (response === 'Yes, show me') {
-                await this.showOnboardingSteps();
+                if (!result) {
+                    break;
+                }
             }
 
             await context.globalState.update(this.ONBOARDING_SHOWN_KEY, true);
-        }
-    }
-
-    private static async showOnboardingSteps(): Promise<void> {
-        const steps: OnboardingStep[] = [
-            {
-                title: 'Step 1: Choose an AI Provider',
-                content: 'GitMind supports multiple AI providers:\n• Gemini (Google)\n• Hugging Face\n• Ollama (Local)\n• Mistral AI\n• Cohere\n• OpenAI\n\nClick Next to learn how to configure your chosen provider.',
-            },
-            {
-                title: 'Step 2: Configure API Settings',
-                content: 'Click the ⚙️ icon in the Source Control panel or use the command palette to open settings.\nConfigure your chosen provider\'s API key and model settings.',
-            },
-            {
-                title: 'Step 3: Generate Commit Messages',
-                content: 'To generate a commit message:\n1. Stage your changes\n2. Click the AI icon in the Source Control panel\n3. Review and edit the generated message\n4. Commit as usual',
-            },
-            {
-                title: 'Ready to Start!',
-                content: 'You\'re all set! Need help? Check our documentation on GitHub or open the settings to configure the extension.',
-            }
-        ];
-
-        for (const step of steps) {
-            const response = await vscode.window.showInformationMessage(
-                `${step.title}\n\n${step.content}`,
-                { modal: true },
-                'Next'
-            );
-            if (!response) {
-                break;
-            }
         }
     }
 
@@ -168,7 +148,8 @@ export class OnboardingManager {
             'Hugging Face': 'huggingface.apiKey',
             'Mistral': 'mistral.apiKey',
             'Cohere': 'cohere.apiKey',
-            'OpenAI': 'openai.apiKey'
+            'OpenAI': 'openai.apiKey',
+            'Together AI': 'together.apiKey'
         };
         return paths[provider] || '';
     }

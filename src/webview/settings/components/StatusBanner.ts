@@ -28,6 +28,9 @@ export class StatusBanner {
       case "cohere":
         modelInfo = this._settings.cohere.model || "command-r-plus";
         break;
+      case "together":
+        modelInfo = this._settings.together?.model || "Not selected";
+        break;
     }
 
     // Get API configuration status
@@ -48,6 +51,9 @@ export class StatusBanner {
       case "cohere":
         apiConfigured = !!this._settings.cohere.apiKey;
         break;
+      case "together":
+        apiConfigured = !!this._settings.together?.apiKey;
+        break;
     }
 
     // Format provider name for display
@@ -56,7 +62,8 @@ export class StatusBanner {
       huggingface: "Hugging Face",
       ollama: "Ollama",
       mistral: "Mistral",
-      cohere: "Cohere"
+      cohere: "Cohere",
+      together: "Together AI"
     }[this._settings.apiProvider] || this._settings.apiProvider;
 
     return `

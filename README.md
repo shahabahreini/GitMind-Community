@@ -21,6 +21,7 @@ Or launch VS Code Quick Open (Ctrl+P), paste the following command, and press en
 - **[Ollama](https://ollama.com/)**: A completely free, locally installed engine for privacy-focused development
 - **[Cohere](https://cohere.com/)**: High-quality language models with a focus on command and retrieval tasks, offering various models and a free tier
 - **[OpenAI](https://openai.com/)**: High-quality GPT models for professional results
+- **[Together AI](https://together.xyz/)**: Platform for accessing high-quality open-source models with free tier options
 
 | Provider            | Free Plan | Paid Plan |
 |---------------------|-----------|-----------|
@@ -30,6 +31,7 @@ Or launch VS Code Quick Open (Ctrl+P), paste the following command, and press en
 | Ollama              | Yes       | No        |
 | Cohere              | Yes       | Yes       |
 | OpenAI              | No        | Yes       |
+| Together AI         | Yes       | Yes       |
 
 ### Smart Git Integration
 
@@ -186,6 +188,15 @@ Access the settings UI through:
    - Enter your API key
    - Select your preferred model (GPT-4o, GPT-4-turbo, or GPT-3.5-turbo)
 
+### Together AI
+
+1. Sign up for an account at [Together AI](https://together.xyz)
+2. Create an API key in your Together AI dashboard
+3. Configure the extension:
+   - Set "Together" as your provider
+   - Enter your API key
+   - Select your preferred model (e.g., meta-llama/Llama-3.3-70B-Instruct-Turbo)
+
 ## Available Models
 
 ### Gemini Models
@@ -224,3 +235,10 @@ Access the settings UI through:
 - **gpt-4o**: Latest GPT-4o model with enhanced capabilities
 - **gpt-4-turbo**: High-performance GPT-4 model with fast inference
 - **gpt-3.5-turbo**: Efficient and cost-effective GPT-3.5 model
+
+### Together AI Models
+
+- **meta-llama/Llama-3.3-70B-Instruct-Turbo**: Meta's powerful Llama 3.3 model optimized for instruction following
+- **mistralai/Mixtral-8x7B-Instruct-v0.1**: Mistral's high-performing mixture-of-experts model
+- **meta-llama/Llama-2-70b-chat-hf**: Meta's large Llama 2 model for chat applications
+- And many other open-source models available on the Together AI platform

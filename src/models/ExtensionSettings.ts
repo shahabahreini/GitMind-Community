@@ -26,6 +26,10 @@ export interface ExtensionSettings {
         apiKey: string;
         model: string;
     };
+    together: {
+        apiKey: string;
+        model: string;
+    };
     promptCustomization?: {
         enabled: boolean;
     };

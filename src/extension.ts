@@ -11,7 +11,7 @@ import {
 import { initializeLogger, debugLog } from "./services/debug/logger";
 import { processResponse } from "./utils/commitFormatter";
 import { SettingsWebview } from "./webview/settings/SettingsWebview";
-import { OnboardingManager } from "./utils/onboardingManager";
+import { OnboardingManager, OnboardingStep } from "./utils/onboardingManager";
 import { fetchMistralModels } from "./services/api/mistral";
 // Add import for Cohere (if needed in the future)
 // import { fetchCohereModels } from "./services/api/cohere";
@@ -35,8 +35,8 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.workspace.getConfiguration("aiCommitAssistant")
   );
 
-  // Log supported API providers, now including OpenAI
-  debugLog("Supported API providers: Gemini, Hugging Face, Ollama, Mistral, Cohere, OpenAI");
+  // Log supported API providers, now including Together AI
+  debugLog("Supported API providers: Gemini, Hugging Face, Ollama, Mistral, Cohere, OpenAI, Together AI");
 
   // Initialize SCM provider
   const scmProvider = vscode.scm.createSourceControl(
@@ -416,6 +416,29 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Show onboarding for new users
   await OnboardingManager.showOnboarding(context);
+
+  // Update onboarding step to mention Together AI
+  const steps: OnboardingStep[] = [
+    {
+      title: 'Step 1: Choose an AI Provider',
+      content: 'GitMind supports multiple AI providers:\n• Gemini (Google)\n• Hugging Face\n• Ollama (Local)\n• Mistral AI\n• Cohere\n• OpenAI\n• Together AI\n\nClick Next to learn how to configure your chosen provider.',
+    },
+    {
+      title: 'Step 2: Configure API Settings',
+      content: 'Open the settings panel using the command palette (Ctrl+Shift+P or Cmd+Shift+P) and search for "AI Commit: Open Settings".',
+    },
+    {
+      title: 'Step 3: Generate Commit Messages',
+      content: 'After making changes to your code, click the "Generate Commit" button in the Source Control panel or use the command palette.',
+    },
+    {
+      title: 'Step 4: Review & Commit',
+      content: 'Review the AI-generated commit message, make any needed edits, and commit your changes as usual.',
+    }
+  ];
+
+  // Register steps with OnboardingManager
+  OnboardingManager.registerSteps(steps);
 
   // Show SCM status bar item if Git is active
   const gitExtension = vscode.extensions.getExtension("vscode.git");

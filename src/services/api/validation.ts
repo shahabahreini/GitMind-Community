@@ -140,6 +140,24 @@ export async function checkApiSetup(): Promise<ApiCheckResult> {
                     }
                 }
                 break;
+
+            case "together":
+                if (!config.apiKey) {
+                    result.error = "API key not configured";
+                    result.troubleshooting = "Please enter your Together AI API key in the settings";
+                } else {
+                    const isValid = await validateTogetherApiKey(config.apiKey);
+                    result.success = isValid;
+                    if (isValid) {
+                        result.model = config.model || "meta-llama/Llama-3.3-70B-Instruct-Turbo";
+                        result.responseTime = 550; // Placeholder value
+                        result.details = "Connection test successful";
+                    } else {
+                        result.error = "Invalid API key";
+                        result.troubleshooting = "Please check your Together AI API key configuration";
+                    }
+                }
+                break;
         }
 
         return result;
@@ -225,6 +243,17 @@ export async function checkRateLimits(): Promise<RateLimitsCheckResult> {
                     queryCost: 1
                 };
                 result.notes = "OpenAI rate limits depend on your account tier and model";
+                break;
+
+            case "together":
+                result.success = true;
+                result.limits = {
+                    reset: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
+                    limit: 100,
+                    remaining: 90,
+                    queryCost: 1
+                };
+                result.notes = "Together AI rate limits depend on your account tier and model";
                 break;
 
             default:
@@ -343,6 +372,24 @@ async function validateCohereApiKey(apiKey: string): Promise<boolean> {
         return response.ok;
     } catch (error) {
         debugLog("Cohere API validation error:", error);
+        return false;
+    }
+}
+
+async function validateTogetherApiKey(apiKey: string): Promise<boolean> {
+    try {
+        // Use a lightweight endpoint to validate the API key
+        const response = await fetch("https://api.together.xyz/v1/models", {
+            headers: {
+                "Authorization": `Bearer ${apiKey}`,
+                "Content-Type": "application/json"
+            }
+        });
+
+        // If we get a successful response, the API key is valid
+        return response.ok;
+    } catch (error) {
+        debugLog("Together API validation error:", error);
         return false;
     }
 }

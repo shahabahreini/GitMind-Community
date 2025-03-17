@@ -5,6 +5,44 @@ All notable changes to the "AI Commit Assistant" extension will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - Unreleased
+
+### Added
+
+- Added support for [Together AI](https://www.together.ai/) provider
+- Added Together AI models including Llama 3.3, Llama 3.1, Qwen2, and Mixtral
+- Added Together AI API validation and settings UI
+- Added support for customizing commit message prompts with additional context
+
+### Changed
+
+- Updated onboarding to include Together AI as a provider option
+- Enhanced provider selection UI with Together AI option
+- Updated diagnostics to support Together AI models
+- Improved error handling for API responses across all providers
+
+### Fixed
+
+- Fixed Cohere API implementation to use the v2 chat endpoint
+- Fixed response parsing for various API formats
+- Improved error messages for better troubleshooting
+
+## [1.6.0] - 2025-03-18
+
+### Added
+
+- Added support for [Together AI](https://www.together.ai/) as a provider
+- Added Together AI models including Llama-3.3-70B-Instruct-Turbo and Mixtral-8x7B
+- Added Together AI API validation and settings UI
+- Enhanced API service to handle Together AI response format
+
+### Changed
+
+- Updated onboarding to include Together AI as a provider option
+- Enhanced provider selection UI with Together AI option
+- Updated diagnostics to support Together AI models
+- Improved rate limit checks with Together AI headers support
+
 ## [1.5.2] - 2025-03-17
 
 ### Added
