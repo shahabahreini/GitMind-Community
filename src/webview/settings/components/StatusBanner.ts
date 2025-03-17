@@ -31,6 +31,9 @@ export class StatusBanner {
       case "together":
         modelInfo = this._settings.together?.model || "Not selected";
         break;
+      case "openrouter":
+        modelInfo = this._settings.openrouter.model || "Not selected";
+        break;
     }
 
     // Get API configuration status
@@ -54,6 +57,9 @@ export class StatusBanner {
       case "together":
         apiConfigured = !!this._settings.together?.apiKey;
         break;
+      case "openrouter":
+        apiConfigured = !!this._settings.openrouter.apiKey;
+        break;
     }
 
     // Format provider name for display
@@ -63,7 +69,8 @@ export class StatusBanner {
       ollama: "Ollama",
       mistral: "Mistral",
       cohere: "Cohere",
-      together: "Together AI"
+      together: "Together AI",
+      openrouter: "OpenRouter"
     }[this._settings.apiProvider] || this._settings.apiProvider;
 
     return `

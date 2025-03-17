@@ -158,6 +158,24 @@ export async function checkApiSetup(): Promise<ApiCheckResult> {
                     }
                 }
                 break;
+
+            case "openrouter":
+                if (!config.apiKey) {
+                    result.error = "API key not configured";
+                    result.troubleshooting = "Please enter your OpenRouter API key in the settings";
+                } else {
+                    const isValid = await validateOpenRouterApiKey(config.apiKey);
+                    result.success = isValid;
+                    if (isValid) {
+                        result.model = config.model || "default model";
+                        result.responseTime = 550; // Placeholder value
+                        result.details = "Connection test successful";
+                    } else {
+                        result.error = "Invalid API key";
+                        result.troubleshooting = "Please check your OpenRouter API key configuration";
+                    }
+                }
+                break;
         }
 
         return result;
@@ -254,6 +272,17 @@ export async function checkRateLimits(): Promise<RateLimitsCheckResult> {
                     queryCost: 1
                 };
                 result.notes = "Together AI rate limits depend on your account tier and model";
+                break;
+
+            case "openrouter":
+                result.success = true;
+                result.limits = {
+                    reset: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
+                    limit: 100,
+                    remaining: 90,
+                    queryCost: 1
+                };
+                result.notes = "OpenRouter rate limits depend on your account tier and selected model";
                 break;
 
             default:
@@ -390,6 +419,25 @@ async function validateTogetherApiKey(apiKey: string): Promise<boolean> {
         return response.ok;
     } catch (error) {
         debugLog("Together API validation error:", error);
+        return false;
+    }
+}
+
+async function validateOpenRouterApiKey(apiKey: string): Promise<boolean> {
+    try {
+        // Use a lightweight endpoint to validate the API key
+        const response = await fetch("https://openrouter.ai/api/v1/models", {
+            headers: {
+                "Authorization": `Bearer ${apiKey}`,
+                "HTTP-Referer": "https://github.com/shahabahreini/AI-Commit-Assistant",
+                "X-Title": "GitMind: AI Commit Assistant"
+            }
+        });
+
+        // If we get a successful response, the API key is valid
+        return response.ok;
+    } catch (error) {
+        debugLog("OpenRouter API validation error:", error);
         return false;
     }
 }

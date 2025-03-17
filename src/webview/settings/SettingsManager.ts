@@ -40,6 +40,10 @@ export class SettingsManager {
                 apiKey: config.get<string>("together.apiKey") || "",
                 model: config.get<string>("together.model") || "meta-llama/Llama-3.3-70B-Instruct-Turbo",
             },
+            openrouter: {
+                apiKey: config.get<string>("openrouter.apiKey") || "",
+                model: config.get<string>("openrouter.model") || "anthropic/claude-3-opus:beta",
+            },
             promptCustomization: {
                 enabled: config.get<boolean>("promptCustomization.enabled") || false,
             },
@@ -131,6 +135,16 @@ export class SettingsManager {
         await config.update(
             "together.model",
             settings.together.model,
+            vscode.ConfigurationTarget.Global
+        );
+        await config.update(
+            "openrouter.apiKey",
+            settings.openrouter.apiKey,
+            vscode.ConfigurationTarget.Global
+        );
+        await config.update(
+            "openrouter.model",
+            settings.openrouter.model,
             vscode.ConfigurationTarget.Global
         );
         await config.update(
