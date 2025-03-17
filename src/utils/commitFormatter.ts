@@ -33,10 +33,13 @@ export async function processResponse(response: string): Promise<CommitMessage> 
             }
 
             if (foundSummary && cleanLine) {
-                if (cleanLine.startsWith("-")) {
-                    const cleanedPoint = cleanLine.replace(/^-\s*(feat|fix|docs|style|refactor|test|chore):\s*/, '- ');
+                // Correctly handle bullet points with * or -
+                if (cleanLine.startsWith("-") || cleanLine.startsWith("*")) {
+                    const cleanedPoint = cleanLine
+                        .replace(/^[*-]\s*(feat|fix|docs|style|refactor|test|chore):\s*/, '- ')
+                        .replace(/^[*-]\s*/, '- '); // Ensure consistent bullet point format with -
                     bulletPoints.push(cleanedPoint);
-                } else if (!cleanLine.startsWith("#") && !cleanLine.startsWith("*")) {
+                } else if (!cleanLine.startsWith("#")) {
                     bulletPoints.push(`- ${cleanLine}`);
                 }
             }
@@ -71,6 +74,7 @@ export async function processResponse(response: string): Promise<CommitMessage> 
             summary = summary.substring(0, 69) + "...";
         }
 
+        // Use the actual bullet points from the response if available
         const description = bulletPoints.length > 0
             ? bulletPoints.join("\n")
             : "- Update implementation with necessary changes";

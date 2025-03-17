@@ -6,9 +6,9 @@ import { debugLog } from "../debug/logger";
  * @param model The model to use (e.g., "meta-llama/Llama-3.3-70B-Instruct-Turbo")
  * @param diff Git diff to analyze
  * @param customContext Optional custom context to include in the prompt
- * @returns Generated commit message object with summary and description
+ * @returns Generated commit message as a string
  */
-export async function callTogetherAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<{ summary: string, description?: string }> {
+export async function callTogetherAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
     try {
         debugLog(`Calling Together AI API with model: ${model}`);
         const prompt = createPromptFromDiff(diff, customContext);
@@ -45,32 +45,8 @@ export async function callTogetherAPI(apiKey: string, model: string, diff: strin
             const content = data.choices[0].message.content;
             debugLog(`Processing Response:\n${content}`);
 
-            try {
-                const formattedMessage = formatCommitMessage(content);
-
-                // Ensure we have valid content before returning
-                if (!formattedMessage || !formattedMessage.summary || formattedMessage.summary.trim() === '') {
-                    debugLog('Warning: Invalid formatted message structure');
-                    return {
-                        summary: "Error: Invalid message format",
-                        description: "The generated message was not in the expected format."
-                    };
-                }
-
-                debugLog(`Formatted message: ${JSON.stringify(formattedMessage)}`);
-                // Return the formatted message directly
-                return {
-                    summary: formattedMessage.summary,
-                    description: formattedMessage.description
-                };
-            } catch (formatError: unknown) {
-                // Properly handle the unknown type
-                const errorMessage = formatError instanceof Error
-                    ? formatError.message
-                    : String(formatError);
-                debugLog(`Error formatting commit message: ${errorMessage}`);
-                throw new Error(`Error formatting commit message: ${errorMessage}`);
-            }
+            // Format the message and return it as a string
+            return formatCommitMessage(content);
         } else {
             debugLog('Invalid response format from Together AI API');
             throw new Error('Invalid response format from Together AI API');
@@ -109,9 +85,12 @@ Format the response as:
 
 /**
  * Cleans up and formats the commit message returned by the API
- * Parses the message into summary and description parts
+ * Returns a properly formatted commit message string
  */
-function formatCommitMessage(message: string): { summary: string, description?: string } {
+function formatCommitMessage(message: string): string {
+    // First remove thinking sections (used by models like DeepSeek)
+    message = removeThinkingSections(message);
+
     // Remove any markdown code block markers and trim
     message = message.replace(/```[a-z]*\n?|\`\`\`/g, '').trim();
 
@@ -119,7 +98,7 @@ function formatCommitMessage(message: string): { summary: string, description?: 
     const lines = message.split('\n').map(line => line.trim()).filter(line => line.length > 0);
 
     if (lines.length === 0) {
-        throw new Error('Empty commit message received');
+        return 'chore: update code\n\n- Update implementation with necessary changes';
     }
 
     // First non-empty line is the summary
@@ -127,21 +106,62 @@ function formatCommitMessage(message: string): { summary: string, description?: 
     // Remove bullet point if present on the summary line
     summary = summary.replace(/^[*-]\s*/, '').trim();
 
+    // Check if the summary has a conventional commit prefix, add one if not
+    if (!summary.match(/^(feat|fix|docs|style|refactor|test|chore)(\([^)]+\))?:/i)) {
+        // Try to determine an appropriate type from the content
+        const type = summary.toLowerCase().includes('fix') ? 'fix' :
+            summary.toLowerCase().includes('add') ? 'feat' :
+                summary.toLowerCase().includes('updat') ? 'chore' :
+                    summary.toLowerCase().includes('refactor') ? 'refactor' :
+                        'chore';
+
+        summary = `${type}: ${summary}`;
+    }
+
+    // Ensure the summary is properly formatted and not too long
+    summary = summary
+        .replace(/^([^:]+):\s*(.*)$/, (_, type, desc) => `${type.toLowerCase()}: ${desc}`)
+        .trim();
+
+    if (summary.length > 72) {
+        summary = summary.substring(0, 69) + '...';
+    }
+
     // Remaining lines form the description, preserving existing bullet points
     const descriptionLines = lines.slice(1);
-    const description = descriptionLines.length > 0
-        ? descriptionLines
-            .map(line => {
-                // If line doesn't start with bullet point, add one
-                return line.match(/^[*-]\s/) ? line : `* ${line}`;
-            })
-            .join('\n')
-            .trim()
-        : undefined;
+    let description = '';
 
-    // Only include description if it's not empty
-    return {
-        summary,
-        ...(description && description.length > 0 ? { description } : {})
-    };
+    if (descriptionLines.length > 0) {
+        description = descriptionLines.map(line => {
+            // Ensure line starts with a bullet point
+            return line.match(/^[*-]\s/) ? line : `- ${line}`;
+        }).join('\n');
+    } else {
+        description = '- Update implementation with necessary changes';
+    }
+
+    // Return the formatted commit message as a string with summary and description
+    return `${summary}\n\n${description}`;
+}
+
+/**
+ * Removes thinking sections from model responses
+ * This is mainly needed for models like DeepSeek that include reasoning/thinking sections
+ */
+function removeThinkingSections(text: string): string {
+    // Remove content between <think> and </think> tags
+    let cleanedText = text.replace(/<think>[\s\S]*?<\/think>/g, '');
+
+    // Sometimes the text has "chore: <think>" prefixes or "- </think>" lines
+    cleanedText = cleanedText.replace(/^.*?<think>.*$/gm, '');
+    cleanedText = cleanedText.replace(/^.*?<\/think>.*$/gm, '');
+
+    // Remove any possible remaining HTML-like tags related to thinking
+    cleanedText = cleanedText.replace(/<\/?think.*?>/g, '');
+
+    // Clean up any incorrect prefixes that might be added
+    cleanedText = cleanedText.replace(/^chore:\s+(?=\w+:)/i, '');
+
+    // Trim and clean up whitespace
+    return cleanedText.trim();
 }

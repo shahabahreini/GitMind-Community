@@ -201,10 +201,7 @@
           "type": "string",
           "enum": [
             "meta-llama/Llama-3.3-70B-Instruct-Turbo",
-            "meta-llama/Llama-3.1-8B-Instruct",
-            "meta-llama/Llama-3.1-70B-Instruct",
-            "togethercomputer/Qwen2-72B-Instruct",
-            "mistralai/Mixtral-8x7B-Instruct-v0.1"
+            "deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free"
           ],
           "default": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
           "description": "Together AI model to use for generating commit messages"
