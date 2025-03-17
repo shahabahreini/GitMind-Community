@@ -61,6 +61,11 @@ export function getConfiguration(): ExtensionConfig {
             apiKey: config.get("together.apiKey"),
             model: config.get("together.model", "meta-llama/Llama-3.3-70B-Instruct-Turbo"),
         },
+        openrouter: {
+            enabled: config.get("openrouter.enabled", false),
+            apiKey: config.get("openrouter.apiKey"),
+            model: config.get("openrouter.model", "google/gemma-3-27b-it:free"),
+        },
         promptCustomization: {
             enabled: config.get("promptCustomization.enabled", false),
         },
@@ -132,6 +137,13 @@ export function getApiConfig(): ApiConfig {
                 type: "together",
                 apiKey: config.together.apiKey || "",
                 model: config.together.model || "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+            };
+
+        case "openrouter":
+            return {
+                type: "openrouter",
+                apiKey: config.openrouter.apiKey || "",
+                model: config.openrouter.model || "google/gemma-3-27b-it:free",
             };
 
         default:

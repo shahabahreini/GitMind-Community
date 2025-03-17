@@ -22,6 +22,7 @@ Or launch VS Code Quick Open (Ctrl+P), paste the following command, and press en
 - **[Cohere](https://cohere.com/)**: High-quality language models with a focus on command and retrieval tasks, offering various models and a free tier
 - **[OpenAI](https://openai.com/)**: High-quality GPT models for professional results
 - **[Together AI](https://together.xyz/)**: Platform for accessing high-quality open-source models with free tier options
+- **[OpenRouter](https://openrouter.ai/)**: Gateway to multiple AI models from different providers with a unified API
 
 | Provider            | Free Plan | Paid Plan |
 |---------------------|-----------|-----------|
@@ -196,6 +197,15 @@ Access the settings UI through:
    - Set "Together" as your provider
    - Enter your API key
    - Select your preferred model (e.g., meta-llama/Llama-3.3-70B-Instruct-Turbo)
+
+### OpenRouter
+
+1. Sign up for an account at [OpenRouter](https://openrouter.ai/)
+2. Create an API key in your OpenRouter dashboard
+3. Configure the extension:
+   - Set "OpenRouter" as your provider
+   - Enter your API key
+   - Select your preferred model (e.g., google/gemma-3-27b-it:free, openai/gpt-4-turbo)
 
 ## Available Models
 

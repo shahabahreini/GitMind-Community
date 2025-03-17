@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Assistant",
   "description": "Generate meaningful git commit messages using Free/Paid AI (Mistral, Gemini, Hugging Face, Cohere, OpenAI, Together AI, or Ollama) with support for conventional commits and multiple LLM models",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -43,7 +43,8 @@
             "mistral",
             "cohere",
             "openai",
-            "together"
+            "together",
+            "openrouter"
           ],
           "enumDescriptions": [
             "Use Google's Gemini AI for generating commit messages",
@@ -52,7 +53,8 @@
             "Use Mistral AI for generating commit messages",
             "Use Cohere AI for generating commit messages",
             "Use OpenAI for generating commit messages",
-            "Use Together AI for generating commit messages"
+            "Use Together AI for generating commit messages",
+            "Use OpenRouter for accessing multiple AI models"
           ],
           "default": "gemini",
           "description": "Select which AI provider to use for generating commit messages",
@@ -205,6 +207,17 @@
           ],
           "default": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
           "description": "Together AI model to use for generating commit messages"
+        },
+        "aiCommitAssistant.openrouter.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API key for OpenRouter [Learn more](https://openrouter.ai/keys)"
+        },
+        "aiCommitAssistant.openrouter.model": {
+          "type": "string",
+          "default": "google/gemma-3-27b-it:free",
+          "description": "OpenRouter model to use for generating commit messages",
+          "markdownDescription": "OpenRouter model to use for generating commit messages. [Learn more](https://openrouter.ai/models)"
         }
       }
     },

@@ -27,6 +27,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed response parsing for various API formats
 - Improved error messages for better troubleshooting
 
+## [1.7.0]
+
+### Added
+
+- Added support for [OpenRouter](https://openrouter.ai/) as a provider
+- Added OpenRouter API validation and settings UI
+- Access to multiple AI models through OpenRouter's unified API
+
 ## [1.6.0] - 2025-03-18
 
 ### Added

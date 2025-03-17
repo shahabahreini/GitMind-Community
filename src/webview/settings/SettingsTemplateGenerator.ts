@@ -10,6 +10,7 @@ import { MistralSettings } from "./components/MistralSettings";
 import { CohereSettings } from "./components/CohereSettings";
 import { OpenAISettings } from "./components/OpenAISettings";
 import { TogetherSettings } from "./components/TogetherSettings";
+import { OpenRouterSettings } from "./components/OpenRouterSettings";
 import { ButtonGroup } from "./components/ButtonGroup";
 import { getSettingsScript } from "./scripts/settingsManager";
 
@@ -32,6 +33,7 @@ export class SettingsTemplateGenerator {
     const cohereSettings = new CohereSettings(this._settings);
     const openaiSettings = new OpenAISettings(this._settings);
     const togetherSettings = new TogetherSettings(this._settings);
+    const openrouterSettings = new OpenRouterSettings(this._settings);
     const buttonGroup = new ButtonGroup();
 
     return `
@@ -57,6 +59,7 @@ export class SettingsTemplateGenerator {
         ${cohereSettings.render()}
         ${openaiSettings.render()}
         ${togetherSettings.render()}
+        ${openrouterSettings.render()}
         ${buttonGroup.render()}
       </div>
       ${getSettingsScript(this._settings, this._nonce)}

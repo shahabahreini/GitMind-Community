@@ -41,6 +41,7 @@ export class GeneralSettings {
           <option value="cohere" ${this._settings.apiProvider === "cohere" ? "selected" : ""}>Cohere</option>
           <option value="openai" ${this._settings.apiProvider === "openai" ? "selected" : ""}>OpenAI</option>
           <option value="together" ${this._settings.apiProvider === "together" ? "selected" : ""}>Together AI</option>
+          <option value="openrouter" ${this._settings.apiProvider === "openrouter" ? "selected" : ""}>OpenRouter</option>
         </select>
       </div>
     </div>`;

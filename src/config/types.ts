@@ -3,7 +3,7 @@
 import * as vscode from "vscode";
 
 // Provider types
-export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together";
+export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter";
 export type CommitStyle = "conventional" | "gitmoji" | "basic";
 
 // Base configurations
@@ -50,6 +50,11 @@ export interface ExtensionConfig {
         model: string;
     };
     together: {
+        enabled: boolean;
+        apiKey?: string;
+        model: string;
+    };
+    openrouter: {
         enabled: boolean;
         apiKey?: string;
         model: string;
@@ -144,6 +149,12 @@ export interface TogetherApiConfig extends BaseApiConfig {
     model: string;
 }
 
+export interface OpenRouterApiConfig extends BaseApiConfig {
+    type: "openrouter";
+    apiKey: string;
+    model: string;
+}
+
 export interface MistralResponse {
     id: string;
     object: string;
@@ -181,5 +192,6 @@ export type ApiConfig =
     | MistralApiConfig
     | CohereApiConfig
     | OpenAIApiConfig
-    | TogetherApiConfig;
+    | TogetherApiConfig
+    | OpenRouterApiConfig;
 

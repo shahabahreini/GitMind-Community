@@ -8,6 +8,8 @@ import {
     MistralApiConfig,
     CohereApiConfig,
     OpenAIApiConfig,
+    TogetherApiConfig,
+    OpenRouterApiConfig,
 } from "../../config/types";
 import { callGeminiAPI } from "./gemini";
 import { callHuggingFaceAPI } from "./huggingface";
@@ -26,8 +28,9 @@ import { workspace } from "vscode";
 import { DiagnosticsWebview } from "../../webview/diagnostics/DiagnosticsWebview";
 import { callOpenAIAPI } from "./openai";
 import { callTogetherAPI } from "./together";
+import { callOpenRouterAPI } from "./openrouter";
 
-type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI";
+type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter";
 
 export async function generateCommitMessage(
     config: ApiConfig,
@@ -654,6 +657,106 @@ async function generateMessageWithConfig(
             );
         }
 
+        case "openrouter": {
+            const openrouterConfig = config as OpenRouterApiConfig;
+            if (!openrouterConfig.apiKey) {
+                const result = await vscode.window.showWarningMessage(
+                    "OpenRouter API key is required. Would you like to configure it now?",
+                    "Enter API Key",
+                    "Get API Key",
+                    "Cancel"
+                );
+
+                if (result === "Enter API Key") {
+                    const apiKey = await vscode.window.showInputBox({
+                        title: "OpenRouter API Key",
+                        prompt: "Please enter your OpenRouter API key",
+                        password: true,
+                        placeHolder: "Paste your API key here",
+                        ignoreFocusOut: true,
+                        validateInput: (text) =>
+                            text?.trim() ? null : "API key cannot be empty",
+                    });
+
+                    if (apiKey) {
+                        const config =
+                            vscode.workspace.getConfiguration("aiCommitAssistant");
+                        await config.update(
+                            "openrouter.apiKey",
+                            apiKey.trim(),
+                            vscode.ConfigurationTarget.Global
+                        );
+
+                        if (!openrouterConfig.model) {
+                            await vscode.commands.executeCommand(
+                                "ai-commit-assistant.openSettings"
+                            );
+                            return "";
+                        }
+                        return await callOpenRouterAPI(
+                            apiKey.trim(),
+                            openrouterConfig.model,
+                            diff,
+                            customContext
+                        );
+                    }
+                } else if (result === "Get API Key") {
+                    await vscode.env.openExternal(
+                        vscode.Uri.parse("https://openrouter.ai/keys")
+                    );
+                    const apiKey = await vscode.window.showInputBox({
+                        title: "OpenRouter API Key",
+                        prompt:
+                            "Please enter your OpenRouter API key after getting it from the website",
+                        password: true,
+                        placeHolder: "Paste your API key here",
+                        ignoreFocusOut: true,
+                        validateInput: (text) =>
+                            text?.trim() ? null : "API key cannot be empty",
+                    });
+
+                    if (apiKey) {
+                        const config =
+                            vscode.workspace.getConfiguration("aiCommitAssistant");
+                        await config.update(
+                            "openrouter.apiKey",
+                            apiKey.trim(),
+                            vscode.ConfigurationTarget.Global
+                        );
+
+                        if (!openrouterConfig.model) {
+                            await vscode.commands.executeCommand(
+                                "ai-commit-assistant.openSettings"
+                            );
+                            return "";
+                        }
+                        return await callOpenRouterAPI(
+                            apiKey.trim(),
+                            openrouterConfig.model,
+                            diff,
+                            customContext
+                        );
+                    }
+                }
+                return "";
+            }
+            if (!openrouterConfig.model) {
+                await vscode.window.showErrorMessage(
+                    "Please select an OpenRouter model in the settings."
+                );
+                await vscode.commands.executeCommand(
+                    "ai-commit-assistant.openSettings"
+                );
+                return "";
+            }
+            return await callOpenRouterAPI(
+                openrouterConfig.apiKey,
+                openrouterConfig.model,
+                diff,
+                customContext
+            );
+        }
+
         default: {
             const _exhaustiveCheck: never = config;
             throw new Error(`Unsupported API provider: ${(config as any).type}`);
@@ -745,40 +848,6 @@ async function showDiagnosticsInfo(config: ApiConfig, diff: string) {
     }
 }
 
-
-// async function showDiagnosticsInfo(config: ApiConfig, diff: string) {
-//     const showDiagnostics = workspace.getConfiguration('aiCommitAssistant').get('showDiagnostics');
-
-//     if (!showDiagnostics) {
-//         return;
-//     }
-
-//     const estimatedTokens = estimateTokens(diff);
-
-//     let modelInfo = '';
-//     switch (config.type) {
-//         case 'mistral':
-//             modelInfo = `Mistral AI (${config.model})`;
-//             break;
-//         case 'gemini':
-//             modelInfo = 'Gemini Pro';
-//             break;
-//         case 'huggingface':
-//             modelInfo = `Hugging Face (${config.model})`;
-//             break;
-//         case 'ollama':
-//             modelInfo = `Ollama (${config.model})`;
-//             break;
-//     }
-
-//     const proceed = await DiagnosticsWebview.show(modelInfo, estimatedTokens);
-
-//     if (!proceed) {
-//         throw new Error('Operation cancelled by user');
-//     }
-// }
-
-
 // Helper function to get the settings path for a provider
 function getProviderSettingPath(provider: string): string {
     const paths: Record<string, string> = {
@@ -787,7 +856,8 @@ function getProviderSettingPath(provider: string): string {
         Mistral: "mistral.apiKey",
         Cohere: "cohere.apiKey",
         OpenAI: "openai.apiKey",
-        "Together AI": "together.apiKey"
+        "Together AI": "together.apiKey",
+        "OpenRouter": "openrouter.apiKey"
     };
     return paths[provider] || "";
 }
@@ -919,6 +989,9 @@ function showModelInfo(config: ApiConfig) {
         case "together":
             modelInfo = `Using Together AI (${config.model})`;
             break;
+        case "openrouter":
+            modelInfo = `Using OpenRouter (${config.model})`;
+            break;
     }
     vscode.window.setStatusBarMessage(modelInfo, 3000);
 }
@@ -939,6 +1012,8 @@ function getProviderName(type: string): ApiProvider {
             return "OpenAI";
         case "together":
             return "Together AI";
+        case "openrouter":
+            return "OpenRouter";
         default:
             throw new Error(`Unknown provider type: ${type}`);
     }

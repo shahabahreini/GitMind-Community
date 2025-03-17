@@ -36,7 +36,7 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   // Log supported API providers, now including Together AI
-  debugLog("Supported API providers: Gemini, Hugging Face, Ollama, Mistral, Cohere, OpenAI, Together AI");
+  debugLog("Supported API providers: Gemini, Hugging Face, Ollama, Mistral, Cohere, OpenAI, Together AI, OpenRouter");
 
   // Initialize SCM provider
   const scmProvider = vscode.scm.createSourceControl(
@@ -421,7 +421,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const steps: OnboardingStep[] = [
     {
       title: 'Step 1: Choose an AI Provider',
-      content: 'GitMind supports multiple AI providers:\n• Gemini (Google)\n• Hugging Face\n• Ollama (Local)\n• Mistral AI\n• Cohere\n• OpenAI\n• Together AI\n\nClick Next to learn how to configure your chosen provider.',
+      content: 'GitMind supports multiple AI providers:\n• Gemini (Google)\n• Hugging Face\n• Ollama (Local)\n• Mistral AI\n• Cohere\n• OpenAI\n• Together AI\n• OpenRouter\n\nClick Next to learn how to configure your chosen provider.',
     },
     {
       title: 'Step 2: Configure API Settings',

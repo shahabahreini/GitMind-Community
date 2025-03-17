@@ -28,6 +28,8 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     document.getElementById('openaiModel').value = currentSettings.openai?.model || 'gpt-3.5-turbo';
     document.getElementById('togetherApiKey').value = currentSettings.together?.apiKey || '';
     document.getElementById('togetherModel').value = currentSettings.together?.model || 'meta-llama/Llama-3.3-70B-Instruct-Turbo';
+    document.getElementById('openrouterApiKey').value = currentSettings.openrouter?.apiKey || '';
+    document.getElementById('openrouterModel').value = currentSettings.openrouter?.model || 'google/gemma-3-27b-it:free';
     
     ${getUiManagerScript()}
     ${getApiManagerScript()}
@@ -64,6 +66,10 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
         together: {
           apiKey: document.getElementById('togetherApiKey').value,
           model: document.getElementById('togetherModel').value
+        },
+        openrouter: {
+          apiKey: document.getElementById('openrouterApiKey').value,
+          model: document.getElementById('openrouterModel').value
         },
         promptCustomization: {
           enabled: document.getElementById('promptCustomizationEnabled').checked
@@ -378,11 +384,16 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
             document.getElementById('togetherApiKey').value = currentSettings.together.apiKey || '';
             document.getElementById('togetherModel').value = currentSettings.together.model || 'meta-llama/Llama-3.3-70B-Instruct-Turbo';
           }
+
+          if (currentSettings.openrouter) {
+            document.getElementById('openrouterApiKey').value = currentSettings.openrouter.apiKey || '';
+            document.getElementById('openrouterModel').value = currentSettings.openrouter.model || 'google/gemma-3-27b-it:free';
+          }
           
           // Update UI state
           updateVisibleSettings();
           
-          // Update status banner
+          // Update status banner - explicitly pass the currentSettings
           updateStatusBanner(currentSettings);
           break;
       }

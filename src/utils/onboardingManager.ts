@@ -18,7 +18,8 @@ export class OnboardingManager {
         'Mistral': 'https://console.mistral.ai/api-keys/',
         'Cohere': 'https://dashboard.cohere.com/api-keys',
         'OpenAI': 'https://platform.openai.com/api-keys',
-        'Together AI': 'https://api.together.xyz/settings/api-keys'
+        'Together AI': 'https://api.together.xyz/settings/api-keys',
+        'OpenRouter': 'https://openrouter.ai/keys'
     };
 
     private static steps: OnboardingStep[] = [];
@@ -149,7 +150,8 @@ export class OnboardingManager {
             'Mistral': 'mistral.apiKey',
             'Cohere': 'cohere.apiKey',
             'OpenAI': 'openai.apiKey',
-            'Together AI': 'together.apiKey'
+            'Together AI': 'together.apiKey',
+            'OpenRouter': 'openrouter.apiKey'
         };
         return paths[provider] || '';
     }

@@ -30,6 +30,10 @@ export interface ExtensionSettings {
         apiKey: string;
         model: string;
     };
+    openrouter: {
+        apiKey: string;
+        model: string;
+    };
     promptCustomization?: {
         enabled: boolean;
     };
