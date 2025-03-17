@@ -393,7 +393,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           // Update UI state
           updateVisibleSettings();
           
-          // Update status banner
+          // Update status banner - explicitly pass the currentSettings
           updateStatusBanner(currentSettings);
           break;
       }

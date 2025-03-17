@@ -14,6 +14,12 @@ export function getUiManagerScript(): string {
           provider === 'mistral' ? 'block' : 'none';
         document.getElementById('cohereSettings').style.display =
           provider === 'cohere' ? 'block' : 'none';
+        document.getElementById('openaiSettings').style.display =
+          provider === 'openai' ? 'block' : 'none';
+        document.getElementById('togetherSettings').style.display =
+          provider === 'together' ? 'block' : 'none';
+        document.getElementById('openrouterSettings').style.display =
+          provider === 'openrouter' ? 'block' : 'none';
       }
       
       // Initialize UI state immediately
@@ -67,6 +73,15 @@ export function getUiManagerScript(): string {
           case "cohere":
             modelInfo = settings.cohere.model || "command-r-plus";
             break;
+          case "openai":
+            modelInfo = settings.openai.model || "gpt-3.5-turbo";
+            break;
+          case "together":
+            modelInfo = settings.together.model || "meta-llama/Llama-3.3-70B-Instruct-Turbo";
+            break;
+          case "openrouter":
+            modelInfo = settings.openrouter.model || "anthropic/claude-3-opus:beta";
+            break;
         }
         
         // Get API configuration status
@@ -87,6 +102,15 @@ export function getUiManagerScript(): string {
           case "cohere":
             apiConfigured = !!settings.cohere.apiKey;
             break;
+          case "openai":
+            apiConfigured = !!settings.openai.apiKey;
+            break;
+          case "together":
+            apiConfigured = !!settings.together.apiKey;
+            break;
+          case "openrouter":
+            apiConfigured = !!settings.openrouter.apiKey;
+            break;
         }
         
         // Format provider name for display
@@ -95,7 +119,10 @@ export function getUiManagerScript(): string {
           huggingface: "Hugging Face",
           ollama: "Ollama",
           mistral: "Mistral",
-          cohere: "Cohere"
+          cohere: "Cohere",
+          openai: "OpenAI",
+          together: "Together",
+          openrouter: "OpenRouter"
         }[settings.apiProvider] || settings.apiProvider;
         
         const bannerHTML = \`
