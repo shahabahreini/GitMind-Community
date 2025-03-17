@@ -42,7 +42,7 @@ export class SettingsManager {
             },
             openrouter: {
                 apiKey: config.get<string>("openrouter.apiKey") || "",
-                model: config.get<string>("openrouter.model") || "anthropic/claude-3-opus:beta",
+                model: config.get<string>("openrouter.model") || "google/gemma-3-27b-it:free",
             },
             promptCustomization: {
                 enabled: config.get<boolean>("promptCustomization.enabled") || false,

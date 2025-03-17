@@ -80,7 +80,7 @@ export function getUiManagerScript(): string {
             modelInfo = settings.together.model || "meta-llama/Llama-3.3-70B-Instruct-Turbo";
             break;
           case "openrouter":
-            modelInfo = settings.openrouter.model || "anthropic/claude-3-opus:beta";
+            modelInfo = settings.openrouter.model || "google/gemma-3-27b-it:free";
             break;
         }
         

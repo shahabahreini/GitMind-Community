@@ -205,7 +205,7 @@ Access the settings UI through:
 3. Configure the extension:
    - Set "OpenRouter" as your provider
    - Enter your API key
-   - Select your preferred model (e.g., anthropic/claude-3-opus:beta, openai/gpt-4-turbo)
+   - Select your preferred model (e.g., google/gemma-3-27b-it:free, openai/gpt-4-turbo)
 
 ## Available Models
 

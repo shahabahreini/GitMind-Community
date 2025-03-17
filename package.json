@@ -215,7 +215,7 @@
         },
         "aiCommitAssistant.openrouter.model": {
           "type": "string",
-          "default": "anthropic/claude-3-opus:beta",
+          "default": "google/gemma-3-27b-it:free",
           "description": "OpenRouter model to use for generating commit messages",
           "markdownDescription": "OpenRouter model to use for generating commit messages. [Learn more](https://openrouter.ai/models)"
         }

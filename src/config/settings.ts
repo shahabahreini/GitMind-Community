@@ -64,7 +64,7 @@ export function getConfiguration(): ExtensionConfig {
         openrouter: {
             enabled: config.get("openrouter.enabled", false),
             apiKey: config.get("openrouter.apiKey"),
-            model: config.get("openrouter.model", "anthropic/claude-3-opus:beta"),
+            model: config.get("openrouter.model", "google/gemma-3-27b-it:free"),
         },
         promptCustomization: {
             enabled: config.get("promptCustomization.enabled", false),
@@ -143,7 +143,7 @@ export function getApiConfig(): ApiConfig {
             return {
                 type: "openrouter",
                 apiKey: config.openrouter.apiKey || "",
-                model: config.openrouter.model || "anthropic/claude-3-opus:beta",
+                model: config.openrouter.model || "google/gemma-3-27b-it:free",
             };
 
         default:

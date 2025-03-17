@@ -1,14 +1,14 @@
 import { ExtensionSettings } from "../../../models/ExtensionSettings";
 
 export class OpenRouterSettings {
-    private _settings: ExtensionSettings;
+  private _settings: ExtensionSettings;
 
-    constructor(settings: ExtensionSettings) {
-        this._settings = settings;
-    }
+  constructor(settings: ExtensionSettings) {
+    this._settings = settings;
+  }
 
-    public render(): string {
-        return `
+  public render(): string {
+    return `
     <div id="openrouterSettings" class="api-settings ${this._settings.apiProvider === "openrouter" ? "" : "hidden"}">
       <h3>OpenRouter Settings</h3>
       <div class="form-group">
@@ -20,11 +20,11 @@ export class OpenRouterSettings {
       </div>
       <div class="form-group">
         <label for="openrouterModel">Model</label>
-        <input type="text" id="openrouterModel" value="${this._settings.openrouter?.model || ""}" placeholder="e.g., anthropic/claude-3-opus:beta" />
+        <input type="text" id="openrouterModel" value="${this._settings.openrouter?.model || ""}" placeholder="e.g., google/gemma-3-27b-it:free" />
         <div class="description">
-          Examples: anthropic/claude-3-opus:beta, openai/gpt-4-turbo, meta-llama/llama-3-70b-instruct
+          Examples: google/gemma-3-27b-it:free, openai/gpt-4-turbo, meta-llama/llama-3-70b-instruct
         </div>
       </div>
     </div>`;
-    }
+  }
 }

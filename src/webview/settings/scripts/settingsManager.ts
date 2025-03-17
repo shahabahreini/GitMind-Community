@@ -29,7 +29,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     document.getElementById('togetherApiKey').value = currentSettings.together?.apiKey || '';
     document.getElementById('togetherModel').value = currentSettings.together?.model || 'meta-llama/Llama-3.3-70B-Instruct-Turbo';
     document.getElementById('openrouterApiKey').value = currentSettings.openrouter?.apiKey || '';
-    document.getElementById('openrouterModel').value = currentSettings.openrouter?.model || 'anthropic/claude-3-opus:beta';
+    document.getElementById('openrouterModel').value = currentSettings.openrouter?.model || 'google/gemma-3-27b-it:free';
     
     ${getUiManagerScript()}
     ${getApiManagerScript()}
@@ -387,7 +387,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
 
           if (currentSettings.openrouter) {
             document.getElementById('openrouterApiKey').value = currentSettings.openrouter.apiKey || '';
-            document.getElementById('openrouterModel').value = currentSettings.openrouter.model || 'anthropic/claude-3-opus:beta';
+            document.getElementById('openrouterModel').value = currentSettings.openrouter.model || 'google/gemma-3-27b-it:free';
           }
           
           // Update UI state
