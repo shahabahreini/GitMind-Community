@@ -36,6 +36,10 @@ export class SettingsManager {
                 apiKey: config.get<string>("openai.apiKey") || "",
                 model: config.get<string>("openai.model") || "gpt-3.5-turbo",
             },
+            together: {
+                apiKey: config.get<string>("together.apiKey") || "",
+                model: config.get<string>("together.model") || "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+            },
             promptCustomization: {
                 enabled: config.get<boolean>("promptCustomization.enabled") || false,
             },
@@ -117,6 +121,16 @@ export class SettingsManager {
         await config.update(
             "openai.model",
             settings.openai.model,
+            vscode.ConfigurationTarget.Global
+        );
+        await config.update(
+            "together.apiKey",
+            settings.together.apiKey,
+            vscode.ConfigurationTarget.Global
+        );
+        await config.update(
+            "together.model",
+            settings.together.model,
             vscode.ConfigurationTarget.Global
         );
         await config.update(

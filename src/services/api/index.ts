@@ -25,8 +25,9 @@ import { estimateTokens } from "../../utils/tokenCounter";
 import { workspace } from "vscode";
 import { DiagnosticsWebview } from "../../webview/diagnostics/DiagnosticsWebview";
 import { callOpenAIAPI } from "./openai";
+import { callTogetherAPI } from "./together";
 
-type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI";
+type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI";
 
 export async function generateCommitMessage(
     config: ApiConfig,
@@ -553,6 +554,106 @@ async function generateMessageWithConfig(
             );
         }
 
+        case "together": {
+            const togetherConfig = config as TogetherApiConfig;
+            if (!togetherConfig.apiKey) {
+                const result = await vscode.window.showWarningMessage(
+                    "Together AI API key is required. Would you like to configure it now?",
+                    "Enter API Key",
+                    "Get API Key",
+                    "Cancel"
+                );
+
+                if (result === "Enter API Key") {
+                    const apiKey = await vscode.window.showInputBox({
+                        title: "Together AI API Key",
+                        prompt: "Please enter your Together AI API key",
+                        password: true,
+                        placeHolder: "Paste your API key here",
+                        ignoreFocusOut: true,
+                        validateInput: (text) =>
+                            text?.trim() ? null : "API key cannot be empty",
+                    });
+
+                    if (apiKey) {
+                        const config =
+                            vscode.workspace.getConfiguration("aiCommitAssistant");
+                        await config.update(
+                            "together.apiKey",
+                            apiKey.trim(),
+                            vscode.ConfigurationTarget.Global
+                        );
+
+                        if (!togetherConfig.model) {
+                            await vscode.commands.executeCommand(
+                                "ai-commit-assistant.openSettings"
+                            );
+                            return "";
+                        }
+                        return await callTogetherAPI(
+                            apiKey.trim(),
+                            togetherConfig.model,
+                            diff,
+                            customContext
+                        );
+                    }
+                } else if (result === "Get API Key") {
+                    await vscode.env.openExternal(
+                        vscode.Uri.parse("https://api.together.xyz/settings/api-keys")
+                    );
+                    const apiKey = await vscode.window.showInputBox({
+                        title: "Together AI API Key",
+                        prompt:
+                            "Please enter your Together AI API key after getting it from the website",
+                        password: true,
+                        placeHolder: "Paste your API key here",
+                        ignoreFocusOut: true,
+                        validateInput: (text) =>
+                            text?.trim() ? null : "API key cannot be empty",
+                    });
+
+                    if (apiKey) {
+                        const config =
+                            vscode.workspace.getConfiguration("aiCommitAssistant");
+                        await config.update(
+                            "together.apiKey",
+                            apiKey.trim(),
+                            vscode.ConfigurationTarget.Global
+                        );
+
+                        if (!togetherConfig.model) {
+                            await vscode.commands.executeCommand(
+                                "ai-commit-assistant.openSettings"
+                            );
+                            return "";
+                        }
+                        return await callTogetherAPI(
+                            apiKey.trim(),
+                            togetherConfig.model,
+                            diff,
+                            customContext
+                        );
+                    }
+                }
+                return "";
+            }
+            if (!togetherConfig.model) {
+                await vscode.window.showErrorMessage(
+                    "Please select a Together AI model in the settings."
+                );
+                await vscode.commands.executeCommand(
+                    "ai-commit-assistant.openSettings"
+                );
+                return "";
+            }
+            return await callTogetherAPI(
+                togetherConfig.apiKey,
+                togetherConfig.model,
+                diff,
+                customContext
+            );
+        }
+
         default: {
             const _exhaustiveCheck: never = config;
             throw new Error(`Unsupported API provider: ${(config as any).type}`);
@@ -685,7 +786,8 @@ function getProviderSettingPath(provider: string): string {
         "Hugging Face": "huggingface.apiKey",
         Mistral: "mistral.apiKey",
         Cohere: "cohere.apiKey",
-        OpenAI: "openai.apiKey"
+        OpenAI: "openai.apiKey",
+        "Together AI": "together.apiKey"
     };
     return paths[provider] || "";
 }
@@ -814,6 +916,9 @@ function showModelInfo(config: ApiConfig) {
         case "openai":
             modelInfo = `Using OpenAI (${config.model})`;
             break;
+        case "together":
+            modelInfo = `Using Together AI (${config.model})`;
+            break;
     }
     vscode.window.setStatusBarMessage(modelInfo, 3000);
 }
@@ -832,6 +937,8 @@ function getProviderName(type: string): ApiProvider {
             return "Cohere";
         case "openai":
             return "OpenAI";
+        case "together":
+            return "Together AI";
         default:
             throw new Error(`Unknown provider type: ${type}`);
     }

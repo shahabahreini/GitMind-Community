@@ -1,8 +1,8 @@
 {
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Assistant",
-  "description": "Generate meaningful git commit messages using Free/Paid AI (Mistral, Gemini, Hugging Face, Cohere, or Ollama) with support for conventional commits and multiple LLM models",
-  "version": "1.5.2",
+  "description": "Generate meaningful git commit messages using Free/Paid AI (Mistral, Gemini, Hugging Face, Cohere, OpenAI, Together AI, or Ollama) with support for conventional commits and multiple LLM models",
+  "version": "1.6.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -42,7 +42,8 @@
             "ollama",
             "mistral",
             "cohere",
-            "openai"
+            "openai",
+            "together"
           ],
           "enumDescriptions": [
             "Use Google's Gemini AI for generating commit messages",
@@ -50,7 +51,8 @@
             "Use local Ollama models for generating commit messages",
             "Use Mistral AI for generating commit messages",
             "Use Cohere AI for generating commit messages",
-            "Use OpenAI for generating commit messages"
+            "Use OpenAI for generating commit messages",
+            "Use Together AI for generating commit messages"
           ],
           "default": "gemini",
           "description": "Select which AI provider to use for generating commit messages",
@@ -189,6 +191,23 @@
           "type": "boolean",
           "default": false,
           "description": "When enabled, shows a dialog to add custom context when generating commit messages"
+        },
+        "aiCommitAssistant.together.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API key for Together AI [Learn more](https://api.together.xyz/settings/api-keys)"
+        },
+        "aiCommitAssistant.together.model": {
+          "type": "string",
+          "enum": [
+            "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+            "meta-llama/Llama-3.1-8B-Instruct",
+            "meta-llama/Llama-3.1-70B-Instruct",
+            "togethercomputer/Qwen2-72B-Instruct",
+            "mistralai/Mixtral-8x7B-Instruct-v0.1"
+          ],
+          "default": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+          "description": "Together AI model to use for generating commit messages"
         }
       }
     },
@@ -352,6 +371,9 @@
     "cohere",
     "openai",
     "gpt",
+    "together",
+    "together-ai",
+    "llama",
     "conventional-commits",
     "commit-message",
     "git-message",

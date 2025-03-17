@@ -26,6 +26,8 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     document.getElementById('cohereModel').value = currentSettings.cohere?.model || 'command';
     document.getElementById('openaiApiKey').value = currentSettings.openai?.apiKey || '';
     document.getElementById('openaiModel').value = currentSettings.openai?.model || 'gpt-3.5-turbo';
+    document.getElementById('togetherApiKey').value = currentSettings.together?.apiKey || '';
+    document.getElementById('togetherModel').value = currentSettings.together?.model || 'meta-llama/Llama-3.3-70B-Instruct-Turbo';
     
     ${getUiManagerScript()}
     ${getApiManagerScript()}
@@ -58,6 +60,10 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
         openai: {
           apiKey: document.getElementById('openaiApiKey').value,
           model: document.getElementById('openaiModel').value
+        },
+        together: {
+          apiKey: document.getElementById('togetherApiKey').value,
+          model: document.getElementById('togetherModel').value
         },
         promptCustomization: {
           enabled: document.getElementById('promptCustomizationEnabled').checked
@@ -366,6 +372,11 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           if (currentSettings.openai) {
             document.getElementById('openaiApiKey').value = currentSettings.openai.apiKey || '';
             document.getElementById('openaiModel').value = currentSettings.openai.model || 'gpt-3.5-turbo';
+          }
+
+          if (currentSettings.together) {
+            document.getElementById('togetherApiKey').value = currentSettings.together.apiKey || '';
+            document.getElementById('togetherModel').value = currentSettings.together.model || 'meta-llama/Llama-3.3-70B-Instruct-Turbo';
           }
           
           // Update UI state

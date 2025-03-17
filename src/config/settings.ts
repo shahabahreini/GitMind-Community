@@ -56,6 +56,11 @@ export function getConfiguration(): ExtensionConfig {
             apiKey: config.get("openai.apiKey"),
             model: config.get("openai.model", "gpt-3.5-turbo"),
         },
+        together: {
+            enabled: config.get("together.enabled", false),
+            apiKey: config.get("together.apiKey"),
+            model: config.get("together.model", "meta-llama/Llama-3.3-70B-Instruct-Turbo"),
+        },
         promptCustomization: {
             enabled: config.get("promptCustomization.enabled", false),
         },
@@ -120,6 +125,13 @@ export function getApiConfig(): ApiConfig {
                 type: "openai",
                 apiKey: config.openai.apiKey || "",
                 model: config.openai.model || "gpt-3.5-turbo",
+            };
+
+        case "together":
+            return {
+                type: "together",
+                apiKey: config.together.apiKey || "",
+                model: config.together.model || "meta-llama/Llama-3.3-70B-Instruct-Turbo",
             };
 
         default:
