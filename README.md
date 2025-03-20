@@ -33,6 +33,7 @@ Or launch VS Code Quick Open (Ctrl+P), paste the following command, and press en
 | Cohere              | Yes       | Yes       |
 | OpenAI              | No        | Yes       |
 | Together AI         | Yes       | Yes       |
+| OpenRouter          | Yes       | Yes       |
 
 ### Smart Git Integration
 
