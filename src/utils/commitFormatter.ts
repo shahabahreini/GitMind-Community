@@ -5,10 +5,13 @@ export function formatCommitMessage(message: CommitMessage): string {
     return `${message.summary}\n\n${message.description}`;
 }
 
-
 export async function processResponse(response: string): Promise<CommitMessage> {
     debugLog("Processing Response:", response);
     try {
+        // Remove code block markers if present
+        response = response.replace(/```[a-z]*\n|```/g, "");
+
+        // Clean up markdown formatting
         response = response
             .replace(/\*\*/g, "")
             .replace(/`/g, "");
@@ -18,63 +21,67 @@ export async function processResponse(response: string): Promise<CommitMessage> 
             .split("\n")
             .filter((line) => line.trim());
 
-        const summaryPattern =
-            /^(feat|fix|docs|style|refactor|test|chore)(\([^)]+\))?:\s+[^\n]+$/i;
-        let summary = "";
-        let bulletPoints: string[] = [];
-        let foundSummary = false;
+        if (lines.length === 0) {
+            return {
+                summary: "refactor: update code implementation",
+                description: "- Update implementation with necessary changes",
+            };
+        }
 
-        for (const line of lines) {
-            const cleanLine = line.trim();
-            if (!foundSummary && summaryPattern.test(cleanLine)) {
-                summary = cleanLine.replace(/(feat|fix|docs|style|refactor|test|chore):\s*(feat|fix|docs|style|refactor|test|chore):/, '$1:');
-                foundSummary = true;
+        // Extract summary (first line)
+        let summary = lines[0].trim();
+
+        // Check if summary has a conventional commit type
+        const typePattern = /^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\([^)]+\))?:/i;
+        if (!typePattern.test(summary)) {
+            // No type found, add a default type
+            summary = `refactor: ${summary}`;
+        }
+
+        // Clean up the summary
+        summary = summary
+            .replace(/\[.*?\]/g, "")
+            .replace(/<[^>]+>/g, "")
+            .replace(/\s+/g, " ")
+            .trim();
+
+        // Truncate summary if needed, preserving the type prefix
+        if (summary.length > 72) {
+            const typeMatch = summary.match(typePattern);
+            if (typeMatch) {
+                const prefix = typeMatch[0];
+                const rest = summary.substring(prefix.length).trim();
+                const availableSpace = 72 - prefix.length - 3; // -3 for space and "..."
+                const truncatedRest = rest.substring(0, availableSpace) + "...";
+                summary = `${prefix} ${truncatedRest}`;
+            } else {
+                summary = summary.substring(0, 69) + "...";
+            }
+        }
+
+        // Extract description (remaining lines)
+        let bulletPoints = [];
+
+        // Skip the first line (summary) and process the rest
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+
+            // Skip empty lines and headings
+            if (!line || line.startsWith('#')) {
                 continue;
             }
 
-            if (foundSummary && cleanLine) {
-                // Correctly handle bullet points with * or -
-                if (cleanLine.startsWith("-") || cleanLine.startsWith("*")) {
-                    const cleanedPoint = cleanLine
-                        .replace(/^[*-]\s*(feat|fix|docs|style|refactor|test|chore):\s*/, '- ')
-                        .replace(/^[*-]\s*/, '- '); // Ensure consistent bullet point format with -
-                    bulletPoints.push(cleanedPoint);
-                } else if (!cleanLine.startsWith("#")) {
-                    bulletPoints.push(`- ${cleanLine}`);
-                }
+            // Check if it's a bullet point already
+            if (line.match(/^[-*•]\s+.+/)) {
+                bulletPoints.push(line);
+            } else if (i > 1 && bulletPoints.length > 0) {
+                // If we've already found bullet points and this isn't one,
+                // it might be a continuation of the previous point
+                bulletPoints[bulletPoints.length - 1] += " " + line;
             }
         }
 
-        if (!summary) {
-            const firstLine = lines[0]?.trim();
-            if (firstLine) {
-                const typeMatch = firstLine.match(/(feat|fix|docs|style|refactor|test|chore):/i);
-                const type = typeMatch ? typeMatch[1].toLowerCase() : "refactor";
-                const description = firstLine
-                    .replace(/(feat|fix|docs|style|refactor|test|chore):/ig, '')
-                    .replace(/^[-:\s]+/, '')
-                    .trim();
-                summary = `${type}: ${description}`;
-            } else {
-                summary = "refactor: update code implementation";
-            }
-        }
-
-        let previousSummary: string;
-        do {
-            previousSummary = summary;
-            summary = summary
-                .replace(/\[.*?\]/g, "")
-                .replace(/<[^>]+>/g, "")
-                .replace(/\s+/g, " ")
-                .trim();
-        } while (summary !== previousSummary);
-
-        if (typeof summary === 'string' && summary.length > 72) {
-            summary = summary.substring(0, 69) + "...";
-        }
-
-        // Use the actual bullet points from the response if available
+        // Join bullet points into description
         const description = bulletPoints.length > 0
             ? bulletPoints.join("\n")
             : "- Update implementation with necessary changes";
@@ -84,8 +91,9 @@ export async function processResponse(response: string): Promise<CommitMessage> 
     } catch (error) {
         debugLog("Error Processing Response:", error);
         return {
-            summary: "refactor: update code structure",
+            summary: "refactor: update code implementation",
             description: "- Update implementation with necessary changes",
         };
     }
 }
+
