@@ -1,19 +1,117 @@
+// src/services/api/cohere.ts
 import { debugLog } from "../debug/logger";
+import { generateCommitPrompt } from './prompts';
+
+// Define Cohere model types
+export enum CohereModel {
+    COMMAND = "command",
+    COMMAND_R = "command-r",
+    COMMAND_R_PLUS = "command-r-plus",
+    COMMAND_LIGHT = "command-light",
+    COMMAND_NIGHTLY = "command-nightly"
+}
+
+// Configuration for different Cohere models
+interface GenerationConfig {
+    temperature: number;
+    maxOutputTokens: number;
+    topP: number;
+    topK: number;
+}
+
+const MODEL_CONFIGS: Record<CohereModel, GenerationConfig> = {
+    [CohereModel.COMMAND]: {
+        temperature: 0.3,
+        maxOutputTokens: 350,
+        topP: 0.8,
+        topK: 40
+    },
+    [CohereModel.COMMAND_R]: {
+        temperature: 0.3,
+        maxOutputTokens: 350,
+        topP: 0.8,
+        topK: 40
+    },
+    [CohereModel.COMMAND_R_PLUS]: {
+        temperature: 0.3,
+        maxOutputTokens: 350,
+        topP: 0.8,
+        topK: 40
+    },
+    [CohereModel.COMMAND_LIGHT]: {
+        temperature: 0.3,
+        maxOutputTokens: 350,
+        topP: 0.8,
+        topK: 40
+    },
+    [CohereModel.COMMAND_NIGHTLY]: {
+        temperature: 0.3,
+        maxOutputTokens: 350,
+        topP: 0.8,
+        topK: 40
+    }
+};
+
+/**
+ * Enforces proper commit message format
+ * @param message Raw message from API
+ * @returns Properly formatted commit message
+ */
+function enforceCommitMessageFormat(message: string): string {
+    // Split the message into lines
+    const lines = message.split('\n');
+
+    if (lines.length === 0) {
+        return message;
+    }
+
+    // Get the first line (subject line)
+    let subjectLine = lines[0].trim();
+
+    // Truncate the subject line if it exceeds 72 characters
+    if (subjectLine.length > 72) {
+        subjectLine = subjectLine.substring(0, 72);
+        // Ensure we don't cut in the middle of a word
+        if (subjectLine.lastIndexOf(' ') > 0) {
+            subjectLine = subjectLine.substring(0, subjectLine.lastIndexOf(' '));
+        }
+    }
+
+    // Reconstruct the message with the truncated subject line
+    return [subjectLine, ...lines.slice(1)].join('\n');
+}
 
 /**
  * Makes a request to the Cohere API to generate a commit message
  * @param apiKey The Cohere API key
- * @param model The model to use (e.g., "command", "command-light")
+ * @param model The model to use (from CohereModel enum)
  * @param diff Git diff to analyze
  * @param customContext Additional context provided by the user
  * @returns Generated commit message
  */
 export async function callCohereAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
+    if (!apiKey || apiKey.trim() === '') {
+        debugLog("Error: Cohere API key is missing or empty");
+        throw new Error("Cohere API key is required but not configured");
+    }
+
+    // Validate model
+    if (!Object.values(CohereModel).includes(model as CohereModel)) {
+        debugLog("Error: Invalid Cohere model specified", { model });
+        throw new Error(`Invalid Cohere model specified: ${model}`);
+    }
+
     try {
         debugLog(`Calling Cohere API with model: ${model}`);
-        const prompt = createPromptFromDiff(diff, customContext);
+        const promptText = generateCommitPrompt(diff, undefined, customContext);
+        debugLog("Sending prompt to Cohere API");
+        debugLog("Prompt:", promptText);
 
-        // Using the v2 chat API with the proper message format
+        // Get model-specific configuration
+        const config = MODEL_CONFIGS[model as CohereModel];
+        debugLog("Using generation config", { config });
+
+        // Using the v2 chat API
         const response = await fetch('https://api.cohere.ai/v2/chat', {
             method: 'POST',
             headers: {
@@ -26,16 +124,28 @@ export async function callCohereAPI(apiKey: string, model: string, diff: string,
                 messages: [
                     {
                         role: "user",
-                        content: prompt
+                        content: promptText
                     }
-                ]
+                ],
+                temperature: config.temperature,
+                max_tokens: config.maxOutputTokens,
+                p: config.topP,
+                k: config.topK
             })
         });
 
         if (!response.ok) {
             const errorText = await response.text();
             debugLog(`Cohere API error: ${response.status} ${errorText}`);
-            throw new Error(`Cohere API error: ${response.status} - ${errorText}`);
+
+            // Handle specific error cases
+            if (response.status === 429) {
+                throw new Error("Rate limit exceeded. Please try again later.");
+            } else if (response.status === 401) {
+                throw new Error("Invalid API key. Please check your Cohere API key.");
+            } else {
+                throw new Error(`Cohere API error: ${response.status} - ${errorText}`);
+            }
         }
 
         const data = await response.json();
@@ -43,54 +153,77 @@ export async function callCohereAPI(apiKey: string, model: string, diff: string,
 
         // Process the response based on v2 chat API format
         if (data.message && data.message.content && data.message.content.length > 0) {
+            let fullText = "";
             for (const contentItem of data.message.content) {
                 if (contentItem.type === "text") {
-                    return formatCommitMessage(contentItem.text);
+                    fullText += contentItem.text;
                 }
             }
-            throw new Error('No text content found in Cohere API response');
+
+            debugLog(`Processing Response:\n${fullText}`);
+
+            // Process the full text into a formatted commit message
+            const formattedMessage = enforceCommitMessageFormat(fullText);
+            debugLog("Cohere API Response:", formattedMessage);
+            return formattedMessage;
         } else {
-            throw new Error('Invalid response format from Cohere API');
+            throw new Error('No text content found in Cohere API response');
         }
     } catch (error) {
-        debugLog('Error in callCohereAPI:', error);
-        throw new Error(`Failed to generate commit message: ${error instanceof Error ? error.message : String(error)}`);
+        debugLog("Cohere API Call Failed:", error);
+
+        // Handle rate limiting
+        if (error instanceof Error && error.message.includes("rate limit")) {
+            throw new Error("Rate limit exceeded. Please try again later.");
+        }
+
+        // Handle invalid API key
+        if (error instanceof Error && error.message.includes("Invalid API key")) {
+            throw new Error("Invalid API key. Please check your Cohere API key.");
+        }
+
+        // Add specific handling for response processing errors
+        if (error instanceof Error && error.message.includes("text")) {
+            throw new Error("Failed to process Cohere response: " + error.message);
+        }
+
+        // Handle other errors
+        if (error instanceof Error) {
+            throw new Error(`Cohere API call failed: ${error.message}`);
+        }
+
+        throw new Error(`Unexpected error during Cohere API call: ${String(error)}`);
     }
 }
 
 /**
- * Creates a prompt from the git diff to send to the model
+ * Validates a Cohere API key by making a simple request
+ * @param apiKey The API key to validate
+ * @returns Boolean indicating if the API key is valid
  */
-function createPromptFromDiff(diff: string, customContext: string = ""): string {
-    let prompt = `Generate a concise and informative git commit message based on the following changes.
-Focus on what was changed and why. Keep the message under 72 characters for the summary line.
-If verbose mode is needed, add bullet points explaining key changes.`;
+export async function validateCohereAPIKey(apiKey: string): Promise<boolean> {
+    try {
+        const response = await fetch('https://api.cohere.ai/v2/chat', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: CohereModel.COMMAND_LIGHT,
+                messages: [
+                    {
+                        role: "user",
+                        content: "Test"
+                    }
+                ],
+                max_tokens: 10
+            })
+        });
 
-    // Add custom context if provided
-    if (customContext.trim()) {
-        prompt += `\n\nAdditional context from the user: ${customContext.trim()}`;
+        return response.ok;
+    } catch (error) {
+        debugLog("API Key Validation Failed:", error);
+        return false;
     }
-
-    prompt += `\n\nHere are the changes:
-
-\`\`\`
-${diff}
-\`\`\`
-
-Git Commit Message:`;
-
-    return prompt;
-}
-
-/**
- * Cleans up and formats the commit message returned by the API
- */
-function formatCommitMessage(message: string): string {
-    // Remove any "Git Commit Message:" or similar prefixes
-    let formattedMessage = message.replace(/^(git commit message:?|commit message:?)/i, '').trim();
-
-    // Remove any quotes that might wrap the message
-    formattedMessage = formattedMessage.replace(/^["']|["']$/g, '');
-
-    return formattedMessage;
 }
