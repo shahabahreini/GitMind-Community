@@ -127,6 +127,7 @@ export enum GeminiModel {
 }
 
 
+
 export interface HuggingFaceApiConfig extends BaseApiConfig {
     type: "huggingface";
     apiKey: string;
