@@ -17,13 +17,25 @@ interface GenerationConfig {
 }
 
 const MODEL_CONFIGS: Record<GeminiModel, GenerationConfig> = {
-    [GeminiModel.GEMINI_2_FLASH]: {
+    [GeminiModel.GEMINI_2_5_FLASH_PREVIEW]: {
         temperature: 0.2,
         topK: 40,
         topP: 0.9,
         maxOutputTokens: 7000,
     },
-    [GeminiModel.GEMINI_2_FLASH_LITE]: {
+    [GeminiModel.GEMINI_2_5_PRO_PREVIEW]: {
+        temperature: 0.2,
+        topK: 40,
+        topP: 0.9,
+        maxOutputTokens: 7000,
+    },
+    [GeminiModel.GEMINI_2_0_FLASH]: {
+        temperature: 0.2,
+        topK: 40,
+        topP: 0.9,
+        maxOutputTokens: 7000,
+    },
+    [GeminiModel.GEMINI_2_0_FLASH_LITE]: {
         temperature: 0.2,
         topK: 40,
         topP: 0.9,
@@ -174,7 +186,8 @@ export async function callGeminiAPI(apiKey: string, model: string, diff: string,
 export async function validateGeminiAPIKey(apiKey: string): Promise<boolean> {
     try {
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: GeminiModel.GEMINI_2_FLASH });
+        // Update the default model for validation to use the latest Gemini model
+        const model = genAI.getGenerativeModel({ model: GeminiModel.GEMINI_2_5_FLASH_PREVIEW });
 
         // Simple test prompt
         const result = await model.generateContent({
