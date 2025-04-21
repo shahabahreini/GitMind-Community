@@ -91,8 +91,9 @@ export async function callGeminiAPI(apiKey: string, model: string, diff: string,
         throw new Error("Gemini API key is required but not configured");
     }
 
-    // Validate model
-    if (!Object.values(GeminiModel).includes(model as GeminiModel)) {
+    // Validate model - Fixed validation to properly check model string values
+    const validModelValues = Object.values(GeminiModel);
+    if (!validModelValues.includes(model as any)) {
         debugLog("Error: Invalid Gemini model specified", { model });
         throw new Error(`Invalid Gemini model specified: ${model}`);
     }
@@ -102,8 +103,10 @@ export async function callGeminiAPI(apiKey: string, model: string, diff: string,
         const genAI = new GoogleGenerativeAI(apiKey);
         const modelInstance = genAI.getGenerativeModel({ model });
 
-        // Get model-specific configuration
-        const generationConfig = MODEL_CONFIGS[model as GeminiModel];
+        // Get model-specific configuration - use the model string to look up in MODEL_CONFIGS
+        const modelEnum = Object.entries(GeminiModel).find(([_, value]) => value === model)?.[0] as keyof typeof GeminiModel;
+        const generationConfig = modelEnum ? MODEL_CONFIGS[GeminiModel[modelEnum]] : MODEL_CONFIGS[GeminiModel.GEMINI_2_5_FLASH_PREVIEW];
+
         debugLog("Using generation config", { generationConfig });
 
         const promptText = generateCommitPrompt(diff, undefined, customContext);

@@ -126,8 +126,6 @@ export enum GeminiModel {
     GEMINI_1_5_PRO = 'gemini-1.5-pro',
 }
 
-
-
 export interface HuggingFaceApiConfig extends BaseApiConfig {
     type: "huggingface";
     apiKey: string;
