@@ -352,7 +352,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           
           if (currentSettings.gemini) {
             document.getElementById('geminiApiKey').value = currentSettings.gemini.apiKey || '';
-            document.getElementById('geminiModel').value = currentSettings.gemini.model || 'gemini-2.0-flash';
+            document.getElementById('geminiModel').value = currentSettings.gemini?.model || 'gemini-2.5-flash-preview-04-17';
           }
           
           if (currentSettings.huggingface) {

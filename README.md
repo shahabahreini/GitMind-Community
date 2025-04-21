@@ -212,7 +212,13 @@ Access the settings UI through:
 
 ### Gemini Models
 
-- **gemini-pro**: Advanced language model with strong reasoning capabilities and code understanding
+- **gemini-2.5-flash-preview-04-17**: Latest and most advanced Gemini model
+- **gemini-2.5-pro-preview-03-25**: Advanced model with enhanced reasoning capabilities
+- **gemini-2.0-flash**: Fast model with high performance
+- **gemini-2.0-flash-lite**: Lightweight version of Gemini 2.0 Flash
+- **gemini-1.5-flash**: Fast and efficient model
+- **gemini-1.5-flash-8b**: 8B parameter version for faster inference
+- **gemini-1.5-pro**: Base model with comprehensive capabilities
 
 ### Mistral Models
 
