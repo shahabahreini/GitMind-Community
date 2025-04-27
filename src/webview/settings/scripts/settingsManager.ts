@@ -15,7 +15,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     document.getElementById('commitVerbose').checked = currentSettings.commit?.verbose ?? true;
     document.getElementById('promptCustomizationEnabled').checked = currentSettings.promptCustomization?.enabled ?? false;
     document.getElementById('geminiApiKey').value = currentSettings.gemini?.apiKey || '';
-    document.getElementById('geminiModel').value = currentSettings.gemini?.model || 'gemini-2.0-flash';
+    document.getElementById('geminiModel').value = currentSettings.gemini?.model || 'gemini-2.5-flash-preview-04-17';
     document.getElementById('huggingfaceApiKey').value = currentSettings.huggingface?.apiKey || '';
     document.getElementById('huggingfaceModel').value = currentSettings.huggingface?.model || '';
     document.getElementById('ollamaUrl').value = currentSettings.ollama?.url || '';
@@ -352,7 +352,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           
           if (currentSettings.gemini) {
             document.getElementById('geminiApiKey').value = currentSettings.gemini.apiKey || '';
-            document.getElementById('geminiModel').value = currentSettings.gemini.model || 'gemini-2.0-flash';
+            document.getElementById('geminiModel').value = currentSettings.gemini?.model || 'gemini-2.5-flash-preview-04-17';
           }
           
           if (currentSettings.huggingface) {

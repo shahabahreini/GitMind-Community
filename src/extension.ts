@@ -107,9 +107,64 @@ export async function activate(context: vscode.ExtensionContext) {
         loadingItem.tooltip = "AI Commit Assistant is generating a commit message";
         loadingItem.show();
 
-        // Rest of the function...
+        // Check if current directory is a git repository
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders) {
+          vscode.window.showErrorMessage("No workspace folder is open");
+          return;
+        }
+        try {
+          await validateGitRepository(workspaceFolders[0]);
+        } catch (error) {
+          vscode.window.showErrorMessage(
+            "This is not a git repository. Please initialize git first."
+          );
+          return;
+        }
+
+        // Get configuration
+        const apiConfig = getApiConfig();
+
+        // Get git diff
+        const diff = await getDiff(workspaceFolders[0]);
+        if (!diff || diff.trim() === "") {
+          vscode.window.showInformationMessage(
+            "No changes detected to generate a commit message for."
+          );
+          return;
+        }
+
+        // Get custom context if enabled
+        let customContext = "";
+        if (vscode.workspace.getConfiguration("aiCommitAssistant").get("promptCustomization.enabled")) {
+          customContext = await vscode.window.showInputBox({
+            prompt: "Add custom context for your commit (optional)",
+            placeHolder: "e.g., Fixes #123, Implements feature X"
+          }) || "";
+        }
+
+        // Generate commit message
+        const message = await generateCommitMessage(apiConfig, diff, customContext);
+
+        if (message && message.trim() !== "") {
+          // Process the AI response
+          const formattedMessage = await processResponse(message);
+          // Set the message in the SCM input box
+          await setCommitMessage(formattedMessage);
+          vscode.window.showInformationMessage(
+            "Commit message generated successfully!"
+          );
+        } else {
+          vscode.window.showErrorMessage(
+            "Failed to generate commit message. Please try again."
+          );
+        }
+
       } catch (error) {
-        // Error handling...
+        debugLog("Generate Commit Error:", error);
+        vscode.window.showErrorMessage(
+          `Error generating commit message: ${error instanceof Error ? error.message : "Unknown error"}`
+        );
       } finally {
         // Clean up loading indicator
         if (loadingItem) {

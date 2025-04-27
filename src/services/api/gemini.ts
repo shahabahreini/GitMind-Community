@@ -1,14 +1,9 @@
-import {
-    GoogleGenerativeAI,
-    GenerateContentRequest,
-    SafetySetting,
-    HarmCategory,
-    HarmBlockThreshold
-} from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { debugLog } from "../debug/logger";
 import { GeminiModel } from "../../config/types";
 import { generateCommitPrompt } from './prompts';
 
+// Define generation configuration for different models
 interface GenerationConfig {
     temperature: number;
     topK: number;
@@ -17,13 +12,27 @@ interface GenerationConfig {
 }
 
 const MODEL_CONFIGS: Record<GeminiModel, GenerationConfig> = {
-    [GeminiModel.GEMINI_2_FLASH]: {
+    // New stable Gemini 2.5 models
+    [GeminiModel.GEMINI_2_5_PRO]: {
+        temperature: 0.2,
+        topK: 40,
+        topP: 0.9,
+        maxOutputTokens: 8000,
+    },
+    [GeminiModel.GEMINI_2_5_FLASH]: {
+        temperature: 0.2,
+        topK: 40,
+        topP: 0.9,
+        maxOutputTokens: 8000,
+    },
+    // Older models
+    [GeminiModel.GEMINI_2_0_FLASH]: {
         temperature: 0.2,
         topK: 40,
         topP: 0.9,
         maxOutputTokens: 7000,
     },
-    [GeminiModel.GEMINI_2_FLASH_LITE]: {
+    [GeminiModel.GEMINI_2_0_FLASH_LITE]: {
         temperature: 0.2,
         topK: 40,
         topP: 0.9,
@@ -49,144 +58,101 @@ const MODEL_CONFIGS: Record<GeminiModel, GenerationConfig> = {
     },
 };
 
-function enforceCommitMessageFormat(message: string): string {
-    // Split the message into lines
-    const lines = message.split('\n');
-
-    if (lines.length === 0) {
-        return message;
-    }
-
-    // Get the first line (subject line)
-    let subjectLine = lines[0].trim();
-
-    // Truncate the subject line if it exceeds 72 characters
-    if (subjectLine.length > 72) {
-        subjectLine = subjectLine.substring(0, 72);
-        // Ensure we don't cut in the middle of a word
-        if (subjectLine.lastIndexOf(' ') > 0) {
-            subjectLine = subjectLine.substring(0, subjectLine.lastIndexOf(' '));
-        }
-    }
-
-    // Reconstruct the message with the truncated subject line
-    return [subjectLine, ...lines.slice(1)].join('\n');
-}
-
-export async function callGeminiAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
-    if (!apiKey || apiKey.trim() === '') {
-        debugLog("Error: Gemini API key is missing or empty");
-        throw new Error("Gemini API key is required but not configured");
-    }
-
-    // Validate model
-    if (!Object.values(GeminiModel).includes(model as GeminiModel)) {
-        debugLog("Error: Invalid Gemini model specified", { model });
-        throw new Error(`Invalid Gemini model specified: ${model}`);
-    }
-
+export async function callGeminiAPI(apiKey: string, model: string, diff: string, customContext?: string): Promise<string> {
     try {
-        debugLog("Initializing Gemini AI with provided API key and model", { model });
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const modelInstance = genAI.getGenerativeModel({ model });
+        debugLog(`Calling Gemini API with model: ${model}`);
 
-        // Get model-specific configuration
-        const generationConfig = MODEL_CONFIGS[model as GeminiModel];
-        debugLog("Using generation config", { generationConfig });
+        // Validate API key
+        if (!apiKey) {
+            throw new Error("Gemini API key is required");
+        }
 
-        const promptText = generateCommitPrompt(diff, undefined, customContext);
-        debugLog("Sending prompt to Gemini API");
-        debugLog("Prompt:", promptText);
+        // Improved model validation and fallback logic
+        let selectedModel = model as GeminiModel;
+        const validModels = Object.values(GeminiModel);
 
-        const safetySettings: SafetySetting[] = [
-            {
-                category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-                threshold: HarmBlockThreshold.BLOCK_NONE,
-            },
-            {
-                category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-                threshold: HarmBlockThreshold.BLOCK_NONE,
-            },
-            {
-                category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-                threshold: HarmBlockThreshold.BLOCK_NONE,
-            },
-            {
-                category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-                threshold: HarmBlockThreshold.BLOCK_NONE,
-            },
-        ];
+        if (!validModels.includes(selectedModel)) {
+            // Log the issue for debugging
+            debugLog("Warning: Unrecognized Gemini model, attempting to use as custom model ID", { model });
 
-        const request: GenerateContentRequest = {
-            contents: [{ role: "user", parts: [{ text: promptText }] }],
-            generationConfig,
-            safetySettings,
+            // Try to use the provided model string directly if it looks like a valid Gemini model ID
+            if (typeof model === 'string' && model.startsWith('gemini-')) {
+                debugLog("Using provided model string directly", { model });
+                selectedModel = model as GeminiModel;
+            } else {
+                // Fall back to a stable model as last resort
+                debugLog("Falling back to default model", { defaultModel: GeminiModel.GEMINI_2_5_FLASH });
+                selectedModel = GeminiModel.GEMINI_2_5_FLASH;
+            }
+        }
+
+        // Get configuration for the selected model or use a reasonable default
+        const config = MODEL_CONFIGS[selectedModel] || {
+            temperature: 0.2,
+            topK: 40,
+            topP: 0.9,
+            maxOutputTokens: 8000,
         };
 
-        const result = await modelInstance.generateContent(request);
+        // Initialize the API
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const generativeModel = genAI.getGenerativeModel({
+            model: selectedModel, // Use the string directly
+            generationConfig: {
+                temperature: config.temperature,
+                topK: config.topK,
+                topP: config.topP,
+                maxOutputTokens: config.maxOutputTokens,
+            },
+        });
+        // Generate prompt with optional custom context
+        const prompt = generateCommitPrompt(
+            diff,
+            {}, // Removed verbose property as it's not defined in PromptConfig
+            customContext
+        );
 
-        if (!result || !result.response) {
-            throw new Error("Empty response from Gemini API");
-        }
+        // Generate content
+        const result = await generativeModel.generateContent(prompt);
+        const response = result.response;
+        const text = response.text();
 
-        const response = await result.response;
-        const generatedText = response.text();
-
-        if (!generatedText) {
-            throw new Error("No generated text in response");
-        }
-
-        const formattedMessage = enforceCommitMessageFormat(generatedText);
-        debugLog("Gemini API Response:", formattedMessage);
-        return formattedMessage;
+        debugLog("Gemini API response:", { text });
+        return text;
     } catch (error) {
-        debugLog("Gemini API Call Failed:", error);
+        // Enhanced error logging
+        debugLog("Error in callGeminiAPI:", error);
 
-        // Handle rate limiting
-        if (error instanceof Error && error.message.includes("RATE_LIMIT_EXCEEDED")) {
-            throw new Error("Rate limit exceeded. Please try again later.");
+        // Provide more helpful error message
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (errorMessage.includes("not found") || errorMessage.includes("invalid model")) {
+            throw new Error(`Model '${model}' not available or not supported. Please check if you have access to this model or try a different model.`);
+        } else if (errorMessage.includes("permission") || errorMessage.includes("access")) {
+            throw new Error(`Access denied to model '${model}'. Please verify your API key has access to this model.`);
+        } else {
+            throw new Error(`Failed to generate commit message: ${errorMessage}`);
         }
-
-        // Handle quota exceeded
-        if (error instanceof Error && error.message.includes("QUOTA_EXCEEDED")) {
-            throw new Error("API quota exceeded. Please check your usage limits.");
-        }
-
-        // Handle invalid API key
-        if (error instanceof Error && error.message.includes("INVALID_ARGUMENT")) {
-            throw new Error("Invalid API key or configuration. Please check your settings.");
-        }
-
-        // Add specific handling for response processing errors
-        if (error instanceof Error && error.message.includes("text")) {
-            throw new Error("Failed to process Gemini response: " + error.message);
-        }
-
-        // Handle other errors
-        if (error instanceof Error) {
-            throw new Error(`Gemini API call failed: ${error.message}`);
-        }
-
-        throw new Error(`Unexpected error during Gemini API call: ${String(error)}`);
     }
 }
 
 export async function validateGeminiAPIKey(apiKey: string): Promise<boolean> {
     try {
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: GeminiModel.GEMINI_2_FLASH });
+        if (!apiKey) {
+            return false;
+        }
 
-        // Simple test prompt
-        const result = await model.generateContent({
-            contents: [{ role: "user", parts: [{ text: "Test" }] }],
-            generationConfig: {
-                maxOutputTokens: 10,
-            },
+        const genAI = new GoogleGenerativeAI(apiKey);
+
+        // Try with a stable model first
+        const model = genAI.getGenerativeModel({
+            model: GeminiModel.GEMINI_1_5_PRO, // Use a well-established model for validation
         });
 
-        return result !== null;
+        // Simple validation request
+        const result = await model.generateContent("Test connection");
+        return result.response !== undefined;
     } catch (error) {
-        debugLog("API Key Validation Failed:", error);
+        debugLog("Gemini API validation error:", error);
         return false;
     }
 }
