@@ -46,7 +46,7 @@ export async function checkApiSetup(): Promise<ApiCheckResult> {
                     const isValid = await validateGeminiAPIKey(config.apiKey);
                     result.success = isValid;
                     if (isValid) {
-                        result.model = config.model || "gemini-2.5-flash-preview-04-17";
+                        result.model = config.model || "gemini-2.5-flash";
                         result.responseTime = 500; // Placeholder value
                         result.details = "Connection test successful";
                     } else {

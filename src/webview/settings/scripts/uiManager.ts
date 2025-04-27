@@ -59,7 +59,7 @@ export function getUiManagerScript(): string {
         let modelInfo = "";
         switch (settings.apiProvider) {
           case "gemini":
-            modelInfo = settings.gemini.model || "gemini-2.5-flash-preview-04-17";
+            modelInfo = settings.gemini.model || "gemini-2.5-flash";
             break;
           case "huggingface":
             modelInfo = settings.huggingface.model || "Not configured";

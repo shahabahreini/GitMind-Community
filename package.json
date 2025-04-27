@@ -148,7 +148,7 @@
             "gemini-1.5-flash-8b",
             "gemini-1.5-pro"
           ],
-          "default": "gemini-2.5-flash-preview-04-17",
+          "default": "gemini-2.5-flash",
           "description": "Select which Gemini model to use",
           "enumDescriptions": [
             "Gemini 2.5 Flash Preview (04/17) - Latest and most advanced model",

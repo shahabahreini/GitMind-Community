@@ -14,7 +14,7 @@ export class StatusBanner {
     let modelInfo = "";
     switch (this._settings.apiProvider) {
       case "gemini":
-        modelInfo = this._settings.gemini.model || "gemini-2.5-flash-preview-04-17";
+        modelInfo = this._settings.gemini.model || "gemini-2.5-flash";
         break;
       case "huggingface":
         modelInfo = this._settings.huggingface.model || "Not configured";
