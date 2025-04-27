@@ -26,10 +26,6 @@ export class GeminiSettings {
           <option value="${GeminiModel.GEMINI_2_5_PRO}" ${this._settings.gemini?.model === GeminiModel.GEMINI_2_5_PRO ? "selected" : ""}>Gemini 2.5 Pro</option>
           <option value="${GeminiModel.GEMINI_2_5_FLASH}" ${this._settings.gemini?.model === GeminiModel.GEMINI_2_5_FLASH ? "selected" : ""}>Gemini 2.5 Flash</option>
           
-          <!-- Preview models -->
-          <option value="${GeminiModel.GEMINI_2_5_FLASH_PREVIEW}" ${this._settings.gemini?.model === GeminiModel.GEMINI_2_5_FLASH_PREVIEW ? "selected" : ""}>Gemini 2.5 Flash Preview (04/17)</option>
-          <option value="${GeminiModel.GEMINI_2_5_PRO_PREVIEW}" ${this._settings.gemini?.model === GeminiModel.GEMINI_2_5_PRO_PREVIEW ? "selected" : ""}>Gemini 2.5 Pro Preview (03/25)</option>
-          
           <!-- Older models -->
           <option value="${GeminiModel.GEMINI_2_0_FLASH}" ${this._settings.gemini?.model === GeminiModel.GEMINI_2_0_FLASH ? "selected" : ""}>Gemini 2.0 Flash</option>
           <option value="${GeminiModel.GEMINI_2_0_FLASH_LITE}" ${this._settings.gemini?.model === GeminiModel.GEMINI_2_0_FLASH_LITE ? "selected" : ""}>Gemini 2.0 Flash Lite</option>

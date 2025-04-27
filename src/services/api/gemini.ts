@@ -83,11 +83,11 @@ export async function callGeminiAPI(apiKey: string, model: string, diff: string,
         // Improved model validation and fallback logic
         let selectedModel = model as GeminiModel;
         const validModels = Object.values(GeminiModel);
-        
+
         if (!validModels.includes(selectedModel)) {
             // Log the issue for debugging
             debugLog("Warning: Unrecognized Gemini model, attempting to use as custom model ID", { model });
-            
+
             // Try to use the provided model string directly if it looks like a valid Gemini model ID
             if (typeof model === 'string' && model.startsWith('gemini-')) {
                 debugLog("Using provided model string directly", { model });
@@ -110,7 +110,7 @@ export async function callGeminiAPI(apiKey: string, model: string, diff: string,
         // Initialize the API
         const genAI = new GoogleGenerativeAI(apiKey);
         const generativeModel = genAI.getGenerativeModel({
-            model: selectedModel,
+            model: selectedModel, // Use the string directly
             generationConfig: {
                 temperature: config.temperature,
                 topK: config.topK,
@@ -118,7 +118,6 @@ export async function callGeminiAPI(apiKey: string, model: string, diff: string,
                 maxOutputTokens: config.maxOutputTokens,
             },
         });
-
         // Generate prompt with optional custom context
         const prompt = generateCommitPrompt(
             diff,
@@ -136,7 +135,7 @@ export async function callGeminiAPI(apiKey: string, model: string, diff: string,
     } catch (error) {
         // Enhanced error logging
         debugLog("Error in callGeminiAPI:", error);
-        
+
         // Provide more helpful error message
         const errorMessage = error instanceof Error ? error.message : String(error);
         if (errorMessage.includes("not found") || errorMessage.includes("invalid model")) {
@@ -156,7 +155,7 @@ export async function validateGeminiAPIKey(apiKey: string): Promise<boolean> {
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        
+
         // Try with a stable model first
         const model = genAI.getGenerativeModel({
             model: GeminiModel.GEMINI_1_5_PRO, // Use a well-established model for validation
