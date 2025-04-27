@@ -12,6 +12,20 @@ interface GenerationConfig {
 }
 
 const MODEL_CONFIGS: Record<GeminiModel, GenerationConfig> = {
+    // New stable Gemini 2.5 models
+    [GeminiModel.GEMINI_2_5_PRO]: {
+        temperature: 0.2,
+        topK: 40,
+        topP: 0.9,
+        maxOutputTokens: 8000,
+    },
+    [GeminiModel.GEMINI_2_5_FLASH]: {
+        temperature: 0.2,
+        topK: 40,
+        topP: 0.9,
+        maxOutputTokens: 8000,
+    },
+    // Preview models
     [GeminiModel.GEMINI_2_5_FLASH_PREVIEW]: {
         temperature: 0.2,
         topK: 40,
@@ -24,6 +38,7 @@ const MODEL_CONFIGS: Record<GeminiModel, GenerationConfig> = {
         topP: 0.9,
         maxOutputTokens: 8000,
     },
+    // Older models
     [GeminiModel.GEMINI_2_0_FLASH]: {
         temperature: 0.2,
         topK: 40,
@@ -65,20 +80,37 @@ export async function callGeminiAPI(apiKey: string, model: string, diff: string,
             throw new Error("Gemini API key is required");
         }
 
-        // Validate model
+        // Improved model validation and fallback logic
+        let selectedModel = model as GeminiModel;
         const validModels = Object.values(GeminiModel);
-        if (!validModels.includes(model as GeminiModel)) {
-            debugLog("Warning: Unrecognized Gemini model, using default", { model });
-            model = GeminiModel.GEMINI_2_5_FLASH_PREVIEW;
+        
+        if (!validModels.includes(selectedModel)) {
+            // Log the issue for debugging
+            debugLog("Warning: Unrecognized Gemini model, attempting to use as custom model ID", { model });
+            
+            // Try to use the provided model string directly if it looks like a valid Gemini model ID
+            if (typeof model === 'string' && model.startsWith('gemini-')) {
+                debugLog("Using provided model string directly", { model });
+                selectedModel = model as GeminiModel;
+            } else {
+                // Fall back to a stable model as last resort
+                debugLog("Falling back to default model", { defaultModel: GeminiModel.GEMINI_2_5_FLASH });
+                selectedModel = GeminiModel.GEMINI_2_5_FLASH;
+            }
         }
 
-        // Get configuration for the selected model
-        const config = MODEL_CONFIGS[model as GeminiModel] || MODEL_CONFIGS[GeminiModel.GEMINI_2_5_FLASH_PREVIEW];
+        // Get configuration for the selected model or use a reasonable default
+        const config = MODEL_CONFIGS[selectedModel] || {
+            temperature: 0.2,
+            topK: 40,
+            topP: 0.9,
+            maxOutputTokens: 8000,
+        };
 
         // Initialize the API
         const genAI = new GoogleGenerativeAI(apiKey);
         const generativeModel = genAI.getGenerativeModel({
-            model: model,
+            model: selectedModel,
             generationConfig: {
                 temperature: config.temperature,
                 topK: config.topK,
@@ -102,8 +134,18 @@ export async function callGeminiAPI(apiKey: string, model: string, diff: string,
         debugLog("Gemini API response:", { text });
         return text;
     } catch (error) {
+        // Enhanced error logging
         debugLog("Error in callGeminiAPI:", error);
-        throw new Error(`Failed to generate commit message: ${error instanceof Error ? error.message : String(error)}`);
+        
+        // Provide more helpful error message
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (errorMessage.includes("not found") || errorMessage.includes("invalid model")) {
+            throw new Error(`Model '${model}' not available or not supported. Please check if you have access to this model or try a different model.`);
+        } else if (errorMessage.includes("permission") || errorMessage.includes("access")) {
+            throw new Error(`Access denied to model '${model}'. Please verify your API key has access to this model.`);
+        } else {
+            throw new Error(`Failed to generate commit message: ${errorMessage}`);
+        }
     }
 }
 
@@ -114,8 +156,10 @@ export async function validateGeminiAPIKey(apiKey: string): Promise<boolean> {
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
+        
+        // Try with a stable model first
         const model = genAI.getGenerativeModel({
-            model: GeminiModel.GEMINI_2_5_FLASH_PREVIEW,
+            model: GeminiModel.GEMINI_1_5_PRO, // Use a well-established model for validation
         });
 
         // Simple validation request

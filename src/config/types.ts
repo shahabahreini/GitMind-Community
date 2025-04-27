@@ -117,6 +117,10 @@ export interface GeminiProviderConfig {
 }
 
 export enum GeminiModel {
+    // Updated model IDs for Gemini 2.5
+    GEMINI_2_5_PRO = 'gemini-2.5-pro',
+    GEMINI_2_5_FLASH = 'gemini-2.5-flash',
+    // Keep previous models for backward compatibility
     GEMINI_2_5_FLASH_PREVIEW = 'gemini-2.5-flash-preview-04-17',
     GEMINI_2_5_PRO_PREVIEW = 'gemini-2.5-pro-preview-03-25',
     GEMINI_2_0_FLASH = 'gemini-2.0-flash',
@@ -197,4 +201,3 @@ export type ApiConfig =
     | OpenAIApiConfig
     | TogetherApiConfig
     | OpenRouterApiConfig;
-
