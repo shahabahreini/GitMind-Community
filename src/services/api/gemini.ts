@@ -25,19 +25,6 @@ const MODEL_CONFIGS: Record<GeminiModel, GenerationConfig> = {
         topP: 0.9,
         maxOutputTokens: 8000,
     },
-    // Preview models
-    [GeminiModel.GEMINI_2_5_FLASH_PREVIEW]: {
-        temperature: 0.2,
-        topK: 40,
-        topP: 0.9,
-        maxOutputTokens: 8000,
-    },
-    [GeminiModel.GEMINI_2_5_PRO_PREVIEW]: {
-        temperature: 0.2,
-        topK: 40,
-        topP: 0.9,
-        maxOutputTokens: 8000,
-    },
     // Older models
     [GeminiModel.GEMINI_2_0_FLASH]: {
         temperature: 0.2,

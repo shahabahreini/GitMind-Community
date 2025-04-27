@@ -22,8 +22,8 @@ export class GeminiSettings {
       <div class="form-group">
         <label for="geminiModel">Model</label>
         <select id="geminiModel">
-          <option value="gemini-2.5-flash" ${this._settings.gemini?.model === "gemini-2.5-flash" ? "selected" : ""}>Gemini 2.5 Flash Preview (04/17)</option>
-          <option value="gemini-2.5-pro" ${this._settings.gemini?.model === "gemini-2.5-pro-preview" ? "selected" : ""}>Gemini 2.5 Pro Preview (03/25)</option>
+          <option value="gemini-2.5-flash-preview-04-17" ${this._settings.gemini?.model === "gemini-2.5-flash-preview-04-17" ? "selected" : ""}>Gemini 2.5 Flash Preview (04/17)</option>
+          <option value="gemini-2.5-pro-exp-03-25" ${this._settings.gemini?.model === "gemini-2.5-pro-exp-03-25" ? "selected" : ""}>Gemini 2.5 Pro Preview (03/25)</option>
           <option value="gemini-2.0-flash" ${this._settings.gemini?.model === "gemini-2.0-flash" ? "selected" : ""}>Gemini 2.0 Flash</option>
           <option value="gemini-2.0-flash-lite" ${this._settings.gemini?.model === "gemini-2.0-flash-lite" ? "selected" : ""}>Gemini 2.0 Flash-Lite</option>
           <option value="gemini-1.5-flash" ${this._settings.gemini?.model === "gemini-1.5-flash" ? "selected" : ""}>Gemini 1.5 Flash</option>

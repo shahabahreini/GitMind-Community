@@ -118,8 +118,8 @@ export interface GeminiProviderConfig {
 
 export enum GeminiModel {
     // Updated model IDs for Gemini 2.5
-    GEMINI_2_5_PRO = 'gemini-2.5-pro',
-    GEMINI_2_5_FLASH = 'gemini-2.5-flash',
+    GEMINI_2_5_PRO = 'gemini-2.5-pro-exp-03-25',
+    GEMINI_2_5_FLASH = 'gemini-2.5-flash-preview-04-17',
     GEMINI_2_0_FLASH = 'gemini-2.0-flash',
     GEMINI_2_0_FLASH_LITE = 'gemini-2.0-flash-lite',
     GEMINI_1_5_FLASH = 'gemini-1.5-flash',

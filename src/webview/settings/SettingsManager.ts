@@ -14,7 +14,7 @@ export class SettingsManager {
             debug: config.get<boolean>("debug") || false,
             gemini: {
                 apiKey: config.get<string>("gemini.apiKey") || "",
-                model: config.get<string>("gemini.model") || "gemini-2.5-flash",
+                model: config.get<string>("gemini.model") || "gemini-2.5-flash-preview-04-17",
             },
             huggingface: {
                 apiKey: config.get<string>("huggingface.apiKey") || "",
