@@ -213,7 +213,7 @@ Access the settings UI through:
 ### Gemini Models
 
 - **gemini-2.5-flash-preview-04-17**: Latest and most advanced Gemini model
-- **gemini-2.5-pro-exp-03-25-preview-03-25**: Advanced model with enhanced reasoning capabilities
+- **gemini-2.5-pro-exp-03-25**: Advanced model with enhanced reasoning capabilities
 - **gemini-2.0-flash**: Fast model with high performance
 - **gemini-2.0-flash-lite**: Lightweight version of Gemini 2.0 Flash
 - **gemini-1.5-flash**: Fast and efficient model

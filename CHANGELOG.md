@@ -1,11 +1,25 @@
-# Change Log
+# Changelog
 
-All notable changes to the "AI Commit Assistant" extension will be documented in this file.
+## [1.7.5] - 2024-XX-XX
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+### Added
 
-## [1.7.4] - Unreleased
+- Added support for Gemini 2.5 Flash Preview (04/17) model
+- Added support for Gemini 2.5 Pro Preview (03/25) model
+- Added support for Gemini 2.0 Flash and Flash-Lite models
+
+### Changed
+
+- Updated default Gemini model to "gemini-2.5-flash-preview-04-17"
+- Improved model selection UI with descriptive labels
+- Reorganized model options for better user experience
+
+### Fixed
+
+- Fixed compatibility issues with newer Gemini API versions
+- Resolved token estimation accuracy for new Gemini models
+
+## [1.7.4] - 2024-XX-XX
 
 ### Added
 
