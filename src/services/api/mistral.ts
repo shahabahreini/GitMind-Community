@@ -9,7 +9,10 @@ function extractRateLimits(headers: Headers): MistralRateLimit {
         remaining: parseInt(headers.get('ratelimitbysize-remaining') || '0'),
         queryCost: parseInt(headers.get('ratelimitbysize-query-cost') || '0'),
         monthlyLimit: parseInt(headers.get('x-ratelimitbysize-limit-month') || '0'),
-        monthlyRemaining: parseInt(headers.get('x-ratelimitbysize-remaining-month') || '0')
+        monthlyRemaining: parseInt(headers.get('x-ratelimitbysize-remaining-month') || '0'),
+        minuteLimit: parseInt(headers.get('x-ratelimitbysize-limit-minute') || '0'),
+        minuteRemaining: parseInt(headers.get('x-ratelimitbysize-remaining-minute') || '0'),
+        timestamp: Date.now()
     };
 }
 
