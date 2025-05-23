@@ -145,11 +145,12 @@ export async function validateGeminiAPIKey(apiKey: string): Promise<boolean> {
 
         // Try with a stable model first
         const model = genAI.getGenerativeModel({
-            model: GeminiModel.GEMINI_1_5_PRO, // Use a well-established model for validation
+            model: GeminiModel.GEMINI_2_0_FLASH,
         });
 
         // Simple validation request
         const result = await model.generateContent("Test connection");
+        console.log(result);
         return result.response !== undefined;
     } catch (error) {
         debugLog("Gemini API validation error:", error);

@@ -66,7 +66,7 @@ export async function checkApiSetup(): Promise<ApiCheckResult> {
                     if (rateLimits) {
                         result.model = config.model;
                         result.responseTime = 500; // Placeholder value
-                        result.details = `Remaining requests: ${rateLimits.remaining}`;
+                        result.details = `Remaining requests: ${rateLimits.current.remaining}`;
                     } else {
                         result.error = "Invalid API key";
                         result.troubleshooting = "Please check your Mistral API key configuration";
@@ -204,9 +204,14 @@ export async function checkRateLimits(): Promise<RateLimitsCheckResult> {
                     const rateLimits = await checkMistralRateLimits(config.apiKey);
                     if (rateLimits) {
                         result.success = true;
-                        result.limits = rateLimits;
+                        result.limits = {
+                            reset: rateLimits.current.reset,
+                            limit: rateLimits.current.limit,
+                            remaining: rateLimits.current.remaining,
+                            queryCost: rateLimits.current.queryCost
+                        };
                         // Add warning about rate limit checks affecting quota
-                        result.notes = `Rate limits retrieved successfully. Note: Checking rate limits consumes API tokens (${rateLimits.queryCost} tokens for this request).`;
+                        result.notes = `Rate limits retrieved successfully. Note: Checking rate limits consumes API tokens (${rateLimits.current.queryCost} tokens for this request).`;
                     } else {
                         result.error = "Failed to retrieve rate limits";
                         result.notes = "Please check your API key and try again";
@@ -336,9 +341,16 @@ async function validateOpenAIApiKey(apiKey: string): Promise<boolean> {
     }
 }
 
-async function checkMistralRateLimits(apiKey: string): Promise<MistralRateLimit | null> {
+interface RateLimitComparison {
+    current: MistralRateLimit;
+    previous?: MistralRateLimit;
+    anomalies: string[];
+}
+
+let lastRateLimit: MistralRateLimit | null = null;
+
+async function checkMistralRateLimits(apiKey: string): Promise<RateLimitComparison | null> {
     try {
-        // Send a minimal request to get rate limits from headers
         const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -346,24 +358,60 @@ async function checkMistralRateLimits(apiKey: string): Promise<MistralRateLimit 
                 "Authorization": `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                model: "mistral-tiny",  // Use the smallest model to minimize token usage
-                messages: [{ role: "user", content: "Hello" }]  // Minimal prompt
+                model: "mistral-small-latest",
+                messages: [{ role: "user", content: "Hi" }],
+                max_tokens: 1
             })
         });
 
-        if (!response.ok) {
-            return null;
+        const headers = response.headers;
+        const currentRateLimit: MistralRateLimit = {
+            reset: parseInt(headers.get('ratelimitbysize-reset') || '0'),
+            limit: parseInt(headers.get('ratelimitbysize-limit') || '0'),
+            remaining: parseInt(headers.get('ratelimitbysize-remaining') || '0'),
+            queryCost: parseInt(headers.get('ratelimitbysize-query-cost') || '0'),
+            monthlyLimit: parseInt(headers.get('x-ratelimitbysize-limit-month') || '0'),
+            monthlyRemaining: parseInt(headers.get('x-ratelimitbysize-remaining-month') || '0'),
+            minuteLimit: parseInt(headers.get('x-ratelimitbysize-limit-minute') || '0'),
+            minuteRemaining: parseInt(headers.get('x-ratelimitbysize-remaining-minute') || '0'),
+            timestamp: Date.now()
+        };
+
+        // Detect anomalies
+        const anomalies: string[] = [];
+
+        if (lastRateLimit) {
+            // Check if remaining tokens didn't decrease as expected
+            const expectedRemaining = lastRateLimit.remaining - currentRateLimit.queryCost;
+            if (currentRateLimit.remaining > expectedRemaining) {
+                anomalies.push(`Remaining tokens higher than expected: ${currentRateLimit.remaining} vs expected ${expectedRemaining}`);
+            }
+
+            // Check if monthly remaining increased
+            if (currentRateLimit.monthlyRemaining > lastRateLimit.monthlyRemaining) {
+                const increase = currentRateLimit.monthlyRemaining - lastRateLimit.monthlyRemaining;
+                anomalies.push(`Monthly remaining increased by ${increase} tokens`);
+            }
+
+            // Check if reset time is inconsistent
+            const timeDiff = (currentRateLimit.timestamp - lastRateLimit.timestamp) / 1000;
+            const resetDiff = lastRateLimit.reset - currentRateLimit.reset;
+            if (Math.abs(resetDiff - timeDiff) > 5) { // 5 second tolerance
+                anomalies.push(`Reset timer inconsistency: expected ~${Math.round(timeDiff)}s, got ${resetDiff}s`);
+            }
         }
 
-        // Extract rate limit information from headers
-        return {
-            reset: parseInt(response.headers.get('ratelimitbysize-reset') || '0'),
-            limit: parseInt(response.headers.get('ratelimitbysize-limit') || '0'),
-            remaining: parseInt(response.headers.get('ratelimitbysize-remaining') || '0'),
-            queryCost: parseInt(response.headers.get('ratelimitbysize-query-cost') || '0'),
-            monthlyLimit: parseInt(response.headers.get('ratelimitbysize-monthly-limit') || '0'),
-            monthlyRemaining: parseInt(response.headers.get('ratelimitbysize-monthly-remaining') || '0')
+        const result: RateLimitComparison = {
+            current: currentRateLimit,
+            previous: lastRateLimit || undefined,
+            anomalies
         };
+
+        // Store for next comparison
+        lastRateLimit = currentRateLimit;
+
+        return result;
+
     } catch (error) {
         debugLog("Mistral rate limit check error:", error);
         return null;

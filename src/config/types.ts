@@ -181,13 +181,17 @@ export interface MistralResponse {
 }
 
 export interface MistralRateLimit {
-    reset: number;        // Seconds until rate limit resets
-    limit: number;        // Rate limit per minute
-    remaining: number;    // Remaining tokens in current period
-    queryCost: number;    // Cost of the current query
-    monthlyLimit: number;     // Monthly rate limit
-    monthlyRemaining: number; // Remaining tokens for the month
+    reset: number;
+    limit: number;
+    remaining: number;
+    queryCost: number;
+    monthlyLimit: number;
+    monthlyRemaining: number;
+    minuteLimit: number;
+    minuteRemaining: number;
+    timestamp: number;
 }
+
 
 export type ApiConfig =
     | GeminiApiConfig
