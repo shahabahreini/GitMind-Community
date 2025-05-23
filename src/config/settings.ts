@@ -16,7 +16,7 @@ export function getConfiguration(): ExtensionConfig {
         gemini: {
             enabled: config.get("gemini.enabled", false),
             apiKey: config.get("gemini.apiKey"),
-            model: config.get("gemini.model", GeminiModel.GEMINI_2_5_FLASH_PREVIEW),
+            model: config.get("gemini.model", GeminiModel.GEMINI_2_0_FLASH),
         },
         huggingface: {
             enabled: config.get("huggingface.enabled", true),
@@ -26,7 +26,7 @@ export function getConfiguration(): ExtensionConfig {
                 "mistralai/Mistral-7B-Instruct-v0.3"
             ),
             customModel: config.get("huggingface.customModel", ""),
-            temperature: config.get("huggingface.temperature", 0.7),
+            temperature: config.get("huggingface.temperature", 0.3),
         },
         ollama: {
             enabled: config.get("ollama.enabled", false),
@@ -81,7 +81,7 @@ export function getApiConfig(): ApiConfig {
             return {
                 type: "gemini",
                 apiKey: config.gemini.apiKey || "",
-                model: config.gemini.model as GeminiModel || GeminiModel.GEMINI_2_5_FLASH_PREVIEW,
+                model: config.gemini.model as GeminiModel || GeminiModel.GEMINI_2_0_FLASH,
             };
 
         case "huggingface": {
