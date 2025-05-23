@@ -96,11 +96,13 @@ export async function processResponse(response: string): Promise<CommitMessage> 
 
         // Clean up the summary
         const originalSummary = summary;
-        summary = summary
-            .replace(/\[.*?\]/g, "")
-            .replace(/<[^>]+>/g, "")
-            .replace(/\s+/g, " ")
-            .trim();
+        summary = summary.replace(/\[.*?\]/g, "");
+        let previousSummary;
+        do {
+            previousSummary = summary;
+            summary = summary.replace(/<[^>]+>/g, "");
+        } while (summary !== previousSummary);
+        summary = summary.replace(/\s+/g, " ").trim();
         debugLog("Cleaned summary", { summary, changed: originalSummary !== summary });
 
         // Truncate summary if needed, preserving the type prefix
