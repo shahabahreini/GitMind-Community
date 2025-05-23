@@ -160,26 +160,34 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           
         case 'huggingfaceModelsLoaded':
           const huggingfaceModelSelect = document.getElementById('huggingfaceModel');
-          if (huggingfaceModelSelect) {
+          const huggingfaceSearchInput = document.getElementById('huggingfaceModelSearch');
+          
+          if (huggingfaceModelSelect && huggingfaceSearchInput) {
             // Store the currently selected value
             const currentValue = huggingfaceModelSelect.value;
             
-            // Clear existing options
-            huggingfaceModelSelect.innerHTML = '';
-            
             if (message.success && message.models && message.models.length > 0) {
-              // Add models to dropdown
+              // Store all models for search functionality
+              window.allHuggingFaceModels = message.models;
+              
+              // Clear existing options
+              huggingfaceModelSelect.innerHTML = '';
+              
+              // Add all models to dropdown
               message.models.forEach(modelId => {
                 const option = document.createElement('option');
                 option.value = modelId;
                 option.textContent = modelId;
-                // Select the option if it matches the current settings or was previously selected
                 option.selected = modelId === currentValue || 
                                   (currentValue === '' && modelId === currentSettings.huggingface.model);
                 huggingfaceModelSelect.appendChild(option);
               });
               
-              showToast('Hugging Face models loaded successfully', 'success');
+              // Show search input and set up search functionality
+              huggingfaceSearchInput.style.display = 'block';
+              setupHuggingFaceModelSearch();
+              
+              showToast(\`\${message.models.length} Hugging Face models loaded successfully\`, 'success');
             } else {
               // Add default options if loading failed
               const defaultModels = [
@@ -213,7 +221,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
             // Reset the load button
             const loadButton = document.getElementById('loadHuggingFaceModels');
             if (loadButton) {
-              loadButton.textContent = 'Load Available Models';
+              loadButton.textContent = 'Load All Available Models';
               loadButton.disabled = false;
             }
           }
@@ -238,7 +246,11 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     document.getElementById('loadHuggingFaceModels').addEventListener('click', function() {
       // Show loading state
       const huggingfaceModelSelect = document.getElementById('huggingfaceModel');
-      huggingfaceModelSelect.innerHTML = '<option value="">Loading models...</option>';
+      const loadButton = this;
+      
+      huggingfaceModelSelect.innerHTML = '<option value="">Loading all models...</option>';
+      loadButton.textContent = 'Loading...';
+      loadButton.disabled = true;
       
       // Send message to extension to load models
       vscode.postMessage({
@@ -247,6 +259,81 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
       });
     });
     
+    // Setup search functionality for Hugging Face models
+    function setupHuggingFaceModelSearch() {
+      const searchInput = document.getElementById('huggingfaceModelSearch');
+      const modelSelect = document.getElementById('huggingfaceModel');
+      
+      if (!searchInput || !modelSelect || !window.allHuggingFaceModels) return;
+      
+      let searchTimeout;
+      
+      searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          const searchTerm = this.value.toLowerCase();
+          const currentValue = modelSelect.value;
+          
+          // Clear current options
+          modelSelect.innerHTML = '';
+          
+          // Filter models based on search term
+          const filteredModels = window.allHuggingFaceModels.filter(model => 
+            model.toLowerCase().includes(searchTerm)
+          );
+          
+          // Limit results for performance (show first 500 matches)
+          const displayModels = filteredModels.slice(0, 500);
+          
+          // Add filtered options
+          displayModels.forEach(modelId => {
+            const option = document.createElement('option');
+            option.value = modelId;
+            option.textContent = modelId;
+            option.selected = modelId === currentValue;
+            modelSelect.appendChild(option);
+          });
+          
+          // Show count of results
+          if (searchTerm && filteredModels.length > displayModels.length) {
+            const infoOption = document.createElement('option');
+            infoOption.disabled = true;
+            infoOption.textContent = \`Showing \${displayModels.length} of \${filteredModels.length} matches...\`;
+            modelSelect.insertBefore(infoOption, modelSelect.firstChild);
+          }
+        }, 300); // Debounce search
+      });
+      
+      // Handle keyboard navigation
+      searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          modelSelect.focus();
+          modelSelect.selectedIndex = 0;
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          if (modelSelect.options.length > 0) {
+            // Select first non-disabled option
+            for (let i = 0; i < modelSelect.options.length; i++) {
+              if (!modelSelect.options[i].disabled) {
+                modelSelect.selectedIndex = i;
+                break;
+              }
+            }
+          }
+        }
+      });
+      
+      // Return focus to search when leaving select
+      modelSelect.addEventListener('blur', function() {
+        setTimeout(() => {
+          if (document.activeElement !== searchInput) {
+            searchInput.focus();
+          }
+        }, 100);
+      });
+    }
+
     // Listen for messages from the extension
     window.addEventListener('message', event => {
       const message = event.data;

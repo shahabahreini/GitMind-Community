@@ -1,6 +1,15 @@
-import { HuggingFaceResponse } from "../../config/types";
-import { debugLog } from "../debug/logger";
+import axios from 'axios';
+import { HuggingFaceResponse } from '../../config/types';
+import { debugLog } from '../debug/logger';
 import { generateCommitPrompt } from './prompts';
+
+export interface HuggingFaceModel {
+    id: string;
+    downloads: number;
+    likes: number;
+    pipeline_tag?: string;
+    library_name?: string;
+}
 
 export async function callHuggingFaceAPI(
     apiKey: string,
@@ -91,57 +100,43 @@ export async function callHuggingFaceAPI(
 
 export async function fetchHuggingFaceModels(apiKey: string): Promise<string[]> {
     try {
-        debugLog("Fetching Hugging Face models...");
+        debugLog('Fetching all Hugging Face models...');
 
-        const response = await fetch("https://huggingface.co/api/models?filter=text-generation&sort=downloads&direction=-1&limit=50", {
-            method: "GET",
+        const response = await axios.get('https://huggingface.co/api/models', {
             headers: {
-                "Authorization": `Bearer ${apiKey}`,
-                "Content-Type": "application/json",
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
             },
+            params: {
+                limit: 10000, // Fetch a large number of models
+                sort: 'downloads', // Sort by popularity
+                direction: -1 // Descending order
+            },
+            timeout: 30000 // 30 second timeout
         });
 
-        if (!response.ok) {
-            throw new Error(`Hugging Face API error: ${response.status} ${response.statusText}`);
+        if (response.data && Array.isArray(response.data)) {
+            const models = response.data
+                .filter((model: HuggingFaceModel) => model.id && typeof model.id === 'string')
+                .map((model: HuggingFaceModel) => model.id)
+                .slice(0, 5000); // Limit to first 5000 models for performance
+
+            debugLog(`Successfully fetched ${models.length} Hugging Face models`);
+            return models;
+        } else {
+            throw new Error('Invalid response format from Hugging Face API');
         }
-
-        const models = await response.json();
-
-        // Filter models that are suitable for text generation and chat
-        const suitableModels = models
-            .filter((model: any) => {
-                // Filter for models that support text generation and are not too large
-                const modelId = model.id || '';
-                const downloads = model.downloads || 0;
-
-                // Include popular instruction-tuned models and exclude very large models
-                return (
-                    downloads > 1000 && // Only include models with decent popularity
-                    (
-                        modelId.includes('instruct') ||
-                        modelId.includes('chat') ||
-                        modelId.includes('instruction') ||
-                        modelId.includes('conversational') ||
-                        modelId.includes('7b') ||
-                        modelId.includes('13b') ||
-                        modelId.includes('mistral') ||
-                        modelId.includes('llama') ||
-                        modelId.includes('phi') ||
-                        modelId.includes('gemma')
-                    ) &&
-                    !modelId.includes('70b') && // Exclude very large models
-                    !modelId.includes('405b') &&
-                    !modelId.includes('embedding') &&
-                    !modelId.includes('classifier')
-                );
-            })
-            .map((model: any) => model.id)
-            .slice(0, 20); // Limit to top 20 models
-
-        debugLog(`Fetched ${suitableModels.length} Hugging Face models`);
-        return suitableModels;
     } catch (error) {
-        debugLog("Error fetching Hugging Face models:", error);
+        debugLog('Error fetching Hugging Face models:', error);
+        if (axios.isAxiosError(error)) {
+            if (error.response?.status === 401) {
+                throw new Error('Invalid Hugging Face API key');
+            } else if (error.response?.status === 429) {
+                throw new Error('Rate limit exceeded. Please try again later.');
+            } else {
+                throw new Error(`API request failed: ${error.response?.status || 'Unknown error'}`);
+            }
+        }
         throw error;
     }
 }

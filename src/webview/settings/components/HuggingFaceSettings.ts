@@ -46,12 +46,15 @@ export class HuggingFaceSettings {
       </div>
       <div class="form-group">
         <label for="huggingfaceModel">Model</label>
-        <select id="huggingfaceModel">
-          ${optionsHtml}
-        </select>
-        <button id="loadHuggingFaceModels" class="button small" style="margin-top: 8px;">Load Available Models</button>
+        <div class="searchable-select-container">
+          <input type="text" id="huggingfaceModelSearch" placeholder="Search models..." class="model-search-input" style="display: none;" />
+          <select id="huggingfaceModel" class="searchable-select">
+            ${optionsHtml}
+          </select>
+        </div>
+        <button id="loadHuggingFaceModels" class="button small" style="margin-top: 8px;">Load All Available Models</button>
         <div class="description">
-          Default models shown. Click "Load Available Models" to fetch popular instruction-tuned models from Hugging Face.
+          Default popular models shown. Click "Load All Available Models" to fetch all models from Hugging Face with search functionality.
         </div>
       </div>
     </div>`;
