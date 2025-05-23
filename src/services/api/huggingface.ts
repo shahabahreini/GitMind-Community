@@ -88,3 +88,60 @@ export async function callHuggingFaceAPI(
         throw new Error(`Unexpected error during Hugging Face API call: ${String(error)}`);
     }
 }
+
+export async function fetchHuggingFaceModels(apiKey: string): Promise<string[]> {
+    try {
+        debugLog("Fetching Hugging Face models...");
+
+        const response = await fetch("https://huggingface.co/api/models?filter=text-generation&sort=downloads&direction=-1&limit=50", {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${apiKey}`,
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Hugging Face API error: ${response.status} ${response.statusText}`);
+        }
+
+        const models = await response.json();
+
+        // Filter models that are suitable for text generation and chat
+        const suitableModels = models
+            .filter((model: any) => {
+                // Filter for models that support text generation and are not too large
+                const modelId = model.id || '';
+                const downloads = model.downloads || 0;
+
+                // Include popular instruction-tuned models and exclude very large models
+                return (
+                    downloads > 1000 && // Only include models with decent popularity
+                    (
+                        modelId.includes('instruct') ||
+                        modelId.includes('chat') ||
+                        modelId.includes('instruction') ||
+                        modelId.includes('conversational') ||
+                        modelId.includes('7b') ||
+                        modelId.includes('13b') ||
+                        modelId.includes('mistral') ||
+                        modelId.includes('llama') ||
+                        modelId.includes('phi') ||
+                        modelId.includes('gemma')
+                    ) &&
+                    !modelId.includes('70b') && // Exclude very large models
+                    !modelId.includes('405b') &&
+                    !modelId.includes('embedding') &&
+                    !modelId.includes('classifier')
+                );
+            })
+            .map((model: any) => model.id)
+            .slice(0, 20); // Limit to top 20 models
+
+        debugLog(`Fetched ${suitableModels.length} Hugging Face models`);
+        return suitableModels;
+    } catch (error) {
+        debugLog("Error fetching Hugging Face models:", error);
+        throw error;
+    }
+}

@@ -40,6 +40,18 @@ export function getUiManagerScript(): string {
         }
       });
 
+      // Add event listener for Hugging Face API key change
+      document.getElementById('huggingfaceApiKey').addEventListener('change', function() {
+        const apiKey = this.value.trim();
+        if (apiKey && apiKey.length > 10) {
+          // If we have what looks like a valid API key, try loading models
+          vscode.postMessage({
+            command: 'executeCommand',
+            commandId: 'ai-commit-assistant.loadHuggingFaceModels'
+          });
+        }
+      });
+
       // Toast notification system
       function showToast(message, type = 'success') {
         const toast = document.getElementById('toast');

@@ -13,6 +13,7 @@ import { processResponse } from "./utils/commitFormatter";
 import { SettingsWebview } from "./webview/settings/SettingsWebview";
 import { OnboardingManager, OnboardingStep } from "./utils/onboardingManager";
 import { fetchMistralModels } from "./services/api/mistral";
+import { fetchHuggingFaceModels } from "./services/api/huggingface";
 // Add import for Cohere (if needed in the future)
 // import { fetchCohereModels } from "./services/api/cohere";
 
@@ -410,6 +411,56 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  // Register command to load Hugging Face models
+  let loadHuggingFaceModelsCommand = vscode.commands.registerCommand(
+    "ai-commit-assistant.loadHuggingFaceModels",
+    async () => {
+      try {
+        const config = getApiConfig();
+        if (config.type !== "huggingface" || !config.apiKey) {
+          throw new Error("Hugging Face API key is required to load models");
+        }
+
+        // Show progress notification
+        await vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title: "Loading Hugging Face models...",
+            cancellable: false
+          },
+          async () => {
+            try {
+              const models = await fetchHuggingFaceModels(config.apiKey);
+
+              // Send models to webview
+              if (SettingsWebview.isWebviewOpen()) {
+                SettingsWebview.postMessageToWebview({
+                  command: 'huggingfaceModelsLoaded',
+                  success: true,
+                  models: models
+                });
+              }
+            } catch (error) {
+              debugLog("Load Hugging Face Models Error:", error);
+
+              // Send error to webview
+              if (SettingsWebview.isWebviewOpen()) {
+                SettingsWebview.postMessageToWebview({
+                  command: 'huggingfaceModelsLoaded',
+                  success: false,
+                  error: error instanceof Error ? error.message : 'Unknown error'
+                });
+              }
+            }
+          }
+        );
+      } catch (error) {
+        debugLog("Load Hugging Face Models Error:", error);
+        vscode.window.showErrorMessage(`Error loading Hugging Face models: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+  );
+
   let loadingIndicatorCommand = vscode.commands.registerCommand(
     "ai-commit-assistant.loadingIndicator",
     () => {
@@ -436,7 +487,8 @@ export async function activate(context: vscode.ExtensionContext) {
     settingsCommand,
     checkApiSetupCommand,
     checkRateLimitsCommand,
-    loadMistralModelsCommand
+    loadMistralModelsCommand,
+    loadHuggingFaceModelsCommand
   );
 
   // Show onboarding for new users

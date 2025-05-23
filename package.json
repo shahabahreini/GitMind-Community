@@ -265,6 +265,11 @@
         "category": "AI Commit Assistant"
       },
       {
+        "command": "ai-commit-assistant.loadHuggingFaceModels",
+        "title": "Load Hugging Face Models",
+        "category": "AI Commit Assistant"
+      },
+      {
         "command": "ai-commit-assistant.acceptInput",
         "title": "Accept Input",
         "category": "AI Commit Assistant"

@@ -157,6 +157,67 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
             }
           }
           break;
+          
+        case 'huggingfaceModelsLoaded':
+          const huggingfaceModelSelect = document.getElementById('huggingfaceModel');
+          if (huggingfaceModelSelect) {
+            // Store the currently selected value
+            const currentValue = huggingfaceModelSelect.value;
+            
+            // Clear existing options
+            huggingfaceModelSelect.innerHTML = '';
+            
+            if (message.success && message.models && message.models.length > 0) {
+              // Add models to dropdown
+              message.models.forEach(modelId => {
+                const option = document.createElement('option');
+                option.value = modelId;
+                option.textContent = modelId;
+                // Select the option if it matches the current settings or was previously selected
+                option.selected = modelId === currentValue || 
+                                  (currentValue === '' && modelId === currentSettings.huggingface.model);
+                huggingfaceModelSelect.appendChild(option);
+              });
+              
+              showToast('Hugging Face models loaded successfully', 'success');
+            } else {
+              // Add default options if loading failed
+              const defaultModels = [
+                'mistralai/Mistral-7B-Instruct-v0.3',
+                'microsoft/DialoGPT-medium',
+                'facebook/bart-large-cnn',
+                'HuggingFaceH4/zephyr-7b-beta'
+              ];
+              
+              // Add the current model from settings if it's not in default models
+              if (currentSettings.huggingface.model && !defaultModels.includes(currentSettings.huggingface.model)) {
+                const option = document.createElement('option');
+                option.value = currentSettings.huggingface.model;
+                option.textContent = currentSettings.huggingface.model;
+                option.selected = true;
+                huggingfaceModelSelect.appendChild(option);
+              }
+              
+              // Add default models
+              defaultModels.forEach(modelId => {
+                const option = document.createElement('option');
+                option.value = modelId;
+                option.textContent = modelId;
+                option.selected = modelId === currentSettings.huggingface.model;
+                huggingfaceModelSelect.appendChild(option);
+              });
+              
+              showToast('Failed to load Hugging Face models: ' + (message.error || 'Unknown error'), 'error');
+            }
+              
+            // Reset the load button
+            const loadButton = document.getElementById('loadHuggingFaceModels');
+            if (loadButton) {
+              loadButton.textContent = 'Load Available Models';
+              loadButton.disabled = false;
+            }
+          }
+          break;
       }
     });
 
@@ -170,6 +231,19 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
       vscode.postMessage({
         command: 'executeCommand',
         commandId: 'ai-commit-assistant.loadMistralModels'
+      });
+    });
+    
+    // Add event listener for the Hugging Face load models button
+    document.getElementById('loadHuggingFaceModels').addEventListener('click', function() {
+      // Show loading state
+      const huggingfaceModelSelect = document.getElementById('huggingfaceModel');
+      huggingfaceModelSelect.innerHTML = '<option value="">Loading models...</option>';
+      
+      // Send message to extension to load models
+      vscode.postMessage({
+        command: 'executeCommand',
+        commandId: 'ai-commit-assistant.loadHuggingFaceModels'
       });
     });
     
