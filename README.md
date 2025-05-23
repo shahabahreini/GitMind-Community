@@ -79,11 +79,13 @@ Or launch VS Code Quick Open (Ctrl+P), paste the following command, and press en
 - **Token Estimation**:
   - Pre-generation token count estimates
   - Smart content optimization
-  - Rate limit monitoring (Mistral)
+  - Enhanced rate limit monitoring with minute-based tracking
+  - Anomaly detection for unexpected rate limit changes
 - **Usage Tracking**:
   - Real-time token consumption display
-  - Rate limit status indicators
-  - Quota management helpers
+  - Rate limit status indicators with detailed breakdown
+  - Quota management helpers with timestamp tracking
+  - Advanced monitoring for API response patterns
 
 ### Prompt Customization
 
@@ -161,7 +163,11 @@ Access the settings UI through:
 3. Configure the extension:
    - Set "Hugging Face" as your provider
    - Enter your API key
+   - Use the "Load Available Models" feature to browse and select from thousands of models
+   - Search and filter models in real-time for optimal selection
    - Select or enter your preferred model identifier
+
+**Enhanced Model Selection**: The extension now features dynamic model loading from the Hugging Face Hub, allowing you to search through available models and select the best one for your needs directly from the settings interface.
 
 ### Ollama
 
@@ -228,10 +234,12 @@ Access the settings UI through:
 
 ### Hugging Face Models
 
+- **Dynamic Model Loading**: Browse and search through thousands of available models from the Hugging Face Hub
 - **mistralai/Mistral-7B-Instruct-v0.3**: State-of-the-art open-source 7B parameter model
 - **meta-llama/Llama-2-7b-chat-hf**: Meta's Llama 2 conversational model
 - **google/flan-t5-xxl**: Google's instruction-tuned T5 model
-- And many other open-source models available on Hugging Face
+- **Search and Filter**: Use the built-in search functionality to find models that match your specific requirements
+- And thousands of other open-source models available on Hugging Face Hub
 
 ### Ollama Models
 

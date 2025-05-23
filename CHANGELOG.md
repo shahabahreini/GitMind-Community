@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.8.0] - 2024-05-23
+
+### Added
+
+- Enhanced HuggingFace model selection with dynamic loading capabilities
+  - New HuggingFaceModel interface for structured model data
+  - Search functionality for available models
+  - Client-side filtering and sorting for improved performance
+  - Load all models command with real-time feedback
+  - Improved model selection UI with search and loading states
+- Enhanced rate limit tracking system
+  - Added minute-based rate limits with timestamp tracking
+  - Improved API response monitoring and tracking
+  - Anomaly detection for Mistral rate limits
+  - Detection of unexpected changes in remaining tokens and reset timers
+- Added axios for robust API requests with comprehensive error handling
+
+### Changed
+
+- Updated default Gemini model to GEMINI_2_0_FLASH for better stability and performance
+- Reduced default Hugging Face temperature to 0.3 for more focused and predictable responses
+- Enhanced Gemini API validation to use GEMINI_2_0_FLASH model with improved logging
+- Refactored Mistral rate limit retrieval to return comparison objects with anomaly detection
+- Improved HuggingFace settings UI with enhanced search functionality and loading states
+- Updated API key validation to display remaining requests based on current rate limits
+
+### Technical
+
+- Implemented client-side model filtering and sorting for efficiency
+- Added comprehensive rate limit comparison and anomaly detection system
+- Enhanced error handling for HuggingFace API requests
+- Improved user feedback during model loading operations
+
 ## [1.7.5] - 2024-XX-XX
 
 ### Added

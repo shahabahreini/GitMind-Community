@@ -1,7 +1,7 @@
 {
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Assistant",
-  "description": "Generate meaningful git commit messages using Free/Paid AI (Mistral, Gemini, Hugging Face, Cohere, OpenAI, Together AI, OpenRouter, or Ollama) with support for conventional commits and multiple LLM models",
+  "description": "🚀 Generate perfect git commit messages instantly using AI! Support for 8+ free/paid AI providers (Gemini, OpenAI, Claude via OpenRouter, Mistral, HuggingFace, Ollama, Together AI). Smart conventional commits, dynamic model selection, and enhanced UX for effortless Git workflow automation.",
   "version": "1.8.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
@@ -20,7 +20,8 @@
     "SCM Providers",
     "Machine Learning",
     "Formatters",
-    "Other"
+    "Other",
+    "Extension Packs"
   ],
   "extensionDependencies": [
     "vscode.git"
@@ -389,38 +390,62 @@
     "commit",
     "ai",
     "artificial-intelligence",
+    "commit-message-generator",
+    "auto-commit",
+    "smart-commits",
+    "conventional-commits",
+    "semantic-commits",
+    "git-automation",
+    "developer-productivity",
+    "code-quality",
+    "git-workflow",
+    "ai-assistant",
+    "free-ai",
     "gemini",
     "gemini-ai",
     "google-ai",
+    "openai",
+    "gpt",
+    "claude",
+    "anthropic",
     "huggingface",
     "ollama",
     "mistral",
     "mistral-ai",
     "cohere",
-    "openai",
-    "gpt",
     "together",
     "together-ai",
+    "openrouter",
     "llama",
-    "conventional-commits",
-    "commit-message",
-    "git-message",
-    "commit-generator",
-    "git-automation",
-    "ai-assistant",
-    "semantic-commits",
-    "vscode-extension",
-    "vscode-git",
-    "code-quality",
-    "developer-tools",
-    "local-ai",
+    "phi",
+    "codellama",
     "llm",
     "large-language-model",
-    "phi",
-    "llama",
-    "codellama",
-    "git-workflow",
-    "productivity"
+    "local-ai",
+    "free-tier",
+    "vscode-extension",
+    "vscode-git",
+    "git-message",
+    "commit-generator",
+    "developer-tools",
+    "productivity",
+    "workflow-automation",
+    "coding-assistant",
+    "ai-tools",
+    "machine-learning",
+    "natural-language-processing",
+    "commit-standards",
+    "git-best-practices",
+    "code-review",
+    "software-development",
+    "devops",
+    "version-control",
+    "git-helper",
+    "commit-quality",
+    "automated-commits",
+    "intelligent-commits",
+    "contextual-commits",
+    "commit-enhancement"
   ],
   "author": {
     "name": "Shahab Bahreini",
@@ -432,27 +457,42 @@
     "type": "github",
     "url": "https://github.com/sponsors/shahabahreini"
   },
-  "galleryBanner": {
-    "color": "#1e1e1e",
-    "theme": "dark"
-  },
   "badges": [
     {
-      "url": "https://img.shields.io/visual-studio-marketplace/v/ShahabBahreiniJangjoo.ai-commit-assistant",
+      "url": "https://img.shields.io/visual-studio-marketplace/v/ShahabBahreiniJangjoo.ai-commit-assistant?style=for-the-badge&logo=visual-studio-code&color=blue",
       "href": "https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant",
       "description": "VS Code Marketplace Version"
     },
     {
-      "url": "https://img.shields.io/visual-studio-marketplace/d/ShahabBahreiniJangjoo.ai-commit-assistant",
+      "url": "https://img.shields.io/visual-studio-marketplace/d/ShahabBahreiniJangjoo.ai-commit-assistant?style=for-the-badge&logo=visual-studio-code&color=green",
       "href": "https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant",
-      "description": "VS Code Marketplace Downloads"
+      "description": "Downloads"
     },
     {
-      "url": "https://img.shields.io/visual-studio-marketplace/r/ShahabBahreiniJangjoo.ai-commit-assistant",
+      "url": "https://img.shields.io/visual-studio-marketplace/r/ShahabBahreiniJangjoo.ai-commit-assistant?style=for-the-badge&logo=visual-studio-code&color=orange",
       "href": "https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant",
       "description": "Rating"
+    },
+    {
+      "url": "https://img.shields.io/github/stars/shahabahreini/AI-Commit-Assistant?style=for-the-badge&logo=github&color=yellow",
+      "href": "https://github.com/shahabahreini/AI-Commit-Assistant",
+      "description": "GitHub Stars"
+    },
+    {
+      "url": "https://img.shields.io/badge/AI_Providers-8+-purple?style=for-the-badge&logo=openai",
+      "href": "https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant",
+      "description": "Supported AI Providers"
+    },
+    {
+      "url": "https://img.shields.io/badge/Free_Tier-Available-brightgreen?style=for-the-badge&logo=checkmarx",
+      "href": "https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant",
+      "description": "Free Tier Available"
     }
   ],
+  "galleryBanner": {
+    "color": "#0066cc",
+    "theme": "dark"
+  },
   "capabilities": {
     "virtualWorkspaces": true,
     "untrustedWorkspaces": {
