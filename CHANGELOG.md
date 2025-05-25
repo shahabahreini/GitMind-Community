@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.0.0] - 2024-12-19
+
+### Added
+
+- Dynamic model selection with real-time browsing and filtering for Hugging Face and compatible providers
+- Token management with pre-generation estimation, rate limiting, and usage analytics
+- Native VS Code Source Control panel integration and workflow support
+- Latest Gemini and OpenAI model configurations with updated versions and descriptions
+
+### Changed
+
+- Enhanced commit message generation instructions for clarity and completeness
+- Updated commit message guidelines to emphasize proper formatting and untruncated messages
+- Improved multi-provider AI support with significant enhancements
+- Refactored settings UI for better organization and clarity
+- Upgraded core functionality with improved user experience across all providers
+
+### Technical
+
+- Major version upgrade to 2.0.0 reflecting significant architectural improvements
+- Enhanced AI provider support infrastructure
+- Improved model selection and management system
+- Streamlined prompt processing with clearer instruction guidelines
+- Updated API integrations for better compatibility and performance
+
 ## [1.8.0] - 2024-05-23
 
 ### Added
