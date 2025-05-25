@@ -30,7 +30,7 @@ export class SettingsManager {
             },
             cohere: {
                 apiKey: config.get<string>("cohere.apiKey") || "",
-                model: config.get<string>("cohere.model") || "command",
+                model: config.get<string>("cohere.model") || "command-a-03-2025",
             },
             openai: {
                 apiKey: config.get<string>("openai.apiKey") || "",

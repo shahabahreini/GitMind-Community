@@ -83,7 +83,7 @@ export function getUiManagerScript(): string {
             modelInfo = settings.mistral.model || "mistral-large-latest";
             break;
           case "cohere":
-            modelInfo = settings.cohere.model || "command-r-plus";
+            modelInfo = settings.cohere.model || "command-a-03-2025";
             break;
           case "openai":
             modelInfo = settings.openai.model || "gpt-3.5-turbo";

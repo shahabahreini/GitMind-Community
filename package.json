@@ -175,12 +175,32 @@
         "aiCommitAssistant.cohere.model": {
           "type": "string",
           "enum": [
+            "command-a-03-2025",
+            "command-r-08-2024",
+            "command-r-plus-08-2024",
+            "aya-expanse-8b",
+            "aya-expanse-32b",
+            "command-r7b-arabic",
+            "command-r",
+            "command-r-plus",
             "command",
             "command-light",
-            "command-nightly",
-            "command-r"
+            "command-nightly"
           ],
-          "default": "command",
+          "enumDescriptions": [
+            "Command A (Latest - High Performance)",
+            "Command R (08-2024)",
+            "Command R+ (08-2024)",
+            "Aya Expanse 8B (Multilingual)",
+            "Aya Expanse 32B (Multilingual)",
+            "Command R7B Arabic",
+            "Command R (Legacy)",
+            "Command R+ (Legacy)",
+            "Command (Legacy)",
+            "Command Light (Legacy)",
+            "Command Nightly (Legacy)"
+          ],
+          "default": "command-a-03-2025",
           "description": "Cohere model to use for generating commit messages"
         },
         "aiCommitAssistant.openai.apiKey": {

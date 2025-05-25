@@ -49,7 +49,7 @@ export function getConfiguration(): ExtensionConfig {
         cohere: {
             enabled: config.get("cohere.enabled", false),
             apiKey: config.get("cohere.apiKey"),
-            model: config.get("cohere.model", "command"),
+            model: config.get("cohere.model", "command-a-03-2025"),
         },
         openai: {
             enabled: config.get("openai.enabled", false),
@@ -122,7 +122,7 @@ export function getApiConfig(): ApiConfig {
             return {
                 type: "cohere",
                 apiKey: config.cohere.apiKey || "",
-                model: config.cohere.model || "command",
+                model: config.cohere.model || "command-a-03-2025",
             };
 
         case "openai":

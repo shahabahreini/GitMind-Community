@@ -26,7 +26,7 @@ export class StatusBanner {
         modelInfo = this._settings.mistral.model || "mistral-large-latest";
         break;
       case "cohere":
-        modelInfo = this._settings.cohere.model || "command-r-plus";
+        modelInfo = this._settings.cohere.model || "command-a-03-2025";
         break;
       case "together":
         modelInfo = this._settings.together?.model || "Not selected";

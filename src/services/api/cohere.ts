@@ -4,9 +4,20 @@ import { generateCommitPrompt } from './prompts';
 
 // Define Cohere model types
 export enum CohereModel {
-    COMMAND = "command",
+    // Latest Models
+    COMMAND_A_03_2025 = "command-a-03-2025",
+    COMMAND_R_08_2024 = "command-r-08-2024",
+    COMMAND_R_PLUS_08_2024 = "command-r-plus-08-2024",
+
+    // Specialized Models
+    AYA_EXPANSE_8B = "aya-expanse-8b",
+    AYA_EXPANSE_32B = "aya-expanse-32b",
+    COMMAND_R7B_ARABIC = "command-r7b-arabic",
+
+    // Legacy Models
     COMMAND_R = "command-r",
     COMMAND_R_PLUS = "command-r-plus",
+    COMMAND = "command",
     COMMAND_LIGHT = "command-light",
     COMMAND_NIGHTLY = "command-nightly"
 }
@@ -19,13 +30,48 @@ interface GenerationConfig {
     topK: number;
 }
 
-const MODEL_CONFIGS: Record<CohereModel, GenerationConfig> = {
-    [CohereModel.COMMAND]: {
+const MODEL_CONFIGS: Record<string, GenerationConfig> = {
+    // Latest Models
+    [CohereModel.COMMAND_A_03_2025]: {
         temperature: 0.3,
         maxOutputTokens: 350,
         topP: 0.8,
         topK: 40
     },
+    [CohereModel.COMMAND_R_08_2024]: {
+        temperature: 0.3,
+        maxOutputTokens: 350,
+        topP: 0.8,
+        topK: 40
+    },
+    [CohereModel.COMMAND_R_PLUS_08_2024]: {
+        temperature: 0.3,
+        maxOutputTokens: 350,
+        topP: 0.8,
+        topK: 40
+    },
+
+    // Specialized Models
+    [CohereModel.AYA_EXPANSE_8B]: {
+        temperature: 0.3,
+        maxOutputTokens: 350,
+        topP: 0.8,
+        topK: 40
+    },
+    [CohereModel.AYA_EXPANSE_32B]: {
+        temperature: 0.3,
+        maxOutputTokens: 350,
+        topP: 0.8,
+        topK: 40
+    },
+    [CohereModel.COMMAND_R7B_ARABIC]: {
+        temperature: 0.3,
+        maxOutputTokens: 350,
+        topP: 0.8,
+        topK: 40
+    },
+
+    // Legacy Models
     [CohereModel.COMMAND_R]: {
         temperature: 0.3,
         maxOutputTokens: 350,
@@ -33,6 +79,12 @@ const MODEL_CONFIGS: Record<CohereModel, GenerationConfig> = {
         topK: 40
     },
     [CohereModel.COMMAND_R_PLUS]: {
+        temperature: 0.3,
+        maxOutputTokens: 350,
+        topP: 0.8,
+        topK: 40
+    },
+    [CohereModel.COMMAND]: {
         temperature: 0.3,
         maxOutputTokens: 350,
         topP: 0.8,
@@ -96,7 +148,8 @@ export async function callCohereAPI(apiKey: string, model: string, diff: string,
     }
 
     // Validate model
-    if (!Object.values(CohereModel).includes(model as CohereModel)) {
+    const validModels = Object.values(CohereModel);
+    if (!validModels.includes(model as CohereModel)) {
         debugLog("Error: Invalid Cohere model specified", { model });
         throw new Error(`Invalid Cohere model specified: ${model}`);
     }
@@ -108,8 +161,10 @@ export async function callCohereAPI(apiKey: string, model: string, diff: string,
         debugLog("Prompt:", promptText);
 
         // Get model-specific configuration
-        const config = MODEL_CONFIGS[model as CohereModel];
-        debugLog("Using generation config", { config });
+        const config = MODEL_CONFIGS[model];
+        if (!config) {
+            throw new Error(`Configuration not found for model: ${model}`);
+        }
 
         // Using the v2 chat API
         const response = await fetch('https://api.cohere.ai/v2/chat', {

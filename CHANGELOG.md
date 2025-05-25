@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.0.1] - Unreleased
+
+### Added
+
+- Enhanced Cohere model support with latest models:
+  - command-a-03-2025 (Latest - High Performance)
+  - command-r-08-2024 and command-r-plus-08-2024 (Updated Command R variants)
+  - aya-expanse-8b and aya-expanse-32b (Multilingual models)
+  - command-r7b-arabic (Arabic-specialized model)
+- Organized Cohere models into categories: Latest, Specialized, and Legacy
+- Updated default Cohere model to command-a-03-2025
+
+### Changed
+
+- Improved Cohere model selection UI with grouped options and descriptions
+- Enhanced model validation for all new Cohere models
+- Updated documentation to reflect latest Cohere model capabilities
+
 ## [2.0.0] - 2024-12-19
 
 ### Added
