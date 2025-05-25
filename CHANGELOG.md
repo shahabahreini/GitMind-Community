@@ -1,23 +1,5 @@
 # Changelog
 
-## [2.0.1] - Unreleased
-
-### Added
-
-- Enhanced Cohere model support with latest models:
-  - command-a-03-2025 (Latest - High Performance)
-  - command-r-08-2024 and command-r-plus-08-2024 (Updated Command R variants)
-  - aya-expanse-8b and aya-expanse-32b (Multilingual models)
-  - command-r7b-arabic (Arabic-specialized model)
-- Organized Cohere models into categories: Latest, Specialized, and Legacy
-- Updated default Cohere model to command-a-03-2025
-
-### Changed
-
-- Improved Cohere model selection UI with grouped options and descriptions
-- Enhanced model validation for all new Cohere models
-- Updated documentation to reflect latest Cohere model capabilities
-
 ## [2.0.0] - 2024-12-19
 
 ### Added
@@ -26,6 +8,12 @@
 - Token management with pre-generation estimation, rate limiting, and usage analytics
 - Native VS Code Source Control panel integration and workflow support
 - Latest Gemini and OpenAI model configurations with updated versions and descriptions
+- Enhanced Cohere provider support with comprehensive model selection:
+  - Added 6 new Cohere models: command-a-03-2025, command-r-08-2024, command-r-plus-08-2024, aya-expanse-8b, aya-expanse-32b, command-r7b-arabic
+  - Organized Cohere models into intuitive categories (Latest, Specialized, Legacy)
+  - Implemented model-specific generation configurations for optimal performance
+  - Added support for multilingual models (Aya Expanse series) and specialized Arabic model
+- Improved model selection UI with grouped options and detailed descriptions across all providers
 
 ### Changed
 
@@ -34,6 +22,12 @@
 - Improved multi-provider AI support with significant enhancements
 - Refactored settings UI for better organization and clarity
 - Upgraded core functionality with improved user experience across all providers
+- Updated default Cohere model to command-a-03-2025 for better performance and latest capabilities
+- Enhanced Cohere API implementation to support v2 chat endpoint format
+- Improved model validation system for all new Cohere models with proper error handling
+- Improved Cohere model selection UI with grouped options and descriptions
+- Enhanced model validation for all new Cohere models
+- Updated documentation to reflect latest Cohere model capabilities
 
 ### Technical
 
@@ -42,6 +36,16 @@
 - Improved model selection and management system
 - Streamlined prompt processing with clearer instruction guidelines
 - Updated API integrations for better compatibility and performance
+- Added comprehensive model-specific configurations for Cohere models
+- Updated package.json configuration schema to include all new Cohere models with descriptions
+- Enhanced status banner and UI components to reflect latest model selections
+- Improved type definitions and validation for new Cohere model categories
+
+### Fixed
+
+- Fixed Cohere API implementation to properly handle v2 chat endpoint responses
+- Resolved model validation issues for new Cohere models
+- Improved error handling and response parsing for enhanced reliability
 
 ## [1.8.0] - 2024-05-23
 
