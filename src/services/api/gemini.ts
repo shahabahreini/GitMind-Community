@@ -12,49 +12,69 @@ interface GenerationConfig {
 }
 
 const MODEL_CONFIGS: Record<GeminiModel, GenerationConfig> = {
-    // New stable Gemini 2.5 models
-    [GeminiModel.GEMINI_2_5_PRO]: {
+    // Latest Models (Recommended)
+    "gemini-2.5-pro": {
         temperature: 0.2,
         topK: 40,
         topP: 0.9,
         maxOutputTokens: 8000,
     },
-    [GeminiModel.GEMINI_2_5_FLASH]: {
+    "gemini-2.5-flash": {
         temperature: 0.2,
         topK: 40,
         topP: 0.9,
         maxOutputTokens: 8000,
     },
-    // Older models
-    [GeminiModel.GEMINI_2_0_FLASH]: {
+    "gemini-2.5-flash-preview-05-20": {
+        temperature: 0.2,
+        topK: 40,
+        topP: 0.9,
+        maxOutputTokens: 8000,
+    },
+    // Gemini 2.0 Series
+    "gemini-2.0-flash": {
         temperature: 0.2,
         topK: 40,
         topP: 0.9,
         maxOutputTokens: 7000,
     },
-    [GeminiModel.GEMINI_2_0_FLASH_LITE]: {
+    "gemini-2.0-flash-lite": {
         temperature: 0.2,
         topK: 40,
         topP: 0.9,
         maxOutputTokens: 7000,
     },
-    [GeminiModel.GEMINI_1_5_FLASH]: {
+    // Gemini 1.5 Series
+    "gemini-1.5-flash": {
         temperature: 0.2,
         topK: 40,
         topP: 0.9,
         maxOutputTokens: 7000,
     },
-    [GeminiModel.GEMINI_1_5_FLASH_8B]: {
+    "gemini-1.5-flash-8b": {
         temperature: 0.2,
         topK: 40,
         topP: 0.9,
         maxOutputTokens: 7000,
     },
-    [GeminiModel.GEMINI_1_5_PRO]: {
+    "gemini-1.5-pro": {
         temperature: 0.2,
         topK: 40,
         topP: 0.9,
         maxOutputTokens: 7000,
+    },
+    // Legacy/Preview Models
+    "gemini-2.5-flash-preview-04-17": {
+        temperature: 0.2,
+        topK: 40,
+        topP: 0.9,
+        maxOutputTokens: 8000,
+    },
+    "gemini-2.5-pro-exp-03-25": {
+        temperature: 0.2,
+        topK: 40,
+        topP: 0.9,
+        maxOutputTokens: 8000,
     },
 };
 
@@ -69,7 +89,7 @@ export async function callGeminiAPI(apiKey: string, model: string, diff: string,
 
         // Improved model validation and fallback logic
         let selectedModel = model as GeminiModel;
-        const validModels = Object.values(GeminiModel);
+        const validModels = Object.keys(MODEL_CONFIGS) as GeminiModel[];
 
         if (!validModels.includes(selectedModel)) {
             // Log the issue for debugging
@@ -81,8 +101,8 @@ export async function callGeminiAPI(apiKey: string, model: string, diff: string,
                 selectedModel = model as GeminiModel;
             } else {
                 // Fall back to a stable model as last resort
-                debugLog("Falling back to default model", { defaultModel: GeminiModel.GEMINI_2_5_FLASH });
-                selectedModel = GeminiModel.GEMINI_2_5_FLASH;
+                debugLog("Falling back to default model", { defaultModel: "gemini-2.5-flash" });
+                selectedModel = "gemini-2.5-flash";
             }
         }
 
@@ -145,12 +165,12 @@ export async function validateGeminiAPIKey(apiKey: string): Promise<boolean> {
 
         // Try with a stable model first
         const model = genAI.getGenerativeModel({
-            model: GeminiModel.GEMINI_2_0_FLASH,
+            model: "gemini-2.0-flash",
         });
 
         // Simple validation request
         const result = await model.generateContent("Test connection");
-        console.log(result);
+        debugLog("Gemini API validation successful:", result);
         return result.response !== undefined;
     } catch (error) {
         debugLog("Gemini API validation error:", error);

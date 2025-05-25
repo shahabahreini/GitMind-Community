@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Assistant",
   "description": "🚀 Generate perfect git commit messages instantly using AI! Support for 8+ free/paid AI providers (Gemini, OpenAI, Claude via OpenRouter, Mistral, HuggingFace, Ollama, Together AI). Smart conventional commits, dynamic model selection, and enhanced UX for effortless Git workflow automation.",
-  "version": "1.8.0",
+  "version": "2.0.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -141,24 +141,30 @@
         "aiCommitAssistant.gemini.model": {
           "type": "string",
           "enum": [
-            "gemini-2.5-flash-preview-04-17",
-            "gemini-2.5-pro-exp-03-25",
+            "gemini-2.5-pro",
+            "gemini-2.5-flash",
+            "gemini-2.5-flash-preview-05-20",
             "gemini-2.0-flash",
             "gemini-2.0-flash-lite",
             "gemini-1.5-flash",
             "gemini-1.5-flash-8b",
-            "gemini-1.5-pro"
+            "gemini-1.5-pro",
+            "gemini-2.5-flash-preview-04-17",
+            "gemini-2.5-pro-exp-03-25"
           ],
-          "default": "gemini-2.5-flash-preview-04-17",
+          "default": "gemini-2.5-flash",
           "description": "Select which Gemini model to use",
           "enumDescriptions": [
-            "Gemini 2.5 Flash Preview (04/17) - Latest and most advanced model",
-            "Gemini 2.5 Pro Preview (03/25) - Advanced model with enhanced reasoning",
-            "Gemini 2.0 Flash - Fast model with high performance",
-            "Gemini 2.0 Flash-Lite - Lightweight version of Gemini 2.0 Flash",
-            "Gemini 1.5 Flash - Fast and efficient model",
+            "Gemini 2.5 Pro - Latest Thinking Model with advanced reasoning",
+            "Gemini 2.5 Flash - Efficient Thinking model with fast inference",
+            "Gemini 2.5 Flash Preview (05/20) - Preview version with latest features",
+            "Gemini 2.0 Flash - Multimodal model with comprehensive capabilities",
+            "Gemini 2.0 Flash-Lite - Lightweight version of 2.0 Flash",
+            "Gemini 1.5 Flash - Fast and efficient general model",
             "Gemini 1.5 Flash-8B - 8B parameter version for faster inference",
-            "Gemini 1.5 Pro - Base model with comprehensive capabilities"
+            "Gemini 1.5 Pro - Base model with comprehensive capabilities",
+            "Gemini 2.5 Flash Preview (04/17) - Earlier preview version",
+            "Gemini 2.5 Pro Preview (03/25) - Experimental preview version"
           ]
         },
         "aiCommitAssistant.cohere.apiKey": {
@@ -186,12 +192,33 @@
         "aiCommitAssistant.openai.model": {
           "type": "string",
           "enum": [
+            "gpt-4.1",
+            "gpt-4.1-mini",
+            "gpt-4.1-nano",
+            "o3",
+            "o4-mini",
+            "o3-mini",
             "gpt-4o",
+            "gpt-4o-mini",
             "gpt-4-turbo",
+            "gpt-4",
             "gpt-3.5-turbo"
           ],
-          "default": "gpt-3.5-turbo",
+          "default": "gpt-4o",
           "description": "OpenAI model to use for generating commit messages",
+          "enumDescriptions": [
+            "GPT-4.1 - Latest model with enhanced capabilities",
+            "GPT-4.1 Mini - Efficient version of GPT-4.1",
+            "GPT-4.1 Nano - Ultra-efficient GPT-4.1 variant",
+            "o3 - Advanced reasoning model",
+            "o4-mini - Fast reasoning model",
+            "o3-mini - Efficient reasoning model",
+            "GPT-4o - Multimodal model with vision capabilities",
+            "GPT-4o Mini - Efficient multimodal model",
+            "GPT-4 Turbo - High-performance GPT-4 variant",
+            "GPT-4 - Base GPT-4 model",
+            "GPT-3.5 Turbo - Fast and cost-effective model"
+          ],
           "order": 12
         },
         "aiCommitAssistant.promptCustomization.enabled": {

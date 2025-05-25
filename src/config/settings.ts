@@ -16,7 +16,7 @@ export function getConfiguration(): ExtensionConfig {
         gemini: {
             enabled: config.get("gemini.enabled", false),
             apiKey: config.get("gemini.apiKey"),
-            model: config.get("gemini.model", GeminiModel.GEMINI_2_0_FLASH),
+            model: config.get("gemini.model", "gemini-2.5-flash"),
         },
         huggingface: {
             enabled: config.get("huggingface.enabled", true),
@@ -54,7 +54,7 @@ export function getConfiguration(): ExtensionConfig {
         openai: {
             enabled: config.get("openai.enabled", false),
             apiKey: config.get("openai.apiKey"),
-            model: config.get("openai.model", "gpt-3.5-turbo"),
+            model: config.get("openai.model", "gpt-4o"),
         },
         together: {
             enabled: config.get("together.enabled", false),
@@ -81,7 +81,7 @@ export function getApiConfig(): ApiConfig {
             return {
                 type: "gemini",
                 apiKey: config.gemini.apiKey || "",
-                model: config.gemini.model as GeminiModel || GeminiModel.GEMINI_2_0_FLASH,
+                model: config.gemini.model as GeminiModel || "gemini-2.5-flash",
             };
 
         case "huggingface": {
@@ -129,7 +129,7 @@ export function getApiConfig(): ApiConfig {
             return {
                 type: "openai",
                 apiKey: config.openai.apiKey || "",
-                model: config.openai.model || "gpt-3.5-turbo",
+                model: config.openai.model || "gpt-4o",
             };
 
         case "together":
