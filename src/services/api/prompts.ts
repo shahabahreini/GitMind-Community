@@ -16,64 +16,63 @@ export function generateCommitPrompt(
     config: PromptConfig = DEFAULT_PROMPT_CONFIG,
     customContext: string = ""
 ): string {
-    let prompt = `As a Git commit message generator, analyze this specific diff and create ONE commit message that accurately describes these changes:`;
+    let prompt = `You are a Git commit message generator. Your task is to analyze the provided diff and create exactly ONE complete commit message. Do not truncate, summarize, or add ellipsis (...).
+
+CRITICAL INSTRUCTIONS:
+- Generate a COMPLETE commit message, never truncate with "..."
+- Write the FULL subject line and body
+- Do not explain your reasoning or provide alternatives
+- Output only the commit message itself`;
 
     // Add custom context if provided
     if (customContext.trim()) {
-        prompt += `\n\nAdditional context from the user: ${customContext.trim()}`;
+        prompt += `\n\nUser Context: ${customContext.trim()}`;
     }
 
-    prompt += `\n\nGit diff content:
+    prompt += `
+
+DIFF TO ANALYZE:
 ${diff}
 
-## Expected Format
-<type>${config.includeScope ? '(<scope>)' : ''}: <concise description>
+REQUIRED FORMAT:
+<type>${config.includeScope ? '(<scope>)' : ''}: <description>
 
-- <detailed change explanation>
+- <detailed explanation>
 - <additional context if needed>
 
-## Commit Message Format
+COMMIT TYPES (choose ONE):
+- feat: New feature or functionality
+- fix: Bug fix or error correction
+- docs: Documentation changes only
+- style: Code formatting (no logic changes)
+- refactor: Code restructuring (no functionality changes)
+- test: Adding or modifying tests
+- chore: Maintenance, dependencies, build tools
+- perf: Performance improvements
+- ci: CI/CD configuration changes
 
-### Subject Line (First Line)
-- Begin with ONE appropriate type prefix:
-  - 'feat': New feature or functionality
-  - 'fix': Bug fix
-  - 'docs': Changes to documentation only (README, CHANGELOG, comments, API docs, etc.)
-  - 'style': Formatting, whitespace, semicolons (no code logic changes)
-  - 'refactor': Code restructuring without changing functionality
-  - 'test': Adding or modifying tests
-  - 'chore': Maintenance, dependencies, build system changes
-  - 'perf': Performance improvements
-  - 'ci': CI/CD configuration changes
-${config.includeScope ? '- Add scope in parentheses after type if applicable (e.g., feat(auth):)' : ''}
-- Follow with a concise, specific description (max ${config.maxLength} characters total)
-- Use imperative present tense (e.g., "Add" not "Added" or "Adds")
-- Be specific about what changed and where
+SUBJECT LINE RULES:
+- Maximum ${config.maxLength} characters total
+- Use imperative mood ("add", "fix", "update")
+- Be specific about the change
 - No period at the end
+${config.includeScope ? '- Include scope in parentheses if applicable' : ''}
 
-### Commit Body (Subsequent Lines)
-- Separate from subject with one blank line
-- Explain WHAT changed and WHY (not HOW)
-- Use bullet points starting with hyphen and space ('- ')
-- Include relevant issue/ticket references if applicable
+BODY RULES:
+- Start each line with "- "
+- Explain WHAT changed and WHY
+- Include context that helps reviewers understand the change
+- Reference issues/tickets if relevant
 
-### Examples of Good Commit Messages:
-"""
-feat${config.includeScope ? '(user)' : ''}: add password strength indicator to signup form
+EXAMPLE OUTPUT:
+feat${config.includeScope ? '(auth)' : ''}: add two-factor authentication for user login
 
-- Implement real-time password validation with color indicators
-- Add minimum requirements tooltip for better UX
-- Relates to issue #142
-"""
+- Implement TOTP-based 2FA using authenticator apps
+- Add backup codes for account recovery scenarios
+- Update login flow to prompt for verification code
+- Enhances security for sensitive user accounts
 
-"""
-fix${config.includeScope ? '(data)' : ''}: resolve race condition in concurrent access
-
-- Add mutex lock around shared resource access
-- Prevent potential data corruption during high traffic
-"""
-
-Generate exactly ONE commit message following this format. No alternatives or explanations.`;
+Generate the complete commit message now (no truncation, no explanations):`;
 
     return prompt;
 }
