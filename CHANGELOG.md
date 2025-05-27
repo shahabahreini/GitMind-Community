@@ -1,6 +1,22 @@
 # Changelog
 
-## [2.0.0] - 2024-12-19
+## [2.0.1] - 2025-05-27
+
+### Fixed
+
+- Fixed missing command definition for `ai-commit-assistant.configureSettings` that was referenced in menus
+- Resolved extension validation errors related to undefined commands
+
+### Removed
+
+- Removed AI Commit Assistant input box from source control interface for cleaner user experience
+
+### Changed
+
+- Improved command registration and menu structure
+- Enhanced extension stability and validation compliance
+
+## [2.0.0] - 2025-05-26
 
 ### Added
 

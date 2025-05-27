@@ -471,7 +471,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Add to context.subscriptions
   context.subscriptions.push(
-    // ...existing subscriptions
     loadingIndicatorCommand
   );
 
