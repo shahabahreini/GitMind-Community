@@ -39,26 +39,8 @@ export async function activate(context: vscode.ExtensionContext) {
   // Log supported API providers, now including Together AI
   debugLog("Supported API providers: Gemini, Hugging Face, Ollama, Mistral, Cohere, OpenAI, Together AI, OpenRouter");
 
-  // Initialize SCM provider
-  const scmProvider = vscode.scm.createSourceControl(
-    "ai-commit-assistant",
-    "AI Commit Assistant"
-  );
-  const inputBox = scmProvider.inputBox;
-
-  // Create SCM resource group
-  const generateActionButton = scmProvider.createResourceGroup(
-    "generate",
-    "Generate Commit Message"
-  );
-  generateActionButton.hideWhenEmpty = true;
-
-  // Configure SCM provider
-  scmProvider.quickDiffProvider = undefined;
-  scmProvider.acceptInputCommand = {
-    command: "ai-commit-assistant.generateCommitMessage",
-    title: "Generate AI Commit Message",
-  };
+  // Note: VS Code SCM API doesn't provide access to existing source controls
+  // so we cannot clean up previous providers programmatically
 
   // Create loading indicator
   let loadingItem: vscode.StatusBarItem | undefined;
@@ -204,22 +186,39 @@ export async function activate(context: vscode.ExtensionContext) {
   let acceptInputCommand = vscode.commands.registerCommand(
     "ai-commit-assistant.acceptInput",
     async () => {
-      const message = inputBox.value;
-      if (message) {
-        debugLog("Accepting input message:", message);
-        try {
-          // If there's already a message in the input box, use it directly
-          // This allows users to manually edit or accept the generated message
-          await vscode.commands.executeCommand("git.commit");
-          vscode.window.showInformationMessage("Commit created successfully!");
-        } catch (error) {
-          debugLog("Accept Input Error:", error);
-          vscode.window.showErrorMessage(`Error creating commit: ${error instanceof Error ? error.message : 'Unknown error'}`);
-          // If direct commit fails, fall back to generating a message
+      try {
+        // Get the Git extension
+        const gitExtension = vscode.extensions.getExtension("vscode.git")?.exports;
+        const git = gitExtension?.getAPI(1);
+
+        if (git && git.repositories.length > 0) {
+          const repo = git.repositories[0];
+          const message = repo.inputBox.value;
+
+          if (message) {
+            debugLog("Accepting input message:", message);
+            try {
+              // If there's already a message in the input box, use it directly
+              // This allows users to manually edit or accept the generated message
+              await vscode.commands.executeCommand("git.commit");
+              vscode.window.showInformationMessage("Commit created successfully!");
+            } catch (error) {
+              debugLog("Accept Input Error:", error);
+              vscode.window.showErrorMessage(`Error creating commit: ${error instanceof Error ? error.message : 'Unknown error'}`);
+              // If direct commit fails, fall back to generating a message
+              await vscode.commands.executeCommand("ai-commit-assistant.generateCommitMessage");
+            }
+          } else {
+            // If no message exists, generate one
+            await vscode.commands.executeCommand("ai-commit-assistant.generateCommitMessage");
+          }
+        } else {
+          // If Git extension is not available, fall back to generating a message
           await vscode.commands.executeCommand("ai-commit-assistant.generateCommitMessage");
         }
-      } else {
-        // If no message exists, generate one
+      } catch (error) {
+        debugLog("Accept Input Command Error:", error);
+        // If any error occurs, fall back to generating a message
         await vscode.commands.executeCommand("ai-commit-assistant.generateCommitMessage");
       }
     }
@@ -479,7 +478,6 @@ export async function activate(context: vscode.ExtensionContext) {
     state.debugChannel,
     state.statusBarItem,
     scmStatusBarItem,
-    scmProvider,
     toggleDebugCommand,
     generateCommitCommand,
     acceptInputCommand,
@@ -524,6 +522,8 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
+  // Note: VS Code SCM API doesn't provide access to source controls for cleanup
+
   if (state.statusBarItem) {
     state.statusBarItem.dispose();
   }
