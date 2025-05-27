@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Assistant",
   "description": "🚀 Generate perfect git commit messages instantly using AI! Support for 8+ free/paid AI providers (Gemini, OpenAI, Claude via OpenRouter, Mistral, HuggingFace, Ollama, Together AI). Smart conventional commits, dynamic model selection, and enhanced UX for effortless Git workflow automation.",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",

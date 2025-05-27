@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.2] - 2025-05-27
+
+### removed
+
+- Removed unused input box in source control called "AI Commit Assistant"
+
 ## [2.0.1] - 2025-05-27
 
 ### Fixed
