@@ -7,14 +7,12 @@
   "private": false,
   "icon": "images/logo.png",
   "engines": {
-    "vscode": "^1.75.0"
+    "vscode": "^1.100.0",
+    "node": ">=16.0.0"
   },
   "vsce": {
     "dependencies": false,
     "yarn": true
-  },
-  "volta": {
-    "node": ">=16.0.0"
   },
   "categories": [
     "SCM Providers",
@@ -412,31 +410,33 @@
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "test": "vscode-test",
     "clean": "rimraf dist out",
-    "prepare": "npm run compile"
+    "prepare": "npm run compile",
+    "version": "echo 'Version updated to %s'"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
-    "@types/node": "^20.11.16",
-    "@types/sanitize-html": "^2.13.0",
-    "@types/vscode": "^1.75.0",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
-    "@vscode/test-cli": "^0.0.4",
-    "@vscode/test-electron": "^2.3.8",
-    "@vscode/vsce": "^3.2.2",
-    "esbuild": "^0.20.0",
-    "eslint": "^8.56.0",
+    "@types/node": "^22.15.24",
+    "@types/sanitize-html": "^2.16.0",
+    "@types/vscode": "^1.100.0",
+    "@typescript-eslint/eslint-plugin": "^8.33.0",
+    "@typescript-eslint/parser": "^8.33.0",
+    "@vscode/test-cli": "^0.0.11",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.4.2",
+    "esbuild": "^0.25.5",
+    "eslint": "^9.27.0",
     "npm-run-all": "^4.1.5",
-    "rimraf": "^5.0.5",
-    "typescript": "~5.3.3"
+    "rimraf": "^6.0.1",
+    "typescript": "~5.8.3",
+    "yarn-upgrade-all": "^0.7.5"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.1.3",
+    "@google/generative-ai": "^0.24.1",
     "@types/axios": "^0.14.4",
     "axios": "^1.8.1",
-    "dotenv": "^16.4.1",
+    "dotenv": "^16.5.0",
     "node-fetch": "^3.3.2",
-    "sanitize-html": "^2.14.0"
+    "sanitize-html": "^2.17.0"
   },
   "repository": {
     "type": "git",
