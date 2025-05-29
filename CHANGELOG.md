@@ -1,5 +1,54 @@
 # Changelog
 
+## [2.1.1] - 2025-05-28
+
+### Enhanced
+
+- **Build Configuration**: Improved package management and dependency updates
+
+  - Replace Yarn with npm for package management consistency
+  - Add package-lock=true to ensure package-lock.json is maintained
+  - Disable npm fund and audit warnings for cleaner output
+  - Update vscode engine compatibility to ^1.100.0
+  - Add node engine requirement >=16.0.0 to package.json
+
+- **Dependency Updates**: Comprehensive upgrade to latest versions
+
+  - Upgrade @types/node to ^22.15.24
+  - Upgrade @types/sanitize-html to ^2.16.0
+  - Upgrade @types/vscode to ^1.100.0
+  - Upgrade @typescript-eslint/eslint-plugin to ^8.33.0
+  - Upgrade @typescript-eslint/parser to ^8.33.0
+  - Upgrade @vscode/test-cli to ^0.0.11
+  - Upgrade @vscode/test-electron to ^2.5.2
+  - Upgrade @vscode/vsce to ^3.4.2
+  - Upgrade esbuild to ^0.25.5
+  - Upgrade eslint to ^9.27.0
+  - Upgrade rimraf to ^6.0.1
+  - Upgrade typescript to ~5.8.3
+  - Upgrade @google/generative-ai to ^0.24.1
+  - Upgrade dotenv to ^16.5.0
+  - Upgrade sanitize-html to ^2.17.0
+
+- **Development Tools**: Enhanced development workflow
+
+  - Add yarn-upgrade-all for dependency management
+  - Remove volta configuration from package.json
+  - Add version script to echo updated version number
+  - Improves build consistency and dependency management across environments
+
+- **Documentation**: Improved changelog formatting
+
+  - Added consistent blank lines between list items in multiple sections
+  - Improved readability of added features and enhancements
+  - Ensured uniform spacing for better visual organization
+
+### Technical
+
+- Updated npm configuration for cleaner package management
+- Enhanced build consistency across different environments
+- Modernized dependency versions for better security and performance
+
 ## [2.1.0] - 2025-05-28
 
 ### Added
