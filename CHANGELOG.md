@@ -5,6 +5,7 @@
 ### Added
 
 - **Request Cancellation Support**: Added ability to cancel ongoing API requests
+
   - New cancel button appears in SCM panel during generation with dedicated close icon
   - Cancel option in status bar during generation process with visual indicators
   - Proper cleanup of resources when requests are cancelled
@@ -73,6 +74,7 @@
 - **Latest AI Models**: Updated Gemini and OpenAI model configurations with latest versions and descriptions
 
 - **Enhanced Cohere Provider Support**: Comprehensive model selection with 6 new models
+
   - Added models: command-a-03-2025, command-r-08-2024, command-r-plus-08-2024, aya-expanse-8b, aya-expanse-32b, command-r7b-arabic
   - Organized models into intuitive categories (Latest, Specialized, Legacy)
   - Implemented model-specific generation configurations for optimal performance
@@ -113,6 +115,7 @@
 ### Added
 
 - **Enhanced HuggingFace Model Selection**: Dynamic loading capabilities with improved UI
+
   - New HuggingFaceModel interface for structured model data
   - Search functionality for available models
   - Client-side filtering and sorting for improved performance
@@ -120,6 +123,7 @@
   - Improved model selection UI with search and loading states
 
 - **Enhanced Rate Limit Tracking**: Comprehensive monitoring system
+
   - Added minute-based rate limits with timestamp tracking
   - Improved API response monitoring and tracking
   - Anomaly detection for Mistral rate limits
@@ -242,6 +246,7 @@
 ### Added
 
 - **Together AI Provider Support**: New AI provider with advanced models
+
   - Added [Together AI](https://www.together.ai/) as a provider
   - Models including Llama-3.3-70B-Instruct-Turbo and Mixtral-8x7B
   - Together AI API validation and settings UI
@@ -273,6 +278,7 @@
 ### Added
 
 - **Prompt Customization Feature**: Enhanced commit message generation
+
   - New setting `aiCommitAssistant.promptCustomization.enabled` to toggle the feature
   - Custom context input dialog when generating commit messages
   - Enhanced prompt handling across all AI providers
@@ -357,11 +363,13 @@
 ### Added
 
 - **Dynamic Mistral Model Loading**: Improved model selection experience
+
   - New "Load Available Models" button in settings
   - Dynamic population of model selection dropdown
   - Improved error handling for model loading scenarios
 
 - **Monthly Rate Limit Tracking**: Enhanced API usage monitoring
+
   - Added monthly limit and remaining quota display
   - Enhanced rate limit reset time calculations
 
@@ -373,6 +381,7 @@
 ### Enhanced
 
 - **Improved Rate Limit Management**: Optimized token usage and monitoring
+
   - Optimized token usage during rate limit checks
   - Added query cost information
   - Enhanced UI with human-readable rate limit information
@@ -387,10 +396,12 @@
 ### Technical
 
 - **Singleton Logger System**: Migrated to centralized logging
+
   - Centralized configuration and data handling
   - More consistent debug output across the extension
 
 - **Refactored Settings Management**: Improved modularity
+
   - Separated component classes for settings generator
   - Extracted CSS styles into separate modules
   - Created dedicated script files for API and UI logic
@@ -403,6 +414,7 @@
 ### Added
 
 - **New Settings Webview**: Comprehensive configuration interface
+
   - Configurable options for API providers, API keys, and models
   - Status banner displaying current configuration status
   - Enhanced API and rate limit checks with detailed feedback
@@ -414,11 +426,13 @@
 ### Enhanced
 
 - **Refactored Settings Management**: Better modularity and organization
+
   - Modularized settings generator with separate component classes
   - Extracted CSS styles into separate modules
   - Created separate script files for managing API and UI logic
 
 - **Enhanced API Setup**: Improved reliability and user feedback
+
   - Added 15-second timeouts to prevent indefinite hanging
   - Improved error handling with specific messages
   - Added troubleshooting tips for API issues
@@ -481,10 +495,12 @@
 ### Added
 
 - **API Validation Features**: Comprehensive API configuration validation
+
   - "Check API Setup" command to validate API configurations
   - "Check Rate Limits" command to monitor API usage limits
 
 - **Enhanced Settings UI**: Improved user experience
+
   - API validation buttons integrated into settings
   - Real-time validation feedback
 
@@ -533,6 +549,7 @@
 ### Added
 
 - **Verbose Commit Messages**: New configuration option for controlling commit message detail level
+
   - New setting "aiCommitAssistant.commit.verbose" for verbosity control
   - Enhanced commit message formatting based on verbosity setting
   - Updated settings UI with verbose mode checkbox
@@ -589,6 +606,7 @@
 ### Added
 
 - **Interactive API Configuration**: Streamlined setup process
+
   - Interactive API key input prompt for missing configurations
   - Direct links to provider API key pages
   - Centralized method for API configuration validation and updates
@@ -628,6 +646,7 @@
 ### Enhanced
 
 - **Extension Branding**: Improved name and presentation
+
   - Renamed extension from "AI Commit Assistant" to "GitMind: AI Commit Assistant"
   - Standardized URL format in README.md
 
@@ -650,6 +669,7 @@
 ### Added
 
 - **Updated Visual Assets**: Professional new designs
+
   - New icon-dark.png
   - New icon-light.png
   - New logo.png
@@ -689,11 +709,13 @@
 ### Enhanced
 
 - **Prompt Standardization**: Unified prompt format across all API services
+
   - Standardized prompt template for Gemini, HuggingFace, and Ollama API services
   - Simplified requirements section with clearer formatting and structure
   - Updated commit message generation instructions for enhanced clarity
 
 - **Settings Management**: Major refactoring of settings system
+
   - Reorganized configuration structure in package.json into nested objects
   - Grouped settings by provider (general, gemini, huggingface, ollama)
   - Added ordering for better UI presentation
@@ -735,6 +757,7 @@
 ### Added
 
 - **Ollama Integration**: Comprehensive local AI support
+
   - Added Ollama API integration as a new model provider
   - Implemented Ollama availability checking and installation instructions
   - Enhanced error handling for Ollama connection issues
@@ -747,6 +770,7 @@
 ### Enhanced
 
 - **Model Support**: Expanded AI provider options
+
   - Changed default Ollama model from "mistral" to "phi4"
   - Updated package.json VSCode engine requirement to ^1.75.0
   - Added keywords for better marketplace visibility
@@ -787,6 +811,7 @@
 ### Added
 
 - **Loading Indicators**: Enhanced user feedback
+
   - Added SVG icons for generate and loading states in light/dark themes
   - Implemented status bar loading indicator during commit message generation
   - Added publisher field and improved error handling with proper cleanup
