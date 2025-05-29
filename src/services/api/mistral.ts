@@ -1,6 +1,7 @@
 import { debugLog } from "../debug/logger";
 import { MistralResponse, MistralRateLimit } from "../../config/types";
 import { generateCommitPrompt } from './prompts';
+import { RequestManager } from "../../utils/requestManager";
 
 function extractRateLimits(headers: Headers): MistralRateLimit {
     return {
@@ -40,8 +41,48 @@ function enforceCommitMessageFormat(message: string): string {
     return [subjectLine, ...lines.slice(1)].join('\n');
 }
 
+/**
+ * Converts Mistral API errors to user-friendly messages
+ */
+function getUserFriendlyErrorMessage(statusCode: number, errorData: any): string {
+    switch (statusCode) {
+        case 401:
+            return "Mistral API key is invalid or missing. Please check your API key in settings.";
+
+        case 422:
+            if (errorData?.message?.includes("context_length")) {
+                return "The git diff is too large for the selected model. Try:\n• Staging fewer files\n• Using mistral-large-latest for larger context\n• Breaking changes into smaller commits";
+            }
+            return `Mistral request validation failed: ${errorData?.message || 'Invalid request'}`;
+
+        case 429:
+            const resetTime = errorData?.reset_time ? new Date(errorData.reset_time * 1000).toLocaleTimeString() : 'soon';
+            return `Mistral rate limit exceeded. Reset at ${resetTime}. Please wait and try again.`;
+
+        case 400:
+            return `Mistral API request error: ${errorData?.message || 'Bad request'}. Please check your model selection.`;
+
+        case 403:
+            return "Access denied to Mistral API. Please check your API key permissions.";
+
+        case 404:
+            return "Mistral model not found. Please select a different model in settings.";
+
+        case 500:
+        case 502:
+        case 503:
+            return "Mistral AI service is temporarily unavailable. Please try again later.";
+
+        default:
+            return `Mistral API error (${statusCode}): ${errorData?.message || 'Unknown error'}`;
+    }
+}
+
 export async function callMistralAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
+    const requestManager = RequestManager.getInstance();
+    const controller = requestManager.getController();
     const prompt = generateCommitPrompt(diff, undefined, customContext);
+
     debugLog("Calling Mistral API", { model });
     debugLog("Prompt:", prompt);
 
@@ -58,7 +99,8 @@ export async function callMistralAPI(apiKey: string, model: string, diff: string
                 messages: [
                     { role: "user", content: prompt }
                 ]
-            })
+            }),
+            signal: controller.signal
         });
 
         // Extract and log rate limits
@@ -72,14 +114,15 @@ export async function callMistralAPI(apiKey: string, model: string, diff: string
         }
 
         if (!response.ok) {
-            let errorMessage: string;
+            let errorData: any;
             try {
-                const errorData = await response.json();
-                errorMessage = errorData.error?.message || 'Unknown error';
+                errorData = await response.json();
             } catch {
-                errorMessage = response.statusText;
+                errorData = { message: response.statusText };
             }
-            throw new Error(`Mistral API error (${response.status}): ${errorMessage}`);
+
+            const userFriendlyError = getUserFriendlyErrorMessage(response.status, errorData);
+            throw new Error(userFriendlyError);
         }
 
         const result = await response.json() as MistralResponse;
@@ -89,14 +132,18 @@ export async function callMistralAPI(apiKey: string, model: string, diff: string
             throw new Error("No generated text in response");
         }
 
-        // Apply the commit message formatting rules
         const formattedMessage = enforceCommitMessageFormat(generatedText);
         debugLog("Mistral API Response:", formattedMessage);
         return formattedMessage;
 
     } catch (error) {
+        // Handle abort error specifically
+        if (error instanceof Error && error.name === 'AbortError') {
+            throw new Error('Request was cancelled');
+        }
+
         if (error instanceof Error) {
-            if (error.message.includes("Mistral API error")) {
+            if (error.message.includes("Mistral API error") || error.message.includes("Rate limit")) {
                 throw error;
             }
             throw new Error(`Mistral API call failed: ${error.message}`);

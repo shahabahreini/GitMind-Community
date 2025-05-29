@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Assistant",
   "description": "🚀 Generate perfect git commit messages instantly using AI! Support for 8+ free/paid AI providers (Gemini, OpenAI, Claude via OpenRouter, Mistral, HuggingFace, Ollama, Together AI). Smart conventional commits, dynamic model selection, and enhanced UX for effortless Git workflow automation.",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -335,23 +335,33 @@
         "command": "ai-commit-assistant.configureSettings",
         "title": "Configure Settings",
         "category": "AI Commit Assistant"
+      },
+      {
+        "command": "ai-commit-assistant.cancelGeneration",
+        "title": "Cancel Generation",
+        "category": "AI Commit Assistant",
+        "icon": {
+          "light": "resources/light/close.svg",
+          "dark": "resources/dark/close.svg"
+        }
       }
     ],
     "menus": {
       "scm/title": [
         {
           "command": "ai-commit-assistant.generateCommitMessage",
-          "group": "navigation",
+          "group": "navigation@1",
           "when": "scmProvider == git && !ai-commit-assistant.isGenerating"
         },
         {
-          "command": "ai-commit-assistant.loadingIndicator",
-          "group": "navigation",
-          "when": "scmProvider == git && ai-commit-assistant.isGenerating"
+          "command": "ai-commit-assistant.cancelGeneration",
+          "group": "navigation@2",
+          "when": "scmProvider == git && ai-commit-assistant.isGenerating",
+          "title": "Cancel AI Generation"
         },
         {
           "command": "ai-commit-assistant.openSettings",
-          "group": "navigation",
+          "group": "navigation@3",
           "when": "scmProvider == git"
         }
       ],
@@ -374,7 +384,7 @@
       "view/title": [
         {
           "command": "ai-commit-assistant.openSettings",
-          "group": "navigation",
+          "group": "1_gitmind@1",
           "when": "scmProvider == git"
         }
       ]

@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { debugLog } from "../debug/logger";
 import { GeminiModel } from "../../config/types";
 import { generateCommitPrompt } from './prompts';
+import { RequestManager } from "../../utils/requestManager";
 
 // Define generation configuration for different models
 interface GenerationConfig {
@@ -79,6 +80,9 @@ const MODEL_CONFIGS: Record<GeminiModel, GenerationConfig> = {
 };
 
 export async function callGeminiAPI(apiKey: string, model: string, diff: string, customContext?: string): Promise<string> {
+    const requestManager = RequestManager.getInstance();
+    const controller = requestManager.getController();
+
     try {
         debugLog(`Calling Gemini API with model: ${model}`);
 
@@ -117,7 +121,7 @@ export async function callGeminiAPI(apiKey: string, model: string, diff: string,
         // Initialize the API
         const genAI = new GoogleGenerativeAI(apiKey);
         const generativeModel = genAI.getGenerativeModel({
-            model: selectedModel, // Use the string directly
+            model: selectedModel,
             generationConfig: {
                 temperature: config.temperature,
                 topK: config.topK,
@@ -125,23 +129,36 @@ export async function callGeminiAPI(apiKey: string, model: string, diff: string,
                 maxOutputTokens: config.maxOutputTokens,
             },
         });
+
         // Generate prompt with optional custom context
         const prompt = generateCommitPrompt(
             diff,
-            {}, // Removed verbose property as it's not defined in PromptConfig
+            {},
             customContext
         );
 
-        // Generate content
-        const result = await generativeModel.generateContent(prompt);
-        const response = result.response;
+        // Generate content with abort signal support
+        const result = await Promise.race([
+            generativeModel.generateContent(prompt),
+            new Promise((_, reject) => {
+                controller.signal.addEventListener('abort', () => {
+                    reject(new Error('Request was cancelled'));
+                });
+            })
+        ]);
+
+        const response = (result as any).response;
         const text = response.text();
 
         debugLog("Gemini API response:", { text });
         return text;
     } catch (error) {
-        // Enhanced error logging
         debugLog("Error in callGeminiAPI:", error);
+
+        // Handle abort error specifically
+        if (error instanceof Error && (error.message === 'Request was cancelled' || error.name === 'AbortError')) {
+            throw new Error('Request was cancelled');
+        }
 
         // Provide more helpful error message
         const errorMessage = error instanceof Error ? error.message : String(error);

@@ -39,10 +39,6 @@ export class DiagnosticsWebview {
                         callback(true);
                         this.dispose();
                         break;
-                    case "cancel":
-                        callback(false);
-                        this.dispose();
-                        break;
                 }
             },
             null,
@@ -115,13 +111,6 @@ export class DiagnosticsWebview {
                 .proceed:hover {
                     background-color: var(--vscode-button-hoverBackground);
                 }
-                .cancel {
-                    background-color: var(--vscode-button-secondaryBackground);
-                    color: var(--vscode-button-secondaryForeground);
-                }
-                .cancel:hover {
-                    background-color: var(--vscode-button-secondaryHoverBackground);
-                }
             </style>
         </head>
         <body>
@@ -138,7 +127,6 @@ export class DiagnosticsWebview {
                     </div>
                 </div>
                 <div class="buttons">
-                    <button class="cancel" onclick="cancel()">Cancel</button>
                     <button class="proceed" onclick="proceed()">Proceed</button>
                 </div>
             </div>
@@ -147,10 +135,6 @@ export class DiagnosticsWebview {
                 
                 function proceed() {
                     vscode.postMessage({ command: 'proceed' });
-                }
-                
-                function cancel() {
-                    vscode.postMessage({ command: 'cancel' });
                 }
             </script>
         </body>

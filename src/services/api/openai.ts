@@ -1,4 +1,5 @@
 import { debugLog } from "../debug/logger";
+import { RequestManager } from "../../utils/requestManager";
 
 /**
  * OpenAI API error types
@@ -84,6 +85,9 @@ const MODEL_CONFIGS: Record<string, ModelConfig> = {
  * @returns Generated commit message
  */
 export async function callOpenAIAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
+    const requestManager = RequestManager.getInstance();
+    const controller = requestManager.getController();
+
     try {
         debugLog(`Calling OpenAI API with model: ${model}`);
         const prompt = createPromptFromDiff(diff, customContext);
@@ -107,7 +111,8 @@ export async function callOpenAIAPI(apiKey: string, model: string, diff: string,
                 ],
                 temperature: modelConfig.temperature,
                 max_tokens: modelConfig.maxTokens
-            })
+            }),
+            signal: controller.signal
         });
 
         if (!response.ok) {
@@ -136,6 +141,11 @@ export async function callOpenAIAPI(apiKey: string, model: string, diff: string,
         }
     } catch (error) {
         debugLog('Error in callOpenAIAPI:', error);
+
+        // Handle abort error specifically
+        if (error instanceof Error && error.name === 'AbortError') {
+            throw new Error('Request was cancelled');
+        }
 
         // Re-throw our custom errors as-is
         if (error instanceof Error && error.message.includes('OpenAI')) {
@@ -167,6 +177,9 @@ function getUserFriendlyErrorMessage(statusCode: number, parsedError: OpenAIErro
 
             case 400:
                 if (type === "invalid_request_error") {
+                    if (message.includes("context_length") || message.includes("token")) {
+                        return "The git diff is too large for the selected model. Try:\n• Staging fewer files\n• Using gpt-4 for larger context\n• Breaking changes into smaller commits";
+                    }
                     return `OpenAI request error: ${message}. Please check your model selection.`;
                 }
                 return "Invalid request to OpenAI API. Please check your settings.";
@@ -191,6 +204,8 @@ function getUserFriendlyErrorMessage(statusCode: number, parsedError: OpenAIErro
     switch (statusCode) {
         case 401:
             return "OpenAI API key is invalid. Please check your settings.";
+        case 400:
+            return "Content may be too large for the model. Try staging fewer files.";
         case 429:
             return "OpenAI rate limit or quota exceeded. Please wait and try again.";
         case 500:

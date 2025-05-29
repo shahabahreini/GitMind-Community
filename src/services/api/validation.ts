@@ -3,6 +3,7 @@ import { debugLog } from "../debug/logger";
 import { validateGeminiAPIKey } from "./gemini";
 import { getApiConfig } from "../../config/settings";
 import { ApiConfig, MistralRateLimit, ApiProvider } from "../../config/types";
+import { RequestManager } from "../../utils/requestManager";
 
 interface ApiCheckResult {
     success: boolean;
@@ -307,35 +308,45 @@ export async function checkRateLimits(): Promise<RateLimitsCheckResult> {
 }
 
 async function validateHuggingFaceApiKey(apiKey: string): Promise<boolean> {
+    const requestManager = RequestManager.getInstance();
+    const controller = requestManager.getController();
+
     try {
-        // Use the models endpoint which requires authentication
         const response = await fetch("https://huggingface.co/api/models?limit=1", {
             headers: {
                 Authorization: `Bearer ${apiKey}`,
                 "Content-Type": "application/json"
             },
+            signal: controller.signal
         });
 
-        // If we get a successful response, the API key is valid
         return response.ok;
     } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+            return false;
+        }
         debugLog("Hugging Face API validation error:", error);
         return false;
     }
 }
 
 async function validateOpenAIApiKey(apiKey: string): Promise<boolean> {
+    const requestManager = RequestManager.getInstance();
+    const controller = requestManager.getController();
+
     try {
-        // Use a lightweight OpenAI endpoint to validate the API key
         const response = await fetch("https://api.openai.com/v1/models", {
             headers: {
                 "Authorization": `Bearer ${apiKey}`
-            }
+            },
+            signal: controller.signal
         });
 
-        // If we get a successful response, the API key is valid
         return response.ok;
     } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+            return false;
+        }
         debugLog("OpenAI API validation error:", error);
         return false;
     }
@@ -350,6 +361,9 @@ interface RateLimitComparison {
 let lastRateLimit: MistralRateLimit | null = null;
 
 async function checkMistralRateLimits(apiKey: string): Promise<RateLimitComparison | null> {
+    const requestManager = RequestManager.getInstance();
+    const controller = requestManager.getController();
+
     try {
         const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
             method: "POST",
@@ -361,7 +375,8 @@ async function checkMistralRateLimits(apiKey: string): Promise<RateLimitComparis
                 model: "mistral-small-latest",
                 messages: [{ role: "user", content: "Hi" }],
                 max_tokens: 1
-            })
+            }),
+            signal: controller.signal
         });
 
         const headers = response.headers;
@@ -413,6 +428,9 @@ async function checkMistralRateLimits(apiKey: string): Promise<RateLimitComparis
         return result;
 
     } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+            return null;
+        }
         debugLog("Mistral rate limit check error:", error);
         return null;
     }

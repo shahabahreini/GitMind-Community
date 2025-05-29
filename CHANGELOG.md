@@ -1,5 +1,50 @@
 # Changelog
 
+## [2.1.0] - 2025-05-29
+
+### Added
+
+- **Request Cancellation Support**: Added ability to cancel ongoing API requests
+  - New cancel button appears in SCM panel during generation with dedicated close icon
+  - Cancel option in status bar during generation process with visual indicators
+  - Proper cleanup of resources when requests are cancelled
+  - 60-second timeout for all API requests to prevent hanging
+  - Professional close/cancel icons for light and dark themes
+
+- **Enhanced Error Handling**: Comprehensive error management for all API providers
+  - Smart token limit detection with actionable suggestions and technical details
+  - Provider-specific error messages with troubleshooting steps
+  - Graceful handling of rate limits, quota issues, and connectivity problems
+  - User-friendly error formatting with solution recommendations
+  - **Intelligent Error Classification**: Automatic detection of error types (auth, network, config, quota)
+  - **Detailed Technical Information**: Shows diff size, token counts, and model limits
+  - **Contextual Solutions**: Provides specific recommendations based on error type and context
+
+### Enhanced
+
+- Improved extension stability and performance
+- Enhanced error handling for API interactions with abort support and detailed feedback
+- Updated documentation for better clarity
+- Refined command registration and validation
+- Better user feedback during long-running operations with specific error guidance
+- Enhanced visual feedback with meaningful icons and tooltips
+- **Improved SCM panel UI**: Grouped GitMind icons together to prevent visual separation by other extensions
+- **Intelligent Content Management**: Automatic detection of oversized diffs with recommendations
+- **Smart Error Prevention**: Eliminated generic "Failed to generate commit message" in favor of specific error details
+
+### Technical
+
+- Implemented AbortController pattern for all API providers
+- Added RequestManager utility for centralized request management
+- Enhanced type safety and validation with cancellation support
+- Improved logging and debugging capabilities for cancelled requests
+- Code optimization and maintenance updates
+- Added professional SVG icons for cancel functionality
+- Enhanced menu group organization for better visual consistency
+- **New Error Handler Utility**: Centralized error processing with provider-specific handling
+- **Token Limit Management**: Smart detection and user guidance for content size issues
+- **Error Message Preservation**: Maintains detailed error information throughout the call stack
+
 ## [2.0.2] - 2025-05-27
 
 ### removed
