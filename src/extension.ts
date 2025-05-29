@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { ExtensionState } from "./config/types";
 import { getApiConfig } from "./config/settings";
-import { generateCommitMessage } from "./services/api";
+import { generateCommitMessage, cancelCurrentRequest, isRequestActive } from "./services/api";
 import { checkApiSetup, checkRateLimits } from "./services/api/validation";
 import {
   validateGitRepository,
@@ -42,8 +42,9 @@ export async function activate(context: vscode.ExtensionContext) {
   // Note: VS Code SCM API doesn't provide access to existing source controls
   // so we cannot clean up previous providers programmatically
 
-  // Create loading indicator
+  // Create loading indicator with cancel functionality
   let loadingItem: vscode.StatusBarItem | undefined;
+  let isGenerating = false;
 
   // Create SCM-specific status bar item
   const scmStatusBarItem = vscode.window.createStatusBarItem(
@@ -68,12 +69,45 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  // Register main command
+  // Register cancel command
+  let cancelCommand = vscode.commands.registerCommand(
+    "ai-commit-assistant.cancelGeneration",
+    async () => {
+      if (isGenerating) {
+        cancelCurrentRequest();
+        isGenerating = false;
+
+        // Clean up loading indicator
+        if (loadingItem) {
+          loadingItem.dispose();
+          loadingItem = undefined;
+        }
+
+        await vscode.commands.executeCommand(
+          "setContext",
+          "ai-commit-assistant.isGenerating",
+          false
+        );
+
+        vscode.window.showInformationMessage("Commit message generation cancelled");
+      }
+    }
+  );
+
+  // Register main command with cancel support
   let generateCommitCommand = vscode.commands.registerCommand(
     "ai-commit-assistant.generateCommitMessage",
     async () => {
       try {
         debugLog("Command Started: generateCommitMessage");
+
+        // If already generating, cancel the current request
+        if (isGenerating) {
+          await vscode.commands.executeCommand("ai-commit-assistant.cancelGeneration");
+          return;
+        }
+
+        isGenerating = true;
 
         // Set the loading context first, before creating the indicator
         await vscode.commands.executeCommand(
@@ -82,12 +116,13 @@ export async function activate(context: vscode.ExtensionContext) {
           true
         );
 
-        // Create and show loading indicator with animation
+        // Create and show loading indicator with cancel option
         loadingItem = vscode.window.createStatusBarItem(
           vscode.StatusBarAlignment.Right
         );
-        loadingItem.text = "$(sync~spin) Generating commit message...";
-        loadingItem.tooltip = "AI Commit Assistant is generating a commit message";
+        loadingItem.text = "$(sync~spin) Generating... $(close) Cancel";
+        loadingItem.tooltip = "AI is generating commit message. Click to cancel.";
+        loadingItem.command = "ai-commit-assistant.cancelGeneration";
         loadingItem.show();
 
         // Check if current directory is a git repository
@@ -126,8 +161,13 @@ export async function activate(context: vscode.ExtensionContext) {
           }) || "";
         }
 
-        // Generate commit message
-        const message = await generateCommitMessage(apiConfig, diff, customContext);
+        // Generate commit message with timeout
+        const message = await Promise.race([
+          generateCommitMessage(apiConfig, diff, customContext),
+          new Promise<string>((_, reject) => {
+            setTimeout(() => reject(new Error("Request timed out after 60 seconds")), 60000);
+          })
+        ]);
 
         if (message && message.trim() !== "") {
           // Process the AI response
@@ -138,20 +178,40 @@ export async function activate(context: vscode.ExtensionContext) {
             "Commit message generated successfully!"
           );
         } else {
-          vscode.window.showErrorMessage(
-            "Failed to generate commit message. Please try again."
+          // Only show generic message if we don't have a specific error
+          vscode.window.showWarningMessage(
+            "No commit message was generated. This may be due to API limitations or configuration issues."
           );
         }
 
       } catch (error) {
         debugLog("Generate Commit Error:", error);
-        vscode.window.showErrorMessage(
-          `Error generating commit message: ${error instanceof Error ? error.message : "Unknown error"}`
-        );
+
+        // Handle cancellation specifically
+        if (error instanceof Error && error.message === 'Request was cancelled') {
+          vscode.window.showInformationMessage("Commit message generation cancelled");
+        } else if (error instanceof Error) {
+          // Show the specific error message from our enhanced error handling
+          const errorMessage = error.message;
+
+          // For token limit errors, show as warning instead of error for better UX
+          if (errorMessage.includes('too large') || errorMessage.includes('exceed') || errorMessage.includes('tokens')) {
+            vscode.window.showWarningMessage(errorMessage, { modal: true });
+          } else {
+            vscode.window.showErrorMessage(errorMessage, { modal: true });
+          }
+        } else {
+          vscode.window.showErrorMessage(
+            "An unexpected error occurred while generating the commit message. Please check the debug logs for more details."
+          );
+        }
       } finally {
+        isGenerating = false;
+
         // Clean up loading indicator
         if (loadingItem) {
           loadingItem.dispose();
+          loadingItem = undefined;
         }
         await vscode.commands.executeCommand(
           "setContext",
@@ -480,6 +540,7 @@ export async function activate(context: vscode.ExtensionContext) {
     scmStatusBarItem,
     toggleDebugCommand,
     generateCommitCommand,
+    cancelCommand,
     acceptInputCommand,
     settingsCommand,
     checkApiSetupCommand,
@@ -519,6 +580,8 @@ export async function activate(context: vscode.ExtensionContext) {
   if (gitExtension && gitExtension.isActive) {
     scmStatusBarItem.show();
   }
+
+  debugLog("GitMind extension activated successfully with all icons");
 }
 
 export function deactivate() {

@@ -29,29 +29,145 @@ import { DiagnosticsWebview } from "../../webview/diagnostics/DiagnosticsWebview
 import { callOpenAIAPI } from "./openai";
 import { callTogetherAPI } from "./together";
 import { callOpenRouterAPI } from "./openrouter";
+import { RequestManager } from "../../utils/requestManager";
+import { APIErrorHandler } from "../../utils/errorHandler";
 
 type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter";
+
+async function handleApiError(
+    error: unknown,
+    config: ApiConfig,
+    context?: { diffSize?: number; filesChanged?: number }
+): Promise<void> {
+    debugLog("API Error:", error);
+
+    if (!(error instanceof Error)) {
+        await vscode.window.showErrorMessage("An unknown error occurred");
+        return;
+    }
+
+    const provider = getProviderName(config.type);
+
+    // Handle cancellation specifically
+    if (error.message === 'Request was cancelled') {
+        return;
+    }
+
+    // Handle Ollama-specific errors
+    if (
+        provider === "Ollama" &&
+        (error.message.includes("not configured") ||
+            error.message.includes("not running"))
+    ) {
+        const result = await vscode.window.showErrorMessage(
+            "Ollama is not configured properly. Would you like to configure it now?",
+            "Configure Now",
+            "Installation Guide"
+        );
+
+        if (result === "Configure Now") {
+            await vscode.commands.executeCommand("ai-commit-assistant.openSettings");
+        } else if (result === "Installation Guide") {
+            const instructions = getOllamaInstallInstructions();
+            await vscode.window.showInformationMessage(instructions, { modal: true });
+        }
+        return;
+    }
+
+    // Enhanced error handling with context
+    if (error.message.includes('Together AI API error: 422') ||
+        error.message.includes('tokens') && error.message.includes('exceed')) {
+        // Show the detailed error message as-is for token limit errors
+        await vscode.window.showErrorMessage(error.message, { modal: true });
+        return;
+    }
+
+    // Use the error handler for other errors
+    const errorInfo = APIErrorHandler.handleAPIError(error, provider, context);
+    const formattedMessage = APIErrorHandler.formatUserMessage(errorInfo);
+
+    await vscode.window.showErrorMessage(formattedMessage, { modal: true });
+}
+
+// Request management
+let currentRequestController: AbortController | null = null;
+let isCurrentlyActive = false;
+
+export function cancelCurrentRequest(): void {
+    if (currentRequestController) {
+        currentRequestController.abort();
+        currentRequestController = null;
+    }
+    isCurrentlyActive = false;
+    debugLog("Current request cancelled");
+}
+
+export function isRequestActive(): boolean {
+    return isCurrentlyActive;
+}
 
 export async function generateCommitMessage(
     config: ApiConfig,
     diff: string,
     customContext: string = ""
 ): Promise<string> {
+    // Calculate context for error handling
+    const diffSize = diff.length;
+    const filesChanged = (diff.match(/diff --git/g) || []).length;
+    const context = { diffSize, filesChanged };
+
     try {
+        // Set up request tracking
+        currentRequestController = new AbortController();
+        isCurrentlyActive = true;
+
         // First validate and potentially update the configuration
         const validatedConfig = await validateAndUpdateConfig(config);
         if (!validatedConfig) {
             debugLog("No valid configuration available");
-            return ""; // Return empty string to indicate no message was generated
+            throw new Error(`${getProviderName(config.type)} configuration is invalid. Please check your API key and settings.`);
         }
 
         // Then generate the message with the validated config
-        return await generateMessageWithConfig(validatedConfig, diff, customContext);
+        const result = await generateMessageWithConfig(validatedConfig, diff, customContext);
+        return result;
     } catch (error) {
         debugLog("Generate Commit Message Error:", error);
-        // Handle the error but don't rethrow
-        await handleApiError(error, config);
-        return ""; // Return empty string to indicate no message was generated
+
+        // Handle cancellation specifically
+        if (error instanceof Error && (error.message === 'Request was cancelled' || error.message === 'User cancelled token count confirmation')) {
+            debugLog("Request was cancelled by user");
+            return "";
+        }
+
+        // Check for AbortError (from fetch cancellation)
+        if (error instanceof Error && error.name === 'AbortError') {
+            debugLog("Request was aborted");
+            throw new Error('Request was cancelled');
+        }
+
+        // Preserve detailed error messages - don't show generic fallback
+        if (error instanceof Error) {
+            // Check if it's already a detailed error from our API handlers
+            if (error.message.includes('Together AI API error: 422 - Content exceeds model limits') ||
+                error.message.includes('tokens') && error.message.includes('exceed') ||
+                error.message.includes('rate limit') ||
+                error.message.includes('API key') ||
+                error.message.includes('quota') ||
+                error.message.includes('billing') ||
+                error.message.includes('Details:') || // Together AI detailed format
+                error.message.includes(': ')) { // Contains provider-specific formatting
+                throw error; // Re-throw detailed errors as-is
+            }
+        }
+
+        // Only handle non-detailed errors with the error handler
+        await handleApiError(error, config, context);
+        return "";
+    } finally {
+        // Clean up request tracking
+        currentRequestController = null;
+        isCurrentlyActive = false;
     }
 }
 
@@ -764,47 +880,6 @@ async function generateMessageWithConfig(
     }
 }
 
-async function handleApiError(
-    error: unknown,
-    config: ApiConfig
-): Promise<void> {
-    debugLog("API Error:", error);
-
-    if (!(error instanceof Error)) {
-        await vscode.window.showErrorMessage("An unknown error occurred");
-        return;
-    }
-
-    const errorMessage = error.message;
-    const provider = getProviderName(config.type);
-
-    // Handle Ollama-specific errors
-    if (
-        provider === "Ollama" &&
-        (errorMessage.includes("not configured") ||
-            errorMessage.includes("not running"))
-    ) {
-        const result = await vscode.window.showErrorMessage(
-            "Ollama is not configured properly. Would you like to configure it now?",
-            "Configure Now",
-            "Installation Guide"
-        );
-
-        if (result === "Configure Now") {
-            await vscode.commands.executeCommand("ai-commit-assistant.openSettings");
-        } else if (result === "Installation Guide") {
-            const instructions = getOllamaInstallInstructions();
-            await vscode.window.showInformationMessage(instructions, { modal: true });
-        }
-        return;
-    }
-
-    // Handle all other errors
-    await vscode.window.showErrorMessage(
-        `Error generating commit message: ${errorMessage}`
-    );
-}
-
 async function showDiagnosticsInfo(config: ApiConfig, diff: string) {
     const showDiagnostics = vscode.workspace.getConfiguration('aiCommitAssistant').get('showDiagnostics');
 
@@ -814,26 +889,54 @@ async function showDiagnosticsInfo(config: ApiConfig, diff: string) {
 
     const estimatedTokens = estimateTokens(diff);
 
-    let modelInfo = '';
+    let providerName = '';
+    let modelName = '';
+
     switch (config.type) {
-        case 'mistral':
-            modelInfo = `Model: Mistral AI (${config.model})`;
-            break;
         case 'gemini':
-            modelInfo = 'Model: Gemini Pro';
+            providerName = 'Google Gemini';
+            modelName = config.model || 'gemini-pro';
             break;
         case 'huggingface':
-            modelInfo = `Model: Hugging Face (${config.model})`;
+            providerName = 'Hugging Face';
+            modelName = config.model;
             break;
         case 'ollama':
-            modelInfo = `Model: Ollama (${config.model})`;
+            providerName = 'Ollama';
+            modelName = config.model;
+            break;
+        case 'mistral':
+            providerName = 'Mistral AI';
+            modelName = config.model;
             break;
         case 'cohere':
-            modelInfo = `Model: Cohere (${config.model})`;
+            providerName = 'Cohere';
+            modelName = config.model;
+            break;
+        case 'openai':
+            providerName = 'OpenAI';
+            modelName = config.model;
+            break;
+        case 'together':
+            providerName = 'Together AI';
+            modelName = config.model;
+            break;
+        case 'openrouter':
+            providerName = 'OpenRouter';
+            modelName = config.model;
             break;
     }
 
-    const message = `${modelInfo}\nEstimated tokens to be sent: ${estimatedTokens}`;
+    // Create a well-formatted message with proper structure
+    const message = [
+        'Request Diagnostics',
+        '',
+        `Provider: ${providerName}`,
+        `Model: ${modelName}`,
+        `Estimated Tokens: ${estimatedTokens.toLocaleString()}`,
+        '',
+        'Would you like to proceed with this request?'
+    ].join('\n');
 
     // Show information message and wait for user confirmation
     const proceed = await vscode.window.showInformationMessage(
@@ -844,7 +947,7 @@ async function showDiagnosticsInfo(config: ApiConfig, diff: string) {
     );
 
     if (proceed !== 'Proceed') {
-        throw new Error('Operation cancelled by user');
+        throw new Error('User cancelled token count confirmation');
     }
 }
 
@@ -914,15 +1017,19 @@ async function validateAndUpdateConfig(
                 }
             }
         } else if (result === "Get API Key") {
-            const providerDocs = {
-                Gemini: "https://aistudio.google.com/app/apikey",
+            const providerDocs: Record<string, string> = {
+                "Gemini": "https://aistudio.google.com/app/apikey",
                 "Hugging Face": "https://huggingface.co/settings/tokens",
-                Mistral: "https://console.mistral.ai/api-keys/",
+                "Mistral": "https://console.mistral.ai/api-keys/",
+                "Cohere": "https://dashboard.cohere.com/api-keys",
+                "OpenAI": "https://platform.openai.com/api-keys",
+                "Together AI": "https://api.together.xyz/settings/api-keys",
+                "OpenRouter": "https://openrouter.ai/keys"
             };
 
             if (provider in providerDocs) {
                 await vscode.env.openExternal(
-                    vscode.Uri.parse(providerDocs[provider as keyof typeof providerDocs])
+                    vscode.Uri.parse(providerDocs[provider])
                 );
                 // After opening the website, prompt for API key input
                 const apiKey = await vscode.window.showInputBox({
@@ -941,80 +1048,73 @@ async function validateAndUpdateConfig(
                 if (apiKey) {
                     const settingPath = getProviderSettingPath(provider);
                     if (settingPath) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
+                        const config = vscode.workspace.getConfiguration("aiCommitAssistant");
                         await config.update(
                             settingPath,
                             apiKey.trim(),
                             vscode.ConfigurationTarget.Global
                         );
-                        debugLog(
-                            "API key saved after website visit, returning updated configuration"
-                        );
+                        debugLog("API key saved, returning updated configuration");
                         return getApiConfig();
                     }
                 }
             }
         }
-
-        debugLog("No API key provided, returning null");
-        return null;
+        return null; // User cancelled or no API key provided
     }
 
-    debugLog("API configuration validated successfully");
+    // If we reach here, API key exists
     return config;
 }
 
-function showModelInfo(config: ApiConfig) {
-    let modelInfo = "";
-    switch (config.type) {
-        case "mistral":
-            modelInfo = `Using Mistral AI (${config.model})`;
-            break;
-        case "gemini":
-            modelInfo = "Using Gemini Pro";
-            break;
-        case "huggingface":
-            modelInfo = `Using Hugging Face (${config.model})`;
-            break;
-        case "ollama":
-            modelInfo = `Using Ollama (${config.model})`;
-            break;
-        case "cohere":
-            modelInfo = `Using Cohere (${config.model})`;
-            break;
-        case "openai":
-            modelInfo = `Using OpenAI (${config.model})`;
-            break;
-        case "together":
-            modelInfo = `Using Together AI (${config.model})`;
-            break;
-        case "openrouter":
-            modelInfo = `Using OpenRouter (${config.model})`;
-            break;
-    }
-    vscode.window.setStatusBarMessage(modelInfo, 3000);
+function getProviderName(type: string): ApiProvider {
+    const providerMap: Record<string, ApiProvider> = {
+        "gemini": "Gemini",
+        "huggingface": "Hugging Face",
+        "ollama": "Ollama",
+        "mistral": "Mistral",
+        "cohere": "Cohere",
+        "openai": "OpenAI",
+        "together": "Together AI",
+        "openrouter": "OpenRouter"
+    };
+    return providerMap[type] || "Gemini";
 }
 
-function getProviderName(type: string): ApiProvider {
-    switch (type) {
-        case "gemini":
-            return "Gemini";
-        case "huggingface":
-            return "Hugging Face";
-        case "ollama":
-            return "Ollama";
-        case "mistral":
-            return "Mistral";
-        case "cohere":
-            return "Cohere";
-        case "openai":
-            return "OpenAI";
-        case "together":
-            return "Together AI";
-        case "openrouter":
-            return "OpenRouter";
-        default:
-            throw new Error(`Unknown provider type: ${type}`);
+function showModelInfo(config: ApiConfig) {
+    const showModelInfo = workspace.getConfiguration('aiCommitAssistant').get('showModelInfo');
+
+    if (!showModelInfo) {
+        return;
     }
+
+    let modelName = '';
+    switch (config.type) {
+        case 'gemini':
+            modelName = `Gemini (${config.model || 'gemini-pro'})`;
+            break;
+        case 'huggingface':
+            modelName = `Hugging Face (${config.model})`;
+            break;
+        case 'ollama':
+            modelName = `Ollama (${config.model})`;
+            break;
+        case 'mistral':
+            modelName = `Mistral (${config.model})`;
+            break;
+        case 'cohere':
+            modelName = `Cohere (${config.model})`;
+            break;
+        case 'openai':
+            modelName = `OpenAI (${config.model})`;
+            break;
+        case 'together':
+            modelName = `Together AI (${config.model})`;
+            break;
+        case 'openrouter':
+            modelName = `OpenRouter (${config.model})`;
+            break;
+    }
+
+    vscode.window.showInformationMessage(`Using model: ${modelName}`, { modal: false });
 }
