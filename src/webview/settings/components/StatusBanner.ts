@@ -1,6 +1,7 @@
 // src/webview/settings/components/StatusBanner.ts
 import { ExtensionSettings } from "../../../models/ExtensionSettings";
 import { getStatusBannerStyles } from "../styles/statusBanner.css";
+import { ProviderIcon } from "./ProviderIcon";
 
 export class StatusBanner {
   private _settings: ExtensionSettings;
@@ -82,7 +83,13 @@ export class StatusBanner {
 
     return `
     <div class="status-banner">
-      <h3>Current Configuration</h3>
+      <div class="status-banner-header">
+        ${ProviderIcon.renderIcon(this._settings.apiProvider, 40)}
+        <div class="status-banner-title">
+          <h3>Current Configuration</h3>
+          <span class="status-provider-name">${providerDisplay}</span>
+        </div>
+      </div>
       <div class="status-grid">
         <div class="status-item">
           <span class="status-label">Active Provider</span>

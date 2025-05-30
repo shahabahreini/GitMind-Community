@@ -1,4 +1,6 @@
 // src/webview/settings/styles/statusBanner.css.ts
+import { ProviderIcon } from "../components/ProviderIcon";
+
 export function getStatusBannerStyles(): string {
   return `
       .status-banner {
@@ -11,13 +13,30 @@ export function getStatusBannerStyles(): string {
         transition: background-color 0.3s ease;
       }
       
+      .status-banner-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--vscode-widget-border);
+      }
+      
+      .status-banner-title {
+        flex: 1;
+      }
+      
       .status-banner h3 {
-        margin-top: 0;
-        margin-bottom: 12px;
-        border-bottom: none;
-        padding-bottom: 0;
+        margin: 0 0 4px 0;
         color: var(--vscode-activityBarBadge-background);
         font-size: 16px;
+        font-weight: 600;
+      }
+      
+      .status-provider-name {
+        font-size: 14px;
+        color: var(--vscode-descriptionForeground);
+        font-weight: 500;
       }
       
       .status-grid {
@@ -72,5 +91,23 @@ export function getStatusBannerStyles(): string {
       .status-badge.cohere {
         background-color:rgb(179, 240, 24);
       }
+      
+      .status-badge.openai {
+        background-color: #00a67e;
+      }
+      
+      .status-badge.anthropic {
+        background-color: #d97706;
+      }
+      
+      .status-badge.together {
+        background-color: #8b5cf6;
+      }
+      
+      .status-badge.openrouter {
+        background-color: #3b82f6;
+      }
+      
+      ${ProviderIcon.getIconStyles()}
     `;
 }

@@ -16,9 +16,11 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 
 ## Key Features
 
-**Multi-Provider AI Support**: Access 8 different AI providers with unified configuration and intelligent fallback handling.
+**Multi-Provider AI Support**: Access 9 different AI providers with unified configuration and intelligent fallback handling.
 
-**Smart Git Integration**: Automatic change detection for staged and unstaged files with context-aware analysis.
+**Advanced Git Integration**: Smart diff analysis with automatic staging detection, binary file handling, and comprehensive repository state management.
+
+**Intelligent Diff Processing**: Enhanced change detection for staged and unstaged files with context-aware analysis and user guidance for complex scenarios.
 
 **Conventional Commits**: Automatic formatting with proper type categorization (feat|fix|docs|style|refactor|test|chore), scope detection, and breaking change identification.
 
@@ -30,7 +32,9 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 
 **Advanced Token Management**: Pre-generation estimation, rate limiting with minute-based tracking, and usage analytics.
 
-**Professional Workflow Integration**: Native VS Code SCM panel integration with loading indicators and status feedback.
+**Professional Workflow Integration**: Native VS Code SCM panel integration with loading indicators and comprehensive status feedback.
+
+**Standardized Prompt Engineering**: Unified prompt architecture across all providers ensuring consistent, high-quality commit message generation.
 
 ## AI Provider Comparison
 
@@ -86,12 +90,20 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 
 ## Technical Capabilities
 
+### Advanced Diff Analysis
+
+- **Smart Staging Detection**: Automatic detection of staged vs unstaged changes with user guidance
+- **Binary File Handling**: Proper detection and handling of binary files in diffs
+- **Repository State Management**: Comprehensive handling of complex git repository states
+- **Edge Case Processing**: Robust handling of empty diffs, merge conflicts, and other edge cases
+
 ### Commit Message Intelligence
 
 - **Context Analysis**: Analyzes file diffs, change patterns, and repository history
 - **Scope Detection**: Automatic identification of affected modules and components
 - **Breaking Change Recognition**: Detects API changes and breaking modifications
 - **Verbosity Control**: Toggle between detailed descriptions and concise summaries
+- **Standardized Prompts**: Consistent prompt templates across all 9 AI providers
 
 ### Advanced Configuration
 
@@ -99,17 +111,19 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 - **Model Selection**: Provider-specific model configuration with performance optimization
 - **Debug Mode**: Comprehensive API interaction logging and response tracking
 - **Token Optimization**: Smart content truncation and cost management
+- **Diff Validation**: Advanced validation to ensure quality input for AI processing
 
 ### Developer Workflow
 
 - **VS Code Integration**: Native Source Control panel with dedicated UI components
-- **Change Detection**: Handles both staged and unstaged modifications with user confirmation
+- **Smart Change Detection**: Handles staged, unstaged, and mixed modifications with user confirmation
 - **Batch Processing**: Support for multiple file changes with intelligent grouping
 - **Manual Override**: Preserves user edits and allows custom modifications
+- **Error Recovery**: Comprehensive error handling with actionable guidance
 
 ## Quick Setup
 
-1. **Choose Provider**: Select from 8 supported AI providers based on your requirements
+1. **Choose Provider**: Select from 9 supported AI providers based on your requirements
 2. **Configure API**: Add your API key through the extension settings panel
 3. **Select Model**: Choose optimal model for your use case and budget
 4. **Generate Commits**: Use the AI button in VS Code's Source Control panel
@@ -150,13 +164,27 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 - **Quality priority**: GPT-4o, Mistral Large, Llama-3.3-70B
 - **Cost optimization**: HuggingFace open models, Ollama local deployment
 
+**Diff Complexity Handling**:
+
+- **Large diffs**: Use providers with higher context windows (Gemini, Claude)
+- **Binary files**: Automatic detection and exclusion from analysis
+- **Mixed changes**: Smart prompting for staged vs unstaged handling
+
 ## Requirements
 
-- Visual Studio Code ^1.75.0
+- Visual Studio Code ^1.100.0
 - Git repository (initialized)
 - API key from chosen provider OR Ollama installation
 
 ## Advanced Features
+
+### Enhanced Diff Processing
+
+Advanced git diff analysis with staging detection, binary file handling, and comprehensive repository state management.
+
+### Standardized Prompt Architecture
+
+Unified prompt engineering across all 9 AI providers ensuring consistent, high-quality output regardless of chosen model.
 
 ### Rate Limit Management
 
@@ -188,11 +216,13 @@ Access settings via Command Palette: `AI Commit Assistant: Open Settings` or the
 Built with TypeScript for reliability and performance:
 
 - **Modular Provider System**: Dedicated API service modules with proper error handling
+- **Advanced Git Integration**: Sophisticated diff processing and repository analysis
 - **Smart Response Parsing**: Sophisticated commit message formatting and validation
+- **Standardized Prompt System**: Unified prompt architecture across all providers
 - **Webview Settings UI**: Professional configuration interface with real-time feedback
-- **Git Integration**: Advanced repository analysis and diff processing
+- **Enhanced Diff Engine**: Advanced repository analysis and diff processing
 - **Token Management**: Intelligent usage tracking and optimization
 
 ---
 
-**GitMind** transforms your commit workflow with professional AI-powered message generation, supporting both individual developers and enterprise teams with consistent, meaningful commit histories.
+**GitMind** transforms your commit workflow with professional AI-powered message generation, supporting both individual developers and enterprise teams with consistent, meaningful commit histories through advanced diff analysis and standardized prompt engineering.
