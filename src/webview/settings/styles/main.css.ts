@@ -27,6 +27,17 @@ export function getMainStyles(): string {
       margin-bottom: 20px;
     }
 
+    /* Compact styling for general settings */
+    .general-settings-compact {
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--vscode-input-border);
+    }
+
+    .general-settings-compact + .settings-section {
+      margin-top: 16px;
+    }
+
     .description {
       font-size: 12px;
       color: var(--vscode-descriptionForeground);

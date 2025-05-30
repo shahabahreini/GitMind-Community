@@ -182,5 +182,164 @@ export function getFormStyles(): string {
           align-self: flex-start;
         }
       }
+
+      /* Compact General Settings Design */
+      .general-settings-compact {
+        margin-bottom: 16px;
+      }
+
+      .general-settings-compact h3 {
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: var(--vscode-foreground);
+      }
+
+      .compact-form {
+        margin-bottom: 8px;
+      }
+
+      .compact-toggles {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px 24px;
+        padding: 8px 0;
+      }
+
+      .compact-toggle-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 140px;
+        cursor: help;
+        padding: 4px 6px;
+        border-radius: 4px;
+        transition: background-color 0.2s ease;
+        position: relative;
+      }
+
+      .compact-toggle-row:hover {
+        background-color: var(--vscode-list-hoverBackground, rgba(90, 93, 94, 0.1));
+      }
+
+      /* Enhanced tooltip styling for better VS Code integration */
+      .compact-toggle-row[title] {
+        position: relative;
+      }
+
+      /* Custom tooltip implementation for better control */
+      .compact-toggle-row::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: var(--vscode-editorHoverWidget-background, #2c2c2c);
+        color: var(--vscode-editorHoverWidget-foreground, #cccccc);
+        border: 1px solid var(--vscode-editorHoverWidget-border, #454545);
+        padding: 8px 12px;
+        border-radius: 3px;
+        font-size: 12px;
+        line-height: 1.4;
+        white-space: normal;
+        width: 260px;
+        max-width: 260px;
+        text-align: left;
+        z-index: 1000;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease 0.3s, visibility 0.3s ease 0.3s;
+        pointer-events: none;
+        margin-bottom: 8px;
+      }
+
+      .compact-toggle-row::before {
+        content: '';
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-top-color: var(--vscode-editorHoverWidget-border, #454545);
+        z-index: 1001;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease 0.3s, visibility 0.3s ease 0.3s;
+        margin-bottom: 3px;
+      }
+
+      .compact-toggle-row:hover::after,
+      .compact-toggle-row:hover::before {
+        opacity: 1;
+        visibility: visible;
+        transition-delay: 0.5s;
+      }
+
+      /* Responsive tooltip positioning */
+      @media (max-width: 600px) {
+        .compact-toggle-row::after {
+          width: 200px;
+          max-width: 200px;
+          left: 0;
+          transform: none;
+        }
+        
+        .compact-toggle-row::before {
+          left: 20px;
+          transform: none;
+        }
+      }
+
+      /* Disable default browser tooltip */
+      .compact-toggle-row[title] {
+        position: relative;
+      }
+
+      /* Ensure tooltip doesn't interfere with layout */
+      .compact-toggles {
+        position: relative;
+        padding-top: 8px;
+      }
+
+      .compact-label {
+        font-size: 12px;
+        color: var(--vscode-foreground);
+        cursor: pointer;
+        white-space: nowrap;
+        font-weight: 400;
+      }
+
+      .compact-toggle-row .toggle-switch {
+        width: 32px;
+        height: 18px;
+        flex-shrink: 0;
+      }
+
+      .compact-toggle-row .toggle-slider {
+        border-radius: 9px;
+      }
+
+      .compact-toggle-row .toggle-slider:before {
+        height: 14px;
+        width: 14px;
+        left: 2px;
+        bottom: 2px;
+      }
+
+      .compact-toggle-row .toggle-switch input:checked + .toggle-slider:before {
+        transform: translateX(14px);
+      }
+
+      /* Responsive compact layout */
+      @media (max-width: 600px) {
+        .compact-toggles {
+          flex-direction: column;
+          gap: 12px;
+        }
+        
+        .compact-toggle-row {
+          min-width: auto;
+        }
+      }
     `;
 }

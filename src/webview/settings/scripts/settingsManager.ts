@@ -34,6 +34,39 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     document.getElementById('anthropicApiKey').value = currentSettings.anthropic?.apiKey || '';
     document.getElementById('anthropicModel').value = currentSettings.anthropic?.model || 'claude-3-5-sonnet-20241022';
     
+    // Enhanced tooltip functionality for compact toggles
+    function initializeTooltips() {
+      const toggleRows = document.querySelectorAll('.compact-toggle-row[title]');
+      toggleRows.forEach(row => {
+        // Store original title and remove it to prevent default tooltip
+        const originalTitle = row.getAttribute('title');
+        row.removeAttribute('title');
+        row.setAttribute('data-tooltip', originalTitle);
+        
+        // Add hover delay for better UX
+        let hoverTimeout;
+        
+        row.addEventListener('mouseenter', () => {
+          hoverTimeout = setTimeout(() => {
+            row.setAttribute('title', row.getAttribute('data-tooltip'));
+          }, 300); // 300ms delay before showing tooltip
+        });
+        
+        row.addEventListener('mouseleave', () => {
+          clearTimeout(hoverTimeout);
+          row.removeAttribute('title');
+        });
+      });
+    }
+    
+    // Initialize tooltips when DOM is ready
+    document.addEventListener('DOMContentLoaded', initializeTooltips);
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeTooltips);
+    } else {
+      initializeTooltips();
+    }
+    
     ${getUiManagerScript()}
     ${getApiManagerScript()}
     

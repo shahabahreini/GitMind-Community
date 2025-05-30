@@ -10,48 +10,30 @@ export class GeneralSettings {
 
   public render(): string {
     return `
-    <div class="settings-section">
+    <div class="settings-section general-settings-compact">
       <h3>General Settings</h3>
-      <div class="form-group">
-        <div class="toggle-setting">
-          <div class="setting-info">
-            <label class="setting-label" for="commitVerbose">Verbose Commit Messages</label>
-            <div class="description">
-              When enabled, generates detailed commit messages with bullet points.
-              When disabled, only generates the summary line.
+      <div class="form-group compact-form">
+        <div class="compact-toggles">
+          <div class="compact-toggle-row" data-tooltip="When enabled, generates detailed commit messages with bullet points. When disabled, only generates the summary line.">
+            <div class="toggle-switch">
+              <input type="checkbox" id="commitVerbose" ${this._settings.commit?.verbose ? "checked" : ""} />
+              <label for="commitVerbose" class="toggle-slider"></label>
             </div>
+            <label class="compact-label" for="commitVerbose">Verbose Messages</label>
           </div>
-          <div class="toggle-switch">
-            <input type="checkbox" id="commitVerbose" ${this._settings.commit?.verbose ? "checked" : ""} />
-            <label for="commitVerbose" class="toggle-slider"></label>
-          </div>
-        </div>
-      </div>
-      <div class="form-group">
-        <div class="toggle-setting">
-          <div class="setting-info">
-            <label class="setting-label" for="promptCustomizationEnabled">Enable Prompt Customization</label>
-            <div class="description">
-              When enabled, shows a dialog to add custom context when generating commit messages.
+          <div class="compact-toggle-row" data-tooltip="When enabled, shows a dialog to add custom context when generating commit messages.">
+            <div class="toggle-switch">
+              <input type="checkbox" id="promptCustomizationEnabled" ${this._settings.promptCustomization?.enabled ? "checked" : ""} />
+              <label for="promptCustomizationEnabled" class="toggle-slider"></label>
             </div>
+            <label class="compact-label" for="promptCustomizationEnabled">Prompt Customization</label>
           </div>
-          <div class="toggle-switch">
-            <input type="checkbox" id="promptCustomizationEnabled" ${this._settings.promptCustomization?.enabled ? "checked" : ""} />
-            <label for="promptCustomizationEnabled" class="toggle-slider"></label>
-          </div>
-        </div>
-      </div>
-      <div class="form-group">
-        <div class="toggle-setting">
-          <div class="setting-info">
-            <label class="setting-label" for="showDiagnostics">Show Diagnostics Before Proceeding</label>
-            <div class="description">
-              When enabled, shows model information and estimated token count before generating commit messages.
+          <div class="compact-toggle-row" data-tooltip="When enabled, shows model information and estimated token count before generating commit messages.">
+            <div class="toggle-switch">
+              <input type="checkbox" id="showDiagnostics" ${this._settings.showDiagnostics ? "checked" : ""} />
+              <label for="showDiagnostics" class="toggle-slider"></label>
             </div>
-          </div>
-          <div class="toggle-switch">
-            <input type="checkbox" id="showDiagnostics" ${this._settings.showDiagnostics ? "checked" : ""} />
-            <label for="showDiagnostics" class="toggle-slider"></label>
+            <label class="compact-label" for="showDiagnostics">Show Diagnostics</label>
           </div>
         </div>
       </div>
