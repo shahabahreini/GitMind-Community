@@ -13,6 +13,7 @@ import { TogetherSettings } from "./components/TogetherSettings";
 import { OpenRouterSettings } from "./components/OpenRouterSettings";
 import { ButtonGroup } from "./components/ButtonGroup";
 import { getSettingsScript } from "./scripts/settingsManager";
+import { AnthropicSettings } from "./components/AnthropicSettings";
 
 export class SettingsTemplateGenerator {
   private _settings: ExtensionSettings;
@@ -35,6 +36,7 @@ export class SettingsTemplateGenerator {
     const togetherSettings = new TogetherSettings(this._settings);
     const openrouterSettings = new OpenRouterSettings(this._settings);
     const buttonGroup = new ButtonGroup();
+    const anthropicSettings = new AnthropicSettings(this._settings);
 
     return `
     <!DOCTYPE html>
@@ -60,6 +62,7 @@ export class SettingsTemplateGenerator {
         ${openaiSettings.render()}
         ${togetherSettings.render()}
         ${openrouterSettings.render()}
+        ${anthropicSettings.render()}
         ${buttonGroup.render()}
       </div>
       ${getSettingsScript(this._settings, this._nonce)}

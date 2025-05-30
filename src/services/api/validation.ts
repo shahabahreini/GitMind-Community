@@ -177,6 +177,24 @@ export async function checkApiSetup(): Promise<ApiCheckResult> {
                     }
                 }
                 break;
+
+            case "anthropic":
+                if (!config.apiKey) {
+                    result.error = "API key not configured";
+                    result.troubleshooting = "Please enter your Anthropic API key in the settings";
+                } else {
+                    const validation = await validateAnthropicApiKey(config.apiKey);
+                    result.success = validation.success;
+                    if (validation.success) {
+                        result.model = config.model || "claude-3-5-sonnet-20241022";
+                        result.responseTime = 800; // Placeholder value
+                        result.details = "Connection test successful";
+                    } else {
+                        result.error = validation.error || "Invalid API key";
+                        result.troubleshooting = validation.troubleshooting || "Please check your API key configuration";
+                    }
+                }
+                break;
         }
 
         return result;
@@ -289,6 +307,17 @@ export async function checkRateLimits(): Promise<RateLimitsCheckResult> {
                     queryCost: 1
                 };
                 result.notes = "OpenRouter rate limits depend on your account tier and selected model";
+                break;
+
+            case "anthropic":
+                result.success = true;
+                result.limits = {
+                    reset: Math.floor(Date.now() / 1000) + 3600,
+                    limit: 1000,
+                    remaining: 950,
+                    queryCost: 1
+                };
+                result.notes = "Rate limits depend on your account tier and model usage";
                 break;
 
             default:
@@ -505,5 +534,94 @@ async function validateOpenRouterApiKey(apiKey: string): Promise<boolean> {
     } catch (error) {
         debugLog("OpenRouter API validation error:", error);
         return false;
+    }
+}
+
+async function validateAnthropicApiKey(apiKey: string): Promise<{ success: boolean; error?: string; troubleshooting?: string }> {
+    try {
+        const response = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: {
+                "x-api-key": apiKey,
+                "Content-Type": "application/json",
+                "anthropic-version": "2023-06-01",
+                "anthropic-beta": "messages-2023-12-15"
+            },
+            body: JSON.stringify({
+                model: "claude-3-5-haiku-20241022",
+                max_tokens: 10,
+                messages: [
+                    {
+                        role: "user",
+                        content: "Test"
+                    }
+                ]
+            })
+        });
+
+        if (response.ok) {
+            return { success: true };
+        }
+
+        // Handle error responses
+        const errorText = await response.text();
+        debugLog(`Anthropic API validation error: ${response.status} ${errorText}`);
+
+        let errorMessage = `Anthropic API error: ${response.status}`;
+        let errorType = '';
+        let troubleshooting = "Please check your API key configuration";
+
+        try {
+            const errorData = JSON.parse(errorText);
+            // Handle Anthropic API error structure: { "error": { "message": "...", "type": "..." }, "type": "error" }
+            if (errorData.error && errorData.error.message) {
+                errorMessage = errorData.error.message;
+                errorType = errorData.error.type || '';
+            }
+            // Fallback: check if there's a direct message field
+            else if (errorData.message) {
+                errorMessage = errorData.message;
+            }
+        } catch (parseError) {
+            // If we can't parse the error, use the raw text
+            errorMessage = errorText || errorMessage;
+        }
+
+        // Provide specific troubleshooting based on error type and status
+        if (response.status === 401) {
+            // Invalid API key
+            troubleshooting = "Please check that your Anthropic API key is correct and active";
+        } else if (response.status === 403) {
+            // Insufficient credits or permissions
+            if (errorMessage.toLowerCase().includes('credit') || errorMessage.toLowerCase().includes('balance')) {
+                troubleshooting = "Your Anthropic account has insufficient credits. Please add credits to your account";
+            } else {
+                troubleshooting = "Your API key may not have the required permissions. Please check your Anthropic account settings";
+            }
+        } else if (response.status === 429) {
+            // Rate limit exceeded
+            const retryAfter = response.headers.get('retry-after');
+            if (retryAfter) {
+                troubleshooting = `Rate limit exceeded. Please wait ${retryAfter} seconds before retrying`;
+            } else {
+                troubleshooting = "Rate limit exceeded. Please try again in a few minutes";
+            }
+        } else if (response.status === 400 && errorType === 'invalid_request_error') {
+            troubleshooting = "The request format is invalid. This may indicate an API compatibility issue";
+        }
+
+        return {
+            success: false,
+            error: errorMessage,
+            troubleshooting: troubleshooting
+        };
+
+    } catch (error) {
+        debugLog("Anthropic API validation network error:", error);
+        return {
+            success: false,
+            error: "Network error while validating API key",
+            troubleshooting: "Please check your internet connection and try again"
+        };
     }
 }

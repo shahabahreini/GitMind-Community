@@ -44,6 +44,10 @@ export class SettingsManager {
                 apiKey: config.get<string>("openrouter.apiKey") || "",
                 model: config.get<string>("openrouter.model") || "google/gemma-3-27b-it:free",
             },
+            anthropic: {
+                apiKey: config.get<string>("anthropic.apiKey") || "",
+                model: config.get<string>("anthropic.model") || "claude-3-5-sonnet-20241022",
+            },
             promptCustomization: {
                 enabled: config.get<boolean>("promptCustomization.enabled") || false,
             },
@@ -145,6 +149,16 @@ export class SettingsManager {
         await config.update(
             "openrouter.model",
             settings.openrouter.model,
+            vscode.ConfigurationTarget.Global
+        );
+        await config.update(
+            "anthropic.apiKey",
+            settings.anthropic.apiKey,
+            vscode.ConfigurationTarget.Global
+        );
+        await config.update(
+            "anthropic.model",
+            settings.anthropic.model,
             vscode.ConfigurationTarget.Global
         );
         await config.update(

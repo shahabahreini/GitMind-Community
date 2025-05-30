@@ -3,7 +3,7 @@
 import * as vscode from "vscode";
 
 // Provider types
-export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter";
+export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic";
 export type CommitStyle = "conventional" | "gitmoji" | "basic";
 
 // Base configurations
@@ -59,6 +59,11 @@ export interface ExtensionConfig {
         apiKey?: string;
         model: string;
     };
+    anthropic: {
+        enabled: boolean;
+        apiKey?: string;
+        model: string;
+    };
     promptCustomization: {
         enabled: boolean;
     };
@@ -84,6 +89,12 @@ export interface CohereApiConfig extends BaseApiConfig {
     type: "cohere";
     apiKey: string;
     model: string;
+}
+
+export interface AnthropicApiConfig extends BaseApiConfig {
+    type: "anthropic";
+    apiKey: string;
+    model: AnthropicModel;
 }
 
 // Commit related types
@@ -131,6 +142,21 @@ export type GeminiModel =
     // Legacy/Preview Models
     | "gemini-2.5-flash-preview-04-17"
     | "gemini-2.5-pro-exp-03-25";
+
+export type AnthropicModel =
+    // Claude 4 Series (Latest)
+    | "claude-opus-4"
+    | "claude-sonnet-4"
+    // Claude 3.7 Series  
+    | "claude-sonnet-3.7"
+    // Claude 3.5 Series
+    | "claude-3-5-sonnet-20241022"
+    | "claude-3-5-sonnet-20240620"
+    | "claude-3-5-haiku-20241022"
+    // Claude 3 Series
+    | "claude-3-opus-20240229"
+    | "claude-3-sonnet-20240229"
+    | "claude-3-haiku-20240307";
 
 
 export interface HuggingFaceApiConfig extends BaseApiConfig {
@@ -206,4 +232,5 @@ export type ApiConfig =
     | CohereApiConfig
     | OpenAIApiConfig
     | TogetherApiConfig
-    | OpenRouterApiConfig;
+    | OpenRouterApiConfig
+    | AnthropicApiConfig;

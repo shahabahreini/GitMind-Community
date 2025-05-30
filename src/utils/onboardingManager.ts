@@ -19,7 +19,8 @@ export class OnboardingManager {
         'Cohere': 'https://dashboard.cohere.com/api-keys',
         'OpenAI': 'https://platform.openai.com/api-keys',
         'Together AI': 'https://api.together.xyz/settings/api-keys',
-        'OpenRouter': 'https://openrouter.ai/keys'
+        'OpenRouter': 'https://openrouter.ai/keys',
+        'Anthropic': 'https://console.anthropic.com/'
     };
 
     private static steps: OnboardingStep[] = [];

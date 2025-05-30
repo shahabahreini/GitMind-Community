@@ -34,6 +34,9 @@ export class StatusBanner {
       case "openrouter":
         modelInfo = this._settings.openrouter.model || "Not selected";
         break;
+      case "anthropic":
+        modelInfo = this._settings.anthropic.model || "claude-3-5-sonnet-20241022";
+        break;
     }
 
     // Get API configuration status
@@ -60,6 +63,9 @@ export class StatusBanner {
       case "openrouter":
         apiConfigured = !!this._settings.openrouter.apiKey;
         break;
+      case "anthropic":
+        apiConfigured = !!this._settings.anthropic.apiKey;
+        break;
     }
 
     // Format provider name for display
@@ -70,7 +76,8 @@ export class StatusBanner {
       mistral: "Mistral",
       cohere: "Cohere",
       together: "Together AI",
-      openrouter: "OpenRouter"
+      openrouter: "OpenRouter",
+      anthropic: "Anthropic"
     }[this._settings.apiProvider] || this._settings.apiProvider;
 
     return `

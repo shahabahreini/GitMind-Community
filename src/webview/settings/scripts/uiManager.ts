@@ -20,6 +20,8 @@ export function getUiManagerScript(): string {
           provider === 'together' ? 'block' : 'none';
         document.getElementById('openrouterSettings').style.display =
           provider === 'openrouter' ? 'block' : 'none';
+        document.getElementById('anthropicSettings').style.display =
+          provider === 'anthropic' ? 'block' : 'none';
       }
       
       // Initialize UI state immediately
@@ -94,6 +96,9 @@ export function getUiManagerScript(): string {
           case "openrouter":
             modelInfo = settings.openrouter.model || "google/gemma-3-27b-it:free";
             break;
+          case "anthropic":
+            modelInfo = settings.anthropic.model || "claude-3-5-sonnet-20241022";
+            break;
         }
         
         // Get API configuration status
@@ -123,6 +128,9 @@ export function getUiManagerScript(): string {
           case "openrouter":
             apiConfigured = !!settings.openrouter.apiKey;
             break;
+          case "anthropic":
+            apiConfigured = !!settings.anthropic.apiKey;
+            break;
         }
         
         // Format provider name for display
@@ -134,7 +142,8 @@ export function getUiManagerScript(): string {
           cohere: "Cohere",
           openai: "OpenAI",
           together: "Together",
-          openrouter: "OpenRouter"
+          openrouter: "OpenRouter",
+          anthropic: "Anthropic"
         }[settings.apiProvider] || settings.apiProvider;
         
         const bannerHTML = \`

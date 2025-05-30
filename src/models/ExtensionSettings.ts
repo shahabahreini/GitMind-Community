@@ -34,6 +34,10 @@ export interface ExtensionSettings {
         apiKey: string;
         model: string;
     };
+    anthropic: {
+        apiKey: string;
+        model: string;
+    };
     promptCustomization?: {
         enabled: boolean;
     };

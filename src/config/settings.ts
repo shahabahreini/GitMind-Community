@@ -5,6 +5,7 @@ import {
     CommitConfig,
     ProviderConfig,
     GeminiModel, // Added this import
+    AnthropicModel, // Added this import
 } from "./types";
 
 export function getConfiguration(): ExtensionConfig {
@@ -65,6 +66,11 @@ export function getConfiguration(): ExtensionConfig {
             enabled: config.get("openrouter.enabled", false),
             apiKey: config.get("openrouter.apiKey"),
             model: config.get("openrouter.model", "google/gemma-3-27b-it:free"),
+        },
+        anthropic: {
+            enabled: config.get("anthropic.enabled", false),
+            apiKey: config.get("anthropic.apiKey"),
+            model: config.get("anthropic.model", "claude-3-5-sonnet-20241022"),
         },
         promptCustomization: {
             enabled: config.get("promptCustomization.enabled", false),
@@ -144,6 +150,13 @@ export function getApiConfig(): ApiConfig {
                 type: "openrouter",
                 apiKey: config.openrouter.apiKey || "",
                 model: config.openrouter.model || "google/gemma-3-27b-it:free",
+            };
+
+        case "anthropic":
+            return {
+                type: "anthropic",
+                apiKey: config.anthropic.apiKey || "",
+                model: (config.anthropic.model || "claude-3-5-sonnet-20241022") as AnthropicModel,
             };
 
         default:

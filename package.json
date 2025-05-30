@@ -1,8 +1,8 @@
 {
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Assistant",
-  "description": "🚀 Generate perfect git commit messages instantly using AI! Support for 8+ free/paid AI providers (Gemini, OpenAI, Claude via OpenRouter, Mistral, HuggingFace, Ollama, Together AI). Smart conventional commits, dynamic model selection, and enhanced UX for effortless Git workflow automation.",
-  "version": "2.1.1",
+  "description": "🚀 Generate perfect git commit messages instantly using AI! Support for 9+ free/paid AI providers (Gemini, OpenAI, Claude, Mistral, HuggingFace, Ollama, Together AI). Smart conventional commits, dynamic model selection, and enhanced UX for effortless Git workflow automation.",
+  "version": "2.2.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -43,7 +43,8 @@
             "cohere",
             "openai",
             "together",
-            "openrouter"
+            "openrouter",
+            "anthropic"
           ],
           "enumDescriptions": [
             "Use Google's Gemini AI for generating commit messages",
@@ -53,7 +54,8 @@
             "Use Cohere AI for generating commit messages",
             "Use OpenAI for generating commit messages",
             "Use Together AI for generating commit messages",
-            "Use OpenRouter for accessing multiple AI models"
+            "Use OpenRouter for accessing multiple AI models",
+            "Use Anthropic Claude for generating commit messages"
           ],
           "default": "gemini",
           "description": "Select which AI provider to use for generating commit messages",
@@ -268,6 +270,38 @@
           "default": "google/gemma-3-27b-it:free",
           "description": "OpenRouter model to use for generating commit messages",
           "markdownDescription": "OpenRouter model to use for generating commit messages. [Learn more](https://openrouter.ai/models)"
+        },
+        "aiCommitAssistant.anthropic.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API key for Anthropic Claude [Learn more](https://console.anthropic.com/)"
+        },
+        "aiCommitAssistant.anthropic.model": {
+          "type": "string",
+          "enum": [
+            "claude-opus-4",
+            "claude-sonnet-4",
+            "claude-sonnet-3.7",
+            "claude-3-5-sonnet-20241022",
+            "claude-3-5-sonnet-20240620",
+            "claude-3-5-haiku-20241022",
+            "claude-3-opus-20240229",
+            "claude-3-sonnet-20240229",
+            "claude-3-haiku-20240307"
+          ],
+          "enumDescriptions": [
+            "Claude Opus 4 - Latest and most capable Claude model",
+            "Claude Sonnet 4 - High-performance Claude 4 model",
+            "Claude Sonnet 3.7 - Advanced Claude 3.7 model",
+            "Claude 3.5 Sonnet (Latest) - Most capable model with enhanced reasoning",
+            "Claude 3.5 Sonnet (June) - High-performance model for complex tasks",
+            "Claude 3.5 Haiku - Fast and efficient for quick responses",
+            "Claude 3 Opus - Most capable Claude 3 model for complex reasoning",
+            "Claude 3 Sonnet - Balanced performance and speed",
+            "Claude 3 Haiku - Fast and cost-effective"
+          ],
+          "default": "claude-opus-4",
+          "description": "Anthropic Claude model to use for generating commit messages"
         }
       }
     },

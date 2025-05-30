@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.2.0] - Unreleased
+
+### Added
+
+- **Anthropic Provider Support**: Industry-leading AI reasoning capabilities
+  - Added [Anthropic](https://anthropic.com/) Claude models for generating commit messages
+  - Support for Claude 3.5 Sonnet, Claude 3.5 Haiku, and Claude 3 series models
+  - Anthropic API validation and settings UI with grouped model selection
+  - Enhanced API implementation supporting Messages API with proper error handling
+
+### Enhanced
+
+- **Updated Provider Selection**: Enhanced UI with Anthropic as a premium option
+- **Enhanced Diagnostics**: Updated to support Anthropic Claude models
+- **Improved Documentation**: Added Anthropic setup instructions and model comparisons
+- **Extended Onboarding**: Include Anthropic in provider selection workflow
+
+### Technical
+
+- Updated package.json to support 9+ AI providers including Anthropic
+- Enhanced type definitions with AnthropicApiConfig interface
+- Implemented comprehensive error handling for Anthropic API responses
+- Added model-specific configurations for optimal Claude model performance
+
 ## [2.1.1] - 2025-05-28
 
 ### Enhanced

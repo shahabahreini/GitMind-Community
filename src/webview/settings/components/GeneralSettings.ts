@@ -42,6 +42,7 @@ export class GeneralSettings {
           <option value="openai" ${this._settings.apiProvider === "openai" ? "selected" : ""}>OpenAI</option>
           <option value="together" ${this._settings.apiProvider === "together" ? "selected" : ""}>Together AI</option>
           <option value="openrouter" ${this._settings.apiProvider === "openrouter" ? "selected" : ""}>OpenRouter</option>
+          <option value="anthropic" ${this._settings.apiProvider === "anthropic" ? "selected" : ""}>Anthropic</option>
         </select>
       </div>
     </div>`;

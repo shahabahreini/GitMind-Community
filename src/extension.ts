@@ -36,8 +36,8 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.workspace.getConfiguration("aiCommitAssistant")
   );
 
-  // Log supported API providers, now including Together AI
-  debugLog("Supported API providers: Gemini, Hugging Face, Ollama, Mistral, Cohere, OpenAI, Together AI, OpenRouter");
+  // Log supported API providers, now including Anthropic
+  debugLog("Supported API providers: Gemini, Hugging Face, Ollama, Mistral, Cohere, OpenAI, Together AI, OpenRouter, Anthropic");
 
   // Note: VS Code SCM API doesn't provide access to existing source controls
   // so we cannot clean up previous providers programmatically

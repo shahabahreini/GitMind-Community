@@ -10,6 +10,7 @@ import {
     OpenAIApiConfig,
     TogetherApiConfig,
     OpenRouterApiConfig,
+    AnthropicApiConfig,
 } from "../../config/types";
 import { callGeminiAPI } from "./gemini";
 import { callHuggingFaceAPI } from "./huggingface";
@@ -29,10 +30,11 @@ import { DiagnosticsWebview } from "../../webview/diagnostics/DiagnosticsWebview
 import { callOpenAIAPI } from "./openai";
 import { callTogetherAPI } from "./together";
 import { callOpenRouterAPI } from "./openrouter";
+import { callAnthropicAPI } from "./anthropic";
 import { RequestManager } from "../../utils/requestManager";
 import { APIErrorHandler } from "../../utils/errorHandler";
 
-type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter";
+type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter" | "Anthropic";
 
 async function handleApiError(
     error: unknown,
@@ -873,6 +875,105 @@ async function generateMessageWithConfig(
             );
         }
 
+        case "anthropic": {
+            const anthropicConfig = config as AnthropicApiConfig;
+            if (!anthropicConfig.apiKey) {
+                const result = await vscode.window.showWarningMessage(
+                    "Anthropic API key is required. Would you like to configure it now?",
+                    "Enter API Key",
+                    "Get API Key",
+                    "Cancel"
+                );
+
+                if (result === "Enter API Key") {
+                    const apiKey = await vscode.window.showInputBox({
+                        title: "Anthropic API Key",
+                        prompt: "Please enter your API key",
+                        password: true,
+                        placeHolder: "Paste your API key here",
+                        ignoreFocusOut: true,
+                        validateInput: (text) =>
+                            text?.trim() ? null : "API key cannot be empty",
+                    });
+
+                    if (apiKey) {
+                        const config =
+                            vscode.workspace.getConfiguration("aiCommitAssistant");
+                        await config.update(
+                            "anthropic.apiKey",
+                            apiKey.trim(),
+                            vscode.ConfigurationTarget.Global
+                        );
+
+                        if (!anthropicConfig.model) {
+                            await vscode.commands.executeCommand(
+                                "ai-commit-assistant.openSettings"
+                            );
+                            return "";
+                        }
+                        return await callAnthropicAPI(
+                            apiKey.trim(),
+                            anthropicConfig.model,
+                            diff,
+                            customContext
+                        );
+                    }
+                } else if (result === "Get API Key") {
+                    await vscode.env.openExternal(
+                        vscode.Uri.parse("https://console.anthropic.com/")
+                    );
+                    const apiKey = await vscode.window.showInputBox({
+                        title: "Anthropic API Key",
+                        prompt: "Please enter your API key after getting it from the website",
+                        password: true,
+                        placeHolder: "Paste your API key here",
+                        ignoreFocusOut: true,
+                        validateInput: (text) =>
+                            text?.trim() ? null : "API key cannot be empty",
+                    });
+
+                    if (apiKey) {
+                        const config =
+                            vscode.workspace.getConfiguration("aiCommitAssistant");
+                        await config.update(
+                            "anthropic.apiKey",
+                            apiKey.trim(),
+                            vscode.ConfigurationTarget.Global
+                        );
+
+                        if (!anthropicConfig.model) {
+                            await vscode.commands.executeCommand(
+                                "ai-commit-assistant.openSettings"
+                            );
+                            return "";
+                        }
+                        return await callAnthropicAPI(
+                            apiKey.trim(),
+                            anthropicConfig.model,
+                            diff,
+                            customContext
+                        );
+                    }
+                }
+                return "";
+            }
+            if (!anthropicConfig.model) {
+                await vscode.window.showErrorMessage(
+                    "Please select a model in the settings."
+                );
+                await vscode.commands.executeCommand(
+                    "ai-commit-assistant.openSettings"
+                );
+                return "";
+            }
+            return await callAnthropicAPI(
+                anthropicConfig.apiKey,
+                anthropicConfig.model,
+                diff,
+                customContext
+            );
+        }
+
         default: {
             const _exhaustiveCheck: never = config;
             throw new Error(`Unsupported API provider: ${(config as any).type}`);
@@ -925,6 +1026,10 @@ async function showDiagnosticsInfo(config: ApiConfig, diff: string) {
             providerName = 'OpenRouter';
             modelName = config.model;
             break;
+        case 'anthropic':
+            providerName = 'Anthropic';
+            modelName = config.model || 'claude-3-5-sonnet-20241022';
+            break;
     }
 
     // Create a well-formatted message with proper structure
@@ -951,7 +1056,62 @@ async function showDiagnosticsInfo(config: ApiConfig, diff: string) {
     }
 }
 
-// Helper function to get the settings path for a provider
+function showModelInfo(config: ApiConfig) {
+    const showModelInfo = workspace.getConfiguration('aiCommitAssistant').get('showModelInfo');
+
+    if (!showModelInfo) {
+        return;
+    }
+
+    let modelName = '';
+    switch (config.type) {
+        case 'gemini':
+            modelName = `Gemini (${config.model || 'gemini-pro'})`;
+            break;
+        case 'huggingface':
+            modelName = `Hugging Face (${config.model})`;
+            break;
+        case 'ollama':
+            modelName = `Ollama (${config.model})`;
+            break;
+        case 'mistral':
+            modelName = `Mistral (${config.model})`;
+            break;
+        case 'cohere':
+            modelName = `Cohere (${config.model})`;
+            break;
+        case 'openai':
+            modelName = `OpenAI (${config.model})`;
+            break;
+        case 'together':
+            modelName = `Together AI (${config.model})`;
+            break;
+        case 'openrouter':
+            modelName = `OpenRouter (${config.model})`;
+            break;
+        case "anthropic":
+            modelName = config.model || 'claude-3-5-sonnet-20241022';
+            break;
+    }
+
+    vscode.window.showInformationMessage(`Using model: ${modelName}`, { modal: false });
+}
+
+function getProviderName(type: string): ApiProvider {
+    const providerMap: Record<string, ApiProvider> = {
+        "gemini": "Gemini",
+        "huggingface": "Hugging Face",
+        "ollama": "Ollama",
+        "mistral": "Mistral",
+        "cohere": "Cohere",
+        "openai": "OpenAI",
+        "together": "Together AI",
+        "openrouter": "OpenRouter",
+        "anthropic": "Anthropic"
+    };
+    return providerMap[type] || "Gemini";
+}
+
 function getProviderSettingPath(provider: string): string {
     const paths: Record<string, string> = {
         Gemini: "gemini.apiKey",
@@ -960,7 +1120,8 @@ function getProviderSettingPath(provider: string): string {
         Cohere: "cohere.apiKey",
         OpenAI: "openai.apiKey",
         "Together AI": "together.apiKey",
-        "OpenRouter": "openrouter.apiKey"
+        "OpenRouter": "openrouter.apiKey",
+        "Anthropic": "anthropic.apiKey"
     };
     return paths[provider] || "";
 }
@@ -1024,7 +1185,8 @@ async function validateAndUpdateConfig(
                 "Cohere": "https://dashboard.cohere.com/api-keys",
                 "OpenAI": "https://platform.openai.com/api-keys",
                 "Together AI": "https://api.together.xyz/settings/api-keys",
-                "OpenRouter": "https://openrouter.ai/keys"
+                "OpenRouter": "https://openrouter.ai/keys",
+                "Anthropic": "https://console.anthropic.com/"
             };
 
             if (provider in providerDocs) {
@@ -1065,56 +1227,4 @@ async function validateAndUpdateConfig(
 
     // If we reach here, API key exists
     return config;
-}
-
-function getProviderName(type: string): ApiProvider {
-    const providerMap: Record<string, ApiProvider> = {
-        "gemini": "Gemini",
-        "huggingface": "Hugging Face",
-        "ollama": "Ollama",
-        "mistral": "Mistral",
-        "cohere": "Cohere",
-        "openai": "OpenAI",
-        "together": "Together AI",
-        "openrouter": "OpenRouter"
-    };
-    return providerMap[type] || "Gemini";
-}
-
-function showModelInfo(config: ApiConfig) {
-    const showModelInfo = workspace.getConfiguration('aiCommitAssistant').get('showModelInfo');
-
-    if (!showModelInfo) {
-        return;
-    }
-
-    let modelName = '';
-    switch (config.type) {
-        case 'gemini':
-            modelName = `Gemini (${config.model || 'gemini-pro'})`;
-            break;
-        case 'huggingface':
-            modelName = `Hugging Face (${config.model})`;
-            break;
-        case 'ollama':
-            modelName = `Ollama (${config.model})`;
-            break;
-        case 'mistral':
-            modelName = `Mistral (${config.model})`;
-            break;
-        case 'cohere':
-            modelName = `Cohere (${config.model})`;
-            break;
-        case 'openai':
-            modelName = `OpenAI (${config.model})`;
-            break;
-        case 'together':
-            modelName = `Together AI (${config.model})`;
-            break;
-        case 'openrouter':
-            modelName = `OpenRouter (${config.model})`;
-            break;
-    }
-
-    vscode.window.showInformationMessage(`Using model: ${modelName}`, { modal: false });
 }

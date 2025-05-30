@@ -30,6 +30,8 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     document.getElementById('togetherModel').value = currentSettings.together?.model || 'meta-llama/Llama-3.3-70B-Instruct-Turbo';
     document.getElementById('openrouterApiKey').value = currentSettings.openrouter?.apiKey || '';
     document.getElementById('openrouterModel').value = currentSettings.openrouter?.model || 'google/gemma-3-27b-it:free';
+    document.getElementById('anthropicApiKey').value = currentSettings.anthropic?.apiKey || '';
+    document.getElementById('anthropicModel').value = currentSettings.anthropic?.model || 'claude-3-5-sonnet-20241022';
     
     ${getUiManagerScript()}
     ${getApiManagerScript()}
@@ -70,6 +72,10 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
         openrouter: {
           apiKey: document.getElementById('openrouterApiKey').value,
           model: document.getElementById('openrouterModel').value
+        },
+        anthropic: {
+          apiKey: document.getElementById('anthropicApiKey').value,
+          model: document.getElementById('anthropicModel').value
         },
         promptCustomization: {
           enabled: document.getElementById('promptCustomizationEnabled').checked
