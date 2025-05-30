@@ -66,6 +66,41 @@ export class SettingsTemplateGenerator {
         ${buttonGroup.render()}
       </div>
       ${getSettingsScript(this._settings, this._nonce)}
+      <script nonce="${this._nonce}">
+            (function() {
+                const vscode = acquireVsCodeApi();
+                
+                // Add event listeners for settings changes
+                document.getElementById('commitVerbose')?.addEventListener('change', (e) => {
+                    const checked = e.target.checked;
+                    vscode.postMessage({
+                        type: 'updateSetting',
+                        key: 'commit.verbose',
+                        value: checked
+                    });
+                });
+
+                document.getElementById('showDiagnostics')?.addEventListener('change', (e) => {
+                    const checked = e.target.checked;
+                    vscode.postMessage({
+                        type: 'updateSetting',
+                        key: 'showDiagnostics',
+                        value: checked
+                    });
+                });
+
+                document.getElementById('promptCustomizationEnabled')?.addEventListener('change', (e) => {
+                    const checked = e.target.checked;
+                    vscode.postMessage({
+                        type: 'updateSetting',
+                        key: 'promptCustomization.enabled',
+                        value: checked
+                    });
+                });
+                
+                // ...existing code...
+            })();
+        </script>
     </body>
     </html>`;
   }

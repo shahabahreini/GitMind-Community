@@ -32,6 +32,15 @@ export class GeneralSettings {
         </div>
       </div>
       <div class="form-group">
+        <div class="checkbox-container">
+          <input type="checkbox" id="showDiagnostics" ${this._settings.showDiagnostics ? "checked" : ""} />
+          <label for="showDiagnostics">Show Diagnostics Before Proceeding</label>
+        </div>
+        <div class="description">
+          When enabled, shows model information and estimated token count before generating commit messages.
+        </div>
+      </div>
+      <div class="form-group">
         <label for="apiProvider">API Provider</label>
         <select id="apiProvider">
           <option value="gemini" ${this._settings.apiProvider === "gemini" ? "selected" : ""}>Gemini</option>

@@ -54,6 +54,7 @@ export class SettingsManager {
             commit: {
                 verbose: config.get<boolean>("commit.verbose") ?? true,
             },
+            showDiagnostics: config.get<boolean>("showDiagnostics") ?? false,
         };
     }
 
@@ -169,6 +170,11 @@ export class SettingsManager {
         await config.update(
             "commit.verbose",
             settings.commit?.verbose ?? true,
+            vscode.ConfigurationTarget.Global
+        );
+        await config.update(
+            "showDiagnostics",
+            settings.showDiagnostics ?? false,
             vscode.ConfigurationTarget.Global
         );
 

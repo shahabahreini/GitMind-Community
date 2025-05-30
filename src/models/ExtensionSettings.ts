@@ -2,6 +2,7 @@
 export interface ExtensionSettings {
     apiProvider: string;
     debug?: boolean;
+    showDiagnostics?: boolean;
     gemini: {
         apiKey: string;
         model: string;
