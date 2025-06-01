@@ -1,5 +1,65 @@
 # Changelog
 
+## [3.0.0] - 2025-05-31
+
+### Added
+
+- **GitHub Copilot Integration**: Seamless VS Code authentication and model access
+
+  - Implemented GitHub Copilot integration via VS Code Language Model API
+  - Support for 14 models across OpenAI, Anthropic, and Google providers (GPT-4o, GPT-4o-mini, GPT-4-turbo, GPT-4, GPT-3.5-turbo)
+  - Zero-configuration setup using VS Code authentication, eliminating the need for API keys
+  - Copilot-specific SVG icon for consistent branding with teal theme
+  - Enhanced UI with Copilot model selection dropdown and status banner
+  - Set default model for Copilot to "gpt-4o" with pre-configured API
+  - Comprehensive error handling with proper error messages and fallbacks
+  - Unit tests and validation systems to ensure integration stability
+
+- **Show Diagnostics Setting**: New boolean setting to display model and token information
+  - Added `showDiagnostics` configuration entry in package.json with default value false
+  - Updated ExtensionSettings interface to include showDiagnostics property
+  - Implemented setting update logic in MessageHandler and SettingsWebviewProvider
+  - Added checkbox and description in settings UI template
+  - Handle setting persistence and form binding in SettingsManager
+
+### Enhanced
+
+- **Modern Settings Interface**: Replaced checkboxes with toggle switches
+
+  - Updated GeneralSettings component to use new toggle-setting component structure
+  - Added new CSS styles for toggle switches with hover, focus, and disabled states
+  - Improved visual appearance and usability of the settings panel
+
+- **Compact Settings Layout**: Improved form design and responsiveness
+
+  - Replaced standard form layout with compact design using flexbox
+  - Enhanced tooltip functionality using custom CSS and JavaScript
+  - Added hover delay to tooltips for better user experience
+  - Modified CSS for compact layout, tooltips, and responsive adjustments
+  - Updated JavaScript to initialize tooltips on DOMContentLoaded
+
+- **Enhanced UI Experience**: Improved branding and visual consistency
+
+  - Enhanced info banner styling with animations and gradient backgrounds
+  - Improved compatibility with VS Code light/dark themes
+  - Updated provider name mapping to include "GitHub Copilot" for display purposes
+  - Enhanced user experience by integrating Copilot seamlessly into existing framework
+
+- **Project Documentation**: Better organization and structure
+  - Moved vsc-extension-quickstart.md from root directory to instructions directory
+  - Renamed multiple documentation files to the instructions directory
+  - Improved project structure and organization while maintaining content
+  - Streamlined navigation and categorization of documentation files
+
+### Technical
+
+- Incremented supported AI provider count from 9+ to 10+ in package description
+- Updated uiManager.ts to handle Copilot model information and API configuration
+- Extended provider name mapping and model selection functionality
+- Enhanced provider architecture to accommodate Copilot integration
+- Updated documentation and README to reflect new provider and features
+- Prepared for production release with version 3.0.0 targeting production readiness
+
 ## [2.2.0] - 2025-05-30
 
 ### Added
