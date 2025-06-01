@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Assistant",
   "description": "🚀 Generate perfect git commit messages instantly using AI! Support for 10+ free/paid AI providers (Gemini, OpenAI, Claude, Mistral, HuggingFace, Ollama, Anthropic,Together AI). Smart conventional commits, advanced diff analysis, standardized prompts, and enhanced UX for effortless Git workflow automation.",
-  "version": "2.3.0",
+  "version": "3.0.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -302,6 +302,25 @@
           ],
           "default": "claude-opus-4",
           "description": "Anthropic Claude model to use for generating commit messages"
+        },
+        "aiCommitAssistant.copilot.model": {
+          "type": "string",
+          "enum": [
+            "gpt-4o",
+            "gpt-4o-mini",
+            "gpt-4-turbo",
+            "gpt-4",
+            "gpt-3.5-turbo"
+          ],
+          "enumDescriptions": [
+            "GPT-4o - Most capable multimodal model (default)",
+            "GPT-4o Mini - Fast and efficient version of GPT-4o",
+            "GPT-4 Turbo - Enhanced version of GPT-4 with extended context",
+            "GPT-4 - Highly capable language model",
+            "GPT-3.5 Turbo - Fast and efficient model"
+          ],
+          "default": "gpt-4o",
+          "description": "GitHub Copilot model to use for generating commit messages"
         }
       }
     },

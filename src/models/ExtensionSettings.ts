@@ -39,6 +39,9 @@ export interface ExtensionSettings {
         apiKey: string;
         model: string;
     };
+    copilot: {
+        model: string;
+    };
     promptCustomization?: {
         enabled: boolean;
     };

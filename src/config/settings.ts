@@ -6,6 +6,7 @@ import {
     ProviderConfig,
     GeminiModel, // Added this import
     AnthropicModel, // Added this import
+    CopilotModel, // Added this import
 } from "./types";
 
 export function getConfiguration(): ExtensionConfig {
@@ -71,6 +72,10 @@ export function getConfiguration(): ExtensionConfig {
             enabled: config.get("anthropic.enabled", false),
             apiKey: config.get("anthropic.apiKey"),
             model: config.get("anthropic.model", "claude-3-5-sonnet-20241022"),
+        },
+        copilot: {
+            enabled: config.get("copilot.enabled", false),
+            model: config.get("copilot.model", "gpt-4o"),
         },
         promptCustomization: {
             enabled: config.get("promptCustomization.enabled", false),
@@ -157,6 +162,12 @@ export function getApiConfig(): ApiConfig {
                 type: "anthropic",
                 apiKey: config.anthropic.apiKey || "",
                 model: (config.anthropic.model || "claude-3-5-sonnet-20241022") as AnthropicModel,
+            };
+
+        case "copilot":
+            return {
+                type: "copilot",
+                model: (config.copilot.model || "gpt-4o") as CopilotModel,
             };
 
         default:

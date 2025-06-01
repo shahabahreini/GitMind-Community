@@ -49,6 +49,7 @@ export class GeneralSettings {
           <option value="together" ${this._settings.apiProvider === "together" ? "selected" : ""}>Together AI</option>
           <option value="openrouter" ${this._settings.apiProvider === "openrouter" ? "selected" : ""}>OpenRouter</option>
           <option value="anthropic" ${this._settings.apiProvider === "anthropic" ? "selected" : ""}>Anthropic</option>
+          <option value="copilot" ${this._settings.apiProvider === "copilot" ? "selected" : ""}>GitHub Copilot</option>
         </select>
       </div>
     </div>`;

@@ -33,6 +33,10 @@ export function getApiManagerScript(): string {
           apiKey: document.getElementById('cohereApiKey').value,
           model: document.getElementById('cohereModel').value
         };
+      } else if (provider === 'copilot') {
+        apiSettings = {
+          model: document.getElementById('copilotModel').value
+        };
       }
       
       // Validate required fields before sending
@@ -50,6 +54,8 @@ export function getApiManagerScript(): string {
         missingFields.push('Mistral API Key');
       } else if (provider === 'cohere' && !apiSettings.apiKey) {
         missingFields.push('Cohere API Key');
+      } else if (provider === 'copilot' && !apiSettings.model) {
+        missingFields.push('Copilot Model');
       }
       
       if (missingFields.length > 0) {
@@ -122,6 +128,9 @@ export function getApiManagerScript(): string {
       } else if (provider === 'cohere') {
         apiSettings.apiKey = document.getElementById('cohereApiKey').value;
         if (!apiSettings.apiKey) missingFields.push('Cohere API Key');
+      } else if (provider === 'copilot') {
+        // Copilot doesn't require API key validation in the UI
+        // The validation happens through VS Code's built-in authentication
       }
       
       if (missingFields.length > 0) {
@@ -178,7 +187,8 @@ export function getApiManagerScript(): string {
         'huggingface': 'Hugging Face',
         'ollama': 'Ollama',
         'mistral': 'Mistral',
-        'cohere': 'Cohere'
+        'cohere': 'Cohere',
+        'copilot': 'GitHub Copilot'
       };
       
       return displayNames[provider] || provider;

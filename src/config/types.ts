@@ -3,7 +3,7 @@
 import * as vscode from "vscode";
 
 // Provider types
-export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic";
+export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic" | "copilot";
 export type CommitStyle = "conventional" | "gitmoji" | "basic";
 
 // Base configurations
@@ -64,6 +64,10 @@ export interface ExtensionConfig {
         apiKey?: string;
         model: string;
     };
+    copilot: {
+        enabled: boolean;
+        model: string;
+    };
     promptCustomization: {
         enabled: boolean;
     };
@@ -95,6 +99,16 @@ export interface AnthropicApiConfig extends BaseApiConfig {
     type: "anthropic";
     apiKey: string;
     model: AnthropicModel;
+}
+
+export interface CopilotApiConfig extends BaseApiConfig {
+    type: "copilot";
+    model: CopilotModel;
+}
+
+export interface CopilotApiConfig extends BaseApiConfig {
+    type: "copilot";
+    model: CopilotModel;
 }
 
 // Commit related types
@@ -157,6 +171,15 @@ export type AnthropicModel =
     | "claude-3-opus-20240229"
     | "claude-3-sonnet-20240229"
     | "claude-3-haiku-20240307";
+
+export type CopilotModel =
+    // GPT-4 Series (GitHub Copilot)
+    | "gpt-4o"
+    | "gpt-4o-mini"
+    | "gpt-4"
+    | "gpt-4-turbo"
+    // GPT-3.5 Series
+    | "gpt-3.5-turbo";
 
 
 export interface HuggingFaceApiConfig extends BaseApiConfig {
@@ -233,4 +256,5 @@ export type ApiConfig =
     | OpenAIApiConfig
     | TogetherApiConfig
     | OpenRouterApiConfig
-    | AnthropicApiConfig;
+    | AnthropicApiConfig
+    | CopilotApiConfig;

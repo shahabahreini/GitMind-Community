@@ -22,6 +22,8 @@ export function getUiManagerScript(): string {
           provider === 'openrouter' ? 'block' : 'none';
         document.getElementById('anthropicSettings').style.display =
           provider === 'anthropic' ? 'block' : 'none';
+        document.getElementById('copilotSettings').style.display =
+          provider === 'copilot' ? 'block' : 'none';
       }
       
       // Initialize UI state immediately

@@ -48,6 +48,9 @@ export class SettingsManager {
                 apiKey: config.get<string>("anthropic.apiKey") || "",
                 model: config.get<string>("anthropic.model") || "claude-3-5-sonnet-20241022",
             },
+            copilot: {
+                model: config.get<string>("copilot.model") || "gpt-4o",
+            },
             promptCustomization: {
                 enabled: config.get<boolean>("promptCustomization.enabled") || false,
             },
@@ -160,6 +163,11 @@ export class SettingsManager {
         await config.update(
             "anthropic.model",
             settings.anthropic.model,
+            vscode.ConfigurationTarget.Global
+        );
+        await config.update(
+            "copilot.model",
+            settings.copilot.model,
             vscode.ConfigurationTarget.Global
         );
         await config.update(

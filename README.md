@@ -16,7 +16,7 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 
 ## Key Features
 
-**Multi-Provider AI Support**: Access 9 different AI providers with unified configuration and intelligent fallback handling.
+**Multi-Provider AI Support**: Access 10 different AI providers with unified configuration and intelligent fallback handling.
 
 **Advanced Git Integration**: Smart diff analysis with automatic staging detection, binary file handling, and comprehensive repository state management.
 
@@ -38,55 +38,60 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 
 ## AI Provider Comparison
 
-| Provider          | Free Tier | Paid Plans | Local Deployment | Dynamic Models | Rate Limiting |
-| ----------------- | --------- | ---------- | ---------------- | -------------- | ------------- |
-| **Google Gemini** | ✓         | ✓          | ✗                | ✗              | Basic         |
-| **Mistral AI**    | ✓         | ✓          | ✗                | ✓              | Advanced      |
-| **Hugging Face**  | ✓         | ✓          | ✗                | ✓              | Basic         |
-| **Ollama**        | ✓         | ✗          | ✓                | ✓              | N/A           |
-| **Cohere**        | ✓         | ✓          | ✗                | ✗              | Basic         |
-| **OpenAI**        | ✗         | ✓          | ✗                | ✗              | Basic         |
-| **Together AI**   | ✓         | ✓          | ✗                | ✓              | Basic         |
-| **OpenRouter**    | ✓         | ✓          | ✗                | ✓              | Basic         |
-| **Anthropic**     | ✗         | ✓          | ✗                | ✗              | Advanced      |
+| Provider           | Free Tier | Paid Plans | Local Deployment | Dynamic Models | Rate Limiting |
+| ------------------ | --------- | ---------- | ---------------- | -------------- | ------------- |
+| **Google Gemini**  | ✓         | ✓          | ✗                | ✗              | Basic         |
+| **GitHub Copilot** | ✗         | ✓          | ✗                | ✗              | VS Code       |
+| **Mistral AI**     | ✓         | ✓          | ✗                | ✓              | Advanced      |
+| **Hugging Face**   | ✓         | ✓          | ✗                | ✓              | Basic         |
+| **Ollama**         | ✓         | ✗          | ✓                | ✓              | N/A           |
+| **Cohere**         | ✓         | ✓          | ✗                | ✗              | Basic         |
+| **OpenAI**         | ✗         | ✓          | ✗                | ✗              | Basic         |
+| **Together AI**    | ✓         | ✓          | ✗                | ✓              | Basic         |
+| **OpenRouter**     | ✓         | ✓          | ✗                | ✓              | Basic         |
+| **Anthropic**      | ✗         | ✓          | ✗                | ✗              | Advanced      |
 
 ## Model Specifications & Capabilities
 
-| Provider          | Model                                   | Context Window | Rate Limits      | Strengths                               | Cost Tier |
-| ----------------- | --------------------------------------- | -------------- | ---------------- | --------------------------------------- | --------- |
-| **Google Gemini** | gemini-2.5-pro                          | 2M tokens      | 15 RPM (free)    | Latest reasoning, thinking model        | Free/Paid |
-|                   | gemini-2.5-flash                        | 2M tokens      | 15 RPM (free)    | Efficient thinking, fast inference      | Free/Paid |
-|                   | gemini-2.0-flash                        | 1M tokens      | 15 RPM (free)    | Multimodal, comprehensive               | Free/Paid |
-|                   | gemini-1.5-pro                          | 2M tokens      | 2 RPM (free)     | Comprehensive capabilities              | Free/Paid |
-| **Mistral AI**    | mistral-large-latest                    | 128k tokens    | 1 RPM (free)     | Superior reasoning, multilingual        | Free/Paid |
-|                   | mistral-medium                          | 32k tokens     | 5 RPM (free)     | Balanced performance/cost               | Free/Paid |
-|                   | mistral-small                           | 32k tokens     | 10 RPM (free)    | Lightweight, fast                       | Free/Paid |
-| **Hugging Face**  | mistralai/Mistral-7B-Instruct-v0.3      | 32k tokens     | Varies by model  | Open source, customizable               | Free/Paid |
-|                   | meta-llama/Llama-3.3-70B-Instruct       | 128k tokens    | Limited (free)   | Meta's latest, instruction-tuned        | Free/Paid |
-|                   | microsoft/DialoGPT-medium               | 1k tokens      | Generous (free)  | Conversational, lightweight             | Free      |
-|                   | google/flan-t5-xxl                      | 512 tokens     | Generous (free)  | Instruction following                   | Free      |
-| **Ollama**        | phi4                                    | 128k tokens    | Hardware limited | Microsoft's reasoning model             | Free      |
-|                   | llama3.3:70b                            | 128k tokens    | Hardware limited | Meta's flagship, high quality           | Free      |
-|                   | codellama:34b                           | 16k tokens     | Hardware limited | Code-specialized, programming           | Free      |
-|                   | mistral:7b                              | 32k tokens     | Hardware limited | Efficient, multilingual                 | Free      |
-| **Cohere**        | command-r                               | 128k tokens    | 20 RPM (free)    | RAG-optimized, retrieval                | Free/Paid |
-|                   | command                                 | 4k tokens      | 5 RPM (free)     | General instruction following           | Free/Paid |
-|                   | command-light                           | 4k tokens      | 100 RPM (free)   | Fast, lightweight                       | Free/Paid |
-| **OpenAI**        | gpt-4.1                                 | 128k tokens    | 20 RPM           | Latest model with enhanced capabilities | Paid      |
-|                   | gpt-4o                                  | 128k tokens    | 20 RPM           | Multimodal, latest capabilities         | Paid      |
-|                   | o3                                      | 128k tokens    | 10 RPM           | Advanced reasoning model                | Paid      |
-|                   | gpt-4-turbo                             | 128k tokens    | 40 RPM           | High performance, cost-effective        | Paid      |
-|                   | gpt-3.5-turbo                           | 16k tokens     | 60 RPM           | Fast, economical                        | Paid      |
-| **Together AI**   | meta-llama/Llama-3.3-70B-Instruct-Turbo | 128k tokens    | 60 RPM (free)    | Optimized inference, high quality       | Free/Paid |
-|                   | mistralai/Mixtral-8x7B-Instruct-v0.1    | 32k tokens     | 60 RPM (free)    | Mixture of experts, efficient           | Free/Paid |
-|                   | microsoft/DialoGPT-large                | 1k tokens      | 200 RPM (free)   | Conversational AI                       | Free      |
-| **OpenRouter**    | google/gemma-2-27b-it                   | 8k tokens      | Varies           | Google's open model                     | Free/Paid |
-|                   | anthropic/claude-3-haiku                | 200k tokens    | Rate limited     | Fast, efficient reasoning               | Paid      |
-|                   | openai/gpt-4-turbo                      | 128k tokens    | Provider limits  | Access to premium models                | Paid      |
-| **Anthropic**     | claude-3-5-sonnet-20241022              | 200k tokens    | 50 RPM           | Latest reasoning, enhanced capabilities | Paid      |
-|                   | claude-3-5-haiku-20241022               | 200k tokens    | 100 RPM          | Fast, efficient processing              | Paid      |
-|                   | claude-3-opus-20240229                  | 200k tokens    | 20 RPM           | Most capable reasoning model            | Paid      |
-|                   | claude-3-sonnet-20240229                | 200k tokens    | 50 RPM           | Balanced performance                    | Paid      |
+| Provider           | Model                                   | Context Window | Rate Limits      | Strengths                                | Cost Tier    |
+| ------------------ | --------------------------------------- | -------------- | ---------------- | ---------------------------------------- | ------------ |
+| **Google Gemini**  | gemini-2.5-pro                          | 2M tokens      | 15 RPM (free)    | Latest reasoning, thinking model         | Free/Paid    |
+|                    | gemini-2.5-flash                        | 2M tokens      | 15 RPM (free)    | Efficient thinking, fast inference       | Free/Paid    |
+|                    | gemini-2.0-flash                        | 1M tokens      | 15 RPM (free)    | Multimodal, comprehensive                | Free/Paid    |
+|                    | gemini-1.5-pro                          | 2M tokens      | 2 RPM (free)     | Comprehensive capabilities               | Free/Paid    |
+| **GitHub Copilot** | gpt-4o                                  | 128k tokens    | VS Code managed  | Seamless VS Code integration, no API key | Subscription |
+|                    | gpt-4o-mini                             | 128k tokens    | VS Code managed  | Fast, efficient, cost-effective          | Subscription |
+|                    | gpt-4-turbo                             | 128k tokens    | VS Code managed  | High performance, balanced capabilities  | Subscription |
+|                    | gpt-3.5-turbo                           | 16k tokens     | VS Code managed  | Fast, economical                         | Subscription |
+| **Mistral AI**     | mistral-large-latest                    | 128k tokens    | 1 RPM (free)     | Superior reasoning, multilingual         | Free/Paid    |
+|                    | mistral-medium                          | 32k tokens     | 5 RPM (free)     | Balanced performance/cost                | Free/Paid    |
+|                    | mistral-small                           | 32k tokens     | 10 RPM (free)    | Lightweight, fast                        | Free/Paid    |
+| **Hugging Face**   | mistralai/Mistral-7B-Instruct-v0.3      | 32k tokens     | Varies by model  | Open source, customizable                | Free/Paid    |
+|                    | meta-llama/Llama-3.3-70B-Instruct       | 128k tokens    | Limited (free)   | Meta's latest, instruction-tuned         | Free/Paid    |
+|                    | microsoft/DialoGPT-medium               | 1k tokens      | Generous (free)  | Conversational, lightweight              | Free         |
+|                    | google/flan-t5-xxl                      | 512 tokens     | Generous (free)  | Instruction following                    | Free         |
+| **Ollama**         | phi4                                    | 128k tokens    | Hardware limited | Microsoft's reasoning model              | Free         |
+|                    | llama3.3:70b                            | 128k tokens    | Hardware limited | Meta's flagship, high quality            | Free         |
+|                    | codellama:34b                           | 16k tokens     | Hardware limited | Code-specialized, programming            | Free         |
+|                    | mistral:7b                              | 32k tokens     | Hardware limited | Efficient, multilingual                  | Free         |
+| **Cohere**         | command-r                               | 128k tokens    | 20 RPM (free)    | RAG-optimized, retrieval                 | Free/Paid    |
+|                    | command                                 | 4k tokens      | 5 RPM (free)     | General instruction following            | Free/Paid    |
+|                    | command-light                           | 4k tokens      | 100 RPM (free)   | Fast, lightweight                        | Free/Paid    |
+| **OpenAI**         | gpt-4.1                                 | 128k tokens    | 20 RPM           | Latest model with enhanced capabilities  | Paid         |
+|                    | gpt-4o                                  | 128k tokens    | 20 RPM           | Multimodal, latest capabilities          | Paid         |
+|                    | o3                                      | 128k tokens    | 10 RPM           | Advanced reasoning model                 | Paid         |
+|                    | gpt-4-turbo                             | 128k tokens    | 40 RPM           | High performance, cost-effective         | Paid         |
+|                    | gpt-3.5-turbo                           | 16k tokens     | 60 RPM           | Fast, economical                         | Paid         |
+| **Together AI**    | meta-llama/Llama-3.3-70B-Instruct-Turbo | 128k tokens    | 60 RPM (free)    | Optimized inference, high quality        | Free/Paid    |
+|                    | mistralai/Mixtral-8x7B-Instruct-v0.1    | 32k tokens     | 60 RPM (free)    | Mixture of experts, efficient            | Free/Paid    |
+|                    | microsoft/DialoGPT-large                | 1k tokens      | 200 RPM (free)   | Conversational AI                        | Free         |
+| **OpenRouter**     | google/gemma-2-27b-it                   | 8k tokens      | Varies           | Google's open model                      | Free/Paid    |
+|                    | anthropic/claude-3-haiku                | 200k tokens    | Rate limited     | Fast, efficient reasoning                | Paid         |
+|                    | openai/gpt-4-turbo                      | 128k tokens    | Provider limits  | Access to premium models                 | Paid         |
+| **Anthropic**      | claude-3-5-sonnet-20241022              | 200k tokens    | 50 RPM           | Latest reasoning, enhanced capabilities  | Paid         |
+|                    | claude-3-5-haiku-20241022               | 200k tokens    | 100 RPM          | Fast, efficient processing               | Paid         |
+|                    | claude-3-opus-20240229                  | 200k tokens    | 20 RPM           | Most capable reasoning model             | Paid         |
+|                    | claude-3-sonnet-20240229                | 200k tokens    | 50 RPM           | Balanced performance                     | Paid         |
 
 ## Technical Capabilities
 
@@ -103,7 +108,7 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 - **Scope Detection**: Automatic identification of affected modules and components
 - **Breaking Change Recognition**: Detects API changes and breaking modifications
 - **Verbosity Control**: Toggle between detailed descriptions and concise summaries
-- **Standardized Prompts**: Consistent prompt templates across all 9 AI providers
+- **Standardized Prompts**: Consistent prompt templates across all 10 AI providers
 
 ### Advanced Configuration
 

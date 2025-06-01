@@ -38,6 +38,9 @@ export class StatusBanner {
       case "anthropic":
         modelInfo = this._settings.anthropic.model || "claude-3-5-sonnet-20241022";
         break;
+      case "copilot":
+        modelInfo = this._settings.copilot?.model || "gpt-4o";
+        break;
     }
 
     // Get API configuration status
@@ -67,6 +70,9 @@ export class StatusBanner {
       case "anthropic":
         apiConfigured = !!this._settings.anthropic.apiKey;
         break;
+      case "copilot":
+        apiConfigured = true; // Copilot uses VS Code authentication
+        break;
     }
 
     // Format provider name for display
@@ -78,7 +84,8 @@ export class StatusBanner {
       cohere: "Cohere",
       together: "Together AI",
       openrouter: "OpenRouter",
-      anthropic: "Anthropic"
+      anthropic: "Anthropic",
+      copilot: "GitHub Copilot"
     }[this._settings.apiProvider] || this._settings.apiProvider;
 
     return `

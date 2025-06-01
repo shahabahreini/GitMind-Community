@@ -11,6 +11,7 @@ import {
     TogetherApiConfig,
     OpenRouterApiConfig,
     AnthropicApiConfig,
+    CopilotApiConfig,
 } from "../../config/types";
 import { callGeminiAPI } from "./gemini";
 import { callHuggingFaceAPI } from "./huggingface";
@@ -31,10 +32,11 @@ import { callOpenAIAPI } from "./openai";
 import { callTogetherAPI } from "./together";
 import { callOpenRouterAPI } from "./openrouter";
 import { callAnthropicAPI } from "./anthropic";
+import { callCopilotAPI } from "./copilot";
 import { RequestManager } from "../../utils/requestManager";
 import { APIErrorHandler } from "../../utils/errorHandler";
 
-type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter" | "Anthropic";
+type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter" | "Anthropic" | "GitHub Copilot";
 
 async function handleApiError(
     error: unknown,
@@ -974,6 +976,24 @@ async function generateMessageWithConfig(
             );
         }
 
+        case "copilot": {
+            const copilotConfig = config as CopilotApiConfig;
+            if (!copilotConfig.model) {
+                await vscode.window.showErrorMessage(
+                    "Please select a GitHub Copilot model in the settings."
+                );
+                await vscode.commands.executeCommand(
+                    "ai-commit-assistant.openSettings"
+                );
+                return "";
+            }
+            return await callCopilotAPI(
+                copilotConfig.model,
+                diff,
+                customContext
+            );
+        }
+
         default: {
             const _exhaustiveCheck: never = config;
             throw new Error(`Unsupported API provider: ${(config as any).type}`);
@@ -1029,6 +1049,10 @@ async function showDiagnosticsInfo(config: ApiConfig, diff: string) {
         case 'anthropic':
             providerName = 'Anthropic';
             modelName = config.model || 'claude-3-5-sonnet-20241022';
+            break;
+        case 'copilot':
+            providerName = 'GitHub Copilot';
+            modelName = config.model || 'gpt-4o';
             break;
     }
 
@@ -1092,6 +1116,9 @@ function showModelInfo(config: ApiConfig) {
         case "anthropic":
             modelName = config.model || 'claude-3-5-sonnet-20241022';
             break;
+        case 'copilot':
+            modelName = `GitHub Copilot (${config.model || 'gpt-4o'})`;
+            break;
     }
 
     vscode.window.showInformationMessage(`Using model: ${modelName}`, { modal: false });
@@ -1107,7 +1134,8 @@ function getProviderName(type: string): ApiProvider {
         "openai": "OpenAI",
         "together": "Together AI",
         "openrouter": "OpenRouter",
-        "anthropic": "Anthropic"
+        "anthropic": "Anthropic",
+        "copilot": "GitHub Copilot"
     };
     return providerMap[type] || "Gemini";
 }
@@ -1131,8 +1159,8 @@ async function validateAndUpdateConfig(
 ): Promise<ApiConfig | null> {
     debugLog("Validating API configuration for provider:", config.type);
 
-    // Skip validation for Ollama as it doesn't require an API key
-    if (config.type === "ollama") {
+    // Skip validation for Ollama and Copilot as they don't require an API key
+    if (config.type === "ollama" || config.type === "copilot") {
         return config;
     }
 

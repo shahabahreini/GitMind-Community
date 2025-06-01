@@ -33,6 +33,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     document.getElementById('openrouterModel').value = currentSettings.openrouter?.model || 'google/gemma-3-27b-it:free';
     document.getElementById('anthropicApiKey').value = currentSettings.anthropic?.apiKey || '';
     document.getElementById('anthropicModel').value = currentSettings.anthropic?.model || 'claude-3-5-sonnet-20241022';
+    document.getElementById('copilotModel').value = currentSettings.copilot?.model || 'gpt-4o';
     
     // Enhanced tooltip functionality for compact toggles
     function initializeTooltips() {
@@ -110,6 +111,9 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
         anthropic: {
           apiKey: document.getElementById('anthropicApiKey').value,
           model: document.getElementById('anthropicModel').value
+        },
+        copilot: {
+          model: document.getElementById('copilotModel').value
         },
         promptCustomization: {
           enabled: document.getElementById('promptCustomizationEnabled').checked
@@ -600,6 +604,12 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           updateStatusBanner(currentSettings);
           break;
       }
+    });
+
+    // Handle Copilot model changes
+    document.getElementById('copilotModel').addEventListener('change', function() {
+      // Update settings immediately when model changes
+      saveSettings();
     });
 
     // Handle API provider change

@@ -4,6 +4,7 @@ import { validateGeminiAPIKey } from "./gemini";
 import { getApiConfig } from "../../config/settings";
 import { ApiConfig, MistralRateLimit, ApiProvider } from "../../config/types";
 import { RequestManager } from "../../utils/requestManager";
+import { isCopilotAvailable, validateCopilotAccess } from "./copilot";
 
 interface ApiCheckResult {
     success: boolean;
@@ -195,6 +196,25 @@ export async function checkApiSetup(): Promise<ApiCheckResult> {
                     }
                 }
                 break;
+
+            case "copilot":
+                const isCopilotReady = await isCopilotAvailable();
+                if (isCopilotReady) {
+                    const accessResult = await validateCopilotAccess();
+                    result.success = accessResult.success;
+                    if (accessResult.success) {
+                        result.model = config.model || "gpt-4o";
+                        result.responseTime = 400; // Placeholder value for VS Code API
+                        result.details = "GitHub Copilot is available and authenticated";
+                    } else {
+                        result.error = accessResult.error || "Copilot access validation failed";
+                        result.troubleshooting = "Please ensure you're signed in to GitHub Copilot and have an active subscription";
+                    }
+                } else {
+                    result.error = "GitHub Copilot not available";
+                    result.troubleshooting = "Please install and authenticate GitHub Copilot extension";
+                }
+                break;
         }
 
         return result;
@@ -318,6 +338,11 @@ export async function checkRateLimits(): Promise<RateLimitsCheckResult> {
                     queryCost: 1
                 };
                 result.notes = "Rate limits depend on your account tier and model usage";
+                break;
+
+            case "copilot":
+                result.success = true;
+                result.notes = "GitHub Copilot uses VS Code's built-in rate limiting and does not expose specific rate limit information";
                 break;
 
             default:
