@@ -1,6 +1,6 @@
 # GitMind: AI Commit Assistant for VS Code
 
-Professional AI-powered commit message generation for Visual Studio Code. Leverage multiple AI providers to create consistent, conventional commit messages that improve code history quality and team collaboration.
+Professional AI-powered commit message generation for Visual Studio Code. Leverage 10 different AI providers to create consistent, conventional commit messages that improve code history quality and team collaboration.
 
 <video width="100%" controls>
   <source src="https://shahabahreini.com/wp-content/uploads/GitMind-Introduction.mp4" type="video/mp4"> <a href="https://shahabahreini.com/wp-content/uploads/GitMind-Introduction.mp4">View the demo video</a>
@@ -38,18 +38,26 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 
 ## AI Provider Comparison
 
-| Provider           | Free Tier | Paid Plans | Local Deployment | Dynamic Models | Rate Limiting |
-| ------------------ | --------- | ---------- | ---------------- | -------------- | ------------- |
-| **Google Gemini**  | ✓         | ✓          | ✗                | ✗              | Basic         |
-| **GitHub Copilot** | ✗         | ✓          | ✗                | ✗              | VS Code       |
-| **Mistral AI**     | ✓         | ✓          | ✗                | ✓              | Advanced      |
-| **Hugging Face**   | ✓         | ✓          | ✗                | ✓              | Basic         |
-| **Ollama**         | ✓         | ✗          | ✓                | ✓              | N/A           |
-| **Cohere**         | ✓         | ✓          | ✗                | ✗              | Basic         |
-| **OpenAI**         | ✗         | ✓          | ✗                | ✗              | Basic         |
-| **Together AI**    | ✓         | ✓          | ✗                | ✓              | Basic         |
-| **OpenRouter**     | ✓         | ✓          | ✗                | ✓              | Basic         |
-| **Anthropic**      | ✗         | ✓          | ✗                | ✗              | Advanced      |
+| Provider           | Free Tier | Paid Plans | Local Deployment | Dynamic Models | Rate Limiting | Setup Time |
+| ------------------ | --------- | ---------- | ---------------- | -------------- | ------------- | ---------- |
+| **GitHub Copilot** | ✗         | ✓          | ✗                | ✗              | VS Code       | **~5 sec** |
+| **Google Gemini**  | ✓         | ✓          | ✗                | ✗              | Basic         | ~2 min     |
+| **Mistral AI**     | ✓         | ✓          | ✗                | ✓              | Advanced      | ~2 min     |
+| **Hugging Face**   | ✓         | ✓          | ✗                | ✓              | Basic         | ~2 min     |
+| **Ollama**         | ✓         | ✗          | ✓                | ✓              | N/A           | ~5 min     |
+| **Cohere**         | ✓         | ✓          | ✗                | ✗              | Basic         | ~2 min     |
+| **OpenAI**         | ✗         | ✓          | ✗                | ✗              | Basic         | ~2 min     |
+| **Together AI**    | ✓         | ✓          | ✗                | ✓              | Basic         | ~2 min     |
+| **OpenRouter**     | ✓         | ✓          | ✗                | ✓              | Basic         | ~2 min     |
+| **Anthropic**      | ✗         | ✓          | ✗                | ✗              | Basic         | ~2 min     |
+
+### 🌟 Recommended Providers
+
+**🚀 For Zero Setup**: GitHub Copilot - requires only your existing VS Code Copilot subscription  
+**💰 For Free Usage**: Google Gemini, Mistral AI, or Hugging Face  
+**🏠 For Local Privacy**: Ollama with local models  
+**⚡ For Performance**: OpenAI GPT-4 or Anthropic Claude
+| **Anthropic** | ✗ | ✓ | ✗ | ✗ | Advanced |
 
 ## Model Specifications & Capabilities
 

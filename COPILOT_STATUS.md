@@ -9,7 +9,7 @@ The GitHub Copilot integration for the GitMind VS Code extension has been **succ
 ### Core Features Implemented:
 
 1. **Complete API Integration** - Full GitHub Copilot API support via VS Code Language Model API
-2. **5 GPT Models Supported** - GPT-4o, GPT-4o-mini, GPT-4-turbo, GPT-4, GPT-3.5-turbo
+2. **14 Multi-Provider Models Supported** - OpenAI (7), Anthropic (5), Google (2)
 3. **No API Key Required** - Seamless VS Code authentication integration
 4. **Full UI Integration** - Settings panel, status banner, provider icons
 5. **Comprehensive Error Handling** - Proper error messages and fallbacks
@@ -77,14 +77,14 @@ The GitHub Copilot integration for the GitMind VS Code extension has been **succ
 
 ## 📊 Feature Comparison
 
-| Feature                  | Before             | After                       |
-| ------------------------ | ------------------ | --------------------------- |
-| **Providers**            | 9                  | **10** (+GitHub Copilot)    |
-| **API Key Management**   | Required for all   | **Copilot: None required**  |
-| **Authentication**       | Manual setup       | **VS Code integrated**      |
-| **Model Selection**      | Fixed per provider | **5 GPT models available**  |
-| **Enterprise Ready**     | Limited            | **Full enterprise support** |
-| **Developer Experience** | Good               | **Exceptional**             |
+| Feature                  | Before             | After                            |
+| ------------------------ | ------------------ | -------------------------------- |
+| **Providers**            | 9                  | **10** (+GitHub Copilot)         |
+| **API Key Management**   | Required for all   | **Copilot: None required**       |
+| **Authentication**       | Manual setup       | **VS Code integrated**           |
+| **Model Selection**      | Fixed per provider | **14 models across 3 providers** |
+| **Enterprise Ready**     | Limited            | **Full enterprise support**      |
+| **Developer Experience** | Good               | **Exceptional**                  |
 
 ## 🚀 Benefits for Users
 

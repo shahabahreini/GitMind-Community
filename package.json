@@ -1,7 +1,7 @@
 {
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Assistant",
-  "description": "🚀 Generate perfect git commit messages instantly using AI! Support for 10+ free/paid AI providers (Gemini, OpenAI, Claude, Mistral, HuggingFace, Ollama, Anthropic,Together AI). Smart conventional commits, advanced diff analysis, standardized prompts, and enhanced UX for effortless Git workflow automation.",
+  "description": "🚀 Generate perfect git commit messages instantly using AI! Support for 10 free/paid AI providers including GitHub Copilot (Gemini, OpenAI, Claude, Mistral, HuggingFace, Ollama, Anthropic, Together AI). Smart conventional commits, advanced diff analysis, standardized prompts, and enhanced UX for effortless Git workflow automation.",
   "version": "3.0.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
@@ -44,7 +44,8 @@
             "openai",
             "together",
             "openrouter",
-            "anthropic"
+            "anthropic",
+            "copilot"
           ],
           "enumDescriptions": [
             "Use Google's Gemini AI for generating commit messages",
@@ -55,7 +56,8 @@
             "Use OpenAI for generating commit messages",
             "Use Together AI for generating commit messages",
             "Use OpenRouter for accessing multiple AI models",
-            "Use Anthropic Claude for generating commit messages"
+            "Use Anthropic Claude for generating commit messages",
+            "Use GitHub Copilot for generating commit messages (no API key required)"
           ],
           "default": "gemini",
           "description": "Select which AI provider to use for generating commit messages",
@@ -307,17 +309,35 @@
           "type": "string",
           "enum": [
             "gpt-4o",
-            "gpt-4o-mini",
-            "gpt-4-turbo",
-            "gpt-4",
-            "gpt-3.5-turbo"
+            "gpt-4.1",
+            "gpt-4.5-preview",
+            "claude-3.5-sonnet",
+            "claude-3.7-sonnet",
+            "claude-3.7-sonnet-thinking",
+            "claude-sonnet-4",
+            "claude-opus-4",
+            "gemini-2.0-flash",
+            "gemini-2.5-pro-preview",
+            "o1-preview",
+            "o3",
+            "o3-mini",
+            "o4-mini"
           ],
           "enumDescriptions": [
-            "GPT-4o - Most capable multimodal model (default)",
-            "GPT-4o Mini - Fast and efficient version of GPT-4o",
-            "GPT-4 Turbo - Enhanced version of GPT-4 with extended context",
-            "GPT-4 - Highly capable language model",
-            "GPT-3.5 Turbo - Fast and efficient model"
+            "GPT-4o - General purpose OpenAI model",
+            "GPT-4.1 - Latest general purpose OpenAI model",
+            "GPT-4.5 Preview - Preview/Pro+ OpenAI model",
+            "Claude 3.5 Sonnet - General purpose Anthropic model",
+            "Claude 3.7 Sonnet - General purpose Anthropic model",
+            "Claude 3.7 Sonnet Thinking - General purpose Anthropic model with reasoning",
+            "Claude Sonnet 4 - General purpose Anthropic model",
+            "Claude Opus 4 - General purpose Anthropic model",
+            "Gemini 2.0 Flash - General purpose Google model",
+            "Gemini 2.5 Pro Preview - Preview Google model",
+            "o1 Preview - Preview OpenAI reasoning model",
+            "o3 - General purpose OpenAI reasoning model",
+            "o3-mini - General purpose compact OpenAI reasoning model",
+            "o4-mini - Preview compact OpenAI reasoning model"
           ],
           "default": "gpt-4o",
           "description": "GitHub Copilot model to use for generating commit messages"
@@ -614,7 +634,7 @@
       "description": "GitHub Stars"
     },
     {
-      "url": "https://img.shields.io/badge/AI_Providers-8+-purple?style=for-the-badge&logo=openai",
+      "url": "https://img.shields.io/badge/AI_Providers-10-purple?style=for-the-badge&logo=openai",
       "href": "https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant",
       "description": "Supported AI Providers"
     },

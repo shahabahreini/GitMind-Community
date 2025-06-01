@@ -108,6 +108,12 @@ export function getStatusBannerStyles(): string {
         background-color: #3b82f6;
       }
       
+      .status-badge.copilot {
+        background-color: #1ed5a9;
+        color: #000;
+        font-weight: 600;
+      }
+      
       ${ProviderIcon.getIconStyles()}
     `;
 }

@@ -102,7 +102,7 @@ npm run package
 
 - ✅ GitHub Copilot appears in provider dropdown
 - ✅ No API key field (shows info about VS Code authentication)
-- ✅ Model selection with 5 GPT models available
+- ✅ Model selection with 14 models across OpenAI, Anthropic, and Google providers
 - ✅ Status banner shows "GitHub Copilot" and "Configured"
 - ✅ Commit messages generated successfully
 - ✅ Proper error messages when Copilot is unavailable

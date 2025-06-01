@@ -238,6 +238,130 @@ export function getMainStyles(): string {
       display: none !important;
     }
 
+    /* Info Banner Styles for Copilot */
+    .info-banner {
+      background: linear-gradient(135deg, 
+        var(--vscode-inputValidation-infoBackground, rgba(100, 150, 255, 0.08)) 0%, 
+        var(--vscode-inputValidation-infoBackground, rgba(100, 150, 255, 0.12)) 100%);
+      border: 1px solid var(--vscode-inputValidation-infoBorder, rgba(100, 150, 255, 0.3));
+      border-left: 4px solid var(--vscode-inputValidation-infoBorder, #3794ff);
+      border-radius: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .info-banner:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(100, 150, 255, 0.15);
+    }
+
+    .info-banner::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, 
+        transparent 0%, 
+        var(--vscode-inputValidation-infoBorder, #3794ff) 50%, 
+        transparent 100%);
+      opacity: 0.6;
+    }
+
+    .info-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px 20px;
+      position: relative;
+    }
+
+    .info-icon {
+      font-size: 20px;
+      line-height: 1;
+      margin-top: 2px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+      animation: gentle-pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes gentle-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.05); }
+    }
+
+    .info-text {
+      flex: 1;
+      line-height: 1.5;
+    }
+
+    .info-text strong {
+      color: var(--vscode-inputValidation-infoBorder, #3794ff);
+      font-weight: 600;
+      font-size: 14px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .info-text br + * {
+      margin-top: 6px;
+    }
+
+    .info-text {
+      font-size: 13px;
+      color: var(--vscode-inputValidation-infoForeground, var(--vscode-foreground));
+      opacity: 0.9;
+    }
+
+    /* GitHub Copilot specific styling */
+    .copilot-info-banner {
+      background: linear-gradient(135deg, 
+        rgba(30, 213, 169, 0.08) 0%, 
+        rgba(30, 213, 169, 0.12) 100%);
+      border-color: rgba(30, 213, 169, 0.3);
+      border-left-color: #1ed5a9;
+    }
+
+    .copilot-info-banner::before {
+      background: linear-gradient(90deg, 
+        transparent 0%, 
+        #1ed5a9 50%, 
+        transparent 100%);
+    }
+
+    .copilot-info-banner .info-text strong {
+      color: #1ed5a9;
+    }
+
+    .copilot-info-banner:hover {
+      box-shadow: 0 4px 12px rgba(30, 213, 169, 0.15);
+    }
+
+    /* Additional visual enhancements */
+    .info-banner .info-icon {
+      background: radial-gradient(circle, 
+        var(--vscode-inputValidation-infoBorder, #3794ff) 0%, 
+        transparent 70%);
+      background-size: 30px 30px;
+      background-position: center;
+      background-repeat: no-repeat;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .copilot-info-banner .info-icon {
+      background: radial-gradient(circle, 
+        rgba(30, 213, 169, 0.2) 0%, 
+        transparent 70%);
+    }
+
     ${getFormStyles()}
     ${getButtonStyles()}
     ${getStatusBannerStyles()}

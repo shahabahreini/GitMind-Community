@@ -173,13 +173,23 @@ export type AnthropicModel =
     | "claude-3-haiku-20240307";
 
 export type CopilotModel =
-    // GPT-4 Series (GitHub Copilot)
+    // OpenAI Models
     | "gpt-4o"
-    | "gpt-4o-mini"
-    | "gpt-4"
-    | "gpt-4-turbo"
-    // GPT-3.5 Series
-    | "gpt-3.5-turbo";
+    | "gpt-4.1"
+    | "gpt-4.5-preview"
+    | "o1-preview"
+    | "o3"
+    | "o3-mini"
+    | "o4-mini"
+    // Anthropic Models
+    | "claude-3.5-sonnet"
+    | "claude-3.7-sonnet"
+    | "claude-3.7-sonnet-thinking"
+    | "claude-sonnet-4"
+    | "claude-opus-4"
+    // Google Models
+    | "gemini-2.0-flash"
+    | "gemini-2.5-pro-preview";
 
 
 export interface HuggingFaceApiConfig extends BaseApiConfig {

@@ -11,26 +11,63 @@ interface GenerationConfig {
 }
 
 const MODEL_CONFIGS: Record<CopilotModel, GenerationConfig> = {
-    // GPT-4 Series (GitHub Copilot)
+    // OpenAI Models
     "gpt-4o": {
         maxTokens: 350,
         temperature: 0.3
     },
-    "gpt-4o-mini": {
+    "gpt-4.1": {
         maxTokens: 350,
         temperature: 0.3
     },
-    "gpt-4": {
+    "gpt-4.5-preview": {
         maxTokens: 350,
         temperature: 0.3
     },
-    "gpt-4-turbo": {
+    "o1-preview": {
+        maxTokens: 400,
+        temperature: 0.2
+    },
+    "o3": {
+        maxTokens: 400,
+        temperature: 0.2
+    },
+    "o3-mini": {
         maxTokens: 350,
         temperature: 0.3
     },
-    // GPT-3.5 Series
-    "gpt-3.5-turbo": {
+    "o4-mini": {
         maxTokens: 350,
+        temperature: 0.3
+    },
+    // Anthropic Models
+    "claude-3.5-sonnet": {
+        maxTokens: 350,
+        temperature: 0.3
+    },
+    "claude-3.7-sonnet": {
+        maxTokens: 350,
+        temperature: 0.3
+    },
+    "claude-3.7-sonnet-thinking": {
+        maxTokens: 400,
+        temperature: 0.2
+    },
+    "claude-sonnet-4": {
+        maxTokens: 350,
+        temperature: 0.3
+    },
+    "claude-opus-4": {
+        maxTokens: 400,
+        temperature: 0.3
+    },
+    // Google Models
+    "gemini-2.0-flash": {
+        maxTokens: 350,
+        temperature: 0.3
+    },
+    "gemini-2.5-pro-preview": {
+        maxTokens: 400,
         temperature: 0.3
     }
 };
@@ -91,14 +128,8 @@ export async function callCopilotAPI(model: string, diff: string, customContext:
     const requestManager = RequestManager.getInstance();
     const controller = requestManager.getController();
 
-    // Validate model
-    const validModels: CopilotModel[] = [
-        "gpt-4o",
-        "gpt-4o-mini",
-        "gpt-4",
-        "gpt-4-turbo",
-        "gpt-3.5-turbo"
-    ];
+    // Validate model - use Object.keys to get all valid models from MODEL_CONFIGS
+    const validModels = Object.keys(MODEL_CONFIGS) as CopilotModel[];
     if (!validModels.includes(model as CopilotModel)) {
         debugLog("Error: Invalid Copilot model specified", { model });
         throw new Error(`Invalid Copilot model specified: ${model}`);
@@ -122,10 +153,21 @@ export async function callCopilotAPI(model: string, diff: string, customContext:
             throw new Error("GitHub Copilot is not available. Please ensure GitHub Copilot extension is installed and you have access to Copilot Chat.");
         }
 
-        // Select Copilot chat models
+        // Select Copilot chat models based on model provider
+        let family: string;
+        if (model.startsWith('gpt-') || model.startsWith('o')) {
+            family = 'gpt-4'; // OpenAI models
+        } else if (model.startsWith('claude-')) {
+            family = 'claude'; // Anthropic models
+        } else if (model.startsWith('gemini-')) {
+            family = 'gemini'; // Google models
+        } else {
+            family = 'gpt-4'; // Default fallback
+        }
+
         const models = await vscode.lm.selectChatModels({
             vendor: 'copilot',
-            family: model.startsWith('gpt-4') ? 'gpt-4' : 'gpt-3.5-turbo'
+            family: family
         });
 
         if (models.length === 0) {
