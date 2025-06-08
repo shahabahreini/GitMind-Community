@@ -16,7 +16,7 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 
 ## Key Features
 
-**Multi-Provider AI Support**: Access 10 different AI providers with unified configuration and intelligent fallback handling.
+**Multi-Provider AI Support**: Access 11 different AI providers with unified configuration and intelligent fallback handling.
 
 **Advanced Git Integration**: Smart diff analysis with automatic staging detection, binary file handling, and comprehensive repository state management.
 
@@ -50,14 +50,14 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 | **Together AI**    | ✓         | ✓          | ✗                | ✓              | Basic         | ~2 min     |
 | **OpenRouter**     | ✓         | ✓          | ✗                | ✓              | Basic         | ~2 min     |
 | **Anthropic**      | ✗         | ✓          | ✗                | ✗              | Basic         | ~2 min     |
+| **DeepSeek**       | ✓         | ✓          | ✗                | ✗              | Basic         | ~2 min     |
 
 ### 🌟 Recommended Providers
 
 **🚀 For Zero Setup**: GitHub Copilot - requires only your existing VS Code Copilot subscription  
-**💰 For Free Usage**: Google Gemini, Mistral AI, or Hugging Face  
+**💰 For Free Usage**: Google Gemini, Mistral AI, DeepSeek, or Hugging Face  
 **🏠 For Local Privacy**: Ollama with local models  
-**⚡ For Performance**: OpenAI GPT-4 or Anthropic Claude
-| **Anthropic** | ✗ | ✓ | ✗ | ✗ | Advanced |
+**⚡ For Performance**: OpenAI GPT-4, Anthropic Claude, or DeepSeek Reasoner
 
 ## Model Specifications & Capabilities
 
@@ -100,6 +100,8 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 |                    | claude-3-5-haiku-20241022               | 200k tokens    | 100 RPM          | Fast, efficient processing               | Paid         |
 |                    | claude-3-opus-20240229                  | 200k tokens    | 20 RPM           | Most capable reasoning model             | Paid         |
 |                    | claude-3-sonnet-20240229                | 200k tokens    | 50 RPM           | Balanced performance                     | Paid         |
+| **DeepSeek**       | deepseek-chat                           | 128k tokens    | 50 RPM (free)    | General purpose, code generation         | Free/Paid    |
+|                    | deepseek-reasoner                       | 128k tokens    | 20 RPM (free)    | Advanced reasoning, complex problems     | Free/Paid    |
 
 ## Technical Capabilities
 
@@ -116,7 +118,7 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 - **Scope Detection**: Automatic identification of affected modules and components
 - **Breaking Change Recognition**: Detects API changes and breaking modifications
 - **Verbosity Control**: Toggle between detailed descriptions and concise summaries
-- **Standardized Prompts**: Consistent prompt templates across all 10 AI providers
+- **Standardized Prompts**: Consistent prompt templates across all 11 AI providers
 
 ### Advanced Configuration
 
@@ -147,16 +149,19 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 
 - **Ollama** (phi4 or llama3.3:70b) - Complete privacy, no API costs
 - **Hugging Face** (mistralai/Mistral-7B-Instruct-v0.3) - Reliable free tier
+- **DeepSeek** (deepseek-chat) - Excellent free tier, competitive performance
 
 **For Professional Development**:
 
 - **Google Gemini** (gemini-2.5-flash) - Excellent free tier, 2M context
 - **Mistral AI** (mistral-large-latest) - Superior reasoning, multilingual
+- **DeepSeek** (deepseek-reasoner) - Advanced reasoning capabilities
 
 **For Enterprise**:
 
 - **OpenAI** (gpt-4o) - Industry standard, multimodal capabilities
 - **Mistral Large** - EU-compliant alternative with advanced reasoning
+- **DeepSeek Reasoner** - Cost-effective reasoning model
 
 **For High-Volume Usage**:
 
@@ -197,7 +202,7 @@ Advanced git diff analysis with staging detection, binary file handling, and com
 
 ### Standardized Prompt Architecture
 
-Unified prompt engineering across all 9 AI providers ensuring consistent, high-quality output regardless of chosen model.
+Unified prompt engineering across all 11 AI providers ensuring consistent, high-quality output regardless of chosen model.
 
 ### Rate Limit Management
 

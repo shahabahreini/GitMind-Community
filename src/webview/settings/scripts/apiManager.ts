@@ -37,6 +37,11 @@ export function getApiManagerScript(): string {
         apiSettings = {
           model: document.getElementById('copilotModel').value
         };
+      } else if (provider === 'deepseek') {
+        apiSettings = {
+          apiKey: document.getElementById('deepseekApiKey').value,
+          model: document.getElementById('deepseekModel').value
+        };
       }
       
       // Validate required fields before sending
@@ -56,6 +61,8 @@ export function getApiManagerScript(): string {
         missingFields.push('Cohere API Key');
       } else if (provider === 'copilot' && !apiSettings.model) {
         missingFields.push('Copilot Model');
+      } else if (provider === 'deepseek' && !apiSettings.apiKey) {
+        missingFields.push('DeepSeek API Key');
       }
       
       if (missingFields.length > 0) {
@@ -131,6 +138,9 @@ export function getApiManagerScript(): string {
       } else if (provider === 'copilot') {
         // Copilot doesn't require API key validation in the UI
         // The validation happens through VS Code's built-in authentication
+      } else if (provider === 'deepseek') {
+        apiSettings.apiKey = document.getElementById('deepseekApiKey').value;
+        if (!apiSettings.apiKey) missingFields.push('DeepSeek API Key');
       }
       
       if (missingFields.length > 0) {
@@ -188,7 +198,8 @@ export function getApiManagerScript(): string {
         'ollama': 'Ollama',
         'mistral': 'Mistral',
         'cohere': 'Cohere',
-        'copilot': 'GitHub Copilot'
+        'copilot': 'GitHub Copilot',
+        'deepseek': 'DeepSeek'
       };
       
       return displayNames[provider] || provider;

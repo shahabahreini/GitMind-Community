@@ -15,6 +15,7 @@ import { ButtonGroup } from "./components/ButtonGroup";
 import { getSettingsScript } from "./scripts/settingsManager";
 import { AnthropicSettings } from "./components/AnthropicSettings";
 import { CopilotSettings } from "./components/CopilotSettings";
+import { DeepSeekSettings } from "./components/DeepSeekSettings";
 
 export class SettingsTemplateGenerator {
   private _settings: ExtensionSettings;
@@ -39,6 +40,7 @@ export class SettingsTemplateGenerator {
     const buttonGroup = new ButtonGroup();
     const anthropicSettings = new AnthropicSettings(this._settings);
     const copilotSettings = new CopilotSettings(this._settings);
+    const deepseekSettings = new DeepSeekSettings(this._settings);
 
     return `
     <!DOCTYPE html>
@@ -66,6 +68,7 @@ export class SettingsTemplateGenerator {
         ${openrouterSettings.render()}
         ${anthropicSettings.render()}
         ${copilotSettings.render()}
+        ${deepseekSettings.render()}
         ${buttonGroup.render()}
       </div>
       ${getSettingsScript(this._settings, this._nonce)}

@@ -20,7 +20,8 @@ export class OnboardingManager {
         'OpenAI': 'https://platform.openai.com/api-keys',
         'Together AI': 'https://api.together.xyz/settings/api-keys',
         'OpenRouter': 'https://openrouter.ai/keys',
-        'Anthropic': 'https://console.anthropic.com/'
+        'Anthropic': 'https://console.anthropic.com/',
+        'DeepSeek': 'https://platform.deepseek.com/api_keys'
     };
 
     private static steps: OnboardingStep[] = [];

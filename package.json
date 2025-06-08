@@ -1,8 +1,8 @@
 {
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Assistant",
-  "description": "🚀 Generate perfect git commit messages instantly using AI! Support for 10 free/paid AI providers including GitHub Copilot (Gemini, OpenAI, Claude, Mistral, HuggingFace, Ollama, Anthropic, Together AI). Smart conventional commits, advanced diff analysis, standardized prompts, and enhanced UX for effortless Git workflow automation.",
-  "version": "3.0.0",
+  "description": "🚀 Generate perfect git commit messages instantly using AI! Support for 11 free/paid AI providers including GitHub Copilot (Gemini, OpenAI, Claude, Mistral, HuggingFace, Ollama, Anthropic, Together AI, DeepSeek). Smart conventional commits, advanced diff analysis, standardized prompts",
+  "version": "3.1.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -45,7 +45,8 @@
             "together",
             "openrouter",
             "anthropic",
-            "copilot"
+            "copilot",
+            "deepseek"
           ],
           "enumDescriptions": [
             "Use Google's Gemini AI for generating commit messages",
@@ -57,7 +58,8 @@
             "Use Together AI for generating commit messages",
             "Use OpenRouter for accessing multiple AI models",
             "Use Anthropic Claude for generating commit messages",
-            "Use GitHub Copilot for generating commit messages (no API key required)"
+            "Use GitHub Copilot for generating commit messages (no API key required)",
+            "Use DeepSeek AI for generating commit messages"
           ],
           "default": "gemini",
           "description": "Select which AI provider to use for generating commit messages",
@@ -341,6 +343,24 @@
           ],
           "default": "gpt-4o",
           "description": "GitHub Copilot model to use for generating commit messages"
+        },
+        "aiCommitAssistant.deepseek.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API key for DeepSeek AI [Learn more](https://platform.deepseek.com/api_keys)"
+        },
+        "aiCommitAssistant.deepseek.model": {
+          "type": "string",
+          "enum": [
+            "deepseek-chat",
+            "deepseek-reasoner"
+          ],
+          "enumDescriptions": [
+            "DeepSeek Chat - General purpose model optimized for conversation and code generation",
+            "DeepSeek Reasoner - Advanced reasoning model for complex problem solving"
+          ],
+          "default": "deepseek-chat",
+          "description": "DeepSeek model to use for generating commit messages"
         }
       }
     },
@@ -552,6 +572,8 @@
     "together",
     "together-ai",
     "openrouter",
+    "deepseek",
+    "deepseek-ai",
     "llama",
     "phi",
     "codellama",

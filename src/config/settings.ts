@@ -7,6 +7,7 @@ import {
     GeminiModel, // Added this import
     AnthropicModel, // Added this import
     CopilotModel, // Added this import
+    DeepSeekModel, // Added this import
 } from "./types";
 
 export function getConfiguration(): ExtensionConfig {
@@ -76,6 +77,11 @@ export function getConfiguration(): ExtensionConfig {
         copilot: {
             enabled: config.get("copilot.enabled", false),
             model: config.get("copilot.model", "gpt-4o"),
+        },
+        deepseek: {
+            enabled: config.get("deepseek.enabled", false),
+            apiKey: config.get("deepseek.apiKey"),
+            model: config.get("deepseek.model", "deepseek-chat"),
         },
         promptCustomization: {
             enabled: config.get("promptCustomization.enabled", false),
@@ -168,6 +174,13 @@ export function getApiConfig(): ApiConfig {
             return {
                 type: "copilot",
                 model: (config.copilot.model || "gpt-4o") as CopilotModel,
+            };
+
+        case "deepseek":
+            return {
+                type: "deepseek",
+                apiKey: config.deepseek.apiKey || "",
+                model: (config.deepseek.model || "deepseek-chat") as DeepSeekModel,
             };
 
         default:

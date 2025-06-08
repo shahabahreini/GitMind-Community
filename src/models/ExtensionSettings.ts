@@ -42,6 +42,10 @@ export interface ExtensionSettings {
     copilot: {
         model: string;
     };
+    deepseek: {
+        apiKey: string;
+        model: string;
+    };
     promptCustomization?: {
         enabled: boolean;
     };

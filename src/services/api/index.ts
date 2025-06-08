@@ -12,6 +12,7 @@ import {
     OpenRouterApiConfig,
     AnthropicApiConfig,
     CopilotApiConfig,
+    DeepSeekApiConfig,
 } from "../../config/types";
 import { callGeminiAPI } from "./gemini";
 import { callHuggingFaceAPI } from "./huggingface";
@@ -33,6 +34,7 @@ import { callTogetherAPI } from "./together";
 import { callOpenRouterAPI } from "./openrouter";
 import { callAnthropicAPI } from "./anthropic";
 import { callCopilotAPI } from "./copilot";
+import { callDeepSeekAPI } from "./deepseek";
 import { RequestManager } from "../../utils/requestManager";
 import { APIErrorHandler } from "../../utils/errorHandler";
 
@@ -989,6 +991,106 @@ async function generateMessageWithConfig(
             }
             return await callCopilotAPI(
                 copilotConfig.model,
+                diff,
+                customContext
+            );
+        }
+
+        case "deepseek": {
+            const deepseekConfig = config as DeepSeekApiConfig;
+            if (!deepseekConfig.apiKey) {
+                const result = await vscode.window.showWarningMessage(
+                    "DeepSeek API key is required. Would you like to configure it now?",
+                    "Enter API Key",
+                    "Get API Key",
+                    "Cancel"
+                );
+
+                if (result === "Enter API Key") {
+                    const apiKey = await vscode.window.showInputBox({
+                        title: "DeepSeek API Key",
+                        prompt: "Please enter your DeepSeek API key",
+                        password: true,
+                        placeHolder: "Paste your API key here",
+                        ignoreFocusOut: true,
+                        validateInput: (text) =>
+                            text?.trim() ? null : "API key cannot be empty",
+                    });
+
+                    if (apiKey) {
+                        const config =
+                            vscode.workspace.getConfiguration("aiCommitAssistant");
+                        await config.update(
+                            "deepseek.apiKey",
+                            apiKey.trim(),
+                            vscode.ConfigurationTarget.Global
+                        );
+
+                        if (!deepseekConfig.model) {
+                            await vscode.commands.executeCommand(
+                                "ai-commit-assistant.openSettings"
+                            );
+                            return "";
+                        }
+                        return await callDeepSeekAPI(
+                            apiKey.trim(),
+                            deepseekConfig.model,
+                            diff,
+                            customContext
+                        );
+                    }
+                } else if (result === "Get API Key") {
+                    await vscode.env.openExternal(
+                        vscode.Uri.parse("https://platform.deepseek.com/api_keys")
+                    );
+                    const apiKey = await vscode.window.showInputBox({
+                        title: "DeepSeek API Key",
+                        prompt:
+                            "Please enter your DeepSeek API key after getting it from the website",
+                        password: true,
+                        placeHolder: "Paste your API key here",
+                        ignoreFocusOut: true,
+                        validateInput: (text) =>
+                            text?.trim() ? null : "API key cannot be empty",
+                    });
+
+                    if (apiKey) {
+                        const config =
+                            vscode.workspace.getConfiguration("aiCommitAssistant");
+                        await config.update(
+                            "deepseek.apiKey",
+                            apiKey.trim(),
+                            vscode.ConfigurationTarget.Global
+                        );
+
+                        if (!deepseekConfig.model) {
+                            await vscode.commands.executeCommand(
+                                "ai-commit-assistant.openSettings"
+                            );
+                            return "";
+                        }
+                        return await callDeepSeekAPI(
+                            apiKey.trim(),
+                            deepseekConfig.model,
+                            diff,
+                            customContext
+                        );
+                    }
+                }
+                return "";
+            }
+            if (!deepseekConfig.model) {
+                await vscode.window.showErrorMessage(
+                    "Please select a DeepSeek model in the settings."
+                );
+                await vscode.commands.executeCommand(
+                    "ai-commit-assistant.openSettings"
+                );
+                return "";
+            }
+            return await callDeepSeekAPI(
+                deepseekConfig.apiKey,
+                deepseekConfig.model,
                 diff,
                 customContext
             );

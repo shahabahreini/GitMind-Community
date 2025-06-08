@@ -114,6 +114,12 @@ export function getStatusBannerStyles(): string {
         font-weight: 600;
       }
       
+      .status-badge.deepseek {
+        background-color: #1a1a1a;
+        color: #fff;
+        border: 1px solid #555;
+      }
+      
       ${ProviderIcon.getIconStyles()}
     `;
 }

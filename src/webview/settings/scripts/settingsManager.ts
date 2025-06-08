@@ -34,6 +34,8 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     document.getElementById('anthropicApiKey').value = currentSettings.anthropic?.apiKey || '';
     document.getElementById('anthropicModel').value = currentSettings.anthropic?.model || 'claude-3-5-sonnet-20241022';
     document.getElementById('copilotModel').value = currentSettings.copilot?.model || 'gpt-4o';
+    document.getElementById('deepseekApiKey').value = currentSettings.deepseek?.apiKey || '';
+    document.getElementById('deepseekModel').value = currentSettings.deepseek?.model || 'deepseek-chat';
     
     // Enhanced tooltip functionality for compact toggles
     function initializeTooltips() {
@@ -114,6 +116,10 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
         },
         copilot: {
           model: document.getElementById('copilotModel').value
+        },
+        deepseek: {
+          apiKey: document.getElementById('deepseekApiKey').value,
+          model: document.getElementById('deepseekModel').value
         },
         promptCustomization: {
           enabled: document.getElementById('promptCustomizationEnabled').checked
@@ -595,6 +601,11 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           if (currentSettings.openrouter) {
             document.getElementById('openrouterApiKey').value = currentSettings.openrouter.apiKey || '';
             document.getElementById('openrouterModel').value = currentSettings.openrouter.model || 'google/gemma-3-27b-it:free';
+          }
+          
+          if (currentSettings.deepseek) {
+            document.getElementById('deepseekApiKey').value = currentSettings.deepseek.apiKey || '';
+            document.getElementById('deepseekModel').value = currentSettings.deepseek.model || 'deepseek-chat';
           }
           
           // Update UI state

@@ -36,8 +36,8 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.workspace.getConfiguration("aiCommitAssistant")
   );
 
-  // Log supported API providers, now including Anthropic
-  debugLog("Supported API providers: Gemini, Hugging Face, Ollama, Mistral, Cohere, OpenAI, Together AI, OpenRouter, Anthropic");
+  // Log supported API providers, now including Anthropic and DeepSeek
+  debugLog("Supported API providers: Gemini, Hugging Face, Ollama, Mistral, Cohere, OpenAI, Together AI, OpenRouter, Anthropic, GitHub Copilot, DeepSeek");
 
   // Note: VS Code SCM API doesn't provide access to existing source controls
   // so we cannot clean up previous providers programmatically
@@ -552,11 +552,11 @@ export async function activate(context: vscode.ExtensionContext) {
   // Show onboarding for new users
   await OnboardingManager.showOnboarding(context);
 
-  // Update onboarding step to mention Together AI
+  // Update onboarding step to mention all providers including DeepSeek
   const steps: OnboardingStep[] = [
     {
       title: 'Step 1: Choose an AI Provider',
-      content: 'GitMind supports multiple AI providers:\n• Gemini (Google)\n• Hugging Face\n• Ollama (Local)\n• Mistral AI\n• Cohere\n• OpenAI\n• Together AI\n• OpenRouter\n\nClick Next to learn how to configure your chosen provider.',
+      content: 'GitMind supports multiple AI providers:\n• Gemini (Google)\n• Hugging Face\n• Ollama (Local)\n• Mistral AI\n• Cohere\n• OpenAI\n• Together AI\n• OpenRouter\n• Anthropic\n• GitHub Copilot\n• DeepSeek\n\nClick Next to learn how to configure your chosen provider.',
     },
     {
       title: 'Step 2: Configure API Settings',

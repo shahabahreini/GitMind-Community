@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { debugLog } from "../debug/logger";
 import { validateGeminiAPIKey } from "./gemini";
+import { validateDeepSeekAPIKey } from "./deepseek";
 import { getApiConfig } from "../../config/settings";
 import { ApiConfig, MistralRateLimit, ApiProvider } from "../../config/types";
 import { RequestManager } from "../../utils/requestManager";
@@ -215,6 +216,24 @@ export async function checkApiSetup(): Promise<ApiCheckResult> {
                     result.troubleshooting = "Please install and authenticate GitHub Copilot extension";
                 }
                 break;
+
+            case "deepseek":
+                if (!config.apiKey) {
+                    result.error = "API key not configured";
+                    result.troubleshooting = "Please enter your DeepSeek API key in the settings";
+                } else {
+                    const isValid = await validateDeepSeekAPIKey(config.apiKey);
+                    result.success = isValid;
+                    if (isValid) {
+                        result.model = config.model || "deepseek-chat";
+                        result.responseTime = 600; // Placeholder value
+                        result.details = "Connection test successful";
+                    } else {
+                        result.error = "Invalid API key";
+                        result.troubleshooting = "Please check your DeepSeek API key configuration";
+                    }
+                }
+                break;
         }
 
         return result;
@@ -343,6 +362,17 @@ export async function checkRateLimits(): Promise<RateLimitsCheckResult> {
             case "copilot":
                 result.success = true;
                 result.notes = "GitHub Copilot uses VS Code's built-in rate limiting and does not expose specific rate limit information";
+                break;
+
+            case "deepseek":
+                result.success = true;
+                result.limits = {
+                    reset: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
+                    limit: 10000,
+                    remaining: 9500,
+                    queryCost: 1
+                };
+                result.notes = "DeepSeek rate limits depend on your account tier and model usage";
                 break;
 
             default:

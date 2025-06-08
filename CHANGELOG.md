@@ -1,5 +1,43 @@
 # Changelog
 
+## [3.1.0] - 2025-06-08
+
+### Added
+
+- **DeepSeek AI Provider Integration**: Advanced reasoning capabilities with competitive free tier
+
+  - Complete DeepSeek API implementation with support for both chat and reasoning models
+  - Added deepseek-chat model for general purpose code generation and conversation
+  - Added deepseek-reasoner model for advanced reasoning and complex problem solving
+  - Comprehensive UI integration with dedicated settings panel and model selection
+  - Full configuration support in package.json with proper schema validation
+  - Seamless integration with existing provider architecture and error handling
+  - Professional SVG icon integration matching other provider branding
+  - API key management with secure storage and validation flows
+  - Rate limiting support and proper error messaging for missing configurations
+
+- **Enhanced Provider Support**: Expanded AI provider ecosystem to 11 total providers
+  - Updated provider comparison tables and documentation
+  - Added DeepSeek to recommended configurations for various use cases
+  - Enhanced free tier options with competitive DeepSeek pricing
+  - Improved provider selection guidance with reasoning model recommendations
+
+### Enhanced
+
+- **Documentation Updates**: Comprehensive documentation refresh
+  - Updated README.md with DeepSeek provider information and capabilities
+  - Added DeepSeek to model specifications table with context windows and rate limits
+  - Enhanced provider comparison with DeepSeek free tier and reasoning capabilities
+  - Updated recommended configurations for different development scenarios
+
+### Technical
+
+- Extended provider count from 10 to 11 in all documentation and marketing materials
+- Enhanced type definitions with DeepSeekApiConfig and DeepSeekModel types
+- Implemented complete API integration matching existing provider patterns
+- Added comprehensive validation and error handling for DeepSeek endpoints
+- Updated settings management to include DeepSeek form fields and persistence
+
 ## [3.0.0] - 2025-05-31
 
 ### Added

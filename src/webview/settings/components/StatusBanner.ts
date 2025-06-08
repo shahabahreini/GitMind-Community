@@ -41,6 +41,9 @@ export class StatusBanner {
       case "copilot":
         modelInfo = this._settings.copilot?.model || "gpt-4o";
         break;
+      case "deepseek":
+        modelInfo = this._settings.deepseek?.model || "deepseek-chat";
+        break;
     }
 
     // Get API configuration status
@@ -73,6 +76,9 @@ export class StatusBanner {
       case "copilot":
         apiConfigured = true; // Copilot uses VS Code authentication
         break;
+      case "deepseek":
+        apiConfigured = !!this._settings.deepseek?.apiKey;
+        break;
     }
 
     // Format provider name for display
@@ -85,7 +91,8 @@ export class StatusBanner {
       together: "Together AI",
       openrouter: "OpenRouter",
       anthropic: "Anthropic",
-      copilot: "GitHub Copilot"
+      copilot: "GitHub Copilot",
+      deepseek: "DeepSeek"
     }[this._settings.apiProvider] || this._settings.apiProvider;
 
     return `

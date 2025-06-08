@@ -106,6 +106,8 @@ export class SettingsWebviewProvider {
                         <option value="together" ${config.apiProvider === "together" ? "selected" : ""}>Together AI</option>
                         <option value="openrouter" ${config.apiProvider === "openrouter" ? "selected" : ""}>OpenRouter</option>
                         <option value="anthropic" ${config.apiProvider === "anthropic" ? "selected" : ""}>Anthropic</option>
+                        <option value="copilot" ${config.apiProvider === "copilot" ? "selected" : ""}>GitHub Copilot</option>
+                        <option value="deepseek" ${config.apiProvider === "deepseek" ? "selected" : ""}>DeepSeek</option>
                     </select>
                 </div>
                 <script>

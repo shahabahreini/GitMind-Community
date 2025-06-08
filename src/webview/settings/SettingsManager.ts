@@ -51,6 +51,10 @@ export class SettingsManager {
             copilot: {
                 model: config.get<string>("copilot.model") || "gpt-4o",
             },
+            deepseek: {
+                apiKey: config.get<string>("deepseek.apiKey") || "",
+                model: config.get<string>("deepseek.model") || "deepseek-chat",
+            },
             promptCustomization: {
                 enabled: config.get<boolean>("promptCustomization.enabled") || false,
             },
@@ -168,6 +172,16 @@ export class SettingsManager {
         await config.update(
             "copilot.model",
             settings.copilot.model,
+            vscode.ConfigurationTarget.Global
+        );
+        await config.update(
+            "deepseek.apiKey",
+            settings.deepseek.apiKey,
+            vscode.ConfigurationTarget.Global
+        );
+        await config.update(
+            "deepseek.model",
+            settings.deepseek.model,
             vscode.ConfigurationTarget.Global
         );
         await config.update(

@@ -3,7 +3,7 @@
 import * as vscode from "vscode";
 
 // Provider types
-export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic" | "copilot";
+export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic" | "copilot" | "deepseek";
 export type CommitStyle = "conventional" | "gitmoji" | "basic";
 
 // Base configurations
@@ -68,6 +68,11 @@ export interface ExtensionConfig {
         enabled: boolean;
         model: string;
     };
+    deepseek: {
+        enabled: boolean;
+        apiKey?: string;
+        model: string;
+    };
     promptCustomization: {
         enabled: boolean;
     };
@@ -109,6 +114,12 @@ export interface CopilotApiConfig extends BaseApiConfig {
 export interface CopilotApiConfig extends BaseApiConfig {
     type: "copilot";
     model: CopilotModel;
+}
+
+export interface DeepSeekApiConfig extends BaseApiConfig {
+    type: "deepseek";
+    apiKey: string;
+    model: DeepSeekModel;
 }
 
 // Commit related types
@@ -191,6 +202,11 @@ export type CopilotModel =
     | "gemini-2.0-flash"
     | "gemini-2.5-pro-preview";
 
+export type DeepSeekModel =
+    // Latest Models
+    | "deepseek-chat"
+    | "deepseek-reasoner";
+
 
 export interface HuggingFaceApiConfig extends BaseApiConfig {
     type: "huggingface";
@@ -267,4 +283,5 @@ export type ApiConfig =
     | TogetherApiConfig
     | OpenRouterApiConfig
     | AnthropicApiConfig
-    | CopilotApiConfig;
+    | CopilotApiConfig
+    | DeepSeekApiConfig;
