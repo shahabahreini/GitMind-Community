@@ -1,6 +1,6 @@
 # GitMind: AI Commit Assistant for VS Code
 
-**Professional AI-powered commit message generation for Visual Studio Code.** Leverage 11 different AI providers to create consistent, conventional commit messages that improve code history quality and team collaboration.
+**Professional AI-powered commit message generation for Visual Studio Code.** Leverage 11 different AI providers including OpenAI GPT-4o, Claude-3-5-sonnet, Gemini-2.5-flash, DeepSeek-reasoner, and 50+ models to create consistent, conventional commit messages that improve code history quality and team collaboration.
 
 <video width="100%" controls>
   <source src="https://shahabahreini.com/wp-content/uploads/GitMind-Introduction.mp4" type="video/mp4"> <a href="https://shahabahreini.com/wp-content/uploads/GitMind-Introduction.mp4">View the demo video</a>
@@ -18,7 +18,7 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 
 ### **Multi-Provider AI Support**
 
-Access **11 different AI providers** with unified configuration and intelligent fallback handling. From zero-setup GitHub Copilot to privacy-focused local Ollama deployments.
+Access **11 different AI providers** with unified configuration and intelligent fallback handling. From zero-setup GitHub Copilot to privacy-focused local Ollama deployments supporting GPT-4o, Claude-opus-4, Gemini-2.5-pro, DeepSeek-chat, Mistral-large, and 50+ additional models.
 
 ### **Advanced Git Integration**
 
@@ -38,7 +38,7 @@ Enhanced change detection for staged and unstaged files with **context-aware ana
 
 ### **Dynamic Model Selection**
 
-Real-time model browsing for compatible providers with search and filtering capabilities. **2M+ token context windows** supported for large repositories.
+Real-time model browsing for compatible providers with search and filtering capabilities. **2M+ token context windows** supported for large repositories with models like Gemini-2.5-pro and Claude-3-5-sonnet.
 
 ### **Professional Workflow Integration**
 
@@ -48,29 +48,108 @@ Native VS Code SCM panel integration with loading indicators, comprehensive stat
 
 ### **Model Comparison & Selection Guide**
 
-| Provider           | Best Model        | Context | Free Tier | Setup | Strengths                          | Limitations              |
-| ------------------ | ----------------- | ------- | --------- | ----- | ---------------------------------- | ------------------------ |
-| **GitHub Copilot** | gpt-4o            | 128k    | No        | 5sec  | Zero config, VS Code native        | Requires subscription    |
-| **Google Gemini**  | 2.5-flash         | 2M      | 15 RPM    | 2min  | Massive context, thinking model    | Rate limited (free)      |
-| **DeepSeek**       | reasoner          | 128k    | 50 RPM    | 2min  | Advanced reasoning, cost-effective | Newer provider           |
-| **Mistral AI**     | large-latest      | 128k    | 1 RPM     | 2min  | EU-compliant, multilingual         | Low free tier limits     |
-| **Ollama**         | phi4/llama3.3     | 128k    | Unlimited | 5min  | Complete privacy, no API costs     | Hardware dependent       |
-| **OpenAI**         | gpt-4o            | 128k    | No        | 2min  | Industry standard, multimodal      | Paid only, higher cost   |
-| **Anthropic**      | claude-3-5-sonnet | 200k    | No        | 2min  | Superior reasoning, long context   | Paid only                |
-| **Together AI**    | Llama-3.3-70B     | 128k    | 60 RPM    | 2min  | Optimized inference, generous free | Variable model quality   |
-| **Hugging Face**   | Mistral-7B-v0.3   | 32k     | Varies    | 2min  | Open source, customizable          | Inconsistent performance |
-| **Cohere**         | command-r         | 128k    | 20 RPM    | 2min  | RAG-optimized, retrieval focus     | Limited model variety    |
-| **OpenRouter**     | Multiple          | Varies  | Limited   | 2min  | Access to premium models           | Complex pricing          |
+| Provider           | Featured Models                    | Context | Free Tier | Setup | Strengths                          | Limitations              |
+| ------------------ | ---------------------------------- | ------- | --------- | ----- | ---------------------------------- | ------------------------ |
+| **GitHub Copilot** | gpt-4o, claude-3.5-sonnet, o3      | 128k    | No        | 5sec  | Zero config, VS Code native        | Requires subscription    |
+| **Google Gemini**  | 2.5-flash, 2.5-pro, 2.0-flash      | 2M      | 15 RPM    | 2min  | Massive context, thinking model    | Rate limited (free)      |
+| **DeepSeek**       | reasoner, chat                     | 128k    | 50 RPM    | 2min  | Advanced reasoning, cost-effective | Newer provider           |
+| **Mistral AI**     | large-latest, medium, small        | 128k    | 1 RPM     | 2min  | EU-compliant, multilingual         | Low free tier limits     |
+| **Ollama**         | deepseek-r1, llama3.3, phi4, qwen3 | 128k    | Unlimited | 5min  | Complete privacy, no API costs     | Hardware dependent       |
+| **OpenAI**         | gpt-4o, gpt-4.1, o3, o4-mini       | 128k    | No        | 2min  | Industry standard, multimodal      | Paid only, higher cost   |
+| **Anthropic**      | claude-opus-4, sonnet-4, haiku     | 200k    | No        | 2min  | Superior reasoning, long context   | Paid only                |
+| **Together AI**    | Llama-3.3-70B, Mixtral-8x7B        | 128k    | 60 RPM    | 2min  | Optimized inference, generous free | Variable model quality   |
+| **Hugging Face**   | Mistral-7B, Zephyr-7B, OpenHermes  | 32k     | Varies    | 2min  | Open source, customizable          | Inconsistent performance |
+| **Cohere**         | command-r, command-a-03-2025       | 128k    | 20 RPM    | 2min  | RAG-optimized, retrieval focus     | Limited model variety    |
+| **OpenRouter**     | Multiple providers & models        | Varies  | Limited   | 2min  | Access to premium models           | Complex pricing          |
 
 ### **Quick Selection Guide**
 
-**For Immediate Use**: GitHub Copilot (existing subscription) or Google Gemini (best free tier)
+**For Immediate Use**: GitHub Copilot with gpt-4o or claude-3.5-sonnet (existing subscription) or Google Gemini 2.5-flash (best free tier)
 
-**For Privacy**: Ollama with local phi4 or llama3.3:70b deployment
+**For Privacy**: Ollama with local phi4, llama3.3:70b, or codellama deployment
 
-**For Performance**: OpenAI GPT-4o, Anthropic Claude-3-5-sonnet, or DeepSeek Reasoner
+**For Performance**: OpenAI GPT-4.1, Anthropic Claude-opus-4, or DeepSeek-reasoner
 
-**For Large Projects**: Google Gemini (2M context) or Anthropic Claude (200k context)
+**For Large Projects**: Google Gemini-2.5-pro (2M context) or Anthropic Claude-sonnet-4 (200k context)
+
+## API Provider Setup Links
+
+### **Get API Keys & Documentation**
+
+| Provider           | API Signup                                                 | Documentation                                                 | Free Tier Details     |
+| ------------------ | ---------------------------------------------------------- | ------------------------------------------------------------- | --------------------- |
+| **GitHub Copilot** | [VS Code Copilot](https://copilot.github.com/)             | [Copilot Docs](https://docs.github.com/copilot)               | Requires subscription |
+| **Google Gemini**  | [AI Studio](https://ai.google.dev/gemini-api/docs/api-key) | [Gemini API Docs](https://ai.google.dev/gemini-api)           | 15 requests/minute    |
+| **DeepSeek**       | [DeepSeek Platform](https://platform.deepseek.com/)        | [DeepSeek API Docs](https://api-docs.deepseek.com/)           | 50 requests/minute    |
+| **Mistral AI**     | [Mistral Console](https://console.mistral.ai/)             | [Mistral API Docs](https://docs.mistral.ai/)                  | 1 request/minute      |
+| **OpenAI**         | [OpenAI Platform](https://platform.openai.com/signup)      | [OpenAI API Docs](https://platform.openai.com/docs)           | Paid only             |
+| **Anthropic**      | [Anthropic Console](https://console.anthropic.com/)        | [Claude API Docs](https://docs.anthropic.com/)                | Paid only             |
+| **Together AI**    | [Together Platform](https://api.together.ai/)              | [Together API Docs](https://docs.together.ai/)                | 60 requests/minute    |
+| **Hugging Face**   | [HF Token](https://huggingface.co/settings/tokens)         | [HF Inference API](https://huggingface.co/docs/api-inference) | Varies by model       |
+| **Cohere**         | [Cohere Dashboard](https://dashboard.cohere.ai/)           | [Cohere API Docs](https://docs.cohere.ai/)                    | 20 requests/minute    |
+| **OpenRouter**     | [OpenRouter Keys](https://openrouter.ai/keys)              | [OpenRouter Docs](https://openrouter.ai/docs)                 | Limited free tier     |
+| **Ollama**         | [Ollama Download](https://ollama.com/download)             | [Ollama Docs](https://github.com/ollama/ollama)               | Unlimited (local)     |
+
+### **Quick API Setup Guide**
+
+1. **Choose your provider** from the table above
+2. **Sign up** using the provided API signup link
+3. **Generate API key** in your provider dashboard
+4. **Configure GitMind** with your API key
+5. **Select optimal model** for your use case
+
+For detailed setup instructions for each provider, see our [Configuration Guide](#configuration-options).
+
+## Supported Models by Provider
+
+<details>
+<summary><strong>Complete Model Directory (50+ Models Supported)</strong></summary>
+
+### **GitHub Copilot Models**
+
+`gpt-4o` | `gpt-4.1` | `gpt-4.5-preview` | `claude-3.5-sonnet` | `claude-3.7-sonnet` | `claude-3.7-sonnet-thinking` | `claude-sonnet-4` | `claude-opus-4` | `gemini-2.0-flash` | `gemini-2.5-pro-preview` | `o1-preview` | `o3` | `o3-mini` | `o4-mini`
+
+### **Google Gemini Models**
+
+`gemini-2.5-pro` | `gemini-2.5-flash` | `gemini-2.5-flash-preview-05-20` | `gemini-2.0-flash` | `gemini-2.0-flash-lite` | `gemini-1.5-flash` | `gemini-1.5-flash-8b` | `gemini-1.5-pro` | `gemini-2.5-flash-preview-04-17` | `gemini-2.5-pro-exp-03-25`
+
+### **OpenAI Models**
+
+`gpt-4.1` | `gpt-4.1-mini` | `gpt-4.1-nano` | `o3` | `o4-mini` | `o3-mini` | `gpt-4o` | `gpt-4o-mini` | `gpt-4-turbo` | `gpt-4` | `gpt-3.5-turbo`
+
+### **Anthropic Claude Models**
+
+`claude-opus-4` | `claude-sonnet-4` | `claude-sonnet-3.7` | `claude-3-5-sonnet-20241022` | `claude-3-5-sonnet-20240620` | `claude-3-5-haiku-20241022` | `claude-3-opus-20240229` | `claude-3-sonnet-20240229` | `claude-3-haiku-20240307`
+
+### **DeepSeek Models**
+
+`deepseek-chat` | `deepseek-reasoner`
+
+### **Mistral AI Models**
+
+`mistral-large-latest` | `mistral-medium-latest` | `mistral-small-latest` | `pixtral-large-latest` | `codestral-latest` | `mistral-tiny` | `mistral-medium`
+
+### **Cohere Models**
+
+`command-a-03-2025` | `command-r-08-2024` | `command-r-plus-08-2024` | `aya-expanse-8b` | `aya-expanse-32b` | `command-r7b-arabic` | `command-r` | `command-r-plus` | `command` | `command-light` | `command-nightly`
+
+### **Together AI Models**
+
+`meta-llama/Llama-3.3-70B-Instruct-Turbo` | `meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo` | `meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo` | `meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo` | `microsoft/WizardLM-2-8x22B` | `NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO` | `deepseek-ai/deepseek-llm-67b-chat` | `deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free`
+
+### **Hugging Face Models**
+
+`mistralai/Mistral-7B-Instruct-v0.3` | `microsoft/DialoGPT-medium` | `facebook/bart-large-cnn` | `microsoft/DialoGPT-large` | `HuggingFaceH4/zephyr-7b-beta` | `teknium/OpenHermes-2.5-Mistral-7B` | `NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO` | `meta-llama/Llama-3.2-3B-Instruct` | `microsoft/Phi-3.5-mini-instruct` | `Qwen/Qwen2.5-Coder-32B-Instruct` | `deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct` | `mistralai/Mistral-Nemo-Instruct-2407`
+
+### **Ollama Local Models**
+
+`deepseek-r1` | `llama3.3` | `phi4` | `qwen3` | `gemma3` | `llava1.6` | `granite3.1` | `mistral` | `codellama` | `qwen2.5-coder` | `llama2` | `phi3` | `gemma2` | `starcoder2` | `tinyllama` | `deepseek-coder` | `dolphin-llama3.1` | `olmo2` | `bge-m3` | `nous-hermes` | `mixtral` | `smollm2` | `snowflake-arctic-embed`
+
+### **OpenRouter Models**
+
+Access to multiple providers including `google/gemma-3-27b-it:free` and premium models from various providers
+
+</details>
 
 ## Technical Architecture
 
@@ -83,14 +162,14 @@ Native VS Code SCM panel integration with loading indicators, comprehensive stat
 
 ### **Commit Message Intelligence**
 
-- **Context Analysis**: Deep analysis of file diffs, change patterns, and repository history
+- **Context Analysis**: Deep analysis of file diffs, change patterns, and repository history powered by advanced models like GPT-4o, Claude-opus-4, and Gemini-2.5-pro
 - **Scope Detection**: Automatic identification of affected modules and components
 - **Breaking Change Recognition**: Intelligent detection of API changes and breaking modifications
 - **Verbosity Control**: Toggle between detailed descriptions and concise summaries
 
 ### **Enterprise-Ready Configuration**
 
-- **Standardized Prompts**: Consistent prompt templates across all 11 AI providers
+- **Standardized Prompts**: Consistent prompt templates across all 11 AI providers and 50+ models
 - **Custom Context Enhancement**: Optional domain-specific prompt customization
 - **Token Optimization**: Smart content truncation and cost management with pre-generation estimation
 - **Rate Limit Management**: Advanced monitoring with minute-based tracking and anomaly detection
@@ -100,10 +179,10 @@ Native VS Code SCM panel integration with loading indicators, comprehensive stat
 
 ### 1. Choose Your Provider Strategy
 
-**For Immediate Use**: GitHub Copilot (if you have VS Code Copilot subscription)
-**For Free Usage**: Google Gemini or DeepSeek for best free tier experience
-**For Privacy**: Ollama with local model deployment
-**For Performance**: OpenAI GPT-4o or Anthropic Claude-3-5-sonnet
+**For Immediate Use**: GitHub Copilot with gpt-4o or claude-3.5-sonnet (if you have VS Code Copilot subscription)  
+**For Free Usage**: Google Gemini-2.5-flash or DeepSeek-reasoner for best free tier experience  
+**For Privacy**: Ollama with local deepseek-r1, llama3.3, phi4, qwen3, gemma3, or codellama deployment  
+**For Performance**: OpenAI gpt-4.1, Anthropic claude-opus-4, or Google gemini-2.5-pro
 
 ### 2. Configuration
 
@@ -124,31 +203,31 @@ Native VS Code SCM panel integration with loading indicators, comprehensive stat
 
 ### **Context Window Considerations**
 
-- **Large repositories/refactoring**: 128k+ tokens (Gemini 2.5, Claude, GPT-4)
-- **Standard commits**: 32k tokens sufficient (Mistral Medium, most models)
-- **Complex multi-file changes**: 2M tokens recommended (Gemini models)
+- **Large repositories/refactoring**: 128k+ tokens (Gemini-2.5-pro, Claude-opus-4, GPT-4o)
+- **Standard commits**: 32k tokens sufficient (Mistral-medium, most models)
+- **Complex multi-file changes**: 2M tokens recommended (Gemini-2.5-pro models)
 
 ### **Performance Optimization**
 
-- **Speed priority**: Gemini 2.0-flash, Mistral Small, Command-light
-- **Quality priority**: GPT-4o, Claude-3-5-sonnet, Llama-3.3-70B
+- **Speed priority**: Gemini-2.0-flash, Mistral-small, Command-light, GPT-4o-mini
+- **Quality priority**: GPT-4.1, Claude-opus-4, Llama-3.3-70B, DeepSeek-reasoner
 - **Cost optimization**: Hugging Face open models, Ollama local deployment
 
 ### **Specialized Use Cases**
 
-- **Code-heavy changes**: codellama:34b (Ollama), DeepSeek models
-- **Multilingual projects**: Mistral models, Gemini series
+- **Code-heavy changes**: deepseek-r1, codellama:34b (Ollama), DeepSeek models, Qwen2.5-coder, starcoder2
+- **Multilingual projects**: Mistral models, Gemini series, aya-expanse models
 - **Documentation changes**: Command-light (Cohere), smaller efficient models
 
 ## Advanced Features
 
 ### **Enhanced Repository Analysis**
 
-**Intelligent change categorization** with automatic detection of feature additions, bug fixes, documentation updates, and refactoring patterns.
+**Intelligent change categorization** with automatic detection of feature additions, bug fixes, documentation updates, and refactoring patterns using advanced models like Claude-opus-4 and GPT-4.1.
 
 ### **Unified Prompt Architecture**
 
-**Standardized prompt engineering** across all 11 providers ensures consistent, high-quality commit messages regardless of chosen AI model.
+**Standardized prompt engineering** across all 11 providers and 50+ models ensures consistent, high-quality commit messages regardless of chosen AI model.
 
 ### **Professional Integration**
 
@@ -197,20 +276,20 @@ Access settings via Command Palette: `AI Commit Assistant: Open Settings` or the
 
 ### **Individual Developers**
 
-Maintain consistent commit history with intelligent message generation that adapts to your coding patterns and project context.
+Maintain consistent commit history with intelligent message generation that adapts to your coding patterns and project context using models like GPT-4o, Claude-3.5-sonnet, and Gemini-2.5-flash.
 
 ### **Team Collaboration**
 
-Standardize commit message formats across team members with configurable conventional commit standards and custom prompt templates.
+Standardize commit message formats across team members with configurable conventional commit standards and custom prompt templates powered by enterprise-grade models.
 
 ### **Enterprise Deployment**
 
-Scale across organizations with support for multiple AI providers, usage analytics, and centralized configuration management.
+Scale across organizations with support for multiple AI providers, usage analytics, and centralized configuration management using premium models like Claude-opus-4 and GPT-4.1.
 
 ### **Open Source Projects**
 
-Leverage free tier providers or local Ollama deployment to maintain professional commit standards without API costs.
+Leverage free tier providers (Gemini-2.5-flash, DeepSeek-reasoner) or local Ollama deployment (deepseek-r1, phi4, llama3.3, qwen3, gemma3) to maintain professional commit standards without API costs.
 
 ---
 
-**GitMind** transforms your development workflow with intelligent, context-aware commit message generation. **Supporting 11 AI providers** with **advanced diff analysis** and **standardized prompt engineering**, it delivers professional-grade commit messages that improve code history quality and team collaboration efficiency.
+**GitMind** transforms your development workflow with intelligent, context-aware commit message generation. **Supporting 11 AI providers** with **50+ models including GPT-4o, Claude-opus-4, Gemini-2.5-pro, DeepSeek-R1, Llama-3.3, Phi-4** and **advanced diff analysis**, it delivers professional-grade commit messages that improve code history quality and team collaboration efficiency.
