@@ -1,5 +1,32 @@
 # Changelog
 
+## [3.1.1] - 2025-06-08
+
+### Fixed
+
+- **DeepSeek Settings Persistence**: Resolved critical issue where DeepSeek API key and model settings were not being saved
+  - Fixed missing `deepseek.apiKey` and `deepseek.model` save operations in SettingsManager.ts
+  - DeepSeek settings now properly persist across VS Code sessions
+  - All DeepSeek configuration now correctly saves to VS Code's global configuration storage
+  - Users can now reliably configure and use DeepSeek AI provider without re-entering settings
+
+### Enhanced
+
+- **Package Metadata Updates**: Improved extension discoverability and accuracy
+  - Updated AI providers badge from "10" to "11" to accurately reflect current provider count
+  - Added modern keywords for better marketplace discovery:
+    - Settings management: `settings-management`, `configuration-persistence`, `api-key-management`
+    - Reliability: `stable-configuration`, `reliable-settings`
+    - Modern AI: `github-copilot`, `reasoning-models`, `o3-models`, `claude-4`, `gemini-2-5`, `modern-ai-models`
+  - Enhanced keyword coverage for latest AI models and configuration features
+
+### Technical
+
+- Verified all 11 AI providers are properly integrated and functional
+- Confirmed extension compilation and packaging work correctly with all updates
+- Updated version numbering and metadata for marketplace publication
+- Maintained backward compatibility while fixing critical settings persistence issue
+
 ## [3.1.0] - 2025-06-08
 
 ### Added

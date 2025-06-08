@@ -1,6 +1,6 @@
 # GitMind: AI Commit Assistant for VS Code
 
-Professional AI-powered commit message generation for Visual Studio Code. Leverage 10 different AI providers to create consistent, conventional commit messages that improve code history quality and team collaboration.
+**Professional AI-powered commit message generation for Visual Studio Code.** Leverage 11 different AI providers to create consistent, conventional commit messages that improve code history quality and team collaboration.
 
 <video width="100%" controls>
   <source src="https://shahabahreini.com/wp-content/uploads/GitMind-Introduction.mp4" type="video/mp4"> <a href="https://shahabahreini.com/wp-content/uploads/GitMind-Introduction.mp4">View the demo video</a>
@@ -14,233 +14,203 @@ Install from the [VS Code Marketplace](https://marketplace.visualstudio.com/item
 ext install ShahabBahreiniJangjoo.ai-commit-assistant
 ```
 
-## Key Features
+## Core Features
 
-**Multi-Provider AI Support**: Access 11 different AI providers with unified configuration and intelligent fallback handling.
+### **Multi-Provider AI Support**
 
-**Advanced Git Integration**: Smart diff analysis with automatic staging detection, binary file handling, and comprehensive repository state management.
+Access **11 different AI providers** with unified configuration and intelligent fallback handling. From zero-setup GitHub Copilot to privacy-focused local Ollama deployments.
 
-**Intelligent Diff Processing**: Enhanced change detection for staged and unstaged files with context-aware analysis and user guidance for complex scenarios.
+### **Advanced Git Integration**
 
-**Conventional Commits**: Automatic formatting with proper type categorization (feat|fix|docs|style|refactor|test|chore), scope detection, and breaking change identification.
+**Smart diff analysis** with automatic staging detection, binary file handling, and comprehensive repository state management. Handles complex scenarios including merge conflicts and mixed changes.
+
+### **Conventional Commits Standard**
+
+Automatic formatting with proper type categorization (`feat|fix|docs|style|refactor|test|chore`), scope detection, and **breaking change identification**.
 
 <video width="100%" controls>
   <source src="https://shahabahreini.com/wp-content/uploads/GenerateCommits.mp4" type="video/mp4"> <a href="https://shahabahreini.com/wp-content/uploads/GenerateCommits.mp4">View the demo video</a>
 </video>
 
-**Dynamic Model Selection**: Real-time model browsing for compatible providers with search and filtering capabilities.
+### **Intelligent Diff Processing**
 
-**Advanced Token Management**: Pre-generation estimation, rate limiting with minute-based tracking, and usage analytics.
+Enhanced change detection for staged and unstaged files with **context-aware analysis** and user guidance for complex scenarios.
 
-**Professional Workflow Integration**: Native VS Code SCM panel integration with loading indicators and comprehensive status feedback.
+### **Dynamic Model Selection**
 
-**Standardized Prompt Engineering**: Unified prompt architecture across all providers ensuring consistent, high-quality commit message generation.
+Real-time model browsing for compatible providers with search and filtering capabilities. **2M+ token context windows** supported for large repositories.
 
-## AI Provider Comparison
+### **Professional Workflow Integration**
 
-| Provider           | Free Tier | Paid Plans | Local Deployment | Dynamic Models | Rate Limiting | Setup Time |
-| ------------------ | --------- | ---------- | ---------------- | -------------- | ------------- | ---------- |
-| **GitHub Copilot** | ✗         | ✓          | ✗                | ✗              | VS Code       | **~5 sec** |
-| **Google Gemini**  | ✓         | ✓          | ✗                | ✗              | Basic         | ~2 min     |
-| **Mistral AI**     | ✓         | ✓          | ✗                | ✓              | Advanced      | ~2 min     |
-| **Hugging Face**   | ✓         | ✓          | ✗                | ✓              | Basic         | ~2 min     |
-| **Ollama**         | ✓         | ✗          | ✓                | ✓              | N/A           | ~5 min     |
-| **Cohere**         | ✓         | ✓          | ✗                | ✗              | Basic         | ~2 min     |
-| **OpenAI**         | ✗         | ✓          | ✗                | ✗              | Basic         | ~2 min     |
-| **Together AI**    | ✓         | ✓          | ✗                | ✓              | Basic         | ~2 min     |
-| **OpenRouter**     | ✓         | ✓          | ✗                | ✓              | Basic         | ~2 min     |
-| **Anthropic**      | ✗         | ✓          | ✗                | ✗              | Basic         | ~2 min     |
-| **DeepSeek**       | ✓         | ✓          | ✗                | ✗              | Basic         | ~2 min     |
+Native VS Code SCM panel integration with loading indicators, comprehensive status feedback, and **standardized prompt engineering** across all providers.
 
-### 🌟 Recommended Providers
+## AI Provider Ecosystem
 
-**🚀 For Zero Setup**: GitHub Copilot - requires only your existing VS Code Copilot subscription  
-**💰 For Free Usage**: Google Gemini, Mistral AI, DeepSeek, or Hugging Face  
-**🏠 For Local Privacy**: Ollama with local models  
-**⚡ For Performance**: OpenAI GPT-4, Anthropic Claude, or DeepSeek Reasoner
+### **Model Comparison & Selection Guide**
 
-## Model Specifications & Capabilities
+| Provider           | Best Model        | Context | Free Tier | Setup | Strengths                          | Limitations              |
+| ------------------ | ----------------- | ------- | --------- | ----- | ---------------------------------- | ------------------------ |
+| **GitHub Copilot** | gpt-4o            | 128k    | No        | 5sec  | Zero config, VS Code native        | Requires subscription    |
+| **Google Gemini**  | 2.5-flash         | 2M      | 15 RPM    | 2min  | Massive context, thinking model    | Rate limited (free)      |
+| **DeepSeek**       | reasoner          | 128k    | 50 RPM    | 2min  | Advanced reasoning, cost-effective | Newer provider           |
+| **Mistral AI**     | large-latest      | 128k    | 1 RPM     | 2min  | EU-compliant, multilingual         | Low free tier limits     |
+| **Ollama**         | phi4/llama3.3     | 128k    | Unlimited | 5min  | Complete privacy, no API costs     | Hardware dependent       |
+| **OpenAI**         | gpt-4o            | 128k    | No        | 2min  | Industry standard, multimodal      | Paid only, higher cost   |
+| **Anthropic**      | claude-3-5-sonnet | 200k    | No        | 2min  | Superior reasoning, long context   | Paid only                |
+| **Together AI**    | Llama-3.3-70B     | 128k    | 60 RPM    | 2min  | Optimized inference, generous free | Variable model quality   |
+| **Hugging Face**   | Mistral-7B-v0.3   | 32k     | Varies    | 2min  | Open source, customizable          | Inconsistent performance |
+| **Cohere**         | command-r         | 128k    | 20 RPM    | 2min  | RAG-optimized, retrieval focus     | Limited model variety    |
+| **OpenRouter**     | Multiple          | Varies  | Limited   | 2min  | Access to premium models           | Complex pricing          |
 
-| Provider           | Model                                   | Context Window | Rate Limits      | Strengths                                | Cost Tier    |
-| ------------------ | --------------------------------------- | -------------- | ---------------- | ---------------------------------------- | ------------ |
-| **Google Gemini**  | gemini-2.5-pro                          | 2M tokens      | 15 RPM (free)    | Latest reasoning, thinking model         | Free/Paid    |
-|                    | gemini-2.5-flash                        | 2M tokens      | 15 RPM (free)    | Efficient thinking, fast inference       | Free/Paid    |
-|                    | gemini-2.0-flash                        | 1M tokens      | 15 RPM (free)    | Multimodal, comprehensive                | Free/Paid    |
-|                    | gemini-1.5-pro                          | 2M tokens      | 2 RPM (free)     | Comprehensive capabilities               | Free/Paid    |
-| **GitHub Copilot** | gpt-4o                                  | 128k tokens    | VS Code managed  | Seamless VS Code integration, no API key | Subscription |
-|                    | gpt-4o-mini                             | 128k tokens    | VS Code managed  | Fast, efficient, cost-effective          | Subscription |
-|                    | gpt-4-turbo                             | 128k tokens    | VS Code managed  | High performance, balanced capabilities  | Subscription |
-|                    | gpt-3.5-turbo                           | 16k tokens     | VS Code managed  | Fast, economical                         | Subscription |
-| **Mistral AI**     | mistral-large-latest                    | 128k tokens    | 1 RPM (free)     | Superior reasoning, multilingual         | Free/Paid    |
-|                    | mistral-medium                          | 32k tokens     | 5 RPM (free)     | Balanced performance/cost                | Free/Paid    |
-|                    | mistral-small                           | 32k tokens     | 10 RPM (free)    | Lightweight, fast                        | Free/Paid    |
-| **Hugging Face**   | mistralai/Mistral-7B-Instruct-v0.3      | 32k tokens     | Varies by model  | Open source, customizable                | Free/Paid    |
-|                    | meta-llama/Llama-3.3-70B-Instruct       | 128k tokens    | Limited (free)   | Meta's latest, instruction-tuned         | Free/Paid    |
-|                    | microsoft/DialoGPT-medium               | 1k tokens      | Generous (free)  | Conversational, lightweight              | Free         |
-|                    | google/flan-t5-xxl                      | 512 tokens     | Generous (free)  | Instruction following                    | Free         |
-| **Ollama**         | phi4                                    | 128k tokens    | Hardware limited | Microsoft's reasoning model              | Free         |
-|                    | llama3.3:70b                            | 128k tokens    | Hardware limited | Meta's flagship, high quality            | Free         |
-|                    | codellama:34b                           | 16k tokens     | Hardware limited | Code-specialized, programming            | Free         |
-|                    | mistral:7b                              | 32k tokens     | Hardware limited | Efficient, multilingual                  | Free         |
-| **Cohere**         | command-r                               | 128k tokens    | 20 RPM (free)    | RAG-optimized, retrieval                 | Free/Paid    |
-|                    | command                                 | 4k tokens      | 5 RPM (free)     | General instruction following            | Free/Paid    |
-|                    | command-light                           | 4k tokens      | 100 RPM (free)   | Fast, lightweight                        | Free/Paid    |
-| **OpenAI**         | gpt-4.1                                 | 128k tokens    | 20 RPM           | Latest model with enhanced capabilities  | Paid         |
-|                    | gpt-4o                                  | 128k tokens    | 20 RPM           | Multimodal, latest capabilities          | Paid         |
-|                    | o3                                      | 128k tokens    | 10 RPM           | Advanced reasoning model                 | Paid         |
-|                    | gpt-4-turbo                             | 128k tokens    | 40 RPM           | High performance, cost-effective         | Paid         |
-|                    | gpt-3.5-turbo                           | 16k tokens     | 60 RPM           | Fast, economical                         | Paid         |
-| **Together AI**    | meta-llama/Llama-3.3-70B-Instruct-Turbo | 128k tokens    | 60 RPM (free)    | Optimized inference, high quality        | Free/Paid    |
-|                    | mistralai/Mixtral-8x7B-Instruct-v0.1    | 32k tokens     | 60 RPM (free)    | Mixture of experts, efficient            | Free/Paid    |
-|                    | microsoft/DialoGPT-large                | 1k tokens      | 200 RPM (free)   | Conversational AI                        | Free         |
-| **OpenRouter**     | google/gemma-2-27b-it                   | 8k tokens      | Varies           | Google's open model                      | Free/Paid    |
-|                    | anthropic/claude-3-haiku                | 200k tokens    | Rate limited     | Fast, efficient reasoning                | Paid         |
-|                    | openai/gpt-4-turbo                      | 128k tokens    | Provider limits  | Access to premium models                 | Paid         |
-| **Anthropic**      | claude-3-5-sonnet-20241022              | 200k tokens    | 50 RPM           | Latest reasoning, enhanced capabilities  | Paid         |
-|                    | claude-3-5-haiku-20241022               | 200k tokens    | 100 RPM          | Fast, efficient processing               | Paid         |
-|                    | claude-3-opus-20240229                  | 200k tokens    | 20 RPM           | Most capable reasoning model             | Paid         |
-|                    | claude-3-sonnet-20240229                | 200k tokens    | 50 RPM           | Balanced performance                     | Paid         |
-| **DeepSeek**       | deepseek-chat                           | 128k tokens    | 50 RPM (free)    | General purpose, code generation         | Free/Paid    |
-|                    | deepseek-reasoner                       | 128k tokens    | 20 RPM (free)    | Advanced reasoning, complex problems     | Free/Paid    |
+### **Quick Selection Guide**
 
-## Technical Capabilities
+**For Immediate Use**: GitHub Copilot (existing subscription) or Google Gemini (best free tier)
 
-### Advanced Diff Analysis
+**For Privacy**: Ollama with local phi4 or llama3.3:70b deployment
+
+**For Performance**: OpenAI GPT-4o, Anthropic Claude-3-5-sonnet, or DeepSeek Reasoner
+
+**For Large Projects**: Google Gemini (2M context) or Anthropic Claude (200k context)
+
+## Technical Architecture
+
+### **Advanced Diff Analysis Engine**
 
 - **Smart Staging Detection**: Automatic detection of staged vs unstaged changes with user guidance
-- **Binary File Handling**: Proper detection and handling of binary files in diffs
+- **Binary File Handling**: Proper detection and exclusion of binary files from analysis
 - **Repository State Management**: Comprehensive handling of complex git repository states
-- **Edge Case Processing**: Robust handling of empty diffs, merge conflicts, and other edge cases
+- **Edge Case Processing**: Robust handling of empty diffs, merge conflicts, and repository anomalies
 
-### Commit Message Intelligence
+### **Commit Message Intelligence**
 
-- **Context Analysis**: Analyzes file diffs, change patterns, and repository history
+- **Context Analysis**: Deep analysis of file diffs, change patterns, and repository history
 - **Scope Detection**: Automatic identification of affected modules and components
-- **Breaking Change Recognition**: Detects API changes and breaking modifications
+- **Breaking Change Recognition**: Intelligent detection of API changes and breaking modifications
 - **Verbosity Control**: Toggle between detailed descriptions and concise summaries
+
+### **Enterprise-Ready Configuration**
+
 - **Standardized Prompts**: Consistent prompt templates across all 11 AI providers
+- **Custom Context Enhancement**: Optional domain-specific prompt customization
+- **Token Optimization**: Smart content truncation and cost management with pre-generation estimation
+- **Rate Limit Management**: Advanced monitoring with minute-based tracking and anomaly detection
+- **Debug Mode**: Comprehensive API interaction logging and response analysis
 
-### Advanced Configuration
+## Quick Start Guide
 
-- **Custom Prompts**: Optional context enhancement for domain-specific commits
-- **Model Selection**: Provider-specific model configuration with performance optimization
-- **Debug Mode**: Comprehensive API interaction logging and response tracking
-- **Token Optimization**: Smart content truncation and cost management
-- **Diff Validation**: Advanced validation to ensure quality input for AI processing
+### 1. Choose Your Provider Strategy
 
-### Developer Workflow
+**For Immediate Use**: GitHub Copilot (if you have VS Code Copilot subscription)
+**For Free Usage**: Google Gemini or DeepSeek for best free tier experience
+**For Privacy**: Ollama with local model deployment
+**For Performance**: OpenAI GPT-4o or Anthropic Claude-3-5-sonnet
 
-- **VS Code Integration**: Native Source Control panel with dedicated UI components
-- **Smart Change Detection**: Handles staged, unstaged, and mixed modifications with user confirmation
-- **Batch Processing**: Support for multiple file changes with intelligent grouping
-- **Manual Override**: Preserves user edits and allows custom modifications
-- **Error Recovery**: Comprehensive error handling with actionable guidance
+### 2. Configuration
 
-## Quick Setup
+1. Open VS Code Source Control panel
+2. Click the settings icon in GitMind section
+3. Select your preferred AI provider
+4. Add API key (skip for GitHub Copilot and Ollama)
+5. Choose optimal model for your use case
 
-1. **Choose Provider**: Select from 9 supported AI providers based on your requirements
-2. **Configure API**: Add your API key through the extension settings panel
-3. **Select Model**: Choose optimal model for your use case and budget
-4. **Generate Commits**: Use the AI button in VS Code's Source Control panel
+### 3. Generate Commits
 
-### Recommended Configurations
+1. Stage your changes in Git
+2. Click the "AI" button in Source Control panel
+3. Review and edit the generated commit message
+4. Commit your changes
 
-**For Open Source Projects**:
+## Model Selection Guidelines
 
-- **Ollama** (phi4 or llama3.3:70b) - Complete privacy, no API costs
-- **Hugging Face** (mistralai/Mistral-7B-Instruct-v0.3) - Reliable free tier
-- **DeepSeek** (deepseek-chat) - Excellent free tier, competitive performance
+### **Context Window Considerations**
 
-**For Professional Development**:
+- **Large repositories/refactoring**: 128k+ tokens (Gemini 2.5, Claude, GPT-4)
+- **Standard commits**: 32k tokens sufficient (Mistral Medium, most models)
+- **Complex multi-file changes**: 2M tokens recommended (Gemini models)
 
-- **Google Gemini** (gemini-2.5-flash) - Excellent free tier, 2M context
-- **Mistral AI** (mistral-large-latest) - Superior reasoning, multilingual
-- **DeepSeek** (deepseek-reasoner) - Advanced reasoning capabilities
-
-**For Enterprise**:
-
-- **OpenAI** (gpt-4o) - Industry standard, multimodal capabilities
-- **Mistral Large** - EU-compliant alternative with advanced reasoning
-- **DeepSeek Reasoner** - Cost-effective reasoning model
-
-**For High-Volume Usage**:
-
-- **Together AI** (Llama-3.3-70B-Instruct-Turbo) - Optimized inference, generous free tier
-- **OpenRouter** - Access multiple premium models through unified API
-
-### Model Selection Guidelines
-
-**Context Window Considerations**:
-
-- **Large repositories**: Choose models with 128k+ tokens (Gemini, Mistral Large, OpenAI)
-- **Simple commits**: 32k tokens sufficient (Mistral Medium, most HuggingFace models)
-- **Complex refactoring**: 2M tokens recommended (Gemini 2.5-flash, Gemini 1.5-pro)
-
-**Performance Trade-offs**:
+### **Performance Optimization**
 
 - **Speed priority**: Gemini 2.0-flash, Mistral Small, Command-light
-- **Quality priority**: GPT-4o, Mistral Large, Llama-3.3-70B
-- **Cost optimization**: HuggingFace open models, Ollama local deployment
+- **Quality priority**: GPT-4o, Claude-3-5-sonnet, Llama-3.3-70B
+- **Cost optimization**: Hugging Face open models, Ollama local deployment
 
-**Diff Complexity Handling**:
+### **Specialized Use Cases**
 
-- **Large diffs**: Use providers with higher context windows (Gemini, Claude)
-- **Binary files**: Automatic detection and exclusion from analysis
-- **Mixed changes**: Smart prompting for staged vs unstaged handling
-
-## Requirements
-
-- Visual Studio Code ^1.100.0
-- Git repository (initialized)
-- API key from chosen provider OR Ollama installation
+- **Code-heavy changes**: codellama:34b (Ollama), DeepSeek models
+- **Multilingual projects**: Mistral models, Gemini series
+- **Documentation changes**: Command-light (Cohere), smaller efficient models
 
 ## Advanced Features
 
-### Enhanced Diff Processing
+### **Enhanced Repository Analysis**
 
-Advanced git diff analysis with staging detection, binary file handling, and comprehensive repository state management.
+**Intelligent change categorization** with automatic detection of feature additions, bug fixes, documentation updates, and refactoring patterns.
 
-### Standardized Prompt Architecture
+### **Unified Prompt Architecture**
 
-Unified prompt engineering across all 11 AI providers ensuring consistent, high-quality output regardless of chosen model.
+**Standardized prompt engineering** across all 11 providers ensures consistent, high-quality commit messages regardless of chosen AI model.
 
-### Rate Limit Management
+### **Professional Integration**
 
-Advanced monitoring and handling for API quotas with minute-based tracking and anomaly detection.
+- Native VS Code Source Control panel integration
+- **Batch processing** support for multiple file changes
+- Manual override with edit preservation
+- Comprehensive error handling with actionable guidance
 
-### Dynamic Model Loading
+### **Diagnostic & Monitoring Tools**
 
-Real-time model discovery and selection for Hugging Face and compatible providers.
+- Real-time token usage estimation
+- API response analysis and debugging
+- Rate limit monitoring and optimization
+- Model performance analytics
 
-### Diagnostic Tools
-
-Token estimation, response analysis, and comprehensive debugging capabilities.
-
-### Professional Integration
-
-Enterprise-ready with support for team configurations and standardized commit formats.
-
-## Configuration
+## Configuration Options
 
 Access settings via Command Palette: `AI Commit Assistant: Open Settings` or the settings icon in the Source Control panel.
 
-**Provider Configuration**: Select AI provider and configure authentication
-**Model Selection**: Choose specific models with real-time validation
-**Message Format**: Configure verbosity and conventional commit formatting
-**Advanced Options**: Enable debug mode, custom prompts, and diagnostic information
+**Provider Management**
 
-## Architecture
+- AI provider selection with real-time validation
+- Secure API key configuration
+- Model selection with performance metrics
 
-Built with TypeScript for reliability and performance:
+**Message Formatting**
 
-- **Modular Provider System**: Dedicated API service modules with proper error handling
-- **Advanced Git Integration**: Sophisticated diff processing and repository analysis
-- **Smart Response Parsing**: Sophisticated commit message formatting and validation
-- **Standardized Prompt System**: Unified prompt architecture across all providers
-- **Webview Settings UI**: Professional configuration interface with real-time feedback
-- **Enhanced Diff Engine**: Advanced repository analysis and diff processing
-- **Token Management**: Intelligent usage tracking and optimization
+- Conventional commit standard compliance
+- Verbosity level control
+- Custom scope and type configuration
+
+**Advanced Settings**
+
+- Debug mode for development
+- Custom prompt templates
+- Token usage optimization
+- Rate limit configuration
+
+## Requirements
+
+- **Visual Studio Code** ^1.100.0
+- **Git repository** (initialized)
+- **API key** from chosen provider OR **Ollama installation** for local deployment
+
+## Professional Use Cases
+
+### **Individual Developers**
+
+Maintain consistent commit history with intelligent message generation that adapts to your coding patterns and project context.
+
+### **Team Collaboration**
+
+Standardize commit message formats across team members with configurable conventional commit standards and custom prompt templates.
+
+### **Enterprise Deployment**
+
+Scale across organizations with support for multiple AI providers, usage analytics, and centralized configuration management.
+
+### **Open Source Projects**
+
+Leverage free tier providers or local Ollama deployment to maintain professional commit standards without API costs.
 
 ---
 
-**GitMind** transforms your commit workflow with professional AI-powered message generation, supporting both individual developers and enterprise teams with consistent, meaningful commit histories through advanced diff analysis and standardized prompt engineering.
+**GitMind** transforms your development workflow with intelligent, context-aware commit message generation. **Supporting 11 AI providers** with **advanced diff analysis** and **standardized prompt engineering**, it delivers professional-grade commit messages that improve code history quality and team collaboration efficiency.

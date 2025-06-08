@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for integrating a new AI provider 
 ## Prerequisites
 
 Before starting, ensure you have:
+
 - Provider name (e.g., "anthropic", "deepseek", "openai")
 - Provider display name (e.g., "Anthropic", "DeepSeek", "OpenAI")
 - Available models list
@@ -19,54 +20,69 @@ Before starting, ensure you have:
 ### File: `src/config/types.ts`
 
 1. **Add provider to ApiProvider union type:**
+
 ```typescript
-export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic" | "copilot" | "deepseek" | "PROVIDER_NAME";
+export type ApiProvider =
+  | "gemini"
+  | "huggingface"
+  | "ollama"
+  | "mistral"
+  | "cohere"
+  | "openai"
+  | "together"
+  | "openrouter"
+  | "anthropic"
+  | "copilot"
+  | "deepseek"
+  | "PROVIDER_NAME";
 ```
 
 2. **Add provider model type:**
+
 ```typescript
 export type ProviderNameModel =
-    // Latest Models
-    | "model-name-1"
-    | "model-name-2"
-    | "model-name-3";
+  // Latest Models
+  "model-name-1" | "model-name-2" | "model-name-3";
 ```
 
 3. **Add provider API configuration interface:**
+
 ```typescript
 export interface ProviderNameApiConfig extends BaseApiConfig {
-    type: "PROVIDER_NAME";
-    apiKey: string; // or other auth fields
-    model: ProviderNameModel;
+  type: "PROVIDER_NAME";
+  apiKey: string; // or other auth fields
+  model: ProviderNameModel;
 }
 ```
 
 4. **Add to ApiConfig union type:**
+
 ```typescript
 export type ApiConfig =
-    | GeminiApiConfig
-    | HuggingFaceApiConfig
-    | OllamaApiConfig
-    | MistralApiConfig
-    | CohereApiConfig
-    | OpenAIApiConfig
-    | TogetherApiConfig
-    | OpenRouterApiConfig
-    | AnthropicApiConfig
-    | CopilotApiConfig
-    | DeepSeekApiConfig
-    | ProviderNameApiConfig;
+  | GeminiApiConfig
+  | HuggingFaceApiConfig
+  | OllamaApiConfig
+  | MistralApiConfig
+  | CohereApiConfig
+  | OpenAIApiConfig
+  | TogetherApiConfig
+  | OpenRouterApiConfig
+  | AnthropicApiConfig
+  | CopilotApiConfig
+  | DeepSeekApiConfig
+  | ProviderNameApiConfig;
 ```
 
 5. **Add to ExtensionConfig interface:**
+
 ```typescript
 export interface ExtensionConfig {
-    // ... existing fields
-    PROVIDER_NAME: {
-        enabled: boolean;
-        apiKey?: string; // or other auth fields
-        model: string;
-    };
+  // ... existing fields
+  PROVIDER_NAME: {
+    enabled: boolean;
+    apiKey?: string; // or other auth fields
+    model: string;
+  };
 }
 ```
 
@@ -75,30 +91,33 @@ export interface ExtensionConfig {
 ### File: `src/config/settings.ts`
 
 1. **Add import for model type:**
+
 ```typescript
 import {
-    // ... existing imports
-    ProviderNameModel, // Add this import
+  // ... existing imports
+  ProviderNameModel, // Add this import
 } from "./types";
 ```
 
 2. **Add provider config in getConfiguration():**
+
 ```typescript
 export function getConfiguration(): ExtensionConfig {
-    // ... existing code
-    return {
-        // ... existing providers
-        PROVIDER_NAME: {
-            enabled: config.get("PROVIDER_NAME.enabled", false),
-            apiKey: config.get("PROVIDER_NAME.apiKey"),
-            model: config.get("PROVIDER_NAME.model", "DEFAULT_MODEL_NAME"),
-        },
-        // ... rest of config
-    };
+  // ... existing code
+  return {
+    // ... existing providers
+    PROVIDER_NAME: {
+      enabled: config.get("PROVIDER_NAME.enabled", false),
+      apiKey: config.get("PROVIDER_NAME.apiKey"),
+      model: config.get("PROVIDER_NAME.model", "DEFAULT_MODEL_NAME"),
+    },
+    // ... rest of config
+  };
 }
 ```
 
 3. **Add case in getApiConfig() switch statement:**
+
 ```typescript
 case "PROVIDER_NAME":
     return {
@@ -112,7 +131,7 @@ case "PROVIDER_NAME":
 
 ### File: `src/services/api/PROVIDER_NAME.ts`
 
-Create new file with complete API implementation:
+**CREATE NEW FILE** with complete API implementation:
 
 ```typescript
 import { debugLog } from "../debug/logger";
@@ -122,87 +141,93 @@ import { APIErrorHandler } from "../../utils/errorHandler";
 const PROVIDER_NAME_BASE_URL = "https://api.provider.com/v1"; // Replace with actual URL
 
 export async function callProviderNameAPI(
-    apiKey: string,
-    model: string,
-    diff: string,
-    customContext?: string
+  apiKey: string,
+  model: string,
+  diff: string,
+  customContext?: string
 ): Promise<string> {
-    debugLog(`Making API call to Provider Name with model: ${model}`);
-    
-    const headers = {
-        "Authorization": `Bearer ${apiKey}`, // Adjust auth header as needed
-        "Content-Type": "application/json",
-    };
+  debugLog(`Making API call to Provider Name with model: ${model}`);
 
-    const messages = [
-        {
-            role: "system",
-            content: "You are an expert at creating concise, informative git commit messages..."
-        },
-        {
-            role: "user",
-            content: `${customContext ? customContext + "\n\n" : ""}Here's the git diff:\n\n${diff}`
-        }
-    ];
+  const headers = {
+    Authorization: `Bearer ${apiKey}`, // Adjust auth header as needed
+    "Content-Type": "application/json",
+  };
 
-    const body = {
-        model: model,
-        messages: messages,
-        max_tokens: 150,
-        temperature: 0.3,
-    };
+  const messages = [
+    {
+      role: "system",
+      content:
+        "You are an expert at creating concise, informative git commit messages...",
+    },
+    {
+      role: "user",
+      content: `${
+        customContext ? customContext + "\n\n" : ""
+      }Here's the git diff:\n\n${diff}`,
+    },
+  ];
 
-    try {
-        const response = await RequestManager.makeRequest(
-            `${PROVIDER_NAME_BASE_URL}/chat/completions`, // Adjust endpoint
-            {
-                method: "POST",
-                headers,
-                body: JSON.stringify(body),
-            }
-        );
+  const body = {
+    model: model,
+    messages: messages,
+    max_tokens: 150,
+    temperature: 0.3,
+  };
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            debugLog(`Provider Name API error: ${response.status} - ${errorText}`);
-            throw APIErrorHandler.handleError(
-                new Error(`Provider Name API error: ${response.status}`),
-                "PROVIDER_NAME"
-            );
-        }
+  try {
+    const response = await RequestManager.makeRequest(
+      `${PROVIDER_NAME_BASE_URL}/chat/completions`, // Adjust endpoint
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      }
+    );
 
-        const data = await response.json();
-        const message = data.choices?.[0]?.message?.content || data.message?.content;
-        
-        if (!message) {
-            throw new Error("No valid response from Provider Name API");
-        }
-
-        debugLog(`Provider Name API response received successfully`);
-        return message.trim();
-    } catch (error) {
-        debugLog(`Provider Name API call failed: ${error}`);
-        throw APIErrorHandler.handleError(error as Error, "PROVIDER_NAME");
+    if (!response.ok) {
+      const errorText = await response.text();
+      debugLog(`Provider Name API error: ${response.status} - ${errorText}`);
+      throw APIErrorHandler.handleError(
+        new Error(`Provider Name API error: ${response.status}`),
+        "PROVIDER_NAME"
+      );
     }
+
+    const data = await response.json();
+    const message =
+      data.choices?.[0]?.message?.content || data.message?.content;
+
+    if (!message) {
+      throw new Error("No valid response from Provider Name API");
+    }
+
+    debugLog(`Provider Name API response received successfully`);
+    return message.trim();
+  } catch (error) {
+    debugLog(`Provider Name API call failed: ${error}`);
+    throw APIErrorHandler.handleError(error as Error, "PROVIDER_NAME");
+  }
 }
 
-export async function validateProviderNameAPIKey(apiKey: string): Promise<boolean> {
-    try {
-        const response = await RequestManager.makeRequest(
-            `${PROVIDER_NAME_BASE_URL}/models`, // Adjust validation endpoint
-            {
-                method: "GET",
-                headers: {
-                    "Authorization": `Bearer ${apiKey}`,
-                    "Content-Type": "application/json",
-                },
-            }
-        );
-        return response.ok;
-    } catch (error) {
-        debugLog(`Provider Name API key validation failed: ${error}`);
-        return false;
-    }
+export async function validateProviderNameAPIKey(
+  apiKey: string
+): Promise<boolean> {
+  try {
+    const response = await RequestManager.makeRequest(
+      `${PROVIDER_NAME_BASE_URL}/models`, // Adjust validation endpoint
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.ok;
+  } catch (error) {
+    debugLog(`Provider Name API key validation failed: ${error}`);
+    return false;
+  }
 }
 ```
 
@@ -211,15 +236,17 @@ export async function validateProviderNameAPIKey(apiKey: string): Promise<boolea
 ### File: `src/services/api/index.ts`
 
 1. **Add import:**
+
 ```typescript
 import { callProviderNameAPI } from "./PROVIDER_NAME";
 import {
-    // ... existing imports
-    ProviderNameApiConfig,
+  // ... existing imports
+  ProviderNameApiConfig,
 } from "../../config/types";
 ```
 
 2. **Add case in generateMessageWithConfig() switch statement:**
+
 ```typescript
 case "PROVIDER_NAME": {
     const providerConfig = config as ProviderNameApiConfig;
@@ -327,11 +354,13 @@ case "PROVIDER_NAME": {
 ### File: `src/services/api/validation.ts`
 
 1. **Add import:**
+
 ```typescript
 import { validateProviderNameAPIKey } from "./PROVIDER_NAME";
 ```
 
 2. **Add case in checkApiSetup() switch statement:**
+
 ```typescript
 case "PROVIDER_NAME":
     if (!config.apiKey) {
@@ -353,6 +382,7 @@ case "PROVIDER_NAME":
 ```
 
 3. **Add case in checkRateLimits() switch statement:**
+
 ```typescript
 case "PROVIDER_NAME":
     result.success = true;
@@ -374,12 +404,12 @@ Add provider configuration to interface:
 
 ```typescript
 export interface ExtensionSettings {
-    // ... existing providers
-    PROVIDER_NAME: {
-        apiKey: string;
-        model: string;
-    };
-    // ... rest of interface
+  // ... existing providers
+  PROVIDER_NAME: {
+    apiKey: string;
+    model: string;
+  };
+  // ... rest of interface
 }
 ```
 
@@ -388,10 +418,11 @@ export interface ExtensionSettings {
 ### File: `package.json`
 
 1. **Add to provider enum:**
+
 ```json
 "enum": [
     "gemini",
-    "huggingface", 
+    "huggingface",
     "ollama",
     "mistral",
     "cohere",
@@ -406,6 +437,7 @@ export interface ExtensionSettings {
 ```
 
 2. **Add to enumDescriptions:**
+
 ```json
 "enumDescriptions": [
     // ... existing descriptions
@@ -414,6 +446,7 @@ export interface ExtensionSettings {
 ```
 
 3. **Add provider-specific configuration:**
+
 ```json
 "aiCommitAssistant.PROVIDER_NAME.apiKey": {
     "type": "string",
@@ -429,7 +462,7 @@ export interface ExtensionSettings {
     ],
     "enumDescriptions": [
         "Model 1 - Description of capabilities",
-        "Model 2 - Description of capabilities", 
+        "Model 2 - Description of capabilities",
         "Model 3 - Description of capabilities"
     ],
     "default": "DEFAULT_MODEL_NAME",
@@ -438,6 +471,7 @@ export interface ExtensionSettings {
 ```
 
 4. **Add to keywords:**
+
 ```json
 "keywords": [
     // ... existing keywords
@@ -447,11 +481,13 @@ export interface ExtensionSettings {
 ```
 
 5. **Update description to increment provider count:**
+
 ```json
 "description": "🚀 Generate perfect git commit messages instantly using AI! Support for 12 free/paid AI providers including GitHub Copilot (Gemini, OpenAI, Claude, Mistral, HuggingFace, Ollama, Anthropic, Together AI, DeepSeek, Provider Name). Smart conventional commits, advanced diff analysis, standardized prompts"
 ```
 
 6. **Update version number:**
+
 ```json
 "version": "X.Y.Z" // Increment appropriately
 ```
@@ -461,6 +497,7 @@ export interface ExtensionSettings {
 ### File: `src/webview/settings/SettingsManager.ts`
 
 1. **Add to getCurrentSettings():**
+
 ```typescript
 PROVIDER_NAME: {
     apiKey: config.get<string>("PROVIDER_NAME.apiKey") || "",
@@ -469,16 +506,17 @@ PROVIDER_NAME: {
 ```
 
 2. **Add to saveSettings():**
+
 ```typescript
 await config.update(
-    "PROVIDER_NAME.apiKey",
-    settings.PROVIDER_NAME.apiKey,
-    vscode.ConfigurationTarget.Global
+  "PROVIDER_NAME.apiKey",
+  settings.PROVIDER_NAME.apiKey,
+  vscode.ConfigurationTarget.Global
 );
 await config.update(
-    "PROVIDER_NAME.model",
-    settings.PROVIDER_NAME.model,
-    vscode.ConfigurationTarget.Global
+  "PROVIDER_NAME.model",
+  settings.PROVIDER_NAME.model,
+  vscode.ConfigurationTarget.Global
 );
 ```
 
@@ -486,19 +524,21 @@ await config.update(
 
 ### File: `src/webview/settings/components/ProviderNameSettings.ts`
 
+**CREATE NEW FILE** with settings component implementation:
+
 ```typescript
 import { ExtensionSettings } from "../../../models/ExtensionSettings";
 import { ProviderIcon } from "./ProviderIcon";
 
 export class ProviderNameSettings {
-    private _settings: ExtensionSettings;
+  private _settings: ExtensionSettings;
 
-    constructor(settings: ExtensionSettings) {
-        this._settings = settings;
-    }
+  constructor(settings: ExtensionSettings) {
+    this._settings = settings;
+  }
 
-    public render(): string {
-        return `
+  public render(): string {
+    return `
         <div id="PROVIDER_NAMESettings" class="provider-section" style="display: none;">
             <div class="provider-header">
                 <div class="provider-title">
@@ -528,13 +568,25 @@ export class ProviderNameSettings {
                 <div class="form-group">
                     <label for="PROVIDER_NAMEModel">Model</label>
                     <select id="PROVIDER_NAMEModel" class="form-control">
-                        <option value="model-name-1" ${this._settings.PROVIDER_NAME?.model === "model-name-1" ? "selected" : ""}>
+                        <option value="model-name-1" ${
+                          this._settings.PROVIDER_NAME?.model === "model-name-1"
+                            ? "selected"
+                            : ""
+                        }>
                             Model 1 - Description
                         </option>
-                        <option value="model-name-2" ${this._settings.PROVIDER_NAME?.model === "model-name-2" ? "selected" : ""}>
+                        <option value="model-name-2" ${
+                          this._settings.PROVIDER_NAME?.model === "model-name-2"
+                            ? "selected"
+                            : ""
+                        }>
                             Model 2 - Description
                         </option>
-                        <option value="model-name-3" ${this._settings.PROVIDER_NAME?.model === "model-name-3" ? "selected" : ""}>
+                        <option value="model-name-3" ${
+                          this._settings.PROVIDER_NAME?.model === "model-name-3"
+                            ? "selected"
+                            : ""
+                        }>
                             Model 3 - Description
                         </option>
                     </select>
@@ -544,7 +596,7 @@ export class ProviderNameSettings {
                 </div>
             </div>
         </div>`;
-    }
+  }
 }
 ```
 
@@ -553,11 +605,13 @@ export class ProviderNameSettings {
 ### File: `src/webview/settings/SettingsTemplateGenerator.ts`
 
 1. **Add import:**
+
 ```typescript
 import { ProviderNameSettings } from "./components/ProviderNameSettings";
 ```
 
 2. **Add to generate() method:**
+
 ```typescript
 const providerNameSettings = new ProviderNameSettings(this._settings);
 
@@ -586,6 +640,7 @@ private static icons = {
 ### File: `src/webview/settings/components/StatusBanner.ts`
 
 1. **Add case to get model info:**
+
 ```typescript
 case "PROVIDER_NAME":
     modelInfo = this._settings.PROVIDER_NAME?.model || "DEFAULT_MODEL_NAME";
@@ -593,6 +648,7 @@ case "PROVIDER_NAME":
 ```
 
 2. **Add case to check API configuration:**
+
 ```typescript
 case "PROVIDER_NAME":
     apiConfigured = !!this._settings.PROVIDER_NAME?.apiKey;
@@ -600,10 +656,11 @@ case "PROVIDER_NAME":
 ```
 
 3. **Add to provider display names:**
+
 ```typescript
 const providerDisplayNames = {
-    // ... existing providers
-    PROVIDER_NAME: "Provider Display Name"
+  // ... existing providers
+  PROVIDER_NAME: "Provider Display Name",
 } as const;
 ```
 
@@ -646,12 +703,16 @@ Add option to provider select:
 ### File: `src/webview/settings/scripts/settingsManager.ts`
 
 1. **Add to form population:**
+
 ```typescript
-document.getElementById('PROVIDER_NAMEApiKey').value = currentSettings.PROVIDER_NAME?.apiKey || '';
-document.getElementById('PROVIDER_NAMEModel').value = currentSettings.PROVIDER_NAME?.model || 'DEFAULT_MODEL_NAME';
+document.getElementById("PROVIDER_NAMEApiKey").value =
+  currentSettings.PROVIDER_NAME?.apiKey || "";
+document.getElementById("PROVIDER_NAMEModel").value =
+  currentSettings.PROVIDER_NAME?.model || "DEFAULT_MODEL_NAME";
 ```
 
 2. **Add to form collection:**
+
 ```typescript
 PROVIDER_NAME: {
     apiKey: document.getElementById('PROVIDER_NAMEApiKey').value,
@@ -660,10 +721,13 @@ PROVIDER_NAME: {
 ```
 
 3. **Add to settings update handler:**
+
 ```typescript
 if (currentSettings.PROVIDER_NAME) {
-    document.getElementById('PROVIDER_NAMEApiKey').value = currentSettings.PROVIDER_NAME.apiKey || '';
-    document.getElementById('PROVIDER_NAMEModel').value = currentSettings.PROVIDER_NAME.model || 'DEFAULT_MODEL_NAME';
+  document.getElementById("PROVIDER_NAMEApiKey").value =
+    currentSettings.PROVIDER_NAME.apiKey || "";
+  document.getElementById("PROVIDER_NAMEModel").value =
+    currentSettings.PROVIDER_NAME.model || "DEFAULT_MODEL_NAME";
 }
 ```
 
@@ -672,6 +736,7 @@ if (currentSettings.PROVIDER_NAME) {
 ### File: `src/webview/settings/scripts/apiManager.ts`
 
 1. **Add to getApiSettings() function:**
+
 ```typescript
 } else if (provider === 'PROVIDER_NAME') {
     apiSettings = {
@@ -682,6 +747,7 @@ if (currentSettings.PROVIDER_NAME) {
 ```
 
 2. **Add to validation checks:**
+
 ```typescript
 } else if (provider === 'PROVIDER_NAME' && !apiSettings.apiKey) {
     missingFields.push('Provider Name API Key');
@@ -689,6 +755,7 @@ if (currentSettings.PROVIDER_NAME) {
 ```
 
 3. **Add to testConnection() function:**
+
 ```typescript
 } else if (provider === 'PROVIDER_NAME') {
     apiSettings.apiKey = document.getElementById('PROVIDER_NAMEApiKey').value;
@@ -697,10 +764,11 @@ if (currentSettings.PROVIDER_NAME) {
 ```
 
 4. **Add to display names:**
+
 ```typescript
 const displayNames = {
-    // ... existing providers
-    'PROVIDER_NAME': 'Provider Display Name'
+  // ... existing providers
+  PROVIDER_NAME: "Provider Display Name",
 };
 ```
 
@@ -709,20 +777,23 @@ const displayNames = {
 ### File: `src/webview/settings/scripts/uiManager.ts`
 
 1. **Add to updateVisibleSettings() function:**
+
 ```typescript
-document.getElementById('PROVIDER_NAMESettings').style.display =
-    provider === 'PROVIDER_NAME' ? 'block' : 'none';
+document.getElementById("PROVIDER_NAMESettings").style.display =
+  provider === "PROVIDER_NAME" ? "block" : "none";
 ```
 
 2. **Add to icons object:**
+
 ```typescript
 const icons = {
-    // ... existing icons
-    PROVIDER_NAME: "SVG_PATH_DATA_HERE"
+  // ... existing icons
+  PROVIDER_NAME: "SVG_PATH_DATA_HERE",
 };
 ```
 
 3. **Add to getStatusInfo() switch statement:**
+
 ```typescript
 case "PROVIDER_NAME":
     modelInfo = settings.PROVIDER_NAME.model || "DEFAULT_MODEL_NAME";
@@ -730,6 +801,7 @@ case "PROVIDER_NAME":
 ```
 
 4. **Add to API configuration check:**
+
 ```typescript
 case "PROVIDER_NAME":
     apiConfigured = !!settings.PROVIDER_NAME.apiKey;
@@ -737,10 +809,11 @@ case "PROVIDER_NAME":
 ```
 
 5. **Add to display names:**
+
 ```typescript
 const displayNames = {
-    // ... existing providers
-    PROVIDER_NAME: "Provider Display Name"
+  // ... existing providers
+  PROVIDER_NAME: "Provider Display Name",
 };
 ```
 
@@ -762,11 +835,15 @@ private static readonly API_KEY_URLS = {
 ### File: `src/extension.ts`
 
 1. **Update supported providers log:**
+
 ```typescript
-debugLog("Supported API providers: Gemini, Hugging Face, Ollama, Mistral, Cohere, OpenAI, Together AI, OpenRouter, Anthropic, GitHub Copilot, DeepSeek, Provider Name");
+debugLog(
+  "Supported API providers: Gemini, Hugging Face, Ollama, Mistral, Cohere, OpenAI, Together AI, OpenRouter, Anthropic, GitHub Copilot, DeepSeek, Provider Name"
+);
 ```
 
 2. **Update onboarding content:**
+
 ```typescript
 content: 'GitMind supports multiple AI providers:\n• Gemini (Google)\n• Hugging Face\n• Ollama (Local)\n• Mistral AI\n• Cohere\n• OpenAI\n• Together AI\n• OpenRouter\n• Anthropic\n• GitHub Copilot\n• DeepSeek\n• Provider Name\n\nClick Next to learn how to configure your chosen provider.',
 ```
@@ -776,32 +853,38 @@ content: 'GitMind supports multiple AI providers:\n• Gemini (Google)\n• Hugg
 ### File: `README.md`
 
 1. **Update provider count in key features:**
+
 ```markdown
 **Multi-Provider AI Support**: Access 12 different AI providers with unified configuration and intelligent fallback handling.
 ```
 
 2. **Add provider to comparison table:**
+
 ```markdown
-| **Provider Name**  | ✓/✗       | ✓/✗        | ✓/✗              | ✓/✗            | Basic/Advanced| ~X min     |
+| **Provider Name** | ✓/✗ | ✓/✗ | ✓/✗ | ✓/✗ | Basic/Advanced| ~X min |
 ```
 
 3. **Add to recommended providers section:**
+
 ```markdown
 **For [Use Case]**: Provider Name (model-name) - Description of benefits
 ```
 
 4. **Add to model specifications table:**
+
 ```markdown
-| **Provider Name**  | model-name-1                            | XXXk tokens    | XX RPM           | Description of model capabilities        | Free/Paid    |
-|                    | model-name-2                            | XXXk tokens    | XX RPM           | Description of model capabilities        | Free/Paid    |
+| **Provider Name** | model-name-1 | XXXk tokens | XX RPM | Description of model capabilities | Free/Paid |
+| | model-name-2 | XXXk tokens | XX RPM | Description of model capabilities | Free/Paid |
 ```
 
 5. **Update standardized prompts count:**
+
 ```markdown
 - **Standardized Prompts**: Consistent prompt templates across all 12 AI providers
 ```
 
 6. **Update technical capabilities count:**
+
 ```markdown
 Unified prompt engineering across all 12 AI providers ensuring consistent, high-quality output regardless of chosen model.
 ```
@@ -818,9 +901,10 @@ Add new version entry with provider integration details:
 ### Added
 
 - **Provider Name AI Provider Integration**: [Brief description of capabilities]
+
   - Complete Provider Name API implementation with support for [models/features]
   - Added model-name-1 model for [use case description]
-  - Added model-name-2 model for [use case description] 
+  - Added model-name-2 model for [use case description]
   - Comprehensive UI integration with dedicated settings panel and model selection
   - Full configuration support in package.json with proper schema validation
   - Seamless integration with existing provider architecture and error handling
