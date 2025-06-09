@@ -1,5 +1,44 @@
 # Changelog
 
+## [3.1.2] - 2025-01-08
+
+### Enhanced
+
+- **Comprehensive Model Directory**: Expanded documentation with 50+ supported models across all 11 AI providers
+
+  - Added detailed model specifications including context windows, capabilities, and use cases
+  - Comprehensive model comparison table with performance characteristics and pricing tiers
+  - Provider-specific model listings with technical details and recommended configurations
+  - Enhanced model selection guidance with performance benchmarks and optimization tips
+
+- **Enhanced Documentation Structure**: Complete documentation overhaul for better developer experience
+
+  - Added API setup links and comprehensive configuration guides for each provider
+  - Expanded provider setup instructions with step-by-step authentication flows
+  - Enhanced feature descriptions with specific model references and capabilities
+  - Improved technical architecture section with model-specific implementation details
+
+- **Advanced Configuration Guidance**: Detailed setup and optimization recommendations
+
+  - Added quick selection guide with updated model recommendations for different use cases
+  - Enhanced repository analysis section highlighting model-specific capabilities
+  - Improved prompt engineering documentation covering all 50+ supported models
+  - Refined use case recommendations with model-specific performance suggestions
+
+- **Enterprise and Open Source Support**: Comprehensive deployment and usage guidance
+  - Enhanced enterprise deployment section with premium model references and scaling considerations
+  - Added dedicated open source project section featuring free tier and local model options
+  - Updated API key management and documentation links for all 11 providers
+  - Improved overall extension description emphasizing 50+ models and advanced AI capabilities
+
+### Technical
+
+- Maintained backward compatibility with existing configurations
+- Updated package.json version to reflect maintenance release
+- Verified all model documentation accuracy across providers
+- Enhanced repository structure for better navigation and developer experience
+- No functional code changes - purely documentation and guidance improvements
+
 ## [3.1.1] - 2025-06-08
 
 ### Fixed
