@@ -3,7 +3,7 @@
 import * as vscode from "vscode";
 
 // Provider types
-export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic" | "copilot" | "deepseek";
+export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic" | "copilot" | "deepseek" | "grok";
 export type CommitStyle = "conventional" | "gitmoji" | "basic";
 
 // Base configurations
@@ -73,6 +73,11 @@ export interface ExtensionConfig {
         apiKey?: string;
         model: string;
     };
+    grok: {
+        enabled: boolean;
+        apiKey?: string;
+        model: string;
+    };
     promptCustomization: {
         enabled: boolean;
     };
@@ -120,6 +125,12 @@ export interface DeepSeekApiConfig extends BaseApiConfig {
     type: "deepseek";
     apiKey: string;
     model: DeepSeekModel;
+}
+
+export interface GrokApiConfig extends BaseApiConfig {
+    type: "grok";
+    apiKey: string;
+    model: GrokModel;
 }
 
 // Commit related types
@@ -207,6 +218,28 @@ export type DeepSeekModel =
     | "deepseek-chat"
     | "deepseek-reasoner";
 
+export type GrokModel =
+    // Latest Models (Recommended)
+    | "grok-3"
+    | "grok-3-latest"
+    | "grok-3-fast"
+    | "grok-3-fast-latest"
+    | "grok-3-mini"
+    | "grok-3-mini-latest"
+    | "grok-3-mini-fast"
+    | "grok-3-mini-fast-latest"
+    // Vision and Image Models
+    | "grok-2-vision-1212"
+    | "grok-2-vision"
+    | "grok-2-vision-latest"
+    | "grok-2-image-1212"
+    | "grok-2-image"
+    | "grok-2-image-latest"
+    // Grok 2 Series
+    | "grok-2-1212"
+    | "grok-2"
+    | "grok-2-latest";
+
 
 export interface HuggingFaceApiConfig extends BaseApiConfig {
     type: "huggingface";
@@ -284,4 +317,5 @@ export type ApiConfig =
     | OpenRouterApiConfig
     | AnthropicApiConfig
     | CopilotApiConfig
-    | DeepSeekApiConfig;
+    | DeepSeekApiConfig
+    | GrokApiConfig;

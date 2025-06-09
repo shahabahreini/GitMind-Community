@@ -120,6 +120,12 @@ export function getStatusBannerStyles(): string {
         border: 1px solid #555;
       }
       
+      .status-badge.grok {
+        background-color: #000000;
+        color: #ffffff;
+        font-weight: 600;
+      }
+      
       ${ProviderIcon.getIconStyles()}
     `;
 }

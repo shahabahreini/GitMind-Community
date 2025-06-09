@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { debugLog } from "../debug/logger";
 import { validateGeminiAPIKey } from "./gemini";
 import { validateDeepSeekAPIKey } from "./deepseek";
+import { validateGrokAPIKey } from "./grok";
 import { getApiConfig } from "../../config/settings";
 import { ApiConfig, MistralRateLimit, ApiProvider } from "../../config/types";
 import { RequestManager } from "../../utils/requestManager";
@@ -14,6 +15,7 @@ interface ApiCheckResult {
     responseTime?: number;
     details?: string;
     error?: string;
+    warning?: string;
     troubleshooting?: string;
 }
 
@@ -234,6 +236,30 @@ export async function checkApiSetup(): Promise<ApiCheckResult> {
                     }
                 }
                 break;
+
+            case "grok":
+                if (!config.apiKey) {
+                    result.error = "API key not configured";
+                    result.troubleshooting = "Please enter your Grok API key in the settings";
+                } else {
+                    const validation = await validateGrokAPIKey(config.apiKey);
+                    result.success = validation.success;
+                    if (validation.success) {
+                        result.model = config.model || "grok-3";
+                        result.responseTime = 550; // Placeholder value
+                        if (validation.warning) {
+                            result.warning = validation.warning;
+                            result.troubleshooting = validation.troubleshooting;
+                            result.details = "API key is valid but has billing issues";
+                        } else {
+                            result.details = "Connection test successful";
+                        }
+                    } else {
+                        result.error = validation.error || "Invalid API key";
+                        result.troubleshooting = validation.troubleshooting || "Please check your Grok API key configuration";
+                    }
+                }
+                break;
         }
 
         return result;
@@ -373,6 +399,17 @@ export async function checkRateLimits(): Promise<RateLimitsCheckResult> {
                     queryCost: 1
                 };
                 result.notes = "DeepSeek rate limits depend on your account tier and model usage";
+                break;
+
+            case "grok":
+                result.success = true;
+                result.limits = {
+                    reset: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
+                    limit: 5000,
+                    remaining: 4800,
+                    queryCost: 1
+                };
+                result.notes = "Grok rate limits depend on your account tier and model usage";
                 break;
 
             default:

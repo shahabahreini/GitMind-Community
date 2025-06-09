@@ -55,6 +55,10 @@ export class SettingsManager {
                 apiKey: config.get<string>("deepseek.apiKey") || "",
                 model: config.get<string>("deepseek.model") || "deepseek-chat",
             },
+            grok: {
+                apiKey: config.get<string>("grok.apiKey") || "",
+                model: config.get<string>("grok.model") || "grok-3",
+            },
             promptCustomization: {
                 enabled: config.get<boolean>("promptCustomization.enabled") || false,
             },
@@ -182,6 +186,16 @@ export class SettingsManager {
         await config.update(
             "deepseek.model",
             settings.deepseek.model,
+            vscode.ConfigurationTarget.Global
+        );
+        await config.update(
+            "grok.apiKey",
+            settings.grok.apiKey,
+            vscode.ConfigurationTarget.Global
+        );
+        await config.update(
+            "grok.model",
+            settings.grok.model,
             vscode.ConfigurationTarget.Global
         );
         await config.update(

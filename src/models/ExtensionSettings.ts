@@ -46,6 +46,10 @@ export interface ExtensionSettings {
         apiKey: string;
         model: string;
     };
+    grok: {
+        apiKey: string;
+        model: string;
+    };
     promptCustomization?: {
         enabled: boolean;
     };

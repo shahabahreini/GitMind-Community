@@ -73,6 +73,11 @@ export function getMainStyles(): string {
       background-color: #dc3545;
     }
 
+    .toast.warning {
+      background-color: #f39c12;
+      color: white;
+    }
+
     .toast.info {
       background-color: var(--vscode-infoBackground, #17a2b8);
       color: var(--vscode-infoForeground, white);
@@ -184,8 +189,13 @@ export function getMainStyles(): string {
       border-left: 4px solid #dc3545;
     }
 
+    .status-details.warning {
+      border-left: 4px solid #f39c12;
+    }
+
     .status-success,
-    .status-error {
+    .status-error,
+    .status-warning {
       display: flex;
       gap: 16px;
       padding: 16px;
@@ -202,8 +212,14 @@ export function getMainStyles(): string {
       flex-shrink: 0;
     }
 
+    .status-warning svg {
+      color: #f39c12;
+      flex-shrink: 0;
+    }
+
     .status-success h4,
-    .status-error h4 {
+    .status-error h4,
+    .status-warning h4 {
       margin-top: 0;
       margin-bottom: 8px;
       border-bottom: none;
@@ -211,13 +227,15 @@ export function getMainStyles(): string {
     }
 
     .status-success ul,
-    .status-error ul {
+    .status-error ul,
+    .status-warning ul {
       margin: 0;
       padding-left: 20px;
     }
 
     .status-success p,
-    .status-error p {
+    .status-error p,
+    .status-warning p {
       margin-bottom: 0;
     }
 

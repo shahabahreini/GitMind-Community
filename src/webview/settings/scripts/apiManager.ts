@@ -42,6 +42,11 @@ export function getApiManagerScript(): string {
           apiKey: document.getElementById('deepseekApiKey').value,
           model: document.getElementById('deepseekModel').value
         };
+      } else if (provider === 'grok') {
+        apiSettings = {
+          apiKey: document.getElementById('grokApiKey').value,
+          model: document.getElementById('grokModel').value
+        };
       }
       
       // Validate required fields before sending
@@ -63,6 +68,8 @@ export function getApiManagerScript(): string {
         missingFields.push('Copilot Model');
       } else if (provider === 'deepseek' && !apiSettings.apiKey) {
         missingFields.push('DeepSeek API Key');
+      } else if (provider === 'grok' && !apiSettings.apiKey) {
+        missingFields.push('Grok API Key');
       }
       
       if (missingFields.length > 0) {
@@ -141,6 +148,9 @@ export function getApiManagerScript(): string {
       } else if (provider === 'deepseek') {
         apiSettings.apiKey = document.getElementById('deepseekApiKey').value;
         if (!apiSettings.apiKey) missingFields.push('DeepSeek API Key');
+      } else if (provider === 'grok') {
+        apiSettings.apiKey = document.getElementById('grokApiKey').value;
+        if (!apiSettings.apiKey) missingFields.push('Grok API Key');
       }
       
       if (missingFields.length > 0) {
@@ -199,7 +209,8 @@ export function getApiManagerScript(): string {
         'mistral': 'Mistral',
         'cohere': 'Cohere',
         'copilot': 'GitHub Copilot',
-        'deepseek': 'DeepSeek'
+        'deepseek': 'DeepSeek',
+        'grok': 'Grok'
       };
       
       return displayNames[provider] || provider;

@@ -13,6 +13,7 @@ import {
     AnthropicApiConfig,
     CopilotApiConfig,
     DeepSeekApiConfig,
+    GrokApiConfig,
 } from "../../config/types";
 import { callGeminiAPI } from "./gemini";
 import { callHuggingFaceAPI } from "./huggingface";
@@ -35,10 +36,11 @@ import { callOpenRouterAPI } from "./openrouter";
 import { callAnthropicAPI } from "./anthropic";
 import { callCopilotAPI } from "./copilot";
 import { callDeepSeekAPI } from "./deepseek";
+import { callGrokAPI } from "./grok";
 import { RequestManager } from "../../utils/requestManager";
 import { APIErrorHandler } from "../../utils/errorHandler";
 
-type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter" | "Anthropic" | "GitHub Copilot";
+type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter" | "Anthropic" | "GitHub Copilot" | "DeepSeek" | "Grok";
 
 async function handleApiError(
     error: unknown,
@@ -1096,6 +1098,106 @@ async function generateMessageWithConfig(
             );
         }
 
+        case "grok": {
+            const grokConfig = config as GrokApiConfig;
+            if (!grokConfig.apiKey) {
+                const result = await vscode.window.showWarningMessage(
+                    "Grok API key is required. Would you like to configure it now?",
+                    "Enter API Key",
+                    "Get API Key",
+                    "Cancel"
+                );
+
+                if (result === "Enter API Key") {
+                    const apiKey = await vscode.window.showInputBox({
+                        title: "Grok API Key",
+                        prompt: "Please enter your Grok API key",
+                        password: true,
+                        placeHolder: "Paste your API key here",
+                        ignoreFocusOut: true,
+                        validateInput: (text) =>
+                            text?.trim() ? null : "API key cannot be empty",
+                    });
+
+                    if (apiKey) {
+                        const config =
+                            vscode.workspace.getConfiguration("aiCommitAssistant");
+                        await config.update(
+                            "grok.apiKey",
+                            apiKey.trim(),
+                            vscode.ConfigurationTarget.Global
+                        );
+
+                        if (!grokConfig.model) {
+                            await vscode.commands.executeCommand(
+                                "ai-commit-assistant.openSettings"
+                            );
+                            return "";
+                        }
+                        return await callGrokAPI(
+                            apiKey.trim(),
+                            grokConfig.model,
+                            diff,
+                            customContext
+                        );
+                    }
+                } else if (result === "Get API Key") {
+                    await vscode.env.openExternal(
+                        vscode.Uri.parse("https://console.x.ai/")
+                    );
+                    const apiKey = await vscode.window.showInputBox({
+                        title: "Grok API Key",
+                        prompt:
+                            "Please enter your Grok API key after getting it from the website",
+                        password: true,
+                        placeHolder: "Paste your API key here",
+                        ignoreFocusOut: true,
+                        validateInput: (text) =>
+                            text?.trim() ? null : "API key cannot be empty",
+                    });
+
+                    if (apiKey) {
+                        const config =
+                            vscode.workspace.getConfiguration("aiCommitAssistant");
+                        await config.update(
+                            "grok.apiKey",
+                            apiKey.trim(),
+                            vscode.ConfigurationTarget.Global
+                        );
+
+                        if (!grokConfig.model) {
+                            await vscode.commands.executeCommand(
+                                "ai-commit-assistant.openSettings"
+                            );
+                            return "";
+                        }
+                        return await callGrokAPI(
+                            apiKey.trim(),
+                            grokConfig.model,
+                            diff,
+                            customContext
+                        );
+                    }
+                }
+                return "";
+            }
+            if (!grokConfig.model) {
+                await vscode.window.showErrorMessage(
+                    "Please select a Grok model in the settings."
+                );
+                await vscode.commands.executeCommand(
+                    "ai-commit-assistant.openSettings"
+                );
+                return "";
+            }
+            return await callGrokAPI(
+                grokConfig.apiKey,
+                grokConfig.model,
+                diff,
+                customContext
+            );
+        }
+
         default: {
             const _exhaustiveCheck: never = config;
             throw new Error(`Unsupported API provider: ${(config as any).type}`);
@@ -1155,6 +1257,14 @@ async function showDiagnosticsInfo(config: ApiConfig, diff: string) {
         case 'copilot':
             providerName = 'GitHub Copilot';
             modelName = config.model || 'gpt-4o';
+            break;
+        case 'deepseek':
+            providerName = 'DeepSeek';
+            modelName = config.model;
+            break;
+        case 'grok':
+            providerName = 'Grok';
+            modelName = config.model;
             break;
     }
 
@@ -1221,6 +1331,12 @@ function showModelInfo(config: ApiConfig) {
         case 'copilot':
             modelName = `GitHub Copilot (${config.model || 'gpt-4o'})`;
             break;
+        case 'deepseek':
+            modelName = `DeepSeek (${config.model})`;
+            break;
+        case 'grok':
+            modelName = `Grok (${config.model})`;
+            break;
     }
 
     vscode.window.showInformationMessage(`Using model: ${modelName}`, { modal: false });
@@ -1237,7 +1353,9 @@ function getProviderName(type: string): ApiProvider {
         "together": "Together AI",
         "openrouter": "OpenRouter",
         "anthropic": "Anthropic",
-        "copilot": "GitHub Copilot"
+        "copilot": "GitHub Copilot",
+        "deepseek": "DeepSeek",
+        "grok": "Grok"
     };
     return providerMap[type] || "Gemini";
 }
@@ -1251,7 +1369,9 @@ function getProviderSettingPath(provider: string): string {
         OpenAI: "openai.apiKey",
         "Together AI": "together.apiKey",
         "OpenRouter": "openrouter.apiKey",
-        "Anthropic": "anthropic.apiKey"
+        "Anthropic": "anthropic.apiKey",
+        "DeepSeek": "deepseek.apiKey",
+        "Grok": "grok.apiKey"
     };
     return paths[provider] || "";
 }
@@ -1316,7 +1436,9 @@ async function validateAndUpdateConfig(
                 "OpenAI": "https://platform.openai.com/api-keys",
                 "Together AI": "https://api.together.xyz/settings/api-keys",
                 "OpenRouter": "https://openrouter.ai/keys",
-                "Anthropic": "https://console.anthropic.com/"
+                "Anthropic": "https://console.anthropic.com/",
+                "DeepSeek": "https://platform.deepseek.com/api_keys",
+                "Grok": "https://console.x.ai/"
             };
 
             if (provider in providerDocs) {

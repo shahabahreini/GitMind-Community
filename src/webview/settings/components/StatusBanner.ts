@@ -44,6 +44,9 @@ export class StatusBanner {
       case "deepseek":
         modelInfo = this._settings.deepseek?.model || "deepseek-chat";
         break;
+      case "grok":
+        modelInfo = this._settings.grok?.model || "grok-3";
+        break;
     }
 
     // Get API configuration status
@@ -79,6 +82,9 @@ export class StatusBanner {
       case "deepseek":
         apiConfigured = !!this._settings.deepseek?.apiKey;
         break;
+      case "grok":
+        apiConfigured = !!this._settings.grok?.apiKey;
+        break;
     }
 
     // Format provider name for display
@@ -92,7 +98,8 @@ export class StatusBanner {
       openrouter: "OpenRouter",
       anthropic: "Anthropic",
       copilot: "GitHub Copilot",
-      deepseek: "DeepSeek"
+      deepseek: "DeepSeek",
+      grok: "Grok"
     }[this._settings.apiProvider] || this._settings.apiProvider;
 
     return `

@@ -1,8 +1,8 @@
 {
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Assistant",
-  "description": "🚀 Generate perfect git commit messages instantly using AI! Support for 11 free/paid AI providers including GitHub Copilot (Gemini, OpenAI, Claude, Mistral, HuggingFace, Ollama, Anthropic, Together AI, DeepSeek). Smart conventional commits, advanced diff analysis, standardized prompts",
-  "version": "3.1.2",
+  "description": "🚀 Generate perfect git commit messages instantly using AI! Support for 12 free/paid AI providers including GitHub Copilot (Gemini, OpenAI, Claude, Mistral, HuggingFace, Ollama, Anthropic, Together AI, DeepSeek, Grok). Smart conventional commits, advanced diff analysis, standardized prompts",
+  "version": "3.2.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -46,7 +46,8 @@
             "openrouter",
             "anthropic",
             "copilot",
-            "deepseek"
+            "deepseek",
+            "grok"
           ],
           "enumDescriptions": [
             "Use Google's Gemini AI for generating commit messages",
@@ -59,7 +60,8 @@
             "Use OpenRouter for accessing multiple AI models",
             "Use Anthropic Claude for generating commit messages",
             "Use GitHub Copilot for generating commit messages (no API key required)",
-            "Use DeepSeek AI for generating commit messages"
+            "Use DeepSeek AI for generating commit messages",
+            "Use Grok AI for generating commit messages"
           ],
           "default": "gemini",
           "description": "Select which AI provider to use for generating commit messages",
@@ -361,6 +363,46 @@
           ],
           "default": "deepseek-chat",
           "description": "DeepSeek model to use for generating commit messages"
+        },
+        "aiCommitAssistant.grok.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API key for Grok AI [Learn more](https://api.x.ai/)"
+        },
+        "aiCommitAssistant.grok.model": {
+          "type": "string",
+          "enum": [
+            "grok-3",
+            "grok-3-fast",
+            "grok-3-mini",
+            "grok-2",
+            "grok-2-vision",
+            "grok-2-mini",
+            "grok-2-turbo",
+            "grok-2-vision-turbo",
+            "grok-2-fast",
+            "grok-beta",
+            "grok-vision-beta",
+            "grok-image-beta",
+            "grok-image-mini"
+          ],
+          "enumDescriptions": [
+            "Grok 3 - Latest and most capable Grok model",
+            "Grok 3 Fast - High-performance variant of Grok 3",
+            "Grok 3 Mini - Efficient and cost-effective Grok 3",
+            "Grok 2 - Advanced general purpose model",
+            "Grok 2 Vision - Multimodal model with image understanding",
+            "Grok 2 Mini - Compact version of Grok 2",
+            "Grok 2 Turbo - High-speed variant of Grok 2",
+            "Grok 2 Vision Turbo - Fast multimodal model",
+            "Grok 2 Fast - Optimized for speed",
+            "Grok Beta - Latest experimental features",
+            "Grok Vision Beta - Experimental vision capabilities",
+            "Grok Image Beta - Experimental image generation",
+            "Grok Image Mini - Compact image generation model"
+          ],
+          "default": "grok-3",
+          "description": "Grok model to use for generating commit messages"
         }
       }
     },
@@ -574,6 +616,9 @@
     "openrouter",
     "deepseek",
     "deepseek-ai",
+    "grok",
+    "grok-ai",
+    "x-ai",
     "llama",
     "phi",
     "codellama",
@@ -631,6 +676,7 @@
     "o3-models",
     "claude-4",
     "gemini-2-5",
+    "grok-3",
     "modern-ai-models",
     "stable-configuration",
     "reliable-settings"
@@ -667,7 +713,7 @@
       "description": "GitHub Stars"
     },
     {
-      "url": "https://img.shields.io/badge/AI_Providers-11-purple?style=for-the-badge&logo=openai",
+      "url": "https://img.shields.io/badge/AI_Providers-12-purple?style=for-the-badge&logo=openai",
       "href": "https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant",
       "description": "Supported AI Providers"
     },

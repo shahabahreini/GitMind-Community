@@ -21,7 +21,8 @@ export class OnboardingManager {
         'Together AI': 'https://api.together.xyz/settings/api-keys',
         'OpenRouter': 'https://openrouter.ai/keys',
         'Anthropic': 'https://console.anthropic.com/',
-        'DeepSeek': 'https://platform.deepseek.com/api_keys'
+        'DeepSeek': 'https://platform.deepseek.com/api_keys',
+        'Grok': 'https://console.x.ai/'
     };
 
     private static steps: OnboardingStep[] = [];
@@ -153,7 +154,10 @@ export class OnboardingManager {
             'Cohere': 'cohere.apiKey',
             'OpenAI': 'openai.apiKey',
             'Together AI': 'together.apiKey',
-            'OpenRouter': 'openrouter.apiKey'
+            'OpenRouter': 'openrouter.apiKey',
+            'Anthropic': 'anthropic.apiKey',
+            'DeepSeek': 'deepseek.apiKey',
+            'Grok': 'grok.apiKey'
         };
         return paths[provider] || '';
     }

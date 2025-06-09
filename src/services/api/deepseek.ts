@@ -257,16 +257,64 @@ export async function validateDeepSeekAPIKey(apiKey: string): Promise<boolean> {
                         content: "Test"
                     }
                 ],
-                max_tokens: 10,
+                max_tokens: 1,
                 stream: false
             }),
             signal: controller.signal
         });
 
         clearTimeout(timeoutId);
-        return response.ok;
+
+        // Check if the response is successful OR if it's a valid error response indicating the API key is valid
+        if (response.ok) {
+            return true;
+        }
+
+        // Handle specific error codes that indicate the API key is valid but other issues exist
+        if (response.status === 400 || response.status === 422) {
+            // Bad request - likely means API key is valid but request format has issues
+            return true;
+        }
+
+        if (response.status === 429) {
+            // Rate limit - API key is valid but rate limited
+            return true;
+        }
+
+        if (response.status === 402) {
+            // Insufficient balance - API key is valid but no credits
+            return true;
+        }
+
+        // Status 401 or 403 means invalid API key
+        if (response.status === 401 || response.status === 403) {
+            return false;
+        }
+
+        // For other errors, try to parse the response to get more info
+        try {
+            const errorText = await response.text();
+            const errorData = JSON.parse(errorText);
+
+            // If we get a structured error response, it likely means the API key is valid
+            if (errorData.error && errorData.error.message) {
+                // Check if it's specifically an auth error
+                if (errorData.error.message.toLowerCase().includes('authentication') ||
+                    errorData.error.message.toLowerCase().includes('api key')) {
+                    return false;
+                }
+                // Other structured errors suggest valid API key
+                return true;
+            }
+        } catch (parseError) {
+            // If we can't parse the error, fall back to response status
+        }
+
+        // Default to false for unknown errors
+        return false;
     } catch (error) {
         debugLog("API Key Validation Failed:", error);
+        // Network errors or timeouts - assume key is invalid for safety
         return false;
     }
 }

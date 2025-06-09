@@ -36,6 +36,8 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     document.getElementById('copilotModel').value = currentSettings.copilot?.model || 'gpt-4o';
     document.getElementById('deepseekApiKey').value = currentSettings.deepseek?.apiKey || '';
     document.getElementById('deepseekModel').value = currentSettings.deepseek?.model || 'deepseek-chat';
+    document.getElementById('grokApiKey').value = currentSettings.grok?.apiKey || '';
+    document.getElementById('grokModel').value = currentSettings.grok?.model || 'grok-3';
     
     // Enhanced tooltip functionality for compact toggles
     function initializeTooltips() {
@@ -120,6 +122,10 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
         deepseek: {
           apiKey: document.getElementById('deepseekApiKey').value,
           model: document.getElementById('deepseekModel').value
+        },
+        grok: {
+          apiKey: document.getElementById('grokApiKey').value,
+          model: document.getElementById('grokModel').value
         },
         promptCustomization: {
           enabled: document.getElementById('promptCustomizationEnabled').checked
@@ -400,33 +406,69 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           const apiStatusDetails = document.getElementById('apiStatusDetails');
           
           if (message.success) {
-            if (apiStatusMessage) {
-              apiStatusMessage.textContent = 'API connection successful!';
-            }
-            
-            if (apiStatusDetails) {
-              apiStatusDetails.innerHTML = \`
-                <div class="status-success">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                  </svg>
-                  <div>
-                    <h4>Connection Details</h4>
-                    <ul>
-                      <li><strong>Provider:</strong> \${getProviderDisplayName(message.provider)}</li>
-                      <li><strong>Model:</strong> \${message.model || 'Default'}</li>
-                      <li><strong>Response Time:</strong> \${message.responseTime || 'N/A'} ms</li>
-                    </ul>
-                    \${message.details ? '<p>' + message.details + '</p>' : ''}
+            if (message.warning) {
+              // Success with warning (e.g., insufficient credits)
+              if (apiStatusMessage) {
+                apiStatusMessage.textContent = 'API connection successful with warning';
+              }
+              
+              if (apiStatusDetails) {
+                apiStatusDetails.innerHTML = \`
+                  <div class="status-warning">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                      <line x1="12" y1="9" x2="12" y2="13"></line>
+                      <circle cx="12" cy="17" r="1"></circle>
+                    </svg>
+                    <div>
+                      <h4>Connection Successful - Warning</h4>
+                      <ul>
+                        <li><strong>Provider:</strong> \${getProviderDisplayName(message.provider)}</li>
+                        <li><strong>Model:</strong> \${message.model || 'Default'}</li>
+                        <li><strong>Response Time:</strong> \${message.responseTime || 'N/A'} ms</li>
+                      </ul>
+                      \${message.details ? '<p>' + message.details + '</p>' : ''}
+                      <h4>Warning</h4>
+                      <p>\${message.warning}</p>
+                      \${message.troubleshooting ? '<h4>Troubleshooting</h4><p>' + message.troubleshooting + '</p>' : ''}
+                    </div>
                   </div>
-                </div>
-              \`;
-              apiStatusDetails.className = 'status-details success';
+                \`;
+                apiStatusDetails.className = 'status-details warning';
+              }
+              
+              // Show warning toast
+              showToast('API connection successful with warning: ' + message.warning, 'warning');
+            } else {
+              // Normal success case
+              if (apiStatusMessage) {
+                apiStatusMessage.textContent = 'API connection successful!';
+              }
+              
+              if (apiStatusDetails) {
+                apiStatusDetails.innerHTML = \`
+                  <div class="status-success">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <div>
+                      <h4>Connection Details</h4>
+                      <ul>
+                        <li><strong>Provider:</strong> \${getProviderDisplayName(message.provider)}</li>
+                        <li><strong>Model:</strong> \${message.model || 'Default'}</li>
+                        <li><strong>Response Time:</strong> \${message.responseTime || 'N/A'} ms</li>
+                      </ul>
+                      \${message.details ? '<p>' + message.details + '</p>' : ''}
+                    </div>
+                  </div>
+                \`;
+                apiStatusDetails.className = 'status-details success';
+              }
+              
+              // Show success toast
+              showToast('API connection successful', 'success');
             }
-            
-            // Also show a toast
-            showToast('API connection successful', 'success');
           } else {
             if (apiStatusMessage) {
               apiStatusMessage.textContent = 'API connection failed';
@@ -606,6 +648,11 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           if (currentSettings.deepseek) {
             document.getElementById('deepseekApiKey').value = currentSettings.deepseek.apiKey || '';
             document.getElementById('deepseekModel').value = currentSettings.deepseek.model || 'deepseek-chat';
+          }
+
+          if (currentSettings.grok) {
+            document.getElementById('grokApiKey').value = currentSettings.grok.apiKey || '';
+            document.getElementById('grokModel').value = currentSettings.grok.model || 'grok-3';
           }
           
           // Update UI state

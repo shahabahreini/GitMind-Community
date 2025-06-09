@@ -1,5 +1,91 @@
 # Changelog
 
+## [3.2.0] - 2025-06-09
+
+### Added
+
+- **Grok (X.ai) Provider Integration**: Full support for X.ai's Grok AI models with comprehensive feature set
+
+  - **13 Grok Models**: Complete model lineup including Grok 3 Series (grok-3, grok-3-fast, grok-3-mini), Grok 2 Series (grok-2-vision-1212, grok-2-1212, grok-2), and Beta Models (grok-vision-beta, grok-beta)
+  - **X.ai API Integration**: Native integration with X.ai API endpoint (https://api.x.ai/v1) using Bearer token authentication
+  - **Real-time Capabilities**: Access to Grok's real-time data processing and fast inference capabilities
+  - **Vision Model Support**: Integrated support for Grok's vision-enabled models for multimodal AI assistance
+  - **Complete UI Integration**: Dedicated Grok settings panel with organized model groups and intuitive configuration interface
+
+- **Enhanced Provider Ecosystem**: Expanded from 11 to 12 AI providers
+
+  - Updated extension description and documentation to reflect 12 provider support
+  - Added Grok to onboarding flow with X.ai console integration
+  - Enhanced provider comparison table with Grok specifications and capabilities
+  - Comprehensive API setup guide including X.ai authentication and model selection
+
+- **Technical Infrastructure**: Complete Grok integration across all extension components
+  - Full API implementation with error handling and rate limit management
+  - Integrated Grok validation and configuration management
+  - Enhanced settings persistence and UI management for Grok provider
+  - Complete status banner and provider icon integration
+
+### Enhanced
+
+- **Provider Documentation**: Updated all documentation to include Grok models and capabilities
+- **Model Directory**: Added 8 new Grok models to comprehensive model listing (58+ total models supported)
+- **API Setup Links**: Added X.ai console integration and documentation references
+- **Onboarding Experience**: Enhanced onboarding flow to include Grok provider information
+
+### Fixed
+
+- **DeepSeek API Integration Completeness**: Resolved missing integration pieces for DeepSeek provider
+
+  - Added missing DeepSeek case to `showDiagnosticsInfo` function for proper diagnostics display
+  - Added DeepSeek documentation URL to `validateAndUpdateConfig` function provider documentation mapping
+  - Ensured consistent DeepSeek provider support across all API service functions
+  - Fixed missing provider documentation links for seamless API key setup workflow
+
+- **API Key Validation Improvements**: Enhanced "Check API Setup" functionality for DeepSeek and Grok providers
+
+  - **DeepSeek Validation**: Fixed false "Invalid API key" errors by implementing robust error handling
+    - Now correctly identifies valid API keys even when account has insufficient balance (402), rate limits (429), or request format issues (400/422)
+    - Added structured error response parsing to distinguish authentication errors from operational issues
+    - Reduced validation token usage from 10 to 1 token for cost optimization
+    - Enhanced error differentiation between invalid API keys (401/403) and account-level issues
+  - **Grok Validation**: Implemented comprehensive validation strategy based on official X.ai API documentation
+    - Primary validation uses lightweight `/models` endpoint when available
+    - Fallback to `/chat/completions` endpoint with minimal 1-token request if models endpoint unavailable
+    - **X.ai Compliant Error Handling**: Follows official X.ai status code specifications
+      - 401/403: Invalid API key or insufficient permissions (correctly identifies invalid keys)
+      - 400: Bad request - distinguishes between API key errors and request format issues
+      - 404/405/415/422: Request format/endpoint issues (API key valid, operational problems)
+      - 429: Rate limit exceeded (API key valid, temporarily throttled)
+      - 202: Deferred completion queued (API key valid, request processing)
+    - Enhanced structured error response parsing with authentication-specific detection
+    - Comprehensive debug logging for troubleshooting validation issues
+
+- **Enhanced Grok API Error Handling**: Improved error messaging and user experience for Grok API interactions
+
+  - **Structured Error Response Parsing**: Now properly handles X.ai's JSON error format with `code` and `error` fields
+  - **Credit Management**: Specific error messages for insufficient credits with direct link to purchase credits
+  - **Contextual Error Messages**: Clear, actionable error messages for different failure scenarios:
+    - 403 Forbidden: Distinguishes between insufficient credits and permission issues
+    - 401 Unauthorized: Clear invalid API key messaging
+    - 429 Rate Limited: User-friendly rate limit guidance
+    - 400/404: Specific bad request and model not found messages
+  - **Fallback Error Handling**: Graceful degradation for unexpected error formats while preserving detailed information
+
+- **Fixed Grok API Validation Error Display**: Resolved issue where Grok API validation errors were not properly displayed in the UI
+  - **Corrected Validation Response Handling**: Fixed type mismatch where validation.ts was expecting boolean return but validateGrokAPIKey returns detailed error object
+  - **Enhanced Error Message Display**: Now properly displays specific error messages (e.g., "insufficient credits", "access forbidden") instead of generic "Invalid API key" message
+  - **Improved Troubleshooting Guidance**: Error popups now show contextual troubleshooting tips specific to the actual error encountered
+  - **Complete Error Flow**: Ensured end-to-end error reporting from API validation to UI display for comprehensive user feedback
+
+### Technical
+
+- Added GrokApiConfig interface and GrokModel type definitions
+- Implemented callGrokAPI() and validateGrokAPIKey() functions
+- Enhanced API validation and rate limiting for Grok provider
+- Updated all UI components to support Grok provider integration
+- Maintained backward compatibility with existing provider configurations
+- Completed DeepSeek provider integration ensuring full functionality across all service functions
+
 ## [3.1.2] - 2025-01-08
 
 ### Enhanced

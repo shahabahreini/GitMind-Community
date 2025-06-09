@@ -8,6 +8,7 @@ import {
     AnthropicModel, // Added this import
     CopilotModel, // Added this import
     DeepSeekModel, // Added this import
+    GrokModel, // Added this import
 } from "./types";
 
 export function getConfiguration(): ExtensionConfig {
@@ -82,6 +83,11 @@ export function getConfiguration(): ExtensionConfig {
             enabled: config.get("deepseek.enabled", false),
             apiKey: config.get("deepseek.apiKey"),
             model: config.get("deepseek.model", "deepseek-chat"),
+        },
+        grok: {
+            enabled: config.get("grok.enabled", false),
+            apiKey: config.get("grok.apiKey"),
+            model: config.get("grok.model", "grok-3"),
         },
         promptCustomization: {
             enabled: config.get("promptCustomization.enabled", false),
@@ -181,6 +187,13 @@ export function getApiConfig(): ApiConfig {
                 type: "deepseek",
                 apiKey: config.deepseek.apiKey || "",
                 model: (config.deepseek.model || "deepseek-chat") as DeepSeekModel,
+            };
+
+        case "grok":
+            return {
+                type: "grok",
+                apiKey: config.grok.apiKey || "",
+                model: (config.grok.model || "grok-3") as GrokModel,
             };
 
         default:
