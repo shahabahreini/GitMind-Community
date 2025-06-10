@@ -1,5 +1,45 @@
 # Changelog
 
+## [3.3.0] - 2025-06-09
+
+### Added
+
+- **Save Last Custom Prompt Feature**: Comprehensive prompt management system for enhanced workflow efficiency
+
+  - **Automatic Prompt Saving**: When enabled, automatically saves custom prompts entered during commit generation for future reuse
+  - **Smart Default Handling**: Saved prompts appear as default values in future commit generations with intelligent placeholder text
+  - **Clipboard Integration**: Built-in option to copy saved prompts to clipboard before editing for external modification
+  - **Conditional UI Toggle**: "Save Last Custom Prompt" setting appears dynamically only when prompt customization is enabled
+  - **Prompt Management Commands**: Added dedicated commands for viewing and managing saved prompts:
+    - `ai-commit-assistant.clearLastPrompt`: Clear saved prompt with confirmation dialog
+    - `ai-commit-assistant.viewLastPrompt`: View saved prompt with copy/clear options
+  - **Persistent Storage**: Prompts are saved to VS Code's global configuration, persisting across sessions and workspaces
+  - **Enhanced User Experience**: Intuitive workflow with clear notifications and user-friendly confirmation dialogs
+
+- **Complete Feature Integration**: Seamless integration across all extension components
+
+  - **Settings Schema**: Complete configuration options in package.json with proper type definitions
+  - **UI Components**: Dynamic toggle visibility with descriptive tooltips explaining functionality
+  - **Core Logic**: Robust PromptManager implementation with save/load/clear/copy operations
+  - **Extension Integration**: Full integration with commit generation workflow and command registration
+  - **Error Handling**: Comprehensive error handling with user-friendly messages and debug logging
+
+### Enhanced
+
+- **Prompt Customization Workflow**: Improved user experience for custom prompt management
+  - Enhanced input box experience with saved prompt indication and clipboard copy options
+  - Improved settings UI with conditional visibility and better user guidance
+  - Enhanced documentation and tooltips explaining the prompt saving functionality
+
+### Technical
+
+- Added comprehensive PromptManager.ts with complete prompt lifecycle management
+- Enhanced ExtensionSettings interface with saveLastPrompt and lastPrompt properties
+- Updated settings persistence layer to handle prompt storage and retrieval
+- Implemented command registration for prompt management operations
+- Added complete error handling and user feedback systems
+- Maintained backward compatibility with existing prompt customization features
+
 ## [3.2.0] - 2025-06-09
 
 ### Added

@@ -40,6 +40,10 @@ Enhanced change detection for staged and unstaged files with **context-aware ana
 
 Real-time model browsing for compatible providers with search and filtering capabilities. **2M+ token context windows** supported for large repositories with models like Gemini-2.5-pro and Claude-3-5-sonnet.
 
+### **Smart Prompt Management**
+
+**Save Last Custom Prompt** feature allows you to automatically save and reuse custom prompts across commit generations. Saved prompts appear as defaults in future sessions with clipboard copy options for easy editing.
+
 ### **Professional Workflow Integration**
 
 Native VS Code SCM panel integration with loading indicators, comprehensive status feedback, and **standardized prompt engineering** across all providers.
@@ -175,8 +179,9 @@ Access to multiple providers including `google/gemma-3-27b-it:free` and premium 
 
 ### **Enterprise-Ready Configuration**
 
-- **Standardized Prompts**: Consistent prompt templates across all 11 AI providers and 50+ models
-- **Custom Context Enhancement**: Optional domain-specific prompt customization
+- **Standardized Prompts**: Consistent prompt templates across all 12 AI providers and 50+ models
+- **Custom Context Enhancement**: Optional domain-specific prompt customization with automatic saving and reuse
+- **Smart Prompt Management**: Save Last Custom Prompt feature for workflow efficiency and consistency
 - **Token Optimization**: Smart content truncation and cost management with pre-generation estimation
 - **Rate Limit Management**: Advanced monitoring with minute-based tracking and anomaly detection
 - **Debug Mode**: Comprehensive API interaction logging and response analysis
@@ -197,13 +202,15 @@ Access to multiple providers including `google/gemma-3-27b-it:free` and premium 
 3. Select your preferred AI provider
 4. Add API key (skip for GitHub Copilot and Ollama)
 5. Choose optimal model for your use case
+6. **Optional**: Enable "Prompt Customization" and "Save Last Custom Prompt" for enhanced workflow
 
 ### 3. Generate Commits
 
 1. Stage your changes in Git
 2. Click the "AI" button in Source Control panel
-3. Review and edit the generated commit message
-4. Commit your changes
+3. **Optional**: Add custom context (saved automatically if enabled)
+4. Review and edit the generated commit message
+5. Commit your changes
 
 ## Model Selection Guidelines
 
@@ -231,9 +238,26 @@ Access to multiple providers including `google/gemma-3-27b-it:free` and premium 
 
 **Intelligent change categorization** with automatic detection of feature additions, bug fixes, documentation updates, and refactoring patterns using advanced models like Claude-opus-4 and GPT-4.1.
 
+### **Smart Prompt Management System**
+
+**Comprehensive prompt lifecycle management** with automatic saving, intelligent reuse, and seamless workflow integration:
+
+- **Automatic Saving**: Custom prompts are automatically saved when "Save Last Custom Prompt" is enabled
+- **Smart Defaults**: Saved prompts appear as default values in future commit generations
+- **Clipboard Integration**: Built-in copy-to-clipboard functionality for external editing
+- **Management Commands**: Dedicated VS Code commands for viewing and clearing saved prompts
+- **Persistent Storage**: Prompts persist across VS Code sessions and workspaces using global configuration
+
 ### **Unified Prompt Architecture**
 
-**Standardized prompt engineering** across all 11 providers and 50+ models ensures consistent, high-quality commit messages regardless of chosen AI model.
+**Standardized prompt engineering** across all 12 providers and 50+ models ensures consistent, high-quality commit messages regardless of chosen AI model.
+
+### **Advanced Prompt Management**
+
+- **Save Last Custom Prompt**: Automatically save and reuse custom prompts across sessions
+- **Smart Defaults**: Saved prompts appear as default values with clipboard copy options
+- **Prompt Commands**: Dedicated commands for viewing (`View Last Custom Prompt`) and clearing (`Clear Last Custom Prompt`) saved prompts
+- **Persistent Storage**: Prompts persist across VS Code sessions and workspaces
 
 ### **Professional Integration**
 
@@ -258,6 +282,12 @@ Access settings via Command Palette: `AI Commit Assistant: Open Settings` or the
 - AI provider selection with real-time validation
 - Secure API key configuration
 - Model selection with performance metrics
+
+**Prompt Customization**
+
+- Enable custom context prompts for commit generation
+- Save Last Custom Prompt toggle for automatic prompt reuse
+- Persistent prompt storage across sessions
 
 **Message Formatting**
 
