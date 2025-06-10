@@ -9,6 +9,7 @@ import {
     CopilotModel, // Added this import
     DeepSeekModel, // Added this import
     GrokModel, // Added this import
+    PerplexityModel, // Added this import
 } from "./types";
 
 export function getConfiguration(): ExtensionConfig {
@@ -88,6 +89,11 @@ export function getConfiguration(): ExtensionConfig {
             enabled: config.get("grok.enabled", false),
             apiKey: config.get("grok.apiKey"),
             model: config.get("grok.model", "grok-3"),
+        },
+        perplexity: {
+            enabled: config.get("perplexity.enabled", false),
+            apiKey: config.get("perplexity.apiKey"),
+            model: config.get("perplexity.model", "sonar-pro"),
         },
         promptCustomization: {
             enabled: config.get("promptCustomization.enabled", false),
@@ -196,6 +202,13 @@ export function getApiConfig(): ApiConfig {
                 type: "grok",
                 apiKey: config.grok.apiKey || "",
                 model: (config.grok.model || "grok-3") as GrokModel,
+            };
+
+        case "perplexity":
+            return {
+                type: "perplexity",
+                apiKey: config.perplexity.apiKey || "",
+                model: (config.perplexity.model || "sonar-pro") as PerplexityModel,
             };
 
         default:

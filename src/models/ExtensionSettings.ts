@@ -50,6 +50,10 @@ export interface ExtensionSettings {
         apiKey: string;
         model: string;
     };
+    perplexity: {
+        apiKey: string;
+        model: string;
+    };
     promptCustomization: {
         enabled: boolean;
         saveLastPrompt: boolean;

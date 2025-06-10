@@ -22,7 +22,8 @@ export class OnboardingManager {
         'OpenRouter': 'https://openrouter.ai/keys',
         'Anthropic': 'https://console.anthropic.com/',
         'DeepSeek': 'https://platform.deepseek.com/api_keys',
-        'Grok': 'https://console.x.ai/'
+        'Grok': 'https://console.x.ai/',
+        'Perplexity': 'https://www.perplexity.ai/settings/api'
     };
 
     private static steps: OnboardingStep[] = [];
@@ -157,7 +158,8 @@ export class OnboardingManager {
             'OpenRouter': 'openrouter.apiKey',
             'Anthropic': 'anthropic.apiKey',
             'DeepSeek': 'deepseek.apiKey',
-            'Grok': 'grok.apiKey'
+            'Grok': 'grok.apiKey',
+            'Perplexity': 'perplexity.apiKey'
         };
         return paths[provider] || '';
     }

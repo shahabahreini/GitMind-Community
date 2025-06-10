@@ -39,6 +39,8 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     document.getElementById('deepseekModel').value = currentSettings.deepseek?.model || 'deepseek-chat';
     document.getElementById('grokApiKey').value = currentSettings.grok?.apiKey || '';
     document.getElementById('grokModel').value = currentSettings.grok?.model || 'grok-3';
+    document.getElementById('perplexityApiKey').value = currentSettings.perplexity?.apiKey || '';
+    document.getElementById('perplexityModel').value = currentSettings.perplexity?.model || 'sonar-pro';
     
     // Enhanced tooltip functionality for compact toggles
     function initializeTooltips() {
@@ -127,6 +129,10 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
         grok: {
           apiKey: document.getElementById('grokApiKey').value,
           model: document.getElementById('grokModel').value
+        },
+        perplexity: {
+          apiKey: document.getElementById('perplexityApiKey').value,
+          model: document.getElementById('perplexityModel').value
         },
         promptCustomization: {
           enabled: document.getElementById('promptCustomizationEnabled').checked,
@@ -658,6 +664,11 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
             document.getElementById('grokApiKey').value = currentSettings.grok.apiKey || '';
             document.getElementById('grokModel').value = currentSettings.grok.model || 'grok-3';
           }
+
+          if (currentSettings.perplexity) {
+            document.getElementById('perplexityApiKey').value = currentSettings.perplexity.apiKey || '';
+            document.getElementById('perplexityModel').value = currentSettings.perplexity.model || 'sonar-pro';
+          }
           
           // Update UI state
           updateVisibleSettings();
@@ -754,6 +765,10 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
         grok: {
           apiKey: document.getElementById('grokApiKey').value,
           model: document.getElementById('grokModel').value
+        },
+        perplexity: {
+          apiKey: document.getElementById('perplexityApiKey').value,
+          model: document.getElementById('perplexityModel').value
         },
         promptCustomization: {
           enabled: document.getElementById('promptCustomizationEnabled').checked,

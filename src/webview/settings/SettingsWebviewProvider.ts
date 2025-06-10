@@ -109,6 +109,7 @@ export class SettingsWebviewProvider {
                         <option value="copilot" ${config.apiProvider === "copilot" ? "selected" : ""}>GitHub Copilot</option>
                         <option value="deepseek" ${config.apiProvider === "deepseek" ? "selected" : ""}>DeepSeek</option>
                         <option value="grok" ${config.apiProvider === "grok" ? "selected" : ""}>Grok</option>
+                        <option value="perplexity" ${config.apiProvider === "perplexity" ? "selected" : ""}>Perplexity</option>
                     </select>
                 </div>
                 <script>

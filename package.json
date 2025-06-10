@@ -1,8 +1,8 @@
 {
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Assistant",
-  "description": "🚀 Generate perfect git commit messages instantly using AI! Support for 12 free/paid AI providers including GitHub Copilot (Gemini, OpenAI, Claude, Mistral, HuggingFace, Ollama, Anthropic, Together AI, DeepSeek, Grok). Smart conventional commits, advanced diff analysis, prompt management, standardized prompts",
-  "version": "3.3.0",
+  "description": "🚀 Generate perfect git commit messages instantly using AI! Support for 13 free/paid AI providers including GitHub Copilot (Gemini, OpenAI, Claude, Mistral, HuggingFace, Ollama, Anthropic, Together AI, DeepSeek, Grok, Perplexity). Smart conventional commits, advanced diff analysis, prompt management, standardized prompts",
+  "version": "3.4.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -47,7 +47,8 @@
             "anthropic",
             "copilot",
             "deepseek",
-            "grok"
+            "grok",
+            "perplexity"
           ],
           "enumDescriptions": [
             "Use Google's Gemini AI for generating commit messages",
@@ -61,7 +62,8 @@
             "Use Anthropic Claude for generating commit messages",
             "Use GitHub Copilot for generating commit messages (no API key required)",
             "Use DeepSeek AI for generating commit messages",
-            "Use Grok AI for generating commit messages"
+            "Use Grok AI for generating commit messages",
+            "Use Perplexity AI for generating commit messages"
           ],
           "default": "gemini",
           "description": "Select which AI provider to use for generating commit messages",
@@ -413,6 +415,36 @@
           ],
           "default": "grok-3",
           "description": "Grok model to use for generating commit messages"
+        },
+        "aiCommitAssistant.perplexity.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API key for Perplexity AI [Learn more](https://www.perplexity.ai/settings/api)"
+        },
+        "aiCommitAssistant.perplexity.model": {
+          "type": "string",
+          "enum": [
+            "sonar-pro",
+            "sonar-reasoning",
+            "sonar",
+            "llama-3.1-sonar-small-128k-chat",
+            "llama-3.1-sonar-large-128k-chat",
+            "llama-3.1-sonar-huge-128k-online",
+            "llama-3.1-sonar-small-128k-online",
+            "llama-3.1-sonar-large-128k-online"
+          ],
+          "enumDescriptions": [
+            "Sonar Pro - Latest and most capable Perplexity model with advanced reasoning",
+            "Sonar Reasoning - Advanced reasoning capabilities with real-time information",
+            "Sonar - General purpose model with web search capabilities",
+            "Llama 3.1 Sonar Small Chat - Efficient chat model (128k context)",
+            "Llama 3.1 Sonar Large Chat - Large chat model (128k context)",
+            "Llama 3.1 Sonar Huge Online - Largest model with real-time web access",
+            "Llama 3.1 Sonar Small Online - Efficient model with real-time web access",
+            "Llama 3.1 Sonar Large Online - Large model with real-time web access"
+          ],
+          "default": "sonar-pro",
+          "description": "Perplexity model to use for generating commit messages"
         }
       }
     },
@@ -639,6 +671,9 @@
     "grok",
     "grok-ai",
     "x-ai",
+    "perplexity",
+    "perplexity-ai",
+    "sonar",
     "llama",
     "phi",
     "codellama",

@@ -47,6 +47,9 @@ export class StatusBanner {
       case "grok":
         modelInfo = this._settings.grok?.model || "grok-3";
         break;
+      case "perplexity":
+        modelInfo = this._settings.perplexity?.model || "sonar-pro";
+        break;
     }
 
     // Get API configuration status
@@ -85,6 +88,9 @@ export class StatusBanner {
       case "grok":
         apiConfigured = !!this._settings.grok?.apiKey;
         break;
+      case "perplexity":
+        apiConfigured = !!this._settings.perplexity?.apiKey;
+        break;
     }
 
     // Format provider name for display
@@ -99,7 +105,8 @@ export class StatusBanner {
       anthropic: "Anthropic",
       copilot: "GitHub Copilot",
       deepseek: "DeepSeek",
-      grok: "Grok"
+      grok: "Grok",
+      perplexity: "Perplexity"
     }[this._settings.apiProvider] || this._settings.apiProvider;
 
     return `

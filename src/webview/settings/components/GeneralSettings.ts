@@ -59,6 +59,7 @@ export class GeneralSettings {
           <option value="copilot" ${this._settings.apiProvider === "copilot" ? "selected" : ""}>GitHub Copilot</option>
           <option value="deepseek" ${this._settings.apiProvider === "deepseek" ? "selected" : ""}>DeepSeek</option>
           <option value="grok" ${this._settings.apiProvider === "grok" ? "selected" : ""}>Grok</option>
+          <option value="perplexity" ${this._settings.apiProvider === "perplexity" ? "selected" : ""}>Perplexity</option>
         </select>
       </div>
     </div>`;

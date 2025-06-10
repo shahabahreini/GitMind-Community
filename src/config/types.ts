@@ -3,7 +3,7 @@
 import * as vscode from "vscode";
 
 // Provider types
-export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic" | "copilot" | "deepseek" | "grok";
+export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic" | "copilot" | "deepseek" | "grok" | "perplexity";
 export type CommitStyle = "conventional" | "gitmoji" | "basic";
 
 // Base configurations
@@ -78,6 +78,11 @@ export interface ExtensionConfig {
         apiKey?: string;
         model: string;
     };
+    perplexity: {
+        enabled: boolean;
+        apiKey?: string;
+        model: string;
+    };
     promptCustomization: {
         enabled: boolean;
         saveLastPrompt: boolean;
@@ -133,6 +138,12 @@ export interface GrokApiConfig extends BaseApiConfig {
     type: "grok";
     apiKey: string;
     model: GrokModel;
+}
+
+export interface PerplexityApiConfig extends BaseApiConfig {
+    type: "perplexity";
+    apiKey: string;
+    model: PerplexityModel;
 }
 
 // Commit related types
@@ -242,6 +253,19 @@ export type GrokModel =
     | "grok-2"
     | "grok-2-latest";
 
+export type PerplexityModel =
+    // Latest Sonar Models (Recommended)
+    | "sonar-pro"
+    | "sonar-reasoning"
+    | "sonar"
+    // Chat Models
+    | "llama-3.1-sonar-small-128k-chat"
+    | "llama-3.1-sonar-large-128k-chat"
+    | "llama-3.1-sonar-huge-128k-online"
+    // Online Models with Real-time Information
+    | "llama-3.1-sonar-small-128k-online"
+    | "llama-3.1-sonar-large-128k-online";
+
 
 export interface HuggingFaceApiConfig extends BaseApiConfig {
     type: "huggingface";
@@ -320,4 +344,5 @@ export type ApiConfig =
     | AnthropicApiConfig
     | CopilotApiConfig
     | DeepSeekApiConfig
-    | GrokApiConfig;
+    | GrokApiConfig
+    | PerplexityApiConfig;

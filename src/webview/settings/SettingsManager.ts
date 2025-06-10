@@ -59,6 +59,10 @@ export class SettingsManager {
                 apiKey: config.get<string>("grok.apiKey") || "",
                 model: config.get<string>("grok.model") || "grok-3",
             },
+            perplexity: {
+                apiKey: config.get<string>("perplexity.apiKey") || "",
+                model: config.get<string>("perplexity.model") || "sonar-pro",
+            },
             promptCustomization: {
                 enabled: config.get<boolean>("promptCustomization.enabled") || false,
                 saveLastPrompt: config.get<boolean>("promptCustomization.saveLastPrompt") || false,
@@ -123,6 +127,10 @@ export class SettingsManager {
             grok: {
                 apiKey: config.get<string>("grok.apiKey") || "",
                 model: config.get<string>("grok.model") || "grok-3",
+            },
+            perplexity: {
+                apiKey: config.get<string>("perplexity.apiKey") || "",
+                model: config.get<string>("perplexity.model") || "sonar-pro",
             },
             promptCustomization: {
                 enabled: config.get<boolean>("promptCustomization.enabled") || false,
@@ -263,6 +271,16 @@ export class SettingsManager {
         await config.update(
             "grok.model",
             settings.grok.model,
+            vscode.ConfigurationTarget.Global
+        );
+        await config.update(
+            "perplexity.apiKey",
+            settings.perplexity.apiKey,
+            vscode.ConfigurationTarget.Global
+        );
+        await config.update(
+            "perplexity.model",
+            settings.perplexity.model,
             vscode.ConfigurationTarget.Global
         );
         await config.update(

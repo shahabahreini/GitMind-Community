@@ -3,6 +3,7 @@ import { debugLog } from "../debug/logger";
 import { validateGeminiAPIKey } from "./gemini";
 import { validateDeepSeekAPIKey } from "./deepseek";
 import { validateGrokAPIKey } from "./grok";
+import { validatePerplexityAPIKey } from "./perplexity";
 import { getApiConfig } from "../../config/settings";
 import { ApiConfig, MistralRateLimit, ApiProvider } from "../../config/types";
 import { RequestManager } from "../../utils/requestManager";
@@ -260,6 +261,30 @@ export async function checkApiSetup(): Promise<ApiCheckResult> {
                     }
                 }
                 break;
+
+            case "perplexity":
+                if (!config.apiKey) {
+                    result.error = "API key not configured";
+                    result.troubleshooting = "Please enter your Perplexity API key in the settings";
+                } else {
+                    const validation = await validatePerplexityAPIKey(config.apiKey);
+                    result.success = validation.success;
+                    if (validation.success) {
+                        result.model = config.model || "sonar-pro";
+                        result.responseTime = 400; // Placeholder value
+                        if (validation.warning) {
+                            result.warning = validation.warning;
+                            result.troubleshooting = validation.troubleshooting;
+                            result.details = "API key is valid but has billing issues";
+                        } else {
+                            result.details = "Connection test successful";
+                        }
+                    } else {
+                        result.error = validation.error || "Invalid API key";
+                        result.troubleshooting = validation.troubleshooting || "Please check your Perplexity API key configuration";
+                    }
+                }
+                break;
         }
 
         return result;
@@ -410,6 +435,17 @@ export async function checkRateLimits(): Promise<RateLimitsCheckResult> {
                     queryCost: 1
                 };
                 result.notes = "Grok rate limits depend on your account tier and model usage";
+                break;
+
+            case "perplexity":
+                result.success = true;
+                result.limits = {
+                    reset: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
+                    limit: 20,
+                    remaining: 18,
+                    queryCost: 1
+                };
+                result.notes = "Perplexity has 20 requests per minute for free tier users. Pro users have higher limits.";
                 break;
 
             default:

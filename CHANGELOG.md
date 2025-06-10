@@ -1,5 +1,37 @@
 # Changelog
 
+## [3.4.0] - 2025-01-27
+
+### Added
+
+- **Perplexity AI Provider Integration**: Full support for Perplexity's AI models with comprehensive feature set
+
+  - **8 Perplexity Models**: Complete model lineup including Sonar Series (sonar-pro, sonar-reasoning, sonar), Llama 3.1 Sonar Online Series (llama-3.1-sonar-small-128k-online, llama-3.1-sonar-large-128k-online, llama-3.1-sonar-huge-128k-online), and Llama 3.1 Sonar Chat Series (llama-3.1-sonar-small-128k-chat, llama-3.1-sonar-large-128k-chat)
+  - **Perplexity API Integration**: Native integration with Perplexity API endpoint (https://api.perplexity.ai/chat/completions) using Bearer token authentication
+  - **Real-time Web Search**: Access to Perplexity's web-aware models with real-time data processing capabilities
+  - **Advanced Reasoning**: Support for sonar-reasoning model with enhanced analytical capabilities
+  - **Complete Settings UI**: Dedicated Perplexity settings panel with model selection, API key configuration, and comprehensive validation
+  - **Full Extension Integration**: Seamless integration across all extension components including status banner, diagnostics, onboarding, and error handling
+  - **Professional Documentation**: Complete API documentation links and setup guides for https://www.perplexity.ai/settings/api
+
+### Enhanced
+
+- **Provider Count**: Updated from 12 to 13 supported AI providers
+- **Model Selection**: Added Perplexity models to comprehensive model directory (now 58+ supported models)
+- **Onboarding Experience**: Updated onboarding flow to include Perplexity in provider selection guide
+- **Extension Logging**: Enhanced debug logging to include Perplexity in supported providers list
+- **Documentation**: Updated README.md with Perplexity model comparison, setup guides, and feature descriptions
+
+### Technical
+
+- Added complete PerplexityApiConfig interface and PerplexityModel type definitions
+- Implemented comprehensive Perplexity API service with proper error handling and response parsing
+- Enhanced ExtensionSettings with perplexity configuration support
+- Updated package.json with Perplexity configuration schema and model definitions
+- Added PerplexitySettings.ts component with full UI integration
+- Integrated Perplexity across all utility modules (apiManager, onboardingManager, statusBanner)
+- Updated provider icons and display mappings for complete UI integration
+
 ## [3.3.0] - 2025-06-09
 
 ### Added

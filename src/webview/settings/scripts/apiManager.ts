@@ -47,6 +47,11 @@ export function getApiManagerScript(): string {
           apiKey: document.getElementById('grokApiKey').value,
           model: document.getElementById('grokModel').value
         };
+      } else if (provider === 'perplexity') {
+        apiSettings = {
+          apiKey: document.getElementById('perplexityApiKey').value,
+          model: document.getElementById('perplexityModel').value
+        };
       }
       
       // Validate required fields before sending
@@ -151,6 +156,9 @@ export function getApiManagerScript(): string {
       } else if (provider === 'grok') {
         apiSettings.apiKey = document.getElementById('grokApiKey').value;
         if (!apiSettings.apiKey) missingFields.push('Grok API Key');
+      } else if (provider === 'perplexity') {
+        apiSettings.apiKey = document.getElementById('perplexityApiKey').value;
+        if (!apiSettings.apiKey) missingFields.push('Perplexity API Key');
       }
       
       if (missingFields.length > 0) {
@@ -210,7 +218,8 @@ export function getApiManagerScript(): string {
         'cohere': 'Cohere',
         'copilot': 'GitHub Copilot',
         'deepseek': 'DeepSeek',
-        'grok': 'Grok'
+        'grok': 'Grok',
+        'perplexity': 'Perplexity'
       };
       
       return displayNames[provider] || provider;

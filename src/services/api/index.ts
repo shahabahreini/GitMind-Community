@@ -14,6 +14,7 @@ import {
     CopilotApiConfig,
     DeepSeekApiConfig,
     GrokApiConfig,
+    PerplexityApiConfig,
 } from "../../config/types";
 import { callGeminiAPI } from "./gemini";
 import { callHuggingFaceAPI } from "./huggingface";
@@ -37,10 +38,11 @@ import { callAnthropicAPI } from "./anthropic";
 import { callCopilotAPI } from "./copilot";
 import { callDeepSeekAPI } from "./deepseek";
 import { callGrokAPI } from "./grok";
+import { callPerplexityAPI } from "./perplexity";
 import { RequestManager } from "../../utils/requestManager";
 import { APIErrorHandler } from "../../utils/errorHandler";
 
-type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter" | "Anthropic" | "GitHub Copilot" | "DeepSeek" | "Grok";
+type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter" | "Anthropic" | "GitHub Copilot" | "DeepSeek" | "Grok" | "Perplexity";
 
 async function handleApiError(
     error: unknown,
@@ -1198,6 +1200,106 @@ async function generateMessageWithConfig(
             );
         }
 
+        case "perplexity": {
+            const perplexityConfig = config as PerplexityApiConfig;
+            if (!perplexityConfig.apiKey) {
+                const result = await vscode.window.showWarningMessage(
+                    "Perplexity API key is required. Would you like to configure it now?",
+                    "Enter API Key",
+                    "Get API Key",
+                    "Cancel"
+                );
+
+                if (result === "Enter API Key") {
+                    const apiKey = await vscode.window.showInputBox({
+                        title: "Perplexity API Key",
+                        prompt: "Please enter your Perplexity API key",
+                        password: true,
+                        placeHolder: "Paste your API key here",
+                        ignoreFocusOut: true,
+                        validateInput: (text) =>
+                            text?.trim() ? null : "API key cannot be empty",
+                    });
+
+                    if (apiKey) {
+                        const config =
+                            vscode.workspace.getConfiguration("aiCommitAssistant");
+                        await config.update(
+                            "perplexity.apiKey",
+                            apiKey.trim(),
+                            vscode.ConfigurationTarget.Global
+                        );
+
+                        if (!perplexityConfig.model) {
+                            await vscode.commands.executeCommand(
+                                "ai-commit-assistant.openSettings"
+                            );
+                            return "";
+                        }
+                        return await callPerplexityAPI(
+                            apiKey.trim(),
+                            perplexityConfig.model,
+                            diff,
+                            customContext
+                        );
+                    }
+                } else if (result === "Get API Key") {
+                    await vscode.env.openExternal(
+                        vscode.Uri.parse("https://www.perplexity.ai/settings/api")
+                    );
+                    const apiKey = await vscode.window.showInputBox({
+                        title: "Perplexity API Key",
+                        prompt:
+                            "Please enter your Perplexity API key after getting it from the website",
+                        password: true,
+                        placeHolder: "Paste your API key here",
+                        ignoreFocusOut: true,
+                        validateInput: (text) =>
+                            text?.trim() ? null : "API key cannot be empty",
+                    });
+
+                    if (apiKey) {
+                        const config =
+                            vscode.workspace.getConfiguration("aiCommitAssistant");
+                        await config.update(
+                            "perplexity.apiKey",
+                            apiKey.trim(),
+                            vscode.ConfigurationTarget.Global
+                        );
+
+                        if (!perplexityConfig.model) {
+                            await vscode.commands.executeCommand(
+                                "ai-commit-assistant.openSettings"
+                            );
+                            return "";
+                        }
+                        return await callPerplexityAPI(
+                            apiKey.trim(),
+                            perplexityConfig.model,
+                            diff,
+                            customContext
+                        );
+                    }
+                }
+                return "";
+            }
+            if (!perplexityConfig.model) {
+                await vscode.window.showErrorMessage(
+                    "Please select a Perplexity model in the settings."
+                );
+                await vscode.commands.executeCommand(
+                    "ai-commit-assistant.openSettings"
+                );
+                return "";
+            }
+            return await callPerplexityAPI(
+                perplexityConfig.apiKey,
+                perplexityConfig.model,
+                diff,
+                customContext
+            );
+        }
+
         default: {
             const _exhaustiveCheck: never = config;
             throw new Error(`Unsupported API provider: ${(config as any).type}`);
@@ -1264,6 +1366,10 @@ async function showDiagnosticsInfo(config: ApiConfig, diff: string) {
             break;
         case 'grok':
             providerName = 'Grok';
+            modelName = config.model;
+            break;
+        case 'perplexity':
+            providerName = 'Perplexity';
             modelName = config.model;
             break;
     }
@@ -1337,6 +1443,9 @@ function showModelInfo(config: ApiConfig) {
         case 'grok':
             modelName = `Grok (${config.model})`;
             break;
+        case 'perplexity':
+            modelName = `Perplexity (${config.model})`;
+            break;
     }
 
     vscode.window.showInformationMessage(`Using model: ${modelName}`, { modal: false });
@@ -1355,7 +1464,8 @@ function getProviderName(type: string): ApiProvider {
         "anthropic": "Anthropic",
         "copilot": "GitHub Copilot",
         "deepseek": "DeepSeek",
-        "grok": "Grok"
+        "grok": "Grok",
+        "perplexity": "Perplexity"
     };
     return providerMap[type] || "Gemini";
 }
@@ -1371,7 +1481,8 @@ function getProviderSettingPath(provider: string): string {
         "OpenRouter": "openrouter.apiKey",
         "Anthropic": "anthropic.apiKey",
         "DeepSeek": "deepseek.apiKey",
-        "Grok": "grok.apiKey"
+        "Grok": "grok.apiKey",
+        "Perplexity": "perplexity.apiKey"
     };
     return paths[provider] || "";
 }
@@ -1438,7 +1549,8 @@ async function validateAndUpdateConfig(
                 "OpenRouter": "https://openrouter.ai/keys",
                 "Anthropic": "https://console.anthropic.com/",
                 "DeepSeek": "https://platform.deepseek.com/api_keys",
-                "Grok": "https://console.x.ai/"
+                "Grok": "https://console.x.ai/",
+                "Perplexity": "https://www.perplexity.ai/settings/api"
             };
 
             if (provider in providerDocs) {

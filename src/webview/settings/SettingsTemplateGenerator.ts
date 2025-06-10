@@ -17,6 +17,7 @@ import { AnthropicSettings } from "./components/AnthropicSettings";
 import { CopilotSettings } from "./components/CopilotSettings";
 import { DeepSeekSettings } from "./components/DeepSeekSettings";
 import { GrokSettings } from "./components/GrokSettings";
+import { PerplexitySettings } from "./components/PerplexitySettings";
 
 export class SettingsTemplateGenerator {
   private _settings: ExtensionSettings;
@@ -43,6 +44,7 @@ export class SettingsTemplateGenerator {
     const copilotSettings = new CopilotSettings(this._settings);
     const deepseekSettings = new DeepSeekSettings(this._settings);
     const grokSettings = new GrokSettings(this._settings);
+    const perplexitySettings = new PerplexitySettings(this._settings);
 
     return `
     <!DOCTYPE html>
@@ -72,6 +74,7 @@ export class SettingsTemplateGenerator {
         ${copilotSettings.render()}
         ${deepseekSettings.render()}
         ${grokSettings.render()}
+        ${perplexitySettings.render()}
         ${buttonGroup.render()}
       </div>
       ${getSettingsScript(this._settings, this._nonce)}

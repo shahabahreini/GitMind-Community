@@ -1,6 +1,6 @@
 # GitMind: AI Commit Assistant for VS Code
 
-**Professional AI-powered commit message generation for Visual Studio Code.** Leverage 12 different AI providers including OpenAI GPT-4o, Claude-3-5-sonnet, Gemini-2.5-flash, DeepSeek-reasoner, Grok-3, and 50+ models to create consistent, conventional commit messages that improve code history quality and team collaboration.
+**Professional AI-powered commit message generation for Visual Studio Code.** Leverage 13 different AI providers including OpenAI GPT-4o, Claude-3-5-sonnet, Gemini-2.5-flash, DeepSeek-reasoner, Grok-3, Perplexity-sonar, and 50+ models to create consistent, conventional commit messages that improve code history quality and team collaboration.
 
 <video width="100%" controls>
   <source src="https://shahabahreini.com/wp-content/uploads/GitMind-Introduction.mp4" type="video/mp4"> <a href="https://shahabahreini.com/wp-content/uploads/GitMind-Introduction.mp4">View the demo video</a>
@@ -18,7 +18,7 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 
 ### **Multi-Provider AI Support**
 
-Access **12 different AI providers** with unified configuration and intelligent fallback handling. From zero-setup GitHub Copilot to privacy-focused local Ollama deployments supporting GPT-4o, Claude-opus-4, Gemini-2.5-pro, DeepSeek-chat, Grok-3, Mistral-large, and 50+ additional models.
+Access **13 different AI providers** with unified configuration and intelligent fallback handling. From zero-setup GitHub Copilot to privacy-focused local Ollama deployments supporting GPT-4o, Claude-opus-4, Gemini-2.5-pro, DeepSeek-chat, Grok-3, Perplexity-sonar, Mistral-large, and 50+ additional models.
 
 ### **Advanced Git Integration**
 
@@ -58,6 +58,7 @@ Native VS Code SCM panel integration with loading indicators, comprehensive stat
 | **Google Gemini**  | 2.5-flash, 2.5-pro, 2.0-flash      | 2M      | 15 RPM    | 2min  | Massive context, thinking model    | Rate limited (free)      |
 | **Grok (X.ai)**    | grok-3, grok-3-fast, grok-3-mini   | 128k    | Limited   | 2min  | Real-time data access, fast        | X Premium required       |
 | **DeepSeek**       | reasoner, chat                     | 128k    | 50 RPM    | 2min  | Advanced reasoning, cost-effective | Newer provider           |
+| **Perplexity**     | sonar-pro, sonar-reasoning, sonar  | 127k    | Limited   | 2min  | Real-time web search, reasoning    | Paid tier recommended    |
 | **Mistral AI**     | large-latest, medium, small        | 128k    | 1 RPM     | 2min  | EU-compliant, multilingual         | Low free tier limits     |
 | **Ollama**         | deepseek-r1, llama3.3, phi4, qwen3 | 128k    | Unlimited | 5min  | Complete privacy, no API costs     | Hardware dependent       |
 | **OpenAI**         | gpt-4o, gpt-4.1, o3, o4-mini       | 128k    | No        | 2min  | Industry standard, multimodal      | Paid only, higher cost   |
@@ -81,20 +82,21 @@ Native VS Code SCM panel integration with loading indicators, comprehensive stat
 
 ### **Get API Keys & Documentation**
 
-| Provider           | API Signup                                                 | Documentation                                                 | Free Tier Details     |
-| ------------------ | ---------------------------------------------------------- | ------------------------------------------------------------- | --------------------- |
-| **GitHub Copilot** | [VS Code Copilot](https://copilot.github.com/)             | [Copilot Docs](https://docs.github.com/copilot)               | Requires subscription |
-| **Google Gemini**  | [AI Studio](https://ai.google.dev/gemini-api/docs/api-key) | [Gemini API Docs](https://ai.google.dev/gemini-api)           | 15 requests/minute    |
-| **Grok (X.ai)**    | [X.ai Console](https://console.x.ai/)                      | [Grok API Docs](https://docs.x.ai/)                           | Limited free tier     |
-| **DeepSeek**       | [DeepSeek Platform](https://platform.deepseek.com/)        | [DeepSeek API Docs](https://api-docs.deepseek.com/)           | 50 requests/minute    |
-| **Mistral AI**     | [Mistral Console](https://console.mistral.ai/)             | [Mistral API Docs](https://docs.mistral.ai/)                  | 1 request/minute      |
-| **OpenAI**         | [OpenAI Platform](https://platform.openai.com/signup)      | [OpenAI API Docs](https://platform.openai.com/docs)           | Paid only             |
-| **Anthropic**      | [Anthropic Console](https://console.anthropic.com/)        | [Claude API Docs](https://docs.anthropic.com/)                | Paid only             |
-| **Together AI**    | [Together Platform](https://api.together.ai/)              | [Together API Docs](https://docs.together.ai/)                | 60 requests/minute    |
-| **Hugging Face**   | [HF Token](https://huggingface.co/settings/tokens)         | [HF Inference API](https://huggingface.co/docs/api-inference) | Varies by model       |
-| **Cohere**         | [Cohere Dashboard](https://dashboard.cohere.ai/)           | [Cohere API Docs](https://docs.cohere.ai/)                    | 20 requests/minute    |
-| **OpenRouter**     | [OpenRouter Keys](https://openrouter.ai/keys)              | [OpenRouter Docs](https://openrouter.ai/docs)                 | Limited free tier     |
-| **Ollama**         | [Ollama Download](https://ollama.com/download)             | [Ollama Docs](https://github.com/ollama/ollama)               | Unlimited (local)     |
+| Provider           | API Signup                                                    | Documentation                                                 | Free Tier Details     |
+| ------------------ | ------------------------------------------------------------- | ------------------------------------------------------------- | --------------------- |
+| **GitHub Copilot** | [VS Code Copilot](https://copilot.github.com/)                | [Copilot Docs](https://docs.github.com/copilot)               | Requires subscription |
+| **Google Gemini**  | [AI Studio](https://ai.google.dev/gemini-api/docs/api-key)    | [Gemini API Docs](https://ai.google.dev/gemini-api)           | 15 requests/minute    |
+| **Grok (X.ai)**    | [X.ai Console](https://console.x.ai/)                         | [Grok API Docs](https://docs.x.ai/)                           | Limited free tier     |
+| **DeepSeek**       | [DeepSeek Platform](https://platform.deepseek.com/)           | [DeepSeek API Docs](https://api-docs.deepseek.com/)           | 50 requests/minute    |
+| **Perplexity**     | [Perplexity Settings](https://www.perplexity.ai/settings/api) | [Perplexity API Docs](https://docs.perplexity.ai/)            | Limited free tier     |
+| **Mistral AI**     | [Mistral Console](https://console.mistral.ai/)                | [Mistral API Docs](https://docs.mistral.ai/)                  | 1 request/minute      |
+| **OpenAI**         | [OpenAI Platform](https://platform.openai.com/signup)         | [OpenAI API Docs](https://platform.openai.com/docs)           | Paid only             |
+| **Anthropic**      | [Anthropic Console](https://console.anthropic.com/)           | [Claude API Docs](https://docs.anthropic.com/)                | Paid only             |
+| **Together AI**    | [Together Platform](https://api.together.ai/)                 | [Together API Docs](https://docs.together.ai/)                | 60 requests/minute    |
+| **Hugging Face**   | [HF Token](https://huggingface.co/settings/tokens)            | [HF Inference API](https://huggingface.co/docs/api-inference) | Varies by model       |
+| **Cohere**         | [Cohere Dashboard](https://dashboard.cohere.ai/)              | [Cohere API Docs](https://docs.cohere.ai/)                    | 20 requests/minute    |
+| **OpenRouter**     | [OpenRouter Keys](https://openrouter.ai/keys)                 | [OpenRouter Docs](https://openrouter.ai/docs)                 | Limited free tier     |
+| **Ollama**         | [Ollama Download](https://ollama.com/download)                | [Ollama Docs](https://github.com/ollama/ollama)               | Unlimited (local)     |
 
 ### **Quick API Setup Guide**
 
@@ -134,6 +136,10 @@ For detailed setup instructions for each provider, see our [Configuration Guide]
 ### **DeepSeek Models**
 
 `deepseek-chat` | `deepseek-reasoner`
+
+### **Perplexity Models**
+
+`sonar-pro` | `sonar-reasoning` | `sonar` | `llama-3.1-sonar-small-128k-online` | `llama-3.1-sonar-large-128k-online` | `llama-3.1-sonar-huge-128k-online` | `llama-3.1-sonar-small-128k-chat` | `llama-3.1-sonar-large-128k-chat`
 
 ### **Mistral AI Models**
 
