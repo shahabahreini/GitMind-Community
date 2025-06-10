@@ -91,6 +91,8 @@ export function getConfiguration(): ExtensionConfig {
         },
         promptCustomization: {
             enabled: config.get("promptCustomization.enabled", false),
+            saveLastPrompt: config.get("promptCustomization.saveLastPrompt", false),
+            lastPrompt: config.get("promptCustomization.lastPrompt", ""),
         },
     };
 }

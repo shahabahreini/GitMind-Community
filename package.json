@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Assistant",
   "description": "🚀 Generate perfect git commit messages instantly using AI! Support for 12 free/paid AI providers including GitHub Copilot (Gemini, OpenAI, Claude, Mistral, HuggingFace, Ollama, Anthropic, Together AI, DeepSeek, Grok). Smart conventional commits, advanced diff analysis, standardized prompts",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -252,6 +252,16 @@
           "default": false,
           "description": "When enabled, shows a dialog to add custom context when generating commit messages"
         },
+        "aiCommitAssistant.promptCustomization.saveLastPrompt": {
+          "type": "boolean",
+          "default": false,
+          "description": "Save the last custom prompt and use it as default for next commit message generation"
+        },
+        "aiCommitAssistant.promptCustomization.lastPrompt": {
+          "type": "string",
+          "default": "",
+          "description": "The last custom prompt used (automatically managed)"
+        },
         "aiCommitAssistant.together.apiKey": {
           "type": "string",
           "default": "",
@@ -477,6 +487,16 @@
           "light": "resources/light/close.svg",
           "dark": "resources/dark/close.svg"
         }
+      },
+      {
+        "command": "ai-commit-assistant.clearLastPrompt",
+        "title": "Clear Last Custom Prompt",
+        "category": "AI Commit Assistant"
+      },
+      {
+        "command": "ai-commit-assistant.viewLastPrompt",
+        "title": "View Last Custom Prompt",
+        "category": "AI Commit Assistant"
       }
     ],
     "menus": {

@@ -16,6 +16,7 @@ import { fetchMistralModels } from "./services/api/mistral";
 import { fetchHuggingFaceModels } from "./services/api/huggingface";
 // Add import for Cohere (if needed in the future)
 // import { fetchCohereModels } from "./services/api/cohere";
+import { PromptManager } from "./services/promptManager";
 
 const state: ExtensionState = {
   debugChannel: vscode.window.createOutputChannel("AI Commit Assistant Debug"),
@@ -153,13 +154,7 @@ export async function activate(context: vscode.ExtensionContext) {
         }
 
         // Get custom context if enabled
-        let customContext = "";
-        if (vscode.workspace.getConfiguration("aiCommitAssistant").get("promptCustomization.enabled")) {
-          customContext = await vscode.window.showInputBox({
-            prompt: "Add custom context for your commit (optional)",
-            placeHolder: "e.g., Fixes #123, Implements feature X"
-          }) || "";
-        }
+        const customContext = await PromptManager.getCustomContext();
 
         // Generate commit message with timeout
         const message = await Promise.race([
@@ -529,6 +524,68 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  // Register Clear Last Custom Prompt command
+  let clearLastPromptCommand = vscode.commands.registerCommand(
+    "ai-commit-assistant.clearLastPrompt",
+    async () => {
+      try {
+        const lastPrompt = PromptManager.getLastPrompt();
+        if (!lastPrompt) {
+          vscode.window.showInformationMessage("No saved custom prompt to clear.");
+          return;
+        }
+
+        const confirmation = await vscode.window.showWarningMessage(
+          "Are you sure you want to clear the last saved custom prompt?",
+          { modal: true },
+          "Clear",
+          "Cancel"
+        );
+
+        if (confirmation === "Clear") {
+          await PromptManager.clearLastPrompt();
+          vscode.window.showInformationMessage("Last custom prompt cleared successfully!");
+          debugLog("Last custom prompt cleared by user");
+        }
+      } catch (error) {
+        debugLog("Clear Last Prompt Error:", error);
+        vscode.window.showErrorMessage("Failed to clear the last custom prompt.");
+      }
+    }
+  );
+
+  // Register View Last Custom Prompt command
+  let viewLastPromptCommand = vscode.commands.registerCommand(
+    "ai-commit-assistant.viewLastPrompt",
+    async () => {
+      try {
+        const lastPrompt = PromptManager.getLastPrompt();
+        if (!lastPrompt) {
+          vscode.window.showInformationMessage("No saved custom prompt available.");
+          return;
+        }
+
+        const action = await vscode.window.showInformationMessage(
+          `Last saved custom prompt:\n\n"${lastPrompt}"`,
+          { modal: true },
+          "Copy to Clipboard",
+          "Clear Prompt",
+          "Close"
+        );
+
+        if (action === "Copy to Clipboard") {
+          await vscode.env.clipboard.writeText(lastPrompt);
+          vscode.window.showInformationMessage("Prompt copied to clipboard!");
+        } else if (action === "Clear Prompt") {
+          await vscode.commands.executeCommand("ai-commit-assistant.clearLastPrompt");
+        }
+      } catch (error) {
+        debugLog("View Last Prompt Error:", error);
+        vscode.window.showErrorMessage("Failed to view the last custom prompt.");
+      }
+    }
+  );
+
   // Add to context.subscriptions
   context.subscriptions.push(
     loadingIndicatorCommand
@@ -547,7 +604,9 @@ export async function activate(context: vscode.ExtensionContext) {
     checkApiSetupCommand,
     checkRateLimitsCommand,
     loadMistralModelsCommand,
-    loadHuggingFaceModelsCommand
+    loadHuggingFaceModelsCommand,
+    clearLastPromptCommand,
+    viewLastPromptCommand
   );
 
   // Show onboarding for new users
@@ -587,11 +646,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
 export function deactivate() {
   // Note: VS Code SCM API doesn't provide access to source controls for cleanup
-
-  if (state.statusBarItem) {
-    state.statusBarItem.dispose();
-  }
   if (state.debugChannel) {
     state.debugChannel.dispose();
+  }
+  if (state.statusBarItem) {
+    state.statusBarItem.dispose();
   }
 }

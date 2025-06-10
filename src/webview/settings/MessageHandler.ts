@@ -13,7 +13,7 @@ export class MessageHandler {
     public async handleMessage(message: any): Promise<void> {
         switch (message.command) {
             case "saveSettings":
-                await this._settingsManager.saveSettings(message.settings);
+                await SettingsManager.saveSettings(message.settings);
                 break;
             case "executeCommand":
                 await vscode.commands.executeCommand(message.commandId);

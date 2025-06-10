@@ -1,0 +1,153 @@
+/* General styles for the settings webview */
+
+/* Container for the entire settings section */
+.settings-section {
+  padding: 16px;
+  border-bottom: 1px solid var(--vscode-separator-color);
+}
+
+/* Title styles */
+.settings-section h3 {
+  font-size: 1.5em;
+  margin-bottom: 12px;
+  color: var(--vscode-titleForeground);
+}
+
+/* Form group container */
+.form-group {
+  margin-bottom: 16px;
+}
+
+/* Label styles */
+.form-group label {
+  font-weight: 500;
+  margin-bottom: 8px;
+  display: block;
+  color: var(--vscode-labelForeground);
+}
+
+/* Input and select box styles */
+.form-control {
+  padding: 10px;
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 4px;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Focused input styles */
+.form-control:focus {
+  border-color: var(--vscode-focusBorder);
+  outline: none;
+}
+
+/* Help text styles */
+.form-help {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  margin-top: 4px;
+}
+
+/* Compact toggle styles */
+.compact-toggles {
+  display: flex;
+  flex-direction: column;
+}
+
+.compact-toggle-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  transition: opacity 0.3s ease, height 0.3s ease;
+}
+
+.compact-toggle-row[style*="display: none"] {
+  opacity: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* Toggle switch styles */
+.toggle-switch {
+  position: relative;
+  width: 40px;
+  height: 20px;
+  margin-right: 10px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--vscode-toggle-off);
+  transition: background-color 0.3s ease;
+  border-radius: 10px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: transform 0.3s ease;
+  border-radius: 50%;
+}
+
+/* Checked toggle styles */
+.toggle-switch input:checked + .toggle-slider {
+  background-color: var(--vscode-toggle-on);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+
+/* Compact label styles */
+.compact-label {
+  font-size: 14px;
+  color: var(--vscode-labelForeground);
+}
+
+/* Status banner styles */
+.status-banner {
+  padding: 10px;
+  border-radius: 4px;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.status-banner.success {
+  background-color: var(--vscode-infoBackground);
+  color: var(--vscode-infoForeground);
+}
+
+.status-banner.error {
+  background-color: var(--vscode-errorBackground);
+  color: var(--vscode-errorForeground);
+}
+
+.status-banner.warning {
+  background-color: var(--vscode-warningBackground);
+  color: var(--vscode-warningForeground);
+}
+
+/* Highlight saved prompt indicator */
+.saved-prompt-indicator {
+  color: var(--vscode-charts-green);
+  font-size: 0.9em;
+  margin-left: 8px;
+}

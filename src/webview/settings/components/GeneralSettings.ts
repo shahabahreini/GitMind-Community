@@ -28,6 +28,13 @@ export class GeneralSettings {
             </div>
             <label class="compact-label" for="promptCustomizationEnabled">Prompt Customization</label>
           </div>
+          <div class="compact-toggle-row" data-tooltip="When enabled, saves your last custom prompt and uses it as default for future commit message generation. The prompt can be copied to clipboard for editing." style="display: ${this._settings.promptCustomization?.enabled ? "flex" : "none"};" id="saveLastPromptRow">
+            <div class="toggle-switch">
+              <input type="checkbox" id="saveLastPrompt" ${this._settings.promptCustomization?.saveLastPrompt ? "checked" : ""} />
+              <label for="saveLastPrompt" class="toggle-slider"></label>
+            </div>
+            <label class="compact-label" for="saveLastPrompt">Save Last Custom Prompt</label>
+          </div>
           <div class="compact-toggle-row" data-tooltip="When enabled, shows model information and estimated token count before generating commit messages.">
             <div class="toggle-switch">
               <input type="checkbox" id="showDiagnostics" ${this._settings.showDiagnostics ? "checked" : ""} />

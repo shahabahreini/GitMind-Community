@@ -80,6 +80,8 @@ export interface ExtensionConfig {
     };
     promptCustomization: {
         enabled: boolean;
+        saveLastPrompt: boolean;
+        lastPrompt: string;
     };
 }
 

@@ -50,8 +50,10 @@ export interface ExtensionSettings {
         apiKey: string;
         model: string;
     };
-    promptCustomization?: {
+    promptCustomization: {
         enabled: boolean;
+        saveLastPrompt: boolean;
+        lastPrompt: string;
     };
     commit?: {
         verbose: boolean;

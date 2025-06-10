@@ -61,6 +61,8 @@ export class SettingsManager {
             },
             promptCustomization: {
                 enabled: config.get<boolean>("promptCustomization.enabled") || false,
+                saveLastPrompt: config.get<boolean>("promptCustomization.saveLastPrompt") || false,
+                lastPrompt: config.get<string>("promptCustomization.lastPrompt") || "",
             },
             commit: {
                 verbose: config.get<boolean>("commit.verbose") ?? true,
@@ -69,7 +71,72 @@ export class SettingsManager {
         };
     }
 
-    public async saveSettings(settings: ExtensionSettings): Promise<void> {
+    public static async getCurrentSettings(): Promise<ExtensionSettings> {
+        const config = vscode.workspace.getConfiguration("aiCommitAssistant");
+
+        return {
+            apiProvider: config.get<string>("apiProvider") || "huggingface",
+            debug: config.get<boolean>("debug") || false,
+            gemini: {
+                apiKey: config.get<string>("gemini.apiKey") || "",
+                model: config.get<string>("gemini.model") || "gemini-2.5-flash-preview-04-17",
+            },
+            huggingface: {
+                apiKey: config.get<string>("huggingface.apiKey") || "",
+                model: config.get<string>("huggingface.model") || "",
+            },
+            ollama: {
+                url: config.get<string>("ollama.url") || "",
+                model: config.get<string>("ollama.model") || "",
+            },
+            mistral: {
+                apiKey: config.get<string>("mistral.apiKey") || "",
+                model: config.get<string>("mistral.model") || "mistral-large-latest",
+            },
+            cohere: {
+                apiKey: config.get<string>("cohere.apiKey") || "",
+                model: config.get<string>("cohere.model") || "command-a-03-2025",
+            },
+            openai: {
+                apiKey: config.get<string>("openai.apiKey") || "",
+                model: config.get<string>("openai.model") || "gpt-3.5-turbo",
+            },
+            together: {
+                apiKey: config.get<string>("together.apiKey") || "",
+                model: config.get<string>("together.model") || "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+            },
+            openrouter: {
+                apiKey: config.get<string>("openrouter.apiKey") || "",
+                model: config.get<string>("openrouter.model") || "google/gemma-3-27b-it:free",
+            },
+            anthropic: {
+                apiKey: config.get<string>("anthropic.apiKey") || "",
+                model: config.get<string>("anthropic.model") || "claude-3-5-sonnet-20241022",
+            },
+            copilot: {
+                model: config.get<string>("copilot.model") || "gpt-4o",
+            },
+            deepseek: {
+                apiKey: config.get<string>("deepseek.apiKey") || "",
+                model: config.get<string>("deepseek.model") || "deepseek-chat",
+            },
+            grok: {
+                apiKey: config.get<string>("grok.apiKey") || "",
+                model: config.get<string>("grok.model") || "grok-3",
+            },
+            promptCustomization: {
+                enabled: config.get<boolean>("promptCustomization.enabled") || false,
+                saveLastPrompt: config.get<boolean>("promptCustomization.saveLastPrompt") || false,
+                lastPrompt: config.get<string>("promptCustomization.lastPrompt") || "",
+            },
+            commit: {
+                verbose: config.get<boolean>("commit.verbose") ?? true,
+            },
+            showDiagnostics: config.get<boolean>("showDiagnostics") ?? false,
+        };
+    }
+
+    public static async saveSettings(settings: ExtensionSettings): Promise<void> {
         const config = vscode.workspace.getConfiguration("aiCommitAssistant");
 
         // Update settings one by one
@@ -200,7 +267,17 @@ export class SettingsManager {
         );
         await config.update(
             "promptCustomization.enabled",
-            settings.promptCustomization?.enabled ?? false,
+            settings.promptCustomization.enabled,
+            vscode.ConfigurationTarget.Global
+        );
+        await config.update(
+            "promptCustomization.saveLastPrompt",
+            settings.promptCustomization.saveLastPrompt,
+            vscode.ConfigurationTarget.Global
+        );
+        await config.update(
+            "promptCustomization.lastPrompt",
+            settings.promptCustomization.lastPrompt,
             vscode.ConfigurationTarget.Global
         );
         await config.update(

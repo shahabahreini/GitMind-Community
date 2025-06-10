@@ -15,6 +15,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     document.getElementById('commitVerbose').checked = currentSettings.commit?.verbose ?? true;
     document.getElementById('showDiagnostics').checked = currentSettings.showDiagnostics ?? false;
     document.getElementById('promptCustomizationEnabled').checked = currentSettings.promptCustomization?.enabled ?? false;
+    document.getElementById('saveLastPrompt').checked = currentSettings.promptCustomization?.saveLastPrompt || false;
     document.getElementById('geminiApiKey').value = currentSettings.gemini?.apiKey || '';
     document.getElementById('geminiModel').value = currentSettings.gemini?.model || 'gemini-2.5-flash-preview-04-17';
     document.getElementById('huggingfaceApiKey').value = currentSettings.huggingface?.apiKey || '';
@@ -128,7 +129,9 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           model: document.getElementById('grokModel').value
         },
         promptCustomization: {
-          enabled: document.getElementById('promptCustomizationEnabled').checked
+          enabled: document.getElementById('promptCustomizationEnabled').checked,
+          saveLastPrompt: document.getElementById('saveLastPrompt').checked,
+          lastPrompt: currentSettings.promptCustomization?.lastPrompt || '',
         },
         commit: {
           verbose: document.getElementById('commitVerbose').checked
@@ -604,6 +607,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           document.getElementById('commitVerbose').checked = currentSettings.commit?.verbose ?? true;
           document.getElementById('showDiagnostics').checked = currentSettings.showDiagnostics ?? false;
           document.getElementById('promptCustomizationEnabled').checked = currentSettings.promptCustomization?.enabled ?? false;
+          document.getElementById('saveLastPrompt').checked = currentSettings.promptCustomization?.saveLastPrompt || false;
           
           if (currentSettings.gemini) {
             document.getElementById('geminiApiKey').value = currentSettings.gemini.apiKey || '';
@@ -687,6 +691,97 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
       
       // Update status banner
       updateStatusBanner();
+    });
+    
+    function populateForm(settings) {
+      document.getElementById('apiProvider').value = settings.apiProvider || 'huggingface';
+      document.getElementById('commitVerbose').checked = settings.commit?.verbose ?? true;
+      document.getElementById('showDiagnostics').checked = settings.showDiagnostics ?? false;
+      document.getElementById('promptCustomizationEnabled').checked = settings.promptCustomization?.enabled || false;
+      document.getElementById('saveLastPrompt').checked = settings.promptCustomization?.saveLastPrompt || false;
+      
+      // Show/hide the save last prompt toggle based on prompt customization enabled state
+      toggleSaveLastPromptVisibility(settings.promptCustomization?.enabled || false);
+    }
+
+    function collectFormData() {
+      return {
+        apiProvider: document.getElementById('apiProvider').value,
+        debug: currentSettings.debug,
+        gemini: {
+          apiKey: document.getElementById('geminiApiKey').value,
+          model: document.getElementById('geminiModel').value
+        },
+        huggingface: {
+          apiKey: document.getElementById('huggingfaceApiKey').value,
+          model: document.getElementById('huggingfaceModel').value
+        },
+        ollama: {
+          url: document.getElementById('ollamaUrl').value,
+          model: document.getElementById('ollamaModel').value
+        },
+        mistral: {
+          apiKey: document.getElementById('mistralApiKey').value,
+          model: document.getElementById('mistralModel').value
+        },
+        cohere: {
+          apiKey: document.getElementById('cohereApiKey').value,
+          model: document.getElementById('cohereModel').value
+        },
+        openai: {
+          apiKey: document.getElementById('openaiApiKey').value,
+          model: document.getElementById('openaiModel').value
+        },
+        together: {
+          apiKey: document.getElementById('togetherApiKey').value,
+          model: document.getElementById('togetherModel').value
+        },
+        openrouter: {
+          apiKey: document.getElementById('openrouterApiKey').value,
+          model: document.getElementById('openrouterModel').value
+        },
+        anthropic: {
+          apiKey: document.getElementById('anthropicApiKey').value,
+          model: document.getElementById('anthropicModel').value
+        },
+        copilot: {
+          model: document.getElementById('copilotModel').value
+        },
+        deepseek: {
+          apiKey: document.getElementById('deepseekApiKey').value,
+          model: document.getElementById('deepseekModel').value
+        },
+        grok: {
+          apiKey: document.getElementById('grokApiKey').value,
+          model: document.getElementById('grokModel').value
+        },
+        promptCustomization: {
+          enabled: document.getElementById('promptCustomizationEnabled').checked,
+          saveLastPrompt: document.getElementById('saveLastPrompt').checked,
+          lastPrompt: currentSettings.promptCustomization?.lastPrompt || '',
+        },
+        commit: {
+          verbose: document.getElementById('commitVerbose').checked
+        },
+        showDiagnostics: document.getElementById('showDiagnostics').checked
+      };
+    }
+
+    function toggleSaveLastPromptVisibility(show) {
+      const saveLastPromptRow = document.getElementById('saveLastPromptRow');
+      if (saveLastPromptRow) {
+        saveLastPromptRow.style.display = show ? 'flex' : 'none';
+      }
+    }
+
+    // Add event listener for prompt customization toggle
+    document.addEventListener('DOMContentLoaded', function() {
+      const promptCustomizationToggle = document.getElementById('promptCustomizationEnabled');
+      if (promptCustomizationToggle) {
+        promptCustomizationToggle.addEventListener('change', function() {
+          toggleSaveLastPromptVisibility(this.checked);
+        });
+      }
     });
   </script>`;
 }
