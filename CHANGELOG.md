@@ -1,6 +1,48 @@
 # Changelog
 
-## [3.4.0] - 2025-01-27
+## [3.4.1] - 2025-06-10
+
+### Enhanced
+
+- **Improved API Error Handling**: Enhanced error handling for Cohere and Grok providers with comprehensive status code coverage
+
+  - **Cohere API Error Handling**: Updated error handling to match official Cohere API documentation
+
+    - **400 Bad Request**: Clear messaging for invalid request body and missing required fields
+    - **401 Unauthorized**: Specific invalid API key detection and troubleshooting
+    - **402 Payment Required**: Billing limit detection with direct dashboard links for payment method updates
+    - **404 Not Found**: Model or resource not found handling with specific guidance
+    - **429 Rate Limiting**: Enhanced rate limit handling with Trial vs Production key differentiation and upgrade paths
+    - **499 Request Cancelled**: Proper handling of cancelled requests with retry guidance
+    - **500 Server Error**: Internal server error handling with support contact recommendations
+    - **Enhanced Error Propagation**: Preserves detailed API error messages throughout the call stack
+
+  - **Cohere API Key Validation**: Updated validation function to use structured warning system
+
+    - **Insufficient Balance Warning**: Returns success with warning for billing limit (402) since API key is valid
+    - **Rate Limit Warning**: Returns success with warning for rate limits since API key is valid
+    - **Structured Response**: Now returns detailed object with success, error, warning, and troubleshooting properties
+    - **Enhanced User Feedback**: Clear warnings in "Check API Setup" for billing and configuration issues
+
+  - **Grok API Error Handling**: Maintained existing comprehensive error handling
+    - **Credit Management**: Specific messaging for insufficient credits with purchase links
+    - **Structured Response**: Detailed validation responses with warnings for operational issues
+    - **Authentication Detection**: Robust API key validation with comprehensive status code handling
+
+### Fixed
+
+- **API Key Validation Consistency**: Ensured both Cohere and Grok use consistent warning patterns for insufficient balance/credits
+- **Error Message Clarity**: Improved error message specificity and actionable guidance across both providers
+- **Validation Response Structure**: Standardized validation response format between providers for better UI integration
+
+### Technical
+
+- Updated Cohere error handling to match official API documentation status codes and messages
+- Enhanced error propagation system to maintain detailed error context throughout the application
+- Improved validation function signatures for consistent provider integration
+- Added comprehensive debug logging for better troubleshooting and error tracking
+
+## [3.4.0] - 2025-06-09
 
 ### Added
 

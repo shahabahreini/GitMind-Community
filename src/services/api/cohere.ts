@@ -193,13 +193,27 @@ export async function callCohereAPI(apiKey: string, model: string, diff: string,
             const errorText = await response.text();
             debugLog(`Cohere API error: ${response.status} ${errorText}`);
 
-            // Handle specific error cases
-            if (response.status === 429) {
-                throw new Error("Rate limit exceeded. Please try again later.");
-            } else if (response.status === 401) {
-                throw new Error("Invalid API key. Please check your Cohere API key.");
-            } else {
-                throw new Error(`Cohere API error: ${response.status} - ${errorText}`);
+            // Handle specific error cases based on status codes
+            switch (response.status) {
+                case 400:
+                    throw new Error("Bad Request: Invalid request body. Please check the request format and required fields.");
+                case 401:
+                    throw new Error("Invalid API key. Please check your Cohere API key.");
+                case 402:
+                    throw new Error("Payment Required: Account has reached billing limit. Please add or update your payment method at https://dashboard.cohere.com/billing?tab=payment");
+                case 404:
+                    throw new Error("Not Found: The requested model or resource was not found. Please check the model ID.");
+                case 429:
+                    const rateLimitMessage = errorText.includes("Trial key")
+                        ? "Trial key rate limit exceeded (40 API calls/minute). Consider upgrading to a Production key at https://dashboard.cohere.com/api-keys"
+                        : "Rate limit exceeded. Please wait and try again later.";
+                    throw new Error(rateLimitMessage);
+                case 499:
+                    throw new Error("Request was cancelled. Please try again.");
+                case 500:
+                    throw new Error("Internal server error. Please contact Cohere support if this persists.");
+                default:
+                    throw new Error(`Cohere API error: ${response.status} - ${errorText}`);
             }
         }
 
@@ -227,23 +241,44 @@ export async function callCohereAPI(apiKey: string, model: string, diff: string,
     } catch (error) {
         debugLog("Cohere API Call Failed:", error);
 
-        // Handle rate limiting
-        if (error instanceof Error && error.message.includes("rate limit")) {
-            throw new Error("Rate limit exceeded. Please try again later.");
-        }
-
-        // Handle invalid API key
-        if (error instanceof Error && error.message.includes("Invalid API key")) {
-            throw new Error("Invalid API key. Please check your Cohere API key.");
-        }
-
-        // Add specific handling for response processing errors
-        if (error instanceof Error && error.message.includes("text")) {
-            throw new Error("Failed to process Cohere response: " + error.message);
-        }
-
-        // Handle other errors
+        // Handle specific error types
         if (error instanceof Error) {
+            // Rate limiting errors
+            if (error.message.includes("rate limit") || error.message.includes("Rate limit")) {
+                throw error; // Re-throw the detailed rate limit message
+            }
+
+            // Authentication errors
+            if (error.message.includes("Invalid API key") || error.message.includes("Unauthorized")) {
+                throw error; // Re-throw the detailed auth message
+            }
+
+            // Payment/billing errors
+            if (error.message.includes("Payment Required") || error.message.includes("billing")) {
+                throw error; // Re-throw the detailed billing message
+            }
+
+            // Resource not found errors
+            if (error.message.includes("Not Found") || error.message.includes("not found")) {
+                throw error; // Re-throw the detailed not found message
+            }
+
+            // Request cancellation errors
+            if (error.message.includes("cancelled") || error.message.includes("Request was cancelled")) {
+                throw error; // Re-throw the detailed cancellation message
+            }
+
+            // Server errors
+            if (error.message.includes("Internal server error") || error.message.includes("500")) {
+                throw error; // Re-throw the detailed server error message
+            }
+
+            // Response processing errors
+            if (error.message.includes("text") || error.message.includes("response")) {
+                throw new Error("Failed to process Cohere response: " + error.message);
+            }
+
+            // Generic API errors
             throw new Error(`Cohere API call failed: ${error.message}`);
         }
 
@@ -254,9 +289,11 @@ export async function callCohereAPI(apiKey: string, model: string, diff: string,
 /**
  * Validates a Cohere API key by making a simple request
  * @param apiKey The API key to validate
- * @returns Boolean indicating if the API key is valid
+ * @returns Object with success status and optional warning/troubleshooting information
  */
-export async function validateCohereAPIKey(apiKey: string): Promise<boolean> {
+export async function validateCohereAPIKey(
+    apiKey: string
+): Promise<{ success: boolean; error?: string; warning?: string; troubleshooting?: string }> {
     try {
         const response = await fetch('https://api.cohere.ai/v2/chat', {
             method: 'POST',
@@ -276,9 +313,107 @@ export async function validateCohereAPIKey(apiKey: string): Promise<boolean> {
             })
         });
 
-        return response.ok;
+        if (!response.ok) {
+            const errorText = await response.text();
+            debugLog(`Cohere API key validation failed: ${response.status} ${errorText}`);
+
+            // Parse error response for more detailed information
+            let errorMessage = `Cohere API error (${response.status})`;
+            try {
+                const errorData = JSON.parse(errorText);
+                if (errorData.message) {
+                    errorMessage = errorData.message;
+                }
+            } catch (parseError) {
+                // Use raw text if JSON parsing fails
+                if (errorText) {
+                    errorMessage = errorText;
+                }
+            }
+
+            // Handle specific error cases based on status codes
+            switch (response.status) {
+                case 400:
+                    debugLog("Cohere API key validation: 400 Bad Request - Invalid request format");
+                    return {
+                        success: false,
+                        error: "Bad Request: Invalid request body or missing required fields",
+                        troubleshooting: "Please check the API request format. This may indicate an issue with the validation request."
+                    };
+
+                case 401:
+                    debugLog("Cohere API key validation: 401 Unauthorized - Invalid API key");
+                    return {
+                        success: false,
+                        error: "Invalid API key",
+                        troubleshooting: "Please check that your Cohere API key is correct and active"
+                    };
+
+                case 402:
+                    debugLog("Cohere API key validation: 402 Payment Required - Billing limit reached");
+                    // For insufficient balance, return success with warning since API key is valid
+                    return {
+                        success: true,
+                        warning: "Billing limit reached",
+                        troubleshooting: "Your Cohere account has reached its billing limit. Please add or update your payment method at https://dashboard.cohere.com/billing?tab=payment to continue using the API"
+                    };
+
+                case 404:
+                    debugLog("Cohere API key validation: 404 Not Found - Model or resource not found");
+                    return {
+                        success: false,
+                        error: "Model or resource not found",
+                        troubleshooting: "The requested model or resource was not found. Please check the model ID or contact Cohere support."
+                    };
+
+                case 429:
+                    debugLog("Cohere API key validation: 429 Too Many Requests - Rate limit exceeded");
+                    const rateLimitTroubleshooting = errorMessage.includes("Trial key")
+                        ? "Trial key rate limit exceeded (40 API calls/minute). Consider upgrading to a Production key at https://dashboard.cohere.com/api-keys"
+                        : "Rate limit exceeded. Please wait and try again later.";
+
+                    // Rate limit means API key is valid
+                    return {
+                        success: true,
+                        warning: "Rate limit exceeded",
+                        troubleshooting: rateLimitTroubleshooting
+                    };
+
+                case 499:
+                    debugLog("Cohere API key validation: 499 Request Cancelled");
+                    return {
+                        success: false,
+                        error: "Request was cancelled",
+                        troubleshooting: "The API request was cancelled. Please try again."
+                    };
+
+                case 500:
+                    debugLog("Cohere API key validation: 500 Internal Server Error");
+                    return {
+                        success: false,
+                        error: "Internal server error",
+                        troubleshooting: "Cohere API is experiencing internal issues. Please contact Cohere support if this persists."
+                    };
+
+                default:
+                    debugLog(`Cohere API key validation: ${response.status} - Unknown status code`);
+                    return {
+                        success: false,
+                        error: errorMessage,
+                        troubleshooting: "Please check your API key configuration and try again."
+                    };
+            }
+        }
+
+        debugLog("Cohere API key validation: Success");
+        return { success: true };
+
     } catch (error) {
-        debugLog("API Key Validation Failed:", error);
-        return false;
+        debugLog("Cohere API Key Validation Failed:", error);
+        return {
+            success: false,
+            error: "Network error",
+            troubleshooting: "Unable to connect to Cohere API. Please check your internet connection and try again."
+        };
     }
 }
