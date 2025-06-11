@@ -1,5 +1,36 @@
 # Changelog
 
+## [3.4.2] - 2025-06-11
+
+### Fixed
+
+- **Show Diagnostics Toggle**: Resolved issue where the "Show Diagnostics" setting toggle in Settings UI was not responding to user interaction
+
+  - **Event Listener Registration**: Added missing event listeners for `showDiagnostics` toggle in settings script
+  - **Message Handling**: Enhanced message processing to properly handle `showDiagnostics` setting updates
+  - **Immediate Setting Updates**: Fixed toggle state updates to reflect changes immediately in the UI
+  - **Proper Persistence**: Ensured `showDiagnostics` setting is correctly saved to VS Code's global configuration
+  - **User Feedback**: Added confirmation messages when settings are successfully updated
+
+- **Settings UI Responsiveness**: Improved overall responsiveness of toggle switches in Settings panel
+
+  - **Toggle State Synchronization**: Fixed issue where toggle visual state wasn't updating immediately after changes
+  - **Event Handler Consistency**: Standardized event handling across all toggle switches for reliable operation
+  - **Settings Persistence**: Enhanced settings persistence mechanism to ensure all toggle changes are properly saved
+
+### Enhanced
+
+- **Settings UI Event Handling**: Improved event listener management for better user experience
+- **Configuration Management**: Enhanced real-time configuration updates for immediate setting reflection
+- **User Feedback**: Added visual confirmation when settings are updated successfully
+
+### Technical
+
+- Enhanced `settingsManager.ts` with proper event listeners for all toggle switches
+- Improved message handling in settings components for immediate UI updates
+- Standardized event handling patterns across all settings toggles
+- Added proper error handling and user feedback for settings updates
+
 ## [3.4.1] - 2025-06-10
 
 ### Enhanced

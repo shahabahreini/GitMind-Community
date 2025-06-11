@@ -798,5 +798,37 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
         });
       }
     });
+
+    // Add event listeners for settings changes
+    document.getElementById('commitVerbose')?.addEventListener('change', (e) => {
+        const checked = e.target.checked;
+        currentSettings.commit.verbose = checked;
+        vscode.postMessage({
+            command: 'updateSetting',
+            key: 'commit.verbose',
+            value: checked
+        });
+    });
+
+    document.getElementById('showDiagnostics')?.addEventListener('change', (e) => {
+        const checked = e.target.checked;
+        currentSettings.showDiagnostics = checked;
+        vscode.postMessage({
+            command: 'updateSetting',
+            key: 'showDiagnostics',
+            value: checked
+        });
+    });
+
+    document.getElementById('promptCustomizationEnabled')?.addEventListener('change', (e) => {
+        const checked = e.target.checked;
+        currentSettings.promptCustomization.enabled = checked;
+        vscode.postMessage({
+            command: 'updateSetting',
+            key: 'promptCustomization.enabled',
+            value: checked
+        });
+        toggleSaveLastPromptVisibility(checked);
+    });
   </script>`;
 }

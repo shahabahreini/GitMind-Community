@@ -32,7 +32,8 @@ export class MessageHandler {
                         await config.update('promptCustomization.enabled', message.value, vscode.ConfigurationTarget.Global);
                     }
 
-                    vscode.window.showInformationMessage(`Setting updated: ${message.key}`);
+                    // Provide immediate feedback
+                    vscode.window.showInformationMessage(`Setting updated: ${message.key} = ${message.value}`);
                 } catch (error) {
                     vscode.window.showErrorMessage(`Failed to update setting: ${error}`);
                 }

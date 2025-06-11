@@ -70,6 +70,10 @@ export class SettingsWebview {
     this._panel.webview.onDidReceiveMessage(
       async (message) => {
         await this._messageHandler.handleMessage(message);
+        // Refresh the webview after settings updates
+        if (message.command === 'updateSetting' || message.type === 'updateSetting') {
+          this._update();
+        }
       },
       null,
       this._disposables
