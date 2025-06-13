@@ -6,6 +6,7 @@ import { debugLog } from "../../services/debug/logger";
 
 export class SettingsManager {
     public getSettings(): ExtensionSettings {
+        // Force refresh configuration to get latest values
         const config = vscode.workspace.getConfiguration("aiCommitAssistant");
 
         // Get the API provider with a default

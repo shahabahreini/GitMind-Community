@@ -70,9 +70,17 @@ export class SettingsWebview {
     this._panel.webview.onDidReceiveMessage(
       async (message) => {
         await this._messageHandler.handleMessage(message);
-        // Refresh the webview after settings updates
+        // Refresh the webview after settings updates with a delay
+        // to ensure VS Code configuration is fully updated
         if (message.command === 'updateSetting' || message.type === 'updateSetting') {
-          this._update();
+          setTimeout(async () => {
+            await this._update();
+          }, 250); // Increased delay to ensure config is updated
+        } else if (message.command === 'saveSettings') {
+          // Longer delay for bulk save operations
+          setTimeout(async () => {
+            await this._update();
+          }, 350); // Longer delay for bulk configuration updates
         }
       },
       null,
@@ -82,7 +90,7 @@ export class SettingsWebview {
     SettingsWebview.currentPanel = this;
   }
 
-  private _update() {
+  private async _update() {
     const webview = this._panel.webview;
     const settings = this._settingsManager.getSettings();
     const templateGenerator = new SettingsTemplateGenerator(settings, getNonce());

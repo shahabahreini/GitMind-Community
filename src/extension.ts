@@ -11,6 +11,7 @@ import {
 import { initializeLogger, debugLog } from "./services/debug/logger";
 import { processResponse } from "./utils/commitFormatter";
 import { SettingsWebview } from "./webview/settings/SettingsWebview";
+import { OnboardingWebview } from "./webview/onboarding/OnboardingWebview";
 import { OnboardingManager, OnboardingStep } from "./utils/onboardingManager";
 import { fetchMistralModels } from "./services/api/mistral";
 import { fetchHuggingFaceModels } from "./services/api/huggingface";
@@ -615,9 +616,43 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  // Add to context.subscriptions
-  context.subscriptions.push(
-    loadingIndicatorCommand
+  // Register Open Onboarding command
+  let openOnboardingCommand = vscode.commands.registerCommand(
+    "ai-commit-assistant.openOnboarding",
+    () => {
+      OnboardingWebview.createOrShow(context.extensionUri);
+      telemetryService.trackEvent('onboarding.opened');
+    }
+  );
+
+  // Register Complete Onboarding command
+  let completeOnboardingCommand = vscode.commands.registerCommand(
+    "ai-commit-assistant.completeOnboarding",
+    async () => {
+      await context.globalState.update('aiCommitAssistant.onboardingShown', true);
+      vscode.window.showInformationMessage("🎉 Welcome to GitMind! You're all set up and ready to generate amazing commit messages.");
+      telemetryService.trackEvent('onboarding.completed');
+
+      // Close onboarding webview
+      if (OnboardingWebview.isWebviewOpen()) {
+        vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+      }
+    }
+  );
+
+  // Register Skip Onboarding command
+  let skipOnboardingCommand = vscode.commands.registerCommand(
+    "ai-commit-assistant.skipOnboarding",
+    async () => {
+      await context.globalState.update('aiCommitAssistant.onboardingShown', true);
+      vscode.window.showInformationMessage("Onboarding skipped. You can access settings anytime through the command palette.");
+      telemetryService.trackEvent('onboarding.skipped');
+
+      // Close onboarding webview
+      if (OnboardingWebview.isWebviewOpen()) {
+        vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+      }
+    }
   );
 
   // Register all disposables
@@ -635,35 +670,23 @@ export async function activate(context: vscode.ExtensionContext) {
     loadMistralModelsCommand,
     loadHuggingFaceModelsCommand,
     clearLastPromptCommand,
-    viewLastPromptCommand
+    viewLastPromptCommand,
+    loadingIndicatorCommand,
+    openOnboardingCommand,
+    completeOnboardingCommand,
+    skipOnboardingCommand
   );
 
   // Show onboarding for new users
-  await OnboardingManager.showOnboarding(context);
-  telemetryService.trackEvent('extension.onboarding.shown');
-
-  // Update onboarding step to mention all providers including DeepSeek, Grok, and Perplexity
-  const steps: OnboardingStep[] = [
-    {
-      title: 'Step 1: Choose an AI Provider',
-      content: 'GitMind supports multiple AI providers:\n• Gemini (Google)\n• Hugging Face\n• Ollama (Local)\n• Mistral AI\n• Cohere\n• OpenAI\n• Together AI\n• OpenRouter\n• Anthropic\n• GitHub Copilot\n• DeepSeek\n• Grok (X.ai)\n• Perplexity\n\nClick Next to learn how to configure your chosen provider.',
-    },
-    {
-      title: 'Step 2: Configure API Settings',
-      content: 'Open the settings panel using the command palette (Ctrl+Shift+P or Cmd+Shift+P) and search for "AI Commit: Open Settings".',
-    },
-    {
-      title: 'Step 3: Generate Commit Messages',
-      content: 'After making changes to your code, click the "Generate Commit" button in the Source Control panel or use the command palette.',
-    },
-    {
-      title: 'Step 4: Review & Commit',
-      content: 'Review the AI-generated commit message, make any needed edits, and commit your changes as usual.',
-    }
-  ];
-
-  // Register steps with OnboardingManager
-  OnboardingManager.registerSteps(steps);
+  const hasShownOnboarding = context.globalState.get<boolean>('aiCommitAssistant.onboardingShown');
+  if (!hasShownOnboarding) {
+    // Use the new interactive onboarding webview
+    OnboardingWebview.createOrShow(context.extensionUri);
+    telemetryService.trackEvent('extension.onboarding.webview.shown');
+  } else {
+    // For returning users, just log the activation
+    telemetryService.trackEvent('extension.activation.existing_user');
+  }
 
   // Show SCM status bar item if Git is active
   const gitExtension = vscode.extensions.getExtension("vscode.git");

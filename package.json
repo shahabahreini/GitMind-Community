@@ -535,6 +535,21 @@
         "command": "ai-commit-assistant.viewLastPrompt",
         "title": "View Last Custom Prompt",
         "category": "AI Commit Assistant"
+      },
+      {
+        "command": "ai-commit-assistant.openOnboarding",
+        "title": "Open Onboarding",
+        "category": "AI Commit Assistant"
+      },
+      {
+        "command": "ai-commit-assistant.completeOnboarding",
+        "title": "Complete Onboarding",
+        "category": "AI Commit Assistant"
+      },
+      {
+        "command": "ai-commit-assistant.skipOnboarding",
+        "title": "Skip Onboarding",
+        "category": "AI Commit Assistant"
       }
     ],
     "menus": {
