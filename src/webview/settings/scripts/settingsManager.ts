@@ -14,6 +14,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     document.getElementById('apiProvider').value = currentSettings.apiProvider || 'huggingface';
     document.getElementById('commitVerbose').checked = currentSettings.commit?.verbose ?? true;
     document.getElementById('showDiagnostics').checked = currentSettings.showDiagnostics ?? false;
+    document.getElementById('telemetryEnabled').checked = currentSettings.telemetry?.enabled ?? true;
     document.getElementById('promptCustomizationEnabled').checked = currentSettings.promptCustomization?.enabled ?? false;
     document.getElementById('saveLastPrompt').checked = currentSettings.promptCustomization?.saveLastPrompt || false;
     document.getElementById('geminiApiKey').value = currentSettings.gemini?.apiKey || '';
@@ -142,7 +143,10 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
         commit: {
           verbose: document.getElementById('commitVerbose').checked
         },
-        showDiagnostics: document.getElementById('showDiagnostics').checked
+        showDiagnostics: document.getElementById('showDiagnostics').checked,
+        telemetry: {
+          enabled: document.getElementById('telemetryEnabled').checked
+        }
       };
       
       // Send message to extension
@@ -612,6 +616,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           document.getElementById('apiProvider').value = currentSettings.apiProvider || 'huggingface';
           document.getElementById('commitVerbose').checked = currentSettings.commit?.verbose ?? true;
           document.getElementById('showDiagnostics').checked = currentSettings.showDiagnostics ?? false;
+          document.getElementById('telemetryEnabled').checked = currentSettings.telemetry?.enabled ?? true;
           document.getElementById('promptCustomizationEnabled').checked = currentSettings.promptCustomization?.enabled ?? false;
           document.getElementById('saveLastPrompt').checked = currentSettings.promptCustomization?.saveLastPrompt || false;
           
@@ -708,6 +713,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
       document.getElementById('apiProvider').value = settings.apiProvider || 'huggingface';
       document.getElementById('commitVerbose').checked = settings.commit?.verbose ?? true;
       document.getElementById('showDiagnostics').checked = settings.showDiagnostics ?? false;
+      document.getElementById('telemetryEnabled').checked = settings.telemetry?.enabled ?? true;
       document.getElementById('promptCustomizationEnabled').checked = settings.promptCustomization?.enabled || false;
       document.getElementById('saveLastPrompt').checked = settings.promptCustomization?.saveLastPrompt || false;
       
@@ -778,7 +784,10 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
         commit: {
           verbose: document.getElementById('commitVerbose').checked
         },
-        showDiagnostics: document.getElementById('showDiagnostics').checked
+        showDiagnostics: document.getElementById('showDiagnostics').checked,
+        telemetry: {
+          enabled: document.getElementById('telemetryEnabled').checked
+        }
       };
     }
 
@@ -816,6 +825,19 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
         vscode.postMessage({
             command: 'updateSetting',
             key: 'showDiagnostics',
+            value: checked
+        });
+    });
+
+    document.getElementById('telemetryEnabled')?.addEventListener('change', (e) => {
+        const checked = e.target.checked;
+        if (!currentSettings.telemetry) {
+            currentSettings.telemetry = { enabled: true };
+        }
+        currentSettings.telemetry.enabled = checked;
+        vscode.postMessage({
+            command: 'updateSetting',
+            key: 'telemetry.enabled',
             value: checked
         });
     });

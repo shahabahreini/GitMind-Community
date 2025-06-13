@@ -3,6 +3,10 @@ export interface ExtensionSettings {
     apiProvider: string;
     debug?: boolean;
     showDiagnostics?: boolean;
+    // Privacy and Analytics Settings
+    telemetry?: {
+        enabled: boolean;
+    };
     gemini: {
         apiKey: string;
         model: string;

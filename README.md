@@ -335,3 +335,42 @@ Leverage free tier providers (Gemini-2.5-flash, DeepSeek-reasoner) or local Olla
 ---
 
 **GitMind** transforms your development workflow with intelligent, context-aware commit message generation. **Supporting 11 AI providers** with **50+ models including GPT-4o, Claude-opus-4, Gemini-2.5-pro, DeepSeek-R1, Llama-3.3, Phi-4** and **advanced diff analysis**, it delivers professional-grade commit messages that improve code history quality and team collaboration efficiency.
+
+## Privacy and Telemetry
+
+GitMind collects anonymous usage data to help improve the extension. This helps us understand how the extension is used and identify areas for improvement.
+
+### What data is collected:
+
+- **Usage Analytics**: Command usage frequency, success/failure rates, and performance metrics
+- **Provider Statistics**: Which AI providers are used (but not API keys or responses)
+- **Technical Information**: VS Code version, OS platform, extension version
+- **Error Reports**: Anonymous error logs and exception details
+- **User Flow**: Navigation patterns within the extension
+
+### What is NOT collected:
+
+- **No code content**: Your actual code, commit messages, or diff content
+- **No personal information**: Names, emails, or other personal identifiers
+- **No API keys**: Your API credentials are never transmitted
+- **No repository information**: Project names, file paths, or repository details
+
+### How to disable telemetry:
+
+You can disable telemetry at any time by:
+
+1. Opening VS Code Settings (`Ctrl/Cmd + ,`)
+2. Searching for "telemetry"
+3. Setting "Telemetry: Telemetry Level" to "off"
+
+GitMind respects your privacy settings and will not collect any data if telemetry is disabled.
+
+### Data usage:
+
+The collected data helps us:
+- Improve extension reliability and performance
+- Understand which features are most valuable
+- Prioritize development efforts
+- Fix bugs and compatibility issues
+
+All data is processed in accordance with Microsoft's privacy policies and is used solely for improving the GitMind extension.

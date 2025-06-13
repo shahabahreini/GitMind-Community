@@ -1,6 +1,8 @@
 // src/webview/settings/SettingsManager.ts
 import * as vscode from "vscode";
 import { ExtensionSettings } from "../../models/ExtensionSettings";
+import { telemetryService } from "../../services/telemetry/telemetryService";
+import { debugLog } from "../../services/debug/logger";
 
 export class SettingsManager {
     public getSettings(): ExtensionSettings {
@@ -72,6 +74,9 @@ export class SettingsManager {
                 verbose: config.get<boolean>("commit.verbose") ?? true,
             },
             showDiagnostics: config.get<boolean>("showDiagnostics") ?? false,
+            telemetry: {
+                enabled: config.get<boolean>("telemetry.enabled") ?? true,
+            },
         };
     }
 
@@ -141,174 +146,243 @@ export class SettingsManager {
                 verbose: config.get<boolean>("commit.verbose") ?? true,
             },
             showDiagnostics: config.get<boolean>("showDiagnostics") ?? false,
+            telemetry: {
+                enabled: config.get<boolean>("telemetry.enabled") ?? true,
+            },
         };
     }
 
     public static async saveSettings(settings: ExtensionSettings): Promise<void> {
-        const config = vscode.workspace.getConfiguration("aiCommitAssistant");
+        try {
+            const config = vscode.workspace.getConfiguration("aiCommitAssistant");
+            const currentSettings = await this.getCurrentSettings();
 
-        // Update settings one by one
-        await config.update(
-            "apiProvider",
-            settings.apiProvider,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "debug",
-            settings.debug,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "gemini.apiKey",
-            settings.gemini.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "gemini.model",
-            settings.gemini.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "huggingface.apiKey",
-            settings.huggingface.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "huggingface.model",
-            settings.huggingface.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "ollama.url",
-            settings.ollama.url,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "ollama.model",
-            settings.ollama.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "mistral.apiKey",
-            settings.mistral.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "mistral.model",
-            settings.mistral.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "cohere.apiKey",
-            settings.cohere.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "cohere.model",
-            settings.cohere.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "openai.apiKey",
-            settings.openai.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "openai.model",
-            settings.openai.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "together.apiKey",
-            settings.together.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "together.model",
-            settings.together.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "openrouter.apiKey",
-            settings.openrouter.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "openrouter.model",
-            settings.openrouter.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "anthropic.apiKey",
-            settings.anthropic.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "anthropic.model",
-            settings.anthropic.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "copilot.model",
-            settings.copilot.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "deepseek.apiKey",
-            settings.deepseek.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "deepseek.model",
-            settings.deepseek.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "grok.apiKey",
-            settings.grok.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "grok.model",
-            settings.grok.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "perplexity.apiKey",
-            settings.perplexity.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "perplexity.model",
-            settings.perplexity.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "promptCustomization.enabled",
-            settings.promptCustomization.enabled,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "promptCustomization.saveLastPrompt",
-            settings.promptCustomization.saveLastPrompt,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "promptCustomization.lastPrompt",
-            settings.promptCustomization.lastPrompt,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "commit.verbose",
-            settings.commit?.verbose ?? true,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "showDiagnostics",
-            settings.showDiagnostics ?? false,
-            vscode.ConfigurationTarget.Global
-        );
+            // Track settings changes for telemetry
+            const changes: Array<{ setting: string, oldValue: string, newValue: string }> = [];
 
-        vscode.window.showInformationMessage("Settings saved successfully!");
+            // Check for provider change
+            if (currentSettings.apiProvider !== settings.apiProvider) {
+                changes.push({
+                    setting: 'apiProvider',
+                    oldValue: currentSettings.apiProvider,
+                    newValue: settings.apiProvider
+                });
+            }
+
+            // Check for debug mode change
+            if (currentSettings.debug !== settings.debug) {
+                changes.push({
+                    setting: 'debug',
+                    oldValue: (currentSettings.debug || false).toString(),
+                    newValue: (settings.debug || false).toString()
+                });
+            }
+
+            // Track API key configuration changes (without exposing the actual keys)
+            const apiProviders = ['gemini', 'huggingface', 'ollama', 'mistral', 'cohere', 'openai', 'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'perplexity'];
+
+            apiProviders.forEach(provider => {
+                const currentProvider = (currentSettings as any)[provider];
+                const newProvider = (settings as any)[provider];
+
+                if (currentProvider && newProvider && typeof newProvider === 'object' && newProvider.apiKey !== undefined) {
+                    const oldHasKey = !!(currentProvider?.apiKey);
+                    const newHasKey = !!(newProvider.apiKey);
+
+                    if (oldHasKey !== newHasKey) {
+                        changes.push({
+                            setting: `${provider}.apiKey.configured`,
+                            oldValue: oldHasKey.toString(),
+                            newValue: newHasKey.toString()
+                        });
+                    }
+
+                    // Track model changes
+                    if (newProvider.model !== currentProvider?.model) {
+                        changes.push({
+                            setting: `${provider}.model`,
+                            oldValue: currentProvider?.model || 'none',
+                            newValue: newProvider.model || 'none'
+                        });
+                    }
+                }
+            });
+
+            // Save all settings
+            await config.update("apiProvider", settings.apiProvider, vscode.ConfigurationTarget.Global);
+            await config.update("debug", settings.debug, vscode.ConfigurationTarget.Global);
+            await config.update(
+                "gemini.apiKey",
+                settings.gemini.apiKey,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "gemini.model",
+                settings.gemini.model,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "huggingface.apiKey",
+                settings.huggingface.apiKey,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "huggingface.model",
+                settings.huggingface.model,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "ollama.url",
+                settings.ollama.url,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "ollama.model",
+                settings.ollama.model,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "mistral.apiKey",
+                settings.mistral.apiKey,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "mistral.model",
+                settings.mistral.model,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "cohere.apiKey",
+                settings.cohere.apiKey,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "cohere.model",
+                settings.cohere.model,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "openai.apiKey",
+                settings.openai.apiKey,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "openai.model",
+                settings.openai.model,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "together.apiKey",
+                settings.together.apiKey,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "together.model",
+                settings.together.model,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "openrouter.apiKey",
+                settings.openrouter.apiKey,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "openrouter.model",
+                settings.openrouter.model,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "anthropic.apiKey",
+                settings.anthropic.apiKey,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "anthropic.model",
+                settings.anthropic.model,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "copilot.model",
+                settings.copilot.model,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "deepseek.apiKey",
+                settings.deepseek.apiKey,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "deepseek.model",
+                settings.deepseek.model,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "grok.apiKey",
+                settings.grok.apiKey,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "grok.model",
+                settings.grok.model,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "perplexity.apiKey",
+                settings.perplexity.apiKey,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "perplexity.model",
+                settings.perplexity.model,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "promptCustomization.enabled",
+                settings.promptCustomization.enabled,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "promptCustomization.saveLastPrompt",
+                settings.promptCustomization.saveLastPrompt,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "promptCustomization.lastPrompt",
+                settings.promptCustomization.lastPrompt,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "commit.verbose",
+                settings.commit?.verbose ?? true,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "showDiagnostics",
+                settings.showDiagnostics ?? false,
+                vscode.ConfigurationTarget.Global
+            );
+            await config.update(
+                "telemetry.enabled",
+                settings.telemetry?.enabled ?? true,
+                vscode.ConfigurationTarget.Global
+            );
+
+            // Track the changes in telemetry
+            telemetryService.trackEvent('settings.saved', {
+                'changes.count': changes.length.toString()
+            });
+
+            changes.forEach(change => {
+                telemetryService.trackSettingsChanged(change.setting, change.oldValue, change.newValue);
+            });
+
+            debugLog("Settings saved successfully");
+        } catch (error) {
+            telemetryService.trackException(error as Error, {
+                'operation': 'saveSettings'
+            });
+            debugLog("Error saving settings:", error);
+            throw error;
+        }
     }
 }

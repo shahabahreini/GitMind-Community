@@ -42,6 +42,13 @@ export class GeneralSettings {
             </div>
             <label class="compact-label" for="showDiagnostics">Show Diagnostics</label>
           </div>
+          <div class="compact-toggle-row" data-tooltip="Help improve GitMind by sharing anonymous usage analytics. Privacy First: No code content, file names, or personal information is collected. This setting works alongside VS Code's global telemetry setting.">
+            <div class="toggle-switch">
+              <input type="checkbox" id="telemetryEnabled" ${this._settings.telemetry?.enabled !== false ? "checked" : ""} />
+              <label for="telemetryEnabled" class="toggle-slider"></label>
+            </div>
+            <label class="compact-label" for="telemetryEnabled">Anonymous Analytics 🛡️</label>
+          </div>
         </div>
       </div>
       <div class="form-group">

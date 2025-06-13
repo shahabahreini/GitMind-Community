@@ -1,5 +1,50 @@
 # Changelog
 
+## [3.4.3] - 2025-06-11
+
+### Added
+
+- **Microsoft Application Insights Integration**: Comprehensive telemetry and analytics system for extension improvement
+
+  - **Anonymous Usage Analytics**: Track command usage, success rates, and performance metrics to improve extension reliability
+  - **Provider Usage Statistics**: Monitor AI provider popularity and success rates (without exposing API keys or responses)
+  - **Error Tracking**: Automatic exception logging and error pattern detection for better debugging and fixes
+  - **Performance Monitoring**: Track API response times, commit generation duration, and user workflow efficiency
+  - **User Flow Analytics**: Understand how users navigate the extension to improve UX and feature discovery
+  - **Privacy-First Design**: No code content, commit messages, API keys, or personal information is collected
+  - **Respect User Preferences**: Automatically disabled when VS Code telemetry is turned off
+  - **Secure Data Handling**: Uses Microsoft Azure Application Insights with enterprise-grade security
+
+- **Enhanced Privacy Controls**: Complete transparency and user control over data collection
+
+  - **Clear Privacy Documentation**: Detailed explanation of what is and isn't collected
+  - **Easy Opt-Out**: Simple instructions to disable telemetry via VS Code settings
+  - **Secure Storage**: API keys and sensitive data stored locally using VS Code's secure storage
+  - **Anonymous Identifiers**: Only machine-based IDs are used, no personal information
+  - **Data Minimization**: Only essential usage data is collected for extension improvement
+
+### Enhanced
+
+- **Improved Error Handling**: Better error tracking and resolution with telemetry insights
+- **Performance Optimization**: Data-driven performance improvements based on usage patterns
+- **User Experience**: Enhanced understanding of user workflows to improve feature development
+- **Extension Reliability**: Proactive identification and resolution of issues through error analytics
+
+### Privacy
+
+- **No Code Collection**: Your code, commit messages, and diff content remain completely private
+- **No Personal Data**: Names, emails, and other personal identifiers are never collected
+- **API Key Security**: API credentials are stored locally and never transmitted to telemetry services
+- **Transparent Data Usage**: All collected data is used solely for improving GitMind extension
+
+### Technical
+
+- Added comprehensive TelemetryService with Microsoft Application Insights integration
+- Implemented privacy-respecting analytics across all extension operations
+- Enhanced error tracking and exception handling with detailed context
+- Added performance monitoring for API calls and user interactions
+- Integrated telemetry controls with VS Code's built-in privacy settings
+
 ## [3.4.2] - 2025-06-11
 
 ### Fixed
@@ -559,4 +604,4 @@
 - Refactored settings UI for better organization and clarity
 - Upgraded core functionality with improved user experience across all providers
 - Updated default Cohere model to command-a-03-2025 for better performance and latest capabilities
-- Enhanced Cohere API implementation to support v2 chat endpoint format
+ 

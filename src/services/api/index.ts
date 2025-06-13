@@ -41,6 +41,7 @@ import { callGrokAPI } from "./grok";
 import { callPerplexityAPI } from "./perplexity";
 import { RequestManager } from "../../utils/requestManager";
 import { APIErrorHandler } from "../../utils/errorHandler";
+import { telemetryService } from "../telemetry/telemetryService";
 
 type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter" | "Anthropic" | "GitHub Copilot" | "DeepSeek" | "Grok" | "Perplexity";
 
@@ -126,10 +127,19 @@ export async function generateCommitMessage(
     const filesChanged = (diff.match(/diff --git/g) || []).length;
     const context = { diffSize, filesChanged };
 
+    const startTime = Date.now();
+
     try {
         // Set up request tracking
         currentRequestController = new AbortController();
         isCurrentlyActive = true;
+
+        // Track the start of generation
+        telemetryService.trackEvent('api.generateCommit.started', {
+            'provider': config.type,
+            'files.changed': filesChanged.toString(),
+            'diff.size.bytes': diffSize.toString()
+        });
 
         // First validate and potentially update the configuration
         const validatedConfig = await validateAndUpdateConfig(config);
@@ -140,13 +150,36 @@ export async function generateCommitMessage(
 
         // Then generate the message with the validated config
         const result = await generateMessageWithConfig(validatedConfig, diff, customContext);
+
+        const duration = Date.now() - startTime;
+        telemetryService.trackProviderUsage(config.type, getModelName(config), true);
+        telemetryService.trackEvent('api.generateCommit.completed', {
+            'provider': config.type,
+            'success': 'true',
+            'duration.ms': duration.toString()
+        });
+
         return result;
     } catch (error) {
+        const duration = Date.now() - startTime;
         debugLog("Generate Commit Message Error:", error);
+
+        // Track the error
+        if (error instanceof Error) {
+            telemetryService.trackException(error, {
+                'provider': config.type,
+                'operation': 'generateCommitMessage'
+            });
+            telemetryService.trackProviderUsage(config.type, getModelName(config), false);
+        }
 
         // Handle cancellation specifically
         if (error instanceof Error && (error.message === 'Request was cancelled' || error.message === 'User cancelled token count confirmation')) {
             debugLog("Request was cancelled by user");
+            telemetryService.trackEvent('api.generateCommit.cancelled', {
+                'provider': config.type,
+                'duration.ms': duration.toString()
+            });
             return "";
         }
 
@@ -1468,6 +1501,40 @@ function getProviderName(type: string): ApiProvider {
         "perplexity": "Perplexity"
     };
     return providerMap[type] || "Gemini";
+}
+
+function getModelName(config: ApiConfig): string {
+    // Extract model name from config based on provider type
+    switch (config.type) {
+        case 'gemini':
+            return (config as GeminiApiConfig).model || 'unknown';
+        case 'huggingface':
+            return (config as HuggingFaceApiConfig).model || 'unknown';
+        case 'ollama':
+            return (config as OllamaApiConfig).model || 'unknown';
+        case 'mistral':
+            return (config as MistralApiConfig).model || 'unknown';
+        case 'cohere':
+            return (config as CohereApiConfig).model || 'unknown';
+        case 'openai':
+            return (config as OpenAIApiConfig).model || 'unknown';
+        case 'together':
+            return (config as TogetherApiConfig).model || 'unknown';
+        case 'openrouter':
+            return (config as OpenRouterApiConfig).model || 'unknown';
+        case 'anthropic':
+            return (config as AnthropicApiConfig).model || 'unknown';
+        case 'copilot':
+            return (config as CopilotApiConfig).model || 'unknown';
+        case 'deepseek':
+            return (config as DeepSeekApiConfig).model || 'unknown';
+        case 'grok':
+            return (config as GrokApiConfig).model || 'unknown';
+        case 'perplexity':
+            return (config as PerplexityApiConfig).model || 'unknown';
+        default:
+            return 'unknown';
+    }
 }
 
 function getProviderSettingPath(provider: string): string {

@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: Professional AI Commit Assistant",
   "description": "🚀 Professional AI-powered commit message generation for Visual Studio Code. Leverage 13 different AI providers including OpenAI GPT-4o, Claude-3-5-sonnet, Gemini-2.5-flash, DeepSeek-reasoner, Grok-3, Perplexity-sonar, and 50+ models to create consistent, conventional commit messages that improve code history quality and team collaboration.",
-  "version": "3.4.2",
+  "version": "3.4.3",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -145,6 +145,12 @@
           "default": false,
           "description": "Show model and token information before generating commit messages",
           "order": 11
+        },
+        "aiCommitAssistant.telemetry.enabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Enable extension telemetry to help improve GitMind. **Privacy First**: Only anonymous usage analytics are collected - no code content, file names, or personal information. You can disable this anytime while still respecting VS Code's global telemetry setting.",
+          "order": 12
         },
         "aiCommitAssistant.gemini.model": {
           "type": "string",
@@ -602,7 +608,7 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
-    "@types/node": "^22.15.24",
+    "@types/node": "^22.15.31",
     "@types/sanitize-html": "^2.16.0",
     "@types/vscode": "^1.100.0",
     "@typescript-eslint/eslint-plugin": "^8.33.0",
@@ -621,6 +627,7 @@
     "@google/generative-ai": "^0.24.1",
     "@lobehub/icons": "^2.2.0",
     "@types/axios": "^0.14.4",
+    "applicationinsights": "^3.7.0",
     "axios": "^1.8.1",
     "dotenv": "^16.5.0",
     "node-fetch": "^3.3.2",
@@ -882,6 +889,15 @@
     "untrustedWorkspaces": {
       "supported": true,
       "description": "This extension requires API keys to be configured for full functionality."
+    }
+  },
+  "telemetry": {
+    "enabled": true,
+    "level": "usage",
+    "description": "This extension collects anonymous usage data to improve functionality. No code content or personal information is collected.",
+    "optOut": {
+      "setting": "telemetry.telemetryLevel",
+      "value": "off"
     }
   }
 }

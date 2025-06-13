@@ -14,9 +14,8 @@ import { SettingsWebview } from "./webview/settings/SettingsWebview";
 import { OnboardingManager, OnboardingStep } from "./utils/onboardingManager";
 import { fetchMistralModels } from "./services/api/mistral";
 import { fetchHuggingFaceModels } from "./services/api/huggingface";
-// Add import for Cohere (if needed in the future)
-// import { fetchCohereModels } from "./services/api/cohere";
 import { PromptManager } from "./services/promptManager";
+import { telemetryService } from "./services/telemetry/telemetryService";
 
 const state: ExtensionState = {
   debugChannel: vscode.window.createOutputChannel("AI Commit Assistant Debug"),
@@ -32,6 +31,13 @@ export async function activate(context: vscode.ExtensionContext) {
   state.context = context;
   initializeLogger(state.debugChannel);
   debugLog("AI Commit Assistant is now active");
+
+  // Initialize telemetry service
+  await telemetryService.initialize(context);
+  telemetryService.trackEvent('extension.activated', {
+    'activation.time': new Date().toISOString()
+  });
+
   debugLog(
     "Extension configuration:",
     vscode.workspace.getConfiguration("aiCommitAssistant")
@@ -95,16 +101,23 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  // Register main command with cancel support
+  // Register main command with telemetry tracking
   let generateCommitCommand = vscode.commands.registerCommand(
     "ai-commit-assistant.generateCommitMessage",
     async () => {
+      const startTime = Date.now();
+      const apiConfig = getApiConfig();
+
       try {
         debugLog("Command Started: generateCommitMessage");
+        telemetryService.trackEvent('command.generateCommit.started', {
+          'provider': apiConfig.type
+        });
 
         // If already generating, cancel the current request
         if (isGenerating) {
           await vscode.commands.executeCommand("ai-commit-assistant.cancelGeneration");
+          telemetryService.trackEvent('command.generateCommit.cancelled');
           return;
         }
 
@@ -129,24 +142,30 @@ export async function activate(context: vscode.ExtensionContext) {
         // Check if current directory is a git repository
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (!workspaceFolders) {
+          telemetryService.trackEvent('command.generateCommit.failed', {
+            'error': 'no_workspace_folder'
+          });
           vscode.window.showErrorMessage("No workspace folder is open");
           return;
         }
         try {
           await validateGitRepository(workspaceFolders[0]);
         } catch (error) {
+          telemetryService.trackEvent('command.generateCommit.failed', {
+            'error': 'not_git_repository'
+          });
           vscode.window.showErrorMessage(
             "This is not a git repository. Please initialize git first."
           );
           return;
         }
 
-        // Get configuration
-        const apiConfig = getApiConfig();
-
         // Get git diff
         const diff = await getDiff(workspaceFolders[0]);
         if (!diff || diff.trim() === "") {
+          telemetryService.trackEvent('command.generateCommit.failed', {
+            'error': 'no_changes'
+          });
           vscode.window.showInformationMessage(
             "No changes detected to generate a commit message for."
           );
@@ -164,15 +183,32 @@ export async function activate(context: vscode.ExtensionContext) {
           })
         ]);
 
+        const duration = Date.now() - startTime;
+
         if (message && message.trim() !== "") {
           // Process the AI response
           const formattedMessage = await processResponse(message);
           // Set the message in the SCM input box
           await setCommitMessage(formattedMessage);
+
+          telemetryService.trackCommitGeneration(
+            apiConfig.type,
+            true,
+            duration,
+            Math.ceil(diff.length / 4) // Rough token estimation
+          );
+
           vscode.window.showInformationMessage(
             "Commit message generated successfully!"
           );
         } else {
+          telemetryService.trackCommitGeneration(
+            apiConfig.type,
+            false,
+            duration,
+            undefined,
+            'empty_response'
+          );
           // Only show generic message if we don't have a specific error
           vscode.window.showWarningMessage(
             "No commit message was generated. This may be due to API limitations or configuration issues."
@@ -180,10 +216,29 @@ export async function activate(context: vscode.ExtensionContext) {
         }
 
       } catch (error) {
+        const duration = Date.now() - startTime;
         debugLog("Generate Commit Error:", error);
+
+        // Track the error
+        if (error instanceof Error) {
+          telemetryService.trackException(error, {
+            'command': 'generateCommit',
+            'provider': apiConfig.type
+          });
+          telemetryService.trackCommitGeneration(
+            apiConfig.type,
+            false,
+            duration,
+            undefined,
+            error.name
+          );
+        }
 
         // Handle cancellation specifically
         if (error instanceof Error && error.message === 'Request was cancelled') {
+          telemetryService.trackEvent('command.generateCommit.cancelled', {
+            'duration.ms': duration.toString()
+          });
           vscode.window.showInformationMessage("Commit message generation cancelled");
         } else if (error instanceof Error) {
           // Show the specific error message from our enhanced error handling
@@ -217,76 +272,19 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  // Register settings command
-  let settingsCommand = vscode.commands.registerCommand(
-    "ai-commit-assistant.openSettings",
-    () => {
-      SettingsWebview.createOrShow(context.extensionUri);
-    }
-  );
-
-  // Handle SCM visibility changes
-  context.subscriptions.push(
-    vscode.window.onDidChangeVisibleTextEditors(() => {
-      const gitExtension = vscode.extensions.getExtension("vscode.git");
-      if (gitExtension && gitExtension.isActive) {
-        scmStatusBarItem.show();
-      } else {
-        scmStatusBarItem.hide();
-      }
-    })
-  );
-
-  // Register accept input command
-  let acceptInputCommand = vscode.commands.registerCommand(
-    "ai-commit-assistant.acceptInput",
-    async () => {
-      try {
-        // Get the Git extension
-        const gitExtension = vscode.extensions.getExtension("vscode.git")?.exports;
-        const git = gitExtension?.getAPI(1);
-
-        if (git && git.repositories.length > 0) {
-          const repo = git.repositories[0];
-          const message = repo.inputBox.value;
-
-          if (message) {
-            debugLog("Accepting input message:", message);
-            try {
-              // If there's already a message in the input box, use it directly
-              // This allows users to manually edit or accept the generated message
-              await vscode.commands.executeCommand("git.commit");
-              vscode.window.showInformationMessage("Commit created successfully!");
-            } catch (error) {
-              debugLog("Accept Input Error:", error);
-              vscode.window.showErrorMessage(`Error creating commit: ${error instanceof Error ? error.message : 'Unknown error'}`);
-              // If direct commit fails, fall back to generating a message
-              await vscode.commands.executeCommand("ai-commit-assistant.generateCommitMessage");
-            }
-          } else {
-            // If no message exists, generate one
-            await vscode.commands.executeCommand("ai-commit-assistant.generateCommitMessage");
-          }
-        } else {
-          // If Git extension is not available, fall back to generating a message
-          await vscode.commands.executeCommand("ai-commit-assistant.generateCommitMessage");
-        }
-      } catch (error) {
-        debugLog("Accept Input Command Error:", error);
-        // If any error occurs, fall back to generating a message
-        await vscode.commands.executeCommand("ai-commit-assistant.generateCommitMessage");
-      }
-    }
-  );
-
-  // Register API check command with enhanced feedback
+  // Register API check command with telemetry
   let checkApiSetupCommand = vscode.commands.registerCommand(
     "ai-commit-assistant.checkApiSetup",
     async () => {
+      const startTime = Date.now();
       try {
         // Get the current provider from settings
         const apiConfig = getApiConfig();
         const provider = apiConfig.type;
+
+        telemetryService.trackEvent('command.checkApiSetup.started', {
+          'provider': provider
+        });
 
         // Show a progress notification
         await vscode.window.withProgress(
@@ -303,6 +301,9 @@ export async function activate(context: vscode.ExtensionContext) {
                   setTimeout(() => reject(new Error("Connection test timed out after 15 seconds")), 15000)
                 )
               ]);
+
+              const duration = Date.now() - startTime;
+              telemetryService.trackAPIValidation(provider, result.success, duration);
 
               // Send results to webview
               if (SettingsWebview.isWebviewOpen()) {
@@ -326,7 +327,14 @@ export async function activate(context: vscode.ExtensionContext) {
                 }
               }
             } catch (error) {
+              const duration = Date.now() - startTime;
               debugLog("API Check Error (inner):", error);
+
+              telemetryService.trackException(error as Error, {
+                'command': 'checkApiSetup',
+                'provider': provider
+              });
+              telemetryService.trackAPIValidation(provider, false, duration);
 
               // Send error to webview
               if (SettingsWebview.isWebviewOpen()) {
@@ -345,6 +353,9 @@ export async function activate(context: vscode.ExtensionContext) {
         );
       } catch (error) {
         debugLog("API Check Error (outer):", error);
+        telemetryService.trackException(error as Error, {
+          'command': 'checkApiSetup'
+        });
         vscode.window.showErrorMessage(`Error checking API: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
@@ -524,6 +535,24 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  // Register Accept Input command
+  let acceptInputCommand = vscode.commands.registerCommand(
+    "ai-commit-assistant.acceptInput",
+    () => {
+      // This command is used for UI interactions and input acceptance
+      debugLog("Accept input command triggered");
+    }
+  );
+
+  // Register Open Settings command
+  let settingsCommand = vscode.commands.registerCommand(
+    "ai-commit-assistant.openSettings",
+    () => {
+      SettingsWebview.createOrShow(context.extensionUri);
+      telemetryService.trackEvent('settings.opened');
+    }
+  );
+
   // Register Clear Last Custom Prompt command
   let clearLastPromptCommand = vscode.commands.registerCommand(
     "ai-commit-assistant.clearLastPrompt",
@@ -611,6 +640,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Show onboarding for new users
   await OnboardingManager.showOnboarding(context);
+  telemetryService.trackEvent('extension.onboarding.shown');
 
   // Update onboarding step to mention all providers including DeepSeek, Grok, and Perplexity
   const steps: OnboardingStep[] = [
@@ -642,9 +672,13 @@ export async function activate(context: vscode.ExtensionContext) {
   }
 
   debugLog("GitMind extension activated successfully with all icons");
+  telemetryService.trackEvent('extension.activation.completed');
 }
 
 export function deactivate() {
+  telemetryService.trackEvent('extension.deactivated');
+  telemetryService.flush();
+
   // Note: VS Code SCM API doesn't provide access to source controls for cleanup
   if (state.debugChannel) {
     state.debugChannel.dispose();

@@ -30,6 +30,8 @@ export class MessageHandler {
                         await config.update('showDiagnostics', message.value, vscode.ConfigurationTarget.Global);
                     } else if (message.key === 'promptCustomization.enabled') {
                         await config.update('promptCustomization.enabled', message.value, vscode.ConfigurationTarget.Global);
+                    } else if (message.key === 'telemetry.enabled') {
+                        await config.update('telemetry.enabled', message.value, vscode.ConfigurationTarget.Global);
                     }
 
                     // Provide immediate feedback
