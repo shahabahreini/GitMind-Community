@@ -75,12 +75,12 @@ export class SettingsWebview {
         if (message.command === 'updateSetting' || message.type === 'updateSetting') {
           setTimeout(async () => {
             await this._update();
-          }, 250); // Increased delay to ensure config is updated
+          }, 150); // Reduced delay for better responsiveness
         } else if (message.command === 'saveSettings') {
-          // Longer delay for bulk save operations
+          // Longer delay for bulk save operations to ensure all settings are persisted
           setTimeout(async () => {
             await this._update();
-          }, 350); // Longer delay for bulk configuration updates
+          }, 400); // Increased delay to ensure VS Code configuration is fully saved
         }
       },
       null,

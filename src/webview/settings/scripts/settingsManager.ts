@@ -81,6 +81,15 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     
     // Save settings
     function saveSettings() {
+      // Collect current form values at the time of saving
+      const currentFormValues = {
+        commitVerbose: document.getElementById('commitVerbose').checked,
+        showDiagnostics: document.getElementById('showDiagnostics').checked,
+        telemetryEnabled: document.getElementById('telemetryEnabled').checked,
+        promptCustomizationEnabled: document.getElementById('promptCustomizationEnabled').checked,
+        saveLastPrompt: document.getElementById('saveLastPrompt').checked
+      };
+
       const newSettings = {
         apiProvider: document.getElementById('apiProvider').value,
         debug: currentSettings.debug,
@@ -136,18 +145,26 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           model: document.getElementById('perplexityModel').value
         },
         promptCustomization: {
-          enabled: document.getElementById('promptCustomizationEnabled').checked,
-          saveLastPrompt: document.getElementById('saveLastPrompt').checked,
+          enabled: currentFormValues.promptCustomizationEnabled,
+          saveLastPrompt: currentFormValues.saveLastPrompt,
           lastPrompt: currentSettings.promptCustomization?.lastPrompt || '',
         },
         commit: {
-          verbose: document.getElementById('commitVerbose').checked
+          verbose: currentFormValues.commitVerbose
         },
-        showDiagnostics: document.getElementById('showDiagnostics').checked,
+        showDiagnostics: currentFormValues.showDiagnostics,
         telemetry: {
-          enabled: document.getElementById('telemetryEnabled').checked
+          enabled: currentFormValues.telemetryEnabled
         }
       };
+      
+      // Log the settings being saved for debugging
+      console.log('Saving settings:', {
+        commitVerbose: newSettings.commit.verbose,
+        showDiagnostics: newSettings.showDiagnostics,
+        telemetryEnabled: newSettings.telemetry.enabled,
+        promptCustomizationEnabled: newSettings.promptCustomization.enabled
+      });
       
       // Send message to extension
       vscode.postMessage({
@@ -155,7 +172,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
         settings: newSettings
       });
       
-      // Update current settings
+      // Update current settings immediately
       currentSettings = newSettings;
       
       // Update the status banner with new settings
@@ -811,6 +828,9 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     // Add event listeners for settings changes
     document.getElementById('commitVerbose')?.addEventListener('change', (e) => {
         const checked = e.target.checked;
+        if (!currentSettings.commit) {
+            currentSettings.commit = { verbose: true };
+        }
         currentSettings.commit.verbose = checked;
         vscode.postMessage({
             command: 'updateSetting',
@@ -844,6 +864,9 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
 
     document.getElementById('promptCustomizationEnabled')?.addEventListener('change', (e) => {
         const checked = e.target.checked;
+        if (!currentSettings.promptCustomization) {
+            currentSettings.promptCustomization = { enabled: false, saveLastPrompt: false, lastPrompt: '' };
+        }
         currentSettings.promptCustomization.enabled = checked;
         vscode.postMessage({
             command: 'updateSetting',
@@ -851,6 +874,19 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
             value: checked
         });
         toggleSaveLastPromptVisibility(checked);
+    });
+
+    document.getElementById('saveLastPrompt')?.addEventListener('change', (e) => {
+        const checked = e.target.checked;
+        if (!currentSettings.promptCustomization) {
+            currentSettings.promptCustomization = { enabled: false, saveLastPrompt: false, lastPrompt: '' };
+        }
+        currentSettings.promptCustomization.saveLastPrompt = checked;
+        vscode.postMessage({
+            command: 'updateSetting',
+            key: 'promptCustomization.saveLastPrompt',
+            value: checked
+        });
     });
   </script>`;
 }
