@@ -1,13 +1,31 @@
 # Changelog
 
-## [3.4.3] - 2025-06-11
+## [3.4.3] - 2025-06-13
 
 ### Added
+
+- **Revolutionary Interactive Onboarding System**: Complete replacement of modal-based onboarding with modern webview experience
+
+  - **4-Step Interactive Flow**: Professional guided onboarding with Welcome → Provider Selection → Configuration → First Commit walkthrough
+  - **Visual Provider Selection**: Beautiful provider cards with badges (Free, Premium, Local, Integrated) for all 13 AI providers
+  - **Real-time API Status**: Interactive configuration setup with live API key validation and connection testing
+  - **Modern UI/UX Design**: VS Code theme integration (light/dark/high-contrast) with responsive design and professional styling
+  - **Smart Provider Guidance**: Detailed provider descriptions, pricing information, and setup links for informed decision-making
+  - **Seamless Settings Integration**: Direct transition from onboarding to settings configuration with selected provider pre-configured
+
+- **Enhanced Onboarding Architecture**: Complete webview-based system with comprehensive functionality
+
+  - **OnboardingWebview**: Main controller with proper lifecycle management and telemetry integration
+  - **OnboardingMessageHandler**: Command handling with comprehensive telemetry tracking for user actions
+  - **OnboardingTemplateGenerator**: Rich HTML/CSS/JavaScript template with interactive elements and animations
+  - **Responsive Styling**: Complete CSS system with VS Code theme variables and mobile-friendly design
+  - **Command Integration**: Full command palette support with manual onboarding access via "AI Commit: Open Onboarding"
 
 - **Microsoft Application Insights Integration**: Comprehensive telemetry and analytics system for extension improvement
 
   - **Anonymous Usage Analytics**: Track command usage, success rates, and performance metrics to improve extension reliability
   - **Provider Usage Statistics**: Monitor AI provider popularity and success rates (without exposing API keys or responses)
+  - **Onboarding Analytics**: Track completion rates, step navigation, and provider selection preferences
   - **Error Tracking**: Automatic exception logging and error pattern detection for better debugging and fixes
   - **Performance Monitoring**: Track API response times, commit generation duration, and user workflow efficiency
   - **User Flow Analytics**: Understand how users navigate the extension to improve UX and feature discovery
@@ -15,20 +33,42 @@
   - **Respect User Preferences**: Automatically disabled when VS Code telemetry is turned off
   - **Secure Data Handling**: Uses Microsoft Azure Application Insights with enterprise-grade security
 
-- **Enhanced Privacy Controls**: Complete transparency and user control over data collection
+### Fixed
 
-  - **Clear Privacy Documentation**: Detailed explanation of what is and isn't collected
-  - **Easy Opt-Out**: Simple instructions to disable telemetry via VS Code settings
-  - **Secure Storage**: API keys and sensitive data stored locally using VS Code's secure storage
-  - **Anonymous Identifiers**: Only machine-based IDs are used, no personal information
-  - **Data Minimization**: Only essential usage data is collected for extension improvement
+- **Critical Settings Bug Resolution**: Fixed settings webview refresh issue where status items disappeared after saving
+
+  - **Settings Webview Refresh**: Added proper webview refresh after saveSettings commands with optimized timing
+  - **Message Handler Enhancement**: Implemented confirmation messaging system between settings webview and extension
+  - **Status Item Persistence**: Resolved "Prompt Customization" and "Anonymous Analytics" status items disappearing issue
+  - **Real-time UI Updates**: Enhanced settings UI responsiveness with immediate visual feedback
+
+- **TypeScript Compilation Issues**: Resolved all compilation errors in extension.ts and onboarding system
+
+  - **Import Resolution**: Fixed module import issues for onboarding components
+  - **Command Registration**: Corrected command registration and subscription management
+  - **Type Safety**: Enhanced type definitions and error handling throughout the onboarding system
+  - **Extension Integration**: Proper integration of new onboarding webview with existing extension architecture
 
 ### Enhanced
 
-- **Improved Error Handling**: Better error tracking and resolution with telemetry insights
-- **Performance Optimization**: Data-driven performance improvements based on usage patterns
-- **User Experience**: Enhanced understanding of user workflows to improve feature development
-- **Extension Reliability**: Proactive identification and resolution of issues through error analytics
+- **First-Time User Experience**: Transformed from basic modal dialogs to professional interactive experience
+
+  - **Engagement Rate**: Modern interface designed to significantly improve onboarding completion rates
+  - **Provider Discovery**: Visual presentation helps users discover and understand all 13 AI providers
+  - **Reduced Support Burden**: Clear setup instructions and real-time validation reduce user confusion
+  - **Professional Branding**: Consistent GitMind branding throughout the onboarding experience
+
+- **Developer Experience**: Comprehensive testing and development workflow improvements
+
+  - **Testing Framework**: Added multiple testing methods (automatic, manual, state reset) for thorough validation
+  - **Development Mode**: Enhanced extension development workflow with proper testing capabilities
+  - **Documentation**: Complete testing guide and implementation documentation for future maintenance
+
+- **User Interface Improvements**: Modern design language throughout the extension
+
+  - **Visual Consistency**: Onboarding design matches existing settings webview for cohesive experience
+  - **Accessibility**: Proper keyboard navigation, screen reader support, and high-contrast theme compatibility
+  - **Performance**: Optimized webview loading and rendering for smooth user experience
 
 ### Privacy
 
@@ -36,14 +76,24 @@
 - **No Personal Data**: Names, emails, and other personal identifiers are never collected
 - **API Key Security**: API credentials are stored locally and never transmitted to telemetry services
 - **Transparent Data Usage**: All collected data is used solely for improving GitMind extension
+- **Onboarding Privacy**: Provider selection and setup preferences tracked anonymously for feature improvement
 
 ### Technical
 
-- Added comprehensive TelemetryService with Microsoft Application Insights integration
-- Implemented privacy-respecting analytics across all extension operations
-- Enhanced error tracking and exception handling with detailed context
-- Added performance monitoring for API calls and user interactions
-- Integrated telemetry controls with VS Code's built-in privacy settings
+- **Complete Onboarding Rewrite**: Replaced OnboardingManager modal system with modern OnboardingWebview architecture
+- **Webview Infrastructure**: Built comprehensive webview system following VS Code best practices
+- **State Management**: Proper onboarding completion tracking and user preference persistence
+- **Telemetry Integration**: Added comprehensive TelemetryService with Microsoft Application Insights integration
+- **Error Handling**: Enhanced error tracking and exception handling with detailed context
+- **Performance Monitoring**: Added performance monitoring for API calls and user interactions
+- **Command System**: Extended command registration with new onboarding-specific commands
+- **Package Configuration**: Updated package.json with new onboarding commands and proper configuration
+- **Build System**: Ensured all new components compile and package correctly for distribution
+
+### Breaking Changes
+
+- **Onboarding System**: Replaced modal-based OnboardingManager with webview-based OnboardingWebview (internal change, no user impact)
+- **Command Registration**: Added new onboarding commands that extend existing command palette functionality
 
 ## [3.4.2] - 2025-06-11
 
@@ -604,4 +654,3 @@
 - Refactored settings UI for better organization and clarity
 - Upgraded core functionality with improved user experience across all providers
 - Updated default Cohere model to command-a-03-2025 for better performance and latest capabilities
- 

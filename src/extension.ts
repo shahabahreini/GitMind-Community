@@ -679,6 +679,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Show onboarding for new users
   const hasShownOnboarding = context.globalState.get<boolean>('aiCommitAssistant.onboardingShown');
+
+  // TEMPORARY: Force onboarding to show for testing (remove this line when done testing)
+  context.globalState.update('aiCommitAssistant.onboardingShown', false);
+
   if (!hasShownOnboarding) {
     // Use the new interactive onboarding webview
     OnboardingWebview.createOrShow(context.extensionUri);
