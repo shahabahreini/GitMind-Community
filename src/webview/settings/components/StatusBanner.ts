@@ -141,6 +141,10 @@ export class StatusBanner {
           <span class="status-label">Prompt Customization</span>
           <span class="status-value">${this._settings.promptCustomization?.enabled ? "Enabled" : "Disabled"}</span>
         </div>
+        <div class="status-item">
+          <span class="status-label">Anonymous Analytics</span>
+          <span class="status-value ${this._settings.telemetry?.enabled !== false ? 'telemetry-enabled' : 'telemetry-disabled'}">${this._settings.telemetry?.enabled !== false ? "Enabled" : "Disabled"}</span>
+        </div>
       </div>
     </div>`;
   }

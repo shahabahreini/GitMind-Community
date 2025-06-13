@@ -12,3 +12,12 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
+.env
+.env.local
+.env.production
+.env.development
+deployment-verification.sh
+telemetry-connection-test.js
+test-telemetry-final.js
+test-telemetry.sh
+telemetry-status-demo.html

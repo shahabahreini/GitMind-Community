@@ -24,9 +24,10 @@ class TelemetryService {
     private readonly instrumentationKey: string;
 
     constructor() {
-        // Store instrumentation key securely - replace with your actual key
+        // Application Insights connection string for GitMind VSCode Extension
+        // Production deployment with Azure Canada Central
         this.instrumentationKey = process.env.APPLICATIONINSIGHTS_CONNECTION_STRING ||
-            'InstrumentationKey=YOUR_INSTRUMENTATION_KEY_HERE';
+            'InstrumentationKey=d65ed410-ce22-4010-8e4d-075016e2f9b3;IngestionEndpoint=https://canadacentral-1.in.applicationinsights.azure.com/;LiveEndpoint=https://canadacentral.livediagnostics.monitor.azure.com/';
 
         this.extensionInfo = {
             version: this.getExtensionVersion(),

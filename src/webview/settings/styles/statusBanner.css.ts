@@ -126,6 +126,27 @@ export function getStatusBannerStyles(): string {
         font-weight: 600;
       }
       
+      /* Telemetry status specific styling */
+      .status-value.telemetry-enabled {
+        color: var(--vscode-charts-green);
+        font-weight: 600;
+      }
+      
+      .status-value.telemetry-disabled {
+        color: var(--vscode-charts-orange);
+        font-weight: 600;
+      }
+      
+      .status-value.telemetry-enabled::before {
+        content: "🛡️ ";
+        margin-right: 4px;
+      }
+      
+      .status-value.telemetry-disabled::before {
+        content: "⚠️ ";
+        margin-right: 4px;
+      }
+      
       ${ProviderIcon.getIconStyles()}
     `;
 }
