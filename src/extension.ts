@@ -306,7 +306,7 @@ export async function activate(context: vscode.ExtensionContext) {
               const duration = Date.now() - startTime;
               telemetryService.trackAPIValidation(provider, result.success, duration);
 
-              // Send results to webview
+              // Send results to settings webview
               if (SettingsWebview.isWebviewOpen()) {
                 SettingsWebview.postMessageToWebview({
                   command: 'apiCheckResult',
@@ -319,8 +319,29 @@ export async function activate(context: vscode.ExtensionContext) {
                   warning: result.warning,
                   troubleshooting: result.troubleshooting
                 });
+              }
+
+              // Also send results to onboarding webview if open
+              if (OnboardingWebview.isWebviewOpen()) {
+                // For onboarding, we'll send simplified status
+                const hasApiKey = (apiConfig.type === "ollama" || apiConfig.type === "copilot") ? true :
+                  (['gemini', 'openai', 'mistral', 'cohere', 'huggingface', 'anthropic',
+                    'together', 'openrouter', 'deepseek', 'grok', 'perplexity']
+                    .includes(apiConfig.type) && 'apiKey' in apiConfig && !!apiConfig.apiKey);
+
+                OnboardingWebview.postMessageToWebview({
+                  command: 'updateConfigStatus',
+                  status: { hasApiKey }
+                });
+
+                // Also send connection test result
+                OnboardingWebview.postMessageToWebview({
+                  command: 'connectionTestResult',
+                  success: result.success,
+                  message: result.success ? "Connection successful!" : (result.error || "Connection failed")
+                });
               } else {
-                // Show a notification if webview isn't open
+                // Show a notification if webviews aren't open
                 if (result.success) {
                   vscode.window.showInformationMessage(`${provider} API connection successful!`);
                 } else {
@@ -337,7 +358,7 @@ export async function activate(context: vscode.ExtensionContext) {
               });
               telemetryService.trackAPIValidation(provider, false, duration);
 
-              // Send error to webview
+              // Send error to settings webview
               if (SettingsWebview.isWebviewOpen()) {
                 SettingsWebview.postMessageToWebview({
                   command: 'apiCheckResult',
@@ -345,6 +366,27 @@ export async function activate(context: vscode.ExtensionContext) {
                   provider: provider,
                   error: error instanceof Error ? error.message : 'Unknown error',
                   troubleshooting: "Please check your API key and network connection."
+                });
+              }
+
+              // Also send error to onboarding webview if open
+              if (OnboardingWebview.isWebviewOpen()) {
+                // For API key status, we still check if the key is configured
+                const hasApiKey = (apiConfig.type === "ollama" || apiConfig.type === "copilot") ? true :
+                  (['gemini', 'openai', 'mistral', 'cohere', 'huggingface', 'anthropic',
+                    'together', 'openrouter', 'deepseek', 'grok', 'perplexity']
+                    .includes(apiConfig.type) && 'apiKey' in apiConfig && !!apiConfig.apiKey);
+
+                OnboardingWebview.postMessageToWebview({
+                  command: 'updateConfigStatus',
+                  status: { hasApiKey }
+                });
+
+                // Also send connection test result
+                OnboardingWebview.postMessageToWebview({
+                  command: 'connectionTestResult',
+                  success: false,
+                  message: error instanceof Error ? error.message : "Connection test failed"
                 });
               } else {
                 vscode.window.showErrorMessage(`API connection test failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -655,6 +697,35 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  // Register command to check API key configuration (without testing connection)
+  let checkApiConfigCommand = vscode.commands.registerCommand(
+    "ai-commit-assistant.checkApiConfig",
+    async () => {
+      try {
+        const apiConfig = getApiConfig();
+
+        // Determine if an API key is configured for the current provider
+        const hasApiKey = (apiConfig.type === "ollama" || apiConfig.type === "copilot") ? true :
+          (['gemini', 'openai', 'mistral', 'cohere', 'huggingface', 'anthropic',
+            'together', 'openrouter', 'deepseek', 'grok', 'perplexity']
+            .includes(apiConfig.type) && 'apiKey' in apiConfig && !!apiConfig.apiKey);
+
+        // Send status to onboarding webview if open
+        if (OnboardingWebview.isWebviewOpen()) {
+          OnboardingWebview.postMessageToWebview({
+            command: 'updateConfigStatus',
+            status: { hasApiKey }
+          });
+        }
+
+        return { hasApiKey, provider: apiConfig.type };
+      } catch (error) {
+        debugLog("API Config Check Error:", error);
+        return { hasApiKey: false, error };
+      }
+    }
+  );
+
   // Register all disposables
   context.subscriptions.push(
     state.debugChannel,
@@ -674,7 +745,8 @@ export async function activate(context: vscode.ExtensionContext) {
     loadingIndicatorCommand,
     openOnboardingCommand,
     completeOnboardingCommand,
-    skipOnboardingCommand
+    skipOnboardingCommand,
+    checkApiConfigCommand
   );
 
   // Show onboarding for new users
