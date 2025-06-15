@@ -15,10 +15,51 @@ export interface ErrorInfo {
     };
 }
 
+interface ErrorPattern {
+    type: string;
+    patterns: string[];
+    handler: (error: Error, errorInfo: ErrorInfo, provider: string, context?: any) => ErrorInfo;
+}
+
 export class APIErrorHandler {
-    /**
-     * Analyzes and formats API errors into user-friendly messages
-     */
+    private static readonly ERROR_PATTERNS: ErrorPattern[] = [
+        {
+            type: 'token_limit',
+            patterns: ['token', 'exceed', 'too large', 'context_length', 'max_tokens', 'Input validation error'],
+            handler: APIErrorHandler.handleTokenLimitError
+        },
+        {
+            type: 'rate_limit',
+            patterns: ['rate limit', '429', 'too many requests'],
+            handler: APIErrorHandler.handleRateLimitError
+        },
+        {
+            type: 'auth',
+            patterns: ['API key', '401', 'unauthorized', 'invalid key', 'authentication'],
+            handler: APIErrorHandler.handleAuthError
+        },
+        {
+            type: 'quota',
+            patterns: ['quota', 'billing', 'insufficient_quota', 'payment'],
+            handler: APIErrorHandler.handleQuotaError
+        },
+        {
+            type: 'network',
+            patterns: ['network', 'timeout', 'connection', 'ECONNREFUSED', 'ETIMEDOUT', 'fetch failed'],
+            handler: APIErrorHandler.handleNetworkError
+        },
+        {
+            type: 'config',
+            patterns: ['configuration', 'not configured', 'missing', 'invalid request'],
+            handler: APIErrorHandler.handleConfigError
+        }
+    ];
+
+    private static readonly PROVIDER_SUGGESTIONS: Record<string, string> = {
+        'Together AI': 'Try meta-llama/Llama-3.3-70B-Instruct-Turbo (128k)',
+        default: 'Check available models with larger limits'
+    };
+
     static handleAPIError(error: Error, provider: string, context?: {
         diffSize?: number;
         estimatedTokens?: number;
@@ -34,87 +75,30 @@ export class APIErrorHandler {
             technicalDetails: context
         };
 
-        // Extract status code if present
+        // Extract status code
         const statusMatch = error.message.match(/(\d{3})/);
         if (statusMatch) {
             errorInfo.statusCode = parseInt(statusMatch[1]);
         }
 
-        // Handle specific error patterns with enhanced detection
-        if (this.isTokenLimitError(error.message)) {
-            return this.handleTokenLimitError(error, errorInfo, context);
-        } else if (this.isRateLimitError(error.message)) {
-            return this.handleRateLimitError(error, errorInfo, provider);
-        } else if (this.isAuthError(error.message)) {
-            return this.handleAuthError(error, errorInfo, provider);
-        } else if (this.isQuotaError(error.message)) {
-            return this.handleQuotaError(error, errorInfo, provider);
-        } else if (this.isNetworkError(error.message)) {
-            return this.handleNetworkError(error, errorInfo, provider);
-        } else if (this.isConfigError(error.message)) {
-            return this.handleConfigError(error, errorInfo, provider);
-        } else {
-            // Generic error handling with context
-            return this.handleGenericError(error, errorInfo, provider, context);
+        // Find matching error pattern
+        for (const pattern of this.ERROR_PATTERNS) {
+            if (this.matchesPattern(error.message, pattern.patterns)) {
+                return pattern.handler(error, errorInfo, provider, context);
+            }
         }
+
+        return this.handleGenericError(error, errorInfo, provider, context);
     }
 
-    private static isTokenLimitError(message: string): boolean {
-        return message.includes("token") && (
-            message.includes("exceed") ||
-            message.includes("too large") ||
-            message.includes("context_length") ||
-            message.includes("max_tokens") ||
-            message.includes("Input validation error")
-        );
+    private static matchesPattern(message: string, patterns: string[]): boolean {
+        return patterns.some(pattern => message.toLowerCase().includes(pattern.toLowerCase()));
     }
 
-    private static isRateLimitError(message: string): boolean {
-        return message.includes("rate limit") ||
-            message.includes("429") ||
-            message.includes("too many requests");
-    }
-
-    private static isAuthError(message: string): boolean {
-        return message.includes("API key") ||
-            message.includes("401") ||
-            message.includes("unauthorized") ||
-            message.includes("invalid key") ||
-            message.includes("authentication");
-    }
-
-    private static isQuotaError(message: string): boolean {
-        return message.includes("quota") ||
-            message.includes("billing") ||
-            message.includes("insufficient_quota") ||
-            message.includes("payment");
-    }
-
-    private static isNetworkError(message: string): boolean {
-        return message.includes("network") ||
-            message.includes("timeout") ||
-            message.includes("connection") ||
-            message.includes("ECONNREFUSED") ||
-            message.includes("ETIMEDOUT") ||
-            message.includes("fetch failed");
-    }
-
-    private static isConfigError(message: string): boolean {
-        return message.includes("configuration") ||
-            message.includes("not configured") ||
-            message.includes("missing") ||
-            message.includes("invalid request");
-    }
-
-    private static handleTokenLimitError(error: Error, errorInfo: ErrorInfo, context?: any): ErrorInfo {
+    private static handleTokenLimitError(error: Error, errorInfo: ErrorInfo, provider: string, context?: any): ErrorInfo {
         const tokenMatch = error.message.match(/(\d+)/g);
-        let inputTokens = 0;
-        let maxTokens = 0;
-
-        if (tokenMatch && tokenMatch.length >= 2) {
-            inputTokens = parseInt(tokenMatch[0]);
-            maxTokens = parseInt(tokenMatch[1]);
-        }
+        const inputTokens = tokenMatch?.[0] ? parseInt(tokenMatch[0]) : 0;
+        const maxTokens = tokenMatch?.[1] ? parseInt(tokenMatch[1]) : 0;
 
         errorInfo.userMessage = `Content is too large for the selected model.`;
         errorInfo.technicalDetails = {
@@ -123,14 +107,17 @@ export class APIErrorHandler {
             modelLimit: maxTokens
         };
 
+        const estimatedTokens = inputTokens || context?.estimatedTokens || 'Unknown';
+        const limitText = maxTokens ? ` (limit: ${maxTokens.toLocaleString()})` : '';
+        const modelSuggestion = this.PROVIDER_SUGGESTIONS[provider] || this.PROVIDER_SUGGESTIONS.default;
+
         errorInfo.suggestions = [
-            `Current: ~${inputTokens || context?.estimatedTokens || 'Unknown'} tokens${maxTokens ? ` (limit: ${maxTokens.toLocaleString()})` : ''}`,
+            `Current: ~${estimatedTokens} tokens${limitText}`,
             "Solutions:",
             `• Stage fewer files (currently: ${context?.filesChanged || 'multiple'} files)`,
             "• Use 'git add -p' to stage specific chunks",
             "• Commit changes in smaller, logical groups",
-            "• Switch to a model with larger context window:",
-            `  - ${errorInfo.provider === 'Together AI' ? 'Try meta-llama/Llama-3.3-70B-Instruct-Turbo (128k)' : 'Check available models with larger limits'}`,
+            `• Switch to a model with larger context window: ${modelSuggestion}`,
             "• Remove unnecessary whitespace/formatting changes"
         ];
 
@@ -193,8 +180,9 @@ export class APIErrorHandler {
     }
 
     private static handleGenericError(error: Error, errorInfo: ErrorInfo, provider: string, context?: any): ErrorInfo {
-        // Try to extract useful information from the error message
-        if (error.message.includes("service") || error.message.includes("502") || error.message.includes("503")) {
+        const message = error.message.toLowerCase();
+
+        if (message.includes("service") || message.includes("502") || message.includes("503")) {
             errorInfo.userMessage = `${provider} service is temporarily unavailable.`;
             errorInfo.suggestions = [
                 "The service may be experiencing issues",
@@ -202,7 +190,7 @@ export class APIErrorHandler {
                 "Check the service status page",
                 "Consider using a different provider temporarily"
             ];
-        } else if (error.message.includes("model") && error.message.includes("not found")) {
+        } else if (message.includes("model") && message.includes("not found")) {
             errorInfo.userMessage = `Selected model is not available in ${provider}.`;
             errorInfo.suggestions = [
                 "Check if the model name is correct",
@@ -222,42 +210,30 @@ export class APIErrorHandler {
         return errorInfo;
     }
 
-    /**
-     * Formats error information for display to users with enhanced details
-     */
     static formatUserMessage(errorInfo: ErrorInfo): string {
         let message = `${errorInfo.provider}: ${errorInfo.userMessage}`;
 
-        // Add technical details if available
         if (errorInfo.technicalDetails) {
             const details = errorInfo.technicalDetails;
-            if (details.diffSize || details.estimatedTokens) {
-                message += "\n\nTechnical Details:";
-                if (details.diffSize) {
-                    message += `\n• Diff size: ${this.formatBytes(details.diffSize)}`;
-                }
-                if (details.estimatedTokens) {
-                    message += `\n• Estimated tokens: ${details.estimatedTokens.toLocaleString()}`;
-                }
-                if (details.modelLimit) {
-                    message += `\n• Model limit: ${details.modelLimit.toLocaleString()} tokens`;
-                }
-                if (details.filesChanged) {
-                    message += `\n• Files changed: ${details.filesChanged}`;
-                }
+            const technicalInfo = [];
+
+            if (details.diffSize) { technicalInfo.push(`Diff size: ${this.formatBytes(details.diffSize)}`); }
+            if (details.estimatedTokens) { technicalInfo.push(`Estimated tokens: ${details.estimatedTokens.toLocaleString()}`); }
+            if (details.modelLimit) { technicalInfo.push(`Model limit: ${details.modelLimit.toLocaleString()} tokens`); }
+            if (details.filesChanged) { technicalInfo.push(`Files changed: ${details.filesChanged}`); }
+
+            if (technicalInfo.length > 0) {
+                message += "\n\nTechnical Details:\n• " + technicalInfo.join("\n• ");
             }
         }
 
-        if (errorInfo.suggestions && errorInfo.suggestions.length > 0) {
+        if (errorInfo.suggestions?.length) {
             message += "\n\n" + errorInfo.suggestions.join("\n");
         }
 
         return message;
     }
 
-    /**
-     * Helper function to format bytes in human-readable format
-     */
     private static formatBytes(bytes: number): string {
         if (bytes === 0) { return '0 B'; }
         const k = 1024;
@@ -266,53 +242,20 @@ export class APIErrorHandler {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     }
 
-    /**
-     * Estimates the severity of the error for UI display
-     */
     static getErrorSeverity(errorInfo: ErrorInfo): 'error' | 'warning' | 'info' {
-        if (errorInfo.statusCode) {
-            if (errorInfo.statusCode >= 500) { return 'error'; }
-            if (errorInfo.statusCode === 429 || errorInfo.statusCode === 422) { return 'warning'; }
-            if (errorInfo.statusCode >= 400) { return 'error'; }
-        }
-        return 'error';
+        if (!errorInfo.statusCode) { return 'error'; }
+        if (errorInfo.statusCode >= 500) { return 'error'; }
+        if (errorInfo.statusCode === 429 || errorInfo.statusCode === 422) { return 'warning'; }
+        return errorInfo.statusCode >= 400 ? 'error' : 'info';
     }
 
-    /**
-     * Determines if an error should trigger a retry attempt
-     */
     static shouldRetryError(error: Error): boolean {
-        const message = error.message.toLowerCase();
-
-        // Transient errors that should be retried
-        const retryablePatterns = [
-            'timeout',
-            'temporarily',
-            'rate limit',
-            'overloaded',
-            'service unavailable',
-            'network'
-        ];
-
-        return retryablePatterns.some(pattern => message.includes(pattern));
+        const retryablePatterns = ['timeout', 'temporarily', 'rate limit', 'overloaded', 'service unavailable', 'network'];
+        return retryablePatterns.some(pattern => error.message.toLowerCase().includes(pattern));
     }
 
-    /**
-     * Determines if an error is fatal and should not be retried
-     */
     static isFatalError(error: Error): boolean {
-        const message = error.message.toLowerCase();
-
-        // Fatal errors that should not be retried
-        const fatalPatterns = [
-            'invalid',
-            'not found',
-            'suspended',
-            'billing',
-            'unauthorized',
-            'forbidden'
-        ];
-
-        return fatalPatterns.some(pattern => message.includes(pattern));
+        const fatalPatterns = ['invalid', 'not found', 'suspended', 'billing', 'unauthorized', 'forbidden'];
+        return fatalPatterns.some(pattern => error.message.toLowerCase().includes(pattern));
     }
 }
