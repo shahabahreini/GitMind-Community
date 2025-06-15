@@ -4,146 +4,56 @@ import { ExtensionSettings } from "../../models/ExtensionSettings";
 import { telemetryService } from "../../services/telemetry/telemetryService";
 import { debugLog } from "../../services/debug/logger";
 
+interface ProviderConfig {
+    apiKey?: string;
+    model: string;
+    url?: string;
+}
+
+interface ProviderDefaults {
+    [key: string]: ProviderConfig;
+}
+
 export class SettingsManager {
-    private static CONFIG_PREFIX = "aiCommitAssistant";
+    private static readonly CONFIG_PREFIX = "aiCommitAssistant";
+
+    private static readonly PROVIDER_DEFAULTS: ProviderDefaults = {
+        gemini: { model: "gemini-2.5-flash-preview-04-17" },
+        huggingface: { model: "" },
+        ollama: { model: "", url: "" },
+        mistral: { model: "mistral-large-latest" },
+        cohere: { model: "command-a-03-2025" },
+        openai: { model: "gpt-4o" },
+        together: { model: "meta-llama/Llama-3.3-70B-Instruct-Turbo" },
+        openrouter: { model: "google/gemma-3-27b-it:free" },
+        anthropic: { model: "claude-3-5-sonnet-20241022" },
+        copilot: { model: "gpt-4o" },
+        deepseek: { model: "deepseek-chat" },
+        grok: { model: "grok-3" },
+        perplexity: { model: "sonar-pro" }
+    };
+
+    private static readonly API_KEY_PROVIDERS = [
+        'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
+        'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'perplexity'
+    ];
+
+    private static readonly NO_API_KEY_PROVIDERS = ['ollama', 'copilot'];
 
     public getSettings(): ExtensionSettings {
-        // Force refresh configuration to get latest values - add delay for VS Code config sync
-        vscode.workspace.getConfiguration().update; // Force config refresh
+        const config = vscode.workspace.getConfiguration(SettingsManager.CONFIG_PREFIX);
+        return SettingsManager.buildSettingsFromConfig(config);
+    }
+
+    public static async getCurrentSettings(): Promise<ExtensionSettings> {
         const config = vscode.workspace.getConfiguration(SettingsManager.CONFIG_PREFIX);
         return SettingsManager.buildSettingsFromConfig(config);
     }
 
     private static buildSettingsFromConfig(config: vscode.WorkspaceConfiguration): ExtensionSettings {
-        // Get the API provider with a default
-        const apiProvider = config.get<string>("apiProvider") || "huggingface";
-
-        return {
-            apiProvider,
-            debug: config.get<boolean>("debug") || false,
-            gemini: {
-                apiKey: config.get<string>("gemini.apiKey") || "",
-                model: config.get<string>("gemini.model") || "gemini-2.5-flash-preview-04-17",
-            },
-            huggingface: {
-                apiKey: config.get<string>("huggingface.apiKey") || "",
-                model: config.get<string>("huggingface.model") || "",
-            },
-            ollama: {
-                url: config.get<string>("ollama.url") || "",
-                model: config.get<string>("ollama.model") || "",
-            },
-            mistral: {
-                apiKey: config.get<string>("mistral.apiKey") || "",
-                model: config.get<string>("mistral.model") || "mistral-large-latest",
-            },
-            cohere: {
-                apiKey: config.get<string>("cohere.apiKey") || "",
-                model: config.get<string>("cohere.model") || "command-a-03-2025",
-            },
-            openai: {
-                apiKey: config.get<string>("openai.apiKey") || "",
-                model: config.get<string>("openai.model") || "gpt-3.5-turbo",
-            },
-            together: {
-                apiKey: config.get<string>("together.apiKey") || "",
-                model: config.get<string>("together.model") || "meta-llama/Llama-3.3-70B-Instruct-Turbo",
-            },
-            openrouter: {
-                apiKey: config.get<string>("openrouter.apiKey") || "",
-                model: config.get<string>("openrouter.model") || "google/gemma-3-27b-it:free",
-            },
-            anthropic: {
-                apiKey: config.get<string>("anthropic.apiKey") || "",
-                model: config.get<string>("anthropic.model") || "claude-3-5-sonnet-20241022",
-            },
-            copilot: {
-                model: config.get<string>("copilot.model") || "gpt-4o",
-            },
-            deepseek: {
-                apiKey: config.get<string>("deepseek.apiKey") || "",
-                model: config.get<string>("deepseek.model") || "deepseek-chat",
-            },
-            grok: {
-                apiKey: config.get<string>("grok.apiKey") || "",
-                model: config.get<string>("grok.model") || "grok-3",
-            },
-            perplexity: {
-                apiKey: config.get<string>("perplexity.apiKey") || "",
-                model: config.get<string>("perplexity.model") || "sonar-pro",
-            },
-            promptCustomization: {
-                enabled: config.get<boolean>("promptCustomization.enabled") || false,
-                saveLastPrompt: config.get<boolean>("promptCustomization.saveLastPrompt") || false,
-                lastPrompt: config.get<string>("promptCustomization.lastPrompt") || "",
-            },
-            commit: {
-                verbose: config.get<boolean>("commit.verbose") ?? true,
-            },
-            showDiagnostics: config.get<boolean>("showDiagnostics") ?? false,
-            telemetry: {
-                enabled: config.get<boolean>("telemetry.enabled") ?? true,
-            },
-        };
-    }
-
-    public static async getCurrentSettings(): Promise<ExtensionSettings> {
-        const config = vscode.workspace.getConfiguration("aiCommitAssistant");
-
-        return {
+        const settings: ExtensionSettings = {
             apiProvider: config.get<string>("apiProvider") || "huggingface",
             debug: config.get<boolean>("debug") || false,
-            gemini: {
-                apiKey: config.get<string>("gemini.apiKey") || "",
-                model: config.get<string>("gemini.model") || "gemini-2.5-flash-preview-04-17",
-            },
-            huggingface: {
-                apiKey: config.get<string>("huggingface.apiKey") || "",
-                model: config.get<string>("huggingface.model") || "",
-            },
-            ollama: {
-                url: config.get<string>("ollama.url") || "",
-                model: config.get<string>("ollama.model") || "",
-            },
-            mistral: {
-                apiKey: config.get<string>("mistral.apiKey") || "",
-                model: config.get<string>("mistral.model") || "mistral-large-latest",
-            },
-            cohere: {
-                apiKey: config.get<string>("cohere.apiKey") || "",
-                model: config.get<string>("cohere.model") || "command-a-03-2025",
-            },
-            openai: {
-                apiKey: config.get<string>("openai.apiKey") || "",
-                model: config.get<string>("openai.model") || "gpt-3.5-turbo",
-            },
-            together: {
-                apiKey: config.get<string>("together.apiKey") || "",
-                model: config.get<string>("together.model") || "meta-llama/Llama-3.3-70B-Instruct-Turbo",
-            },
-            openrouter: {
-                apiKey: config.get<string>("openrouter.apiKey") || "",
-                model: config.get<string>("openrouter.model") || "google/gemma-3-27b-it:free",
-            },
-            anthropic: {
-                apiKey: config.get<string>("anthropic.apiKey") || "",
-                model: config.get<string>("anthropic.model") || "claude-3-5-sonnet-20241022",
-            },
-            copilot: {
-                model: config.get<string>("copilot.model") || "gpt-4o",
-            },
-            deepseek: {
-                apiKey: config.get<string>("deepseek.apiKey") || "",
-                model: config.get<string>("deepseek.model") || "deepseek-chat",
-            },
-            grok: {
-                apiKey: config.get<string>("grok.apiKey") || "",
-                model: config.get<string>("grok.model") || "grok-3",
-            },
-            perplexity: {
-                apiKey: config.get<string>("perplexity.apiKey") || "",
-                model: config.get<string>("perplexity.model") || "sonar-pro",
-            },
             promptCustomization: {
                 enabled: config.get<boolean>("promptCustomization.enabled") || false,
                 saveLastPrompt: config.get<boolean>("promptCustomization.saveLastPrompt") || false,
@@ -156,16 +66,34 @@ export class SettingsManager {
             telemetry: {
                 enabled: config.get<boolean>("telemetry.enabled") ?? true,
             },
-        };
+        } as ExtensionSettings;
+
+        // Build provider configurations dynamically
+        Object.entries(SettingsManager.PROVIDER_DEFAULTS).forEach(([provider, defaults]) => {
+            const providerConfig: ProviderConfig = {
+                model: config.get<string>(`${provider}.model`) || defaults.model,
+            };
+
+            if (SettingsManager.API_KEY_PROVIDERS.includes(provider)) {
+                providerConfig.apiKey = config.get<string>(`${provider}.apiKey`) || "";
+            }
+
+            if (provider === 'ollama') {
+                providerConfig.url = config.get<string>(`${provider}.url`) || "";
+            }
+
+            (settings as any)[provider] = providerConfig;
+        });
+
+        return settings;
     }
 
     public static async saveSettings(settings: ExtensionSettings): Promise<void> {
         try {
             debugLog("Starting settings save process...");
-            const config = vscode.workspace.getConfiguration(this.CONFIG_PREFIX);
-            const currentSettings = await this.getCurrentSettings();
+            const config = vscode.workspace.getConfiguration(SettingsManager.CONFIG_PREFIX);
+            const currentSettings = await SettingsManager.getCurrentSettings();
 
-            // Log the incoming settings for debugging
             debugLog("Incoming settings to save:", {
                 apiProvider: settings.apiProvider,
                 commitVerbose: settings.commit?.verbose,
@@ -174,28 +102,18 @@ export class SettingsManager {
                 promptCustomizationEnabled: settings.promptCustomization?.enabled
             });
 
-            // Track settings changes for telemetry
-            this.trackSettingsChanges(currentSettings, settings);
+            SettingsManager.trackSettingsChanges(currentSettings, settings);
+            await SettingsManager.updateConfigurationSettings(config, settings);
 
-            debugLog("Saving configuration settings...", { settingsKeys: Object.keys(settings) });
-
-            // Save all settings sequentially to avoid race conditions
-            await this.updateConfigurationSettings(config, settings);
-
-            // Wait for VS Code to fully persist the configuration changes
+            // Allow VS Code to persist changes
             await new Promise(resolve => setTimeout(resolve, 100));
 
-            // Verify the settings were saved properly by reading them back
-            const verificationSettings = await this.getCurrentSettings();
+            const verificationSettings = await SettingsManager.getCurrentSettings();
             debugLog("Settings verification:", {
                 originalApiProvider: settings.apiProvider,
                 savedApiProvider: verificationSettings.apiProvider,
                 originalCommitVerbose: settings.commit?.verbose,
-                savedCommitVerbose: verificationSettings.commit?.verbose,
-                originalShowDiagnostics: settings.showDiagnostics,
-                savedShowDiagnostics: verificationSettings.showDiagnostics,
-                originalTelemetryEnabled: settings.telemetry?.enabled,
-                savedTelemetryEnabled: verificationSettings.telemetry?.enabled
+                savedCommitVerbose: verificationSettings.commit?.verbose
             });
 
             debugLog("Settings saved successfully");
@@ -204,179 +122,66 @@ export class SettingsManager {
             debugLog("Error saving settings:", errorMessage);
 
             telemetryService.trackException(error as Error, {
-                'operation': 'saveSettings',
-                'errorMessage': errorMessage
+                operation: 'saveSettings',
+                errorMessage
             });
 
             throw error;
         }
     }
 
-    private static async updateConfigurationSettings(config: vscode.WorkspaceConfiguration, settings: ExtensionSettings) {
-        await config.update("apiProvider", settings.apiProvider, vscode.ConfigurationTarget.Global);
-        await config.update("debug", settings.debug, vscode.ConfigurationTarget.Global);
-        await config.update(
-            "gemini.apiKey",
-            settings.gemini.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "gemini.model",
-            settings.gemini.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "huggingface.apiKey",
-            settings.huggingface.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "huggingface.model",
-            settings.huggingface.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "ollama.url",
-            settings.ollama.url,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "ollama.model",
-            settings.ollama.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "mistral.apiKey",
-            settings.mistral.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "mistral.model",
-            settings.mistral.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "cohere.apiKey",
-            settings.cohere.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "cohere.model",
-            settings.cohere.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "openai.apiKey",
-            settings.openai.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "openai.model",
-            settings.openai.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "together.apiKey",
-            settings.together.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "together.model",
-            settings.together.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "openrouter.apiKey",
-            settings.openrouter.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "openrouter.model",
-            settings.openrouter.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "anthropic.apiKey",
-            settings.anthropic.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "anthropic.model",
-            settings.anthropic.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "copilot.model",
-            settings.copilot.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "deepseek.apiKey",
-            settings.deepseek.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "deepseek.model",
-            settings.deepseek.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "grok.apiKey",
-            settings.grok.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "grok.model",
-            settings.grok.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "perplexity.apiKey",
-            settings.perplexity.apiKey,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "perplexity.model",
-            settings.perplexity.model,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "promptCustomization.enabled",
-            settings.promptCustomization.enabled,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "promptCustomization.saveLastPrompt",
-            settings.promptCustomization.saveLastPrompt,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "promptCustomization.lastPrompt",
-            settings.promptCustomization.lastPrompt,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "commit.verbose",
-            settings.commit?.verbose ?? true,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "showDiagnostics",
-            settings.showDiagnostics ?? false,
-            vscode.ConfigurationTarget.Global
-        );
-        await config.update(
-            "telemetry.enabled",
-            settings.telemetry?.enabled ?? true,
-            vscode.ConfigurationTarget.Global
-        );
+    private static async updateConfigurationSettings(
+        config: vscode.WorkspaceConfiguration,
+        settings: ExtensionSettings
+    ): Promise<void> {
+        const target = vscode.ConfigurationTarget.Global;
+
+        // Core settings
+        const coreUpdates = [
+            config.update("apiProvider", settings.apiProvider, target),
+            config.update("debug", settings.debug, target),
+            config.update("promptCustomization.enabled", settings.promptCustomization.enabled, target),
+            config.update("promptCustomization.saveLastPrompt", settings.promptCustomization.saveLastPrompt, target),
+            config.update("promptCustomization.lastPrompt", settings.promptCustomization.lastPrompt, target),
+            config.update("commit.verbose", settings.commit?.verbose ?? true, target),
+            config.update("showDiagnostics", settings.showDiagnostics ?? false, target),
+            config.update("telemetry.enabled", settings.telemetry?.enabled ?? true, target)
+        ];
+
+        // Provider settings
+        const providerUpdates: Thenable<void>[] = [];
+
+        Object.keys(SettingsManager.PROVIDER_DEFAULTS).forEach(provider => {
+            const providerSettings = (settings as any)[provider];
+            if (providerSettings) {
+                providerUpdates.push(
+                    config.update(`${provider}.model`, providerSettings.model, target)
+                );
+
+                if (SettingsManager.API_KEY_PROVIDERS.includes(provider)) {
+                    providerUpdates.push(
+                        config.update(`${provider}.apiKey`, providerSettings.apiKey, target)
+                    );
+                }
+
+                if (provider === 'ollama' && providerSettings.url !== undefined) {
+                    providerUpdates.push(
+                        config.update(`${provider}.url`, providerSettings.url, target)
+                    );
+                }
+            }
+        });
+
+        await Promise.all([...coreUpdates, ...providerUpdates]);
     }
 
-    private static trackSettingsChanges(currentSettings: ExtensionSettings, newSettings: ExtensionSettings) {
-        // Track settings changes for telemetry
-        const changes: Array<{ setting: string, oldValue: string, newValue: string }> = [];
+    private static trackSettingsChanges(
+        currentSettings: ExtensionSettings,
+        newSettings: ExtensionSettings
+    ): void {
+        const changes: Array<{ setting: string; oldValue: string; newValue: string }> = [];
 
-        // Check for provider change
+        // Track core setting changes
         if (currentSettings.apiProvider !== newSettings.apiProvider) {
             changes.push({
                 setting: 'apiProvider',
@@ -385,48 +190,55 @@ export class SettingsManager {
             });
         }
 
-        // Check for debug mode change
         if (currentSettings.debug !== newSettings.debug) {
             changes.push({
                 setting: 'debug',
-                oldValue: (currentSettings.debug || false).toString(),
-                newValue: (newSettings.debug || false).toString()
+                oldValue: String(currentSettings.debug || false),
+                newValue: String(newSettings.debug || false)
             });
         }
 
-        // Track API key configuration changes (without exposing the actual keys)
-        const apiProviders = ['gemini', 'huggingface', 'ollama', 'mistral', 'cohere', 'openai', 'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'perplexity'];
-
-        apiProviders.forEach(provider => {
+        // Track provider changes
+        Object.keys(SettingsManager.PROVIDER_DEFAULTS).forEach(provider => {
             const currentProvider = (currentSettings as any)[provider];
             const newProvider = (newSettings as any)[provider];
 
-            if (currentProvider && newProvider && typeof newProvider === 'object' && newProvider.apiKey !== undefined) {
-                const oldHasKey = !!(currentProvider?.apiKey);
-                const newHasKey = !!(newProvider.apiKey);
+            if (currentProvider && newProvider) {
+                // Only track API key changes for providers that use API keys
+                if (SettingsManager.API_KEY_PROVIDERS.includes(provider)) {
+                    const oldHasKey = Boolean(currentProvider.apiKey);
+                    const newHasKey = Boolean(newProvider.apiKey);
 
-                if (oldHasKey !== newHasKey) {
+                    if (oldHasKey !== newHasKey) {
+                        changes.push({
+                            setting: `${provider}.apiKey.configured`,
+                            oldValue: String(oldHasKey),
+                            newValue: String(newHasKey)
+                        });
+                    }
+                }
+
+                if (newProvider.model !== currentProvider.model) {
                     changes.push({
-                        setting: `${provider}.apiKey.configured`,
-                        oldValue: oldHasKey.toString(),
-                        newValue: newHasKey.toString()
+                        setting: `${provider}.model`,
+                        oldValue: currentProvider.model || 'none',
+                        newValue: newProvider.model || 'none'
                     });
                 }
 
-                // Track model changes
-                if (newProvider.model !== currentProvider?.model) {
+                // Track URL changes for Ollama
+                if (provider === 'ollama' && newProvider.url !== currentProvider.url) {
                     changes.push({
-                        setting: `${provider}.model`,
-                        oldValue: currentProvider?.model || 'none',
-                        newValue: newProvider.model || 'none'
+                        setting: `${provider}.url`,
+                        oldValue: currentProvider.url || 'none',
+                        newValue: newProvider.url || 'none'
                     });
                 }
             }
         });
 
-        // Track the changes in telemetry
         telemetryService.trackEvent('settings.saved', {
-            'changes.count': changes.length.toString()
+            'changes.count': String(changes.length)
         });
 
         changes.forEach(change => {

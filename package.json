@@ -633,6 +633,8 @@
     "check-types": "tsc --noEmit",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "test": "vscode-test",
+    "test:validate": "node scripts/test-validator.js",
+    "test:status": "node scripts/test-status.js",
     "clean": "rimraf dist out",
     "prepare": "npm run compile",
     "version": "echo 'Version updated to %s'"

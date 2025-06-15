@@ -4,11 +4,14 @@ import { getUiManagerScript } from "./uiManager";
 
 // src/webview/settings/scripts/settingsManager.ts
 export function getSettingsScript(settings: ExtensionSettings, nonce: string): string {
+  // HTML-escape the JSON to prevent XSS
+  const safeSettings = JSON.stringify(settings).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+
   return `
   <div id="toast" class="toast"></div>
   <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
-    let currentSettings = ${JSON.stringify(settings)};
+    let currentSettings = ${safeSettings};
     
     // Initialize form with current settings
     document.getElementById('apiProvider').value = currentSettings.apiProvider || 'huggingface';
@@ -28,7 +31,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     document.getElementById('cohereApiKey').value = currentSettings.cohere?.apiKey || '';
     document.getElementById('cohereModel').value = currentSettings.cohere?.model || 'command';
     document.getElementById('openaiApiKey').value = currentSettings.openai?.apiKey || '';
-    document.getElementById('openaiModel').value = currentSettings.openai?.model || 'gpt-3.5-turbo';
+    document.getElementById('openaiModel').value = currentSettings.openai?.model || 'gpt-4o';
     document.getElementById('togetherApiKey').value = currentSettings.together?.apiKey || '';
     document.getElementById('togetherModel').value = currentSettings.together?.model || 'meta-llama/Llama-3.3-70B-Instruct-Turbo';
     document.getElementById('openrouterApiKey').value = currentSettings.openrouter?.apiKey || '';
@@ -664,7 +667,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           
           if (currentSettings.openai) {
             document.getElementById('openaiApiKey').value = currentSettings.openai.apiKey || '';
-            document.getElementById('openaiModel').value = currentSettings.openai.model || 'gpt-3.5-turbo';
+            document.getElementById('openaiModel').value = currentSettings.openai.model || 'gpt-4o';
           }
 
           if (currentSettings.together) {

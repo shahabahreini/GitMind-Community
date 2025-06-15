@@ -277,4 +277,42 @@ export class APIErrorHandler {
         }
         return 'error';
     }
+
+    /**
+     * Determines if an error should trigger a retry attempt
+     */
+    static shouldRetryError(error: Error): boolean {
+        const message = error.message.toLowerCase();
+
+        // Transient errors that should be retried
+        const retryablePatterns = [
+            'timeout',
+            'temporarily',
+            'rate limit',
+            'overloaded',
+            'service unavailable',
+            'network'
+        ];
+
+        return retryablePatterns.some(pattern => message.includes(pattern));
+    }
+
+    /**
+     * Determines if an error is fatal and should not be retried
+     */
+    static isFatalError(error: Error): boolean {
+        const message = error.message.toLowerCase();
+
+        // Fatal errors that should not be retried
+        const fatalPatterns = [
+            'invalid',
+            'not found',
+            'suspended',
+            'billing',
+            'unauthorized',
+            'forbidden'
+        ];
+
+        return fatalPatterns.some(pattern => message.includes(pattern));
+    }
 }

@@ -135,7 +135,7 @@ export function getUiManagerScript(): string {
             modelInfo = settings.cohere.model || "command-a-03-2025";
             break;
           case "openai":
-            modelInfo = settings.openai.model || "gpt-3.5-turbo";
+            modelInfo = settings.openai.model || "gpt-4o";
             break;
           case "together":
             modelInfo = settings.together.model || "meta-llama/Llama-3.3-70B-Instruct-Turbo";

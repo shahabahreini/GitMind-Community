@@ -78,16 +78,6 @@ export class SettingsTemplateGenerator {
         ${buttonGroup.render()}
       </div>
       ${getSettingsScript(this._settings, this._nonce)}
-      <script nonce="${this._nonce}">
-            (function() {
-                const vscode = acquireVsCodeApi();
-                
-                // Add event listeners for settings changes - removed to avoid conflicts
-                // These are now handled in the main settings script to prevent duplication
-                
-                // ...existing code...
-            })();
-        </script>
     </body>
     </html>`;
   }

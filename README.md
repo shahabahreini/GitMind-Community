@@ -336,6 +336,45 @@ Leverage free tier providers (Gemini-2.5-flash, DeepSeek-reasoner) or local Olla
 
 **GitMind** transforms your development workflow with intelligent, context-aware commit message generation. **Supporting 11 AI providers** with **50+ models including GPT-4o, Claude-opus-4, Gemini-2.5-pro, DeepSeek-R1, Llama-3.3, Phi-4** and **advanced diff analysis**, it delivers professional-grade commit messages that improve code history quality and team collaboration efficiency.
 
+## Development and Testing
+
+GitMind includes a comprehensive automated test suite to ensure reliability and quality before publication.
+
+### Test Coverage
+
+The extension features **7 comprehensive test suites** covering all main functionality:
+
+- **Settings UI Testing**: UI persistence, validation, and provider switching
+- **AI Providers Testing**: All 13 providers with API validation and model selection
+- **Extension Commands Testing**: All commands, error handling, and status management
+- **Git Integration Testing**: Diff parsing, commit messages, and repository validation
+- **Webview Components Testing**: Settings panel, onboarding, and messaging
+- **Error Handling Testing**: API errors, network issues, rate limits, and recovery
+- **Configuration Management Testing**: Settings persistence, schema validation, and migration
+
+### Quality Assurance
+
+✅ **100% TypeScript compilation** with no errors or warnings  
+✅ **Complete VS Code API mocking** for isolated testing  
+✅ **Comprehensive error simulation** for robust error handling  
+✅ **End-to-end integration testing** for all workflows  
+✅ **Modular test architecture** for maintainability
+
+### Running Tests
+
+```bash
+# Compile and run all tests
+npm test
+
+# Check test status and coverage
+npm run test:status
+
+# Validate test compilation
+npm run test:validate
+```
+
+For detailed test documentation, see [TEST_DOCUMENTATION.md](./TEST_DOCUMENTATION.md).
+
 ## Privacy and Telemetry
 
 GitMind collects anonymous usage data to help improve the extension. This helps us understand how the extension is used and identify areas for improvement.
@@ -368,6 +407,7 @@ GitMind respects your privacy settings and will not collect any data if telemetr
 ### Data usage:
 
 The collected data helps us:
+
 - Improve extension reliability and performance
 - Understand which features are most valuable
 - Prioritize development efforts

@@ -137,7 +137,7 @@ export async function checkApiSetup(): Promise<ApiCheckResult> {
                     const isValid = await validateOpenAIApiKey(config.apiKey);
                     result.success = isValid;
                     if (isValid) {
-                        result.model = config.model || "gpt-3.5-turbo";
+                        result.model = config.model || "gpt-4o";
                         result.responseTime = 550; // Placeholder value
                         result.details = "Connection test successful";
                     } else {
