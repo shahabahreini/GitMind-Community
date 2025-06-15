@@ -662,8 +662,19 @@ export async function activate(context: vscode.ExtensionContext) {
   let openOnboardingCommand = vscode.commands.registerCommand(
     "ai-commit-assistant.openOnboarding",
     () => {
-      OnboardingWebview.createOrShow(context.extensionUri);
-      telemetryService.trackEvent('onboarding.opened');
+      if (OnboardingManager.canManuallyOpen(context)) {
+        OnboardingWebview.createOrShow(context.extensionUri);
+        telemetryService.trackEvent('onboarding.opened');
+      } else {
+        vscode.window.showInformationMessage(
+          "Onboarding is disabled in settings. You can enable it in the extension settings under 'Show Onboarding'.",
+          "Open Settings"
+        ).then(result => {
+          if (result === "Open Settings") {
+            vscode.commands.executeCommand("ai-commit-assistant.openSettings");
+          }
+        });
+      }
     }
   );
 
@@ -671,8 +682,19 @@ export async function activate(context: vscode.ExtensionContext) {
   let completeOnboardingCommand = vscode.commands.registerCommand(
     "ai-commit-assistant.completeOnboarding",
     async () => {
-      await context.globalState.update('aiCommitAssistant.onboardingShown', true);
-      vscode.window.showInformationMessage("🎉 Welcome to GitMind! You're all set up and ready to generate amazing commit messages.");
+      await OnboardingManager.markAsCompleted(context);
+
+      const action = await vscode.window.showInformationMessage(
+        "🎉 Welcome to GitMind! You're all set up and ready to generate amazing commit messages. Try it out by making some changes to your files and using the Source Control panel.",
+        { modal: false },
+        "Try It Now",
+        "Got it"
+      );
+
+      if (action === "Try It Now") {
+        await vscode.commands.executeCommand("workbench.view.scm");
+      }
+
       telemetryService.trackEvent('onboarding.completed');
 
       // Close onboarding webview
@@ -686,8 +708,19 @@ export async function activate(context: vscode.ExtensionContext) {
   let skipOnboardingCommand = vscode.commands.registerCommand(
     "ai-commit-assistant.skipOnboarding",
     async () => {
-      await context.globalState.update('aiCommitAssistant.onboardingShown', true);
-      vscode.window.showInformationMessage("Onboarding skipped. You can access settings anytime through the command palette.");
+      await OnboardingManager.markAsSkipped(context);
+
+      const action = await vscode.window.showInformationMessage(
+        "Onboarding has been permanently disabled. GitMind will no longer show the setup wizard automatically. You can still access settings manually through the command palette.",
+        { modal: false },
+        "Open Settings Now",
+        "Got it"
+      );
+
+      if (action === "Open Settings Now") {
+        await vscode.commands.executeCommand("ai-commit-assistant.openSettings");
+      }
+
       telemetryService.trackEvent('onboarding.skipped');
 
       // Close onboarding webview
@@ -726,6 +759,41 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  // Register Reset Onboarding command (for debugging/testing)
+  let resetOnboardingCommand = vscode.commands.registerCommand(
+    "ai-commit-assistant.resetOnboarding",
+    async () => {
+      await OnboardingManager.resetOnboardingState(context);
+      vscode.window.showInformationMessage("Onboarding state has been reset. The extension will treat you as a new user on next restart.");
+      telemetryService.trackEvent('onboarding.reset');
+    }
+  );
+
+  // Register Re-enable Onboarding command
+  let reEnableOnboardingCommand = vscode.commands.registerCommand(
+    "ai-commit-assistant.reEnableOnboarding",
+    async () => {
+      const config = vscode.workspace.getConfiguration('aiCommitAssistant');
+      await config.update('showOnboarding', true, vscode.ConfigurationTarget.Global);
+      // Clear the permanently disabled flag by calling the reset method
+      await context.globalState.update('aiCommitAssistant.onboardingDisabledPermanently', undefined);
+
+      const action = await vscode.window.showInformationMessage(
+        "Onboarding has been re-enabled. You can now access the setup wizard again.",
+        { modal: false },
+        "Open Onboarding",
+        "Got it"
+      );
+
+      if (action === "Open Onboarding") {
+        OnboardingWebview.createOrShow(context.extensionUri);
+        telemetryService.trackEvent('onboarding.reopened');
+      }
+
+      telemetryService.trackEvent('onboarding.reenabled');
+    }
+  );
+
   // Register all disposables
   context.subscriptions.push(
     state.debugChannel,
@@ -746,21 +814,20 @@ export async function activate(context: vscode.ExtensionContext) {
     openOnboardingCommand,
     completeOnboardingCommand,
     skipOnboardingCommand,
-    checkApiConfigCommand
+    checkApiConfigCommand,
+    resetOnboardingCommand,
+    reEnableOnboardingCommand
   );
 
-  // Show onboarding for new users
-  const hasShownOnboarding = context.globalState.get<boolean>('aiCommitAssistant.onboardingShown');
+  // Show onboarding for new users with improved logic
+  const shouldShowOnboarding = await OnboardingManager.shouldShowOnboarding(context);
 
-  // TEMPORARY: Force onboarding to show for testing (remove this line when done testing)
-  context.globalState.update('aiCommitAssistant.onboardingShown', false);
-
-  if (!hasShownOnboarding) {
+  if (shouldShowOnboarding) {
     // Use the new interactive onboarding webview
     OnboardingWebview.createOrShow(context.extensionUri);
     telemetryService.trackEvent('extension.onboarding.webview.shown');
   } else {
-    // For returning users, just log the activation
+    // For returning users or users with existing config, just log the activation
     telemetryService.trackEvent('extension.activation.existing_user');
   }
 

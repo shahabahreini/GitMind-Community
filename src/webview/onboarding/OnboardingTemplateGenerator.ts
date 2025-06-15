@@ -271,7 +271,7 @@ export class OnboardingTemplateGenerator {
                     ← Previous
                 </button>
                 <button class="btn btn-secondary" id="skipBtn">
-                    Skip Setup
+                    Don't Show Again
                 </button>
                 <button class="btn btn-primary" id="nextBtn">
                     Next →

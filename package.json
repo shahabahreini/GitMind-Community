@@ -75,15 +75,21 @@
           "description": "Enable debug mode to show detailed LLM responses and API interactions",
           "order": 2
         },
+        "aiCommitAssistant.showOnboarding": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the onboarding experience for new users. Disable this to permanently turn off onboarding. Can be re-enabled to allow manual access to the onboarding wizard.",
+          "order": 3
+        },
         "aiCommitAssistant.gemini.apiKey": {
           "type": "string",
           "markdownDescription": "API key for Google's Gemini AI [Learn more](https://aistudio.google.com/app/apikey)",
-          "order": 3
+          "order": 4
         },
         "aiCommitAssistant.huggingface.apiKey": {
           "type": "string",
           "markdownDescription": "API key for Hugging Face [Learn more](https://huggingface.co/settings/tokens)",
-          "order": 4
+          "order": 5
         },
         "aiCommitAssistant.huggingface.model": {
           "type": "string",
@@ -95,7 +101,7 @@
             "facebook/bart-large-cnn",
             "microsoft/DialoGPT-medium"
           ],
-          "order": 5
+          "order": 6
         },
         "aiCommitAssistant.ollama.url": {
           "type": "string",
@@ -549,6 +555,16 @@
       {
         "command": "ai-commit-assistant.skipOnboarding",
         "title": "Skip Onboarding",
+        "category": "AI Commit Assistant"
+      },
+      {
+        "command": "ai-commit-assistant.resetOnboarding",
+        "title": "Reset Onboarding State",
+        "category": "AI Commit Assistant"
+      },
+      {
+        "command": "ai-commit-assistant.reEnableOnboarding",
+        "title": "Re-enable Onboarding",
         "category": "AI Commit Assistant"
       }
     ],
