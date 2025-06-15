@@ -1,6 +1,7 @@
 // src/webview/onboarding/OnboardingTemplateGenerator.ts
 import * as vscode from "vscode";
 import { getOnboardingStyles } from "./styles/onboarding.css";
+import { ProviderIcon } from "../settings/components/ProviderIcon";
 
 export class OnboardingTemplateGenerator {
     private _extensionUri: vscode.Uri;
@@ -25,6 +26,9 @@ export class OnboardingTemplateGenerator {
         <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${this._nonce}'; img-src ${webview.cspSource} data:;">
         <title>Welcome to GitMind</title>
         ${getOnboardingStyles()}
+        <style>
+            ${ProviderIcon.getIconStyles()}
+        </style>
     </head>
     <body>
         <div class="onboarding-container">
@@ -80,14 +84,13 @@ export class OnboardingTemplateGenerator {
 
                 <!-- Step 2: Choose Provider -->
                 <div class="step" id="step2">
-                    <div class="step-icon">🔧</div>
                     <h2>Choose Your AI Provider</h2>
                     <p>Select an AI provider to power your commit messages. Each has different strengths and pricing models.</p>
                     
                     <div class="providers-grid">
                         <div class="provider-card" data-provider="gemini">
                             <div class="provider-header">
-                                <div class="provider-icon">🧠</div>
+                                ${ProviderIcon.renderIcon('gemini', 64)}
                                 <h3>Google Gemini</h3>
                                 <span class="provider-badge free">Free Tier</span>
                             </div>
@@ -101,7 +104,7 @@ export class OnboardingTemplateGenerator {
 
                         <div class="provider-card" data-provider="openai">
                             <div class="provider-header">
-                                <div class="provider-icon">⭐</div>
+                                ${ProviderIcon.renderIcon('openai', 64)}
                                 <h3>OpenAI</h3>
                                 <span class="provider-badge popular">Popular</span>
                             </div>
@@ -115,7 +118,7 @@ export class OnboardingTemplateGenerator {
 
                         <div class="provider-card" data-provider="anthropic">
                             <div class="provider-header">
-                                <div class="provider-icon">🎯</div>
+                                ${ProviderIcon.renderIcon('anthropic', 64)}
                                 <h3>Anthropic Claude</h3>
                                 <span class="provider-badge smart">Smart</span>
                             </div>
@@ -129,7 +132,7 @@ export class OnboardingTemplateGenerator {
 
                         <div class="provider-card" data-provider="ollama">
                             <div class="provider-header">
-                                <div class="provider-icon">🏠</div>
+                                ${ProviderIcon.renderIcon('ollama', 64)}
                                 <h3>Ollama (Local)</h3>
                                 <span class="provider-badge private">Private</span>
                             </div>
@@ -143,7 +146,7 @@ export class OnboardingTemplateGenerator {
 
                         <div class="provider-card" data-provider="huggingface">
                             <div class="provider-header">
-                                <div class="provider-icon">🤗</div>
+                                ${ProviderIcon.renderIcon('huggingface', 64)}
                                 <h3>Hugging Face</h3>
                                 <span class="provider-badge open">Open Source</span>
                             </div>
@@ -157,7 +160,7 @@ export class OnboardingTemplateGenerator {
 
                         <div class="provider-card" data-provider="copilot">
                             <div class="provider-header">
-                                <div class="provider-icon">🐙</div>
+                                ${ProviderIcon.renderIcon('copilot', 64)}
                                 <h3>GitHub Copilot</h3>
                                 <span class="provider-badge integrated">Integrated</span>
                             </div>
@@ -178,7 +181,6 @@ export class OnboardingTemplateGenerator {
 
                 <!-- Step 3: Configuration -->
                 <div class="step" id="step3">
-                    <div class="step-icon">⚙️</div>
                     <h2>Configure Your Settings</h2>
                     <p>Let's set up your API key and configure your preferences.</p>
                     
@@ -218,7 +220,6 @@ export class OnboardingTemplateGenerator {
 
                 <!-- Step 4: First Commit -->
                 <div class="step" id="step4">
-                    <div class="step-icon">✨</div>
                     <h2>Generate Your First Commit!</h2>
                     <p>You're all set! Let's generate your first AI-powered commit message.</p>
                     
@@ -270,7 +271,7 @@ export class OnboardingTemplateGenerator {
                     ← Previous
                 </button>
                 <button class="btn btn-secondary" id="skipBtn">
-                    Skip Setup
+                    Don't Show Again
                 </button>
                 <button class="btn btn-primary" id="nextBtn">
                     Next →
@@ -457,6 +458,41 @@ export class OnboardingTemplateGenerator {
                 instruction: 'No additional setup needed if you have GitHub Copilot:',
                 link: 'https://github.com/features/copilot',
                 linkText: 'Learn about GitHub Copilot'
+            },
+            'mistral': {
+                instruction: 'Create an account and get your API key from Mistral:',
+                link: 'https://console.mistral.ai/api-keys/',
+                linkText: 'Get Mistral API Key'
+            },
+            'cohere': {
+                instruction: 'Sign up and get your API key from Cohere:',
+                link: 'https://dashboard.cohere.com/api-keys',
+                linkText: 'Get Cohere API Key'
+            },
+            'together': {
+                instruction: 'Create an account and get your API key from Together AI:',
+                link: 'https://api.together.xyz/settings/api-keys',
+                linkText: 'Get Together AI API Key'
+            },
+            'openrouter': {
+                instruction: 'Sign up and get your API key from OpenRouter:',
+                link: 'https://openrouter.ai/keys',
+                linkText: 'Get OpenRouter API Key'
+            },
+            'deepseek': {
+                instruction: 'Get your API key from DeepSeek:',
+                link: 'https://platform.deepseek.com/',
+                linkText: 'Get DeepSeek API Key'
+            },
+            'grok': {
+                instruction: 'Sign up for X Premium or above to access Grok:',
+                link: 'https://x.com/premium',
+                linkText: 'Get X Premium'
+            },
+            'perplexity': {
+                instruction: 'Create an account and get your API key from Perplexity:',
+                link: 'https://www.perplexity.ai/settings/api',
+                linkText: 'Get Perplexity API Key'
             }
         };
         

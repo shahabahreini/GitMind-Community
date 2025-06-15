@@ -18,6 +18,11 @@ export class OnboardingMessageHandler {
                 });
                 const config = vscode.workspace.getConfiguration("aiCommitAssistant");
                 await config.update("apiProvider", message.provider, vscode.ConfigurationTarget.Global);
+
+                // Check API configuration immediately after updating the provider
+                await vscode.commands.executeCommand("ai-commit-assistant.checkApiConfig");
+
+                // Open settings panel
                 await vscode.commands.executeCommand("ai-commit-assistant.openSettings");
                 break;
             case "completeOnboarding":

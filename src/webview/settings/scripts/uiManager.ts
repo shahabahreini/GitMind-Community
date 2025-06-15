@@ -1,260 +1,217 @@
 // src/webview/settings/scripts/uiManager.ts
+import { ProviderIcon } from '../components/ProviderIcon';
+
+interface ProviderDisplayConfig {
+  displayName: string;
+  model: string;
+  apiConfigured: (settings: any) => boolean;
+}
+
+const PROVIDER_DISPLAY_CONFIG: Record<string, ProviderDisplayConfig> = {
+  gemini: {
+    displayName: "Gemini",
+    model: "gemini-2.5-flash-preview-04-17",
+    apiConfigured: (s) => !!s.gemini?.apiKey
+  },
+  huggingface: {
+    displayName: "Hugging Face",
+    model: "Not configured",
+    apiConfigured: (s) => !!s.huggingface?.apiKey
+  },
+  ollama: {
+    displayName: "Ollama",
+    model: "Not configured",
+    apiConfigured: (s) => !!s.ollama?.url
+  },
+  mistral: {
+    displayName: "Mistral",
+    model: "mistral-large-latest",
+    apiConfigured: (s) => !!s.mistral?.apiKey
+  },
+  cohere: {
+    displayName: "Cohere",
+    model: "command-a-03-2025",
+    apiConfigured: (s) => !!s.cohere?.apiKey
+  },
+  openai: {
+    displayName: "OpenAI",
+    model: "gpt-3.5-turbo",
+    apiConfigured: (s) => !!s.openai?.apiKey
+  },
+  together: {
+    displayName: "Together AI",
+    model: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    apiConfigured: (s) => !!s.together?.apiKey
+  },
+  openrouter: {
+    displayName: "OpenRouter",
+    model: "google/gemma-3-27b-it:free",
+    apiConfigured: (s) => !!s.openrouter?.apiKey
+  },
+  anthropic: {
+    displayName: "Anthropic",
+    model: "claude-3-5-sonnet-20241022",
+    apiConfigured: (s) => !!s.anthropic?.apiKey
+  },
+  copilot: {
+    displayName: "GitHub Copilot",
+    model: "gpt-4o",
+    apiConfigured: () => true
+  },
+  deepseek: {
+    displayName: "DeepSeek",
+    model: "deepseek-chat",
+    apiConfigured: (s) => !!s.deepseek?.apiKey
+  },
+  grok: {
+    displayName: "Grok",
+    model: "grok-3",
+    apiConfigured: (s) => !!s.grok?.apiKey
+  },
+  perplexity: {
+    displayName: "Perplexity",
+    model: "sonar-pro",
+    apiConfigured: (s) => !!s.perplexity?.apiKey
+  }
+};
+
+const PROVIDERS = Object.keys(PROVIDER_DISPLAY_CONFIG);
+
 export function getUiManagerScript(): string {
-  return `
-      // Show/hide sections based on selected provider
-      function updateVisibleSettings() {
-        const provider = document.getElementById('apiProvider').value;
-        document.getElementById('geminiSettings').style.display =
-          provider === 'gemini' ? 'block' : 'none';
-        document.getElementById('huggingfaceSettings').style.display =
-          provider === 'huggingface' ? 'block' : 'none';
-        document.getElementById('ollamaSettings').style.display =
-          provider === 'ollama' ? 'block' : 'none';
-        document.getElementById('mistralSettings').style.display =
-          provider === 'mistral' ? 'block' : 'none';
-        document.getElementById('cohereSettings').style.display =
-          provider === 'cohere' ? 'block' : 'none';
-        document.getElementById('openaiSettings').style.display =
-          provider === 'openai' ? 'block' : 'none';
-        document.getElementById('togetherSettings').style.display =
-          provider === 'together' ? 'block' : 'none';
-        document.getElementById('openrouterSettings').style.display =
-          provider === 'openrouter' ? 'block' : 'none';
-        document.getElementById('anthropicSettings').style.display =
-          provider === 'anthropic' ? 'block' : 'none';
-        document.getElementById('copilotSettings').style.display =
-          provider === 'copilot' ? 'block' : 'none';
-        document.getElementById('deepseekSettings').style.display =
-          provider === 'deepseek' ? 'block' : 'none';
-        document.getElementById('grokSettings').style.display =
-          provider === 'grok' ? 'block' : 'none';
-        document.getElementById('perplexitySettings').style.display =
-          provider === 'perplexity' ? 'block' : 'none';
+  const providerIconString = `
+    window.ProviderIcon = {
+      icons: ${JSON.stringify(ProviderIcon['icons'])},
+      renderIcon: function(provider, size = 24) {
+        const iconPath = this.icons[provider];
+        if (!iconPath) {
+          return \`<div class="provider-icon-placeholder" style="width: \${size}px; height: \${size}px;"></div>\`;
+        }
+        return \`
+          <svg class="provider-icon" width="\${size}" height="\${size}" viewBox="0 0 24 24" 
+               fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path d="\${iconPath}" />
+          </svg>
+        \`;
       }
+    };
+  `;
+
+  return `
+    ${providerIconString}
+    
+    const PROVIDER_DISPLAY_CONFIG = ${JSON.stringify(PROVIDER_DISPLAY_CONFIG)};
+    const PROVIDERS = ${JSON.stringify(PROVIDERS)};
+    
+    function updateVisibleSettings() {
+      const selectedProvider = document.getElementById('apiProvider').value;
       
-      // Initialize UI state immediately
-      updateVisibleSettings();
-      
-      // Add event listener for future changes
-      document.getElementById('apiProvider').addEventListener('change', updateVisibleSettings);
-      
-      // Add event listener for API key change
-      document.getElementById('mistralApiKey').addEventListener('change', function() {
-        const apiKey = this.value.trim();
-        if (apiKey && apiKey.length > 10) {
-          // If we have what looks like a valid API key, try loading models
-          vscode.postMessage({
-            command: 'executeCommand',
-            commandId: 'ai-commit-assistant.loadMistralModels'
-          });
+      PROVIDERS.forEach(provider => {
+        const element = document.getElementById(provider + 'Settings');
+        if (element) {
+          element.style.display = provider === selectedProvider ? 'block' : 'none';
         }
       });
-
-      // Add event listener for Hugging Face API key change
-      document.getElementById('huggingfaceApiKey').addEventListener('change', function() {
-        const apiKey = this.value.trim();
-        if (apiKey && apiKey.length > 10) {
-          // If we have what looks like a valid API key, try loading models
-          vscode.postMessage({
-            command: 'executeCommand',
-            commandId: 'ai-commit-assistant.loadHuggingFaceModels'
-          });
-        }
-      });
-
-      // Toast notification system
-      function showToast(message, type = 'success') {
-        const toast = document.getElementById('toast');
+    }
+    
+    function setupApiKeyAutoLoading(provider, commandId) {
+      const apiKeyElement = document.getElementById(provider + 'ApiKey');
+      if (apiKeyElement) {
+        apiKeyElement.addEventListener('change', function() {
+          const apiKey = this.value.trim();
+          if (apiKey && apiKey.length > 10) {
+            vscode.postMessage({
+              command: 'executeCommand',
+              commandId: commandId
+            });
+          }
+        });
+      }
+    }
+    
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      if (toast) {
         toast.textContent = message;
         toast.className = 'toast';
-        toast.classList.add(type);
-        toast.classList.add('show');
+        toast.classList.add(type, 'show');
         
         setTimeout(() => {
           toast.classList.remove('show');
         }, 3000);
       }
+    }
+    
+    function getProviderInfo(provider, settings) {
+      const config = PROVIDER_DISPLAY_CONFIG[provider];
+      if (!config) return { displayName: provider, model: '', apiConfigured: false };
       
-      // Update status banner with new settings
-      function updateStatusBanner(settings) {
-        // Get provider-specific model info
-        let modelInfo = "";
-        
-        // Provider icon paths
-        const providerIcons = {
-          anthropic: "M4.709 15.955l4.72-2.647.08-.23-.08-.128H9.2l-.79-.048-2.698-.073-2.339-.097-2.266-.122-.571-.121L0 11.784l.055-.352.48-.321.686.06 1.52.103 2.278.158 1.652.097 2.449.255h.389l.055-.157-.134-.098-.103-.097-2.358-1.596-2.552-1.688-1.336-.972-.724-.491-.364-.462-.158-1.008.656-.722.881.06.225.061.893.686 1.908 1.476 2.491 1.833.365.304.145-.103.019-.073-.164-.274-1.355-2.446-1.446-2.49-.644-1.032-.17-.619a2.97 2.97 0 01-.104-.729L6.283.134 6.696 0l.996.134.42.364.62 1.414 1.002 2.229 1.555 3.03.456.898.243.832.091.255h.158V9.01l.128-1.706.237-2.095.23-2.695.08-.76.376-.91.747-.492.584.28.48.685-.067.444-.286 1.851-.559 2.903-.364 1.942h.212l.243-.242.985-1.306 1.652-2.064.73-.82.85-.904.547-.431h1.033l.76 1.129-.34 1.166-1.064 1.347-.881 1.142-1.264 1.7-.79 1.36.073.11.188-.02 2.856-.606 1.543-.28 1.841-.315.833.388.091.395-.328.807-1.969.486-2.309.462-3.439.813-.042.03.049.061 1.549.146.662.036h1.622l3.02.225.79.522.474.638-.079.485-1.215.62-1.64-.389-3.829-.91-1.312-.329h-.182v.11l1.093 1.068 2.006 1.81 2.509 2.33.127.578-.322.455-.34-.049-2.205-1.657-.851-.747-1.926-1.62h-.128v.17l.444.649 2.345 3.521.122 1.08-.17.353-.608.213-.668-.122-1.374-1.925-1.415-2.167-1.143-1.943-.14.08-.674 7.254-.316.37-.729.28-.607-.461-.322-.747.322-1.476.389-1.924.315-1.53.286-1.9.17-.632-.012-.042-.14.018-1.434 1.967-2.18 2.945-1.726 1.845-.414.164-.717-.37.067-.662.401-.589 2.388-3.036 1.44-1.882.93-1.086-.006-.158h-.055L4.132 18.56l-1.13.146-.487-.456.061-.746.231-.243 1.908-1.312-.006.006z",
-          openai: "M21.55 10.004a5.416 5.416 0 00-.478-4.501c-1.217-2.09-3.662-3.166-6.05-2.66A5.59 5.59 0 0010.831 1C8.39.995 6.224 2.546 5.473 4.838A5.553 5.553 0 001.76 7.496a5.487 5.487 0 00.691 6.5 5.416 5.416 0 00.477 4.502c1.217 2.09 3.662 3.165 6.05 2.66A5.586 5.586 0 0013.168 23c2.443.006 4.61-1.546 5.361-3.84a5.553 5.553 0 003.715-2.66 5.488 5.488 0 00-.693-6.497v.001zm-8.381 11.558a4.199 4.199 0 01-2.675-.954c.034-.018.093-.05.132-.074l4.44-2.53a.71.71 0 00.364-.623v-6.176l1.877 1.069c.02.01.033.029.036.05v5.115c-.003 2.274-1.87 4.118-4.174 4.123zM4.192 17.78a4.059 4.059 0 01-.498-2.763c.032.02.09.055.131.078l4.44 2.53c.225.13.504.13.73 0l5.42-3.088v2.138a.068.068 0 01-.027.057L9.9 19.288c-1.999 1.136-4.552.46-5.707-1.51h-.001zM3.023 8.216A4.15 4.15 0 015.198 6.41l-.002.151v5.06a.711.711 0 00.364.624l5.42 3.087-1.876 1.07a.067.067 0 01-.063.005l-4.489-2.559c-1.995-1.14-2.679-3.658-1.53-5.63h.001zm15.417 3.54l-5.42-3.088L14.896 7.6a.067.067 0 01.063-.006l4.489 2.557c1.998 1.14 2.683 3.662 1.529 5.633a4.163 4.163 0 01-2.174 1.807V12.38a.71.71 0 00-.363-.623zm1.867-2.773a6.04 6.04 0 00-.132-.078l-4.44-2.53a.731.731 0 00-.729 0l-5.42 3.088V7.325a.068.068 0 01.027-.057L14.1 4.713c2-1.137 4.555-.46 5.707 1.513.487.833.664 1.809.499 2.757h.001zm-11.741 3.81l-1.877-1.068a.065.065 0 01-.036-.051V6.559c.001-2.277 1.873-4.122 4.181-4.12.976 0 1.92.338 2.671.954-.034.018-.092.05-.131.073l-4.44 2.53a.71.71 0 00-.365.623l-.003 6.173v.002zm1.02-2.168L12 9.25l2.414 1.375v2.75L12 14.75l-2.415-1.375v-2.75z",
-          ollama: "M7.905 1.09c.216.085.411.225.588.41.295.306.544.744.734 1.263.191.522.315 1.1.362 1.68a5.054 5.054 0 012.049-.636l.051-.004c.87-.07 1.73.087 2.48.474.101.053.2.11.297.17.05-.569.172-1.134.36-1.644.19-.52.439-.957.733-1.264a1.67 1.67 0 01.589-.41c.257-.1.53-.118.796-.042.401.114.745.368 1.016.737.248.337.434.769.561 1.287.23.934.27 2.163.115 3.645l.053.04.026.019c.757.576 1.284 1.397 1.563 2.35.435 1.487.216 3.155-.534 4.088l-.018.021.002.003c.417.762.67 1.567.724 2.4l.002.03c.064 1.065-.2 2.137-.814 3.19l-.007.01.01.024c.472 1.157.62 2.322.438 3.486l-.006.039a.651.651 0 01-.747.536.648.648 0 01-.54-.742c.167-1.033.01-2.069-.48-3.123a.643.643 0 01.04-.617l.004-.006c.604-.924.854-1.83.8-2.72-.046-.779-.325-1.544-.8-2.273a.644.644 0 01.18-.886l.009-.006c.243-.159.467-.565.58-1.12a4.229 4.229 0 00-.095-1.974c-.205-.7-.58-1.284-1.105-1.683-.595-.454-1.383-.673-2.38-.61a.653.653 0 01-.632-.371c-.314-.665-.772-1.141-1.343-1.436a3.288 3.288 0 00-1.702-.332c-1.245.099-2.343.801-2.67 1.686a.652.652 0 01-.61.425c-1.067.002-1.893.252-2.497.703-.522.39-.878.935-1.066 1.588a4.07 4.07 0 00-.068 1.886c.112.558.331 1.02.582 1.269l.008.007c.212.207.257.53.109.785-.36.622-.629 1.549-.673 2.44-.05 1.018.186 1.902.719 2.536l.016.019a.643.643 0 01.095.69c-.576 1.236-.753 2.252-.562 3.052a.652.652 0 01-1.269.298c-.243-1.018-.078-2.184.473-3.498l.014-.035-.008-.012a4.339 4.339 0 01-.598-1.309l-.005-.019a5.764 5.764 0 01-.177-1.785c.044-.91.278-1.842.622-2.59l.012-.026-.002-.002c-.293-.418-.51-.953-.63-1.545l-.005-.024a5.352 5.352 0 01.093-2.49c.262-.915.777-1.701 1.536-2.269.06-.045.123-.09.186-.132-.159-1.493-.119-2.73.112-3.67.127-.518.314-.95.562-1.287.27-.368.614-.622 1.015-.737.266-.076.54-.059.797.042zm4.116 9.09c.936 0 1.8.313 2.446.855.63.527 1.005 1.235 1.005 1.94 0 .888-.406 1.58-1.133 2.022-.62.375-1.451.557-2.403.557-1.009 0-1.871-.259-2.493-.734-.617-.47-.963-1.13-.963-1.845 0-.707.398-1.417 1.056-1.946.668-.537 1.55-.849 2.485-.849zm0 .896a3.07 3.07 0 00-1.916.65c-.461.37-.722.835-.722 1.25 0 .428.21.829.61 1.134.455.347 1.124.548 1.943.548.799 0 1.473-.147 1.932-.426.463-.28.7-.686.7-1.257 0-.423-.246-.89-.683-1.256-.484-.405-1.14-.643-1.864-.643zm.662 1.21l.004.004c.12.151.095.37-.056.49l-.292.23v.446a.375.375 0 01-.376.373.375.375 0 01-.376-.373v-.46l-.271-.218a.347.347 0 01-.052-.49.353.353 0 01.494-.051l.215.172.22-.174a.353.353 0 01.49.051zm-5.04-1.919c.478 0 .867.39.867.871a.87.87 0 01-.868.871.87.87 0 01-.867-.87.87.87 0 01.867-.872zm8.706 0c.48 0 .868.39.868.871a.87.87 0 01-.868.871.87.87 0 01-.867-.87.87.87 0 01.867-.872zM7.44 2.3l-.003.002a.659.659 0 00-.285.238l-.005.006c-.138.189-.258.467-.348.832-.17.692-.216 1.631-.124 2.782.43-.128.899-.208 1.404-.237l.01-.001.019-.034c.046-.082.095-.161.148-.239.123-.771.022-1.692-.253-2.444-.134-.364-.297-.65-.453-.813a.628.628 0 00-.107-.09L7.44 2.3zm9.174.04l-.002.001a.628.628 0 00-.107.09c-.156.163-.32.45-.453.814-.29.794-.387 1.776-.23 2.572l.058.097.008.014h.03a5.184 5.184 0 011.466.212c.086-1.124.038-2.043-.128-2.722-.09-.365-.21-.643-.349-.832l-.004-.006a.659.659 0 00-.285-.239h-.004z",
-          gemini: "M12 24A14.304 14.304 0 000 12 14.304 14.304 0 0012 0a14.305 14.305 0 0012 12 14.305 14.305 0 00-12 12",
-          huggingface: "M16.781 3.277c2.997 1.704 4.844 4.851 4.844 8.258 0 .995-.155 1.955-.443 2.857a1.332 1.332 0 011.125.4 1.41 1.41 0 01.2 1.723c.204.165.352.385.428.632l.017.062c.06.222.12.69-.2 1.166.244.37.279.836.093 1.236-.255.57-.893 1.018-2.128 1.5l-.202.078-.131.048c-.478.173-.89.295-1.061.345l-.086.024c-.89.243-1.808.375-2.732.394-1.32 0-2.3-.36-2.923-1.067a9.852 9.852 0 01-3.18.018C9.778 21.647 8.802 22 7.494 22a11.249 11.249 0 01-2.541-.343l-.221-.06-.273-.08a16.574 16.574 0 01-1.175-.405c-1.237-.483-1.875-.93-2.13-1.501-.186-.4-.151-.867.093-1.236a1.42 1.42 0 01-.2-1.166c.069-.273.226-.516.447-.694a1.41 1.41 0 01.2-1.722c.233-.248.557-.391.917-.407l.078-.001a9.385 9.385 0 01-.44-2.85c0-3.407 1.847-6.554 4.844-8.258a9.822 9.822 0 019.687 0zM4.188 14.758c.125.687 2.357 2.35 2.14 2.707-.19.315-.796-.239-.948-.386l-.041-.04-.168-.147c-.561-.479-2.304-1.9-2.74-1.432-.43.46.119.859 1.055 1.42l.784.467.136.083c1.045.643 1.12.84.95 1.113-.188.295-3.07-2.1-3.34-1.083-.27 1.011 2.942 1.304 2.744 2.006-.2.7-2.265-1.324-2.685-.537-.425.79 2.913 1.718 2.94 1.725l.16.04.175.042c1.227.284 3.565.65 4.435-.604.673-.973.64-1.709-.248-2.61l-.057-.057c-.945-.928-1.495-2.288-1.495-2.288l-.017-.058-.025-.072c-.082-.22-.284-.639-.63-.584-.46.073-.798 1.21.12 1.933l.05.038c.977.721-.195 1.21-.573.534l-.058-.104-.143-.25c-.463-.799-1.282-2.111-1.739-2.397-.532-.332-.907-.148-.782.541zm14.842-.541c-.533.335-1.563 2.074-1.94 2.751a.613.613 0 01-.687.302.436.436 0 01-.176-.098.303.303 0 01-.049-.06l-.014-.028-.008-.02-.007-.019-.003-.013-.003-.017a.289.289 0 01-.004-.048c0-.12.071-.266.25-.427.026-.024.054-.047.084-.07l.047-.036c.022-.016.043-.032.063-.049.883-.71.573-1.81.131-1.917l-.031-.006-.056-.004a.368.368 0 00-.062.006l-.028.005-.042.014-.039.017-.028.015-.028.019-.036.027-.023.02c-.173.158-.273.428-.31.542l-.016.054s-.53 1.309-1.439 2.234l-.054.054c-.365.358-.596.69-.702 1.018-.143.437-.066.868.21 1.353.055.097.117.195.187.296.882 1.275 3.282.876 4.494.59l.286-.07.25-.074c.276-.084.736-.233 1.2-.42l.188-.077.065-.028.064-.028.124-.056.081-.038c.529-.252.964-.543.994-.827l.001-.036a.299.299 0 00-.037-.139c-.094-.176-.271-.212-.491-.168l-.045.01c-.044.01-.09.024-.136.04l-.097.035-.054.022c-.559.23-1.238.705-1.607.745h.006a.452.452 0 01-.05.003h-.024l-.024-.003-.023-.005c-.068-.016-.116-.06-.14-.142a.22.22 0 01-.005-.1c.062-.345.958-.595 1.713-.91l.066-.028c.528-.224.97-.483.985-.832v-.04a.47.47 0 00-.016-.098c-.048-.18-.175-.251-.36-.251-.785 0-2.55 1.36-2.92 1.36-.025 0-.048-.007-.058-.024a.6.6 0 01-.046-.088c-.1-.238.068-.462 1.06-1.066l.209-.126c.538-.32 1.01-.588 1.341-.831.29-.212.475-.406.503-.6l.003-.028c.008-.113-.038-.227-.147-.344a.266.266 0 00-.07-.054l-.034-.015-.013-.005a.403.403 0 00-.13-.02c-.162 0-.369.07-.595.18-.637.313-1.431.952-1.826 1.285l-.249.215-.033.033c-.08.078-.288.27-.493.386l-.071.037-.041.019a.535.535 0 01-.122.036h.005a.346.346 0 01-.031.003l.01-.001-.013.001c-.079.005-.145-.021-.19-.095a.113.113 0 01-.014-.065c.027-.465 2.034-1.991 2.152-2.642l.009-.048c.1-.65-.271-.817-.791-.493zM11.938 2.984c-4.798 0-8.688 3.829-8.688 8.55 0 .692.083 1.364.24 2.008l.008-.009c.252-.298.612-.46 1.017-.46.355.008.699.117.993.312.22.14.465.384.715.694.261-.372.69-.598 1.15-.605.852 0 1.367.728 1.562 1.383l.047.105.06.127c.192.396.595 1.139 1.143 1.68 1.06 1.04 1.324 2.115.8 3.266a8.865 8.865 0 002.024-.014c-.505-1.12-.26-2.17.74-3.186l.066-.066c.695-.684 1.157-1.69 1.252-1.912.195-.655.708-1.383 1.56-1.383.46.007.889.233 1.15.605.25-.31.495-.553.718-.694a1.87 1.87 0 01.99-.312c.357 0 .682.126.925.36.14-.61.215-1.245.215-1.898 0-4.722-3.89-8.55-8.687-8.55zm1.857 8.926l.439-.212c.553-.264.89-.383.89.152 0 1.093-.771 3.208-3.155 3.262h-.184c-2.325-.052-3.116-2.06-3.156-3.175l-.001-.087c0-1.107 1.452.586 3.25.586.716 0 1.379-.272 1.917-.526zm4.017-3.143c.45 0 .813.358.813.8 0 .441-.364.8-.813.8a.806.806 0 01-.812-.8c0-.442.364-.8.812-.8zm-11.624 0c.448 0 .812.358.812.8 0 .441-.364.8-.812.8a.806.806 0 01-.813-.8c0-.442.364-.8.813-.8zm7.79-.841c.32-.384.846-.54 1.33-.394.483.146.83.564.878 1.06.048.495-.212.97-.659 1.203-.322.168-.447-.477-.767-.585l.002-.003c-.287-.098-.772.362-.925.079a1.215 1.215 0 01.14-1.36zm-4.323 0c.322.384.377.92.14 1.36-.152.283-.64-.177-.925-.079l.003.003c-.108.036-.194.134-.273.24l-.118.165c-.11.15-.22.262-.377.18a1.226 1.226 0 01-.658-1.204c.048-.495.395-.913.878-1.059a1.262 1.262 0 011.33.394z",
-          mistral: "M3.428 3.4h3.429v3.428h3.429v3.429h-.002 3.431V6.828h3.427V3.4h3.43v13.714H24v3.429H13.714v-3.428h-3.428v-3.429h-3.43v3.428h3.43v3.429H0v-3.429h3.428V3.4zm10.286 13.715h3.428v-3.429h-3.427v3.429z",
-          cohere: "M8.128 14.099c.592 0 1.77-.033 3.398-.703 1.897-.781 5.672-2.2 8.395-3.656 1.905-1.018 2.74-2.366 2.74-4.18A4.56 4.56 0 0018.1 1H7.549A6.55 6.55 0 001 7.55c0 3.617 2.745 6.549 7.128 6.549zM9.912 18.61a4.387 4.387 0 012.705-4.052l3.323-1.38c3.361-1.394 7.06 1.076 7.06 4.715a5.104 5.104 0 01-5.105 5.104l-3.597-.001a4.386 4.386 0 01-4.386-4.387zM4.776 14.962A3.775 3.775 0 001 18.738v.489a3.776 3.776 0 007.551 0v-.49a3.775 3.775 0 00-3.775-3.775z",
-          together: "M17.385 11.23a4.615 4.615 0 100-9.23 4.615 4.615 0 000 9.23zm0 10.77a4.615 4.615 0 100-9.23 4.615 4.615 0 000 9.23zm-10.77 0a4.615 4.615 0 100-9.23 4.615 4.615 0 000 9.23z M6.615 11.23a4.615 4.615 0 100-9.23 4.615 4.615 0 000 9.23z",
-          openrouter: "M16.804 1.957l7.22 4.105v.087L16.73 10.21l.017-2.117-.821-.03c-1.059-.028-1.611.002-2.268.11-1.064.175-2.038.577-3.147 1.352L8.345 11.03c-.284.195-.495.336-.68.455l-.515.322-.397.234.385.23.53.338c.476.314 1.17.796 2.701 1.866 1.11.775 2.083 1.177 3.147 1.352l.3.045c.694.091 1.375.094 2.825.033l.022-2.159 7.22 4.105v.087L16.589 22l.014-1.862-.635.022c-1.386.042-2.137.002-3.138-.162-1.694-.28-3.26-.926-4.881-2.059l-2.158-1.5a21.997 21.997 0 00-.755-.498l-.467-.28a55.927 55.927 0 00-.76-.43C2.908 14.73.563 14.116 0 14.116V9.888l.14.004c.564-.007 2.91-.622 3.809-1.124l1.016-.58.438-.274c.428-.28 1.072-.726 2.686-1.853 1.621-1.133 3.186-1.78 4.881-2.059 1.152-.19 1.974-.213 3.814-.138l.02-1.907z",
-          copilot: "M19.245 5.364c1.322 1.36 1.877 3.216 2.11 5.817.622 0 1.2.135 1.592.654l.73.964c.21.278.323.61.323.955v2.62c0 .339-.173.669-.453.868C20.239 19.602 16.157 21.5 12 21.5c-4.6 0-9.205-2.583-11.547-4.258-.28-.2-.452-.53-.453-.868v-2.62c0-.345.113-.679.321-.956l.73-.963c.392-.517.974-.654 1.593-.654l.029-.297c.25-2.446.81-4.213 2.082-5.52 2.461-2.54 5.71-2.851 7.146-2.864h.198c1.436.013 4.685.323 7.146 2.864zm-7.244 4.328c-.284 0-.613.016-.962.05-.123.447-.305.85-.57 1.108-1.05 1.023-2.316 1.18-2.994 1.18-.638 0-1.306-.13-1.851-.464-.516.165-1.012.403-1.044.996a65.882 65.882 0 00-.063 2.884l-.002.48c-.002.563-.005 1.126-.013 1.69.002.326.204.63.51.765 2.482 1.102 4.83 1.657 6.99 1.657 2.156 0 4.504-.555 6.985-1.657a.854.854 0 00.51-.766c.03-1.682.006-3.372-.076-5.053-.031-.596-.528-.83-1.046-.996-.546.333-1.212.464-1.85.464-.677 0-1.942-.157-2.993-1.18-.266-.258-.447-.661-.57-1.108-.32-.032-.64-.049-.96-.05zm-2.525 4.013c.539 0 .976.426.976.95v1.753c0 .525-.437.95-.976.95a.964.964 0 01-.976-.95v-1.752c0-.525.437-.951.976-.951zm5 0c.539 0 .976.426.976.95v1.753c0 .525-.437.95-.976.95a.964.964 0 01-.976-.95v-1.752c0-.525.437-.951.976-.951zM7.635 5.087c-1.05.102-1.935.438-2.385.906-.975 1.037-.765 3.668-.21 4.224.405.394 1.17.657 1.995.657h.09c.649-.013 1.785-.176 2.73-1.11.435-.41.705-1.433.675-2.47-.03-.834-.27-1.52-.63-1.813-.39-.336-1.275-.482-2.265-.394zm6.465.394c-.36.292-.6.98-.63 1.813-.03 1.037.24 2.06.675 2.47.968.957 2.136 1.104 2.776 1.11h.044c.825 0 1.59-.263 1.995-.657.555-.556.765-3.187-.21-4.224-.45-.468-1.335-.804-2.385-.906-.99-.088-1.875.058-2.265.394zM12 7.615c-.24 0-.525.015-.84.044.03.16.045.336.06.526l-.001.159a2.94 2.94 0 01-.014.25c.225-.022.425-.027.612-.028h.366c.187 0 .387.006.612.028-.015-.146-.015-.277-.015-.409.015-.19.03-.365.06-.526a9.29 9.29 0 00-.84-.044z",
-          deepseek: "M23.748 4.482c-.254-.124-.364.113-.512.234-.051.039-.094.09-.137.136-.372.397-.806.657-1.373.626-.829-.046-1.537.214-2.163.848-.133-.782-.575-1.248-1.247-1.548-.352-.156-.708-.311-.955-.65-.172-.241-.219-.51-.305-.774-.055-.16-.11-.323-.293-.35-.2-.031-.278.136-.356.276-.313.572-.434 1.202-.422 1.84.027 1.436.633 2.58 1.838 3.393.137.093.172.187.129.323-.082.28-.18.552-.266.833-.055.179-.137.217-.329.14a5.526 5.526 0 01-1.736-1.18c-.857-.828-1.631-1.742-2.597-2.458a11.365 11.365 0 00-.689-.471c-.985-.957.13-1.743.388-1.836.27-.098.093-.432-.779-.428-.872.004-1.67.295-2.687.684a3.055 3.055 0 01-.465.137 9.597 9.597 0 00-2.883-.102c-1.885.21-3.39 1.102-4.497 2.623C.082 8.606-.231 10.684.152 12.85c.403 2.284 1.569 4.175 3.36 5.653 1.858 1.533 3.997 2.284 6.438 2.14 1.482-.085 3.133-.284 4.994-1.86.47.234.962.327 1.78.397.63.059 1.236-.03 1.705-.128.735-.156.684-.837.419-.961-2.155-1.004-1.682-.595-2.113-.926 1.096-1.296 2.746-2.642 3.392-7.003.05-.347.007-.565 0-.845-.004-.17.035-.237.23-.256a4.173 4.173 0 001.545-.475c1.396-.763 1.96-2.015 2.093-3.517.02-.23-.004-.467-.247-.588zM11.581 18c-2.089-1.642-3.102-2.183-3.52-2.16-.392.024-.321.471-.235.763.09.288.207.486.371.739.114.167.192.416-.113.603-.673.416-1.842-.14-1.897-.167-1.361-.802-2.5-1.86-3.301-3.307-.774-1.393-1.224-2.887-1.298-4.482-.02-.386.093-.522.477-.592a4.696 4.696 0 011.529-.039c2.132.312 3.946 1.265 5.468 2.774.868.86 1.525 1.887 2.202 2.891.72 1.066 1.494 2.082 2.48 2.914.348.292.625.514.891.677-.802.09-2.14.11-3.054-.614zm1-6.44a.306.306 0 01.415-.287.302.302 0 01.2.288.306.306 0 01-.31.307.303.303 0 01-.304-.308zm3.11 1.596c-.2.081-.399.151-.59.16a1.245 1.245 0 01-.798-.254c-.274-.23-.47-.358-.552-.758a1.73 1.73 0 01.016-.588c.07-.327-.008-.537-.239-.727-.187-.156-.426-.199-.688-.199a.559.559 0 01-.254-.078c-.11-.054-.2-.19-.114-.358.028-.054.16-.186.192-.21.356-.202.767-.136 1.146.016.352.144.618.408 1.001.782.391.451.462.576.685.914.176.265.336.537.445.848.067.195-.019.354-.25.452z",
-          grok: "M9.27 15.29l7.978-5.897c.391-.29.95-.177 1.137.272.98 2.369.542 5.215-1.41 7.169-1.951 1.954-4.667 2.382-7.149 1.406l-2.711 1.257c3.889 2.661 8.611 2.003 11.562-.953 2.341-2.344 3.066-5.539 2.388-8.42l.006.007c-.983-4.232.242-5.924 2.75-9.383.06-.082.12-.164.179-.248l-3.301 3.305v-.01L9.267 15.292M7.623 16.723c-2.792-2.67-2.31-6.801.071-9.184 1.761-1.763 4.647-2.483 7.166-1.425l2.705-1.25a7.808 7.808 0 00-1.829-1A8.975 8.975 0 005.984 5.83c-2.533 2.536-3.33 6.436-1.962 9.764 1.022 2.487-.653 4.246-2.34 6.022-.599.63-1.199 1.259-1.682 1.925l7.62-6.815",
-          perplexity: "M19.785 0v7.272H22.5V17.62h-2.935V24l-7.037-6.194v6.145h-1.091v-6.152L4.392 24v-6.465H1.5V7.188h2.884V0l7.053 6.494V.19h1.09v6.49L19.786 0zm-7.257 9.044v7.319l5.946 5.234V14.44l-5.946-5.397zm-1.099-.08l-5.946 5.398v7.235l5.946-5.234V8.965zm8.136 7.58h1.844V8.349H13.46l6.105 5.54v2.655zm-8.982-8.28H2.59v8.195h1.8v-2.576l6.192-5.62zM5.475 2.476v4.71h5.115l-5.115-4.71zm13.219 0l-5.115 4.71h5.115v-4.71z"
-        };
-        
-        function renderProviderIcon(provider, size = 32) {
-          const iconPath = providerIcons[provider];
-          if (!iconPath) {
-            return \`<div class="provider-icon-placeholder" style="width: \${size}px; height: \${size}px;"></div>\`;
-          }
-          return \`
-            <svg class="provider-icon" width="\${size}" height="\${size}" viewBox="0 0 24 24" 
-                 fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-              <path d="\${iconPath}" />
-            </svg>
-          \`;
-        }
-        switch (settings.apiProvider) {
-          case "gemini":
-            modelInfo = settings.gemini.model || "gemini-2.5-flash-preview-04-17";
-            break;
-          case "huggingface":
-            modelInfo = settings.huggingface.model || "Not configured";
-            break;
-          case "ollama":
-            modelInfo = settings.ollama.model || "Not configured";
-            break;
-          case "mistral":
-            modelInfo = settings.mistral.model || "mistral-large-latest";
-            break;
-          case "cohere":
-            modelInfo = settings.cohere.model || "command-a-03-2025";
-            break;
-          case "openai":
-            modelInfo = settings.openai.model || "gpt-3.5-turbo";
-            break;
-          case "together":
-            modelInfo = settings.together.model || "meta-llama/Llama-3.3-70B-Instruct-Turbo";
-            break;
-          case "openrouter":
-            modelInfo = settings.openrouter.model || "google/gemma-3-27b-it:free";
-            break;
-          case "anthropic":
-            modelInfo = settings.anthropic.model || "claude-3-5-sonnet-20241022";
-            break;
-          case "copilot":
-            modelInfo = settings.copilot.model || "gpt-4o";
-            break;
-          case "deepseek":
-            modelInfo = settings.deepseek.model || "deepseek-chat";
-            break;
-          case "grok":
-            modelInfo = settings.grok?.model || "grok-3";
-            break;
-          case "perplexity":
-            modelInfo = settings.perplexity?.model || "sonar-pro";
-            break;
-        }
-        
-        // Get API configuration status
-        let apiConfigured = false;
-        switch (settings.apiProvider) {
-          case "gemini":
-            apiConfigured = !!settings.gemini.apiKey;
-            break;
-          case "huggingface":
-            apiConfigured = !!settings.huggingface.apiKey;
-            break;
-          case "ollama":
-            apiConfigured = !!settings.ollama.url;
-            break;
-          case "mistral":
-            apiConfigured = !!settings.mistral.apiKey;
-            break;
-          case "cohere":
-            apiConfigured = !!settings.cohere.apiKey;
-            break;
-          case "openai":
-            apiConfigured = !!settings.openai.apiKey;
-            break;
-          case "together":
-            apiConfigured = !!settings.together.apiKey;
-            break;
-          case "openrouter":
-            apiConfigured = !!settings.openrouter.apiKey;
-            break;
-          case "anthropic":
-            apiConfigured = !!settings.anthropic.apiKey;
-            break;
-          case "copilot":
-            apiConfigured = true; // Copilot authentication is handled by VS Code
-            break;
-          case "deepseek":
-            apiConfigured = !!settings.deepseek.apiKey;
-            break;
-          case "grok":
-            apiConfigured = !!settings.grok?.apiKey;
-            break;
-          case "perplexity":
-            apiConfigured = !!settings.perplexity?.apiKey;
-            break;
-        }
-        
-        // Format provider name for display
-        const providerDisplay = {
-          gemini: "Gemini",
-          huggingface: "Hugging Face",
-          ollama: "Ollama",
-          mistral: "Mistral",
-          cohere: "Cohere",
-          openai: "OpenAI",
-          together: "Together AI",
-          openrouter: "OpenRouter",
-          anthropic: "Anthropic",
-          copilot: "GitHub Copilot",
-          deepseek: "DeepSeek",
-          grok: "Grok",
-          perplexity: "Perplexity"
-        }[settings.apiProvider] || settings.apiProvider;
-        
-        const bannerHTML = \`
-          <div class="status-banner">
-            <div class="status-banner-header">
-              \${renderProviderIcon(settings.apiProvider, 40)}
-              <div class="status-banner-title">
-                <h3>Current Configuration</h3>
-                <span class="status-provider-name">\${providerDisplay}</span>
-              </div>
-            </div>
-            <div class="status-grid">
-              <div class="status-item">
-                <span class="status-label">Active Provider</span>
-                <span class="status-value">
-                  <span class="status-badge \${settings.apiProvider}">\${providerDisplay}</span>
-                </span>
-              </div>
-              <div class="status-item">
-                <span class="status-label">Model</span>
-                <span class="status-value">\${modelInfo}</span>
-              </div>
-              <div class="status-item">
-                <span class="status-label">API Status</span>
-                <span class="status-value">\${apiConfigured ? "Configured" : "Not Configured"}</span>
-              </div>
-              <div class="status-item">
-                <span class="status-label">Commit Style</span>
-                <span class="status-value">\${settings.commit?.verbose ? "Verbose" : "Concise"}</span>
-              </div>
+      const providerSettings = settings[provider];
+      const model = providerSettings?.model || config.model;
+      const apiConfigured = config.apiConfigured(settings);
+      
+      return {
+        displayName: config.displayName,
+        model: model,
+        apiConfigured: apiConfigured
+      };
+    }
+    
+    function updateStatusBanner(settings) {
+      const provider = settings.apiProvider;
+      const providerInfo = getProviderInfo(provider, settings);
+      
+      const renderProviderIcon = (provider, size = 32) => 
+        window.ProviderIcon ? window.ProviderIcon.renderIcon(provider, size) : '';
+      
+      const bannerHTML = \`
+        <div class="status-banner">
+          <div class="status-banner-header">
+            \${renderProviderIcon(provider, 40)}
+            <div class="status-banner-title">
+              <h3>Current Configuration</h3>
+              <span class="status-provider-name">\${providerInfo.displayName}</span>
             </div>
           </div>
-        \`;
-        
-        const container = document.getElementById('statusBannerContainer');
+          <div class="status-grid">
+            <div class="status-item">
+              <span class="status-label">Active Provider</span>
+              <span class="status-value">
+                <span class="status-badge \${provider}">\${providerInfo.displayName}</span>
+              </span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Model</span>
+              <span class="status-value">\${providerInfo.model}</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">API Status</span>
+              <span class="status-value">\${providerInfo.apiConfigured ? "Configured" : "Not Configured"}</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Commit Style</span>
+              <span class="status-value">\${settings.commit?.verbose ? "Verbose" : "Concise"}</span>
+            </div>
+          </div>
+        </div>
+      \`;
+      
+      const container = document.getElementById('statusBannerContainer');
+      if (container) {
         container.innerHTML = bannerHTML;
-        container.firstElementChild.classList.add('banner-updated');
-        
-        // Remove animation class after animation completes
-        setTimeout(() => {
-          const banner = container.firstElementChild;
-          if (banner) {
-            banner.classList.remove('banner-updated');
-          }
-        }, 1000);
+        const banner = container.firstElementChild;
+        if (banner) {
+          banner.classList.add('banner-updated');
+          setTimeout(() => banner.classList.remove('banner-updated'), 1000);
+        }
       }
-    `;
+    }
+    
+    // Initialize UI
+    updateVisibleSettings();
+    document.getElementById('apiProvider')?.addEventListener('change', updateVisibleSettings);
+    
+    // Setup auto-loading for providers that support it
+    setupApiKeyAutoLoading('mistral', 'ai-commit-assistant.loadMistralModels');
+    setupApiKeyAutoLoading('huggingface', 'ai-commit-assistant.loadHuggingFaceModels');
+  `;
 }

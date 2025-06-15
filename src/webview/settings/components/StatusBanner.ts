@@ -3,149 +3,153 @@ import { ExtensionSettings } from "../../../models/ExtensionSettings";
 import { getStatusBannerStyles } from "../styles/statusBanner.css";
 import { ProviderIcon } from "./ProviderIcon";
 
+interface ProviderConfig {
+  displayName: string;
+  defaultModel: string;
+  getApiConfigured: (settings: ExtensionSettings) => boolean;
+}
+
 export class StatusBanner {
   private _settings: ExtensionSettings;
+
+  private static readonly PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
+    gemini: {
+      displayName: "Gemini",
+      defaultModel: "gemini-2.5-flash-preview-04-17",
+      getApiConfigured: (s) => !!s.gemini?.apiKey
+    },
+    huggingface: {
+      displayName: "Hugging Face",
+      defaultModel: "Not configured",
+      getApiConfigured: (s) => !!s.huggingface?.apiKey
+    },
+    ollama: {
+      displayName: "Ollama",
+      defaultModel: "Not configured",
+      getApiConfigured: (s) => !!s.ollama?.url
+    },
+    mistral: {
+      displayName: "Mistral",
+      defaultModel: "mistral-large-latest",
+      getApiConfigured: (s) => !!s.mistral?.apiKey
+    },
+    cohere: {
+      displayName: "Cohere",
+      defaultModel: "command-a-03-2025",
+      getApiConfigured: (s) => !!s.cohere?.apiKey
+    },
+    openai: {
+      displayName: "OpenAI",
+      defaultModel: "gpt-3.5-turbo",
+      getApiConfigured: (s) => !!s.openai?.apiKey
+    },
+    together: {
+      displayName: "Together AI",
+      defaultModel: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+      getApiConfigured: (s) => !!s.together?.apiKey
+    },
+    openrouter: {
+      displayName: "OpenRouter",
+      defaultModel: "google/gemma-3-27b-it:free",
+      getApiConfigured: (s) => !!s.openrouter?.apiKey
+    },
+    anthropic: {
+      displayName: "Anthropic",
+      defaultModel: "claude-3-5-sonnet-20241022",
+      getApiConfigured: (s) => !!s.anthropic?.apiKey
+    },
+    copilot: {
+      displayName: "GitHub Copilot",
+      defaultModel: "gpt-4o",
+      getApiConfigured: () => true
+    },
+    deepseek: {
+      displayName: "DeepSeek",
+      defaultModel: "deepseek-chat",
+      getApiConfigured: (s) => !!s.deepseek?.apiKey
+    },
+    grok: {
+      displayName: "Grok",
+      defaultModel: "grok-3",
+      getApiConfigured: (s) => !!s.grok?.apiKey
+    },
+    perplexity: {
+      displayName: "Perplexity",
+      defaultModel: "sonar-pro",
+      getApiConfigured: (s) => !!s.perplexity?.apiKey
+    }
+  };
 
   constructor(settings: ExtensionSettings) {
     this._settings = settings;
   }
 
+  private getProviderInfo(): { displayName: string; model: string; apiConfigured: boolean } {
+    const provider = this._settings.apiProvider;
+    const config = StatusBanner.PROVIDER_CONFIGS[provider];
+
+    if (!config) {
+      return {
+        displayName: provider,
+        model: "Unknown",
+        apiConfigured: false
+      };
+    }
+
+    const providerSettings = (this._settings as any)[provider];
+    const model = providerSettings?.model || config.defaultModel;
+    const apiConfigured = config.getApiConfigured(this._settings);
+
+    return {
+      displayName: config.displayName,
+      model,
+      apiConfigured
+    };
+  }
+
+  private renderStatusItem(label: string, value: string, className?: string): string {
+    const valueClass = className ? ` class="${className}"` : '';
+    return `
+      <div class="status-item">
+        <span class="status-label">${label}</span>
+        <span class="status-value"${valueClass}>${value}</span>
+      </div>
+    `;
+  }
+
   public render(): string {
-    // Get provider-specific model info
-    let modelInfo = "";
-    switch (this._settings.apiProvider) {
-      case "gemini":
-        modelInfo = this._settings.gemini.model || "gemini-2.5-flash-preview-04-17";
-        break;
-      case "huggingface":
-        modelInfo = this._settings.huggingface.model || "Not configured";
-        break;
-      case "ollama":
-        modelInfo = this._settings.ollama.model || "Not configured";
-        break;
-      case "mistral":
-        modelInfo = this._settings.mistral.model || "mistral-large-latest";
-        break;
-      case "cohere":
-        modelInfo = this._settings.cohere.model || "command-a-03-2025";
-        break;
-      case "together":
-        modelInfo = this._settings.together?.model || "Not selected";
-        break;
-      case "openrouter":
-        modelInfo = this._settings.openrouter.model || "Not selected";
-        break;
-      case "anthropic":
-        modelInfo = this._settings.anthropic.model || "claude-3-5-sonnet-20241022";
-        break;
-      case "copilot":
-        modelInfo = this._settings.copilot?.model || "gpt-4o";
-        break;
-      case "deepseek":
-        modelInfo = this._settings.deepseek?.model || "deepseek-chat";
-        break;
-      case "grok":
-        modelInfo = this._settings.grok?.model || "grok-3";
-        break;
-      case "perplexity":
-        modelInfo = this._settings.perplexity?.model || "sonar-pro";
-        break;
-    }
+    const providerInfo = this.getProviderInfo();
+    const provider = this._settings.apiProvider;
 
-    // Get API configuration status
-    let apiConfigured = false;
-    switch (this._settings.apiProvider) {
-      case "gemini":
-        apiConfigured = !!this._settings.gemini.apiKey;
-        break;
-      case "huggingface":
-        apiConfigured = !!this._settings.huggingface.apiKey;
-        break;
-      case "ollama":
-        apiConfigured = !!this._settings.ollama.url;
-        break;
-      case "mistral":
-        apiConfigured = !!this._settings.mistral.apiKey;
-        break;
-      case "cohere":
-        apiConfigured = !!this._settings.cohere.apiKey;
-        break;
-      case "together":
-        apiConfigured = !!this._settings.together?.apiKey;
-        break;
-      case "openrouter":
-        apiConfigured = !!this._settings.openrouter.apiKey;
-        break;
-      case "anthropic":
-        apiConfigured = !!this._settings.anthropic.apiKey;
-        break;
-      case "copilot":
-        apiConfigured = true; // Copilot uses VS Code authentication
-        break;
-      case "deepseek":
-        apiConfigured = !!this._settings.deepseek?.apiKey;
-        break;
-      case "grok":
-        apiConfigured = !!this._settings.grok?.apiKey;
-        break;
-      case "perplexity":
-        apiConfigured = !!this._settings.perplexity?.apiKey;
-        break;
-    }
-
-    // Format provider name for display
-    const providerDisplay = {
-      gemini: "Gemini",
-      huggingface: "Hugging Face",
-      ollama: "Ollama",
-      mistral: "Mistral",
-      cohere: "Cohere",
-      together: "Together AI",
-      openrouter: "OpenRouter",
-      anthropic: "Anthropic",
-      copilot: "GitHub Copilot",
-      deepseek: "DeepSeek",
-      grok: "Grok",
-      perplexity: "Perplexity"
-    }[this._settings.apiProvider] || this._settings.apiProvider;
+    const statusItems = [
+      this.renderStatusItem(
+        'Active Provider',
+        `<span class="status-badge ${provider}">${providerInfo.displayName}</span>`
+      ),
+      this.renderStatusItem('Model', providerInfo.model),
+      this.renderStatusItem('API Status', providerInfo.apiConfigured ? 'Configured' : 'Not Configured'),
+      this.renderStatusItem('Commit Style', this._settings.commit?.verbose ? 'Verbose' : 'Concise'),
+      this.renderStatusItem('Prompt Customization', this._settings.promptCustomization?.enabled ? 'Enabled' : 'Disabled'),
+      this.renderStatusItem(
+        'Anonymous Analytics',
+        this._settings.telemetry?.enabled !== false ? 'Enabled' : 'Disabled',
+        this._settings.telemetry?.enabled !== false ? 'telemetry-enabled' : 'telemetry-disabled'
+      )
+    ];
 
     return `
-    <div class="status-banner">
-      <div class="status-banner-header">
-        ${ProviderIcon.renderIcon(this._settings.apiProvider, 40)}
-        <div class="status-banner-title">
-          <h3>Current Configuration</h3>
-          <span class="status-provider-name">${providerDisplay}</span>
+      <div class="status-banner">
+        <div class="status-banner-header">
+          ${ProviderIcon.renderIcon(provider, 40)}
+          <div class="status-banner-title">
+            <h3>Current Configuration</h3>
+            <span class="status-provider-name">${providerInfo.displayName}</span>
+          </div>
+        </div>
+        <div class="status-grid">
+          ${statusItems.join('')}
         </div>
       </div>
-      <div class="status-grid">
-        <div class="status-item">
-          <span class="status-label">Active Provider</span>
-          <span class="status-value">
-            <span class="status-badge ${this._settings.apiProvider}">${providerDisplay}</span>
-          </span>
-        </div>
-        <div class="status-item">
-          <span class="status-label">Model</span>
-          <span class="status-value">${modelInfo}</span>
-        </div>
-        <div class="status-item">
-          <span class="status-label">API Status</span>
-          <span class="status-value">${apiConfigured ? "Configured" : "Not Configured"}</span>
-        </div>
-        <div class="status-item">
-          <span class="status-label">Commit Style</span>
-          <span class="status-value">${this._settings.commit?.verbose ? "Verbose" : "Concise"}</span>
-        </div>
-        <div class="status-item">
-          <span class="status-label">Prompt Customization</span>
-          <span class="status-value">${this._settings.promptCustomization?.enabled ? "Enabled" : "Disabled"}</span>
-        </div>
-        <div class="status-item">
-          <span class="status-label">Anonymous Analytics</span>
-          <span class="status-value ${this._settings.telemetry?.enabled !== false ? 'telemetry-enabled' : 'telemetry-disabled'}">${this._settings.telemetry?.enabled !== false ? "Enabled" : "Disabled"}</span>
-        </div>
-      </div>
-    </div>`;
+    `;
   }
 }

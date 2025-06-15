@@ -1,34 +1,31 @@
 import { CommitMessage } from "../config/types";
 import { debugLog } from "../services/debug/logger";
 
+interface ResponseAnalysis {
+    responseLength: number;
+    containsCodeBlocks: boolean;
+    firstLine: string;
+    bulletPointCount: number;
+    nonEmptyLineCount: number;
+    emptyLinesAfterFirst: number | null;
+}
+
+interface ProcessingStep {
+    stage: string;
+    content: string;
+}
+
 export function formatCommitMessage(message: CommitMessage): string {
     return `${message.summary}\n\n${message.description}`;
 }
 
-function analyzeResponseFormat(response: string): void {
+function analyzeResponseFormat(response: string): ResponseAnalysis {
     debugLog("=== RESPONSE FORMAT ANALYSIS ===");
 
-    const analysisData = {
-        responseLength: response.length,
-        containsCodeBlocks: response.includes("```"),
-        firstLine: response.split("\n")[0],
-    };
-    debugLog("Basic format info", analysisData);
-
-    // Check for bullet points
     const bulletPointRegex = /^[-*•]\s+.+/gm;
     const bulletPoints = response.match(bulletPointRegex);
-
-    const bulletPointInfo = {
-        count: bulletPoints ? bulletPoints.length : 0,
-        samples: bulletPoints ? bulletPoints.slice(0, 3) : []
-    };
-    debugLog("Bullet point analysis", bulletPointInfo);
-
-    // Check for line breaks
     const lines = response.split("\n").filter(line => line.trim());
 
-    // Check for empty lines after first line
     const firstLineIndex = response.indexOf("\n");
     let emptyLinesAfterFirst = null;
     if (firstLineIndex > -1) {
@@ -36,39 +33,136 @@ function analyzeResponseFormat(response: string): void {
         emptyLinesAfterFirst = nextNonEmptyLine;
     }
 
-    const lineInfo = {
+    const analysis: ResponseAnalysis = {
+        responseLength: response.length,
+        containsCodeBlocks: response.includes("```"),
+        firstLine: response.split("\n")[0],
+        bulletPointCount: bulletPoints?.length || 0,
         nonEmptyLineCount: lines.length,
         emptyLinesAfterFirst
     };
-    debugLog("Line structure analysis", lineInfo);
 
+    debugLog("Response analysis", analysis);
+    if (bulletPoints) { debugLog("Bullet point samples", bulletPoints.slice(0, 3)); }
     debugLog("=== END ANALYSIS ===");
+
+    return analysis;
+}
+
+function cleanResponse(response: string): ProcessingStep[] {
+    const steps: ProcessingStep[] = [];
+
+    steps.push({ stage: "original", content: response });
+
+    // Remove code block markers
+    const withoutCodeBlocks = response.replace(/```[a-z]*\n|```/g, "");
+    steps.push({ stage: "code_blocks_removed", content: withoutCodeBlocks });
+
+    // Clean markdown formatting
+    const cleanedMarkdown = withoutCodeBlocks
+        .replace(/\*\*/g, "")
+        .replace(/`/g, "");
+    steps.push({ stage: "markdown_cleaned", content: cleanedMarkdown });
+
+    steps.forEach(step => debugLog(`After ${step.stage}`, JSON.stringify(step.content)));
+
+    return steps;
+}
+
+function processSummary(summary: string): string {
+    const typePattern = /^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\([^)]+\))?:/i;
+    let processedSummary = summary.trim();
+
+    debugLog("Initial summary", processedSummary);
+
+    // Add conventional commit type if missing
+    if (!typePattern.test(processedSummary)) {
+        processedSummary = `refactor: ${processedSummary}`;
+        debugLog("Added default type", processedSummary);
+    }
+
+    // Clean up summary
+    const originalSummary = processedSummary;
+    processedSummary = processedSummary
+        .replace(/\[.*?\]/g, "")
+        .replace(/<[^>]+>/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    if (originalSummary !== processedSummary) {
+        debugLog("Cleaned summary", processedSummary);
+    }
+
+    // Truncate if needed
+    if (processedSummary.length > 72) {
+        debugLog("Summary needs truncation", { length: processedSummary.length });
+        const typeMatch = processedSummary.match(typePattern);
+
+        if (typeMatch) {
+            const prefix = typeMatch[0];
+            const rest = processedSummary.substring(prefix.length).trim();
+            const availableSpace = 72 - prefix.length - 3;
+            processedSummary = `${prefix} ${rest.substring(0, availableSpace)}...`;
+        } else {
+            processedSummary = processedSummary.substring(0, 69) + "...";
+        }
+        debugLog("Truncated summary", processedSummary);
+    }
+
+    return processedSummary;
+}
+
+function processDescription(lines: string[]): string {
+    debugLog("Description lines before processing", lines);
+
+    // Skip empty lines at beginning
+    const startIndex = lines.findIndex(line => line.trim());
+    const nonEmptyLines = startIndex >= 0 ? lines.slice(startIndex) : [];
+
+    debugLog("Non-empty description lines", nonEmptyLines);
+
+    const bulletPoints: string[] = [];
+
+    for (const line of nonEmptyLines) {
+        const trimmedLine = line.trim();
+
+        // Skip empty lines and headings
+        if (!trimmedLine || trimmedLine.startsWith('#')) {
+            continue;
+        }
+
+        // Convert to bullet point if not already
+        if (trimmedLine.match(/^[-*•]\s+.+/)) {
+            bulletPoints.push(trimmedLine);
+            debugLog("Found bullet point", trimmedLine);
+        } else {
+            const bulletPoint = `- ${trimmedLine}`;
+            bulletPoints.push(bulletPoint);
+            debugLog("Created bullet point", bulletPoint);
+        }
+    }
+
+    debugLog("Processed bullet points", bulletPoints);
+
+    return bulletPoints.length > 0
+        ? bulletPoints.join("\n")
+        : "- Update implementation with necessary changes";
 }
 
 export async function processResponse(response: string): Promise<CommitMessage> {
     debugLog("Processing Response (original)", response);
 
-    // Call the analysis function
-    analyzeResponseFormat(response);
-
     try {
-        // Log the response before any processing
-        debugLog("Response before processing", JSON.stringify(response));
+        analyzeResponseFormat(response);
 
-        // Remove code block markers if present
-        const withoutCodeBlocks = response.replace(/```[a-z]*\n|```/g, "");
-        debugLog("After code block removal", JSON.stringify(withoutCodeBlocks));
+        const cleaningSteps = cleanResponse(response);
+        const cleanedContent = cleaningSteps[cleaningSteps.length - 1].content;
 
-        // Clean up markdown formatting
-        const cleanedMarkdown = withoutCodeBlocks
-            .replace(/\*\*/g, "")
-            .replace(/`/g, "");
-        debugLog("After markdown cleanup", JSON.stringify(cleanedMarkdown));
-
-        const lines = cleanedMarkdown
+        const lines = cleanedContent
             .trim()
             .split("\n")
-            .filter((line) => line.trim());
+            .filter(line => line.trim());
+
         debugLog("Split lines", lines);
 
         if (lines.length === 0) {
@@ -79,96 +173,13 @@ export async function processResponse(response: string): Promise<CommitMessage> 
             };
         }
 
-        // Extract summary (first line)
-        let summary = lines[0].trim();
-        debugLog("Initial summary", summary);
+        const summary = processSummary(lines[0]);
+        const description = processDescription(lines.slice(1));
 
-        // Check if summary has a conventional commit type
-        const typePattern = /^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\([^)]+\))?:/i;
-        const hasType = typePattern.test(summary);
-        debugLog("Has conventional type", hasType);
+        const result = { summary, description };
+        debugLog("Final commit message", result);
 
-        if (!hasType) {
-            // No type found, add a default type
-            summary = `refactor: ${summary}`;
-            debugLog("Added default type", summary);
-        }
-
-        // Clean up the summary
-        const originalSummary = summary;
-        summary = summary.replace(/\[.*?\]/g, "");
-        let previousSummary;
-        do {
-            previousSummary = summary;
-            summary = summary.replace(/<[^>]+>/g, "");
-        } while (summary !== previousSummary);
-        summary = summary.replace(/\s+/g, " ").trim();
-        debugLog("Cleaned summary", { summary, changed: originalSummary !== summary });
-
-        // Truncate summary if needed, preserving the type prefix
-        if (summary.length > 72) {
-            debugLog("Summary needs truncation", { length: summary.length });
-            const typeMatch = summary.match(typePattern);
-            if (typeMatch) {
-                const prefix = typeMatch[0];
-                const rest = summary.substring(prefix.length).trim();
-                const availableSpace = 72 - prefix.length - 3; // -3 for space and "..."
-                const truncatedRest = rest.substring(0, availableSpace) + "...";
-                summary = `${prefix} ${truncatedRest}`;
-                debugLog("Truncated with prefix", summary);
-            } else {
-                summary = summary.substring(0, 69) + "...";
-                debugLog("Simple truncation", summary);
-            }
-        }
-
-        // Extract description (remaining lines)
-        const descriptionLines = lines.slice(1);
-        debugLog("Description lines before processing", descriptionLines);
-
-        // Skip empty lines at the beginning of description
-        let startIndex = 0;
-        while (startIndex < descriptionLines.length && !descriptionLines[startIndex].trim()) {
-            startIndex++;
-        }
-
-        const nonEmptyDescriptionLines = descriptionLines.slice(startIndex);
-        debugLog("Non-empty description lines", nonEmptyDescriptionLines);
-
-        // Process bullet points
-        let bulletPoints: string[] = [];
-
-        for (let i = 0; i < nonEmptyDescriptionLines.length; i++) {
-            const line = nonEmptyDescriptionLines[i].trim();
-
-            // Skip empty lines and headings
-            if (!line || line.startsWith('#')) {
-                continue;
-            }
-
-            // Check if it's already a bullet point
-            if (line.match(/^[-*•]\s+.+/)) {
-                bulletPoints.push(line);
-                debugLog("Found bullet point", line);
-            } else {
-                // Convert to bullet point if not already
-                const bulletPoint = `- ${line}`;
-                bulletPoints.push(bulletPoint);
-                debugLog("Created bullet point", bulletPoint);
-            }
-        }
-
-        debugLog("Processed bullet points", bulletPoints);
-
-        // Use default description only if no bullet points were found
-        const description = bulletPoints.length > 0
-            ? bulletPoints.join("\n")
-            : "- Update implementation with necessary changes";
-
-        debugLog("Final description", description);
-        debugLog("Final commit message", { summary, description });
-
-        return { summary, description };
+        return result;
     } catch (error) {
         debugLog("Error Processing Response", error);
         return {

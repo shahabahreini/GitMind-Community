@@ -1,89 +1,78 @@
 // src/webview/settings/scripts/apiManager.ts
+
+interface ProviderConfig {
+  apiKey?: boolean;
+  url?: boolean;
+  model?: boolean;
+  displayName: string;
+}
+
+const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
+  gemini: { apiKey: true, model: false, displayName: 'Gemini' },
+  huggingface: { apiKey: true, model: true, displayName: 'Hugging Face' },
+  ollama: { url: true, model: true, displayName: 'Ollama' },
+  mistral: { apiKey: true, model: false, displayName: 'Mistral' },
+  cohere: { apiKey: true, model: false, displayName: 'Cohere' },
+  openai: { apiKey: true, model: false, displayName: 'OpenAI' },
+  together: { apiKey: true, model: false, displayName: 'Together AI' },
+  openrouter: { apiKey: true, model: false, displayName: 'OpenRouter' },
+  anthropic: { apiKey: true, model: false, displayName: 'Anthropic' },
+  copilot: { model: true, displayName: 'GitHub Copilot' },
+  deepseek: { apiKey: true, model: false, displayName: 'DeepSeek' },
+  grok: { apiKey: true, model: false, displayName: 'Grok' },
+  perplexity: { apiKey: true, model: false, displayName: 'Perplexity' }
+};
+
 export function getApiManagerScript(): string {
   return `
-    // Check API setup
-    function checkApiSetup() {
-      const provider = document.getElementById('apiProvider').value;
+    const PROVIDER_CONFIGS = ${JSON.stringify(PROVIDER_CONFIGS)};
+    
+    function getProviderSettings(provider) {
+      const config = PROVIDER_CONFIGS[provider];
+      if (!config) return {};
       
-      // Collect relevant settings based on provider
-      let apiSettings = {};
+      const settings = {};
       
-      if (provider === 'gemini') {
-        apiSettings = {
-          apiKey: document.getElementById('geminiApiKey').value,
-          model: document.getElementById('geminiModel').value
-        };
-      } else if (provider === 'huggingface') {
-        apiSettings = {
-          apiKey: document.getElementById('huggingfaceApiKey').value,
-          model: document.getElementById('huggingfaceModel').value
-        };
-      } else if (provider === 'ollama') {
-        apiSettings = {
-          url: document.getElementById('ollamaUrl').value,
-          model: document.getElementById('ollamaModel').value
-        };
-      } else if (provider === 'mistral') {
-        apiSettings = {
-          apiKey: document.getElementById('mistralApiKey').value,
-          model: document.getElementById('mistralModel').value
-        };
-      } else if (provider === 'cohere') {
-        apiSettings = {
-          apiKey: document.getElementById('cohereApiKey').value,
-          model: document.getElementById('cohereModel').value
-        };
-      } else if (provider === 'copilot') {
-        apiSettings = {
-          model: document.getElementById('copilotModel').value
-        };
-      } else if (provider === 'deepseek') {
-        apiSettings = {
-          apiKey: document.getElementById('deepseekApiKey').value,
-          model: document.getElementById('deepseekModel').value
-        };
-      } else if (provider === 'grok') {
-        apiSettings = {
-          apiKey: document.getElementById('grokApiKey').value,
-          model: document.getElementById('grokModel').value
-        };
-      } else if (provider === 'perplexity') {
-        apiSettings = {
-          apiKey: document.getElementById('perplexityApiKey').value,
-          model: document.getElementById('perplexityModel').value
-        };
+      if (config.apiKey) {
+        const element = document.getElementById(provider + 'ApiKey');
+        if (element) settings.apiKey = element.value;
       }
       
-      // Validate required fields before sending
-      let missingFields = [];
-      
-      if (provider === 'gemini' && !apiSettings.apiKey) {
-        missingFields.push('Gemini API Key');
-      } else if (provider === 'huggingface') {
-        if (!apiSettings.apiKey) missingFields.push('Hugging Face API Key');
-        if (!apiSettings.model) missingFields.push('Hugging Face Model');
-      } else if (provider === 'ollama') {
-        if (!apiSettings.url) missingFields.push('Ollama URL');
-        if (!apiSettings.model) missingFields.push('Ollama Model');
-      } else if (provider === 'mistral' && !apiSettings.apiKey) {
-        missingFields.push('Mistral API Key');
-      } else if (provider === 'cohere' && !apiSettings.apiKey) {
-        missingFields.push('Cohere API Key');
-      } else if (provider === 'copilot' && !apiSettings.model) {
-        missingFields.push('Copilot Model');
-      } else if (provider === 'deepseek' && !apiSettings.apiKey) {
-        missingFields.push('DeepSeek API Key');
-      } else if (provider === 'grok' && !apiSettings.apiKey) {
-        missingFields.push('Grok API Key');
+      if (config.url) {
+        const element = document.getElementById(provider + 'Url');
+        if (element) settings.url = element.value;
       }
       
-      if (missingFields.length > 0) {
-        showToast('Missing required fields: ' + missingFields.join(', '), 'error');
-        return;
+      if (config.model) {
+        const element = document.getElementById(provider + 'Model');
+        if (element) settings.model = element.value;
       }
       
-      // Create and show a detailed status dialog
-      const dialogId = 'apiStatusDialog';
+      return settings;
+    }
+    
+    function validateProviderSettings(provider, settings) {
+      const config = PROVIDER_CONFIGS[provider];
+      if (!config) return [];
+      
+      const missingFields = [];
+      
+      if (config.apiKey && !settings.apiKey) {
+        missingFields.push(config.displayName + ' API Key');
+      }
+      
+      if (config.url && !settings.url) {
+        missingFields.push(config.displayName + ' URL');
+      }
+      
+      if (config.model && !settings.model) {
+        missingFields.push(config.displayName + ' Model');
+      }
+      
+      return missingFields;
+    }
+    
+    function createStatusDialog(dialogId, title, provider, action) {
       let dialog = document.getElementById(dialogId);
       
       if (!dialog) {
@@ -93,72 +82,63 @@ export function getApiManagerScript(): string {
         dialog.innerHTML = \`
           <div class="status-dialog-content">
             <div class="status-dialog-header">
-              <h3>API Connection Status</h3>
-              <button class="close-button" onclick="closeStatusDialog('apiStatusDialog')">×</button>
+              <h3>\${title}</h3>
+              <button class="close-button" onclick="closeStatusDialog('\${dialogId}')">×</button>
             </div>
             <div class="status-dialog-body">
               <div class="status-spinner"></div>
-              <div id="apiStatusMessage">Testing connection to \${getProviderDisplayName(provider)}...</div>
-              <div id="apiStatusDetails" class="status-details"></div>
+              <div id="\${dialogId}Message">\${action} \${getProviderDisplayName(provider)}...</div>
+              <div id="\${dialogId}Details" class="status-details"></div>
             </div>
           </div>
         \`;
         document.body.appendChild(dialog);
       } else {
-        document.getElementById('apiStatusMessage').textContent = \`Testing connection to \${getProviderDisplayName(provider)}...\`;
-        document.getElementById('apiStatusDetails').innerHTML = '';
-        document.getElementById('apiStatusDetails').className = 'status-details';
-        // Make sure spinner is visible
-        const spinner = dialog.querySelector('.status-spinner');
-        if (spinner) {
-          spinner.style.display = 'inline-block';
+        const messageEl = document.getElementById(dialogId + 'Message');
+        const detailsEl = document.getElementById(dialogId + 'Details');
+        
+        if (messageEl) messageEl.textContent = \`\${action} \${getProviderDisplayName(provider)}...\`;
+        if (detailsEl) {
+          detailsEl.innerHTML = '';
+          detailsEl.className = 'status-details';
         }
+        
+        const spinner = dialog.querySelector('.status-spinner');
+        if (spinner) spinner.style.display = 'inline-block';
       }
       
       dialog.style.display = 'flex';
+      return dialog;
+    }
+    
+    function checkApiSetup() {
+      const provider = document.getElementById('apiProvider').value;
+      const apiSettings = getProviderSettings(provider);
+      const missingFields = validateProviderSettings(provider, apiSettings);
       
-      // Send message to extension to execute the command
+      if (missingFields.length > 0) {
+        showToast('Missing required fields: ' + missingFields.join(', '), 'error');
+        return;
+      }
+      
+      createStatusDialog('apiStatusDialog', 'API Connection Status', provider, 'Testing connection to');
+      
       vscode.postMessage({
         command: 'executeCommand',
         commandId: 'ai-commit-assistant.checkApiSetup'
       });
     }
     
-    // Check rate limits
     function checkRateLimits() {
       const provider = document.getElementById('apiProvider').value;
+      const apiSettings = getProviderSettings(provider);
       
-      // Validate that we have the necessary API keys/settings
-      let apiSettings = {};
-      let missingFields = [];
+      // For rate limits, we only need API keys (not URLs or models)
+      const missingFields = [];
+      const config = PROVIDER_CONFIGS[provider];
       
-      if (provider === 'gemini') {
-        apiSettings.apiKey = document.getElementById('geminiApiKey').value;
-        if (!apiSettings.apiKey) missingFields.push('Gemini API Key');
-      } else if (provider === 'huggingface') {
-        apiSettings.apiKey = document.getElementById('huggingfaceApiKey').value;
-        if (!apiSettings.apiKey) missingFields.push('Hugging Face API Key');
-      } else if (provider === 'ollama') {
-        apiSettings.url = document.getElementById('ollamaUrl').value;
-        if (!apiSettings.url) missingFields.push('Ollama URL');
-      } else if (provider === 'mistral') {
-        apiSettings.apiKey = document.getElementById('mistralApiKey').value;
-        if (!apiSettings.apiKey) missingFields.push('Mistral API Key');
-      } else if (provider === 'cohere') {
-        apiSettings.apiKey = document.getElementById('cohereApiKey').value;
-        if (!apiSettings.apiKey) missingFields.push('Cohere API Key');
-      } else if (provider === 'copilot') {
-        // Copilot doesn't require API key validation in the UI
-        // The validation happens through VS Code's built-in authentication
-      } else if (provider === 'deepseek') {
-        apiSettings.apiKey = document.getElementById('deepseekApiKey').value;
-        if (!apiSettings.apiKey) missingFields.push('DeepSeek API Key');
-      } else if (provider === 'grok') {
-        apiSettings.apiKey = document.getElementById('grokApiKey').value;
-        if (!apiSettings.apiKey) missingFields.push('Grok API Key');
-      } else if (provider === 'perplexity') {
-        apiSettings.apiKey = document.getElementById('perplexityApiKey').value;
-        if (!apiSettings.apiKey) missingFields.push('Perplexity API Key');
+      if (config && config.apiKey && !apiSettings.apiKey) {
+        missingFields.push(config.displayName + ' API Key');
       }
       
       if (missingFields.length > 0) {
@@ -166,66 +146,19 @@ export function getApiManagerScript(): string {
         return;
       }
       
-      // Create and show a detailed status dialog
-      const dialogId = 'rateLimitsDialog';
-      let dialog = document.getElementById(dialogId);
+      createStatusDialog('rateLimitsDialog', 'Rate Limits Status', provider, 'Checking rate limits for');
       
-      if (!dialog) {
-        dialog = document.createElement('div');
-        dialog.id = dialogId;
-        dialog.className = 'status-dialog';
-        dialog.innerHTML = \`
-          <div class="status-dialog-content">
-            <div class="status-dialog-header">
-              <h3>Rate Limits Status</h3>
-              <button class="close-button" onclick="closeStatusDialog('rateLimitsDialog')">×</button>
-            </div>
-            <div class="status-dialog-body">
-              <div class="status-spinner"></div>
-              <div id="rateLimitsMessage">Checking rate limits for \${getProviderDisplayName(provider)}...</div>
-              <div id="rateLimitsDetails" class="status-details"></div>
-            </div>
-          </div>
-        \`;
-        document.body.appendChild(dialog);
-      } else {
-        document.getElementById('rateLimitsMessage').textContent = \`Checking rate limits for \${getProviderDisplayName(provider)}...\`;
-        document.getElementById('rateLimitsDetails').innerHTML = '';
-        document.getElementById('rateLimitsDetails').className = 'status-details';
-        // Make sure spinner is visible
-        const spinner = dialog.querySelector('.status-spinner');
-        if (spinner) {
-          spinner.style.display = 'inline-block';
-        }
-      }
-      
-      dialog.style.display = 'flex';
-      
-      // Send message to extension to execute the command
       vscode.postMessage({
         command: 'executeCommand',
         commandId: 'ai-commit-assistant.checkRateLimits'
       });
     }
     
-    // Helper function to get display name for provider
     function getProviderDisplayName(provider) {
-      const displayNames = {
-        'gemini': 'Gemini',
-        'huggingface': 'Hugging Face',
-        'ollama': 'Ollama',
-        'mistral': 'Mistral',
-        'cohere': 'Cohere',
-        'copilot': 'GitHub Copilot',
-        'deepseek': 'DeepSeek',
-        'grok': 'Grok',
-        'perplexity': 'Perplexity'
-      };
-      
-      return displayNames[provider] || provider;
+      const config = PROVIDER_CONFIGS[provider];
+      return config ? config.displayName : provider;
     }
     
-    // Close status dialog
     function closeStatusDialog(dialogId) {
       const dialog = document.getElementById(dialogId);
       if (dialog) {

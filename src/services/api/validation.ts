@@ -32,259 +32,212 @@ interface RateLimitsCheckResult {
     error?: string;
 }
 
+interface ValidatorConfig {
+    requiresApiKey: boolean;
+    validator?: (apiKey: string) => Promise<boolean | { success: boolean; error?: string; warning?: string; troubleshooting?: string }>;
+    defaultModel: string;
+    responseTime: number;
+    rateLimits?: {
+        limit: number;
+        remaining: number;
+        notes: string;
+    };
+}
 
-// In src/services/api/validation.ts
+const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
+    gemini: {
+        requiresApiKey: true,
+        validator: validateGeminiAPIKey,
+        defaultModel: "gemini-2.5-flash-preview-04-17",
+        responseTime: 500,
+        rateLimits: {
+            limit: 60,
+            remaining: 50,
+            notes: "Gemini provides quota-based rate limits rather than time-based limits"
+        }
+    },
+    huggingface: {
+        requiresApiKey: true,
+        validator: validateHuggingFaceApiKey,
+        defaultModel: "",
+        responseTime: 600,
+        rateLimits: {
+            limit: 30000,
+            remaining: 29000,
+            notes: "Hugging Face rate limits depend on your account tier"
+        }
+    },
+    ollama: {
+        requiresApiKey: false,
+        validator: async (url: string) => checkOllamaAvailability(url || "http://localhost:11434"),
+        defaultModel: "",
+        responseTime: 200,
+        rateLimits: { limit: 0, remaining: 0, notes: "Ollama is a local service with no API rate limits" }
+    },
+    mistral: {
+        requiresApiKey: true,
+        validator: async (apiKey: string) => !!(await checkMistralRateLimits(apiKey)),
+        defaultModel: "mistral-large-latest",
+        responseTime: 500
+    },
+    cohere: {
+        requiresApiKey: true,
+        validator: validateCohereApiKey,
+        defaultModel: "command",
+        responseTime: 550,
+        rateLimits: {
+            limit: 100,
+            remaining: 90,
+            notes: "Cohere rate limits depend on your account tier and model"
+        }
+    },
+    openai: {
+        requiresApiKey: true,
+        validator: validateOpenAIApiKey,
+        defaultModel: "gpt-4o",
+        responseTime: 550,
+        rateLimits: {
+            limit: 200,
+            remaining: 180,
+            notes: "OpenAI rate limits depend on your account tier and model"
+        }
+    },
+    together: {
+        requiresApiKey: true,
+        validator: validateTogetherApiKey,
+        defaultModel: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+        responseTime: 550,
+        rateLimits: {
+            limit: 100,
+            remaining: 90,
+            notes: "Together AI rate limits depend on your account tier and model"
+        }
+    },
+    openrouter: {
+        requiresApiKey: true,
+        validator: validateOpenRouterApiKey,
+        defaultModel: "google/gemma-3-27b-it:free",
+        responseTime: 550,
+        rateLimits: {
+            limit: 100,
+            remaining: 90,
+            notes: "OpenRouter rate limits depend on your account tier and selected model"
+        }
+    },
+    anthropic: {
+        requiresApiKey: true,
+        validator: validateAnthropicApiKey,
+        defaultModel: "claude-3-5-sonnet-20241022",
+        responseTime: 800,
+        rateLimits: {
+            limit: 1000,
+            remaining: 950,
+            notes: "Rate limits depend on your account tier and model usage"
+        }
+    },
+    copilot: {
+        requiresApiKey: false,
+        validator: async () => {
+            const available = await isCopilotAvailable();
+            return available ? await validateCopilotAccess() : { success: false, error: "GitHub Copilot not available" };
+        },
+        defaultModel: "gpt-4o",
+        responseTime: 400,
+        rateLimits: { limit: 0, remaining: 0, notes: "GitHub Copilot uses VS Code's built-in rate limiting" }
+    },
+    deepseek: {
+        requiresApiKey: true,
+        validator: validateDeepSeekAPIKey,
+        defaultModel: "deepseek-chat",
+        responseTime: 600,
+        rateLimits: {
+            limit: 10000,
+            remaining: 9500,
+            notes: "DeepSeek rate limits depend on your account tier and model usage"
+        }
+    },
+    grok: {
+        requiresApiKey: true,
+        validator: validateGrokAPIKey,
+        defaultModel: "grok-3",
+        responseTime: 550,
+        rateLimits: {
+            limit: 5000,
+            remaining: 4800,
+            notes: "Grok rate limits depend on your account tier and model usage"
+        }
+    },
+    perplexity: {
+        requiresApiKey: true,
+        validator: validatePerplexityAPIKey,
+        defaultModel: "sonar-pro",
+        responseTime: 400,
+        rateLimits: {
+            limit: 20,
+            remaining: 18,
+            notes: "Perplexity has 20 requests per minute for free tier users. Pro users have higher limits."
+        }
+    }
+};
+
 export async function checkApiSetup(): Promise<ApiCheckResult> {
     const config: ApiConfig = getApiConfig();
-    let result: ApiCheckResult = {
+    const validatorConfig = VALIDATOR_CONFIGS[config.type];
+
+    const result: ApiCheckResult = {
         success: false,
         provider: config.type,
         details: '',
     };
 
+    if (!validatorConfig) {
+        result.error = "Unknown provider";
+        result.troubleshooting = "Provider not supported";
+        return result;
+    }
+
     try {
-        switch (config.type) {
-            case "gemini":
-                if (!config.apiKey) {
-                    result.error = "API key not configured";
-                    result.troubleshooting = "Please enter your Gemini API key in the settings";
-                } else {
-                    const isValid = await validateGeminiAPIKey(config.apiKey);
-                    result.success = isValid;
-                    if (isValid) {
-                        result.model = config.model || "gemini-2.5-flash-preview-04-17";
-                        result.responseTime = 500; // Placeholder value
-                        result.details = "Connection test successful";
-                    } else {
-                        result.error = "Invalid API key";
-                        result.troubleshooting = "Please check your Gemini API key configuration";
-                    }
-                }
-                break;
+        if (validatorConfig.requiresApiKey && !('apiKey' in config && config.apiKey)) {
+            result.error = "API key not configured";
+            result.troubleshooting = `Please enter your ${config.type} API key in the settings`;
+            return result;
+        }
 
-            case "mistral":
-                if (!config.apiKey) {
-                    result.error = "API key not configured";
-                    result.troubleshooting = "Please enter your Mistral API key in the settings";
-                } else {
-                    const rateLimits = await checkMistralRateLimits(config.apiKey);
-                    result.success = !!rateLimits;
-                    if (rateLimits) {
-                        result.model = config.model;
-                        result.responseTime = 500; // Placeholder value
-                        result.details = `Remaining requests: ${rateLimits.current.remaining}`;
-                    } else {
-                        result.error = "Invalid API key";
-                        result.troubleshooting = "Please check your Mistral API key configuration";
-                    }
-                }
-                break;
+        const apiKeyOrUrl = validatorConfig.requiresApiKey
+            ? ('apiKey' in config ? config.apiKey : '')
+            : ('url' in config ? config.url : '');
+        const validation = await validatorConfig.validator!(apiKeyOrUrl!);
 
-            case "huggingface":
-                if (!config.apiKey) {
-                    result.error = "API key not configured";
-                    result.troubleshooting = "Please enter your Hugging Face API key in the settings";
-                } else {
-                    const isValid = await validateHuggingFaceApiKey(config.apiKey);
-                    result.success = isValid;
-                    if (isValid) {
-                        result.model = config.model || "";
-                        result.responseTime = 600; // Placeholder value
-                        result.details = "Connection test successful";
-                    } else {
-                        result.error = "Invalid API key";
-                        result.troubleshooting = "Please check your Hugging Face API key configuration";
-                    }
-                }
-                break;
+        if (typeof validation === 'boolean') {
+            result.success = validation;
+            if (validation) {
+                result.model = config.model || validatorConfig.defaultModel;
+                result.responseTime = validatorConfig.responseTime;
+                result.details = "Connection test successful";
+            } else {
+                result.error = "Invalid API key";
+                result.troubleshooting = `Please check your ${config.type} configuration`;
+            }
+        } else {
+            result.success = validation.success;
+            if (validation.success) {
+                result.model = config.model || validatorConfig.defaultModel;
+                result.responseTime = validatorConfig.responseTime;
+                result.details = validation.warning ? "API key is valid but has billing issues" : "Connection test successful";
+                result.warning = validation.warning;
+                result.troubleshooting = validation.troubleshooting;
+            } else {
+                result.error = validation.error || "Invalid API key";
+                result.troubleshooting = validation.troubleshooting || `Please check your ${config.type} configuration`;
+            }
+        }
 
-            case "ollama":
-                const isAvailable = await checkOllamaAvailability(config.url || "http://localhost:11434");
-                result.success = isAvailable;
-                if (isAvailable) {
-                    result.model = config.model || "";
-                    result.responseTime = 200; // Placeholder value for local service
-                    result.details = "Ollama service is running and accessible";
-                } else {
-                    result.error = "Service not available";
-                    result.troubleshooting = "Please check if Ollama is running and accessible at the configured URL";
-                }
-                break;
-
-            case "cohere":
-                if (!config.apiKey) {
-                    result.error = "API key not configured";
-                    result.troubleshooting = "Please enter your Cohere API key in the settings";
-                } else {
-                    const isValid = await validateCohereApiKey(config.apiKey);
-                    result.success = isValid;
-                    if (isValid) {
-                        result.model = config.model || "command";
-                        result.responseTime = 550; // Placeholder value
-                        result.details = "Connection test successful";
-                    } else {
-                        result.error = "Invalid API key";
-                        result.troubleshooting = "Please check your Cohere API key configuration";
-                    }
-                }
-                break;
-
-            case "openai":
-                if (!config.apiKey) {
-                    result.error = "API key not configured";
-                    result.troubleshooting = "Please enter your OpenAI API key in the settings";
-                } else {
-                    const isValid = await validateOpenAIApiKey(config.apiKey);
-                    result.success = isValid;
-                    if (isValid) {
-                        result.model = config.model || "gpt-3.5-turbo";
-                        result.responseTime = 550; // Placeholder value
-                        result.details = "Connection test successful";
-                    } else {
-                        result.error = "Invalid API key";
-                        result.troubleshooting = "Please check your OpenAI API key configuration";
-                    }
-                }
-                break;
-
-            case "together":
-                if (!config.apiKey) {
-                    result.error = "API key not configured";
-                    result.troubleshooting = "Please enter your Together AI API key in the settings";
-                } else {
-                    const isValid = await validateTogetherApiKey(config.apiKey);
-                    result.success = isValid;
-                    if (isValid) {
-                        result.model = config.model || "meta-llama/Llama-3.3-70B-Instruct-Turbo";
-                        result.responseTime = 550; // Placeholder value
-                        result.details = "Connection test successful";
-                    } else {
-                        result.error = "Invalid API key";
-                        result.troubleshooting = "Please check your Together AI API key configuration";
-                    }
-                }
-                break;
-
-            case "openrouter":
-                if (!config.apiKey) {
-                    result.error = "API key not configured";
-                    result.troubleshooting = "Please enter your OpenRouter API key in the settings";
-                } else {
-                    const isValid = await validateOpenRouterApiKey(config.apiKey);
-                    result.success = isValid;
-                    if (isValid) {
-                        result.model = config.model || "default model";
-                        result.responseTime = 550; // Placeholder value
-                        result.details = "Connection test successful";
-                    } else {
-                        result.error = "Invalid API key";
-                        result.troubleshooting = "Please check your OpenRouter API key configuration";
-                    }
-                }
-                break;
-
-            case "anthropic":
-                if (!config.apiKey) {
-                    result.error = "API key not configured";
-                    result.troubleshooting = "Please enter your Anthropic API key in the settings";
-                } else {
-                    const validation = await validateAnthropicApiKey(config.apiKey);
-                    result.success = validation.success;
-                    if (validation.success) {
-                        result.model = config.model || "claude-3-5-sonnet-20241022";
-                        result.responseTime = 800; // Placeholder value
-                        result.details = "Connection test successful";
-                    } else {
-                        result.error = validation.error || "Invalid API key";
-                        result.troubleshooting = validation.troubleshooting || "Please check your API key configuration";
-                    }
-                }
-                break;
-
-            case "copilot":
-                const isCopilotReady = await isCopilotAvailable();
-                if (isCopilotReady) {
-                    const accessResult = await validateCopilotAccess();
-                    result.success = accessResult.success;
-                    if (accessResult.success) {
-                        result.model = config.model || "gpt-4o";
-                        result.responseTime = 400; // Placeholder value for VS Code API
-                        result.details = "GitHub Copilot is available and authenticated";
-                    } else {
-                        result.error = accessResult.error || "Copilot access validation failed";
-                        result.troubleshooting = "Please ensure you're signed in to GitHub Copilot and have an active subscription";
-                    }
-                } else {
-                    result.error = "GitHub Copilot not available";
-                    result.troubleshooting = "Please install and authenticate GitHub Copilot extension";
-                }
-                break;
-
-            case "deepseek":
-                if (!config.apiKey) {
-                    result.error = "API key not configured";
-                    result.troubleshooting = "Please enter your DeepSeek API key in the settings";
-                } else {
-                    const isValid = await validateDeepSeekAPIKey(config.apiKey);
-                    result.success = isValid;
-                    if (isValid) {
-                        result.model = config.model || "deepseek-chat";
-                        result.responseTime = 600; // Placeholder value
-                        result.details = "Connection test successful";
-                    } else {
-                        result.error = "Invalid API key";
-                        result.troubleshooting = "Please check your DeepSeek API key configuration";
-                    }
-                }
-                break;
-
-            case "grok":
-                if (!config.apiKey) {
-                    result.error = "API key not configured";
-                    result.troubleshooting = "Please enter your Grok API key in the settings";
-                } else {
-                    const validation = await validateGrokAPIKey(config.apiKey);
-                    result.success = validation.success;
-                    if (validation.success) {
-                        result.model = config.model || "grok-3";
-                        result.responseTime = 550; // Placeholder value
-                        if (validation.warning) {
-                            result.warning = validation.warning;
-                            result.troubleshooting = validation.troubleshooting;
-                            result.details = "API key is valid but has billing issues";
-                        } else {
-                            result.details = "Connection test successful";
-                        }
-                    } else {
-                        result.error = validation.error || "Invalid API key";
-                        result.troubleshooting = validation.troubleshooting || "Please check your Grok API key configuration";
-                    }
-                }
-                break;
-
-            case "perplexity":
-                if (!config.apiKey) {
-                    result.error = "API key not configured";
-                    result.troubleshooting = "Please enter your Perplexity API key in the settings";
-                } else {
-                    const validation = await validatePerplexityAPIKey(config.apiKey);
-                    result.success = validation.success;
-                    if (validation.success) {
-                        result.model = config.model || "sonar-pro";
-                        result.responseTime = 400; // Placeholder value
-                        if (validation.warning) {
-                            result.warning = validation.warning;
-                            result.troubleshooting = validation.troubleshooting;
-                            result.details = "API key is valid but has billing issues";
-                        } else {
-                            result.details = "Connection test successful";
-                        }
-                    } else {
-                        result.error = validation.error || "Invalid API key";
-                        result.troubleshooting = validation.troubleshooting || "Please check your Perplexity API key configuration";
-                    }
-                }
-                break;
+        // Special handling for Mistral rate limits in success case
+        if (config.type === "mistral" && result.success && config.apiKey) {
+            const rateLimits = await checkMistralRateLimits(config.apiKey);
+            if (rateLimits) {
+                result.details = `Remaining requests: ${rateLimits.current.remaining}`;
+            }
         }
 
         return result;
@@ -299,160 +252,49 @@ export async function checkApiSetup(): Promise<ApiCheckResult> {
 
 export async function checkRateLimits(): Promise<RateLimitsCheckResult> {
     const config: ApiConfig = getApiConfig();
-    let result: RateLimitsCheckResult = {
-        success: false
-    };
+    const validatorConfig = VALIDATOR_CONFIGS[config.type];
+
+    const result: RateLimitsCheckResult = { success: false };
+
+    if (!validatorConfig) {
+        result.error = "Unknown provider";
+        result.notes = "Rate limits not available for this provider";
+        return result;
+    }
 
     try {
-        switch (config.type) {
-            case "mistral":
-                if (!config.apiKey) {
-                    result.error = "API key not configured";
-                    result.notes = "Please configure your Mistral API key";
+        if (config.type === "mistral") {
+            if (!config.apiKey) {
+                result.error = "API key not configured";
+                result.notes = "Please configure your Mistral API key";
+            } else {
+                const rateLimits = await checkMistralRateLimits(config.apiKey);
+                if (rateLimits) {
+                    result.success = true;
+                    result.limits = {
+                        reset: rateLimits.current.reset,
+                        limit: rateLimits.current.limit,
+                        remaining: rateLimits.current.remaining,
+                        queryCost: rateLimits.current.queryCost
+                    };
+                    result.notes = `Rate limits retrieved successfully. Note: Checking rate limits consumes API tokens (${rateLimits.current.queryCost} tokens for this request).`;
                 } else {
-                    const rateLimits = await checkMistralRateLimits(config.apiKey);
-                    if (rateLimits) {
-                        result.success = true;
-                        result.limits = {
-                            reset: rateLimits.current.reset,
-                            limit: rateLimits.current.limit,
-                            remaining: rateLimits.current.remaining,
-                            queryCost: rateLimits.current.queryCost
-                        };
-                        // Add warning about rate limit checks affecting quota
-                        result.notes = `Rate limits retrieved successfully. Note: Checking rate limits consumes API tokens (${rateLimits.current.queryCost} tokens for this request).`;
-                    } else {
-                        result.error = "Failed to retrieve rate limits";
-                        result.notes = "Please check your API key and try again";
-                    }
+                    result.error = "Failed to retrieve rate limits";
+                    result.notes = "Please check your API key and try again";
                 }
-                break;
-
-            case "gemini":
-                result.success = true;
+            }
+        } else {
+            result.success = true;
+            if (validatorConfig.rateLimits) {
+                const resetTime = Math.floor(Date.now() / 1000) + 3600;
                 result.limits = {
-                    reset: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
-                    limit: 60,
-                    remaining: 50,
+                    reset: resetTime,
+                    limit: validatorConfig.rateLimits.limit,
+                    remaining: validatorConfig.rateLimits.remaining,
                     queryCost: 1
                 };
-                result.notes = "Gemini provides quota-based rate limits rather than time-based limits";
-                break;
-
-            case "huggingface":
-                result.success = true;
-                result.limits = {
-                    reset: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
-                    limit: 30000,
-                    remaining: 29000,
-                    queryCost: 1
-                };
-                result.notes = "Hugging Face rate limits depend on your account tier";
-                break;
-
-            case "ollama":
-                result.success = true;
-                result.notes = "Ollama is a local service with no API rate limits";
-                break;
-
-            case "cohere":
-                result.success = true;
-                result.limits = {
-                    reset: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
-                    limit: 100,
-                    remaining: 90,
-                    queryCost: 1
-                };
-                result.notes = "Cohere rate limits depend on your account tier and model";
-                break;
-
-            case "openai":
-                result.success = true;
-                result.limits = {
-                    reset: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
-                    limit: 200,
-                    remaining: 180,
-                    queryCost: 1
-                };
-                result.notes = "OpenAI rate limits depend on your account tier and model";
-                break;
-
-            case "together":
-                result.success = true;
-                result.limits = {
-                    reset: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
-                    limit: 100,
-                    remaining: 90,
-                    queryCost: 1
-                };
-                result.notes = "Together AI rate limits depend on your account tier and model";
-                break;
-
-            case "openrouter":
-                result.success = true;
-                result.limits = {
-                    reset: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
-                    limit: 100,
-                    remaining: 90,
-                    queryCost: 1
-                };
-                result.notes = "OpenRouter rate limits depend on your account tier and selected model";
-                break;
-
-            case "anthropic":
-                result.success = true;
-                result.limits = {
-                    reset: Math.floor(Date.now() / 1000) + 3600,
-                    limit: 1000,
-                    remaining: 950,
-                    queryCost: 1
-                };
-                result.notes = "Rate limits depend on your account tier and model usage";
-                break;
-
-            case "copilot":
-                result.success = true;
-                result.notes = "GitHub Copilot uses VS Code's built-in rate limiting and does not expose specific rate limit information";
-                break;
-
-            case "deepseek":
-                result.success = true;
-                result.limits = {
-                    reset: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
-                    limit: 10000,
-                    remaining: 9500,
-                    queryCost: 1
-                };
-                result.notes = "DeepSeek rate limits depend on your account tier and model usage";
-                break;
-
-            case "grok":
-                result.success = true;
-                result.limits = {
-                    reset: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
-                    limit: 5000,
-                    remaining: 4800,
-                    queryCost: 1
-                };
-                result.notes = "Grok rate limits depend on your account tier and model usage";
-                break;
-
-            case "perplexity":
-                result.success = true;
-                result.limits = {
-                    reset: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
-                    limit: 20,
-                    remaining: 18,
-                    queryCost: 1
-                };
-                result.notes = "Perplexity has 20 requests per minute for free tier users. Pro users have higher limits.";
-                break;
-
-            default:
-                result.success = false;
-                // Fix: Remove the type assertion and use string interpolation with the known config.type
-                result.notes = "Rate limits not available for this provider";
-                break;
+            }
+            result.notes = validatorConfig.rateLimits?.notes || "Rate limits information not available";
         }
     } catch (error) {
         debugLog("Rate limits check error:", error);
@@ -464,6 +306,7 @@ export async function checkRateLimits(): Promise<RateLimitsCheckResult> {
     return result;
 }
 
+// Helper functions
 async function validateHuggingFaceApiKey(apiKey: string): Promise<boolean> {
     const requestManager = RequestManager.getInstance();
     const controller = requestManager.getController();
@@ -476,12 +319,9 @@ async function validateHuggingFaceApiKey(apiKey: string): Promise<boolean> {
             },
             signal: controller.signal
         });
-
         return response.ok;
     } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') {
-            return false;
-        }
+        if (error instanceof Error && error.name === 'AbortError') { return false; }
         debugLog("Hugging Face API validation error:", error);
         return false;
     }
@@ -493,17 +333,12 @@ async function validateOpenAIApiKey(apiKey: string): Promise<boolean> {
 
     try {
         const response = await fetch("https://api.openai.com/v1/models", {
-            headers: {
-                "Authorization": `Bearer ${apiKey}`
-            },
+            headers: { "Authorization": `Bearer ${apiKey}` },
             signal: controller.signal
         });
-
         return response.ok;
     } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') {
-            return false;
-        }
+        if (error instanceof Error && error.name === 'AbortError') { return false; }
         debugLog("OpenAI API validation error:", error);
         return false;
     }
@@ -549,26 +384,21 @@ async function checkMistralRateLimits(apiKey: string): Promise<RateLimitComparis
             timestamp: Date.now()
         };
 
-        // Detect anomalies
         const anomalies: string[] = [];
-
         if (lastRateLimit) {
-            // Check if remaining tokens didn't decrease as expected
             const expectedRemaining = lastRateLimit.remaining - currentRateLimit.queryCost;
             if (currentRateLimit.remaining > expectedRemaining) {
                 anomalies.push(`Remaining tokens higher than expected: ${currentRateLimit.remaining} vs expected ${expectedRemaining}`);
             }
 
-            // Check if monthly remaining increased
             if (currentRateLimit.monthlyRemaining > lastRateLimit.monthlyRemaining) {
                 const increase = currentRateLimit.monthlyRemaining - lastRateLimit.monthlyRemaining;
                 anomalies.push(`Monthly remaining increased by ${increase} tokens`);
             }
 
-            // Check if reset time is inconsistent
             const timeDiff = (currentRateLimit.timestamp - lastRateLimit.timestamp) / 1000;
             const resetDiff = lastRateLimit.reset - currentRateLimit.reset;
-            if (Math.abs(resetDiff - timeDiff) > 5) { // 5 second tolerance
+            if (Math.abs(resetDiff - timeDiff) > 5) {
                 anomalies.push(`Reset timer inconsistency: expected ~${Math.round(timeDiff)}s, got ${resetDiff}s`);
             }
         }
@@ -579,15 +409,10 @@ async function checkMistralRateLimits(apiKey: string): Promise<RateLimitComparis
             anomalies
         };
 
-        // Store for next comparison
         lastRateLimit = currentRateLimit;
-
         return result;
-
     } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') {
-            return null;
-        }
+        if (error instanceof Error && error.name === 'AbortError') { return null; }
         debugLog("Mistral rate limit check error:", error);
         return null;
     }
@@ -597,7 +422,7 @@ async function checkOllamaAvailability(url: string): Promise<boolean> {
     try {
         const response = await fetch(`${url}/api/version`, {
             method: 'GET',
-            signal: AbortSignal.timeout(2000) // 2 second timeout
+            signal: AbortSignal.timeout(2000)
         });
         return response.ok;
     } catch (error) {
@@ -608,19 +433,14 @@ async function checkOllamaAvailability(url: string): Promise<boolean> {
 
 async function validateCohereApiKey(apiKey: string): Promise<boolean> {
     try {
-        // Use Cohere's API to validate the key with a minimal request
         const response = await fetch("https://api.cohere.ai/v1/tokenize", {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${apiKey}`,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                text: "test" // Minimal text to tokenize
-            })
+            body: JSON.stringify({ text: "test" })
         });
-
-        // If we get a successful response, the API key is valid
         return response.ok;
     } catch (error) {
         debugLog("Cohere API validation error:", error);
@@ -630,15 +450,12 @@ async function validateCohereApiKey(apiKey: string): Promise<boolean> {
 
 async function validateTogetherApiKey(apiKey: string): Promise<boolean> {
     try {
-        // Use a lightweight endpoint to validate the API key
         const response = await fetch("https://api.together.xyz/v1/models", {
             headers: {
                 "Authorization": `Bearer ${apiKey}`,
                 "Content-Type": "application/json"
             }
         });
-
-        // If we get a successful response, the API key is valid
         return response.ok;
     } catch (error) {
         debugLog("Together API validation error:", error);
@@ -648,7 +465,6 @@ async function validateTogetherApiKey(apiKey: string): Promise<boolean> {
 
 async function validateOpenRouterApiKey(apiKey: string): Promise<boolean> {
     try {
-        // Use a lightweight endpoint to validate the API key
         const response = await fetch("https://openrouter.ai/api/v1/models", {
             headers: {
                 "Authorization": `Bearer ${apiKey}`,
@@ -656,8 +472,6 @@ async function validateOpenRouterApiKey(apiKey: string): Promise<boolean> {
                 "X-Title": "GitMind: AI Commit Assistant"
             }
         });
-
-        // If we get a successful response, the API key is valid
         return response.ok;
     } catch (error) {
         debugLog("OpenRouter API validation error:", error);
@@ -678,72 +492,43 @@ async function validateAnthropicApiKey(apiKey: string): Promise<{ success: boole
             body: JSON.stringify({
                 model: "claude-3-5-haiku-20241022",
                 max_tokens: 10,
-                messages: [
-                    {
-                        role: "user",
-                        content: "Test"
-                    }
-                ]
+                messages: [{ role: "user", content: "Test" }]
             })
         });
 
-        if (response.ok) {
-            return { success: true };
-        }
+        if (response.ok) { return { success: true }; }
 
-        // Handle error responses
         const errorText = await response.text();
         debugLog(`Anthropic API validation error: ${response.status} ${errorText}`);
 
         let errorMessage = `Anthropic API error: ${response.status}`;
-        let errorType = '';
         let troubleshooting = "Please check your API key configuration";
 
         try {
             const errorData = JSON.parse(errorText);
-            // Handle Anthropic API error structure: { "error": { "message": "...", "type": "..." }, "type": "error" }
-            if (errorData.error && errorData.error.message) {
+            if (errorData.error?.message) {
                 errorMessage = errorData.error.message;
-                errorType = errorData.error.type || '';
-            }
-            // Fallback: check if there's a direct message field
-            else if (errorData.message) {
+            } else if (errorData.message) {
                 errorMessage = errorData.message;
             }
-        } catch (parseError) {
-            // If we can't parse the error, use the raw text
+        } catch {
             errorMessage = errorText || errorMessage;
         }
 
-        // Provide specific troubleshooting based on error type and status
         if (response.status === 401) {
-            // Invalid API key
             troubleshooting = "Please check that your Anthropic API key is correct and active";
         } else if (response.status === 403) {
-            // Insufficient credits or permissions
-            if (errorMessage.toLowerCase().includes('credit') || errorMessage.toLowerCase().includes('balance')) {
-                troubleshooting = "Your Anthropic account has insufficient credits. Please add credits to your account";
-            } else {
-                troubleshooting = "Your API key may not have the required permissions. Please check your Anthropic account settings";
-            }
+            troubleshooting = errorMessage.toLowerCase().includes('credit')
+                ? "Your Anthropic account has insufficient credits. Please add credits to your account"
+                : "Your API key may not have the required permissions. Please check your Anthropic account settings";
         } else if (response.status === 429) {
-            // Rate limit exceeded
             const retryAfter = response.headers.get('retry-after');
-            if (retryAfter) {
-                troubleshooting = `Rate limit exceeded. Please wait ${retryAfter} seconds before retrying`;
-            } else {
-                troubleshooting = "Rate limit exceeded. Please try again in a few minutes";
-            }
-        } else if (response.status === 400 && errorType === 'invalid_request_error') {
-            troubleshooting = "The request format is invalid. This may indicate an API compatibility issue";
+            troubleshooting = retryAfter
+                ? `Rate limit exceeded. Please wait ${retryAfter} seconds before retrying`
+                : "Rate limit exceeded. Please try again in a few minutes";
         }
 
-        return {
-            success: false,
-            error: errorMessage,
-            troubleshooting: troubleshooting
-        };
-
+        return { success: false, error: errorMessage, troubleshooting };
     } catch (error) {
         debugLog("Anthropic API validation network error:", error);
         return {

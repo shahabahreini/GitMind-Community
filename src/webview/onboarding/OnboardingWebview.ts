@@ -52,9 +52,7 @@ export class OnboardingWebview {
         new OnboardingWebview(panel, extensionUri);
     }
 
-    private static currentPanel: OnboardingWebview | undefined;
-
-    private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
+    private static currentPanel: OnboardingWebview | undefined; private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
         this._panel = panel;
         this._extensionUri = extensionUri;
         this._messageHandler = new OnboardingMessageHandler();
@@ -84,6 +82,11 @@ export class OnboardingWebview {
         const webview = this._panel.webview;
         const templateGenerator = new OnboardingTemplateGenerator(this._extensionUri, getNonce());
         this._panel.webview.html = templateGenerator.generateHtml(webview);
+
+        // Check API configuration status after slight delay to ensure webview is loaded
+        setTimeout(async () => {
+            await vscode.commands.executeCommand("ai-commit-assistant.checkApiConfig");
+        }, 500);
     }
 
     public dispose() {
