@@ -2,43 +2,50 @@ import * as vscode from "vscode";
 import {
     ApiConfig,
     ExtensionConfig,
-    CommitConfig,
-    ProviderConfig,
-    GeminiModel, // Added this import
-    AnthropicModel, // Added this import
-    CopilotModel, // Added this import
-    DeepSeekModel, // Added this import
-    GrokModel, // Added this import
-    PerplexityModel, // Added this import
+    GeminiModel,
+    AnthropicModel,
+    CopilotModel,
+    DeepSeekModel,
+    GrokModel,
+    PerplexityModel,
 } from "./types";
+
+interface ProviderDefaults {
+    model: string;
+    enabled: boolean;
+    extras?: Record<string, any>;
+}
+
+const PROVIDER_DEFAULTS: Record<string, ProviderDefaults> = {
+    gemini: { model: "gemini-2.5-flash", enabled: false },
+    huggingface: {
+        model: "mistralai/Mistral-7B-Instruct-v0.3",
+        enabled: true,
+        extras: { temperature: 0.3 }
+    },
+    ollama: {
+        model: "phi4",
+        enabled: false,
+        extras: { url: "http://localhost:11434" }
+    },
+    mistral: { model: "mistral-large-latest", enabled: false },
+    cohere: { model: "command-a-03-2025", enabled: false },
+    openai: { model: "gpt-4o", enabled: false },
+    together: { model: "meta-llama/Llama-3.3-70B-Instruct-Turbo", enabled: false },
+    openrouter: { model: "google/gemma-3-27b-it:free", enabled: false },
+    anthropic: { model: "claude-3-5-sonnet-20241022", enabled: false },
+    copilot: { model: "gpt-4o", enabled: false },
+    deepseek: { model: "deepseek-chat", enabled: false },
+    grok: { model: "grok-3", enabled: false },
+    perplexity: { model: "sonar-pro", enabled: false }
+};
 
 export function getConfiguration(): ExtensionConfig {
     const config = vscode.workspace.getConfiguration("aiCommitAssistant");
 
-    return {
+    const result: ExtensionConfig = {
         provider: config.get("apiProvider", "mistral"),
         debug: config.get("debug", false),
-        gemini: {
-            enabled: config.get("gemini.enabled", false),
-            apiKey: config.get("gemini.apiKey"),
-            model: config.get("gemini.model", "gemini-2.5-flash"),
-        },
-        huggingface: {
-            enabled: config.get("huggingface.enabled", true),
-            apiKey: config.get("huggingface.apiKey"),
-            model: config.get(
-                "huggingface.model",
-                "mistralai/Mistral-7B-Instruct-v0.3"
-            ),
-            customModel: config.get("huggingface.customModel", ""),
-            temperature: config.get("huggingface.temperature", 0.3),
-        },
-        ollama: {
-            enabled: config.get("ollama.enabled", false),
-            url: config.get("ollama.url", "http://localhost:11434"),
-            model: config.get("ollama.model", "phi4"),
-            customModel: config.get("ollama.customModel", ""),
-        },
         commit: {
             style: config.get("commit.style", "conventional"),
             maxLength: config.get("commit.maxLength", 72),
@@ -46,173 +53,80 @@ export function getConfiguration(): ExtensionConfig {
             addBulletPoints: config.get("commit.addBulletPoints", true),
             verbose: config.get("commit.verbose", true),
         },
-        mistral: {
-            enabled: config.get("mistral.enabled", false),
-            apiKey: config.get("mistral.apiKey"),
-            model: config.get("mistral.model", "mistral-large-latest"),
-        },
-        cohere: {
-            enabled: config.get("cohere.enabled", false),
-            apiKey: config.get("cohere.apiKey"),
-            model: config.get("cohere.model", "command-a-03-2025"),
-        },
-        openai: {
-            enabled: config.get("openai.enabled", false),
-            apiKey: config.get("openai.apiKey"),
-            model: config.get("openai.model", "gpt-4o"),
-        },
-        together: {
-            enabled: config.get("together.enabled", false),
-            apiKey: config.get("together.apiKey"),
-            model: config.get("together.model", "meta-llama/Llama-3.3-70B-Instruct-Turbo"),
-        },
-        openrouter: {
-            enabled: config.get("openrouter.enabled", false),
-            apiKey: config.get("openrouter.apiKey"),
-            model: config.get("openrouter.model", "google/gemma-3-27b-it:free"),
-        },
-        anthropic: {
-            enabled: config.get("anthropic.enabled", false),
-            apiKey: config.get("anthropic.apiKey"),
-            model: config.get("anthropic.model", "claude-3-5-sonnet-20241022"),
-        },
-        copilot: {
-            enabled: config.get("copilot.enabled", false),
-            model: config.get("copilot.model", "gpt-4o"),
-        },
-        deepseek: {
-            enabled: config.get("deepseek.enabled", false),
-            apiKey: config.get("deepseek.apiKey"),
-            model: config.get("deepseek.model", "deepseek-chat"),
-        },
-        grok: {
-            enabled: config.get("grok.enabled", false),
-            apiKey: config.get("grok.apiKey"),
-            model: config.get("grok.model", "grok-3"),
-        },
-        perplexity: {
-            enabled: config.get("perplexity.enabled", false),
-            apiKey: config.get("perplexity.apiKey"),
-            model: config.get("perplexity.model", "sonar-pro"),
-        },
         promptCustomization: {
             enabled: config.get("promptCustomization.enabled", false),
             saveLastPrompt: config.get("promptCustomization.saveLastPrompt", false),
             lastPrompt: config.get("promptCustomization.lastPrompt", ""),
         },
-    };
+    } as ExtensionConfig;
+
+    // Build provider configurations dynamically
+    Object.entries(PROVIDER_DEFAULTS).forEach(([provider, defaults]) => {
+        const providerConfig: any = {
+            enabled: config.get(`${provider}.enabled`, defaults.enabled),
+            model: config.get(`${provider}.model`, defaults.model),
+        };
+
+        // Add API key for providers that need it
+        if (provider !== 'ollama' && provider !== 'copilot') {
+            providerConfig.apiKey = config.get(`${provider}.apiKey`);
+        }
+
+        // Add provider-specific extras
+        if (defaults.extras) {
+            Object.entries(defaults.extras).forEach(([key, value]) => {
+                providerConfig[key] = config.get(`${provider}.${key}`, value);
+            });
+        }
+
+        // Handle custom models
+        if (provider === 'huggingface' || provider === 'ollama') {
+            providerConfig.customModel = config.get(`${provider}.customModel`, "");
+        }
+
+        (result as any)[provider] = providerConfig;
+    });
+
+    return result;
 }
 
 export function getApiConfig(): ApiConfig {
     const config = getConfiguration();
-    const selectedProvider = config.provider;
+    const provider = config.provider;
+    const providerConfig = (config as any)[provider];
 
-    switch (selectedProvider) {
-        case "gemini":
-            return {
-                type: "gemini",
-                apiKey: config.gemini.apiKey || "",
-                model: config.gemini.model as GeminiModel || "gemini-2.5-flash",
-            };
-
-        case "huggingface": {
-            const hfModel =
-                config.huggingface.model === "custom"
-                    ? config.huggingface.customModel
-                    : config.huggingface.model;
-
-            return {
-                type: "huggingface",
-                apiKey: config.huggingface.apiKey || "", // Return empty string instead of throwing
-                model: hfModel || "", // Return empty string instead of throwing
-                temperature: config.huggingface.temperature,
-            };
-        }
-
-        case "ollama": {
-            const ollamaModel =
-                config.ollama.model === "custom"
-                    ? config.ollama.customModel
-                    : config.ollama.model;
-
-            return {
-                type: "ollama",
-                url: config.ollama.url || "", // Return empty string instead of throwing
-                model: ollamaModel || "", // Return empty string instead of throwing
-            };
-        }
-
-        case "mistral":
-            return {
-                type: "mistral",
-                apiKey: config.mistral.apiKey || "", // Return empty string instead of throwing
-                model: config.mistral.model || "", // Return empty string instead of throwing
-            };
-
-        case "cohere":
-            return {
-                type: "cohere",
-                apiKey: config.cohere.apiKey || "",
-                model: config.cohere.model || "command-a-03-2025",
-            };
-
-        case "openai":
-            return {
-                type: "openai",
-                apiKey: config.openai.apiKey || "",
-                model: config.openai.model || "gpt-4o",
-            };
-
-        case "together":
-            return {
-                type: "together",
-                apiKey: config.together.apiKey || "",
-                model: config.together.model || "meta-llama/Llama-3.3-70B-Instruct-Turbo",
-            };
-
-        case "openrouter":
-            return {
-                type: "openrouter",
-                apiKey: config.openrouter.apiKey || "",
-                model: config.openrouter.model || "google/gemma-3-27b-it:free",
-            };
-
-        case "anthropic":
-            return {
-                type: "anthropic",
-                apiKey: config.anthropic.apiKey || "",
-                model: (config.anthropic.model || "claude-3-5-sonnet-20241022") as AnthropicModel,
-            };
-
-        case "copilot":
-            return {
-                type: "copilot",
-                model: (config.copilot.model || "gpt-4o") as CopilotModel,
-            };
-
-        case "deepseek":
-            return {
-                type: "deepseek",
-                apiKey: config.deepseek.apiKey || "",
-                model: (config.deepseek.model || "deepseek-chat") as DeepSeekModel,
-            };
-
-        case "grok":
-            return {
-                type: "grok",
-                apiKey: config.grok.apiKey || "",
-                model: (config.grok.model || "grok-3") as GrokModel,
-            };
-
-        case "perplexity":
-            return {
-                type: "perplexity",
-                apiKey: config.perplexity.apiKey || "",
-                model: (config.perplexity.model || "sonar-pro") as PerplexityModel,
-            };
-
-        default:
-            // For unsupported providers, we should still throw as this is a programming error
-            throw new Error(`Unsupported provider: ${selectedProvider}`);
+    if (!providerConfig) {
+        throw new Error(`Unsupported provider: ${provider}`);
     }
+
+    const baseConfig: any = {
+        type: provider,
+        model: getEffectiveModel(provider, providerConfig)
+    };
+
+    // Add API key for providers that need it
+    if (provider !== 'ollama' && provider !== 'copilot') {
+        baseConfig.apiKey = providerConfig.apiKey || "";
+    }
+
+    // Add provider-specific properties
+    switch (provider) {
+        case 'ollama':
+            baseConfig.url = providerConfig.url || "";
+            break;
+        case 'huggingface':
+            baseConfig.temperature = providerConfig.temperature;
+            break;
+    }
+
+    return baseConfig as ApiConfig;
+}
+
+function getEffectiveModel(provider: string, providerConfig: any): string {
+    if ((provider === 'huggingface' || provider === 'ollama') &&
+        providerConfig.model === "custom" &&
+        providerConfig.customModel) {
+        return providerConfig.customModel;
+    }
+    return providerConfig.model || PROVIDER_DEFAULTS[provider]?.model || "";
 }
