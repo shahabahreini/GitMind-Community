@@ -2,180 +2,174 @@ import { CommitMessage } from "../config/types";
 import { debugLog } from "../services/debug/logger";
 import sanitizeHtml from 'sanitize-html';
 
+interface CleaningConfig {
+    removePatterns: RegExp[];
+    defaultType: string;
+    preserveBullets: boolean;
+}
+
+const COMMIT_TYPES = ['feat', 'fix', 'docs', 'style', 'refactor', 'test', 'chore', 'perf', 'ci', 'build', 'revert'];
+const COMMIT_TYPE_PATTERN = new RegExp(`^(${COMMIT_TYPES.join('|')})(\\([^)]+\\))?:`, 'i');
+const MAX_SUMMARY_LENGTH = 72;
+
 export function parseMarkdownContent(content: string): CommitMessage {
     const summaryMatch = content.match(/# Commit Summary\s*\n([^\n#]*)/);
-    const descriptionMatch = content.match(
-        /# Detailed Description\s*\n([\s\S]*?)(?:\n#|$)/
-    );
+    const descriptionMatch = content.match(/# Detailed Description\s*\n([\s\S]*?)(?:\n#|$)/);
 
-    const summary = summaryMatch ? summaryMatch[1].trim() : "chore: update code";
-    const description = descriptionMatch
-        ? descriptionMatch[1].trim()
-        : "Update implementation";
-
-    return { summary, description };
+    return {
+        summary: summaryMatch?.[1]?.trim() || "chore: update code",
+        description: descriptionMatch?.[1]?.trim() || "Update implementation"
+    };
 }
 
 export function cleanDeepSeekResponse(response: string): string {
-    response = response.replace(/^:\s*/, '');
-    const lines = response.split('\n');
+    const config: CleaningConfig = {
+        removePatterns: [/<think>[\s\S]*?<\/think>/g, /^:\s*/],
+        defaultType: 'chore',
+        preserveBullets: true
+    };
 
-    if (lines[0].includes('-')) {
-        const match = lines[0].match(/(feat|fix|docs|style|refactor|test|chore):\s*([^-]+)/);
-        if (match) {
-            const [_, type, description] = match;
-            return `${type}: ${description.trim()}\n\n${lines.join('\n')}`;
+    return cleanResponseWithConfig(response, config, (cleaned) => {
+        const lines = cleaned.split('\n');
+
+        if (lines[0]?.includes('-')) {
+            const match = lines[0].match(/(feat|fix|docs|style|refactor|test|chore):\s*([^-]+)/);
+            if (match) {
+                const [_, type, description] = match;
+                return `${type}: ${description.trim()}\n\n${lines.join('\n')}`;
+            }
         }
-    }
 
-    let previous;
-    do {
-        previous = response;
-        response = response
-            .replace(/<think>[\s\S]*?<\/think>/g, '')
-            .replace(/\s+/g, ' ')
-            .trim();
-    } while (response !== previous);
-
-    response = sanitizeHtml(response, {
-        allowedTags: [],
-        allowedAttributes: {}
+        return sanitizeHtml(cleaned, { allowedTags: [], allowedAttributes: {} });
     });
-
-    return response;
 }
 
 export function cleanGeminiResponse(response: string): string {
-    response = response
-        .replace(/^#\s.*$/gm, '')
-        .replace(/```.*?```/gs, '')
-        .replace(/\*\*/g, '')
-        .replace(/`/g, '');
+    const config: CleaningConfig = {
+        removePatterns: [/^#\s.*$/gm, /```.*?```/gs, /\*\*/g, /`/g],
+        defaultType: 'refactor',
+        preserveBullets: true
+    };
 
-    const lines = response.split('\n').filter(line => line.trim());
-    let summary = '';
-    let bulletPoints: string[] = [];
-    let foundSummary = false;
+    return cleanResponseWithConfig(response, config, (cleaned) => {
+        const lines = cleaned.split('\n').filter(line => line.trim());
+        let summary = '';
+        const bulletPoints: string[] = [];
+        let foundSummary = false;
 
-    for (const line of lines) {
-        const trimmedLine = line.trim();
+        for (const line of lines) {
+            const trimmed = line.trim();
 
-        if (!trimmedLine || trimmedLine.toLowerCase().includes('detailed description')) {
-            continue;
-        }
+            if (!trimmed || trimmed.toLowerCase().includes('detailed description')) { continue; }
 
-        if (!foundSummary && trimmedLine.match(/^(feat|fix|docs|style|refactor|test|chore)(\([^)]+\))?:/i)) {
-            summary = trimmedLine
-                .replace(/^([^:]+):\s*(.*)$/, (_, type, desc) => `${type.toLowerCase()}: ${desc}`)
-                .trim();
-            foundSummary = true;
-            continue;
-        }
+            if (!foundSummary && COMMIT_TYPE_PATTERN.test(trimmed)) {
+                summary = trimmed.replace(/^([^:]+):\s*(.*)$/, (_, type, desc) => `${type.toLowerCase()}: ${desc}`).trim();
+                foundSummary = true;
+                continue;
+            }
 
-        if (trimmedLine.startsWith('-')) {
-            const cleanedPoint = trimmedLine
-                .replace(/^-\s*(feat|fix|docs|style|refactor|test|chore):\s*/i, '- ')
-                .replace(/^-\s*/, '')
-                .trim();
-
-            if (cleanedPoint) {
-                bulletPoints.push(`- ${cleanedPoint}`);
+            if (trimmed.startsWith('-')) {
+                const cleaned = trimmed.replace(/^-\s*(feat|fix|docs|style|refactor|test|chore):\s*/i, '- ').replace(/^-\s*/, '').trim();
+                if (cleaned) { bulletPoints.push(`- ${cleaned}`); }
             }
         }
-    }
 
-    if (!summary && lines.length > 0) {
-        const firstLine = lines[0].trim();
-        if (firstLine) {
-            const typeMatch = firstLine.match(/(feat|fix|docs|style|refactor|test|chore):/i);
-            const type = typeMatch ? typeMatch[1].toLowerCase() : 'refactor';
-
-            const description = firstLine
-                .replace(/^[^a-zA-Z]+/, '')
-                .replace(/^(feat|fix|docs|style|refactor|test|chore):\s*/i, '')
-                .trim();
-
-            summary = `${type}: ${description}`;
-        } else {
-            summary = 'refactor: update code implementation';
+        if (!summary) {
+            summary = generateSummary(lines[0] || '', 'refactor');
         }
-    }
 
-    if (summary.length > 72) {
-        summary = summary.substring(0, 69) + '...';
-    }
-
-    if (bulletPoints.length === 0) {
-        bulletPoints = ['- Update implementation with necessary changes'];
-    }
-
-    return `${summary}\n\n${bulletPoints.join('\n')}`;
+        return formatCommitMessage(summary, bulletPoints.length ? bulletPoints : ['- Update implementation with necessary changes']);
+    });
 }
 
-/**
- * Cleans and formats responses from Together AI to a standard format
- * @param response The raw response from Together AI
- * @returns A formatted string with summary and description
- */
 export function cleanTogetherAIResponse(response: string): string {
-    try {
-        debugLog(`Cleaning Together AI response`);
+    const config: CleaningConfig = {
+        removePatterns: [/```[a-z]*\n?|\`\`\`/g],
+        defaultType: 'chore',
+        preserveBullets: true
+    };
 
-        // Remove any markdown code blocks and trim
-        response = response.replace(/```[a-z]*\n?|\`\`\`/g, '').trim();
+    return cleanResponseWithConfig(response, config, (cleaned) => {
+        debugLog('Cleaning Together AI response');
 
-        // Split into lines and filter out empty lines
-        const lines = response.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+        const lines = cleaned.split('\n').map(line => line.trim()).filter(line => line.length > 0);
 
         if (lines.length === 0) {
-            debugLog(`No content found in Together AI response`);
+            debugLog('No content found in Together AI response');
             return 'chore: update code\n\n- Update implementation with necessary changes';
         }
 
-        // First line is the summary
-        let summary = lines[0];
-        // Remove bullet point if present on the summary line
-        summary = summary.replace(/^[*-]\s*/, '').trim();
+        let summary = lines[0].replace(/^[*-]\s*/, '').trim();
 
-        // Check if the summary has a conventional commit prefix, add one if not
-        if (!summary.match(/^(feat|fix|docs|style|refactor|test|chore)(\([^)]+\))?:/i)) {
-            // Try to determine an appropriate type from the content
-            const type = summary.toLowerCase().includes('fix') ? 'fix' :
-                summary.toLowerCase().includes('add') ? 'feat' :
-                    summary.toLowerCase().includes('updat') ? 'chore' :
-                        summary.toLowerCase().includes('refactor') ? 'refactor' :
-                            'chore';
-
+        if (!COMMIT_TYPE_PATTERN.test(summary)) {
+            const type = determineCommitType(summary);
             summary = `${type}: ${summary}`;
         }
 
-        // Ensure the summary is properly formatted and not too long
-        summary = summary
-            .replace(/^([^:]+):\s*(.*)$/, (_, type, desc) => `${type.toLowerCase()}: ${desc}`)
-            .trim();
+        summary = summary.replace(/^([^:]+):\s*(.*)$/, (_, type, desc) => `${type.toLowerCase()}: ${desc}`).trim();
+        summary = truncateSummary(summary);
 
-        if (summary.length > 72) {
-            summary = summary.substring(0, 69) + '...';
-        }
-
-        // Remaining lines form the description, preserving existing bullet points
-        const descriptionLines = lines.slice(1);
-        let bulletPoints: string[] = [];
-
-        if (descriptionLines.length > 0) {
-            bulletPoints = descriptionLines.map(line => {
-                // Ensure line starts with a bullet point
-                return line.match(/^[*-]\s/) ? line : `- ${line}`;
-            });
-        } else {
-            bulletPoints = ['- Update implementation with necessary changes'];
-        }
+        const bulletPoints = lines.slice(1).map(line =>
+            line.match(/^[*-]\s/) ? line : `- ${line}`
+        );
 
         debugLog(`Cleaned Together AI response: ${summary}`);
-        return `${summary}\n\n${bulletPoints.join('\n')}`;
-    } catch (error: unknown) {
+        return formatCommitMessage(summary, bulletPoints.length ? bulletPoints : ['- Update implementation with necessary changes']);
+    });
+}
+
+function cleanResponseWithConfig(
+    response: string,
+    config: CleaningConfig,
+    customProcessor?: (cleaned: string) => string
+): string {
+    try {
+        let cleaned = response;
+
+        // Apply remove patterns
+        for (const pattern of config.removePatterns) {
+            cleaned = cleaned.replace(pattern, '');
+        }
+
+        // Normalize whitespace
+        cleaned = cleaned.replace(/\s+/g, ' ').trim();
+
+        return customProcessor ? customProcessor(cleaned) : cleaned;
+    } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        debugLog(`Error cleaning Together AI response: ${errorMessage}`);
-        return 'chore: error processing response\n\n- Error occurred while processing AI response';
+        debugLog(`Error cleaning response: ${errorMessage}`);
+        return `${config.defaultType}: error processing response\n\n- Error occurred while processing AI response`;
     }
+}
+
+function determineCommitType(content: string): string {
+    const lower = content.toLowerCase();
+    if (lower.includes('fix')) { return 'fix'; }
+    if (lower.includes('add')) { return 'feat'; }
+    if (lower.includes('updat')) { return 'chore'; }
+    if (lower.includes('refactor')) { return 'refactor'; }
+    return 'chore';
+}
+
+function generateSummary(firstLine: string, defaultType: string): string {
+    if (!firstLine?.trim()) {
+        return `${defaultType}: update code implementation`;
+    }
+
+    const typeMatch = firstLine.match(COMMIT_TYPE_PATTERN);
+    const type = typeMatch ? typeMatch[1].toLowerCase() : defaultType;
+    const description = firstLine
+        .replace(/^[^a-zA-Z]+/, '')
+        .replace(COMMIT_TYPE_PATTERN, '')
+        .trim();
+
+    return `${type}: ${description || 'update code implementation'}`;
+}
+
+function truncateSummary(summary: string): string {
+    return summary.length > MAX_SUMMARY_LENGTH ? summary.substring(0, 69) + '...' : summary;
+}
+
+function formatCommitMessage(summary: string, bulletPoints: string[]): string {
+    return `${truncateSummary(summary)}\n\n${bulletPoints.join('\n')}`;
 }
