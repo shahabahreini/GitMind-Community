@@ -47,7 +47,7 @@ export class MessageHandler {
                     await new Promise(resolve => setTimeout(resolve, 50));
 
                     // Provide immediate feedback
-                    vscode.window.showInformationMessage(`Setting updated: ${message.key} = ${message.value}`);
+                    // vscode.window.showInformationMessage(`Setting updated: ${message.key} = ${message.value}`);
                 } catch (error) {
                     vscode.window.showErrorMessage(`Failed to update setting: ${error}`);
                 }
