@@ -58,7 +58,7 @@ export class OnboardingWebview {
         this._messageHandler = new OnboardingMessageHandler();
 
         // Track onboarding webview creation
-        telemetryService.trackEvent('onboarding.webview.created');
+        telemetryService.trackDailyActiveUser();
 
         // Set the webview's initial html content
         this._update();

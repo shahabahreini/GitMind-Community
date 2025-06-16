@@ -17,11 +17,34 @@ interface ExtensionInfo {
     machineId: string;
 }
 
+interface DailyActiveUser {
+    userId: string;
+    date: string;
+    sessionId: string;
+}
+
+interface CommitGeneration {
+    userId: string;
+    date: string;
+    success: boolean;
+    provider: string;
+}
+
+interface ExtensionError {
+    userId: string;
+    date: string;
+    errorType: string;
+    errorMessage: string;
+    context: string;
+}
+
 class TelemetryService {
     private client: appInsights.TelemetryClient | null = null;
     private isEnabled: boolean = false;
     private extensionInfo: ExtensionInfo;
     private readonly instrumentationKey: string;
+    private dailyUserTracked: boolean = false;
+    private lastActiveDate: string = '';
 
     constructor() {
         // Application Insights connection string for GitMind VSCode Extension
@@ -35,6 +58,9 @@ class TelemetryService {
             platform: process.platform,
             machineId: vscode.env.machineId
         };
+
+        // Track daily active user on startup
+        this.trackDailyActiveUser();
     }
 
     public async initialize(context: vscode.ExtensionContext): Promise<void> {
@@ -96,7 +122,7 @@ class TelemetryService {
             await context.globalState.update('telemetry.sessionId', this.client.commonProperties['session.id']);
 
             debugLog('Application Insights telemetry initialized successfully');
-            this.trackEvent('extension.telemetry.initialized');
+            this.trackDailyActiveUser();
 
         } catch (error) {
             debugLog('Failed to initialize telemetry:', error);
@@ -118,111 +144,139 @@ class TelemetryService {
         } catch {
             return false;
         }
+
     }
 
-    public trackEvent(eventName: string, properties?: TelemetryProperties, measurements?: TelemetryMeasurements): void {
+    /**
+     * Track daily active users - Core Metric #1
+     * Records unique users who use the extension each day
+     */
+    public trackDailyActiveUser(): void {
         if (!this.isEnabled || !this.client || !this.isTelemetryCurrentlyEnabled()) {
             return;
         }
 
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+
+        // Only track once per day per user
+        if (this.dailyUserTracked && this.lastActiveDate === today) {
+            return;
+        }
+
         try {
-            const eventProperties = {
-                ...properties,
-                'timestamp': new Date().toISOString()
+            const userEvent: DailyActiveUser = {
+                userId: this.extensionInfo.machineId,
+                date: today,
+                sessionId: this.generateSessionId()
             };
 
             this.client.trackEvent({
-                name: `gitmind.${eventName}`,
-                properties: eventProperties,
-                measurements: measurements
+                name: 'gitmind.daily_active_user',
+                properties: {
+                    'user_id': userEvent.userId,
+                    'date': userEvent.date,
+                    'session_id': userEvent.sessionId,
+                    'extension_version': this.extensionInfo.version
+                }
             });
 
-            debugLog(`Telemetry event tracked: ${eventName}`, { properties: eventProperties, measurements });
+            this.dailyUserTracked = true;
+            this.lastActiveDate = today;
+            debugLog('Daily active user tracked');
         } catch (error) {
-            debugLog('Failed to track telemetry event:', error);
+            debugLog('Failed to track daily active user:', error);
         }
     }
 
-    public trackCommitGeneration(provider: string, success: boolean, duration: number, tokenCount?: number, errorType?: string): void {
-        const properties: TelemetryProperties = {
-            'provider': provider,
-            'success': success.toString(),
-            'error.type': errorType || 'none'
-        };
-
-        const measurements: TelemetryMeasurements = {
-            'duration.ms': duration,
-            'token.count': tokenCount || 0
-        };
-
-        this.trackEvent('commit.generated', properties, measurements);
-    }
-
-    public trackProviderUsage(provider: string, model: string, success: boolean): void {
-        this.trackEvent('provider.used', {
-            'provider': provider,
-            'model': model,
-            'success': success.toString()
-        });
-    }
-
-    public trackSettingsChanged(setting: string, oldValue: string, newValue: string): void {
-        this.trackEvent('settings.changed', {
-            'setting': setting,
-            'old.value': oldValue,
-            'new.value': newValue
-        });
-    }
-
-    public trackAPIValidation(provider: string, success: boolean, responseTime?: number): void {
-        const measurements: TelemetryMeasurements = {};
-        if (responseTime !== undefined) {
-            measurements['response.time.ms'] = responseTime;
-        }
-
-        this.trackEvent('api.validation', {
-            'provider': provider,
-            'success': success.toString()
-        }, measurements);
-    }
-
-    public trackException(error: Error, properties?: TelemetryProperties): void {
+    /**
+     * Track commit generation - Core Metric #2
+     * Records when users generate commits and success rate
+     */
+    public trackCommitGeneration(provider: string, success: boolean, errorMessage?: string): void {
         if (!this.isEnabled || !this.client || !this.isTelemetryCurrentlyEnabled()) {
             return;
         }
 
         try {
-            const errorProperties = {
-                ...properties,
-                'error.name': error.name,
-                'error.stack': error.stack || 'No stack trace available',
-                'timestamp': new Date().toISOString()
+            const today = new Date().toISOString().split('T')[0];
+
+            const commitEvent: CommitGeneration = {
+                userId: this.extensionInfo.machineId,
+                date: today,
+                success: success,
+                provider: provider
             };
 
-            this.client.trackException({
-                exception: error,
-                properties: errorProperties
+            this.client.trackEvent({
+                name: 'gitmind.commit_generated',
+                properties: {
+                    'user_id': commitEvent.userId,
+                    'date': commitEvent.date,
+                    'success': success.toString(),
+                    'provider': provider,
+                    'error_message': errorMessage || 'none'
+                },
+                measurements: {
+                    'commits_count': 1
+                }
             });
 
-            debugLog('Telemetry exception tracked:', error);
-        } catch (telemetryError) {
-            debugLog('Failed to track telemetry exception:', telemetryError);
+            debugLog(`Commit generation tracked: ${success ? 'success' : 'failed'} with ${provider}`);
+        } catch (error) {
+            debugLog('Failed to track commit generation:', error);
         }
     }
 
-    public trackUserFlow(flowName: string, step: string, success: boolean, duration?: number): void {
-        const properties: TelemetryProperties = {
-            'flow': flowName,
-            'step': step,
-            'success': success.toString()
-        };
-
-        const measurements: TelemetryMeasurements = {};
-        if (duration !== undefined) {
-            measurements['duration.ms'] = duration;
+    /**
+     * Track extension errors - Core Metric #3
+     * Records errors users encounter while using the extension
+     */
+    public trackExtensionError(errorType: string, errorMessage: string, context: string): void {
+        if (!this.isEnabled || !this.client || !this.isTelemetryCurrentlyEnabled()) {
+            return;
         }
 
-        this.trackEvent('user.flow', properties, measurements);
+        try {
+            const today = new Date().toISOString().split('T')[0];
+
+            const errorEvent: ExtensionError = {
+                userId: this.extensionInfo.machineId,
+                date: today,
+                errorType: errorType,
+                errorMessage: errorMessage,
+                context: context
+            };
+
+            this.client.trackEvent({
+                name: 'gitmind.extension_error',
+                properties: {
+                    'user_id': errorEvent.userId,
+                    'date': errorEvent.date,
+                    'error_type': errorType,
+                    'error_message': errorMessage,
+                    'context': context,
+                    'extension_version': this.extensionInfo.version
+                },
+                measurements: {
+                    'error_count': 1
+                }
+            });
+
+            debugLog(`Extension error tracked: ${errorType} in ${context}`);
+        } catch (error) {
+            debugLog('Failed to track extension error:', error);
+        }
+    }
+
+    /**
+     * Legacy method for exception tracking - redirects to trackExtensionError
+     */
+    public trackException(error: Error, context?: string): void {
+        this.trackExtensionError(
+            error.name || 'UnknownError',
+            error.message || 'No error message',
+            context || 'general'
+        );
     }
 
     public flush(): void {

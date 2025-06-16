@@ -134,12 +134,8 @@ export async function generateCommitMessage(
         currentRequestController = new AbortController();
         isCurrentlyActive = true;
 
-        // Track the start of generation
-        telemetryService.trackEvent('api.generateCommit.started', {
-            'provider': config.type,
-            'files.changed': filesChanged.toString(),
-            'diff.size.bytes': diffSize.toString()
-        });
+        // Track the start of generation - using trackDailyActiveUser to ensure user activity is tracked
+        telemetryService.trackDailyActiveUser();
 
         // First validate and potentially update the configuration
         const validatedConfig = await validateAndUpdateConfig(config);
@@ -152,12 +148,7 @@ export async function generateCommitMessage(
         const result = await generateMessageWithConfig(validatedConfig, diff, customContext);
 
         const duration = Date.now() - startTime;
-        telemetryService.trackProviderUsage(config.type, getModelName(config), true);
-        telemetryService.trackEvent('api.generateCommit.completed', {
-            'provider': config.type,
-            'success': 'true',
-            'duration.ms': duration.toString()
-        });
+        telemetryService.trackCommitGeneration(config.type, true);
 
         return result;
     } catch (error) {
@@ -166,20 +157,22 @@ export async function generateCommitMessage(
 
         // Track the error
         if (error instanceof Error) {
-            telemetryService.trackException(error, {
-                'provider': config.type,
-                'operation': 'generateCommitMessage'
-            });
-            telemetryService.trackProviderUsage(config.type, getModelName(config), false);
+            telemetryService.trackExtensionError(
+                'commit_generation_error',
+                error.message,
+                `provider:${config.type}`
+            );
+            telemetryService.trackCommitGeneration(config.type, false, error.message);
         }
 
         // Handle cancellation specifically
         if (error instanceof Error && (error.message === 'Request was cancelled' || error.message === 'User cancelled token count confirmation')) {
             debugLog("Request was cancelled by user");
-            telemetryService.trackEvent('api.generateCommit.cancelled', {
-                'provider': config.type,
-                'duration.ms': duration.toString()
-            });
+            telemetryService.trackExtensionError(
+                'commit_generation_cancelled',
+                error.message,
+                `provider:${config.type}`
+            );
             return "";
         }
 

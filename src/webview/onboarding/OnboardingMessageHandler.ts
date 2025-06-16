@@ -8,14 +8,12 @@ export class OnboardingMessageHandler {
         switch (message.command) {
             case "openSettings":
                 // Close onboarding and open settings
-                telemetryService.trackEvent('onboarding.action.openSettings');
+                telemetryService.trackDailyActiveUser();
                 await vscode.commands.executeCommand("ai-commit-assistant.openSettings");
                 break;
             case "selectProvider":
                 // Update the provider setting and open settings
-                telemetryService.trackEvent('onboarding.action.selectProvider', {
-                    'provider': message.provider
-                });
+                telemetryService.trackDailyActiveUser();
                 const config = vscode.workspace.getConfiguration("aiCommitAssistant");
                 await config.update("apiProvider", message.provider, vscode.ConfigurationTarget.Global);
 
@@ -27,22 +25,22 @@ export class OnboardingMessageHandler {
                 break;
             case "completeOnboarding":
                 // Mark onboarding as completed
-                telemetryService.trackEvent('onboarding.action.completed');
+                telemetryService.trackDailyActiveUser();
                 await vscode.commands.executeCommand("ai-commit-assistant.completeOnboarding");
                 break;
             case "skipOnboarding":
                 // Skip onboarding but mark as shown
-                telemetryService.trackEvent('onboarding.action.skipped');
+                telemetryService.trackDailyActiveUser();
                 await vscode.commands.executeCommand("ai-commit-assistant.skipOnboarding");
                 break;
             case "checkApiSetup":
                 // Check API setup for selected provider
-                telemetryService.trackEvent('onboarding.action.checkApiSetup');
+                telemetryService.trackDailyActiveUser();
                 await vscode.commands.executeCommand("ai-commit-assistant.checkApiSetup");
                 break;
             case "generateFirstCommit":
                 // Try to generate first commit message
-                telemetryService.trackEvent('onboarding.action.generateFirstCommit');
+                telemetryService.trackDailyActiveUser();
                 await vscode.commands.executeCommand("ai-commit-assistant.generateCommitMessage");
                 break;
         }

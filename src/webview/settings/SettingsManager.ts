@@ -121,10 +121,11 @@ export class SettingsManager {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             debugLog("Error saving settings:", errorMessage);
 
-            telemetryService.trackException(error as Error, {
-                operation: 'saveSettings',
-                errorMessage
-            });
+            telemetryService.trackExtensionError(
+                'settings_save_error',
+                errorMessage,
+                'saveSettings'
+            );
 
             throw error;
         }
@@ -237,12 +238,6 @@ export class SettingsManager {
             }
         });
 
-        telemetryService.trackEvent('settings.saved', {
-            'changes.count': String(changes.length)
-        });
-
-        changes.forEach(change => {
-            telemetryService.trackSettingsChanged(change.setting, change.oldValue, change.newValue);
-        });
+        telemetryService.trackDailyActiveUser();
     }
 }

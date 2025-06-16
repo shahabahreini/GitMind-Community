@@ -54,16 +54,14 @@ async function handleError(
   debugLog(`${command} Error:`, error);
 
   if (error instanceof Error) {
-    telemetryService.trackException(error, { command, provider });
+    telemetryService.trackExtensionError(error.name, error.message, `command.${command}`);
 
     if (isGenerating) {
-      telemetryService.trackCommitGeneration(provider, false, duration, undefined, error.name);
+      telemetryService.trackCommitGeneration(provider, false, error.message);
     }
 
     if (error.message === 'Request was cancelled') {
-      telemetryService.trackEvent(`command.${command}.cancelled`, {
-        'duration.ms': duration.toString()
-      });
+      telemetryService.trackExtensionError('UserCancellation', 'Request was cancelled', `command.${command}`);
       vscode.window.showInformationMessage(`${command} cancelled`);
       return;
     }
@@ -75,6 +73,7 @@ async function handleError(
     const showMethod = isTokenError ? vscode.window.showWarningMessage : vscode.window.showErrorMessage;
     showMethod(error.message, { modal: true });
   } else {
+    telemetryService.trackExtensionError('UnknownError', 'An unexpected error occurred', `command.${command}`);
     vscode.window.showErrorMessage(
       `An unexpected error occurred. Please check the debug logs for more details.`
     );
@@ -143,11 +142,11 @@ async function handleGenerateCommit(): Promise<void> {
 
   try {
     debugLog("Command Started: generateCommitMessage");
-    telemetryService.trackEvent('command.generateCommit.started', { provider: apiConfig.type });
+    // Focus on tracking daily active users and commit generation only
 
     if (isRequestActive()) {
       await vscode.commands.executeCommand("ai-commit-assistant.cancelGeneration");
-      telemetryService.trackEvent('command.generateCommit.cancelled');
+      telemetryService.trackExtensionError('UserCancellation', 'User cancelled ongoing request', 'generateCommit');
       return;
     }
 
@@ -163,7 +162,7 @@ async function handleGenerateCommit(): Promise<void> {
 
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (!workspaceFolders) {
-      telemetryService.trackEvent('command.generateCommit.failed', { error: 'no_workspace_folder' });
+      telemetryService.trackExtensionError('ConfigurationError', 'No workspace folder is open', 'generateCommit');
       vscode.window.showErrorMessage("No workspace folder is open");
       return;
     }
@@ -171,14 +170,14 @@ async function handleGenerateCommit(): Promise<void> {
     try {
       await validateGitRepository(workspaceFolders[0]);
     } catch (error) {
-      telemetryService.trackEvent('command.generateCommit.failed', { error: 'not_git_repository' });
+      telemetryService.trackExtensionError('ConfigurationError', 'Not a git repository', 'generateCommit');
       vscode.window.showErrorMessage("This is not a git repository. Please initialize git first.");
       return;
     }
 
     const diff = await getDiff(workspaceFolders[0]);
     if (!diff?.trim()) {
-      telemetryService.trackEvent('command.generateCommit.failed', { error: 'no_changes' });
+      telemetryService.trackExtensionError('UserError', 'No changes detected', 'generateCommit');
       vscode.window.showInformationMessage("No changes detected to generate a commit message for.");
       return;
     }
@@ -200,9 +199,7 @@ async function handleGenerateCommit(): Promise<void> {
 
       telemetryService.trackCommitGeneration(
         apiConfig.type,
-        true,
-        duration,
-        Math.ceil(diff.length / 4)
+        true
       );
 
       vscode.window.showInformationMessage("Commit message generated successfully!");
@@ -210,8 +207,6 @@ async function handleGenerateCommit(): Promise<void> {
       telemetryService.trackCommitGeneration(
         apiConfig.type,
         false,
-        duration,
-        undefined,
         'empty_response'
       );
       vscode.window.showWarningMessage(
@@ -233,7 +228,7 @@ async function handleApiSetupCheck(): Promise<void> {
   const provider = apiConfig.type;
 
   try {
-    telemetryService.trackEvent('command.checkApiSetup.started', { provider });
+    // Focus on core metrics only - tracking errors if API setup fails
 
     await withProgress(`Testing ${provider} API connection...`, async () => {
       try {
@@ -244,15 +239,15 @@ async function handleApiSetupCheck(): Promise<void> {
           )
         ]);
 
-        const duration = Date.now() - startTime;
-        telemetryService.trackAPIValidation(provider, result.success, duration);
         await sendApiCheckResult(result, provider);
       } catch (error) {
-        const duration = Date.now() - startTime;
         debugLog("API Check Error (inner):", error);
 
-        telemetryService.trackException(error as Error, { command: 'checkApiSetup', provider });
-        telemetryService.trackAPIValidation(provider, false, duration);
+        telemetryService.trackExtensionError(
+          'APIConnectionError',
+          error instanceof Error ? error.message : 'Unknown API error',
+          `checkApiSetup.${provider}`
+        );
 
         const errorResult = {
           success: false,
@@ -436,7 +431,7 @@ async function handleOnboardingAction(action: 'complete' | 'skip', context: vsco
     await vscode.commands.executeCommand(command);
   }
 
-  telemetryService.trackEvent(`onboarding.${action}d`);
+  // Removed non-essential telemetry tracking
 
   if (OnboardingWebview.isWebviewOpen()) {
     vscode.commands.executeCommand('workbench.action.closeActiveEditor');
@@ -485,13 +480,13 @@ function registerCommands(context: vscode.ExtensionContext): vscode.Disposable[]
 
     vscode.commands.registerCommand("ai-commit-assistant.openSettings", () => {
       SettingsWebview.createOrShow(context.extensionUri);
-      telemetryService.trackEvent('settings.opened');
+      // Removed non-essential telemetry tracking
     }),
 
     vscode.commands.registerCommand("ai-commit-assistant.openOnboarding", () => {
       if (OnboardingManager.canManuallyOpen(context)) {
         OnboardingWebview.createOrShow(context.extensionUri);
-        telemetryService.trackEvent('onboarding.opened');
+        // Removed non-essential telemetry tracking
       } else {
         vscode.window.showInformationMessage(
           "Onboarding is disabled in settings. You can enable it in the extension settings under 'Show Onboarding'.",
@@ -536,7 +531,7 @@ function registerCommands(context: vscode.ExtensionContext): vscode.Disposable[]
       vscode.window.showInformationMessage(
         "Onboarding state has been reset. The extension will treat you as a new user on next restart."
       );
-      telemetryService.trackEvent('onboarding.reset');
+      // Removed non-essential telemetry tracking
     }),
 
     vscode.commands.registerCommand("ai-commit-assistant.reEnableOnboarding", async () => {
@@ -553,10 +548,10 @@ function registerCommands(context: vscode.ExtensionContext): vscode.Disposable[]
 
       if (action === "Open Onboarding") {
         OnboardingWebview.createOrShow(context.extensionUri);
-        telemetryService.trackEvent('onboarding.reopened');
+        // Removed non-essential telemetry tracking
       }
 
-      telemetryService.trackEvent('onboarding.reenabled');
+      // Removed non-essential telemetry tracking
     }),
 
     // Placeholder commands
@@ -575,9 +570,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   debugLog("AI Commit Assistant is now active");
 
   await telemetryService.initialize(context);
-  telemetryService.trackEvent('extension.activated', {
-    'activation.time': new Date().toISOString()
-  });
+  // Track daily active user on extension activation
+  telemetryService.trackDailyActiveUser();
 
   debugLog("Extension configuration:", vscode.workspace.getConfiguration("aiCommitAssistant"));
   debugLog(`Supported API providers: ${SUPPORTED_PROVIDERS.join(", ")}`);
@@ -600,9 +594,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   if (shouldShowOnboarding) {
     OnboardingWebview.createOrShow(context.extensionUri);
-    telemetryService.trackEvent('extension.onboarding.webview.shown');
+    // Removed non-essential telemetry tracking
   } else {
-    telemetryService.trackEvent('extension.activation.existing_user');
+    // Removed non-essential telemetry tracking
   }
 
   const gitExtension = vscode.extensions.getExtension("vscode.git");
@@ -611,11 +605,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   }
 
   debugLog("GitMind extension activated successfully with all icons");
-  telemetryService.trackEvent('extension.activation.completed');
+  // Removed non-essential telemetry tracking
 }
 
 export function deactivate(): void {
-  telemetryService.trackEvent('extension.deactivated');
+  // Removed non-essential telemetry tracking
   telemetryService.flush();
 
   state.debugChannel?.dispose();
