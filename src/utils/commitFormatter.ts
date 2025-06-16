@@ -85,7 +85,15 @@ function processSummary(summary: string): string {
     const originalSummary = processedSummary;
     processedSummary = processedSummary
         .replace(/\[.*?\]/g, "")
-        .replace(/<[^>]+>/g, "")
+        .replace(/<[^>]+>/g, (match) => {
+            let sanitized = match;
+            let previous;
+            do {
+                previous = sanitized;
+                sanitized = sanitized.replace(/<[^>]+>/g, "");
+            } while (sanitized !== previous);
+            return sanitized;
+        })
         .replace(/\s+/g, " ")
         .trim();
 
