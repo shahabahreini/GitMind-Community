@@ -1,5 +1,142 @@
 # Changelog
 
+## [3.5.1] - 2025-06-16
+
+### Added
+
+- **Centralized Provider Configuration System**: Introduced standardized provider configuration with improved type safety
+
+  - **PROVIDER_DEFAULTS Map**: Centralized configuration mapping for all AI providers with default settings and models
+  - **Dynamic Configuration Building**: Enhanced `getConfiguration()` to dynamically build provider configurations from centralized defaults
+  - **BaseProviderConfig & ApiKeyProviderConfig**: New type-safe interfaces for improved configuration handling
+  - **getEffectiveModel() Utility**: New utility function for handling custom model configurations across providers
+
+- **Enhanced API Validation System**: Comprehensive validator configuration for improved error handling
+
+  - **ValidatorConfig Interface**: Standardized provider settings interface for consistent validation
+  - **VALIDATOR_CONFIGS Record**: Centralized provider configurations with default models, response times, and rate limits
+  - **Dynamic Validation Logic**: Provider-agnostic validation system based on centralized configurations
+  - **Enhanced Error Handling**: Improved troubleshooting messages and error resolution suggestions
+
+- **Ollama Installation Management**: Restructured platform-specific installation instructions
+
+  - **Structured Platform Instructions**: Platform-specific installation steps organized in maintainable map structure
+  - **formatInstructions Function**: Consistent formatting for installation and startup processes
+  - **Enhanced Platform Support**: Detailed notes for each platform's installation and startup procedures
+
+- **Advanced Error Handling System**: Comprehensive error pattern recognition and handling
+
+  - **Structured Error Patterns**: Defined patterns for token limits, rate limits, authentication, quotas, network issues, and configuration errors
+  - **Provider-Specific Error Resolution**: Tailored error suggestions based on provider characteristics
+  - **Intelligent Retry Logic**: Enhanced retry logic for transient errors with fatal error identification
+  - **Error Severity Determination**: Status code-based error severity classification
+
+- **Enhanced Commit Message Processing**: Multi-stage response analysis and cleaning
+
+  - **Response Analysis Metrics**: Detailed analysis including length, code blocks, bullet points, and line structure
+  - **Multi-Stage Response Cleaning**: Advanced cleaning for code blocks, markdown, and formatting
+  - **Conventional Commit Support**: Enhanced summary processing with commit type handling and truncation
+  - **Improved Description Processing**: Better handling of bullet points and empty lines
+
+- **Dynamic Provider Settings System**: Flexible provider configuration with model loading
+
+  - **Provider-Specific Defaults**: Dynamic default models and API key requirements per provider
+  - **Dynamic Form Initialization**: Responsive form initialization based on provider configurations
+  - **Model Loading Handlers**: Specialized handlers for Mistral and Hugging Face model loading
+  - **Enhanced Message Handling**: Improved model updates and settings synchronization
+
+- **Comprehensive Test Suite**: Complete testing framework for quality assurance
+
+  - **Full Test Coverage**: Test suites covering settings UI, AI providers, and git integration
+  - **VS Code API Mocking**: Isolated testing environment with proper API mocking
+  - **Test Documentation**: Detailed quality assurance documentation and validation scripts
+  - **Development Testing Tools**: Scripts for test status monitoring and validation
+
+- **Enhanced Onboarding Control**: Improved user control over onboarding experience
+
+  - **Onboarding Settings Control**: New `aiCommitAssistant.showOnboarding` setting for user control
+  - **Onboarding Reset Commands**: Commands for debugging and manual onboarding access
+  - **Smart Onboarding Logic**: Prevents unnecessary onboarding when API configurations exist
+  - **Permanent Onboarding Disable**: Option to permanently disable onboarding wizard
+
+- **Improved Token Estimation**: More accurate token counting algorithm
+
+  - **Length-Based Tokenization**: Word-length-based token counting for improved accuracy
+  - **Special Character Handling**: Proper handling of punctuation and special characters
+  - **Character-Based Fallback**: Fallback mechanism for edge cases and high special character density
+  - **Multi-Language Support**: Better accuracy for code and non-Latin text
+
+### Enhanced
+
+- **Code Organization and Maintainability**: Significant refactoring for better code structure
+
+  - **Simplified API Configuration**: Streamlined `getApiConfig()` with type-based configuration retrieval
+  - **Reduced Code Duplication**: Eliminated redundant provider-specific logic across modules
+  - **Improved Type Safety**: Enhanced type definitions throughout the codebase
+  - **Modular Processing**: Extracted interfaces and modularized processing steps
+
+- **Webview Component Architecture**: Restructured diagnostics and UI components
+
+  - **DiagnosticInfo Interface**: Type-safe diagnostic information handling in DiagnosticsWebview
+  - **Provider Configuration Mapping**: Replaced switch statements with configuration-based logic
+  - **Centralized Provider Logic**: Consolidated provider-specific settings into shared configurations
+  - **UI Manager Simplification**: Streamlined UI management with shared display configurations
+
+- **Extension Activation System**: Streamlined extension lifecycle management
+
+  - **Separated Command Registration**: Moved command registration to dedicated functions for better organization
+  - **Helper Function Architecture**: Introduced helper functions for error handling, progress notifications, and API checks
+  - **Improved Error Reporting**: Enhanced telemetry tracking for better event logging and error reporting
+  - **Constants Organization**: Added timeout durations and supported provider constants
+
+- **Settings and Configuration Management**: Improved settings handling and UI responsiveness
+
+  - **Centralized Settings Functions**: Unified settings collection and update logic
+  - **Enhanced Loading States**: Improved UI responsiveness with loading indicators and error handling
+  - **Optimized Form Processing**: Enhanced form initialization and settings collection processes
+  - **Better Tooltip UX**: Improved tooltip functionality with hover delays
+
+### Fixed
+
+- **Configuration Management**: Resolved configuration handling issues
+
+  - **Backward Compatibility**: Maintained compatibility with legacy ProviderConfig type
+  - **Type Safety Issues**: Fixed type-related issues in configuration handling
+  - **Provider-Specific Logic**: Eliminated redundant provider interfaces in types.ts
+
+- **Response Processing**: Improved response handling and formatting
+
+  - **Response Cleaning**: Enhanced response cleaning functions with better error handling
+  - **Commit Message Formatting**: Standardized commit message generation across AI models
+  - **Logging Improvements**: Better debug logging for each processing stage
+
+### Technical
+
+- **Architecture Improvements**: Significant codebase restructuring for maintainability
+
+  - **Provider Configuration Abstraction**: Centralized provider handling logic
+  - **Dynamic Configuration System**: Provider-agnostic configuration management
+  - **Enhanced Type System**: Improved type safety throughout the extension
+  - **Modular Component Design**: Better separation of concerns and code organization
+
+- **Testing Infrastructure**: Comprehensive testing framework implementation
+
+  - **Isolated Testing Environment**: VS Code API mocking for reliable testing
+  - **Quality Assurance Tools**: Scripts and documentation for test validation
+  - **Development Workflow**: Enhanced development and testing procedures
+
+- **Performance Optimizations**: Improved extension performance and responsiveness
+
+  - **Efficient Configuration Loading**: Optimized configuration retrieval and caching
+  - **Responsive UI Updates**: Enhanced webview performance and user experience
+  - **Memory Management**: Better resource management and cleanup
+
+### Breaking Changes
+
+- **Configuration Interface Changes**: Updated provider configuration interfaces (internal changes, backward compatible)
+- **Removed Legacy Types**: Cleaned up redundant provider-specific interfaces in types.ts (internal refactoring)
+- **File Structure Changes**: Removed obsolete configuration files and documentation (no user impact)
+
 ## [3.4.3] - 2025-06-13
 
 ### Added
