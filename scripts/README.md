@@ -4,24 +4,33 @@ This directory contains scripts for setting up and managing privacy-compliant te
 
 ## 🚀 Quick Start
 
-Run the master setup script to configure everything:
+Run the unified setup script to configure everything:
 
 ```bash
-./scripts/setup-telemetry.sh
+./scripts/unified-telemetry-setup.sh
 ```
 
 ## 📁 Scripts Overview
 
 ### Main Setup Scripts
 
-- **`setup-telemetry.sh`** - Master script that orchestrates the complete setup
-- **`azure-insights-setup.sh`** - Bash script for Azure Application Insights setup
-- **`azure-insights-setup.ps1`** - PowerShell version for Windows users
+- **`unified-telemetry-setup.sh`** - Comprehensive setup script with privacy validation
+- **`get-connection-string.sh`** - Retrieve Azure connection string
 
 ### Configuration Files
 
-- **`telemetry-queries.json`** - KQL queries and privacy settings for Azure
+- **`telemetry-queries.json`** - Complete KQL queries and privacy settings for Azure
 - **`privacy-validator.js`** - Node.js script to validate privacy compliance
+
+### Testing & Validation
+
+- **`test-validator.js`** - Test telemetry connection and validation
+- **`test-status.js`** - Check extension test status
+
+### Documentation
+
+- **`COMPREHENSIVE_TELEMETRY_GUIDE.md`** - Complete telemetry setup and privacy guide
+- **`privacy-compliance-certificate.md`** - Privacy compliance documentation
 
 ## 🔐 Privacy Features
 

@@ -45,6 +45,146 @@ import { telemetryService } from "../telemetry/telemetryService";
 
 type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter" | "Anthropic" | "GitHub Copilot" | "DeepSeek" | "Grok" | "Perplexity";
 
+interface ProviderConfig {
+    name: ApiProvider;
+    displayName: string;
+    settingPath: string;
+    docsUrl: string;
+    requiresApiKey: boolean;
+    defaultModel?: string;
+    apiCall: (apiKey: string, model: string, diff: string, customContext: string) => Promise<string>;
+}
+
+// Provider configurations
+const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
+    gemini: {
+        name: "Gemini",
+        displayName: "Gemini",
+        settingPath: "gemini.apiKey",
+        docsUrl: "https://aistudio.google.com/app/apikey",
+        requiresApiKey: true,
+        defaultModel: "gemini-pro",
+        apiCall: callGeminiAPI,
+    },
+    huggingface: {
+        name: "Hugging Face",
+        displayName: "Hugging Face",
+        settingPath: "huggingface.apiKey",
+        docsUrl: "https://huggingface.co/settings/tokens",
+        requiresApiKey: true,
+        apiCall: callHuggingFaceAPI,
+    },
+    mistral: {
+        name: "Mistral",
+        displayName: "Mistral AI",
+        settingPath: "mistral.apiKey",
+        docsUrl: "https://console.mistral.ai/api-keys/",
+        requiresApiKey: true,
+        apiCall: callMistralAPI,
+    },
+    cohere: {
+        name: "Cohere",
+        displayName: "Cohere",
+        settingPath: "cohere.apiKey",
+        docsUrl: "https://dashboard.cohere.com/api-keys",
+        requiresApiKey: true,
+        apiCall: callCohereAPI,
+    },
+    openai: {
+        name: "OpenAI",
+        displayName: "OpenAI",
+        settingPath: "openai.apiKey",
+        docsUrl: "https://platform.openai.com/api-keys",
+        requiresApiKey: true,
+        apiCall: callOpenAIAPI,
+    },
+    together: {
+        name: "Together AI",
+        displayName: "Together AI",
+        settingPath: "together.apiKey",
+        docsUrl: "https://api.together.xyz/settings/api-keys",
+        requiresApiKey: true,
+        apiCall: callTogetherAPI,
+    },
+    openrouter: {
+        name: "OpenRouter",
+        displayName: "OpenRouter",
+        settingPath: "openrouter.apiKey",
+        docsUrl: "https://openrouter.ai/keys",
+        requiresApiKey: true,
+        apiCall: callOpenRouterAPI,
+    },
+    anthropic: {
+        name: "Anthropic",
+        displayName: "Anthropic",
+        settingPath: "anthropic.apiKey",
+        docsUrl: "https://console.anthropic.com/",
+        requiresApiKey: true,
+        defaultModel: "claude-3-5-sonnet-20241022",
+        apiCall: callAnthropicAPI,
+    },
+    deepseek: {
+        name: "DeepSeek",
+        displayName: "DeepSeek",
+        settingPath: "deepseek.apiKey",
+        docsUrl: "https://platform.deepseek.com/api_keys",
+        requiresApiKey: true,
+        apiCall: callDeepSeekAPI,
+    },
+    grok: {
+        name: "Grok",
+        displayName: "Grok",
+        settingPath: "grok.apiKey",
+        docsUrl: "https://console.x.ai/",
+        requiresApiKey: true,
+        apiCall: callGrokAPI,
+    },
+    perplexity: {
+        name: "Perplexity",
+        displayName: "Perplexity",
+        settingPath: "perplexity.apiKey",
+        docsUrl: "https://www.perplexity.ai/settings/api",
+        requiresApiKey: true,
+        apiCall: callPerplexityAPI,
+    },
+    ollama: {
+        name: "Ollama",
+        displayName: "Ollama",
+        settingPath: "",
+        docsUrl: "",
+        requiresApiKey: false,
+        apiCall: (apiKey: string, model: string, diff: string, customContext: string) =>
+            callOllamaAPI("", model, diff, customContext), // Ollama uses URL from config
+    },
+    copilot: {
+        name: "GitHub Copilot",
+        displayName: "GitHub Copilot",
+        settingPath: "",
+        docsUrl: "",
+        requiresApiKey: false,
+        defaultModel: "gpt-4o",
+        apiCall: (apiKey: string, model: string, diff: string, customContext: string) =>
+            callCopilotAPI(model, diff, customContext),
+    },
+};
+
+// Request management
+let currentRequestController: AbortController | null = null;
+let isCurrentlyActive = false;
+
+export function cancelCurrentRequest(): void {
+    if (currentRequestController) {
+        currentRequestController.abort();
+        currentRequestController = null;
+    }
+    isCurrentlyActive = false;
+    debugLog("Current request cancelled");
+}
+
+export function isRequestActive(): boolean {
+    return isCurrentlyActive;
+}
+
 async function handleApiError(
     error: unknown,
     config: ApiConfig,
@@ -98,23 +238,6 @@ async function handleApiError(
     const formattedMessage = APIErrorHandler.formatUserMessage(errorInfo);
 
     await vscode.window.showErrorMessage(formattedMessage, { modal: true });
-}
-
-// Request management
-let currentRequestController: AbortController | null = null;
-let isCurrentlyActive = false;
-
-export function cancelCurrentRequest(): void {
-    if (currentRequestController) {
-        currentRequestController.abort();
-        currentRequestController = null;
-    }
-    isCurrentlyActive = false;
-    debugLog("Current request cancelled");
-}
-
-export function isRequestActive(): boolean {
-    return isCurrentlyActive;
 }
 
 export async function generateCommitMessage(
@@ -217,1123 +340,142 @@ async function generateMessageWithConfig(
     // Show which model is being used
     showModelInfo(config);
 
-    switch (config.type) {
-        case "gemini": {
-            const geminiConfig = config as GeminiApiConfig;
-            if (!geminiConfig.apiKey) {
-                const result = await vscode.window.showWarningMessage(
-                    "Gemini API key is required. Would you like to configure it now?",
-                    "Enter API Key",
-                    "Get API Key",
-                    "Cancel"
-                );
-
-                if (result === "Enter API Key") {
-                    const apiKey = await vscode.window.showInputBox({
-                        title: "Gemini API Key",
-                        prompt: "Please enter your Gemini API key",
-                        password: true,
-                        placeHolder: "Paste your API key here",
-                        ignoreFocusOut: true,
-                        validateInput: (text) =>
-                            text?.trim() ? null : "API key cannot be empty",
-                    });
-
-                    if (apiKey) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            "gemini.apiKey",
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-                        return await callGeminiAPI(apiKey.trim(), geminiConfig.model, diff, customContext);
-                    }
-                } else if (result === "Get API Key") {
-                    await vscode.env.openExternal(
-                        vscode.Uri.parse("https://aistudio.google.com/app/apikey")
-                    );
-                    const apiKey = await vscode.window.showInputBox({
-                        title: "Gemini API Key",
-                        prompt:
-                            "Please enter your Gemini API key after getting it from the website",
-                        password: true,
-                        placeHolder: "Paste your API key here",
-                        ignoreFocusOut: true,
-                        validateInput: (text) =>
-                            text?.trim() ? null : "API key cannot be empty",
-                    });
-
-                    if (apiKey) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            "gemini.apiKey",
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-                        return await callGeminiAPI(apiKey.trim(), geminiConfig.model, diff, customContext);
-                    }
-                }
-                return ""; // Return empty if user cancels
-            }
-            return await callGeminiAPI(geminiConfig.apiKey, geminiConfig.model, diff, customContext);
-        }
-
-        case "huggingface": {
-            const hfConfig = config as HuggingFaceApiConfig;
-            if (!hfConfig.apiKey) {
-                const result = await vscode.window.showWarningMessage(
-                    "Hugging Face API key is required. Would you like to configure it now?",
-                    "Enter API Key",
-                    "Get API Key",
-                    "Cancel"
-                );
-
-                if (result === "Enter API Key") {
-                    const apiKey = await vscode.window.showInputBox({
-                        title: "Hugging Face API Key",
-                        prompt: "Please enter your Hugging Face API key",
-                        password: true,
-                        placeHolder: "Paste your API key here",
-                        ignoreFocusOut: true,
-                        validateInput: (text) =>
-                            text?.trim() ? null : "API key cannot be empty",
-                    });
-
-                    if (apiKey) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            "huggingface.apiKey",
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-
-                        if (!hfConfig.model) {
-                            await vscode.commands.executeCommand(
-                                "ai-commit-assistant.openSettings"
-                            );
-                            return "";
-                        }
-                        return await callHuggingFaceAPI(
-                            apiKey.trim(),
-                            hfConfig.model,
-                            diff,
-                            customContext
-                        );
-                    }
-                } else if (result === "Get API Key") {
-                    await vscode.env.openExternal(
-                        vscode.Uri.parse("https://huggingface.co/settings/tokens")
-                    );
-                    const apiKey = await vscode.window.showInputBox({
-                        title: "Hugging Face API Key",
-                        prompt:
-                            "Please enter your Hugging Face API key after getting it from the website",
-                        password: true,
-                        placeHolder: "Paste your API key here",
-                        ignoreFocusOut: true,
-                        validateInput: (text) =>
-                            text?.trim() ? null : "API key cannot be empty",
-                    });
-
-                    if (apiKey) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            "huggingface.apiKey",
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-
-                        if (!hfConfig.model) {
-                            await vscode.commands.executeCommand(
-                                "ai-commit-assistant.openSettings"
-                            );
-                            return "";
-                        }
-                        return await callHuggingFaceAPI(
-                            apiKey.trim(),
-                            hfConfig.model,
-                            diff,
-                            customContext
-                        );
-                    }
-                }
-                return "";
-            }
-            if (!hfConfig.model) {
-                await vscode.window.showErrorMessage(
-                    "Please select a Hugging Face model in the settings."
-                );
-                await vscode.commands.executeCommand(
-                    "ai-commit-assistant.openSettings"
-                );
-                return "";
-            }
-            return await callHuggingFaceAPI(hfConfig.apiKey, hfConfig.model, diff, customContext);
-        }
-
-        case "mistral": {
-            const mistralConfig = config as MistralApiConfig;
-            if (!mistralConfig.apiKey) {
-                const result = await vscode.window.showWarningMessage(
-                    "Mistral API key is required. Would you like to configure it now?",
-                    "Enter API Key",
-                    "Get API Key",
-                    "Cancel"
-                );
-
-                if (result === "Enter API Key") {
-                    const apiKey = await vscode.window.showInputBox({
-                        title: "Mistral API Key",
-                        prompt: "Please enter your Mistral API key",
-                        password: true,
-                        placeHolder: "Paste your API key here",
-                        ignoreFocusOut: true,
-                        validateInput: (text) =>
-                            text?.trim() ? null : "API key cannot be empty",
-                    });
-
-                    if (apiKey) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            "mistral.apiKey",
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-
-                        if (!mistralConfig.model) {
-                            await vscode.commands.executeCommand(
-                                "ai-commit-assistant.openSettings"
-                            );
-                            return "";
-                        }
-                        return await callMistralAPI(
-                            apiKey.trim(),
-                            mistralConfig.model,
-                            diff,
-                            customContext
-                        );
-                    }
-                } else if (result === "Get API Key") {
-                    await vscode.env.openExternal(
-                        vscode.Uri.parse("https://console.mistral.ai/api-keys/")
-                    );
-                    const apiKey = await vscode.window.showInputBox({
-                        title: "Mistral API Key",
-                        prompt:
-                            "Please enter your Mistral API key after getting it from the website",
-                        password: true,
-                        placeHolder: "Paste your API key here",
-                        ignoreFocusOut: true,
-                        validateInput: (text) =>
-                            text?.trim() ? null : "API key cannot be empty",
-                    });
-
-                    if (apiKey) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            "mistral.apiKey",
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-
-                        if (!mistralConfig.model) {
-                            await vscode.commands.executeCommand(
-                                "ai-commit-assistant.openSettings"
-                            );
-                            return "";
-                        }
-                        return await callMistralAPI(
-                            apiKey.trim(),
-                            mistralConfig.model,
-                            diff,
-                            customContext
-                        );
-                    }
-                }
-                return "";
-            }
-            if (!mistralConfig.model) {
-                await vscode.window.showErrorMessage(
-                    "Please select a Mistral model in the settings."
-                );
-                await vscode.commands.executeCommand(
-                    "ai-commit-assistant.openSettings"
-                );
-                return "";
-            }
-            return await callMistralAPI(
-                mistralConfig.apiKey,
-                mistralConfig.model,
-                diff,
-                customContext
-            );
-        }
-
-        case "ollama": {
-            const ollamaConfig = config as OllamaApiConfig;
-            if (!ollamaConfig.url) {
-                await vscode.window.showErrorMessage(
-                    "Ollama URL not configured. Please check the extension settings."
-                );
-                await vscode.commands.executeCommand(
-                    "ai-commit-assistant.openSettings"
-                );
-                return "";
-            }
-            if (!ollamaConfig.model) {
-                await vscode.window.showErrorMessage(
-                    "Ollama model not specified. Please select a model in the extension settings."
-                );
-                await vscode.commands.executeCommand(
-                    "ai-commit-assistant.openSettings"
-                );
-                return "";
-            }
-
-            const isOllamaAvailable = await checkOllamaAvailability(ollamaConfig.url);
-            if (!isOllamaAvailable) {
-                const instructions = getOllamaInstallInstructions();
-                await vscode.window.showErrorMessage("Ollama Connection Error", {
-                    modal: true,
-                    detail: instructions,
-                });
-                return "";
-            }
-
-            return await callOllamaAPI(ollamaConfig.url, ollamaConfig.model, diff, customContext);
-        }
-
-        case "cohere": {
-            const cohereConfig = config as CohereApiConfig;
-            if (!cohereConfig.apiKey) {
-                const result = await vscode.window.showWarningMessage(
-                    "Cohere API key is required. Would you like to configure it now?",
-                    "Enter API Key",
-                    "Get API Key",
-                    "Cancel"
-                );
-
-                if (result === "Enter API Key") {
-                    const apiKey = await vscode.window.showInputBox({
-                        title: "Cohere API Key",
-                        prompt: "Please enter your Cohere API key",
-                        password: true,
-                        placeHolder: "Paste your API key here",
-                        ignoreFocusOut: true,
-                        validateInput: (text) =>
-                            text?.trim() ? null : "API key cannot be empty",
-                    });
-
-                    if (apiKey) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            "cohere.apiKey",
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-
-                        if (!cohereConfig.model) {
-                            await vscode.commands.executeCommand(
-                                "ai-commit-assistant.openSettings"
-                            );
-                            return "";
-                        }
-                        return await callCohereAPI(
-                            apiKey.trim(),
-                            cohereConfig.model,
-                            diff,
-                            customContext
-                        );
-                    }
-                } else if (result === "Get API Key") {
-                    await vscode.env.openExternal(
-                        vscode.Uri.parse("https://dashboard.cohere.com/api-keys")
-                    );
-                    const apiKey = await vscode.window.showInputBox({
-                        title: "Cohere API Key",
-                        prompt:
-                            "Please enter your Cohere API key after getting it from the website",
-                        password: true,
-                        placeHolder: "Paste your API key here",
-                        ignoreFocusOut: true,
-                        validateInput: (text) =>
-                            text?.trim() ? null : "API key cannot be empty",
-                    });
-
-                    if (apiKey) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            "cohere.apiKey",
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-
-                        if (!cohereConfig.model) {
-                            await vscode.commands.executeCommand(
-                                "ai-commit-assistant.openSettings"
-                            );
-                            return "";
-                        }
-                        return await callCohereAPI(
-                            apiKey.trim(),
-                            cohereConfig.model,
-                            diff,
-                            customContext
-                        );
-                    }
-                }
-                return "";
-            }
-            if (!cohereConfig.model) {
-                await vscode.window.showErrorMessage(
-                    "Please select a Cohere model in the settings."
-                );
-                await vscode.commands.executeCommand(
-                    "ai-commit-assistant.openSettings"
-                );
-                return "";
-            }
-            return await callCohereAPI(
-                cohereConfig.apiKey,
-                cohereConfig.model,
-                diff,
-                customContext
-            );
-        }
-
-        case "openai": {
-            const openaiConfig = config as OpenAIApiConfig;
-            if (!openaiConfig.apiKey) {
-                const result = await vscode.window.showWarningMessage(
-                    "OpenAI API key is required. Would you like to configure it now?",
-                    "Enter API Key",
-                    "Get API Key",
-                    "Cancel"
-                );
-
-                if (result === "Enter API Key") {
-                    const apiKey = await vscode.window.showInputBox({
-                        title: "OpenAI API Key",
-                        prompt: "Please enter your OpenAI API key",
-                        password: true,
-                        placeHolder: "Paste your API key here",
-                        ignoreFocusOut: true,
-                        validateInput: (text) =>
-                            text?.trim() ? null : "API key cannot be empty",
-                    });
-
-                    if (apiKey) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            "openai.apiKey",
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-
-                        if (!openaiConfig.model) {
-                            await vscode.commands.executeCommand(
-                                "ai-commit-assistant.openSettings"
-                            );
-                            return "";
-                        }
-                        return await callOpenAIAPI(
-                            apiKey.trim(),
-                            openaiConfig.model,
-                            diff,
-                            customContext
-                        );
-                    }
-                } else if (result === "Get API Key") {
-                    await vscode.env.openExternal(
-                        vscode.Uri.parse("https://platform.openai.com/api-keys")
-                    );
-                    const apiKey = await vscode.window.showInputBox({
-                        title: "OpenAI API Key",
-                        prompt:
-                            "Please enter your OpenAI API key after getting it from the website",
-                        password: true,
-                        placeHolder: "Paste your API key here",
-                        ignoreFocusOut: true,
-                        validateInput: (text) =>
-                            text?.trim() ? null : "API key cannot be empty",
-                    });
-
-                    if (apiKey) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            "openai.apiKey",
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-
-                        if (!openaiConfig.model) {
-                            await vscode.commands.executeCommand(
-                                "ai-commit-assistant.openSettings"
-                            );
-                            return "";
-                        }
-                        return await callOpenAIAPI(
-                            apiKey.trim(),
-                            openaiConfig.model,
-                            diff,
-                            customContext
-                        );
-                    }
-                }
-                return "";
-            }
-            if (!openaiConfig.model) {
-                await vscode.window.showErrorMessage(
-                    "Please select an OpenAI model in the settings."
-                );
-                await vscode.commands.executeCommand(
-                    "ai-commit-assistant.openSettings"
-                );
-                return "";
-            }
-            return await callOpenAIAPI(
-                openaiConfig.apiKey,
-                openaiConfig.model,
-                diff,
-                customContext
-            );
-        }
-
-        case "together": {
-            const togetherConfig = config as TogetherApiConfig;
-            if (!togetherConfig.apiKey) {
-                const result = await vscode.window.showWarningMessage(
-                    "Together AI API key is required. Would you like to configure it now?",
-                    "Enter API Key",
-                    "Get API Key",
-                    "Cancel"
-                );
-
-                if (result === "Enter API Key") {
-                    const apiKey = await vscode.window.showInputBox({
-                        title: "Together AI API Key",
-                        prompt: "Please enter your Together AI API key",
-                        password: true,
-                        placeHolder: "Paste your API key here",
-                        ignoreFocusOut: true,
-                        validateInput: (text) =>
-                            text?.trim() ? null : "API key cannot be empty",
-                    });
-
-                    if (apiKey) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            "together.apiKey",
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-
-                        if (!togetherConfig.model) {
-                            await vscode.commands.executeCommand(
-                                "ai-commit-assistant.openSettings"
-                            );
-                            return "";
-                        }
-                        return await callTogetherAPI(
-                            apiKey.trim(),
-                            togetherConfig.model,
-                            diff,
-                            customContext
-                        );
-                    }
-                } else if (result === "Get API Key") {
-                    await vscode.env.openExternal(
-                        vscode.Uri.parse("https://api.together.xyz/settings/api-keys")
-                    );
-                    const apiKey = await vscode.window.showInputBox({
-                        title: "Together AI API Key",
-                        prompt:
-                            "Please enter your Together AI API key after getting it from the website",
-                        password: true,
-                        placeHolder: "Paste your API key here",
-                        ignoreFocusOut: true,
-                        validateInput: (text) =>
-                            text?.trim() ? null : "API key cannot be empty",
-                    });
-
-                    if (apiKey) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            "together.apiKey",
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-
-                        if (!togetherConfig.model) {
-                            await vscode.commands.executeCommand(
-                                "ai-commit-assistant.openSettings"
-                            );
-                            return "";
-                        }
-                        return await callTogetherAPI(
-                            apiKey.trim(),
-                            togetherConfig.model,
-                            diff,
-                            customContext
-                        );
-                    }
-                }
-                return "";
-            }
-            if (!togetherConfig.model) {
-                await vscode.window.showErrorMessage(
-                    "Please select a Together AI model in the settings."
-                );
-                await vscode.commands.executeCommand(
-                    "ai-commit-assistant.openSettings"
-                );
-                return "";
-            }
-            return await callTogetherAPI(
-                togetherConfig.apiKey,
-                togetherConfig.model,
-                diff,
-                customContext
-            );
-        }
-
-        case "openrouter": {
-            const openrouterConfig = config as OpenRouterApiConfig;
-            if (!openrouterConfig.apiKey) {
-                const result = await vscode.window.showWarningMessage(
-                    "OpenRouter API key is required. Would you like to configure it now?",
-                    "Enter API Key",
-                    "Get API Key",
-                    "Cancel"
-                );
-
-                if (result === "Enter API Key") {
-                    const apiKey = await vscode.window.showInputBox({
-                        title: "OpenRouter API Key",
-                        prompt: "Please enter your OpenRouter API key",
-                        password: true,
-                        placeHolder: "Paste your API key here",
-                        ignoreFocusOut: true,
-                        validateInput: (text) =>
-                            text?.trim() ? null : "API key cannot be empty",
-                    });
-
-                    if (apiKey) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            "openrouter.apiKey",
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-
-                        if (!openrouterConfig.model) {
-                            await vscode.commands.executeCommand(
-                                "ai-commit-assistant.openSettings"
-                            );
-                            return "";
-                        }
-                        return await callOpenRouterAPI(
-                            apiKey.trim(),
-                            openrouterConfig.model,
-                            diff,
-                            customContext
-                        );
-                    }
-                } else if (result === "Get API Key") {
-                    await vscode.env.openExternal(
-                        vscode.Uri.parse("https://openrouter.ai/keys")
-                    );
-                    const apiKey = await vscode.window.showInputBox({
-                        title: "OpenRouter API Key",
-                        prompt:
-                            "Please enter your OpenRouter API key after getting it from the website",
-                        password: true,
-                        placeHolder: "Paste your API key here",
-                        ignoreFocusOut: true,
-                        validateInput: (text) =>
-                            text?.trim() ? null : "API key cannot be empty",
-                    });
-
-                    if (apiKey) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            "openrouter.apiKey",
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-
-                        if (!openrouterConfig.model) {
-                            await vscode.commands.executeCommand(
-                                "ai-commit-assistant.openSettings"
-                            );
-                            return "";
-                        }
-                        return await callOpenRouterAPI(
-                            apiKey.trim(),
-                            openrouterConfig.model,
-                            diff,
-                            customContext
-                        );
-                    }
-                }
-                return "";
-            }
-            if (!openrouterConfig.model) {
-                await vscode.window.showErrorMessage(
-                    "Please select an OpenRouter model in the settings."
-                );
-                await vscode.commands.executeCommand(
-                    "ai-commit-assistant.openSettings"
-                );
-                return "";
-            }
-            return await callOpenRouterAPI(
-                openrouterConfig.apiKey,
-                openrouterConfig.model,
-                diff,
-                customContext
-            );
-        }
-
-        case "anthropic": {
-            const anthropicConfig = config as AnthropicApiConfig;
-            if (!anthropicConfig.apiKey) {
-                const result = await vscode.window.showWarningMessage(
-                    "Anthropic API key is required. Would you like to configure it now?",
-                    "Enter API Key",
-                    "Get API Key",
-                    "Cancel"
-                );
-
-                if (result === "Enter API Key") {
-                    const apiKey = await vscode.window.showInputBox({
-                        title: "Anthropic API Key",
-                        prompt: "Please enter your API key",
-                        password: true,
-                        placeHolder: "Paste your API key here",
-                        ignoreFocusOut: true,
-                        validateInput: (text) =>
-                            text?.trim() ? null : "API key cannot be empty",
-                    });
-
-                    if (apiKey) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            "anthropic.apiKey",
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-
-                        if (!anthropicConfig.model) {
-                            await vscode.commands.executeCommand(
-                                "ai-commit-assistant.openSettings"
-                            );
-                            return "";
-                        }
-                        return await callAnthropicAPI(
-                            apiKey.trim(),
-                            anthropicConfig.model,
-                            diff,
-                            customContext
-                        );
-                    }
-                } else if (result === "Get API Key") {
-                    await vscode.env.openExternal(
-                        vscode.Uri.parse("https://console.anthropic.com/")
-                    );
-                    const apiKey = await vscode.window.showInputBox({
-                        title: "Anthropic API Key",
-                        prompt: "Please enter your API key after getting it from the website",
-                        password: true,
-                        placeHolder: "Paste your API key here",
-                        ignoreFocusOut: true,
-                        validateInput: (text) =>
-                            text?.trim() ? null : "API key cannot be empty",
-                    });
-
-                    if (apiKey) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            "anthropic.apiKey",
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-
-                        if (!anthropicConfig.model) {
-                            await vscode.commands.executeCommand(
-                                "ai-commit-assistant.openSettings"
-                            );
-                            return "";
-                        }
-                        return await callAnthropicAPI(
-                            apiKey.trim(),
-                            anthropicConfig.model,
-                            diff,
-                            customContext
-                        );
-                    }
-                }
-                return "";
-            }
-            if (!anthropicConfig.model) {
-                await vscode.window.showErrorMessage(
-                    "Please select a model in the settings."
-                );
-                await vscode.commands.executeCommand(
-                    "ai-commit-assistant.openSettings"
-                );
-                return "";
-            }
-            return await callAnthropicAPI(
-                anthropicConfig.apiKey,
-                anthropicConfig.model,
-                diff,
-                customContext
-            );
-        }
-
-        case "copilot": {
-            const copilotConfig = config as CopilotApiConfig;
-            if (!copilotConfig.model) {
-                await vscode.window.showErrorMessage(
-                    "Please select a GitHub Copilot model in the settings."
-                );
-                await vscode.commands.executeCommand(
-                    "ai-commit-assistant.openSettings"
-                );
-                return "";
-            }
-            return await callCopilotAPI(
-                copilotConfig.model,
-                diff,
-                customContext
-            );
-        }
-
-        case "deepseek": {
-            const deepseekConfig = config as DeepSeekApiConfig;
-            if (!deepseekConfig.apiKey) {
-                const result = await vscode.window.showWarningMessage(
-                    "DeepSeek API key is required. Would you like to configure it now?",
-                    "Enter API Key",
-                    "Get API Key",
-                    "Cancel"
-                );
-
-                if (result === "Enter API Key") {
-                    const apiKey = await vscode.window.showInputBox({
-                        title: "DeepSeek API Key",
-                        prompt: "Please enter your DeepSeek API key",
-                        password: true,
-                        placeHolder: "Paste your API key here",
-                        ignoreFocusOut: true,
-                        validateInput: (text) =>
-                            text?.trim() ? null : "API key cannot be empty",
-                    });
-
-                    if (apiKey) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            "deepseek.apiKey",
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-
-                        if (!deepseekConfig.model) {
-                            await vscode.commands.executeCommand(
-                                "ai-commit-assistant.openSettings"
-                            );
-                            return "";
-                        }
-                        return await callDeepSeekAPI(
-                            apiKey.trim(),
-                            deepseekConfig.model,
-                            diff,
-                            customContext
-                        );
-                    }
-                } else if (result === "Get API Key") {
-                    await vscode.env.openExternal(
-                        vscode.Uri.parse("https://platform.deepseek.com/api_keys")
-                    );
-                    const apiKey = await vscode.window.showInputBox({
-                        title: "DeepSeek API Key",
-                        prompt:
-                            "Please enter your DeepSeek API key after getting it from the website",
-                        password: true,
-                        placeHolder: "Paste your API key here",
-                        ignoreFocusOut: true,
-                        validateInput: (text) =>
-                            text?.trim() ? null : "API key cannot be empty",
-                    });
-
-                    if (apiKey) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            "deepseek.apiKey",
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-
-                        if (!deepseekConfig.model) {
-                            await vscode.commands.executeCommand(
-                                "ai-commit-assistant.openSettings"
-                            );
-                            return "";
-                        }
-                        return await callDeepSeekAPI(
-                            apiKey.trim(),
-                            deepseekConfig.model,
-                            diff,
-                            customContext
-                        );
-                    }
-                }
-                return "";
-            }
-            if (!deepseekConfig.model) {
-                await vscode.window.showErrorMessage(
-                    "Please select a DeepSeek model in the settings."
-                );
-                await vscode.commands.executeCommand(
-                    "ai-commit-assistant.openSettings"
-                );
-                return "";
-            }
-            return await callDeepSeekAPI(
-                deepseekConfig.apiKey,
-                deepseekConfig.model,
-                diff,
-                customContext
-            );
-        }
-
-        case "grok": {
-            const grokConfig = config as GrokApiConfig;
-            if (!grokConfig.apiKey) {
-                const result = await vscode.window.showWarningMessage(
-                    "Grok API key is required. Would you like to configure it now?",
-                    "Enter API Key",
-                    "Get API Key",
-                    "Cancel"
-                );
-
-                if (result === "Enter API Key") {
-                    const apiKey = await vscode.window.showInputBox({
-                        title: "Grok API Key",
-                        prompt: "Please enter your Grok API key",
-                        password: true,
-                        placeHolder: "Paste your API key here",
-                        ignoreFocusOut: true,
-                        validateInput: (text) =>
-                            text?.trim() ? null : "API key cannot be empty",
-                    });
-
-                    if (apiKey) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            "grok.apiKey",
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-
-                        if (!grokConfig.model) {
-                            await vscode.commands.executeCommand(
-                                "ai-commit-assistant.openSettings"
-                            );
-                            return "";
-                        }
-                        return await callGrokAPI(
-                            apiKey.trim(),
-                            grokConfig.model,
-                            diff,
-                            customContext
-                        );
-                    }
-                } else if (result === "Get API Key") {
-                    await vscode.env.openExternal(
-                        vscode.Uri.parse("https://console.x.ai/")
-                    );
-                    const apiKey = await vscode.window.showInputBox({
-                        title: "Grok API Key",
-                        prompt:
-                            "Please enter your Grok API key after getting it from the website",
-                        password: true,
-                        placeHolder: "Paste your API key here",
-                        ignoreFocusOut: true,
-                        validateInput: (text) =>
-                            text?.trim() ? null : "API key cannot be empty",
-                    });
-
-                    if (apiKey) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            "grok.apiKey",
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-
-                        if (!grokConfig.model) {
-                            await vscode.commands.executeCommand(
-                                "ai-commit-assistant.openSettings"
-                            );
-                            return "";
-                        }
-                        return await callGrokAPI(
-                            apiKey.trim(),
-                            grokConfig.model,
-                            diff,
-                            customContext
-                        );
-                    }
-                }
-                return "";
-            }
-            if (!grokConfig.model) {
-                await vscode.window.showErrorMessage(
-                    "Please select a Grok model in the settings."
-                );
-                await vscode.commands.executeCommand(
-                    "ai-commit-assistant.openSettings"
-                );
-                return "";
-            }
-            return await callGrokAPI(
-                grokConfig.apiKey,
-                grokConfig.model,
-                diff,
-                customContext
-            );
-        }
-
-        case "perplexity": {
-            const perplexityConfig = config as PerplexityApiConfig;
-            if (!perplexityConfig.apiKey) {
-                const result = await vscode.window.showWarningMessage(
-                    "Perplexity API key is required. Would you like to configure it now?",
-                    "Enter API Key",
-                    "Get API Key",
-                    "Cancel"
-                );
-
-                if (result === "Enter API Key") {
-                    const apiKey = await vscode.window.showInputBox({
-                        title: "Perplexity API Key",
-                        prompt: "Please enter your Perplexity API key",
-                        password: true,
-                        placeHolder: "Paste your API key here",
-                        ignoreFocusOut: true,
-                        validateInput: (text) =>
-                            text?.trim() ? null : "API key cannot be empty",
-                    });
-
-                    if (apiKey) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            "perplexity.apiKey",
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-
-                        if (!perplexityConfig.model) {
-                            await vscode.commands.executeCommand(
-                                "ai-commit-assistant.openSettings"
-                            );
-                            return "";
-                        }
-                        return await callPerplexityAPI(
-                            apiKey.trim(),
-                            perplexityConfig.model,
-                            diff,
-                            customContext
-                        );
-                    }
-                } else if (result === "Get API Key") {
-                    await vscode.env.openExternal(
-                        vscode.Uri.parse("https://www.perplexity.ai/settings/api")
-                    );
-                    const apiKey = await vscode.window.showInputBox({
-                        title: "Perplexity API Key",
-                        prompt:
-                            "Please enter your Perplexity API key after getting it from the website",
-                        password: true,
-                        placeHolder: "Paste your API key here",
-                        ignoreFocusOut: true,
-                        validateInput: (text) =>
-                            text?.trim() ? null : "API key cannot be empty",
-                    });
-
-                    if (apiKey) {
-                        const config =
-                            vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            "perplexity.apiKey",
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-
-                        if (!perplexityConfig.model) {
-                            await vscode.commands.executeCommand(
-                                "ai-commit-assistant.openSettings"
-                            );
-                            return "";
-                        }
-                        return await callPerplexityAPI(
-                            apiKey.trim(),
-                            perplexityConfig.model,
-                            diff,
-                            customContext
-                        );
-                    }
-                }
-                return "";
-            }
-            if (!perplexityConfig.model) {
-                await vscode.window.showErrorMessage(
-                    "Please select a Perplexity model in the settings."
-                );
-                await vscode.commands.executeCommand(
-                    "ai-commit-assistant.openSettings"
-                );
-                return "";
-            }
-            return await callPerplexityAPI(
-                perplexityConfig.apiKey,
-                perplexityConfig.model,
-                diff,
-                customContext
-            );
-        }
-
-        default: {
-            const _exhaustiveCheck: never = config;
-            throw new Error(`Unsupported API provider: ${(config as any).type}`);
-        }
+    const providerConfig = PROVIDER_CONFIGS[config.type];
+    if (!providerConfig) {
+        throw new Error(`Unsupported API provider: ${config.type}`);
     }
+
+    // Handle special cases
+    if (config.type === "ollama") {
+        return await handleOllamaProvider(config as OllamaApiConfig, diff, customContext);
+    }
+
+    if (config.type === "copilot") {
+        const copilotConfig = config as CopilotApiConfig;
+        if (!copilotConfig.model) {
+            await vscode.window.showErrorMessage(
+                "Please select a GitHub Copilot model in the settings."
+            );
+            await vscode.commands.executeCommand("ai-commit-assistant.openSettings");
+            return "";
+        }
+        return await callCopilotAPI(copilotConfig.model, diff, customContext);
+    }
+
+    // Handle standard providers
+    return await handleStandardProvider(config, providerConfig, diff, customContext);
 }
 
-async function showDiagnosticsInfo(config: ApiConfig, diff: string) {
+async function handleOllamaProvider(
+    config: OllamaApiConfig,
+    diff: string,
+    customContext: string
+): Promise<string> {
+    if (!config.url) {
+        await vscode.window.showErrorMessage(
+            "Ollama URL not configured. Please check the extension settings."
+        );
+        await vscode.commands.executeCommand("ai-commit-assistant.openSettings");
+        return "";
+    }
+    if (!config.model) {
+        await vscode.window.showErrorMessage(
+            "Ollama model not specified. Please select a model in the extension settings."
+        );
+        await vscode.commands.executeCommand("ai-commit-assistant.openSettings");
+        return "";
+    }
+
+    const isOllamaAvailable = await checkOllamaAvailability(config.url);
+    if (!isOllamaAvailable) {
+        const instructions = getOllamaInstallInstructions();
+        await vscode.window.showErrorMessage("Ollama Connection Error", {
+            modal: true,
+            detail: instructions,
+        });
+        return "";
+    }
+
+    return await callOllamaAPI(config.url, config.model, diff, customContext);
+}
+
+async function handleStandardProvider(
+    config: ApiConfig,
+    providerConfig: ProviderConfig,
+    diff: string,
+    customContext: string
+): Promise<string> {
+    const typedConfig = config as any;
+
+    // Check for API key if required
+    if (providerConfig.requiresApiKey && !typedConfig.apiKey) {
+        const apiKey = await promptForApiKey(providerConfig);
+        if (!apiKey) {
+            return "";
+        }
+        typedConfig.apiKey = apiKey;
+    }
+
+    // Check for model
+    if (!typedConfig.model) {
+        await vscode.window.showErrorMessage(
+            `Please select a ${providerConfig.displayName} model in the settings.`
+        );
+        await vscode.commands.executeCommand("ai-commit-assistant.openSettings");
+        return "";
+    }
+
+    return await providerConfig.apiCall(
+        typedConfig.apiKey || "",
+        typedConfig.model,
+        diff,
+        customContext
+    );
+}
+
+async function promptForApiKey(providerConfig: ProviderConfig): Promise<string | null> {
+    const result = await vscode.window.showWarningMessage(
+        `${providerConfig.displayName} API key is required. Would you like to configure it now?`,
+        "Enter API Key",
+        "Get API Key",
+        "Cancel"
+    );
+
+    if (result === "Enter API Key") {
+        return await getApiKeyFromUser(providerConfig);
+    } else if (result === "Get API Key") {
+        await vscode.env.openExternal(vscode.Uri.parse(providerConfig.docsUrl));
+        return await getApiKeyFromUser(providerConfig);
+    }
+
+    return null;
+}
+
+async function getApiKeyFromUser(providerConfig: ProviderConfig): Promise<string | null> {
+    const apiKey = await vscode.window.showInputBox({
+        title: `${providerConfig.displayName} API Key`,
+        prompt: `Please enter your ${providerConfig.displayName} API key`,
+        password: true,
+        placeHolder: "Paste your API key here",
+        ignoreFocusOut: true,
+        validateInput: (text) =>
+            text?.trim() ? null : "API key cannot be empty",
+    });
+
+    if (apiKey) {
+        const config = vscode.workspace.getConfiguration("aiCommitAssistant");
+        await config.update(
+            providerConfig.settingPath,
+            apiKey.trim(),
+            vscode.ConfigurationTarget.Global
+        );
+        return apiKey.trim();
+    }
+
+    return null;
+}
+
+async function showDiagnosticsInfo(config: ApiConfig, diff: string): Promise<void> {
     const showDiagnostics = vscode.workspace.getConfiguration('aiCommitAssistant').get('showDiagnostics');
 
     if (!showDiagnostics) {
@@ -1341,64 +483,8 @@ async function showDiagnosticsInfo(config: ApiConfig, diff: string) {
     }
 
     const estimatedTokens = estimateTokens(diff);
-
-    let providerName = '';
-    let modelName = '';
-
-    switch (config.type) {
-        case 'gemini':
-            providerName = 'Google Gemini';
-            modelName = config.model || 'gemini-pro';
-            break;
-        case 'huggingface':
-            providerName = 'Hugging Face';
-            modelName = config.model;
-            break;
-        case 'ollama':
-            providerName = 'Ollama';
-            modelName = config.model;
-            break;
-        case 'mistral':
-            providerName = 'Mistral AI';
-            modelName = config.model;
-            break;
-        case 'cohere':
-            providerName = 'Cohere';
-            modelName = config.model;
-            break;
-        case 'openai':
-            providerName = 'OpenAI';
-            modelName = config.model;
-            break;
-        case 'together':
-            providerName = 'Together AI';
-            modelName = config.model;
-            break;
-        case 'openrouter':
-            providerName = 'OpenRouter';
-            modelName = config.model;
-            break;
-        case 'anthropic':
-            providerName = 'Anthropic';
-            modelName = config.model || 'claude-3-5-sonnet-20241022';
-            break;
-        case 'copilot':
-            providerName = 'GitHub Copilot';
-            modelName = config.model || 'gpt-4o';
-            break;
-        case 'deepseek':
-            providerName = 'DeepSeek';
-            modelName = config.model;
-            break;
-        case 'grok':
-            providerName = 'Grok';
-            modelName = config.model;
-            break;
-        case 'perplexity':
-            providerName = 'Perplexity';
-            modelName = config.model;
-            break;
-    }
+    const providerName = getProviderDisplayName(config.type);
+    const modelName = getModelName(config);
 
     // Create a well-formatted message with proper structure
     const message = [
@@ -1424,226 +510,71 @@ async function showDiagnosticsInfo(config: ApiConfig, diff: string) {
     }
 }
 
-function showModelInfo(config: ApiConfig) {
+function showModelInfo(config: ApiConfig): void {
     const showModelInfo = workspace.getConfiguration('aiCommitAssistant').get('showModelInfo');
 
     if (!showModelInfo) {
         return;
     }
 
-    let modelName = '';
-    switch (config.type) {
-        case 'gemini':
-            modelName = `Gemini (${config.model || 'gemini-pro'})`;
-            break;
-        case 'huggingface':
-            modelName = `Hugging Face (${config.model})`;
-            break;
-        case 'ollama':
-            modelName = `Ollama (${config.model})`;
-            break;
-        case 'mistral':
-            modelName = `Mistral (${config.model})`;
-            break;
-        case 'cohere':
-            modelName = `Cohere (${config.model})`;
-            break;
-        case 'openai':
-            modelName = `OpenAI (${config.model})`;
-            break;
-        case 'together':
-            modelName = `Together AI (${config.model})`;
-            break;
-        case 'openrouter':
-            modelName = `OpenRouter (${config.model})`;
-            break;
-        case "anthropic":
-            modelName = config.model || 'claude-3-5-sonnet-20241022';
-            break;
-        case 'copilot':
-            modelName = `GitHub Copilot (${config.model || 'gpt-4o'})`;
-            break;
-        case 'deepseek':
-            modelName = `DeepSeek (${config.model})`;
-            break;
-        case 'grok':
-            modelName = `Grok (${config.model})`;
-            break;
-        case 'perplexity':
-            modelName = `Perplexity (${config.model})`;
-            break;
-    }
+    const providerName = getProviderDisplayName(config.type);
+    const modelName = getModelName(config);
+    const displayName = config.type === 'anthropic' ? modelName : `${providerName} (${modelName})`;
 
-    vscode.window.showInformationMessage(`Using model: ${modelName}`, { modal: false });
+    vscode.window.showInformationMessage(`Using model: ${displayName}`, { modal: false });
 }
 
 function getProviderName(type: string): ApiProvider {
-    const providerMap: Record<string, ApiProvider> = {
-        "gemini": "Gemini",
-        "huggingface": "Hugging Face",
-        "ollama": "Ollama",
-        "mistral": "Mistral",
-        "cohere": "Cohere",
-        "openai": "OpenAI",
-        "together": "Together AI",
-        "openrouter": "OpenRouter",
-        "anthropic": "Anthropic",
-        "copilot": "GitHub Copilot",
-        "deepseek": "DeepSeek",
-        "grok": "Grok",
-        "perplexity": "Perplexity"
-    };
-    return providerMap[type] || "Gemini";
+    return PROVIDER_CONFIGS[type]?.name || "Gemini";
+}
+
+function getProviderDisplayName(type: string): string {
+    return PROVIDER_CONFIGS[type]?.displayName || "Unknown";
 }
 
 function getModelName(config: ApiConfig): string {
-    // Extract model name from config based on provider type
-    switch (config.type) {
-        case 'gemini':
-            return (config as GeminiApiConfig).model || 'unknown';
-        case 'huggingface':
-            return (config as HuggingFaceApiConfig).model || 'unknown';
-        case 'ollama':
-            return (config as OllamaApiConfig).model || 'unknown';
-        case 'mistral':
-            return (config as MistralApiConfig).model || 'unknown';
-        case 'cohere':
-            return (config as CohereApiConfig).model || 'unknown';
-        case 'openai':
-            return (config as OpenAIApiConfig).model || 'unknown';
-        case 'together':
-            return (config as TogetherApiConfig).model || 'unknown';
-        case 'openrouter':
-            return (config as OpenRouterApiConfig).model || 'unknown';
-        case 'anthropic':
-            return (config as AnthropicApiConfig).model || 'unknown';
-        case 'copilot':
-            return (config as CopilotApiConfig).model || 'unknown';
-        case 'deepseek':
-            return (config as DeepSeekApiConfig).model || 'unknown';
-        case 'grok':
-            return (config as GrokApiConfig).model || 'unknown';
-        case 'perplexity':
-            return (config as PerplexityApiConfig).model || 'unknown';
-        default:
-            return 'unknown';
-    }
+    const typedConfig = config as any;
+    return typedConfig.model || PROVIDER_CONFIGS[config.type]?.defaultModel || 'unknown';
 }
 
-function getProviderSettingPath(provider: string): string {
-    const paths: Record<string, string> = {
-        Gemini: "gemini.apiKey",
-        "Hugging Face": "huggingface.apiKey",
-        Mistral: "mistral.apiKey",
-        Cohere: "cohere.apiKey",
-        OpenAI: "openai.apiKey",
-        "Together AI": "together.apiKey",
-        "OpenRouter": "openrouter.apiKey",
-        "Anthropic": "anthropic.apiKey",
-        "DeepSeek": "deepseek.apiKey",
-        "Grok": "grok.apiKey",
-        "Perplexity": "perplexity.apiKey"
-    };
-    return paths[provider] || "";
-}
-
-async function validateAndUpdateConfig(
-    config: ApiConfig
-): Promise<ApiConfig | null> {
+async function validateAndUpdateConfig(config: ApiConfig): Promise<ApiConfig | null> {
     debugLog("Validating API configuration for provider:", config.type);
 
-    // Skip validation for Ollama and Copilot as they don't require an API key
-    if (config.type === "ollama" || config.type === "copilot") {
+    const providerConfig = PROVIDER_CONFIGS[config.type];
+    if (!providerConfig) {
+        throw new Error(`Unsupported provider: ${config.type}`);
+    }
+
+    // Skip validation for providers that don't require API keys
+    if (!providerConfig.requiresApiKey) {
         return config;
     }
 
-    const provider = getProviderName(config.type);
-    debugLog("Checking API key for provider:", provider);
+    debugLog("Checking API key for provider:", providerConfig.name);
 
     // Check if API key is missing
-    if (!config.apiKey) {
+    if (!(config as any).apiKey) {
         debugLog("API key missing, showing configuration options");
 
         const result = await vscode.window.showWarningMessage(
-            `${provider} API key is required. Would you like to configure it now?`,
+            `${providerConfig.displayName} API key is required. Would you like to configure it now?`,
             "Enter API Key",
             "Get API Key",
             "Cancel"
         );
 
         if (result === "Enter API Key") {
-            const apiKey = await vscode.window.showInputBox({
-                title: `${provider} API Key`,
-                prompt: `Please enter your ${provider} API key`,
-                password: true,
-                placeHolder: "Paste your API key here",
-                ignoreFocusOut: true,
-                validateInput: (text) => {
-                    return text && text.trim().length > 0
-                        ? null
-                        : "API key cannot be empty";
-                },
-            });
-
+            const apiKey = await getApiKeyFromUser(providerConfig);
             if (apiKey) {
-                const settingPath = getProviderSettingPath(provider);
-                if (settingPath) {
-                    const config = vscode.workspace.getConfiguration("aiCommitAssistant");
-                    await config.update(
-                        settingPath,
-                        apiKey.trim(),
-                        vscode.ConfigurationTarget.Global
-                    );
-                    debugLog("API key saved, returning updated configuration");
-                    return getApiConfig();
-                }
+                debugLog("API key saved, returning updated configuration");
+                return getApiConfig();
             }
         } else if (result === "Get API Key") {
-            const providerDocs: Record<string, string> = {
-                "Gemini": "https://aistudio.google.com/app/apikey",
-                "Hugging Face": "https://huggingface.co/settings/tokens",
-                "Mistral": "https://console.mistral.ai/api-keys/",
-                "Cohere": "https://dashboard.cohere.com/api-keys",
-                "OpenAI": "https://platform.openai.com/api-keys",
-                "Together AI": "https://api.together.xyz/settings/api-keys",
-                "OpenRouter": "https://openrouter.ai/keys",
-                "Anthropic": "https://console.anthropic.com/",
-                "DeepSeek": "https://platform.deepseek.com/api_keys",
-                "Grok": "https://console.x.ai/",
-                "Perplexity": "https://www.perplexity.ai/settings/api"
-            };
-
-            if (provider in providerDocs) {
-                await vscode.env.openExternal(
-                    vscode.Uri.parse(providerDocs[provider])
-                );
-                // After opening the website, prompt for API key input
-                const apiKey = await vscode.window.showInputBox({
-                    title: `${provider} API Key`,
-                    prompt: `Please enter your ${provider} API key after getting it from the website`,
-                    password: true,
-                    placeHolder: "Paste your API key here",
-                    ignoreFocusOut: true,
-                    validateInput: (text) => {
-                        return text && text.trim().length > 0
-                            ? null
-                            : "API key cannot be empty";
-                    },
-                });
-
-                if (apiKey) {
-                    const settingPath = getProviderSettingPath(provider);
-                    if (settingPath) {
-                        const config = vscode.workspace.getConfiguration("aiCommitAssistant");
-                        await config.update(
-                            settingPath,
-                            apiKey.trim(),
-                            vscode.ConfigurationTarget.Global
-                        );
-                        debugLog("API key saved, returning updated configuration");
-                        return getApiConfig();
-                    }
-                }
+            await vscode.env.openExternal(vscode.Uri.parse(providerConfig.docsUrl));
+            const apiKey = await getApiKeyFromUser(providerConfig);
+            if (apiKey) {
+                debugLog("API key saved, returning updated configuration");
+                return getApiConfig();
             }
         }
         return null; // User cancelled or no API key provided
