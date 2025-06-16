@@ -295,7 +295,9 @@ class TelemetryService {
     }
 
     private generateSessionId(): string {
-        return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const crypto = require('crypto');
+        const randomString = crypto.randomBytes(9).toString('hex');
+        return `${Date.now()}-${randomString}`;
     }
 
     public isReady(): boolean {
