@@ -26,11 +26,17 @@ export class OnboardingMessageHandler {
             case "completeOnboarding":
                 // Mark onboarding as completed
                 telemetryService.trackDailyActiveUser();
+                // Close the webview first
+                await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+                // Then execute the completion command
                 await vscode.commands.executeCommand("ai-commit-assistant.completeOnboarding");
                 break;
             case "skipOnboarding":
                 // Skip onboarding but mark as shown
                 telemetryService.trackDailyActiveUser();
+                // Close the webview first
+                await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+                // Then execute the skip command
                 await vscode.commands.executeCommand("ai-commit-assistant.skipOnboarding");
                 break;
             case "checkApiSetup":

@@ -153,16 +153,27 @@ export class OnboardingManager {
 
     private static getProviderSettingPath(provider: string): string {
         const paths: Record<string, string> = {
+            'gemini': 'gemini.apiKey',
             'Gemini': 'gemini.apiKey',
+            'huggingface': 'huggingface.apiKey',
             'Hugging Face': 'huggingface.apiKey',
+            'mistral': 'mistral.apiKey',
             'Mistral': 'mistral.apiKey',
+            'cohere': 'cohere.apiKey',
             'Cohere': 'cohere.apiKey',
+            'openai': 'openai.apiKey',
             'OpenAI': 'openai.apiKey',
+            'together': 'together.apiKey',
             'Together AI': 'together.apiKey',
+            'openrouter': 'openrouter.apiKey',
             'OpenRouter': 'openrouter.apiKey',
+            'anthropic': 'anthropic.apiKey',
             'Anthropic': 'anthropic.apiKey',
+            'deepseek': 'deepseek.apiKey',
             'DeepSeek': 'deepseek.apiKey',
+            'grok': 'grok.apiKey',
             'Grok': 'grok.apiKey',
+            'perplexity': 'perplexity.apiKey',
             'Perplexity': 'perplexity.apiKey'
         };
         return paths[provider] || '';
@@ -209,10 +220,15 @@ export class OnboardingManager {
      * Check if onboarding should be shown based on multiple criteria
      */
     public static async shouldShowOnboarding(context: vscode.ExtensionContext): Promise<boolean> {
+        debugLog('=== Onboarding Check Started ===');
+
         // Check if user has disabled onboarding permanently (either via settings or by skipping)
         const config = vscode.workspace.getConfiguration('aiCommitAssistant');
         const showOnboardingSetting = config.get<boolean>('showOnboarding', true);
         const hasDisabledPermanently = context.globalState.get<boolean>(this.ONBOARDING_DISABLED_PERMANENTLY_KEY, false);
+
+        debugLog(`Settings showOnboarding: ${showOnboardingSetting}`);
+        debugLog(`Permanently disabled: ${hasDisabledPermanently}`);
 
         if (!showOnboardingSetting || hasDisabledPermanently) {
             debugLog('Onboarding disabled in settings or disabled permanently');
@@ -223,19 +239,25 @@ export class OnboardingManager {
         const hasCompleted = context.globalState.get<boolean>(this.ONBOARDING_COMPLETED_KEY, false);
         const hasSkipped = context.globalState.get<boolean>(this.ONBOARDING_SKIPPED_KEY, false);
 
+        debugLog(`Onboarding completed: ${hasCompleted}`);
+        debugLog(`Onboarding skipped: ${hasSkipped}`);
+
         if (hasCompleted || hasSkipped) {
             debugLog('Onboarding already completed or skipped');
             // If user skipped, also mark as permanently disabled to prevent future shows
             if (hasSkipped && !hasDisabledPermanently) {
                 await context.globalState.update(this.ONBOARDING_DISABLED_PERMANENTLY_KEY, true);
+                debugLog('Marked as permanently disabled due to skip');
             }
             return false;
         }
 
-        // Check if user already has a working API configuration (permanent setup)
-        const hasWorkingConfig = await this.hasWorkingApiConfiguration();
-        if (hasWorkingConfig) {
-            debugLog('User already has working API configuration, marking as completed and skipping onboarding');
+        // Check if user already has ANY working API configuration (more permissive than current provider)
+        const hasAnyWorkingConfig = await this.hasAnyValidApiConfiguration();
+        debugLog(`Has any valid API configuration: ${hasAnyWorkingConfig}`);
+
+        if (hasAnyWorkingConfig) {
+            debugLog('User already has working API configuration for at least one provider, marking as completed and skipping onboarding');
             // Mark as completed since they don't need onboarding
             await this.markAsCompleted(context);
             return false;
@@ -243,12 +265,15 @@ export class OnboardingManager {
 
         // Check if this is truly a first-time user with more flexible criteria
         const isFirstTime = await this.isFirstTimeUser(context);
+        debugLog(`Is first time user: ${isFirstTime}`);
+
         if (!isFirstTime) {
             debugLog('Not a first-time user, skipping onboarding');
             return false;
         }
 
         debugLog('All checks passed, should show onboarding');
+        debugLog('=== Onboarding Check Completed ===');
         return true;
     }
 
@@ -287,6 +312,8 @@ export class OnboardingManager {
         const config = vscode.workspace.getConfiguration('aiCommitAssistant');
         const provider = config.get<string>('apiProvider');
 
+        debugLog(`Checking API configuration for provider: ${provider}`);
+
         if (!provider) {
             debugLog('No API provider configured');
             return false;
@@ -314,6 +341,41 @@ export class OnboardingManager {
                 debugLog(`No API key path found for provider: ${provider}`);
                 return false;
         }
+    }
+
+    /**
+     * Check if any API provider has a valid configuration
+     */
+    private static async hasAnyValidApiConfiguration(): Promise<boolean> {
+        const config = vscode.workspace.getConfiguration('aiCommitAssistant');
+
+        // List of all providers that could be configured
+        const providers = ['gemini', 'huggingface', 'ollama', 'mistral', 'cohere', 'openai', 'together', 'openrouter', 'anthropic', 'copilot', 'deepseek', 'grok', 'perplexity'];
+
+        debugLog('Checking API configuration for all providers...');
+
+        for (const provider of providers) {
+            // Check if this provider has configuration
+            if (provider === 'ollama' || provider === 'copilot') {
+                // These don't require API keys, check if they're the current provider
+                const currentProvider = config.get<string>('apiProvider');
+                if (currentProvider === provider) {
+                    debugLog(`Found configured provider: ${provider} (no API key required)`);
+                    return true;
+                }
+            } else {
+                // Check for API key
+                const apiKey = config.get<string>(`${provider}.apiKey`);
+                debugLog(`Checking ${provider}.apiKey: ${apiKey ? `configured (${apiKey.length} chars)` : 'not configured'}`);
+                if (apiKey && apiKey.trim().length > 0) {
+                    debugLog(`Found API key for provider: ${provider}`);
+                    return true;
+                }
+            }
+        }
+
+        debugLog('No valid API configuration found for any provider');
+        return false;
     }
 
     /**

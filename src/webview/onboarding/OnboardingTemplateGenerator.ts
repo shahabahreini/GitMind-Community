@@ -317,12 +317,14 @@ export class OnboardingTemplateGenerator {
     });
     
     document.getElementById('skipBtn').addEventListener('click', () => {
+        console.log('Skip button clicked - sending skipOnboarding command');
         vscode.postMessage({
             command: 'skipOnboarding'
         });
     });
     
     document.getElementById('finishBtn').addEventListener('click', () => {
+        console.log('Finish button clicked - sending completeOnboarding command');
         vscode.postMessage({
             command: 'completeOnboarding'
         });

@@ -433,9 +433,7 @@ async function handleOnboardingAction(action: 'complete' | 'skip', context: vsco
 
   // Removed non-essential telemetry tracking
 
-  if (OnboardingWebview.isWebviewOpen()) {
-    vscode.commands.executeCommand('workbench.action.closeActiveEditor');
-  }
+  // Note: Webview is already closed by the OnboardingMessageHandler
 }
 
 // Command Registration

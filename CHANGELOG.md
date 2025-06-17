@@ -1,5 +1,54 @@
 # Changelog
 
+## [3.5.3] - 2025-06-17
+
+### Fixed
+
+- **Critical Onboarding System Fixes**: Resolved major onboarding workflow issues affecting user experience
+
+  - **Fixed "Don't Show Again" Button**: The skip onboarding button now properly closes the webview and marks onboarding as permanently disabled
+  - **Fixed "Finish Setup" Button**: The complete onboarding button now correctly closes the webview and marks onboarding as completed
+  - **Fixed Persistent Onboarding Display**: Onboarding no longer appears every time VS Code starts for users who have already configured API keys
+  - **Enhanced API Key Detection**: Improved logic to check for existing API keys across ALL providers, not just the currently selected one
+  - **Smart Skip Logic**: Users with any valid API configuration are automatically marked as completed and skip onboarding
+
+- **Onboarding State Management**: Improved handling of onboarding state and user preferences
+
+  - **Proper State Persistence**: Onboarding completion and skip states are now properly saved to VS Code global state
+  - **Race Condition Fix**: Resolved timing issues between webview closure and command execution
+  - **Better Provider Detection**: Enhanced support for providers that don't require API keys (Ollama, GitHub Copilot)
+  - **Improved First-Time User Detection**: More accurate detection of truly new users vs. existing users with configurations
+
+- **Webview Message Handling**: Enhanced communication between onboarding webview and extension
+
+  - **Correct Command Execution Order**: Fixed the sequence of webview closure and command execution to prevent errors
+  - **Enhanced Error Handling**: Better error handling and debugging output throughout the onboarding flow
+  - **Improved Button Responsiveness**: All onboarding buttons now provide immediate feedback and proper state changes
+
+### Enhanced
+
+- **Onboarding Logic Improvements**: Comprehensive enhancements to onboarding decision-making
+
+  - **Multi-Provider API Detection**: New `hasAnyValidApiConfiguration()` function checks all providers for existing setup
+  - **Case-Insensitive Provider Mapping**: Enhanced provider setting path resolution for better compatibility
+  - **Comprehensive Debug Output**: Added detailed logging throughout onboarding flow for better troubleshooting
+  - **Automatic Completion**: Users with existing API keys are automatically marked as onboarded without showing the wizard
+
+- **Developer Experience**: Improved debugging and testing capabilities
+
+  - **Debug Commands**: Added commands for resetting onboarding state and re-enabling onboarding for testing
+  - **Debug Script**: Included `debug-onboarding.js` for manual testing and validation of onboarding logic
+  - **Comprehensive Documentation**: Added `ONBOARDING_FIXES.md` with detailed technical documentation of all fixes
+
+### Technical
+
+- **Code Quality Improvements**: Enhanced maintainability and reliability
+
+  - **Enhanced OnboardingManager**: Improved core onboarding logic with better state management and API detection
+  - **Improved Message Handlers**: Enhanced webview message handling with proper error handling and state management
+  - **Better Configuration Management**: More robust handling of VS Code configuration and global state
+  - **Enhanced Type Safety**: Improved type definitions and error handling throughout onboarding components
+
 ## [3.5.1] - 2025-06-16
 
 ### Added
