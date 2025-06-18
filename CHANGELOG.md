@@ -1,5 +1,45 @@
 # Changelog
 
+## [3.5.4] - 2025-06-18
+
+### Fixed
+
+- **VS Code Engine Compatibility**: Resolved compatibility issues with older VS Code versions and alternative editors
+
+  - **Reduced Engine Requirement**: Lowered VS Code engine requirement from `^1.100.0` to `^1.63.0` for broader compatibility
+  - **Enhanced Editor Support**: Extension now works with Cursor and other VS Code-based editors that may not be on the latest version
+  - **Improved Secrets API Handling**: Added graceful fallback for the Secrets API when not available in older VS Code versions
+  - **Backward Compatibility**: Maintained all functionality while supporting VS Code versions from October 2021 onwards
+  - **Type Definitions Update**: Updated `@types/vscode` from `^1.100.0` to `^1.63.0` to match engine requirements
+
+- **Telemetry Service Robustness**: Enhanced telemetry service to handle missing APIs gracefully
+
+  - **Safe API Access**: Added try-catch blocks around Secrets API usage to prevent crashes on older VS Code versions
+  - **Fallback Mechanism**: Implemented proper fallback to default instrumentation key when Secrets API is unavailable
+  - **Error Prevention**: Eliminated potential runtime errors when extension runs on VS Code versions prior to 1.53.0
+
+### Enhanced
+
+- **Broader User Base Support**: Extension now accessible to users with:
+
+  - **Older VS Code Installations**: Support for VS Code versions from 1.63.0 onwards
+  - **Alternative Editors**: Compatibility with Cursor and other VS Code-based editors
+  - **Enterprise Environments**: Support for environments that may not update to the latest VS Code versions immediately
+  - **Development Teams**: Better compatibility across teams with varying VS Code version preferences
+
+- **Developer Experience**: Improved development workflow compatibility
+  - **Build System**: Verified compilation works correctly with updated engine requirements
+  - **Type Safety**: Maintained full type safety while supporting broader version range
+  - **No Feature Loss**: All existing functionality preserved across supported VS Code versions
+
+### Technical
+
+- Updated VS Code engine requirement from `^1.100.0` to `^1.63.0` in package.json
+- Updated TypeScript definitions to match new engine requirements
+- Enhanced error handling in telemetry service for missing VS Code APIs
+- Added defensive programming patterns for optional API usage
+- Verified backward compatibility with comprehensive testing
+
 ## [3.5.3] - 2025-06-17
 
 ### Fixed

@@ -2,12 +2,12 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: Professional AI Commit Assistant",
   "description": "🚀 Professional AI-powered commit message generation for Visual Studio Code. Leverage 13 different AI providers including OpenAI GPT-4o, Claude-3-5-sonnet, Gemini-2.5-flash, DeepSeek-reasoner, Grok-3, Perplexity-sonar, and 50+ models to create consistent, conventional commit messages that improve code history quality and team collaboration.",
-  "version": "3.5.3",
+  "version": "3.5.4",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
   "engines": {
-    "vscode": "^1.100.0",
+    "vscode": "^1.63.0",
     "node": ">=16.0.0"
   },
   "vsce": {
@@ -643,7 +643,7 @@
     "@types/mocha": "^10.0.6",
     "@types/node": "^22.15.31",
     "@types/sanitize-html": "^2.16.0",
-    "@types/vscode": "^1.100.0",
+    "@types/vscode": "^1.63.0",
     "@typescript-eslint/eslint-plugin": "^8.33.0",
     "@typescript-eslint/parser": "^8.33.0",
     "@vscode/test-cli": "^0.0.11",

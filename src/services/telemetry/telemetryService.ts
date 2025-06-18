@@ -82,8 +82,17 @@ class TelemetryService {
                 return;
             }
 
-            // Try to get instrumentation key from secrets first
-            let instrumentationKey = await context.secrets.get('applicationinsights-key');
+            // Try to get instrumentation key from secrets first (if available)
+            let instrumentationKey: string | undefined;
+            try {
+                if (context.secrets) {
+                    instrumentationKey = await context.secrets.get('applicationinsights-key');
+                }
+            } catch (error) {
+                // Secrets API not available in older VS Code versions, use fallback
+                debugLog('Secrets API not available, using fallback instrumentation key');
+            }
+
             if (!instrumentationKey) {
                 instrumentationKey = this.instrumentationKey;
             }
