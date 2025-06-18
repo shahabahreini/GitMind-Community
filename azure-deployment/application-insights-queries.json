@@ -1,0 +1,24 @@
+{
+  "queries": [
+    {
+      "name": "GitMind - Daily Active Users",
+      "query": "customEvents\n| where name == 'gitmind.daily_active_user'\n| summarize UniqueUsers = dcount(tostring(customDimensions.user_id)) by bin(timestamp, 1d)\n| order by timestamp desc",
+      "category": "GitMind Analytics"
+    },
+    {
+      "name": "GitMind - Commit Success Rate",
+      "query": "customEvents\n| where name == 'gitmind.commit_generated'\n| summarize \n    TotalCommits = count(),\n    SuccessfulCommits = countif(tostring(customDimensions.success) == 'true'),\n    SuccessRate = round(100.0 * countif(tostring(customDimensions.success) == 'true') / count(), 2)\nby bin(timestamp, 1d)\n| order by timestamp desc",
+      "category": "GitMind Analytics"
+    },
+    {
+      "name": "GitMind - Error Analysis",
+      "query": "customEvents\n| where name == 'gitmind.extension_error'\n| summarize \n    ErrorCount = count(),\n    UniqueUsers = dcount(tostring(customDimensions.user_id))\nby \n    ErrorType = tostring(customDimensions.error_type),\n    Context = tostring(customDimensions.context)\n| order by ErrorCount desc",
+      "category": "GitMind Analytics"
+    },
+    {
+      "name": "GitMind - Provider Performance",
+      "query": "customEvents\n| where name == 'gitmind.commit_generated'\n| summarize \n    TotalAttempts = count(),\n    SuccessRate = round(100.0 * countif(tostring(customDimensions.success) == 'true') / count(), 2),\n    AvgResponseTime = avg(todouble(customDimensions.response_time))\nby Provider = tostring(customDimensions.provider)\n| order by SuccessRate desc",
+      "category": "GitMind Analytics"
+    }
+  ]
+}

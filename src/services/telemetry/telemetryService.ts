@@ -48,9 +48,9 @@ class TelemetryService {
 
     constructor() {
         // Application Insights connection string for GitMind VSCode Extension
-        // Production deployment with Azure Canada Central
+        // Production deployment with Azure Canada Central - Updated December 2024
         this.instrumentationKey = process.env.APPLICATIONINSIGHTS_CONNECTION_STRING ||
-            'InstrumentationKey=d65ed410-ce22-4010-8e4d-075016e2f9b3;IngestionEndpoint=https://canadacentral-1.in.applicationinsights.azure.com/;LiveEndpoint=https://canadacentral.livediagnostics.monitor.azure.com/';
+            'InstrumentationKey=***REMOVED***;IngestionEndpoint=https://canadacentral-1.in.applicationinsights.azure.com/;LiveEndpoint=https://canadacentral.livediagnostics.monitor.azure.com/;ApplicationId=***REMOVED***';
 
         this.extensionInfo = {
             version: this.getExtensionVersion(),
@@ -69,6 +69,7 @@ class TelemetryService {
             const config = vscode.workspace.getConfiguration();
             const globalTelemetryLevel = config.get<string>('telemetry.telemetryLevel', 'all');
             const extensionTelemetryEnabled = config.get<boolean>('aiCommitAssistant.telemetry.enabled', true);
+            const customConnectionString = config.get<string>('aiCommitAssistant.telemetry.connectionString', '');
 
             // Telemetry is enabled only if both global VS Code setting allows it AND extension setting is enabled
             this.isEnabled = globalTelemetryLevel !== 'off' && extensionTelemetryEnabled;
@@ -82,29 +83,32 @@ class TelemetryService {
                 return;
             }
 
+            // Use custom connection string if provided, otherwise use default
+            let connectionString = customConnectionString || this.instrumentationKey;
+
             // Try to get instrumentation key from secrets first (if available)
-            let instrumentationKey: string | undefined;
+            let finalConnectionString: string | undefined;
             try {
                 if (context.secrets) {
-                    instrumentationKey = await context.secrets.get('applicationinsights-key');
+                    finalConnectionString = await context.secrets.get('applicationinsights-key');
+                    if (finalConnectionString) {
+                        connectionString = finalConnectionString;
+                        debugLog('Using connection string from VS Code secrets');
+                    }
                 }
             } catch (error) {
                 // Secrets API not available in older VS Code versions, use fallback
-                debugLog('Secrets API not available, using fallback instrumentation key');
+                debugLog('Secrets API not available, using fallback connection string');
             }
 
-            if (!instrumentationKey) {
-                instrumentationKey = this.instrumentationKey;
-            }
-
-            if (!instrumentationKey || instrumentationKey.includes('YOUR_INSTRUMENTATION_KEY_HERE')) {
-                debugLog('Application Insights instrumentation key not configured');
+            if (!connectionString || connectionString.includes('YOUR_INSTRUMENTATION_KEY_HERE')) {
+                debugLog('Application Insights connection string not configured');
                 this.isEnabled = false;
                 return;
             }
 
             // Configure Application Insights
-            appInsights.setup(instrumentationKey)
+            appInsights.setup(connectionString)
                 .setAutoDependencyCorrelation(false)
                 .setAutoCollectRequests(false)
                 .setAutoCollectPerformance(false, false)

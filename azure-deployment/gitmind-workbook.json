@@ -1,0 +1,78 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "# GitMind Extension Analytics Dashboard\n\nThis dashboard provides comprehensive analytics for the GitMind VS Code extension with privacy-compliant metrics.\n\n---"
+      },
+      "name": "text - title"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "customEvents\n| where name == 'gitmind.daily_active_user'\n| where timestamp > ago(30d)\n| summarize UniqueUsers = dcount(tostring(customDimensions.user_id)) by bin(timestamp, 1d)\n| order by timestamp desc",
+        "size": 0,
+        "title": "Daily Active Users (Last 30 Days)",
+        "timeContext": {
+          "durationMs": 2592000000
+        },
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components",
+        "visualization": "timechart"
+      },
+      "name": "query - daily active users"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "customEvents\n| where name == 'gitmind.commit_generated'\n| where timestamp > ago(7d)\n| summarize \n    TotalCommits = count(),\n    SuccessfulCommits = countif(tostring(customDimensions.success) == 'true'),\n    SuccessRate = round(100.0 * countif(tostring(customDimensions.success) == 'true') / count(), 2)\nby bin(timestamp, 1d)\n| order by timestamp desc",
+        "size": 0,
+        "title": "Commit Generation Statistics (Last 7 Days)",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components",
+        "visualization": "table"
+      },
+      "name": "query - commit stats"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "customEvents\n| where name == 'gitmind.extension_error'\n| where timestamp > ago(7d)\n| summarize Count = count() by ErrorType = tostring(customDimensions.error_type)\n| order by Count desc",
+        "size": 0,
+        "title": "Error Distribution (Last 7 Days)",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components",
+        "visualization": "piechart"
+      },
+      "name": "query - error distribution"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "customEvents\n| where name == 'gitmind.commit_generated'\n| where timestamp > ago(7d)\n| summarize \n    TotalAttempts = count(),\n    SuccessfulAttempts = countif(tostring(customDimensions.success) == 'true'),\n    SuccessRate = round(100.0 * countif(tostring(customDimensions.success) == 'true') / count(), 2)\nby Provider = tostring(customDimensions.provider)\n| order by SuccessRate desc",
+        "size": 0,
+        "title": "AI Provider Success Rates",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components",
+        "visualization": "barchart"
+      },
+      "name": "query - provider success"
+    }
+  ],
+  "isLocked": false,
+  "fallbackResourceIds": []
+}

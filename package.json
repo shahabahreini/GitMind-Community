@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: Professional AI Commit Assistant",
   "description": "🚀 Professional AI-powered commit message generation for Visual Studio Code. Leverage 13 different AI providers including OpenAI GPT-4o, Claude-3-5-sonnet, Gemini-2.5-flash, DeepSeek-reasoner, Grok-3, Perplexity-sonar, and 50+ models to create consistent, conventional commit messages that improve code history quality and team collaboration.",
-  "version": "3.5.4",
+  "version": "3.5.5",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -157,6 +157,12 @@
           "default": true,
           "markdownDescription": "Enable extension telemetry to help improve GitMind. **Privacy First**: Only anonymous usage analytics are collected - no code content, file names, or personal information. You can disable this anytime while still respecting VS Code's global telemetry setting.",
           "order": 12
+        },
+        "aiCommitAssistant.telemetry.connectionString": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Azure Application Insights connection string for telemetry (optional). If not provided, the extension will use the default connection string. **Privacy Protected**: All telemetry data is anonymous and GDPR/CCPA compliant.",
+          "order": 13
         },
         "aiCommitAssistant.gemini.model": {
           "type": "string",
