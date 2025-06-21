@@ -627,6 +627,8 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
 
     // Add event listeners
     document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOMContentLoaded event fired');
+      
       const handlers = [
         ['commitVerbose', 'commit.verbose', (el) => el.checked],
         ['showDiagnostics', 'showDiagnostics', (el) => el.checked],
@@ -648,6 +650,289 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           toggleSaveLastPromptVisibility(this.checked);
         });
       }
+
+      // Initialize Ollama model dropdown functionality
+      console.log('About to initialize Ollama dropdown');
+      initializeOllamaModelDropdown();
     });
+
+    // Ollama Model Dropdown Functionality
+    function initializeOllamaModelDropdown() {
+      console.log('Initializing Ollama model dropdown');
+      
+      // Check if vscode API is available
+      if (typeof vscode === 'undefined') {
+        console.error('VS Code API not available!');
+        return;
+      }
+      
+      const modelInput = document.getElementById('ollamaModel');
+      const loadModelsBtn = document.getElementById('loadModelsBtn');
+      const dropdown = document.getElementById('modelDropdown');
+      
+      if (!modelInput || !loadModelsBtn || !dropdown) {
+        console.error('Required elements not found:', { modelInput, loadModelsBtn, dropdown });
+        return;
+      }
+      
+      const modelList = dropdown.querySelector('.model-list');
+      const loadingIndicator = dropdown.querySelector('.dropdown-loading');
+      const errorIndicator = dropdown.querySelector('.dropdown-error');
+      const emptyIndicator = dropdown.querySelector('.dropdown-empty');
+
+      let availableModels = [];
+      let isDropdownOpen = false;
+
+      // Load models button click handler
+      loadModelsBtn.addEventListener('click', async () => {
+        const ollamaUrl = document.getElementById('ollamaUrl').value || 'http://localhost:11434';
+        console.log('Load models button clicked, URL:', ollamaUrl);
+        
+        // Test VS Code API availability
+        if (typeof vscode === 'undefined') {
+          console.error('VS Code API not available!');
+          showError('VS Code API not available - cannot load models');
+          return;
+        }
+        
+        // Test message posting
+        const testMessage = {
+          command: 'loadOllamaModels',
+          baseUrl: ollamaUrl
+        };
+        console.log('About to post message:', testMessage);
+        
+        try {
+          await loadOllamaModels(ollamaUrl);
+        } catch (error) {
+          console.error('Error in loadOllamaModels:', error);
+          showError('Error loading models: ' + error.message);
+          loadModelsBtn.disabled = false;
+          loadModelsBtn.classList.remove('loading');
+        }
+      });
+
+      // Input field events
+      modelInput.addEventListener('focus', () => {
+        if (availableModels.length > 0) {
+          showDropdown();
+        }
+      });
+
+      modelInput.addEventListener('input', (e) => {
+        const filter = e.target.value.toLowerCase();
+        filterModels(filter);
+        if (availableModels.length > 0) {
+          showDropdown();
+        }
+      });
+
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.searchable-dropdown')) {
+          hideDropdown();
+        }
+      });
+
+      // Handle keyboard navigation
+      modelInput.addEventListener('keydown', (e) => {
+        if (!isDropdownOpen) return;
+
+        const visibleItems = modelList.querySelectorAll('li:not(.filtered-out)');
+        const selectedItem = modelList.querySelector('li.selected');
+        let selectedIndex = Array.from(visibleItems).indexOf(selectedItem);
+
+        switch (e.key) {
+          case 'ArrowDown':
+            e.preventDefault();
+            selectedIndex = Math.min(selectedIndex + 1, visibleItems.length - 1);
+            updateSelection(visibleItems, selectedIndex);
+            break;
+          case 'ArrowUp':
+            e.preventDefault();
+            selectedIndex = Math.max(selectedIndex - 1, 0);
+            updateSelection(visibleItems, selectedIndex);
+            break;
+          case 'Enter':
+            e.preventDefault();
+            if (selectedItem) {
+              selectModel(selectedItem.dataset.modelName);
+            }
+            break;
+          case 'Escape':
+            e.preventDefault();
+            hideDropdown();
+            break;
+        }
+      });
+
+      async function loadOllamaModels(baseUrl) {
+        console.log('Loading Ollama models from:', baseUrl);
+        loadModelsBtn.disabled = true;
+        loadModelsBtn.classList.add('loading');
+        showDropdown();
+        showLoading();
+
+        try {
+          // Send message to extension to load models
+          console.log('Sending loadOllamaModels message');
+          vscode.postMessage({
+            command: 'loadOllamaModels',
+            baseUrl: baseUrl
+          });
+          
+          // Add a timeout to detect if no response comes back
+          setTimeout(() => {
+            if (loadModelsBtn.disabled && loadModelsBtn.classList.contains('loading')) {
+              console.warn('No response received after 10 seconds - request may have failed');
+              showError('Request timeout - check if Ollama is running and accessible');
+              loadModelsBtn.disabled = false;
+              loadModelsBtn.classList.remove('loading');
+            }
+          }, 10000);
+          
+        } catch (error) {
+          console.error('Error sending loadOllamaModels message:', error);
+          showError('Failed to load models: ' + error.message);
+          loadModelsBtn.disabled = false;
+          loadModelsBtn.classList.remove('loading');
+        }
+      }
+
+      function populateModels(models) {
+        console.log('Populating models:', models);
+        availableModels = models;
+        modelList.innerHTML = '';
+
+        if (models.length === 0) {
+          showEmpty();
+          return;
+        }
+
+        models.forEach(modelName => {
+          const li = document.createElement('li');
+          li.dataset.modelName = modelName;
+          li.innerHTML = \`
+            <div class="model-name">\${modelName}</div>
+          \`;
+          li.addEventListener('click', () => selectModel(modelName));
+          modelList.appendChild(li);
+        });
+
+        hideLoading();
+        hideError();
+        hideEmpty();
+        loadModelsBtn.disabled = false;
+        loadModelsBtn.classList.remove('loading');
+        console.log('Models populated successfully');
+      }
+
+      function selectModel(modelName) {
+        modelInput.value = modelName;
+        hideDropdown();
+        
+        // Trigger change event to save the setting
+        const event = new Event('change', { bubbles: true });
+        modelInput.dispatchEvent(event);
+      }
+
+      function filterModels(filter) {
+        const items = modelList.querySelectorAll('li');
+        let visibleCount = 0;
+
+        items.forEach(item => {
+          const modelName = item.dataset.modelName.toLowerCase();
+          const isMatch = modelName.includes(filter);
+          
+          if (isMatch) {
+            item.classList.remove('filtered-out');
+            visibleCount++;
+          } else {
+            item.classList.add('filtered-out');
+            item.classList.remove('selected');
+          }
+        });
+
+        // Auto-select first visible item
+        const firstVisible = modelList.querySelector('li:not(.filtered-out)');
+        if (firstVisible) {
+          updateSelection([firstVisible], 0);
+        }
+      }
+
+      function updateSelection(visibleItems, selectedIndex) {
+        // Remove previous selection
+        modelList.querySelectorAll('li.selected').forEach(item => {
+          item.classList.remove('selected');
+        });
+
+        // Add selection to new item
+        if (visibleItems[selectedIndex]) {
+          visibleItems[selectedIndex].classList.add('selected');
+          visibleItems[selectedIndex].scrollIntoView({ block: 'nearest' });
+        }
+      }
+
+      function showDropdown() {
+        dropdown.style.display = 'block';
+        isDropdownOpen = true;
+      }
+
+      function hideDropdown() {
+        dropdown.style.display = 'none';
+        isDropdownOpen = false;
+      }
+
+      function showLoading() {
+        loadingIndicator.style.display = 'block';
+        errorIndicator.style.display = 'none';
+        emptyIndicator.style.display = 'none';
+        modelList.style.display = 'none';
+      }
+
+      function hideLoading() {
+        loadingIndicator.style.display = 'none';
+        modelList.style.display = 'block';
+      }
+
+      function showError(message) {
+        errorIndicator.textContent = message;
+        errorIndicator.style.display = 'block';
+        loadingIndicator.style.display = 'none';
+        emptyIndicator.style.display = 'none';
+        modelList.style.display = 'none';
+      }
+
+      function hideError() {
+        errorIndicator.style.display = 'none';
+      }
+
+      function showEmpty() {
+        emptyIndicator.style.display = 'block';
+        loadingIndicator.style.display = 'none';
+        errorIndicator.style.display = 'none';
+        modelList.style.display = 'none';
+      }
+
+      function hideEmpty() {
+        emptyIndicator.style.display = 'none';
+      }
+
+      // Listen for messages from extension
+      window.addEventListener('message', (event) => {
+        const message = event.data;
+        console.log('Received message from extension:', message);
+        if (message.command === 'ollamaModelsLoaded') {
+          if (message.success) {
+            populateModels(message.models);
+          } else {
+            console.error('Failed to load models:', message.error);
+            showError(message.error || 'Failed to load models');
+            loadModelsBtn.disabled = false;
+            loadModelsBtn.classList.remove('loading');
+          }
+        }
+      });
+    }
   </script>`;
 }

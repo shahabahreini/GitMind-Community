@@ -1,5 +1,53 @@
 # Changelog
 
+## [3.5.6] - 2025-06-20
+
+### Added
+
+- **Ollama Model Dropdown Feature**: Revolutionary searchable model selection interface for Ollama users
+
+  - **Dynamic Model Loading**: Load available models directly from your running Ollama instance with one click
+  - **Searchable Interface**: Real-time filtering and search through available models as you type
+  - **Keyboard Navigation**: Full keyboard support with arrow keys, Enter to select, and Escape to close
+  - **Manual Entry Support**: Maintains backward compatibility - users can still type model names manually
+  - **Professional UI**: Loading indicators, error handling, and smooth animations integrated with VS Code themes
+
+- **Enhanced Ollama Integration**: Comprehensive improvements to Ollama provider experience
+
+  - **Automatic Model Detection**: Uses Ollama API `/api/tags` endpoint to fetch installed models
+  - **Error Handling**: Clear error messages for connection issues, missing models, or API problems
+  - **Debug Logging**: Comprehensive logging for troubleshooting Ollama connectivity issues
+
+### Enhanced
+
+- **User Experience**: Significant improvements to Ollama configuration workflow
+
+  - **One-Click Model Selection**: No more guessing model names - see exactly what's installed
+  - **Visual Feedback**: Loading states and success/error indicators for all operations
+  - **Accessibility**: Full keyboard navigation and screen reader support
+
+- **Developer Experience**: Enhanced debugging and troubleshooting capabilities
+
+  - **Comprehensive Error Messages**: Detailed error reporting with actionable solutions
+  - **Debug Mode Integration**: Full integration with extension debug logging system
+  - **Test Coverage**: Added comprehensive test suite for the new dropdown functionality
+
+### Technical
+
+- **API Integration**: Added `getOllamaModels()` function with proper error handling and response parsing
+- **UI Components**: New searchable dropdown component with filtering, selection, and keyboard navigation
+- **Message Handling**: Enhanced webview-extension communication for model loading requests
+- **Styling**: Complete CSS implementation with VS Code theme integration and responsive design
+- **Testing**: Added test coverage for UI components and API integration functionality
+
+### Implementation Details
+
+- **Backend**: Enhanced `src/services/api/ollama.ts` with model fetching capabilities
+- **Frontend**: New searchable dropdown in `src/webview/settings/components/OllamaSettings.ts`
+- **Styling**: Dedicated CSS module `src/webview/settings/styles/ollamaStyles.css.ts`
+- **Communication**: Message handling in `src/webview/settings/MessageHandler.ts`
+- **Testing**: Comprehensive test coverage in `src/test/suites/settingsUI.test.ts`
+
 ## [3.5.4] - 2025-06-18
 
 ### Fixed

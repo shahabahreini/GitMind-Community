@@ -2,6 +2,7 @@
 import * as vscode from "vscode";
 import { getApiConfig } from "../../config/settings";
 import { debugLog } from "../../services/debug/logger";
+import { getOllamaModels } from "../../services/api/ollama";
 
 export class SettingsWebviewProvider {
     private _panel: vscode.WebviewPanel | undefined;
@@ -32,6 +33,30 @@ export class SettingsWebviewProvider {
                                 await this.updateWebviewContent();
                             } catch (error) {
                                 vscode.window.showErrorMessage(`Failed to update setting: ${error}`);
+                            }
+                            break;
+
+                        case 'loadOllamaModels':
+                            try {
+                                debugLog("Loading Ollama models", { baseUrl: message.baseUrl });
+                                const models = await getOllamaModels(message.baseUrl);
+
+                                // Send models back to webview
+                                this._panel?.webview.postMessage({
+                                    command: 'ollamaModelsLoaded',
+                                    success: true,
+                                    models: models
+                                });
+                            } catch (error) {
+                                const errorMessage = error instanceof Error ? error.message : String(error);
+                                debugLog("Failed to load Ollama models", { error: errorMessage });
+
+                                // Send error back to webview
+                                this._panel?.webview.postMessage({
+                                    command: 'ollamaModelsLoaded',
+                                    success: false,
+                                    error: errorMessage
+                                });
                             }
                             break;
 

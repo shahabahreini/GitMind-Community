@@ -2,6 +2,7 @@
 import { getFormStyles } from "./forms.css";
 import { getButtonStyles } from "./buttons.css";
 import { getStatusBannerStyles } from "./statusBanner.css";
+import { getOllamaStyles } from "./ollamaStyles.css";
 
 export function getMainStyles(): string {
   return `<style>
@@ -383,5 +384,6 @@ export function getMainStyles(): string {
     ${getFormStyles()}
     ${getButtonStyles()}
     ${getStatusBannerStyles()}
+    ${getOllamaStyles()}
   </style>`;
 }
