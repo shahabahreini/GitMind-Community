@@ -1,6 +1,32 @@
 # Changelog
 
-## [3.5.6] - 2025-06-20
+## v3.5.7 - 2025-06-30
+
+### New Features
+
+- Added estimatedTokens calculation to context in `generateCommitMessage`.
+- Added provider-specific model suggestions in `APIErrorHandler`.
+- Added command execution handling in `SettingsWebviewProvider`.
+- Added dialog update and message handling functions in `apiManager.ts`.
+- Added status message and details styling in `main.css.ts`.
+
+### Improvements
+
+- Improved debug logging for provider name retrieval in `getProviderName`.
+- Improved error context handling in `APIErrorHandler`.
+- Improved API check and rate limits result handling in `settingsManager.ts`.
+
+### Bug Fixes
+
+- Enhanced error handling and logging in `callMistralAPI`.
+
+### Other
+
+- Bumped version from 3.5.6 to 3.5.7.
+- Added debug logging for potential authentication issues in `callMistralAPI`.
+- Added debug logging for missing provider documentation URLs in `OnboardingManager`.
+
+## v3.5.6 - 2025-06-20
 
 ### Added
 
@@ -48,7 +74,7 @@
 - **Communication**: Message handling in `src/webview/settings/MessageHandler.ts`
 - **Testing**: Comprehensive test coverage in `src/test/suites/settingsUI.test.ts`
 
-## [3.5.4] - 2025-06-18
+## v3.5.4 - 2025-06-18
 
 ### Fixed
 
@@ -88,7 +114,7 @@
 - Added defensive programming patterns for optional API usage
 - Verified backward compatibility with comprehensive testing
 
-## [3.5.3] - 2025-06-17
+## v3.5.3 - 2025-06-17
 
 ### Fixed
 
@@ -137,7 +163,7 @@
   - **Better Configuration Management**: More robust handling of VS Code configuration and global state
   - **Enhanced Type Safety**: Improved type definitions and error handling throughout onboarding components
 
-## [3.5.1] - 2025-06-16
+## v3.5.1 - 2025-06-16
 
 ### Added
 
@@ -274,7 +300,7 @@
 - **Removed Legacy Types**: Cleaned up redundant provider-specific interfaces in types.ts (internal refactoring)
 - **File Structure Changes**: Removed obsolete configuration files and documentation (no user impact)
 
-## [3.4.3] - 2025-06-13
+## v3.4.3 - 2025-06-13
 
 ### Added
 
@@ -369,7 +395,7 @@
 - **Onboarding System**: Replaced modal-based OnboardingManager with webview-based OnboardingWebview (internal change, no user impact)
 - **Command Registration**: Added new onboarding commands that extend existing command palette functionality
 
-## [3.4.2] - 2025-06-11
+## v3.4.2 - 2025-06-11
 
 ### Fixed
 
@@ -400,7 +426,7 @@
 - Standardized event handling patterns across all settings toggles
 - Added proper error handling and user feedback for settings updates
 
-## [3.4.1] - 2025-06-10
+## v3.4.1 - 2025-06-10
 
 ### Enhanced
 
@@ -442,7 +468,7 @@
 - Improved validation function signatures for consistent provider integration
 - Added comprehensive debug logging for better troubleshooting and error tracking
 
-## [3.4.0] - 2025-06-09
+## v3.4.0 - 2025-06-09
 
 ### Added
 
@@ -474,7 +500,7 @@
 - Integrated Perplexity across all utility modules (apiManager, onboardingManager, statusBanner)
 - Updated provider icons and display mappings for complete UI integration
 
-## [3.3.0] - 2025-06-09
+## v3.3.0 - 2025-06-09
 
 ### Added
 
@@ -514,7 +540,7 @@
 - Added complete error handling and user feedback systems
 - Maintained backward compatibility with existing prompt customization features
 
-## [3.2.0] - 2025-06-09
+## v3.2.0 - 2025-06-09
 
 ### Added
 
@@ -600,7 +626,7 @@
 - Maintained backward compatibility with existing provider configurations
 - Completed DeepSeek provider integration ensuring full functionality across all service functions
 
-## [3.1.2] - 2025-01-08
+## v3.1.2 - 2025-01-08
 
 ### Enhanced
 
@@ -639,7 +665,7 @@
 - Enhanced repository structure for better navigation and developer experience
 - No functional code changes - purely documentation and guidance improvements
 
-## [3.1.1] - 2025-06-08
+## v3.1.1 - 2025-06-08
 
 ### Fixed
 
@@ -666,7 +692,7 @@
 - Updated version numbering and metadata for marketplace publication
 - Maintained backward compatibility while fixing critical settings persistence issue
 
-## [3.1.0] - 2025-06-08
+## v3.1.0 - 2025-06-08
 
 ### Added
 
@@ -704,7 +730,7 @@
 - Added comprehensive validation and error handling for DeepSeek endpoints
 - Updated settings management to include DeepSeek form fields and persistence
 
-## [3.0.0] - 2025-05-31
+## v3.0.0 - 2025-05-31
 
 ### Added
 
@@ -764,7 +790,7 @@
 - Updated documentation and README to reflect new provider and features
 - Prepared for production release with version 3.0.0 targeting production readiness
 
-## [2.2.0] - 2025-05-30
+## v2.2.0 - 2025-05-30
 
 ### Added
 
@@ -789,7 +815,7 @@
 - Implemented comprehensive error handling for Anthropic API responses
 - Added model-specific configurations for optimal Claude model performance
 
-## [2.1.1] - 2025-05-28
+## v2.1.1 - 2025-05-28
 
 ### Enhanced
 
@@ -838,7 +864,7 @@
 - Enhanced build consistency across different environments
 - Modernized dependency versions for better security and performance
 
-## [2.1.0] - 2025-05-28
+## v2.1.0 - 2025-05-28
 
 ### Added
 
@@ -884,13 +910,13 @@
 - **Token Limit Management**: Smart detection and user guidance for content size issues
 - **Error Message Preservation**: Maintains detailed error information throughout the call stack
 
-## [2.0.2] - 2025-05-27
+## v2.0.2 - 2025-05-27
 
 ### Removed
 
 - **Input Box Cleanup**: Removed unused input box in source control called "AI Commit Assistant"
 
-## [2.0.1] - 2025-05-27
+## v2.0.1 - 2025-05-27
 
 ### Fixed
 
@@ -902,7 +928,7 @@
 - Improved command registration and menu structure
 - Enhanced extension stability and validation compliance
 
-## [2.0.0] - 2025-05-24
+## v2.0.0 - 2025-05-24
 
 ### Added
 
