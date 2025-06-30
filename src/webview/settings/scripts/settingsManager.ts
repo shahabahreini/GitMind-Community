@@ -379,13 +379,21 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     }
 
     function handleApiCheckResult(message) {
-      const apiStatusMessage = document.getElementById('apiStatusMessage');
-      const apiStatusDetails = document.getElementById('apiStatusDetails');
+      // Update the dialog created by apiManager
+      const apiStatusMessage = document.getElementById('apiStatusDialogMessage');
+      const apiStatusDetails = document.getElementById('apiStatusDialogDetails');
+      const apiStatusSpinner = document.querySelector('#apiStatusDialog .status-spinner');
+      
+      // Hide spinner
+      if (apiStatusSpinner) {
+        apiStatusSpinner.style.display = 'none';
+      }
       
       if (message.success) {
         if (message.warning) {
           if (apiStatusMessage) {
             apiStatusMessage.textContent = 'API connection successful with warning';
+            apiStatusMessage.className = 'status-warning';
           }
           
           if (apiStatusDetails) {
@@ -417,6 +425,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
         } else {
           if (apiStatusMessage) {
             apiStatusMessage.textContent = 'API connection successful!';
+            apiStatusMessage.className = 'status-success';
           }
           
           if (apiStatusDetails) {
@@ -445,6 +454,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
       } else {
         if (apiStatusMessage) {
           apiStatusMessage.textContent = 'API connection failed';
+          apiStatusMessage.className = 'status-error';
         }
         
         if (apiStatusDetails) {
@@ -467,20 +477,23 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
         
         showToast('API connection failed: ' + (message.error || 'Unknown error'), 'error');
       }
-      
-      const apiStatusSpinner = document.querySelector('#apiStatusDialog .status-spinner');
-      if (apiStatusSpinner) {
-        apiStatusSpinner.style.display = 'none';
-      }
     }
 
     function handleRateLimitsResult(message) {
-      const rateLimitsMessage = document.getElementById('rateLimitsMessage');
-      const rateLimitsDetails = document.getElementById('rateLimitsDetails');
+      // Update the dialog created by apiManager
+      const rateLimitsMessage = document.getElementById('rateLimitsDialogMessage');
+      const rateLimitsDetails = document.getElementById('rateLimitsDialogDetails');
+      const rateLimitsSpinner = document.querySelector('#rateLimitsDialog .status-spinner');
+      
+      // Hide spinner
+      if (rateLimitsSpinner) {
+        rateLimitsSpinner.style.display = 'none';
+      }
       
       if (message.success) {
         if (rateLimitsMessage) {
           rateLimitsMessage.textContent = 'Rate limits retrieved successfully!';
+          rateLimitsMessage.className = 'status-success';
         }
         
         if (rateLimitsDetails) {
@@ -488,7 +501,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           limitsHtml += '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>';
           limitsHtml += '<div><h4>Rate Limit Information</h4>';
           
-          if (typeof message.limits === 'object') {
+          if (typeof message.limits === 'object' && message.limits) {
             limitsHtml += '<ul>';
             
             if (message.limits.reset) {
@@ -531,6 +544,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
       } else {
         if (rateLimitsMessage) {
           rateLimitsMessage.textContent = 'Failed to retrieve rate limits';
+          rateLimitsMessage.className = 'status-error';
         }
         
         if (rateLimitsDetails) {
@@ -551,11 +565,6 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
         }
         
         showToast('Failed to check rate limits: ' + (message.error || 'Unknown error'), 'error');
-      }
-      
-      const rateLimitsSpinner = document.querySelector('#rateLimitsDialog .status-spinner');
-      if (rateLimitsSpinner) {
-        rateLimitsSpinner.style.display = 'none';
       }
     }
 

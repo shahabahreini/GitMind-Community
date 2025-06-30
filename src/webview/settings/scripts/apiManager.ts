@@ -111,6 +111,56 @@ export function getApiManagerScript(): string {
       return dialog;
     }
     
+    function updateStatusDialog(dialogId, success, message, details) {
+      const dialog = document.getElementById(dialogId);
+      if (!dialog) return;
+      
+      const messageEl = document.getElementById(dialogId + 'Message');
+      const detailsEl = document.getElementById(dialogId + 'Details');
+      const spinner = dialog.querySelector('.status-spinner');
+      
+      if (spinner) spinner.style.display = 'none';
+      
+      if (messageEl) {
+        messageEl.textContent = message;
+        messageEl.className = success ? 'status-success' : 'status-error';
+      }
+      
+      if (detailsEl && details) {
+        detailsEl.innerHTML = details;
+        detailsEl.className = success ? 'status-details success' : 'status-details error';
+      }
+    }
+    
+    // Listen for messages from the extension
+    window.addEventListener('message', event => {
+      const message = event.data;
+      
+      switch (message.type) {
+        case 'apiCheckResult':
+          // For API checks, use the proper handler that formats the data correctly
+          if (typeof handleApiCheckResult === 'function') {
+            handleApiCheckResult(message);
+          } else {
+            updateStatusDialog('apiStatusDialog', message.success, 
+              message.success ? 'Connection successful!' : 'Connection failed!', 
+              message.details || message.error);
+          }
+          break;
+          
+        case 'rateLimitsResult':
+          // For rate limits, use the proper handler that formats the data correctly
+          if (typeof handleRateLimitsResult === 'function') {
+            handleRateLimitsResult(message);
+          } else {
+            updateStatusDialog('rateLimitsDialog', message.success, 
+              message.success ? 'Rate limits retrieved!' : 'Failed to get rate limits!', 
+              message.details || message.error);
+          }
+          break;
+      }
+    });
+    
     function checkApiSetup() {
       const provider = document.getElementById('apiProvider').value;
       const apiSettings = getProviderSettings(provider);
@@ -165,5 +215,10 @@ export function getApiManagerScript(): string {
         dialog.style.display = 'none';
       }
     }
+    
+    // Expose functions globally for onclick handlers
+    window.checkApiSetup = checkApiSetup;
+    window.checkRateLimits = checkRateLimits;
+    window.closeStatusDialog = closeStatusDialog;
   `;
 }

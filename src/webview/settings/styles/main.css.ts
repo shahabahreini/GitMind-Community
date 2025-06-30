@@ -381,6 +381,25 @@ export function getMainStyles(): string {
         transparent 70%);
     }
 
+    /* Dialog message styling */
+    .status-dialog-body div[id$="Message"] {
+      font-weight: 500;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    
+    .status-dialog-body div[id$="Message"].status-success {
+      color: #28a745;
+    }
+    
+    .status-dialog-body div[id$="Message"].status-error {
+      color: #dc3545;
+    }
+    
+    .status-dialog-body div[id$="Message"].status-warning {
+      color: #f39c12;
+    }
+
     ${getFormStyles()}
     ${getButtonStyles()}
     ${getStatusBannerStyles()}

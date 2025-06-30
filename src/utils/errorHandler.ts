@@ -57,6 +57,10 @@ export class APIErrorHandler {
 
     private static readonly PROVIDER_SUGGESTIONS: Record<string, string> = {
         'Together AI': 'Try meta-llama/Llama-3.3-70B-Instruct-Turbo (128k)',
+        'Mistral': 'Try mistral-large-latest for larger context',
+        'Anthropic': 'Try claude-3-5-sonnet-20241022 for larger context',
+        'OpenAI': 'Try gpt-4o for larger context',
+        'Gemini': 'Try gemini-2.5-pro for larger context',
         default: 'Check available models with larger limits'
     };
 
@@ -65,7 +69,11 @@ export class APIErrorHandler {
         estimatedTokens?: number;
         filesChanged?: number;
     }): ErrorInfo {
-        debugLog(`Handling ${provider} API error:`, error);
+        debugLog(`Handling ${provider} API error:`, {
+            message: error.message,
+            name: error.name,
+            context: context
+        });
 
         const errorInfo: ErrorInfo = {
             provider,
@@ -96,25 +104,35 @@ export class APIErrorHandler {
     }
 
     private static handleTokenLimitError(error: Error, errorInfo: ErrorInfo, provider: string, context?: any): ErrorInfo {
-        const tokenMatch = error.message.match(/(\d+)/g);
-        const inputTokens = tokenMatch?.[0] ? parseInt(tokenMatch[0]) : 0;
-        const maxTokens = tokenMatch?.[1] ? parseInt(tokenMatch[1]) : 0;
+        // Prioritize context data over parsing error message
+        const estimatedTokens = context?.estimatedTokens || 'Unknown';
+        const diffSize = context?.diffSize;
+        const filesChanged = context?.filesChanged;
+
+        // Don't try to parse token limits from error messages for now
+        // as this often leads to incorrect very low limits being extracted
+        let maxTokens: number | undefined;
 
         errorInfo.userMessage = `Content is too large for the selected model.`;
         errorInfo.technicalDetails = {
-            ...context,
-            estimatedTokens: inputTokens || context?.estimatedTokens,
-            modelLimit: maxTokens
+            diffSize,
+            estimatedTokens,
+            modelLimit: maxTokens,
+            filesChanged
         };
 
-        const estimatedTokens = inputTokens || context?.estimatedTokens || 'Unknown';
         const limitText = maxTokens ? ` (limit: ${maxTokens.toLocaleString()})` : '';
-        const modelSuggestion = this.PROVIDER_SUGGESTIONS[provider] || this.PROVIDER_SUGGESTIONS.default;
+        const modelSuggestion = (this.PROVIDER_SUGGESTIONS && this.PROVIDER_SUGGESTIONS[provider]) || this.PROVIDER_SUGGESTIONS?.default || 'Check available models with larger limits';
 
         errorInfo.suggestions = [
-            `Current: ~${estimatedTokens} tokens${limitText}`,
+            "Technical Details:",
+            ...(diffSize ? [`• Diff size: ${(diffSize / 1024).toFixed(1)} KB`] : []),
+            ...(estimatedTokens !== 'Unknown' ? [`• Estimated tokens: ${typeof estimatedTokens === 'number' ? estimatedTokens.toLocaleString() : estimatedTokens}`] : []),
+            ...(filesChanged ? [`• Files changed: ${filesChanged}`] : []),
+            "",
+            `Current: ~${typeof estimatedTokens === 'number' ? estimatedTokens.toLocaleString() : estimatedTokens} tokens`,
             "Solutions:",
-            `• Stage fewer files (currently: ${context?.filesChanged || 'multiple'} files)`,
+            `• Stage fewer files${filesChanged ? ` (currently: ${filesChanged} files)` : ''}`,
             "• Use 'git add -p' to stage specific chunks",
             "• Commit changes in smaller, logical groups",
             `• Switch to a model with larger context window: ${modelSuggestion}`,

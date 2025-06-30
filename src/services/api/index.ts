@@ -248,7 +248,8 @@ export async function generateCommitMessage(
     // Calculate context for error handling
     const diffSize = diff.length;
     const filesChanged = (diff.match(/diff --git/g) || []).length;
-    const context = { diffSize, filesChanged };
+    const estimatedTokens = estimateTokens(diff);
+    const context = { diffSize, filesChanged, estimatedTokens };
 
     const startTime = Date.now();
 
@@ -524,8 +525,13 @@ function showModelInfo(config: ApiConfig): void {
     vscode.window.showInformationMessage(`Using model: ${displayName}`, { modal: false });
 }
 
-function getProviderName(type: string): ApiProvider {
-    return PROVIDER_CONFIGS[type]?.name || "Gemini";
+function getProviderName(type: string): string {
+    const config = PROVIDER_CONFIGS[type];
+    if (!config) {
+        debugLog(`Warning: No provider config found for type: ${type}`);
+        return "Unknown Provider";
+    }
+    return config.name || "Unknown Provider";
 }
 
 function getProviderDisplayName(type: string): string {

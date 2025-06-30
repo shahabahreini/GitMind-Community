@@ -60,7 +60,18 @@ export class SettingsWebviewProvider {
                             }
                             break;
 
-                        // ...handle other messages...
+                        case 'executeCommand':
+                            try {
+                                await vscode.commands.executeCommand(message.commandId);
+                            } catch (error) {
+                                debugLog("Failed to execute command", {
+                                    commandId: message.commandId,
+                                    error: error instanceof Error ? error.message : String(error)
+                                });
+                            }
+                            break;
+
+                        // Add other message handlers as needed
                     }
                 }
             )

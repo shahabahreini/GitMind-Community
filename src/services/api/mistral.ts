@@ -107,8 +107,13 @@ export async function callMistralAPI(apiKey: string, model: string, diff: string
         const rateLimits = extractRateLimits(response.headers);
         debugLog("Mistral API Rate Limits:", rateLimits);
 
+        // Check if all rate limits are 0, which might indicate auth issues
+        if (rateLimits.limit === 0 && rateLimits.remaining === 0 && rateLimits.monthlyLimit === 0) {
+            debugLog("Warning: All Mistral rate limits are 0 - possible auth issue");
+        }
+
         // Check rate limits
-        if (rateLimits.remaining <= 0) {
+        if (rateLimits.remaining <= 0 && rateLimits.remaining !== 0) {
             const resetTime = new Date(Date.now() + rateLimits.reset * 1000);
             throw new Error(`Rate limit exceeded. Reset at ${resetTime.toLocaleString()}`);
         }
@@ -117,8 +122,17 @@ export async function callMistralAPI(apiKey: string, model: string, diff: string
             let errorData: any;
             try {
                 errorData = await response.json();
+                debugLog("Mistral API Error Response:", {
+                    status: response.status,
+                    statusText: response.statusText,
+                    errorData: errorData
+                });
             } catch {
                 errorData = { message: response.statusText };
+                debugLog("Mistral API Error (no JSON):", {
+                    status: response.status,
+                    statusText: response.statusText
+                });
             }
 
             const userFriendlyError = getUserFriendlyErrorMessage(response.status, errorData);
@@ -143,11 +157,19 @@ export async function callMistralAPI(apiKey: string, model: string, diff: string
         }
 
         if (error instanceof Error) {
+            debugLog("Mistral API Error Details:", {
+                message: error.message,
+                name: error.name,
+                stack: error.stack
+            });
+
             if (error.message.includes("Mistral API error") || error.message.includes("Rate limit")) {
                 throw error;
             }
             throw new Error(`Mistral API call failed: ${error.message}`);
         }
+
+        debugLog("Unknown Mistral API Error:", error);
         throw new Error(`Unexpected error during Mistral API call: ${String(error)}`);
     }
 }

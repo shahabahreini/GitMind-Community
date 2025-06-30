@@ -104,11 +104,13 @@ export class OnboardingManager {
                     }
                 }
             } else if (result === 'Get API Key') {
-                const providerUrl = this.PROVIDER_DOCS[provider];
+                const providerUrl = this.PROVIDER_DOCS && this.PROVIDER_DOCS[provider];
                 if (providerUrl) {
                     await vscode.env.openExternal(vscode.Uri.parse(providerUrl));
                     // After opening the website, prompt for API key input
                     return await this.validateAndPromptForApiKey(provider);
+                } else {
+                    debugLog(`No documentation URL found for provider: ${provider}`);
                 }
             }
 
@@ -176,7 +178,11 @@ export class OnboardingManager {
             'perplexity': 'perplexity.apiKey',
             'Perplexity': 'perplexity.apiKey'
         };
-        return paths[provider] || '';
+        const result = paths[provider];
+        if (!result) {
+            debugLog(`Warning: No setting path found for provider: ${provider}`);
+        }
+        return result || '';
     }
 
     public static async validateConfiguration(provider: string): Promise<boolean> {
@@ -205,9 +211,11 @@ export class OnboardingManager {
                 const newApiKey = await this.promptForApiKey(provider);
                 return !!newApiKey;
             } else if (result === 'Get API Key') {
-                const providerUrl = this.PROVIDER_DOCS[provider];
+                const providerUrl = this.PROVIDER_DOCS && this.PROVIDER_DOCS[provider];
                 if (providerUrl) {
                     await vscode.env.openExternal(vscode.Uri.parse(providerUrl));
+                } else {
+                    debugLog(`No documentation URL found for provider: ${provider}`);
                 }
             }
             return false;
