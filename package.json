@@ -1,0 +1,1181 @@
+{
+  "name": "ai-commit-assistant",
+  "displayName": "GitMind: Professional Commit Assistant",
+  "description": "🚀 Professional AI-powered commit message generation for Visual Studio Code. Leverage 13 different AI providers including OpenAI GPT-4o, Claude-3-5-sonnet, Gemini-2.5-flash, DeepSeek-reasoner, Grok-3, Perplexity-sonar, and 50+ models to create consistent, conventional commit messages",
+  "version": "4.0.11",
+  "publisher": "ShahabBahreiniJangjoo",
+  "private": false,
+  "icon": "images/logo.png",
+  "engines": {
+    "vscode": "^1.63.0",
+    "node": ">=16.0.0"
+  },
+  "vsce": {
+    "dependencies": false,
+    "yarn": true
+  },
+  "categories": [
+    "SCM Providers",
+    "Machine Learning",
+    "Formatters",
+    "Other",
+    "Extension Packs"
+  ],
+  "extensionDependencies": [
+    "vscode.git"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "workspaceContains:.git"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "GitMind",
+      "properties": {
+        "gitmind.apiProvider": {
+          "type": "string",
+          "enum": [
+            "gemini",
+            "huggingface",
+            "ollama",
+            "mistral",
+            "cohere",
+            "openai",
+            "together",
+            "openrouter",
+            "anthropic",
+            "copilot",
+            "deepseek",
+            "grok",
+            "perplexity"
+          ],
+          "enumDescriptions": [
+            "Use Google's Gemini AI for generating commit messages",
+            "Use Hugging Face models for generating commit messages",
+            "Use local Ollama models for generating commit messages",
+            "Use Mistral AI for generating commit messages",
+            "Use Cohere AI for generating commit messages",
+            "Use OpenAI for generating commit messages",
+            "Use Together AI for generating commit messages",
+            "Use OpenRouter for accessing multiple AI models",
+            "Use Anthropic Claude for generating commit messages",
+            "Use GitHub Copilot for generating commit messages (no API key required)",
+            "Use DeepSeek AI for generating commit messages",
+            "Use Grok AI for generating commit messages",
+            "Use Perplexity AI for generating commit messages"
+          ],
+          "default": "gemini",
+          "description": "Select which AI provider to use for generating commit messages",
+          "order": 1
+        },
+        "gitmind.debug": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable debug mode to show detailed LLM responses and API interactions",
+          "order": 2
+        },
+        "gitmind.showOnboarding": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the onboarding experience for new users. Disable this to permanently turn off onboarding. Can be re-enabled to allow manual access to the onboarding wizard.",
+          "order": 3
+        },
+        "gitmind.gemini.apiKey": {
+          "type": "string",
+          "markdownDescription": "API key for Google's Gemini AI [Learn more](https://aistudio.google.com/app/apikey)",
+          "order": 4
+        },
+        "gitmind.huggingface.apiKey": {
+          "type": "string",
+          "markdownDescription": "API key for Hugging Face [Learn more](https://huggingface.co/settings/tokens)",
+          "order": 5
+        },
+        "gitmind.huggingface.model": {
+          "type": "string",
+          "default": "mistralai/Mistral-7B-Instruct-v0.3",
+          "description": "Model ID for Hugging Face",
+          "markdownDescription": "Model ID for Hugging Face. [Learn more](https://huggingface.co/models)",
+          "examples": [
+            "mistralai/Mistral-7B-Instruct-v0.3",
+            "facebook/bart-large-cnn",
+            "microsoft/DialoGPT-medium"
+          ],
+          "order": 6
+        },
+        "gitmind.ollama.url": {
+          "type": "string",
+          "default": "http://localhost:11434",
+          "description": "URL for Ollama API server",
+          "order": 6
+        },
+        "gitmind.ollama.model": {
+          "type": "string",
+          "default": "phi4",
+          "description": "Model name for Ollama",
+          "markdownDescription": "Model name for Ollama. [Available models](https://ollama.ai/library)",
+          "examples": [
+            "mistral",
+            "llama2",
+            "codellama",
+            "phi4",
+            "qwen2.5-coder"
+          ],
+          "order": 7
+        },
+        "gitmind.mistral.apiKey": {
+          "type": "string",
+          "markdownDescription": "API key for Mistral AI [Learn more](https://console.mistral.ai/api-keys/)",
+          "order": 8
+        },
+        "gitmind.mistral.model": {
+          "type": "string",
+          "default": "mistral-large-latest",
+          "description": "Model name for Mistral AI",
+          "examples": [
+            "mistral-tiny",
+            "mistral-small",
+            "mistral-medium",
+            "mistral-large-latest"
+          ],
+          "order": 9
+        },
+        "gitmind.commit.verbose": {
+          "type": "boolean",
+          "default": true,
+          "description": "Generate verbose commit messages with detailed descriptions. When disabled, only generates the summary line.",
+          "order": 10
+        },
+        "gitmind.showDiagnostics": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show model and token information before generating commit messages",
+          "order": 11
+        },
+        "gitmind.telemetry.enabled": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable extension telemetry to help improve GitMind. **Privacy First**: Only anonymous usage analytics are collected - no code content, file names, or personal information. You can disable this anytime while still respecting VS Code's global telemetry setting.",
+          "order": 12
+        },
+        "gitmind.telemetry.connectionString": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Azure Application Insights connection string for telemetry (optional). If not provided, the extension will use the default connection string. **Privacy Protected**: All telemetry data is anonymous and GDPR/CCPA compliant.",
+          "order": 13
+        },
+        "gitmind.gemini.model": {
+          "type": "string",
+          "enum": [
+            "gemini-2.5-pro",
+            "gemini-2.5-flash",
+            "gemini-2.5-flash-preview-05-20",
+            "gemini-2.0-flash",
+            "gemini-2.0-flash-lite",
+            "gemini-1.5-flash",
+            "gemini-1.5-flash-8b",
+            "gemini-1.5-pro",
+            "gemini-2.5-flash-preview-04-17",
+            "gemini-2.5-pro-exp-03-25"
+          ],
+          "default": "gemini-2.5-flash",
+          "description": "Select which Gemini model to use",
+          "enumDescriptions": [
+            "Gemini 2.5 Pro - Latest Thinking Model with advanced reasoning",
+            "Gemini 2.5 Flash - Efficient Thinking model with fast inference",
+            "Gemini 2.5 Flash Preview (05/20) - Preview version with latest features",
+            "Gemini 2.0 Flash - Multimodal model with comprehensive capabilities",
+            "Gemini 2.0 Flash-Lite - Lightweight version of 2.0 Flash",
+            "Gemini 1.5 Flash - Fast and efficient general model",
+            "Gemini 1.5 Flash-8B - 8B parameter version for faster inference",
+            "Gemini 1.5 Pro - Base model with comprehensive capabilities",
+            "Gemini 2.5 Flash Preview (04/17) - Earlier preview version",
+            "Gemini 2.5 Pro Preview (03/25) - Experimental preview version"
+          ]
+        },
+        "gitmind.cohere.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for Cohere"
+        },
+        "gitmind.cohere.model": {
+          "type": "string",
+          "enum": [
+            "command-a-03-2025",
+            "command-r-08-2024",
+            "command-r-plus-08-2024",
+            "aya-expanse-8b",
+            "aya-expanse-32b",
+            "command-r7b-arabic",
+            "command-r",
+            "command-r-plus",
+            "command",
+            "command-light",
+            "command-nightly"
+          ],
+          "enumDescriptions": [
+            "Command A (Latest - High Performance)",
+            "Command R (08-2024)",
+            "Command R+ (08-2024)",
+            "Aya Expanse 8B (Multilingual)",
+            "Aya Expanse 32B (Multilingual)",
+            "Command R7B Arabic",
+            "Command R (Legacy)",
+            "Command R+ (Legacy)",
+            "Command (Legacy)",
+            "Command Light (Legacy)",
+            "Command Nightly (Legacy)"
+          ],
+          "default": "command-a-03-2025",
+          "description": "Cohere model to use for generating commit messages"
+        },
+        "gitmind.openai.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API key for OpenAI [Learn more](https://platform.openai.com/api-keys)",
+          "order": 12
+        },
+        "gitmind.openai.model": {
+          "type": "string",
+          "enum": [
+            "gpt-4.1",
+            "gpt-4.1-mini",
+            "gpt-4.1-nano",
+            "o3",
+            "o4-mini",
+            "o3-mini",
+            "gpt-4o",
+            "gpt-4o-mini",
+            "gpt-4-turbo",
+            "gpt-4",
+            "gpt-3.5-turbo"
+          ],
+          "default": "gpt-4o",
+          "description": "OpenAI model to use for generating commit messages",
+          "enumDescriptions": [
+            "GPT-4.1 - Latest model with enhanced capabilities",
+            "GPT-4.1 Mini - Efficient version of GPT-4.1",
+            "GPT-4.1 Nano - Ultra-efficient GPT-4.1 variant",
+            "o3 - Advanced reasoning model",
+            "o4-mini - Fast reasoning model",
+            "o3-mini - Efficient reasoning model",
+            "GPT-4o - Multimodal model with vision capabilities",
+            "GPT-4o Mini - Efficient multimodal model",
+            "GPT-4 Turbo - High-performance GPT-4 variant",
+            "GPT-4 - Base GPT-4 model",
+            "GPT-3.5 Turbo - Fast and cost-effective model"
+          ],
+          "order": 13
+        },
+        "gitmind.promptCustomization.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "When enabled, shows a dialog to add custom context when generating commit messages"
+        },
+        "gitmind.promptCustomization.saveLastPrompt": {
+          "type": "boolean",
+          "default": false,
+          "description": "Save the last custom prompt and use it as default for next commit message generation"
+        },
+        "gitmind.promptCustomization.lastPrompt": {
+          "type": "string",
+          "default": "",
+          "description": "The last custom prompt used (automatically managed)"
+        },
+        "gitmind.commitStyle.style": {
+          "type": "string",
+          "enum": [
+            "basic",
+            "conventional",
+            "angular",
+            "ember",
+            "emojigit",
+            "gitmoji",
+            "semantic",
+            "commitizen",
+            "karma",
+            "linux",
+            "jquery"
+          ],
+          "default": "conventional",
+          "enumDescriptions": [
+            "Simple, straightforward commit messages",
+            "Conventional Commits standard with types and scopes (Pro)",
+            "Angular commit convention with detailed type definitions (Pro)",
+            "Ember.js style with tags and detailed descriptions (Pro)",
+            "Visual semantic commits with custom emojis (Pro)",
+            "Official gitmoji.dev specification with standardized emojis (Pro)",
+            "Automated release-optimized commits for semantic versioning (Pro)",
+            "Interactive guided commits with validation (Pro)",
+            "Google's strict enterprise convention with mandatory scopes (Pro)",
+            "Traditional kernel development convention with subsystems (Pro)",
+            "JavaScript project convention with issue tracking (Pro)"
+          ],
+          "description": "Choose the commit message style for AI generation",
+          "order": 14
+        },
+        "gitmind.together.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API key for Together AI [Learn more](https://api.together.xyz/settings/api-keys)"
+        },
+        "gitmind.together.model": {
+          "type": "string",
+          "enum": [
+            "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+            "deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free"
+          ],
+          "default": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+          "description": "Together AI model to use for generating commit messages"
+        },
+        "gitmind.openrouter.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API key for OpenRouter [Learn more](https://openrouter.ai/keys)"
+        },
+        "gitmind.openrouter.model": {
+          "type": "string",
+          "default": "google/gemma-3-27b-it:free",
+          "description": "OpenRouter model to use for generating commit messages",
+          "markdownDescription": "OpenRouter model to use for generating commit messages. [Learn more](https://openrouter.ai/models)"
+        },
+        "gitmind.anthropic.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API key for Anthropic Claude [Learn more](https://console.anthropic.com/)"
+        },
+        "gitmind.anthropic.model": {
+          "type": "string",
+          "enum": [
+            "claude-opus-4",
+            "claude-sonnet-4",
+            "claude-sonnet-3.7",
+            "claude-3-5-sonnet-20241022",
+            "claude-3-5-sonnet-20240620",
+            "claude-3-5-haiku-20241022",
+            "claude-3-opus-20240229",
+            "claude-3-sonnet-20240229",
+            "claude-3-haiku-20240307"
+          ],
+          "enumDescriptions": [
+            "Claude Opus 4 - Latest and most capable Claude model",
+            "Claude Sonnet 4 - High-performance Claude 4 model",
+            "Claude Sonnet 3.7 - Advanced Claude 3.7 model",
+            "Claude 3.5 Sonnet (Latest) - Most capable model with enhanced reasoning",
+            "Claude 3.5 Sonnet (June) - High-performance model for complex tasks",
+            "Claude 3.5 Haiku - Fast and efficient for quick responses",
+            "Claude 3 Opus - Most capable Claude 3 model for complex reasoning",
+            "Claude 3 Sonnet - Balanced performance and speed",
+            "Claude 3 Haiku - Fast and cost-effective"
+          ],
+          "default": "claude-opus-4",
+          "description": "Anthropic Claude model to use for generating commit messages"
+        },
+        "gitmind.copilot.model": {
+          "type": "string",
+          "enum": [
+            "gpt-4o",
+            "gpt-4.1",
+            "gpt-4.5-preview",
+            "claude-3.5-sonnet",
+            "claude-3.7-sonnet",
+            "claude-3.7-sonnet-thinking",
+            "claude-sonnet-4",
+            "claude-opus-4",
+            "gemini-2.0-flash",
+            "gemini-2.5-pro-preview",
+            "o1-preview",
+            "o3",
+            "o3-mini",
+            "o4-mini"
+          ],
+          "enumDescriptions": [
+            "GPT-4o - General purpose OpenAI model",
+            "GPT-4.1 - Latest general purpose OpenAI model",
+            "GPT-4.5 Preview - Preview/Pro+ OpenAI model",
+            "Claude 3.5 Sonnet - General purpose Anthropic model",
+            "Claude 3.7 Sonnet - General purpose Anthropic model",
+            "Claude 3.7 Sonnet Thinking - General purpose Anthropic model with reasoning",
+            "Claude Sonnet 4 - General purpose Anthropic model",
+            "Claude Opus 4 - General purpose Anthropic model",
+            "Gemini 2.0 Flash - General purpose Google model",
+            "Gemini 2.5 Pro Preview - Preview Google model",
+            "o1 Preview - Preview OpenAI reasoning model",
+            "o3 - General purpose OpenAI reasoning model",
+            "o3-mini - General purpose compact OpenAI reasoning model",
+            "o4-mini - Preview compact OpenAI reasoning model"
+          ],
+          "default": "gpt-4o",
+          "description": "GitHub Copilot model to use for generating commit messages"
+        },
+        "gitmind.deepseek.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API key for DeepSeek AI [Learn more](https://platform.deepseek.com/api_keys)"
+        },
+        "gitmind.deepseek.model": {
+          "type": "string",
+          "enum": [
+            "deepseek-chat",
+            "deepseek-reasoner"
+          ],
+          "enumDescriptions": [
+            "DeepSeek Chat - General purpose model optimized for conversation and code generation",
+            "DeepSeek Reasoner - Advanced reasoning model for complex problem solving"
+          ],
+          "default": "deepseek-chat",
+          "description": "DeepSeek model to use for generating commit messages"
+        },
+        "gitmind.grok.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API key for Grok AI [Learn more](https://api.x.ai/)"
+        },
+        "gitmind.grok.model": {
+          "type": "string",
+          "enum": [
+            "grok-3",
+            "grok-3-fast",
+            "grok-3-mini",
+            "grok-2",
+            "grok-2-vision",
+            "grok-2-mini",
+            "grok-2-turbo",
+            "grok-2-vision-turbo",
+            "grok-2-fast",
+            "grok-beta",
+            "grok-vision-beta",
+            "grok-image-beta",
+            "grok-image-mini"
+          ],
+          "enumDescriptions": [
+            "Grok 3 - Latest and most capable Grok model",
+            "Grok 3 Fast - High-performance variant of Grok 3",
+            "Grok 3 Mini - Efficient and cost-effective Grok 3",
+            "Grok 2 - Advanced general purpose model",
+            "Grok 2 Vision - Multimodal model with image understanding",
+            "Grok 2 Mini - Compact version of Grok 2",
+            "Grok 2 Turbo - High-speed variant of Grok 2",
+            "Grok 2 Vision Turbo - Fast multimodal model",
+            "Grok 2 Fast - Optimized for speed",
+            "Grok Beta - Latest experimental features",
+            "Grok Vision Beta - Experimental vision capabilities",
+            "Grok Image Beta - Experimental image generation",
+            "Grok Image Mini - Compact image generation model"
+          ],
+          "default": "grok-3",
+          "description": "Grok model to use for generating commit messages"
+        },
+        "gitmind.perplexity.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API key for Perplexity AI [Learn more](https://www.perplexity.ai/settings/api)"
+        },
+        "gitmind.perplexity.model": {
+          "type": "string",
+          "enum": [
+            "sonar-pro",
+            "sonar-reasoning",
+            "sonar",
+            "llama-3.1-sonar-small-128k-chat",
+            "llama-3.1-sonar-large-128k-chat",
+            "llama-3.1-sonar-huge-128k-online",
+            "llama-3.1-sonar-small-128k-online",
+            "llama-3.1-sonar-large-128k-online"
+          ],
+          "enumDescriptions": [
+            "Sonar Pro - Latest and most capable Perplexity model with advanced reasoning",
+            "Sonar Reasoning - Advanced reasoning capabilities with real-time information",
+            "Sonar - General purpose model with web search capabilities",
+            "Llama 3.1 Sonar Small Chat - Efficient chat model (128k context)",
+            "Llama 3.1 Sonar Large Chat - Large chat model (128k context)",
+            "Llama 3.1 Sonar Huge Online - Largest model with real-time web access",
+            "Llama 3.1 Sonar Small Online - Efficient model with real-time web access",
+            "Llama 3.1 Sonar Large Online - Large model with real-time web access"
+          ],
+          "default": "sonar-pro",
+          "description": "Perplexity model to use for generating commit messages"
+        },
+        "gitmind.pro.licenseKey": {
+          "type": "string",
+          "default": "",
+          "description": "[LEGACY] Your GitMind Pro license key for accessing premium features",
+          "markdownDescription": "**Legacy License Key**: For backwards compatibility only. New users should use the subscription system. [Subscribe to Pro](https://gitmind.com/pro) to enable encrypted API key storage and advanced features.",
+          "order": 100
+        },
+        "gitmind.pro.encryptionEnabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable encrypted storage for API keys (Pro feature only)",
+          "markdownDescription": "Enable encrypted storage for API keys using VS Code's SecretStorage API. **Pro Feature**: This feature is only available for GitMind Pro subscribers. API keys are encrypted and stored securely, making them inaccessible to other extensions.",
+          "order": 101
+        },
+        "gitmind.pro.orderId": {
+          "type": "string",
+          "default": "",
+          "description": "Your LemonSqueezy order ID for Pro activation",
+          "markdownDescription": "Your LemonSqueezy order ID for activating GitMind Pro features. This can be found in your purchase receipt email.",
+          "order": 102
+        },
+        "gitmind.pro.validationStatus": {
+          "type": "string",
+          "enum": [
+            "valid",
+            "invalid",
+            "expired",
+            "error"
+          ],
+          "default": "invalid",
+          "description": "License validation status",
+          "markdownDescription": "Current status of your Pro license validation. This is automatically updated when validating your license.",
+          "order": 103,
+          "readOnly": true
+        },
+        "gitmind.pro.lastValidation": {
+          "type": "string",
+          "default": "",
+          "description": "Last time license was validated (internal use)",
+          "order": 104,
+          "readOnly": true
+        },
+        "gitmind.pro.instanceId": {
+          "type": "string",
+          "default": "",
+          "description": "License instance ID (internal use)",
+          "markdownDescription": "The instance ID associated with your activated license. This is used for license validation and is automatically managed.",
+          "order": 105,
+          "readOnly": true
+        },
+        "gitmind.pro.commitBodyOptions.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable custom commit message body line limits (Pro feature)",
+          "markdownDescription": "**Pro Feature**: Control the maximum number of lines in commit message body to maintain consistency and readability across your project. This feature is only available for GitMind Pro subscribers.",
+          "order": 106
+        },
+        "gitmind.pro.commitBodyOptions.maxLines": {
+          "type": "number",
+          "default": 5,
+          "minimum": 3,
+          "maximum": 15,
+          "description": "Maximum number of lines in commit message body (Pro feature)",
+          "markdownDescription": "**Pro Feature**: Set the maximum number of lines for commit message body. Controls how detailed the commit descriptions will be while maintaining readability.",
+          "order": 107
+        },
+        "gitmind.pro.commitLengthOptions.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable custom commit message summary length limits (Pro feature)",
+          "markdownDescription": "**Pro Feature**: Control the maximum length of commit message summary lines. Helps maintain consistency with your team's commit message standards.",
+          "order": 108
+        },
+        "gitmind.pro.commitLengthOptions.maxLength": {
+          "type": "number",
+          "default": 72,
+          "minimum": 50,
+          "maximum": 100,
+          "description": "Maximum length of the commit summary line (first line)",
+          "markdownDescription": "**Pro Feature**: Set the maximum number of characters for commit message summary lines. Standard Git recommendation is 72 characters, but you can customize this to fit your team's needs.",
+          "order": 109
+        },
+        "gitmind.pro.learnFromCommitHistory.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable or disable the Learn from Commit History feature (Pro only)"
+        },
+        "gitmind.pro.learnFromCommitHistory.maxCommits": {
+          "type": "number",
+          "default": 50,
+          "minimum": 10,
+          "maximum": 200,
+          "description": "Maximum number of commits to analyze when learning from commit history"
+        },
+        "gitmind.pro.learnFromCommitHistory.includeAuthorInfo": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include author and date information when analyzing commit history"
+        },
+        "gitmind.subscription.email": {
+          "type": "string",
+          "default": "",
+          "description": "Your email address for GitMind Pro subscription management",
+          "markdownDescription": "Your email address associated with your GitMind Pro subscription. This is used to validate your subscription status and access premium features.",
+          "order": 106
+        },
+        "gitmind.subscription.plan": {
+          "type": "string",
+          "default": "free",
+          "description": "Your current subscription plan",
+          "markdownDescription": "Your current GitMind subscription plan (free, pro-monthly, pro-yearly). This is automatically updated based on your subscription status.",
+          "order": 107,
+          "readOnly": true
+        },
+        "gitmind.subscription.status": {
+          "type": "string",
+          "default": "free",
+          "description": "Your subscription status",
+          "markdownDescription": "Your current subscription status (active, paused, expired, cancelled). This is automatically updated based on your subscription status.",
+          "order": 108,
+          "readOnly": true
+        },
+        "gitmind.subscription.lastChecked": {
+          "type": "string",
+          "default": "",
+          "description": "Last time subscription status was checked (internal use)"
+        },
+        "gitmind.environment.LEMONSQUEEZY_API_KEY": {
+          "type": "string",
+          "default": "",
+          "description": "Lemon Squeezy API key for subscription management",
+          "scope": "machine"
+        },
+        "gitmind.environment.LEMONSQUEEZY_STORE_ID": {
+          "type": "string",
+          "default": "197494",
+          "description": "Lemon Squeezy store ID",
+          "scope": "machine"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "gitmind.generateCommitMessage",
+        "title": "Generate GitMind Commit Message",
+        "category": "GitMind",
+        "icon": {
+          "light": "resources/light/generate.svg",
+          "dark": "resources/dark/generate.svg"
+        }
+      },
+      {
+        "command": "gitmind.toggleDebug",
+        "title": "Toggle Debug Mode",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.openSettings",
+        "title": "Open Settings UI",
+        "category": "GitMind",
+        "icon": {
+          "light": "resources/light/settings.svg",
+          "dark": "resources/dark/settings.svg"
+        }
+      },
+      {
+        "command": "gitmind.checkApiSetup",
+        "title": "Check API Setup",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.checkRateLimits",
+        "title": "Check Rate Limits",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.loadMistralModels",
+        "title": "Load Mistral Models",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.loadHuggingFaceModels",
+        "title": "Load Hugging Face Models",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.acceptInput",
+        "title": "Accept Input",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.learnFromCommitHistory",
+        "title": "Learn from Commit History (Pro)",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.loadingIndicator",
+        "title": "Generating Commit Message...",
+        "category": "GitMind",
+        "icon": {
+          "light": "resources/light/loading-spin.svg",
+          "dark": "resources/dark/loading-spin.svg"
+        }
+      },
+      {
+        "command": "gitmind.cancelGeneration",
+        "title": "Cancel Generation",
+        "category": "GitMind",
+        "icon": {
+          "light": "resources/light/close.svg",
+          "dark": "resources/dark/close.svg"
+        }
+      },
+      {
+        "command": "gitmind.clearLastPrompt",
+        "title": "Clear Last Custom Prompt",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.viewLastPrompt",
+        "title": "View Last Custom Prompt",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.changeCommitStyle",
+        "title": "Change Commit Message Style",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.openOnboarding",
+        "title": "Open Onboarding",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.completeOnboarding",
+        "title": "Complete Onboarding",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.skipOnboarding",
+        "title": "Skip Onboarding",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.resetOnboarding",
+        "title": "Reset Onboarding State",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.reEnableOnboarding",
+        "title": "Re-enable Onboarding",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.debugOnboardingState",
+        "title": "Debug: Check Onboarding State",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.resetOnboardingState",
+        "title": "Debug: Reset Onboarding State",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.subscribe",
+        "title": "Subscribe to GitMind Pro",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.manageSubscription",
+        "title": "Manage Subscription",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.refreshSubscription",
+        "title": "Refresh Subscription Status",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.activateWithLicenseKey",
+        "title": "Activate Pro with License Key",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.activateWithOrderId",
+        "title": "Activate Pro with Order ID",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.validateExistingLicense",
+        "title": "Validate Existing License",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.deactivatePro",
+        "title": "Deactivate Pro Features",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.forceDeactivatePro",
+        "title": "Force Deactivate Pro (Local Only)",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.fixLicenseActivation",
+        "title": "Fix License Activation Issues",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.handleUserStatusChange",
+        "title": "Handle User Status Change",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.cleanupLegacySettings",
+        "title": "Clean Up Legacy Settings",
+        "category": "GitMind"
+      }
+    ],
+    "menus": {
+      "scm/title": [
+        {
+          "command": "gitmind.generateCommitMessage",
+          "group": "navigation@1",
+          "when": "scmProvider == git && !gitmind.isGenerating"
+        },
+        {
+          "command": "gitmind.cancelGeneration",
+          "group": "navigation@2",
+          "when": "scmProvider == git && gitmind.isGenerating",
+          "title": "Cancel AI Generation"
+        },
+        {
+          "command": "gitmind.openSettings",
+          "group": "navigation@3",
+          "when": "scmProvider == git"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "gitmind.generateCommitMessage",
+          "when": "scmProvider == git"
+        },
+        {
+          "command": "gitmind.toggleDebug"
+        },
+        {
+          "command": "gitmind.openSettings",
+          "when": "scmProvider == git"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "gitmind.openSettings",
+          "group": "1_gitmind@1",
+          "when": "scmProvider == git"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "gitmind.generateCommitMessage",
+        "key": "ctrl+alt+g",
+        "mac": "cmd+alt+g",
+        "when": "scmProvider == git"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "npm run check-types && npm run lint && node esbuild.js",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit --watch",
+    "package": "npm run clean && npm run check-types && npm run lint && node esbuild.js --production",
+    "package:vsce": "npx vsce package --allow-package-secrets sendgrid",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "test": "vscode-test",
+    "test:validate": "node scripts/test-validator.js",
+    "test:status": "node scripts/test-status.js",
+    "clean": "rimraf dist out",
+    "prepare": "npm run compile",
+    "version": "echo 'Version updated to %s'"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^22.15.31",
+    "@types/sanitize-html": "^2.16.0",
+    "@types/vscode": "^1.63.0",
+    "@typescript-eslint/eslint-plugin": "^8.33.0",
+    "@typescript-eslint/parser": "^8.33.0",
+    "@vscode/test-cli": "^0.0.11",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.4.2",
+    "esbuild": "^0.25.5",
+    "eslint": "^9.27.0",
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^6.0.1",
+    "typescript": "~5.8.3",
+    "yarn-upgrade-all": "^0.7.5"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@lobehub/icons": "^2.2.0",
+    "@types/axios": "^0.14.4",
+    "applicationinsights": "^3.7.0",
+    "axios": "^1.8.1",
+    "dotenv": "^16.5.0",
+    "node-fetch": "^3.3.2",
+    "sanitize-html": "^2.17.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shahabahreini/AI-Commit-Assistant.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shahabahreini/AI-Commit-Assistant/issues",
+    "email": "shahab.ahreini@gmail.com"
+  },
+  "homepage": "https://github.com/shahabahreini/AI-Commit-Assistant#readme",
+  "keywords": [
+    "git",
+    "commit",
+    "ai",
+    "artificial-intelligence",
+    "commit-message-generator",
+    "auto-commit",
+    "smart-commits",
+    "conventional-commits",
+    "semantic-commits",
+    "git-automation",
+    "developer-productivity",
+    "code-quality",
+    "git-workflow",
+    "ai-assistant",
+    "professional-commits",
+    "enterprise-ready",
+    "team-collaboration",
+    "commit-consistency",
+    "multi-provider-ai",
+    "unified-prompts",
+    "standardized-prompts",
+    "prompt-management",
+    "custom-prompts",
+    "saved-prompts",
+    "prompt-reuse",
+    "workflow-efficiency",
+    "advanced-git",
+    "repository-analysis",
+    "diff-analysis",
+    "staging-detection",
+    "binary-file-handling",
+    "git-diff-processing",
+    "smart-staging",
+    "conventional-format",
+    "breaking-change-detection",
+    "scope-detection",
+    "commit-standards",
+    "git-best-practices",
+    "code-review",
+    "software-development",
+    "devops",
+    "version-control",
+    "git-helper",
+    "commit-quality",
+    "automated-commits",
+    "intelligent-commits",
+    "contextual-commits",
+    "commit-enhancement",
+    "git-integration",
+    "source-control",
+    "scm-integration",
+    "vscode-extension",
+    "vscode-git",
+    "git-message",
+    "commit-generator",
+    "developer-tools",
+    "productivity",
+    "workflow-automation",
+    "coding-assistant",
+    "ai-tools",
+    "machine-learning",
+    "natural-language-processing",
+    "large-language-model",
+    "llm",
+    "free-ai",
+    "free-tier",
+    "local-ai",
+    "privacy-focused",
+    "zero-setup",
+    "github-copilot",
+    "copilot-integration",
+    "gemini",
+    "gemini-ai",
+    "gemini-2-5-pro",
+    "gemini-2-5-flash",
+    "gemini-2-0-flash",
+    "google-ai",
+    "google-gemini",
+    "thinking-models",
+    "reasoning-models",
+    "openai",
+    "gpt",
+    "gpt-4o",
+    "gpt-4-1",
+    "gpt-4-5",
+    "o3",
+    "o3-mini",
+    "o4-mini",
+    "claude",
+    "anthropic",
+    "claude-opus-4",
+    "claude-sonnet-4",
+    "claude-3-5-sonnet",
+    "claude-3-7-sonnet",
+    "huggingface",
+    "hf-models",
+    "open-source-models",
+    "ollama",
+    "local-models",
+    "phi4",
+    "llama3-3",
+    "deepseek-r1",
+    "qwen3",
+    "gemma3",
+    "codellama",
+    "mistral",
+    "mistral-ai",
+    "mistral-large",
+    "mistral-medium",
+    "mistral-small",
+    "cohere",
+    "command-models",
+    "command-a",
+    "command-r",
+    "aya-expanse",
+    "together",
+    "together-ai",
+    "llama-3-3-70b",
+    "openrouter",
+    "multi-model-access",
+    "deepseek",
+    "deepseek-ai",
+    "deepseek-chat",
+    "deepseek-reasoner",
+    "grok",
+    "grok-ai",
+    "x-ai",
+    "grok-3",
+    "grok-3-fast",
+    "grok-3-mini",
+    "perplexity",
+    "perplexity-ai",
+    "sonar",
+    "sonar-pro",
+    "sonar-reasoning",
+    "real-time-data",
+    "web-search-models",
+    "2m-context",
+    "large-context",
+    "128k-context",
+    "200k-context",
+    "massive-context",
+    "advanced-reasoning",
+    "cost-effective",
+    "rate-limits",
+    "api-management",
+    "settings-management",
+    "configuration-persistence",
+    "api-key-management",
+    "model-selection",
+    "dynamic-models",
+    "real-time-browsing",
+    "model-comparison",
+    "provider-ecosystem",
+    "unified-configuration",
+    "intelligent-fallback",
+    "professional-workflow",
+    "enterprise-deployment",
+    "open-source-projects",
+    "individual-developers",
+    "modern-ai-models",
+    "stable-configuration",
+    "reliable-settings",
+    "context-aware-analysis",
+    "smart-diff-analysis",
+    "repository-state-management",
+    "merge-conflict-handling",
+    "mixed-changes",
+    "comprehensive-analysis",
+    "token-optimization",
+    "usage-analytics",
+    "debug-mode",
+    "diagnostic-tools",
+    "performance-monitoring",
+    "batch-processing",
+    "manual-override",
+    "edit-preservation",
+    "error-handling",
+    "actionable-guidance",
+    "native-integration",
+    "loading-indicators",
+    "status-feedback",
+    "user-experience",
+    "quality-assurance"
+  ],
+  "author": {
+    "name": "Shahab Bahreini",
+    "email": "shahabahreini@hotmail.com",
+    "url": "https://github.com/shahabahreini"
+  },
+  "license": "MIT",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/shahabahreini"
+  },
+  "badges": [
+    {
+      "url": "https://img.shields.io/visual-studio-marketplace/v/ShahabBahreiniJangjoo.ai-commit-assistant?style=for-the-badge&logo=visual-studio-code&color=blue",
+      "href": "https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant",
+      "description": "VS Code Marketplace Version"
+    },
+    {
+      "url": "https://img.shields.io/visual-studio-marketplace/d/ShahabBahreiniJangjoo.ai-commit-assistant?style=for-the-badge&logo=visual-studio-code&color=green",
+      "href": "https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant",
+      "description": "Downloads"
+    },
+    {
+      "url": "https://img.shields.io/visual-studio-marketplace/r/ShahabBahreiniJangjoo.ai-commit-assistant?style=for-the-badge&logo=visual-studio-code&color=orange",
+      "href": "https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant",
+      "description": "Rating"
+    },
+    {
+      "url": "https://img.shields.io/github/stars/shahabahreini/AI-Commit-Assistant?style=for-the-badge&logo=github&color=yellow",
+      "href": "https://github.com/shahabahreini/AI-Commit-Assistant",
+      "description": "GitHub Stars"
+    },
+    {
+      "url": "https://img.shields.io/badge/AI_Providers-13-purple?style=for-the-badge&logo=openai",
+      "href": "https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant",
+      "description": "Supported AI Providers"
+    },
+    {
+      "url": "https://img.shields.io/badge/Models-50+-brightgreen?style=for-the-badge&logo=checkmarx",
+      "href": "https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant",
+      "description": "Supported AI Models"
+    },
+    {
+      "url": "https://img.shields.io/badge/Free_Tier-Available-brightgreen?style=for-the-badge&logo=checkmarx",
+      "href": "https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant",
+      "description": "Free Tier Available"
+    },
+    {
+      "url": "https://img.shields.io/badge/Context-2M_Tokens-orange?style=for-the-badge&logo=google",
+      "href": "https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant",
+      "description": "Massive Context Support"
+    }
+  ],
+  "galleryBanner": {
+    "color": "#0066cc",
+    "theme": "dark"
+  },
+  "capabilities": {
+    "virtualWorkspaces": true,
+    "untrustedWorkspaces": {
+      "supported": true,
+      "description": "This extension requires API keys to be configured for full functionality."
+    }
+  },
+  "telemetry": {
+    "enabled": true,
+    "level": "usage",
+    "description": "This extension collects anonymous usage data to improve functionality. No code content or personal information is collected.",
+    "optOut": {
+      "setting": "telemetry.telemetryLevel",
+      "value": "off"
+    }
+  }
+}

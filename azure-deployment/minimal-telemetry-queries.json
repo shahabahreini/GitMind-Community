@@ -1,0 +1,31 @@
+{
+  "name": "GitMind Extension - Minimal Telemetry Queries",
+  "description": "Essential queries for minimal telemetry tracking",
+  "queries": [
+    {
+      "name": "Daily Active Users - Last 30 Days",
+      "category": "Usage Analytics",
+      "query": "customEvents\n| where name == 'gitmind.daily_active_user'\n| where timestamp > ago(30d)\n| summarize UniqueUsers = dcount(tostring(customDimensions.user_id)) by bin(timestamp, 1d)\n| order by timestamp desc"
+    },
+    {
+      "name": "Message Generation Failures by Provider",
+      "category": "Error Monitoring", 
+      "query": "customEvents\n| where name == 'gitmind.message_generation_failure'\n| where timestamp > ago(7d)\n| summarize\n    ErrorCount = count(),\n    UniqueUsers = dcount(tostring(customDimensions.user_id))\nby\n    Provider = tostring(customDimensions.provider),\n    ErrorType = tostring(customDimensions.error_type)\n| order by ErrorCount desc"
+    },
+    {
+      "name": "Error Types Summary",
+      "category": "Error Monitoring",
+      "query": "customEvents\n| where name == 'gitmind.message_generation_failure'\n| where timestamp > ago(7d)\n| summarize\n    Count = count(),\n    AffectedUsers = dcount(tostring(customDimensions.user_id))\nby ErrorType = tostring(customDimensions.error_type)\n| order by Count desc"
+    },
+    {
+      "name": "Today's Active Users",
+      "category": "Usage Analytics",
+      "query": "customEvents\n| where name == 'gitmind.daily_active_user'\n| where timestamp > ago(1d)\n| summarize TodayUsers = dcount(tostring(customDimensions.user_id))"
+    },
+    {
+      "name": "Failure Trend by Day",
+      "category": "Error Monitoring",
+      "query": "customEvents\n| where name == 'gitmind.message_generation_failure'\n| where timestamp > ago(7d)\n| summarize FailureCount = count() by bin(timestamp, 1d)\n| order by timestamp desc"
+    }
+  ]
+}

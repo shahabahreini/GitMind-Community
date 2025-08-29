@@ -1,0 +1,251 @@
+{
+  "lenses": {
+    "0": {
+      "order": 0,
+      "parts": {
+        "0": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "colSpan": 6,
+            "rowSpan": 4
+          },
+          "metadata": {
+            "inputs": [
+              {
+                "name": "resourceTypeMode",
+                "isOptional": true
+              },
+              {
+                "name": "ComponentId",
+                "value": {
+                  "SubscriptionId": "f27befa2-9826-4d07-8029-5ce8746040ba",
+                  "ResourceGroup": "GitMind-Resources",
+                  "Name": "gitmind-vscode-extension"
+                },
+                "isOptional": true
+              },
+              {
+                "name": "Query",
+                "value": "customEvents\n| where name == 'gitmind.daily_active_user'\n| where timestamp > ago(30d)\n| summarize UniqueUsers = dcount(tostring(customDimensions.user_id)) by bin(timestamp, 1d)\n| order by timestamp desc",
+                "isOptional": true
+              },
+              {
+                "name": "TimeRange",
+                "value": "P30D",
+                "isOptional": true
+              },
+              {
+                "name": "Dimensions",
+                "value": {
+                  "xAxis": {
+                    "name": "timestamp",
+                    "type": "datetime"
+                  },
+                  "yAxis": [
+                    {
+                      "name": "UniqueUsers",
+                      "type": "long"
+                    }
+                  ],
+                  "splitBy": [],
+                  "aggregation": "Sum"
+                },
+                "isOptional": true
+              },
+              {
+                "name": "Version",
+                "value": "1.0",
+                "isOptional": true
+              },
+              {
+                "name": "PartId",
+                "value": "1",
+                "isOptional": true
+              },
+              {
+                "name": "PartTitle",
+                "value": "Daily Active Users",
+                "isOptional": true
+              }
+            ],
+            "type": "Extension/AppInsightsExtension/PartType/AnalyticsLineChartPart",
+            "settings": {
+              "content": {
+                "chartSettings": {
+                  "group": null,
+                  "yAxis": {
+                    "isLogarithmic": false,
+                    "units": {
+                      "isCustom": false,
+                      "family": "None",
+                      "unit": "Count"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "1": {
+          "position": {
+            "x": 6,
+            "y": 0,
+            "colSpan": 6,
+            "rowSpan": 4
+          },
+          "metadata": {
+            "inputs": [
+              {
+                "name": "resourceTypeMode",
+                "isOptional": true
+              },
+              {
+                "name": "ComponentId",
+                "value": {
+                  "SubscriptionId": "f27befa2-9826-4d07-8029-5ce8746040ba",
+                  "ResourceGroup": "GitMind-Resources",
+                  "Name": "gitmind-vscode-extension"
+                },
+                "isOptional": true
+              },
+              {
+                "name": "Query",
+                "value": "customEvents\n| where name == 'gitmind.commit_generated'\n| where timestamp > ago(7d)\n| summarize \n    TotalAttempts = count(),\n    SuccessRate = round(100.0 * countif(tostring(customDimensions.success) == 'true') / count(), 2)\nby Provider = tostring(customDimensions.provider)\n| order by SuccessRate desc",
+                "isOptional": true
+              },
+              {
+                "name": "TimeRange",
+                "value": "P7D",
+                "isOptional": true
+              },
+              {
+                "name": "PartTitle",
+                "value": "AI Provider Success Rates",
+                "isOptional": true
+              }
+            ],
+            "type": "Extension/AppInsightsExtension/PartType/AnalyticsGridPart",
+            "settings": {}
+          }
+        },
+        "2": {
+          "position": {
+            "x": 0,
+            "y": 4,
+            "colSpan": 6,
+            "rowSpan": 4
+          },
+          "metadata": {
+            "inputs": [
+              {
+                "name": "resourceTypeMode",
+                "isOptional": true
+              },
+              {
+                "name": "ComponentId",
+                "value": {
+                  "SubscriptionId": "f27befa2-9826-4d07-8029-5ce8746040ba",
+                  "ResourceGroup": "GitMind-Resources",
+                  "Name": "gitmind-vscode-extension"
+                },
+                "isOptional": true
+              },
+              {
+                "name": "Query",
+                "value": "customEvents\n| where name == 'gitmind.extension_error'\n| where timestamp > ago(7d)\n| summarize Count = count() by ErrorType = tostring(customDimensions.error_type)\n| order by Count desc",
+                "isOptional": true
+              },
+              {
+                "name": "TimeRange",
+                "value": "P7D",
+                "isOptional": true
+              },
+              {
+                "name": "PartTitle",
+                "value": "Error Distribution",
+                "isOptional": true
+              }
+            ],
+            "type": "Extension/AppInsightsExtension/PartType/AnalyticsPieChartPart",
+            "settings": {}
+          }
+        },
+        "3": {
+          "position": {
+            "x": 6,
+            "y": 4,
+            "colSpan": 6,
+            "rowSpan": 4
+          },
+          "metadata": {
+            "inputs": [
+              {
+                "name": "resourceTypeMode",
+                "isOptional": true
+              },
+              {
+                "name": "ComponentId",
+                "value": {
+                  "SubscriptionId": "f27befa2-9826-4d07-8029-5ce8746040ba",
+                  "ResourceGroup": "GitMind-Resources",
+                  "Name": "gitmind-vscode-extension"
+                },
+                "isOptional": true
+              },
+              {
+                "name": "Query",
+                "value": "let timeRange = ago(24h);\nlet activeUsers = customEvents\n| where name == 'gitmind.daily_active_user' and timestamp > timeRange\n| dcount(tostring(customDimensions.user_id));\nlet totalCommits = customEvents\n| where name == 'gitmind.commit_generated' and timestamp > timeRange\n| count;\nlet successfulCommits = customEvents\n| where name == 'gitmind.commit_generated' and timestamp > timeRange\n| where tostring(customDimensions.success) == 'true'\n| count;\nlet totalErrors = customEvents\n| where name == 'gitmind.extension_error' and timestamp > timeRange\n| count;\nprint \n    ActiveUsers = activeUsers,\n    TotalCommits = totalCommits,\n    SuccessfulCommits = successfulCommits,\n    SuccessRate = round(100.0 * successfulCommits / totalCommits, 2),\n    TotalErrors = totalErrors,\n    ErrorRate = round(100.0 * totalErrors / (totalCommits + totalErrors), 2)",
+                "isOptional": true
+              },
+              {
+                "name": "TimeRange",
+                "value": "P1D",
+                "isOptional": true
+              },
+              {
+                "name": "PartTitle",
+                "value": "24h Health Overview",
+                "isOptional": true
+              }
+            ],
+            "type": "Extension/AppInsightsExtension/PartType/AnalyticsGridPart",
+            "settings": {}
+          }
+        }
+      }
+    }
+  },
+  "metadata": {
+    "model": {
+      "timeRange": {
+        "value": {
+          "relative": {
+            "duration": 24,
+            "timeUnit": 1
+          }
+        },
+        "type": "MsPortalFx.Composition.Configuration.ValueTypes.TimeRange"
+      },
+      "filterLocale": {
+        "value": "en-us"
+      },
+      "filters": {
+        "value": {
+          "MsPortalFx_TimeRange": {
+            "model": {
+              "format": "utc",
+              "granularity": "auto",
+              "relative": "24h"
+            },
+            "displayCache": {
+              "name": "UTC Time",
+              "value": "Past 24 hours"
+            },
+            "filteredPartIds": []
+          }
+        }
+      }
+    }
+  }
+}

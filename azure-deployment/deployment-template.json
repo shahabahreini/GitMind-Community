@@ -1,0 +1,66 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "name": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "regionId": {
+      "type": "string"
+    },
+    "tagsArray": {
+      "type": "object"
+    },
+    "requestSource": {
+      "type": "string"
+    },
+    "workspaceResourceId": {
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "name": "[parameters('name')]",
+      "type": "microsoft.insights/components",
+      "location": "[parameters('regionId')]",
+      "tags": "[parameters('tagsArray')]",
+      "apiVersion": "2020-02-02-preview",
+      "dependsOn": ["newWorkspaceTemplate"],
+      "properties": {
+        "ApplicationId": "[parameters('name')]",
+        "Application_Type": "[parameters('type')]",
+        "Flow_Type": "Redfield",
+        "Request_Source": "[parameters('requestSource')]",
+        "WorkspaceResourceId": "[parameters('workspaceResourceId')]"
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "newWorkspaceTemplate",
+      "resourceGroup": "DefaultResourceGroup-CCAN",
+      "subscriptionId": "f27befa2-9826-4d07-8029-5ce8746040ba",
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {},
+          "variables": {},
+          "resources": [
+            {
+              "apiVersion": "2020-08-01",
+              "name": "DefaultWorkspace-f27befa2-9826-4d07-8029-5ce8746040ba-CCAN",
+              "type": "Microsoft.OperationalInsights/workspaces",
+              "location": "canadacentral",
+              "properties": {}
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

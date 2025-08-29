@@ -1,0 +1,8 @@
+{
+    "deployment_date": "2025-06-18T18:10:27Z",
+    "setup_type": "standard",
+    "resource_group": "GitMind-Resources",
+    "location": "canadacentral",
+    "app_insights_name": "gitmind-vscode-extension",
+    "connection_string": "InstrumentationKey=***REMOVED***;IngestionEndpoint=https://canadacentral-1.in.applicationinsights.azure.com/;LiveEndpoint=https://canadacentral.livediagnostics.monitor.azure.com/;ApplicationId=***REMOVED***"
+}

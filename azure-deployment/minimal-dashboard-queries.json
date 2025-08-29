@@ -1,0 +1,43 @@
+{
+  "dashboard_name": "GitMind Extension - Minimal Analytics",
+  "description": "Minimal telemetry dashboard with only essential metrics",
+  "queries": {
+    "daily_active_users": {
+      "name": "Daily Active Users",
+      "description": "Count of unique users per day (combining activation and daily user events)",
+      "kql": "customEvents\n| where name in ('gitmind.daily_active_user', 'gitmind.extension_activation')\n| where timestamp > ago(30d)\n| summarize UniqueUsers = dcount(tostring(customDimensions.user_id)) by bin(timestamp, 1d)\n| order by timestamp desc"
+    },
+    "message_generation_failures": {
+      "name": "Message Generation Failures",
+      "description": "Errors that prevent message generation from working",
+      "kql": "customEvents\n| where name == 'gitmind.message_generation_failure'\n| where timestamp > ago(7d)\n| summarize\n    ErrorCount = count(),\n    UniqueUsers = dcount(tostring(customDimensions.user_id))\nby\n    Provider = tostring(customDimensions.provider),\n    ErrorType = tostring(customDimensions.error_type)\n| order by ErrorCount desc"
+    },
+    "failure_trends": {
+      "name": "Failure Trends Over Time",
+      "description": "Track failure patterns by day",
+      "kql": "customEvents\n| where name == 'gitmind.message_generation_failure'\n| where timestamp > ago(7d)\n| summarize\n    FailureCount = count()\nby\n    bin(timestamp, 1d),\n    Provider = tostring(customDimensions.provider)\n| order by timestamp desc"
+    },
+    "error_types_summary": {
+      "name": "Error Types Summary",
+      "description": "Most common error categories",
+      "kql": "customEvents\n| where name == 'gitmind.message_generation_failure'\n| where timestamp > ago(7d)\n| summarize\n    Count = count(),\n    AffectedUsers = dcount(tostring(customDimensions.user_id))\nby ErrorType = tostring(customDimensions.error_type)\n| order by Count desc"
+    }
+  },
+  "alerts": {
+    "high_failure_rate": {
+      "name": "High Message Generation Failure Rate",
+      "condition": "customEvents | where name == 'gitmind.message_generation_failure' | where timestamp > ago(1h) | count",
+      "threshold": "> 10",
+      "description": "Alert when more than 10 message generation failures occur in 1 hour"
+    }
+  },
+  "notes": [
+    "This minimal dashboard only tracks:",
+    "1. Daily active users (for usage analytics)",
+    "2. Message generation failures (for error monitoring)",
+    "",
+    "All other telemetry has been removed to eliminate noise.",
+    "Auto-collection of exceptions is disabled to prevent irrelevant errors.",
+    "Success events are not tracked to reduce data volume."
+  ]
+}

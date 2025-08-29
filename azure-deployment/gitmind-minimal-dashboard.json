@@ -1,0 +1,137 @@
+{
+  "lenses": {
+    "0": {
+      "order": 0,
+      "parts": {
+        "0": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "colSpan": 8,
+            "rowSpan": 4
+          },
+          "metadata": {
+            "inputs": [
+              {
+                "name": "ComponentId",
+                "value": {
+                  "SubscriptionId": "f27befa2-9826-4d07-8029-5ce8746040ba",
+                  "ResourceGroup": "GitMind-Resources",
+                  "Name": "gitmind-vscode-extension"
+                }
+              },
+              {
+                "name": "Query",
+                "value": "customEvents\n| where name == 'gitmind.daily_active_user'\n| where timestamp > ago(30d)\n| summarize UniqueUsers = dcount(tostring(customDimensions.user_id)) by bin(timestamp, 1d)\n| order by timestamp desc"
+              },
+              {
+                "name": "PartTitle",
+                "value": "Daily Active Users (30 Days)"
+              }
+            ],
+            "type": "Extension/AppInsightsExtension/PartType/AnalyticsLineChartPart"
+          }
+        },
+        "1": {
+          "position": {
+            "x": 8,
+            "y": 0,
+            "colSpan": 4,
+            "rowSpan": 4
+          },
+          "metadata": {
+            "inputs": [
+              {
+                "name": "ComponentId",
+                "value": {
+                  "SubscriptionId": "f27befa2-9826-4d07-8029-5ce8746040ba",
+                  "ResourceGroup": "GitMind-Resources",
+                  "Name": "gitmind-vscode-extension"
+                }
+              },
+              {
+                "name": "Query",
+                "value": "customEvents\n| where name == 'gitmind.daily_active_user'\n| where timestamp > ago(1d)\n| summarize TodayUsers = dcount(tostring(customDimensions.user_id))\n| extend Metric = 'Today Active Users'"
+              },
+              {
+                "name": "PartTitle",
+                "value": "Today's Active Users"
+              }
+            ],
+            "type": "Extension/AppInsightsExtension/PartType/AnalyticsGridPart"
+          }
+        },
+        "2": {
+          "position": {
+            "x": 0,
+            "y": 4,
+            "colSpan": 6,
+            "rowSpan": 4
+          },
+          "metadata": {
+            "inputs": [
+              {
+                "name": "ComponentId",
+                "value": {
+                  "SubscriptionId": "f27befa2-9826-4d07-8029-5ce8746040ba",
+                  "ResourceGroup": "GitMind-Resources",
+                  "Name": "gitmind-vscode-extension"
+                }
+              },
+              {
+                "name": "Query",
+                "value": "customEvents\n| where name == 'gitmind.message_generation_failure'\n| where timestamp > ago(7d)\n| summarize\n    ErrorCount = count(),\n    UniqueUsers = dcount(tostring(customDimensions.user_id))\nby\n    Provider = tostring(customDimensions.provider),\n    ErrorType = tostring(customDimensions.error_type)\n| order by ErrorCount desc"
+              },
+              {
+                "name": "PartTitle",
+                "value": "Message Generation Failures (7 Days)"
+              }
+            ],
+            "type": "Extension/AppInsightsExtension/PartType/AnalyticsGridPart"
+          }
+        },
+        "3": {
+          "position": {
+            "x": 6,
+            "y": 4,
+            "colSpan": 6,
+            "rowSpan": 4
+          },
+          "metadata": {
+            "inputs": [
+              {
+                "name": "ComponentId",
+                "value": {
+                  "SubscriptionId": "f27befa2-9826-4d07-8029-5ce8746040ba",
+                  "ResourceGroup": "GitMind-Resources",
+                  "Name": "gitmind-vscode-extension"
+                }
+              },
+              {
+                "name": "Query",
+                "value": "customEvents\n| where name == 'gitmind.message_generation_failure'\n| where timestamp > ago(7d)\n| summarize Count = count() by ErrorType = tostring(customDimensions.error_type)\n| order by Count desc"
+              },
+              {
+                "name": "PartTitle",
+                "value": "Error Types Distribution"
+              }
+            ],
+            "type": "Extension/AppInsightsExtension/PartType/AnalyticsPieChartPart"
+          }
+        }
+      }
+    }
+  },
+  "metadata": {
+    "model": {
+      "timeRange": {
+        "value": {
+          "relative": {
+            "duration": 7,
+            "timeUnit": 1
+          }
+        }
+      }
+    }
+  }
+}

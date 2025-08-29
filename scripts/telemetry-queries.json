@@ -1,0 +1,109 @@
+{
+  "version": "1.0",
+  "description": "GitMind Telemetry KQL Queries for Azure Application Insights",
+  "privacy_compliant": true,
+  "queries": {
+    "daily_active_users": {
+      "name": "Daily Active Users",
+      "description": "Count of unique daily active users over time",
+      "query": "customEvents\n| where name == 'gitmind.daily_active_user'\n| summarize UniqueUsers = dcount(tostring(customDimensions.user_id)) by bin(timestamp, 1d)\n| order by timestamp desc",
+      "chart_type": "timechart",
+      "privacy_level": "anonymous"
+    },
+    "daily_active_users_trend": {
+      "name": "Daily Active Users (7-day trend)",
+      "description": "7-day rolling average of daily active users",
+      "query": "customEvents\n| where name == 'gitmind.daily_active_user'\n| where timestamp > ago(30d)\n| summarize UniqueUsers = dcount(tostring(customDimensions.user_id)) by bin(timestamp, 1d)\n| extend MovingAvg = series_stats_dynamic(series_fir(UniqueUsers, repeat(1, 7), false)).avg\n| project timestamp, UniqueUsers, MovingAvg\n| order by timestamp desc",
+      "chart_type": "timechart",
+      "privacy_level": "anonymous"
+    },
+    "commit_generation_stats": {
+      "name": "Commit Generation Statistics",
+      "description": "Daily commit generation success rates by provider",
+      "query": "customEvents\n| where name == 'gitmind.commit_generated'\n| summarize \n    TotalCommits = count(),\n    SuccessfulCommits = countif(tostring(customDimensions.success) == 'true'),\n    SuccessRate = round(100.0 * countif(tostring(customDimensions.success) == 'true') / count(), 2)\nby bin(timestamp, 1d), tostring(customDimensions.provider)\n| order by timestamp desc",
+      "chart_type": "table",
+      "privacy_level": "anonymous"
+    },
+    "provider_success_rates": {
+      "name": "Provider Success Rates",
+      "description": "Overall success rates by AI provider",
+      "query": "customEvents\n| where name == 'gitmind.commit_generated'\n| where timestamp > ago(7d)\n| summarize \n    TotalAttempts = count(),\n    SuccessfulAttempts = countif(tostring(customDimensions.success) == 'true'),\n    SuccessRate = round(100.0 * countif(tostring(customDimensions.success) == 'true') / count(), 2)\nby Provider = tostring(customDimensions.provider)\n| order by SuccessRate desc",
+      "chart_type": "barchart",
+      "privacy_level": "anonymous"
+    },
+    "error_analysis": {
+      "name": "Error Analysis",
+      "description": "Error frequency by type and context",
+      "query": "customEvents\n| where name == 'gitmind.extension_error'\n| summarize \n    ErrorCount = count(),\n    UniqueUsers = dcount(tostring(customDimensions.user_id))\nby \n    ErrorType = tostring(customDimensions.error_type),\n    Context = tostring(customDimensions.context),\n    bin(timestamp, 1d)\n| order by timestamp desc, ErrorCount desc",
+      "chart_type": "table",
+      "privacy_level": "anonymous"
+    },
+    "error_distribution": {
+      "name": "Error Distribution",
+      "description": "Distribution of error types",
+      "query": "customEvents\n| where name == 'gitmind.extension_error'\n| where timestamp > ago(7d)\n| summarize Count = count() by ErrorType = tostring(customDimensions.error_type)\n| order by Count desc",
+      "chart_type": "piechart",
+      "privacy_level": "anonymous"
+    },
+    "hourly_usage_pattern": {
+      "name": "Hourly Usage Pattern",
+      "description": "Usage patterns by hour of day",
+      "query": "customEvents\n| where name in ('gitmind.daily_active_user', 'gitmind.commit_generated')\n| where timestamp > ago(7d)\n| extend Hour = datepart('hour', timestamp)\n| summarize \n    ActiveUsers = dcountif(tostring(customDimensions.user_id), name == 'gitmind.daily_active_user'),\n    Commits = countif(name == 'gitmind.commit_generated')\nby Hour\n| order by Hour",
+      "chart_type": "columnchart",
+      "privacy_level": "anonymous"
+    },
+    "extension_version_adoption": {
+      "name": "Extension Version Adoption",
+      "description": "Distribution of extension versions in use",
+      "query": "customEvents\n| where name == 'gitmind.daily_active_user'\n| where timestamp > ago(7d)\n| summarize \n    UniqueUsers = dcount(tostring(customDimensions.user_id))\nby Version = tostring(customDimensions.extension_version)\n| order by UniqueUsers desc",
+      "chart_type": "piechart",
+      "privacy_level": "anonymous"
+    },
+    "health_overview": {
+      "name": "Extension Health Overview",
+      "description": "Overall health metrics for the extension",
+      "query": "let timeRange = ago(24h);\nlet activeUsers = customEvents\n| where name == 'gitmind.daily_active_user' and timestamp > timeRange\n| dcount(tostring(customDimensions.user_id));\nlet totalCommits = customEvents\n| where name == 'gitmind.commit_generated' and timestamp > timeRange\n| count;\nlet successfulCommits = customEvents\n| where name == 'gitmind.commit_generated' and timestamp > timeRange\n| where tostring(customDimensions.success) == 'true'\n| count;\nlet totalErrors = customEvents\n| where name == 'gitmind.extension_error' and timestamp > timeRange\n| count;\nprint \n    ActiveUsers = activeUsers,\n    TotalCommits = totalCommits,\n    SuccessfulCommits = successfulCommits,\n    SuccessRate = round(100.0 * successfulCommits / totalCommits, 2),\n    TotalErrors = totalErrors,\n    ErrorRate = round(100.0 * totalErrors / (totalCommits + totalErrors), 2)",
+      "chart_type": "table",
+      "privacy_level": "anonymous"
+    }
+  },
+  "alerts": {
+    "high_error_rate": {
+      "name": "High Error Rate Alert",
+      "description": "Alert when error rate exceeds 10% in 15 minutes",
+      "query": "customEvents\n| where name == 'gitmind.extension_error'\n| where timestamp > ago(15m)\n| summarize ErrorCount = count()\n| where ErrorCount > 10",
+      "threshold": 10,
+      "frequency": "5m",
+      "severity": "Warning"
+    },
+    "low_success_rate": {
+      "name": "Low Success Rate Alert",
+      "description": "Alert when commit success rate drops below 80%",
+      "query": "customEvents\n| where name == 'gitmind.commit_generated'\n| where timestamp > ago(30m)\n| summarize \n    Total = count(),\n    Successful = countif(tostring(customDimensions.success) == 'true')\n| extend SuccessRate = 100.0 * Successful / Total\n| where SuccessRate < 80",
+      "threshold": 80,
+      "frequency": "5m",
+      "severity": "Critical"
+    },
+    "no_activity": {
+      "name": "No Activity Alert",
+      "description": "Alert when no telemetry received for 2 hours",
+      "query": "customEvents\n| where name startswith 'gitmind.'\n| where timestamp > ago(2h)\n| count\n| where Count == 0",
+      "threshold": 0,
+      "frequency": "30m",
+      "severity": "Warning"
+    }
+  },
+  "privacy_settings": {
+    "data_retention_days": 30,
+    "anonymization": true,
+    "pii_scrubbing": true,
+    "gdpr_compliant": true,
+    "ccpa_compliant": true,
+    "user_opt_out": true,
+    "data_encryption": "AES256",
+    "geographic_restrictions": {
+      "eu_data_residency": true,
+      "canada_processing": true
+    }
+  }
+}
