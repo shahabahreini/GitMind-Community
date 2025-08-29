@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: Professional Commit Assistant",
   "description": "🚀 Professional AI-powered commit message generation for Visual Studio Code. Leverage 13 different AI providers including OpenAI GPT-4o, Claude-3-5-sonnet, Gemini-2.5-flash, DeepSeek-reasoner, Grok-3, Perplexity-sonar, and 50+ models to create consistent, conventional commit messages",
-  "version": "4.0.11",
+  "version": "4.1.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -594,6 +594,37 @@
           "type": "boolean",
           "default": true,
           "description": "Include author and date information when analyzing commit history"
+        },
+        "gitmind.commitStyle.gitmoji.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable gitmoji emojis for commit messages (Pro feature)",
+          "markdownDescription": "**Pro Feature**: Add gitmoji emojis to your commit messages. This feature is only available for GitMind Pro subscribers.",
+          "order": 110
+        },
+        "gitmind.commitStyle.gitmoji.placement": {
+          "type": "string",
+          "enum": [
+            "summary",
+            "body", 
+            "both"
+          ],
+          "default": "summary",
+          "description": "Where to place gitmoji emojis in commit messages (Pro feature)",
+          "enumDescriptions": [
+            "Add emojis only to the summary line",
+            "Add emojis only to the body",
+            "Add emojis to both summary and body"
+          ],
+          "markdownDescription": "**Pro Feature**: Choose where gitmoji emojis should appear in your commit messages.",
+          "order": 111
+        },
+        "gitmind.commitStyle.gitmoji.customEmojis": {
+          "type": "object",
+          "default": {},
+          "description": "Custom emoji mappings for commit types (Pro feature)",
+          "markdownDescription": "**Pro Feature**: Define custom emojis for specific commit types. Format: `{\"feat\": \"✨\", \"fix\": \"🐛\"}`. Leave empty to use default gitmoji mappings.",
+          "order": 112
         },
         "gitmind.subscription.email": {
           "type": "string",

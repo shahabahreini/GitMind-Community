@@ -1,5 +1,39 @@
 # Changelog
 
+## v4.1.0 - 2025-01-XX
+
+### New Features
+
+- **🎨 Gitmoji Support (Pro Feature)**: Enhanced commit messages with emoji integration
+  - **Toggle Control**: Enable/disable gitmoji for each commit style individually
+  - **Custom Emoji Mappings**: Customize emoji mappings for different commit types (feat, fix, docs, etc.)
+  - **Flexible Placement**: Choose emoji placement in summary line, body, or both
+  - **Emoji Reference Guide**: Built-in webview with searchable emoji reference and descriptions
+  - **Pro Restriction**: Feature restricted to Pro users with proper license validation
+  - **Default Mappings**: Comprehensive default emoji mappings for common commit types:
+    - ✨ feat (new features)
+    - 🐛 fix (bug fixes)
+    - 📚 docs (documentation)
+    - 🎨 style (formatting)
+    - ♻️ refactor (code restructuring)
+    - ✅ test (adding tests)
+    - 🔧 chore (maintenance)
+    - ⚡ perf (performance improvements)
+    - 👷 ci (CI/CD changes)
+    - 📦 build (build system changes)
+
+### Enhanced
+
+- **Settings UI**: Added gitmoji toggle controls and placement options to commit style renderer
+- **Custom Dialog**: New emoji customization dialog with quick pick interface
+- **Pro Integration**: Seamless integration with existing Pro license validation system
+
+### Technical
+
+- **GitmojiService**: New singleton service managing emoji mappings and commit message processing
+- **Type Safety**: Extended TypeScript interfaces for gitmoji configuration
+- **Settings Schema**: Added new configuration options in package.json with Pro feature flags
+
 ## v4.0.4 - 2025-08-04
 
 ### Enhanced

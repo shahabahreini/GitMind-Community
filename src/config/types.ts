@@ -62,6 +62,13 @@ export interface CommitConfig {
     includeScope: boolean;
     addBulletPoints: boolean;
     verbose: boolean;
+    gitmoji?: GitmojiConfig;
+}
+
+export interface GitmojiConfig {
+    enabled: boolean;
+    placement: 'summary' | 'body' | 'both';
+    customEmojis?: { [key: string]: string }; // type -> emoji mapping
 }
 
 export interface ExtensionConfig {

@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import { getApiConfig } from "../../config/settings";
 import { debugLog } from "../../services/debug/logger";
 import { getOllamaModels } from "../../services/api/ollama";
+import { GitmojiCustomDialog } from "./components/GitmojiCustomDialog";
 
 export class SettingsWebviewProvider {
     private _panel: vscode.WebviewPanel | undefined;
@@ -68,6 +69,30 @@ export class SettingsWebviewProvider {
                                     commandId: message.commandId,
                                     error: error instanceof Error ? error.message : String(error)
                                 });
+                            }
+                            break;
+
+                        case 'openCustomEmojiDialog':
+                            try {
+                                const gitmojiDialog = GitmojiCustomDialog.getInstance();
+                                await gitmojiDialog.showCustomEmojiDialog();
+                            } catch (error) {
+                                debugLog("Failed to open custom emoji dialog", {
+                                    error: error instanceof Error ? error.message : String(error)
+                                });
+                                vscode.window.showErrorMessage(`Failed to open emoji customization: ${error}`);
+                            }
+                            break;
+
+                        case 'showEmojiReference':
+                            try {
+                                const gitmojiDialog = GitmojiCustomDialog.getInstance();
+                                await gitmojiDialog.showEmojiReference();
+                            } catch (error) {
+                                debugLog("Failed to show emoji reference", {
+                                    error: error instanceof Error ? error.message : String(error)
+                                });
+                                vscode.window.showErrorMessage(`Failed to show emoji reference: ${error}`);
                             }
                             break;
 

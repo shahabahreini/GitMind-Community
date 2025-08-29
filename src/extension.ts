@@ -31,6 +31,7 @@ import { LemonSqueezyService } from "./services/subscription/LemonSqueezyService
 import { SettingsMigrationService } from "./services/migration/SettingsMigrationService";
 import { learnFromCommitHistory } from "./services/ai/learnFromCommitHistory";
 import { CommitStyleManager } from "./services/commitStyleManager";
+import { GitmojiService } from "./services/gitmoji/GitmojiService";
 
 // Constants
 const TIMEOUT_DURATION = 60000;
@@ -216,7 +217,20 @@ async function handleGenerateCommit(): Promise<void> {
 
     if (message?.trim()) {
       const formattedMessage = processCommitMessage(message, getPromptConfig());
-      await setCommitMessage(formattedMessage);
+      
+      // Apply gitmoji if enabled and user has Pro access
+      const gitmojiService = GitmojiService.getInstance();
+      const messageString = formattedMessage.description 
+        ? `${formattedMessage.summary}\n\n${formattedMessage.description}`
+        : formattedMessage.summary;
+      const finalMessageString = await gitmojiService.addEmojiToCommit(messageString);
+      
+      // Convert back to CommitMessage format
+      const lines = finalMessageString.split('\n');
+      const summary = lines[0] || '';
+      const description = lines.slice(2).join('\n').trim(); // Skip empty line after summary
+      
+      await setCommitMessage({ summary, description });
 
       telemetryService.trackCommitGeneration(
         apiConfig.type,

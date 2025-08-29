@@ -1,6 +1,7 @@
 // src/webview/settings/components/renderers/CommitStyleRenderer.ts
 import { ExtensionSettings } from "../../../../models/ExtensionSettings";
 import { BaseRenderer } from "./BaseRenderer";
+import { getEmojiEnhancementStyles } from '../../styles/emojiEnhancement.css';
 
 export class CommitStyleRenderer extends BaseRenderer {
     constructor(settings: ExtensionSettings) {
@@ -27,6 +28,7 @@ export class CommitStyleRenderer extends BaseRenderer {
                         <button class="gm-tab-btn gm-tab-btn-active" data-gm-tab="selection" type="button">
                             Style Selection
                         </button>
+                        ${hasValidLicense ? '<button class="gm-tab-btn" data-gm-tab="emoji" type="button">Emoji Enhancement</button>' : ''}
                         <button class="gm-tab-btn" data-gm-tab="reference" type="button">
                             Reference Guide
                         </button>
@@ -35,22 +37,24 @@ export class CommitStyleRenderer extends BaseRenderer {
                     <div class="gm-tab-container">
                         <div class="gm-tab-content gm-tab-content-active" data-gm-content="selection">
                             <div class="gm-style-grid">
-                                ${this.renderStyleOption('basic', 'Basic', 'Simple, straightforward commit messages', false, currentStyle, hasValidLicense)}
-                                ${this.renderStyleOption('conventional', 'Conventional Commits', 'Standard with types and scopes (feat, fix, docs, etc.)', false, currentStyle, hasValidLicense)}
-                                ${this.renderStyleOption('angular', 'Angular', 'Angular commit convention with detailed type definitions', true, currentStyle, hasValidLicense)}
-                                ${this.renderStyleOption('ember', 'Ember.js', 'Ember.js style with tags like [FEATURE], [BUGFIX]', true, currentStyle, hasValidLicense)}
-                                ${this.renderStyleOption('emojigit', 'EmojiGit', 'Visual semantic commits with custom emojis', true, currentStyle, hasValidLicense)}
-                                ${this.renderStyleOption('gitmoji', 'Gitmoji', 'Official gitmoji.dev specification with standardized emojis', true, currentStyle, hasValidLicense)}
-                                ${this.renderStyleOption('semantic', 'Semantic Release', 'Automated release-optimized commits for semantic versioning', true, currentStyle, hasValidLicense)}
-                                ${this.renderStyleOption('commitizen', 'Commitizen', 'Interactive guided commits with validation', true, currentStyle, hasValidLicense)}
-                                ${this.renderStyleOption('karma', 'Karma (Google)', 'Google\'s strict enterprise convention with mandatory scopes', true, currentStyle, hasValidLicense)}
-                                ${this.renderStyleOption('linux', 'Linux Kernel', 'Traditional kernel development convention with subsystems', true, currentStyle, hasValidLicense)}
-                                ${this.renderStyleOption('jquery', 'jQuery', 'JavaScript project convention with issue tracking', true, currentStyle, hasValidLicense)}
+                                ${this.renderSimpleStyleOption('basic', 'Basic', 'Simple, straightforward commit messages', false, currentStyle, hasValidLicense)}
+                                ${this.renderSimpleStyleOption('conventional', 'Conventional Commits', 'Standard with types and scopes (feat, fix, docs, etc.)', false, currentStyle, hasValidLicense)}
+                                ${this.renderSimpleStyleOption('angular', 'Angular', 'Angular commit convention with detailed type definitions', true, currentStyle, hasValidLicense)}
+                                ${this.renderSimpleStyleOption('ember', 'Ember.js', 'Ember.js style with tags like [FEATURE], [BUGFIX]', true, currentStyle, hasValidLicense)}
+                                ${this.renderSimpleStyleOption('emojigit', 'EmojiGit', 'Visual semantic commits with custom emojis', true, currentStyle, hasValidLicense)}
+                                ${this.renderSimpleStyleOption('gitmoji', 'Gitmoji', 'Official gitmoji.dev specification with standardized emojis', true, currentStyle, hasValidLicense)}
+                                ${this.renderSimpleStyleOption('semantic', 'Semantic Release', 'Automated release-optimized commits for semantic versioning', true, currentStyle, hasValidLicense)}
+                                ${this.renderSimpleStyleOption('commitizen', 'Commitizen', 'Interactive guided commits with validation', true, currentStyle, hasValidLicense)}
+                                ${this.renderSimpleStyleOption('karma', 'Karma (Google)', 'Google\'s strict enterprise convention with mandatory scopes', true, currentStyle, hasValidLicense)}
+                                ${this.renderSimpleStyleOption('linux', 'Linux Kernel', 'Traditional kernel development convention with subsystems', true, currentStyle, hasValidLicense)}
+                                ${this.renderSimpleStyleOption('jquery', 'jQuery', 'JavaScript project convention with issue tracking', true, currentStyle, hasValidLicense)}
                             </div>
                             
                             ${!hasValidLicense ? this.renderProUpgradeSection() : ''}
                         </div>
 
+                        ${hasValidLicense ? this.renderEmojiTab(currentStyle) : ''}
+                        
                         <div class="gm-tab-content" data-gm-content="reference">
                             <div class="gm-reference-container">
                                 ${this.renderReferenceGuide()}
@@ -85,6 +89,7 @@ export class CommitStyleRenderer extends BaseRenderer {
                         initializeTabSystem();
                         initializeStyleSelection();
                         initializeExamplesToggle();
+                        initializeEmojiHandlers();
                         initializeSettingsHandling();
                         
                         updateCommitStyleSelection('${currentStyle}');
@@ -183,14 +188,99 @@ export class CommitStyleRenderer extends BaseRenderer {
                         });
                     }
 
+                    function initializeEmojiHandlers() {
+                        // Handle emoji checkbox
+                        const emojiCheckbox = document.querySelector('.gm-emoji-checkbox');
+                        if (emojiCheckbox) {
+                            emojiCheckbox.addEventListener('change', function() {
+                                const isEnabled = this.checked;
+                                const optionsContainer = document.querySelector('.gm-emoji-options');
+                                
+                                if (optionsContainer) {
+                                    if (isEnabled) {
+                                        optionsContainer.classList.add('gm-emoji-options-visible');
+                                    } else {
+                                        optionsContainer.classList.remove('gm-emoji-options-visible');
+                                    }
+                                }
+                                
+                                if (typeof vscode !== 'undefined') {
+                                    vscode.postMessage({
+                                        command: 'updateSetting',
+                                        key: 'commitStyle.gitmoji.enabled',
+                                        value: isEnabled
+                                    });
+                                }
+                                
+                                console.log('[CommitStyleRenderer] Emoji injection enabled:', isEnabled);
+                            });
+                        }
+
+                        // Handle placement radio buttons
+                        const placementRadios = document.querySelectorAll('input[name="gm-emoji-placement"]');
+                        placementRadios.forEach(radio => {
+                            radio.addEventListener('change', function() {
+                                if (this.checked) {
+                                    const placement = this.value;
+                                    
+                                    if (typeof vscode !== 'undefined') {
+                                        vscode.postMessage({
+                                            command: 'updateSetting',
+                                            key: 'commitStyle.gitmoji.placement',
+                                            value: placement
+                                        });
+                                    }
+                                    
+                                    console.log('[CommitStyleRenderer] Emoji placement:', placement);
+                                }
+                            });
+                        });
+
+                    }
+
+                    function openCustomEmojiDialog(styleId) {
+                        if (typeof vscode !== 'undefined') {
+                            vscode.postMessage({
+                                command: 'openCustomEmojiDialog',
+                                styleId: styleId
+                            });
+                        }
+                    }
+
                     function initializeSettingsHandling() {
                         window.addEventListener('message', function(event) {
                             const message = event.data;
                             if (message.command === 'updateSettings' && message.settings) {
                                 const currentStyle = message.settings.commitStyle?.style || 'conventional';
                                 updateCommitStyleSelection(currentStyle);
+                                updateGitmojiSettings(message.settings.commitStyle?.gitmoji);
                                 console.log('[CommitStyleRenderer] Settings updated:', currentStyle);
                             }
+                        });
+                    }
+
+                    function updateGitmojiSettings(gitmojiSettings) {
+                        if (!gitmojiSettings) return;
+                        
+                        // Update emoji checkbox
+                        const checkbox = document.querySelector('.gm-emoji-checkbox');
+                        if (checkbox) {
+                            checkbox.checked = gitmojiSettings.enabled || false;
+                            const optionsContainer = document.querySelector('.gm-emoji-options');
+                            if (optionsContainer) {
+                                if (gitmojiSettings.enabled) {
+                                    optionsContainer.classList.add('gm-emoji-options-visible');
+                                } else {
+                                    optionsContainer.classList.remove('gm-emoji-options-visible');
+                                }
+                            }
+                        }
+                        
+                        // Update placement radios
+                        const placement = gitmojiSettings.placement || 'summary';
+                        const placementRadios = document.querySelectorAll('input[name="gm-emoji-placement"]');
+                        placementRadios.forEach(radio => {
+                            radio.checked = radio.value === placement;
                         });
                     }
 
@@ -325,7 +415,7 @@ export class CommitStyleRenderer extends BaseRenderer {
         `;
     }
 
-    private renderStyleOption(
+    private renderSimpleStyleOption(
         id: string,
         name: string,
         description: string,
@@ -365,14 +455,590 @@ export class CommitStyleRenderer extends BaseRenderer {
                             ${examples.map((example, index) => {
             const label = index === 0 ? 'Single-line example' : 'Multi-line example';
             return `<div class="gm-example-item">
-                                    <div class="gm-example-label">${label}</div>
-                                    <div class="gm-example-content">${example}</div>
-                                </div>`;
+                                        <div class="gm-example-label">${label}</div>
+                                        <div class="gm-example-content">${example}</div>
+                                    </div>`;
         }).join('')}
                         </div>
                     </div>
                 </div>
             </div>
+        `;
+    }
+
+    private renderEmojiTab(currentStyle: string): string {
+        const gitmojiSettings = this.settings.commitStyle?.gitmoji;
+        const isEnabled = gitmojiSettings?.enabled || false;
+        const placement = gitmojiSettings?.placement || 'summary';
+
+        // Check if current style has emoji conflicts
+        const hasEmojiConflict = ['emojigit', 'gitmoji'].includes(currentStyle);
+        const hasFormatConflict = ['ember', 'linux', 'jquery'].includes(currentStyle);
+
+        return `
+            <div class="gm-tab-content" data-gm-content="emoji">
+                <div class="gm-emoji-enhancement-container">
+                    <div class="gm-emoji-header">
+                        <h3 class="gm-emoji-title">🎨 Emoji Enhancement</h3>
+                        <p class="gm-emoji-description">
+                            Add emojis to your commit messages for better visual communication and semantic meaning.
+                        </p>
+                    </div>
+                    
+                    ${this.renderCompatibilityWarning(currentStyle, hasEmojiConflict, hasFormatConflict)}
+                    
+                    <div class="gm-emoji-controls">
+                        <div class="gm-emoji-toggle-section">
+                            <label class="gm-emoji-toggle-label">
+                                <input type="checkbox" 
+                                       class="gm-emoji-checkbox" 
+                                       ${isEnabled ? 'checked' : ''}
+                                       ${hasEmojiConflict ? 'disabled' : ''} />
+                                <span class="gm-emoji-toggle-text">Enable emoji injection for "${this.getStyleDisplayName(currentStyle)}" style</span>
+                            </label>
+                        </div>
+                        
+                        <div class="gm-emoji-options ${isEnabled && !hasEmojiConflict ? 'gm-emoji-options-visible' : ''}">
+                            <div class="gm-placement-section">
+                                <h4 class="gm-placement-title">Injection Location</h4>
+                                <div class="gm-placement-options">
+                                    <label class="gm-placement-item">
+                                        <input type="radio" name="gm-emoji-placement" value="summary" ${placement === 'summary' ? 'checked' : ''} />
+                                        <span class="gm-placement-text">Inject to one line summary</span>
+                                    </label>
+                                    <label class="gm-placement-item">
+                                        <input type="radio" name="gm-emoji-placement" value="body" ${placement === 'body' ? 'checked' : ''} />
+                                        <span class="gm-placement-text">Inject to message body</span>
+                                    </label>
+                                    <label class="gm-placement-item">
+                                        <input type="radio" name="gm-emoji-placement" value="both" ${placement === 'both' ? 'checked' : ''} />
+                                        <span class="gm-placement-text">Both</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            ${this.renderEmojiExamples(currentStyle, placement)}
+                            
+                            ${this.renderEmojiReference()}
+                        </div>
+                    </div>
+                </div>
+                
+                ${this.renderEmojiTabStyles()}
+            </div>
+        `;
+    }
+
+    private renderEmojiExamples(currentStyle: string, placement: string): string {
+        const summaryExample = this.getEmojiExample(currentStyle, 'summary');
+        const bodyExample = this.getEmojiExample(currentStyle, 'body');
+
+        return `
+            <div class="gm-emoji-examples">
+                <h4 class="gm-examples-title">Examples</h4>
+                <div class="gm-examples-grid">
+                    <div class="gm-example-item">
+                        <div class="gm-example-label">Summary injection:</div>
+                        <div class="gm-example-content">${summaryExample}</div>
+                    </div>
+                    <div class="gm-example-item">
+                        <div class="gm-example-label">Body injection:</div>
+                        <div class="gm-example-content">${bodyExample}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    private getEmojiExample(styleId: string, type: 'summary' | 'body'): string {
+        const examples = {
+            'basic': {
+                'summary': '✨ Add user authentication system',
+                'body': `Add user authentication system
+
+✨ Implement OAuth2 login flow
+🔒 Add password encryption
+📝 Update documentation`
+            },
+            'conventional': {
+                'summary': '✨ feat(auth): add two-factor authentication',
+                'body': `feat(auth): add two-factor authentication
+
+✨ Add 2FA setup flow
+🔒 Implement TOTP verification
+📱 Add mobile app support`
+            },
+            'angular': {
+                'summary': '✨ feat(directive): add new user directive',
+                'body': `feat(directive): add new user directive
+
+✨ Create user profile directive
+🎨 Add styling and animations
+✅ Include comprehensive tests`
+            }
+        };
+
+        const styleExamples = examples[styleId as keyof typeof examples] || examples['basic'];
+        return styleExamples[type];
+    }
+
+    private renderEmojiTabStyles(): string {
+        return `<style>${getEmojiEnhancementStyles()}</style>`;
+    }
+
+    private renderGitmojiSection(currentStyle: string): string {
+        const gitmojiSettings = this.settings.commitStyle?.gitmoji;
+        const isEnabled = gitmojiSettings?.enabled || false;
+        const placement = gitmojiSettings?.placement || 'summary';
+
+        // Check if current style has emoji conflicts
+        const hasEmojiConflict = ['emojigit', 'gitmoji'].includes(currentStyle);
+        const hasFormatConflict = ['ember', 'linux', 'jquery'].includes(currentStyle);
+
+        return `
+            <div class="gm-gitmoji-section">
+                <div class="gm-gitmoji-header">
+                    <h4 class="gm-gitmoji-title">🎨 Gitmoji Enhancement</h4>
+                    <p class="gm-gitmoji-description">Add emojis to your commit messages for better visual communication</p>
+                </div>
+                
+                ${this.renderCompatibilityWarning(currentStyle, hasEmojiConflict, hasFormatConflict)}
+                
+                <div class="gm-gitmoji-controls">
+                    <div class="gm-gitmoji-toggle">
+                        <label class="gm-toggle-label">
+                            <input type="checkbox" 
+                                   class="gm-gitmoji-checkbox" 
+                                   ${isEnabled ? 'checked' : ''}
+                                   ${hasEmojiConflict ? 'disabled' : ''} />
+                            <span class="gm-toggle-slider"></span>
+                            <span class="gm-toggle-text">Enable Gitmoji for "${this.getStyleDisplayName(currentStyle)}" style</span>
+                        </label>
+                    </div>
+                    
+                    <div class="gm-gitmoji-options ${isEnabled && !hasEmojiConflict ? 'gm-gitmoji-options-visible' : ''}">
+                        <div class="gm-placement-section">
+                            <h5 class="gm-placement-title">Emoji Placement</h5>
+                            <div class="gm-placement-options">
+                                <label class="gm-radio-label">
+                                    <input type="radio" name="gm-gitmoji-placement" value="summary" ${placement === 'summary' ? 'checked' : ''} />
+                                    <span class="gm-radio-text">Summary line only</span>
+                                </label>
+                                <label class="gm-radio-label">
+                                    <input type="radio" name="gm-gitmoji-placement" value="body" ${placement === 'body' ? 'checked' : ''} />
+                                    <span class="gm-radio-text">Body only</span>
+                                </label>
+                                <label class="gm-radio-label">
+                                    <input type="radio" name="gm-gitmoji-placement" value="both" ${placement === 'both' ? 'checked' : ''} />
+                                    <span class="gm-radio-text">Both summary and body</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        ${this.renderEmojiReference()}
+                    </div>
+                </div>
+                
+                ${this.renderGitmojiStyles()}
+            </div>
+        `;
+    }
+
+    private renderCompatibilityWarning(currentStyle: string, hasEmojiConflict: boolean, hasFormatConflict: boolean): string {
+        if (!hasEmojiConflict && !hasFormatConflict) {
+            return '';
+        }
+
+        let warningMessage = '';
+        let warningType = 'warning';
+
+        if (hasEmojiConflict) {
+            warningType = 'error';
+            warningMessage = `The "${this.getStyleDisplayName(currentStyle)}" style already includes emojis by design. Gitmoji enhancement is not compatible with this style.`;
+        } else if (hasFormatConflict) {
+            warningMessage = `The "${this.getStyleDisplayName(currentStyle)}" style has specific formatting requirements. Emojis may not align perfectly with this style's conventions.`;
+        }
+
+        return `
+            <div class="gm-compatibility-warning gm-warning-${warningType}">
+                <div class="gm-warning-icon">${warningType === 'error' ? '⚠️' : '💡'}</div>
+                <div class="gm-warning-content">
+                    <div class="gm-warning-title">${warningType === 'error' ? 'Style Conflict' : 'Style Notice'}</div>
+                    <div class="gm-warning-message">${warningMessage}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    private getStyleDisplayName(styleId: string): string {
+        const styleNames: { [key: string]: string } = {
+            'conventional': 'Conventional Commits',
+            'gitmoji': 'Gitmoji',
+            'angular': 'Angular',
+            'atom': 'Atom',
+            'ember': 'Ember.js',
+            'eslint': 'ESLint',
+            'jshint': 'JSHint',
+            'karma': 'Karma (Google)',
+            'linux': 'Linux Kernel',
+            'jquery': 'jQuery'
+        };
+        return styleNames[styleId] || styleId;
+    }
+
+    private renderEmojiReference(): string {
+        const emojiMappings = [
+            { type: 'feat', emoji: '✨', description: 'Introduce new features' },
+            { type: 'fix', emoji: '🐛', description: 'Fix a bug' },
+            { type: 'docs', emoji: '📚', description: 'Add or update documentation' },
+            { type: 'style', emoji: '💎', description: 'Add or update the UI and style files' },
+            { type: 'refactor', emoji: '♻️', description: 'Refactor code' },
+            { type: 'perf', emoji: '⚡️', description: 'Improve performance' },
+            { type: 'test', emoji: '🧪', description: 'Add, update, or pass tests' },
+            { type: 'build', emoji: '📦️', description: 'Add or update development scripts' },
+            { type: 'ci', emoji: '👷', description: 'Add or update CI build system' },
+            { type: 'chore', emoji: '🔧', description: 'Add or update development tools' },
+            { type: 'revert', emoji: '⏪️', description: 'Revert changes' },
+            { type: 'wip', emoji: '🚧', description: 'Work in progress' },
+            { type: 'hotfix', emoji: '🚑️', description: 'Critical hotfix' },
+            { type: 'security', emoji: '🔒️', description: 'Fix security issues' },
+            { type: 'breaking', emoji: '💥', description: 'Introduce breaking changes' }
+        ];
+
+        const emojiRows = emojiMappings.map(mapping => `
+            <tr class="gm-emoji-row">
+                <td class="gm-emoji-cell">${mapping.emoji}</td>
+                <td class="gm-type-cell"><code>${mapping.type}</code></td>
+                <td class="gm-description-cell">${mapping.description}</td>
+            </tr>
+        `).join('');
+
+        return `
+            <div class="gm-emoji-reference">
+                <h4 class="gm-reference-title">Emoji Reference Guide</h4>
+                <p class="gm-reference-description">
+                    Common emoji mappings for commit types. These emojis will be automatically added to your commit messages.
+                </p>
+                
+                <div class="gm-reference-table-container">
+                    <table class="gm-reference-table">
+                        <thead>
+                            <tr>
+                                <th>Emoji</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${emojiRows}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="gm-reference-note">
+                    <p><strong>💡 Tip:</strong> You can customize these emoji mappings in your VSCode settings under <code>gitmind.commitStyle.gitmoji.customEmojis</code></p>
+                </div>
+            </div>
+        `;
+    }
+
+    private renderGitmojiStyles(): string {
+        return `
+            <style>
+                .gm-gitmoji-section {
+                    margin-top: 24px;
+{{ ... }}
+                    padding: 20px;
+                    background: var(--vscode-editor-background);
+                    border: 1px solid var(--vscode-panel-border);
+                    border-radius: 8px;
+                }
+                
+                .gm-gitmoji-header {
+                    margin-bottom: 16px;
+                }
+                
+                .gm-gitmoji-title {
+                    margin: 0 0 8px 0;
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: var(--vscode-foreground);
+                }
+                
+                .gm-gitmoji-description {
+                    margin: 0;
+                    font-size: 14px;
+                    color: var(--vscode-descriptionForeground);
+                }
+                
+                .gm-compatibility-warning {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 12px;
+                    padding: 12px;
+                    margin-bottom: 16px;
+                    border-radius: 6px;
+                    font-size: 14px;
+                }
+                
+                .gm-warning-error {
+                    background: var(--vscode-inputValidation-errorBackground);
+                    border: 1px solid var(--vscode-inputValidation-errorBorder);
+                }
+                
+                .gm-warning-warning {
+                    background: var(--vscode-inputValidation-warningBackground);
+                    border: 1px solid var(--vscode-inputValidation-warningBorder);
+                }
+                
+                .gm-warning-icon {
+                    font-size: 16px;
+                    margin-top: 2px;
+                }
+                
+                .gm-warning-title {
+                    font-weight: 600;
+                    margin-bottom: 4px;
+                    color: var(--vscode-foreground);
+                }
+                
+                .gm-warning-message {
+                    color: var(--vscode-descriptionForeground);
+                    line-height: 1.4;
+                }
+                
+                .gm-gitmoji-toggle {
+                    margin-bottom: 16px;
+                }
+                
+                .gm-toggle-label {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    cursor: pointer;
+                    font-size: 14px;
+                }
+                
+                .gm-toggle-label input[type="checkbox"] {
+                    position: relative;
+                    width: 44px;
+                    height: 24px;
+                    appearance: none;
+                    background: var(--vscode-checkbox-background);
+                    border: 1px solid var(--vscode-checkbox-border);
+                    border-radius: 12px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                }
+                
+                .gm-toggle-label input[type="checkbox"]:checked {
+                    background: var(--vscode-checkbox-selectBackground);
+                    border-color: var(--vscode-checkbox-selectBorder);
+                }
+                
+                .gm-toggle-label input[type="checkbox"]:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+                
+                .gm-toggle-label input[type="checkbox"]::after {
+                    content: '';
+                    position: absolute;
+                    top: 2px;
+                    left: 2px;
+                    width: 18px;
+                    height: 18px;
+                    background: var(--vscode-checkbox-foreground);
+                    border-radius: 50%;
+                    transition: transform 0.2s ease;
+                }
+                
+                .gm-toggle-label input[type="checkbox"]:checked::after {
+                    transform: translateX(20px);
+                }
+                
+                .gm-gitmoji-options {
+                    display: none;
+                    padding: 16px;
+                    background: var(--vscode-input-background);
+                    border: 1px solid var(--vscode-input-border);
+                    border-radius: 6px;
+                }
+                
+                .gm-gitmoji-options-visible {
+                    display: block;
+                }
+                
+                .gm-placement-section {
+                    margin-bottom: 20px;
+                }
+                
+                .gm-placement-title {
+                    margin: 0 0 12px 0;
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: var(--vscode-foreground);
+                }
+                
+                .gm-placement-options {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                }
+                
+                .gm-radio-label {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    cursor: pointer;
+                    font-size: 14px;
+                }
+                
+                .gm-radio-label input[type="radio"] {
+                    margin: 0;
+                }
+                
+                .gm-emoji-actions {
+                    display: flex;
+                    gap: 12px;
+                    flex-wrap: wrap;
+                }
+                
+                .gm-btn {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 8px 16px;
+                    border: 1px solid var(--vscode-button-border);
+                    border-radius: 4px;
+                    background: var(--vscode-button-background);
+                    color: var(--vscode-button-foreground);
+                    font-size: 13px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    text-decoration: none;
+                }
+                
+                .gm-btn:hover {
+                    background: var(--vscode-button-hoverBackground);
+                }
+                
+                .gm-btn-secondary {
+                    background: var(--vscode-button-secondaryBackground);
+                    color: var(--vscode-button-secondaryForeground);
+                }
+                
+                .gm-btn-secondary:hover {
+                    background: var(--vscode-button-secondaryHoverBackground);
+                }
+                
+                .gm-btn-icon {
+                    font-size: 14px;
+                }
+                
+                .gm-emoji-reference {
+                    margin-top: 24px;
+                    padding: 20px;
+                    background: var(--vscode-editor-background);
+                    border: 1px solid var(--vscode-panel-border);
+                    border-radius: 6px;
+                }
+                
+                .gm-reference-title {
+                    margin: 0 0 12px 0;
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: var(--vscode-foreground);
+                }
+                
+                .gm-reference-description {
+                    margin: 0 0 20px 0;
+                    font-size: 14px;
+                    color: var(--vscode-descriptionForeground);
+                    line-height: 1.5;
+                }
+                
+                .gm-reference-table-container {
+                    max-height: 300px;
+                    overflow-y: auto;
+                    border: 1px solid var(--vscode-input-border);
+                    border-radius: 4px;
+                }
+                
+                .gm-reference-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 13px;
+                }
+                
+                .gm-reference-table th {
+                    background: var(--vscode-editor-background);
+                    color: var(--vscode-foreground);
+                    font-weight: 600;
+                    padding: 8px 12px;
+                    text-align: left;
+                    border-bottom: 1px solid var(--vscode-panel-border);
+                    position: sticky;
+                    top: 0;
+                }
+                
+                .gm-emoji-row {
+                    border-bottom: 1px solid var(--vscode-panel-border);
+                }
+                
+                .gm-emoji-row:hover {
+                    background: var(--vscode-list-hoverBackground);
+                }
+                
+                .gm-emoji-cell {
+                    padding: 8px 12px;
+                    font-size: 16px;
+                    text-align: center;
+                    width: 50px;
+                }
+                
+                .gm-type-cell {
+                    padding: 8px 12px;
+                    width: 80px;
+                }
+                
+                .gm-type-cell code {
+                    background: var(--vscode-textPreformat-background);
+                    color: var(--vscode-textPreformat-foreground);
+                    padding: 2px 6px;
+                    border-radius: 3px;
+                    font-family: var(--vscode-editor-font-family);
+                    font-size: 12px;
+                }
+                
+                .gm-description-cell {
+                    padding: 8px 12px;
+                    color: var(--vscode-foreground);
+                }
+                
+                .gm-reference-note {
+                    margin-top: 16px;
+                    padding: 12px;
+                    background: var(--vscode-textBlockQuote-background);
+                    border-left: 3px solid var(--vscode-textBlockQuote-border);
+                    border-radius: 0 4px 4px 0;
+                }
+                
+                .gm-reference-note p {
+                    margin: 0;
+                    font-size: 13px;
+                    color: var(--vscode-foreground);
+                }
+                
+                .gm-reference-note code {
+                    background: var(--vscode-textPreformat-background);
+                    color: var(--vscode-textPreformat-foreground);
+                    padding: 2px 4px;
+                    border-radius: 3px;
+                    font-family: var(--vscode-editor-font-family);
+                    font-size: 12px;
+                }
+            </style>
         `;
     }
 
@@ -399,22 +1065,6 @@ export class CommitStyleRenderer extends BaseRenderer {
             </button>
         </div>
     `;
-    }
-    private getStyleDisplayName(styleId: string): string {
-        const names: { [key: string]: string } = {
-            'basic': 'Basic Style',
-            'conventional': 'Conventional Commits',
-            'angular': 'Angular Style',
-            'ember': 'Ember.js Style',
-            'emojigit': 'EmojiGit Style',
-            'gitmoji': 'Gitmoji Style',
-            'semantic': 'Semantic Release',
-            'commitizen': 'Commitizen Style',
-            'karma': 'Karma (Google)',
-            'linux': 'Linux Kernel',
-            'jquery': 'jQuery Style'
-        };
-        return names[styleId] || 'Unknown Style';
     }
 
     private getExamplesForStyle(styleId: string): string[] {
@@ -509,6 +1159,60 @@ export class CommitStyleRenderer extends BaseRenderer {
             ]
         };
         return examples[styleId] || examples['basic'];
+    }
+
+    private renderGitmojiToggle(styleId: string, hasLicense: boolean): string {
+        if (!hasLicense) {
+            return ''; // Only show for Pro users
+        }
+
+        const gitmojiEnabled = this.settings.commitStyle?.gitmoji?.enabled || false;
+        const gitmojiPlacement = this.settings.commitStyle?.gitmoji?.placement || 'summary';
+
+        return `
+            <div class="gm-gitmoji-section" data-style="${styleId}">
+                <div class="gm-gitmoji-toggle">
+                    <label class="gm-toggle-label">
+                        <input type="checkbox" 
+                               class="gm-gitmoji-checkbox" 
+                               data-style="${styleId}"
+                               ${gitmojiEnabled ? 'checked' : ''} />
+                        <span class="gm-toggle-slider"></span>
+                        <span class="gm-toggle-text">Enable Gitmoji 🎯</span>
+                        <span class="gm-pro-badge-small">Pro</span>
+                    </label>
+                </div>
+                
+                <div class="gm-gitmoji-options ${gitmojiEnabled ? 'gm-gitmoji-options-visible' : ''}" data-style="${styleId}">
+                    <div class="gm-placement-options">
+                        <label class="gm-placement-label">Emoji Placement:</label>
+                        <div class="gm-placement-radios">
+                            <label class="gm-radio-label">
+                                <input type="radio" name="gm-gitmoji-placement-${styleId}" value="summary" 
+                                       ${gitmojiPlacement === 'summary' ? 'checked' : ''} />
+                                <span>Summary</span>
+                            </label>
+                            <label class="gm-radio-label">
+                                <input type="radio" name="gm-gitmoji-placement-${styleId}" value="body" 
+                                       ${gitmojiPlacement === 'body' ? 'checked' : ''} />
+                                <span>Body</span>
+                            </label>
+                            <label class="gm-radio-label">
+                                <input type="radio" name="gm-gitmoji-placement-${styleId}" value="both" 
+                                       ${gitmojiPlacement === 'both' ? 'checked' : ''} />
+                                <span>Both</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="gm-custom-emojis">
+                        <button type="button" class="gm-custom-emojis-btn" data-style="${styleId}">
+                            Customize Emojis
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     private renderReferenceGuide(): string {

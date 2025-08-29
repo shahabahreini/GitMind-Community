@@ -111,6 +111,7 @@ Native VS Code SCM panel integration with loading indicators, comprehensive stat
 | **Configurable Commit Body Lines**             | ✗    | ✓   |
 | **Custom Summary Length Limit**                | ✗    | ✓   |
 | **Commit History Analysis**                    | ✗    | ✓   |
+| **Gitmoji Support**                            | ✗    | ✓   |
 | **Multi-device License**                       | ✗    | ✓   |
 
 ### Detailed Feature Comparison
@@ -163,6 +164,9 @@ Configurable chunking system for large code changes. Customizable chunk sizes an
 
 **Commit History Analysis**
 Analyzes commit message history and provides detailed reports on message quality, strengths, weaknesses, dominant style used, and recommended improvements.
+
+**Gitmoji Support**
+Enhanced commit messages with emoji integration. Toggle gitmoji on/off for each commit style, customize emoji mappings, and choose placement (summary, body, or both). Includes default emoji mappings for common commit types and a comprehensive emoji reference guide.
 
 **Multi-device Licensing**
 Use your Pro license across multiple development machines and environments.

@@ -79,6 +79,11 @@ export interface ExtensionSettings {
     };
     commitStyle?: {
         style: string;  // 'basic' | 'conventional' | 'angular' | 'ember' | 'emojigit' | 'gitmoji' | 'semantic' | 'commitizen' | 'karma' | 'linux' | 'jquery'
+        gitmoji?: {
+            enabled: boolean;
+            placement: 'summary' | 'body' | 'both';
+            customEmojis?: { [key: string]: string }; // type -> emoji mapping
+        };
     };
     // Pro Features Settings
     pro?: {
