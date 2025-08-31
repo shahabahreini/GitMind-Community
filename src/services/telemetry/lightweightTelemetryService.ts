@@ -65,7 +65,7 @@ class LightweightTelemetryService {
         };
     }
 
-    public async initialize(context: vscode.ExtensionContext): Promise<void> {
+    public async initialize(_context: vscode.ExtensionContext): Promise<void> {
         try {
             // Respect user's telemetry settings
             const config = vscode.workspace.getConfiguration();
@@ -272,7 +272,7 @@ class LightweightTelemetryService {
         }
     }
 
-    public trackExtensionError(errorType: string, errorMessage: string, context: string): void {
+    public trackExtensionError(_errorType: string, errorMessage: string, context: string): void {
         // Only track if it's related to message generation
         if (context.includes('generateCommit') || context.includes('api')) {
             // Extract provider from context if possible

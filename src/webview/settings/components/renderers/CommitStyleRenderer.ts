@@ -529,7 +529,7 @@ export class CommitStyleRenderer extends BaseRenderer {
         `;
     }
 
-    private renderEmojiExamples(currentStyle: string, placement: string): string {
+    private renderEmojiExamples(currentStyle: string, _placement: string): string {
         const summaryExample = this.getEmojiExample(currentStyle, 'summary');
         const bodyExample = this.getEmojiExample(currentStyle, 'body');
 

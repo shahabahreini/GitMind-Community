@@ -33,7 +33,7 @@ export async function learnFromCommitHistory() {
                 title: 'Analyzing commit messages...',
                 cancellable: true
             },
-            async (progress, token) => {
+            async (progress, _token) => {
                 try {
                     progress.report({ message: 'Fetching commit history...' });
 

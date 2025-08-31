@@ -107,7 +107,7 @@ suite('Settings UI Tests', () => {
     test('SettingsManager should save settings correctly', async () => {
         let savedSettings: { [key: string]: any } = {};
         const mockConfig = {
-            get: (key: string, defaultValue?: any) => defaultValue,
+            get: (_key: string, defaultValue?: any) => defaultValue,
             update: async (key: string, value: any) => {
                 savedSettings[key] = value;
                 return Promise.resolve();
@@ -298,7 +298,7 @@ suite('Settings UI Tests', () => {
 
     test('Settings should handle default values correctly', async () => {
         const mockConfig = {
-            get: (key: string, defaultValue?: any) => defaultValue, // Always return default
+            get: (_key: string, defaultValue?: any) => defaultValue, // Always return default
             update: async () => Promise.resolve(),
             inspect: () => ({ key: '', defaultValue: undefined }),
             has: () => true

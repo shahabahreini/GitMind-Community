@@ -106,7 +106,7 @@ suite('Extension Commands Tests', () => {
         let errorHandled = false;
 
         // Mock error message display
-        (vscode.window as any).showErrorMessage = async (message: string) => {
+        (vscode.window as any).showErrorMessage = async (_message: string) => {
             errorHandled = true;
             return Promise.resolve();
         };
@@ -152,8 +152,8 @@ suite('Extension Commands Tests', () => {
     test('Debug toggle should change debug state', async () => {
         let debugToggled = false;
         const mockConfig = {
-            get: (key: string) => key === 'debug' ? false : undefined,
-            update: async (key: string, value: any) => {
+            get: (_key: string, _value?: any) => _value,
+            update: (key: string, _value: any) => {
                 if (key === 'debug') {
                     debugToggled = true;
                 }

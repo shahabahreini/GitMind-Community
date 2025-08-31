@@ -193,7 +193,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         settingPath: "",
         docsUrl: "",
         requiresApiKey: false,
-        apiCall: (apiKey: string, model: string, diff: string, customContext: string) =>
+        apiCall: (_apiKey: string, model: string, diff: string, customContext: string) =>
             callOllamaAPI("", model, diff, customContext), // Ollama uses URL from config
     },
     copilot: {
@@ -203,7 +203,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         docsUrl: "",
         requiresApiKey: false,
         defaultModel: "gpt-4o",
-        apiCall: (apiKey: string, model: string, diff: string, customContext: string) =>
+        apiCall: (_apiKey: string, model: string, diff: string, customContext: string) =>
             callCopilotAPI(model, diff, customContext),
     },
 };

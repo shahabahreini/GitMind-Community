@@ -305,7 +305,7 @@ class TelemetryService {
         }
     }
 
-    public trackExtensionError(errorType: string, errorMessage: string, context: string): void {
+    public trackExtensionError(_errorType: string, errorMessage: string, context: string): void {
         // Only track if it's related to message generation
         if (context.includes('generateCommit') || context.includes('api')) {
             // Extract provider from context if possible

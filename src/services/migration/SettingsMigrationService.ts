@@ -72,7 +72,7 @@ export class SettingsMigrationService {
     }    /**
      * Check if any legacy aiCommitAssistant settings exist
      */
-    private async checkForLegacySettings(workspaceConfig: vscode.WorkspaceConfiguration): Promise<boolean> {
+    private async checkForLegacySettings(_workspaceConfig: vscode.WorkspaceConfiguration): Promise<boolean> {
         debugLog("Checking for legacy aiCommitAssistant settings...");
 
         const targets = [
@@ -295,7 +295,7 @@ export class SettingsMigrationService {
     /**
      * Remove all legacy aiCommitAssistant settings
      */
-    private async cleanupLegacySettings(workspaceConfig: vscode.WorkspaceConfiguration): Promise<number> {
+    private async cleanupLegacySettings(_workspaceConfig: vscode.WorkspaceConfiguration): Promise<number> {
         debugLog("Cleaning up legacy aiCommitAssistant settings...");
 
         const targets = [

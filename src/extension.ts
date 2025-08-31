@@ -697,7 +697,7 @@ async function showDeactivationSuccessModal(apiResponse?: any): Promise<void> {
 /**
  * Shows the license key in a secure modal
  */
-async function showLicenseKeyModal(license_key?: any, meta?: any): Promise<void> {
+async function showLicenseKeyModal(license_key?: any, _meta?: any): Promise<void> {
   try {
     const licenseKey = license_key?.key || 'License key not available';
 

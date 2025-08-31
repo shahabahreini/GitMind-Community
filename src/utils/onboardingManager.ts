@@ -473,7 +473,7 @@ export class OnboardingManager {
     /**
      * Check if onboarding can be manually opened
      */
-    public static canManuallyOpen(context: vscode.ExtensionContext): boolean {
+    public static canManuallyOpen(_context: vscode.ExtensionContext): boolean {
         // Allow manual opening even if permanently disabled, but check settings
         const config = vscode.workspace.getConfiguration('gitmind');
         return config.get<boolean>('showOnboarding', true);

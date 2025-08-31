@@ -169,8 +169,8 @@ suite('Webview Components Tests', () => {
                 keys: () => []
             },
             globalState: {
-                get: () => undefined,
-                update: async (key: string, value: any) => {
+                get: (_key: string, _value?: any) => _value,
+                update: async (key: string, _value: any) => {
                     if (key === 'onboardingCompleted') {
                         completionTracked = true;
                     }

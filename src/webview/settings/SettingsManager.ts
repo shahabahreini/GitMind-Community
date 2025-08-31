@@ -216,7 +216,7 @@ export class SettingsManager {
      * NOTE: Auto-save is disabled as per user request. Settings are only saved
      * when explicitly requested through the manual save button.
      */
-    public static async saveSettingsDebounced(settings: ExtensionSettings, delay: number = 300): Promise<void> {
+    public static async saveSettingsDebounced(settings: ExtensionSettings, _delay: number = 300): Promise<void> {
         // This method is now only called by explicit user action through the Save button
         // No debouncing needed, just directly save the settings
         try {

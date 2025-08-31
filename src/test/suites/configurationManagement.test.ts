@@ -15,7 +15,7 @@ suite('Configuration Management Tests', () => {
 
     test('Configuration should load with defaults', () => {
         const mockConfig = {
-            get: (key: string, defaultValue?: any) => defaultValue,
+            get: (_key: string, defaultValue?: any) => defaultValue,
             update: async () => Promise.resolve(),
             inspect: () => ({ key: '', defaultValue: undefined }),
             has: () => true
@@ -74,7 +74,7 @@ suite('Configuration Management Tests', () => {
 
     test('Configuration should handle missing values gracefully', () => {
         const mockConfig = {
-            get: (key: string, defaultValue?: any) => {
+            get: (_key: string, defaultValue?: any) => {
                 // Return undefined for all keys (simulate missing config)
                 return defaultValue;
             },
@@ -99,7 +99,7 @@ suite('Configuration Management Tests', () => {
 
         const mockConfig = {
             get: (key: string, defaultValue?: any) => persistentStorage[key] || defaultValue,
-            update: async (key: string, value: any, target?: vscode.ConfigurationTarget) => {
+            update: async (key: string, value: any, _target?: vscode.ConfigurationTarget) => {
                 persistentStorage[key] = value;
                 return Promise.resolve();
             },
@@ -309,8 +309,8 @@ suite('Configuration Management Tests', () => {
     test('Configuration should handle concurrent updates', async () => {
         let updateCount = 0;
         const mockConfig = {
-            get: (key: string, defaultValue?: any) => defaultValue,
-            update: async (key: string, value: any) => {
+            get: (_key: string, defaultValue?: any) => defaultValue,
+            update: async (_key: string, _value: any) => {
                 updateCount++;
                 // Simulate async operation
                 await new Promise(resolve => setTimeout(resolve, 10));

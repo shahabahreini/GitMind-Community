@@ -36,12 +36,12 @@ export class APIErrorHandler {
         {
             type: 'auth',
             patterns: ['API key', '401', 'unauthorized', 'invalid key', 'authentication'],
-            handler: APIErrorHandler.handleAuthError
+            handler: APIErrorHandler.handleAuthenticationError
         },
         {
             type: 'quota',
             patterns: ['quota', 'billing', 'insufficient_quota', 'payment'],
-            handler: APIErrorHandler.handleQuotaError
+            handler: APIErrorHandler.handleQuotaExceededError
         },
         {
             type: 'network',
@@ -51,7 +51,7 @@ export class APIErrorHandler {
         {
             type: 'config',
             patterns: ['configuration', 'not configured', 'missing', 'invalid request'],
-            handler: APIErrorHandler.handleConfigError
+            handler: APIErrorHandler.handleContentFilterError
         }
     ];
 
@@ -96,14 +96,14 @@ export class APIErrorHandler {
             }
         }
 
-        return this.handleGenericError(error, errorInfo, provider, context);
+        return this.handleAPIError(error, provider, context);
     }
 
     private static matchesPattern(message: string, patterns: string[]): boolean {
         return patterns.some(pattern => message.toLowerCase().includes(pattern.toLowerCase()));
     }
 
-    private static handleTokenLimitError(error: Error, errorInfo: ErrorInfo, provider: string, context?: any): ErrorInfo {
+    private static handleTokenLimitError(_error: Error, errorInfo: ErrorInfo, provider: string, context?: any): ErrorInfo {
         // Prioritize context data over parsing error message
         const estimatedTokens = context?.estimatedTokens || 'Unknown';
         const diffSize = context?.diffSize;
@@ -142,7 +142,7 @@ export class APIErrorHandler {
         return errorInfo;
     }
 
-    private static handleRateLimitError(error: Error, errorInfo: ErrorInfo, provider: string): ErrorInfo {
+    private static handleRateLimitError(_error: Error, errorInfo: ErrorInfo, provider: string): ErrorInfo {
         errorInfo.userMessage = `${provider} rate limit exceeded.`;
         errorInfo.suggestions = [
             "Wait a few minutes before trying again",
@@ -153,7 +153,7 @@ export class APIErrorHandler {
         return errorInfo;
     }
 
-    private static handleAuthError(error: Error, errorInfo: ErrorInfo, provider: string): ErrorInfo {
+    private static handleAuthenticationError(_error: Error, errorInfo: ErrorInfo, provider: string): ErrorInfo {
         errorInfo.userMessage = `${provider} API key is invalid or missing.`;
         errorInfo.suggestions = [
             "Check your API key in extension settings",
@@ -164,7 +164,7 @@ export class APIErrorHandler {
         return errorInfo;
     }
 
-    private static handleQuotaError(error: Error, errorInfo: ErrorInfo, provider: string): ErrorInfo {
+    private static handleQuotaExceededError(_error: Error, errorInfo: ErrorInfo, provider: string): ErrorInfo {
         errorInfo.userMessage = `${provider} quota exceeded or billing issue.`;
         errorInfo.suggestions = [
             "Check your billing status",
@@ -175,7 +175,7 @@ export class APIErrorHandler {
         return errorInfo;
     }
 
-    private static handleNetworkError(error: Error, errorInfo: ErrorInfo, provider: string): ErrorInfo {
+    private static handleNetworkError(_error: Error, errorInfo: ErrorInfo, provider: string): ErrorInfo {
         errorInfo.userMessage = `Network connection issue with ${provider}.`;
         errorInfo.suggestions = [
             "Check your internet connection",
@@ -186,7 +186,7 @@ export class APIErrorHandler {
         return errorInfo;
     }
 
-    private static handleConfigError(error: Error, errorInfo: ErrorInfo, provider: string): ErrorInfo {
+    private static handleContentFilterError(_error: Error, errorInfo: ErrorInfo, provider: string): ErrorInfo {
         errorInfo.userMessage = `${provider} configuration issue.`;
         errorInfo.suggestions = [
             "Check your provider settings",
@@ -197,7 +197,7 @@ export class APIErrorHandler {
         return errorInfo;
     }
 
-    private static handleGenericError(error: Error, errorInfo: ErrorInfo, provider: string, context?: any): ErrorInfo {
+    private static handleCopilotError(error: Error, errorInfo: ErrorInfo, provider: string, _context?: any): ErrorInfo {
         const message = error.message.toLowerCase();
 
         if (message.includes("service") || message.includes("502") || message.includes("503")) {

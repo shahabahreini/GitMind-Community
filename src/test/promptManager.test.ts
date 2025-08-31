@@ -23,7 +23,7 @@ suite('PromptManager Tests', () => {
                         return defaultValue;
                 }
             },
-            update: async (key: string, value: any, target: vscode.ConfigurationTarget) => {
+            update: async (_key: string, _value: any, _target: vscode.ConfigurationTarget) => {
                 // Mock update method
                 return Promise.resolve();
             }

@@ -82,7 +82,7 @@ export function generateFormInitialization(): string {
     `} catch (e) { console.warn('Failed to set learnFromCommitHistoryIncludeAuthorInfo:', e); }`
   ];
 
-  Object.entries(PROVIDER_DEFAULTS).forEach(([provider, defaults]) => {
+  Object.entries(PROVIDER_DEFAULTS).forEach(([provider, _defaults]) => {
     if (API_KEY_PROVIDERS.includes(provider)) {
       formInits.push(
         `try {`,
@@ -94,7 +94,7 @@ export function generateFormInitialization(): string {
     formInits.push(
       `try {`,
       `  const ${provider}ModelEl = document.getElementById('${provider}Model');`,
-      `  if (${provider}ModelEl) ${provider}ModelEl.value = currentSettings.${provider}?.model || '${defaults.model}';`,
+      `  if (${provider}ModelEl) ${provider}ModelEl.value = currentSettings.${provider}?.model || '${_defaults.model}';`,
       `} catch (e) { console.warn('Failed to set ${provider}Model:', e); }`
     );
 
@@ -173,6 +173,57 @@ export function generateSettingsCollection(): string {
   return `{ ${settingsObj.join('\n        ')} }`;
 }
 
+export function generateProviderForm(_provider: string, _settings: any, _defaults: any): string {
+  const formInits: string[] = [
+    `// Preserve current UI provider selection - don't reset to saved setting`,
+    `const currentUIProvider = document.getElementById('apiProvider').value;`,
+    `document.getElementById('apiProvider').value = currentUIProvider || currentSettings.apiProvider || 'huggingface';`,
+    `document.getElementById('commitVerbose').checked = currentSettings.commit?.verbose ?? true;`,
+    `document.getElementById('showDiagnostics').checked = currentSettings.showDiagnostics ?? false;`,
+    `document.getElementById('telemetryEnabled').checked = currentSettings.telemetry?.enabled ?? false;`,
+    `console.log('generateProviderForm: Set telemetry checkbox to:', currentSettings.telemetry?.enabled ?? false, 'from settings:', currentSettings.telemetry);`,
+    `document.getElementById('promptCustomizationEnabled').checked = currentSettings.promptCustomization?.enabled ?? false;`,
+    `document.getElementById('saveLastPrompt').checked = currentSettings.promptCustomization?.saveLastPrompt || false;`,
+    `// Pro features: use the setting as determined by the backend`,
+    `document.getElementById('encryptionEnabled').checked = currentSettings.pro?.encryptionEnabled ?? false;`,
+    `// Update Pro feature UI state`,
+    `updateProFeatureUI(currentSettings);`,
+    `// Subscription fields`,
+    `document.getElementById('subscriptionEmail').value = currentSettings.subscription?.email || '';`,
+    `document.getElementById('commitBodyOptionsEnabled').checked = currentSettings.pro?.commitBodyOptions?.enabled ?? false;`,
+    `document.getElementById('commitBodyOptionsMaxLines').value = currentSettings.pro?.commitBodyOptions?.maxLines ?? 5;`,
+    `document.getElementById('commitLengthOptionsEnabled').checked = currentSettings.pro?.commitLengthOptions?.enabled ?? false;`,
+    `document.getElementById('commitLengthOptionsMaxLength').value = currentSettings.pro?.commitLengthOptions?.maxLength ?? 72;`,
+    `document.getElementById('learnFromCommitHistoryEnabled').checked = currentSettings.pro?.learnFromCommitHistory?.enabled ?? true;`,
+    `document.getElementById('learnFromCommitHistoryMaxCommits').value = currentSettings.pro?.learnFromCommitHistory?.maxCommits ?? 50;`,
+    `document.getElementById('learnFromCommitHistoryIncludeAuthorInfo').checked = currentSettings.pro?.learnFromCommitHistory?.includeAuthorInfo ?? true;`
+  ];
+
+  // Update API keys but NOT model dropdowns to preserve dropdown state
+  Object.entries(PROVIDER_DEFAULTS).forEach(([provider, _defaults]) => {
+    formInits.push(`if (currentSettings.${provider}) {`);
+
+    if (API_KEY_PROVIDERS.includes(provider)) {
+      formInits.push(`  document.getElementById('${provider}ApiKey').value = currentSettings.${provider}.apiKey || '';`);
+    }
+
+    // Skip model dropdown updates to preserve open dropdowns
+    // formInits.push(`  document.getElementById('${provider}Model').value = currentSettings.${provider}?.model || '${defaults.model}';`);
+
+    if (provider === 'ollama') {
+      formInits.push(`  document.getElementById('${provider}Url').value = currentSettings.${provider}.url || '';`);
+    }
+
+    formInits.push(`}`);
+  });
+
+  // Add a call to update visible settings to ensure the correct provider panel is shown
+  formInits.push(`// Update visible provider settings based on current selection`);
+  formInits.push(`updateVisibleSettings();`);
+
+  return formInits.join('\n          ');
+}
+
 export function generateUpdateSettingsCode(): string {
   const updates: string[] = [
     `// Preserve current UI provider selection - don't reset to saved setting`,
@@ -199,13 +250,13 @@ export function generateUpdateSettingsCode(): string {
     `document.getElementById('learnFromCommitHistoryIncludeAuthorInfo').checked = currentSettings.pro?.learnFromCommitHistory?.includeAuthorInfo ?? true;`
   ];
 
-  Object.entries(PROVIDER_DEFAULTS).forEach(([provider, defaults]) => {
+  Object.entries(PROVIDER_DEFAULTS).forEach(([provider, _defaults]) => {
     updates.push(`if (currentSettings.${provider}) {`);
 
     if (API_KEY_PROVIDERS.includes(provider)) {
       updates.push(`  document.getElementById('${provider}ApiKey').value = currentSettings.${provider}.apiKey || '';`);
     }
-    updates.push(`  document.getElementById('${provider}Model').value = currentSettings.${provider}?.model || '${defaults.model}';`);
+    updates.push(`  document.getElementById('${provider}Model').value = currentSettings.${provider}?.model || '${_defaults.model}';`);
 
     if (provider === 'ollama') {
       updates.push(`  document.getElementById('${provider}Url').value = currentSettings.${provider}.url || '';`);
@@ -248,7 +299,7 @@ export function generateUpdateSettingsCodePreserveDropdowns(): string {
   ];
 
   // Update API keys but NOT model dropdowns to preserve dropdown state
-  Object.entries(PROVIDER_DEFAULTS).forEach(([provider, defaults]) => {
+  Object.entries(PROVIDER_DEFAULTS).forEach(([provider, _defaults]) => {
     updates.push(`if (currentSettings.${provider}) {`);
 
     if (API_KEY_PROVIDERS.includes(provider)) {

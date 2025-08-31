@@ -72,7 +72,7 @@ export function getPromptConfig(): PromptConfig {
 /**
  * Generate base instructions common to all styles
  */
-function getBaseInstructions(config: PromptConfig, customContext: string = ""): string {
+function getBaseInstructions(_config: PromptConfig, customContext: string = ""): string {
   let prompt = `You are an expert Git commit message generator. Analyze the provided diff carefully and create exactly ONE complete, professional commit message following the specified format precisely.
 
 CRITICAL INSTRUCTIONS:
@@ -1285,7 +1285,7 @@ Generate the commit message now following the exact format specified above:`;
  */
 export function generateCommitHistoryAnalysisPrompt(
   commitHistory: string,
-  maxCommits?: number,
+  _maxCommits?: number,
   includeAuthorInfo?: boolean
 ): string {
   const prompt = `# GitMind Pro: Commit Message Analysis Report
