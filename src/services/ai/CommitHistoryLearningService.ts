@@ -10,9 +10,11 @@ const execAsync = promisify(exec);
 
 export interface CommitInfo {
     hash: string;
-    message: string;
+    subject: string;  // Commit summary/title only
+    body?: string;    // Optional commit body (first few lines)
     author?: string;
     date?: string;
+    timestamp?: number; // Unix timestamp for sorting/analysis
 }
 
 export class CommitHistoryLearningService {
@@ -42,9 +44,9 @@ export class CommitHistoryLearningService {
     }
 
     /**
-     * Get commit messages history
+     * Get optimized commit history with only essential information
      */
-    public async getCommitMessages(maxCommits: number = 50, includeAuthorInfo: boolean = true): Promise<CommitInfo[]> {
+    public async getCommitMessages(maxCommits: number = 10, includeAuthorInfo: boolean = true): Promise<CommitInfo[]> {
         if (!this.isFeatureAvailable()) {
             throw new Error('This feature is only available for GitMind Pro users.');
         }
@@ -57,21 +59,23 @@ export class CommitHistoryLearningService {
 
             const repoPath = workspaceFolder.uri.fsPath;
 
-            // Format for git log command to capture full commit messages (including multi-line)
-            // Using %B instead of %s to get the complete commit message body
-            // Using a custom separator that's unlikely to appear in commit messages
-            const separator = '|||COMMIT_SEPARATOR|||';
+            // Optimized git command to get only essential commit information:
+            // %H = full hash, %s = subject (summary), %b = body, %an = author, %at = timestamp, %ad = date
+            // We'll parse subject and body separately for better control
+            const separator = '|||COMMIT_SEP|||';
+            const bodySeparator = '|||BODY_SEP|||';
+            
             const format = includeAuthorInfo
-                ? `--pretty=format:"%H|%B|%an|%ad${separator}"`
-                : `--pretty=format:"%H|%B${separator}"`;
+                ? `--pretty=format:"%H|%s${bodySeparator}%b|%an|%ad|%at${separator}"`
+                : `--pretty=format:"%H|%s${bodySeparator}%b|%at${separator}"`;
 
             const gitCommand = `git log ${format} --date=short -n ${maxCommits}`;
 
-            debugLog(`[CommitHistory] Executing git command: ${gitCommand}`);
+            debugLog(`[CommitHistory] Executing optimized git command: ${gitCommand}`);
 
             const { stdout } = await execAsync(gitCommand, {
                 cwd: repoPath,
-                maxBuffer: 10 * 1024 * 1024 // 10MB buffer to handle large git outputs
+                maxBuffer: 5 * 1024 * 1024 // Reduced buffer since we're getting less data
             });
 
             if (!stdout.trim()) {
@@ -83,40 +87,44 @@ export class CommitHistoryLearningService {
                 .split(separator)
                 .filter(entry => entry.trim().length > 0)
                 .map(entry => {
-                    const lines = entry.trim().split('\n');
-                    if (lines.length === 0) {
+                    const parts = entry.trim().split('|');
+                    
+                    if (parts.length < 3) {
                         return null;
                     }
 
-                    const firstLine = lines[0];
-                    const parts = firstLine.split('|');
-
-                    if (parts.length < 2) {
-                        return null;
-                    }
+                    // Parse subject and body from the second part
+                    const subjectAndBody = parts[1].split(bodySeparator);
+                    const subject = subjectAndBody[0]?.trim() || '';
+                    const rawBody = subjectAndBody[1]?.trim() || '';
+                    
+                    // Limit body to first 3 lines to keep it concise
+                    const bodyLines = rawBody.split('\n').filter(line => line.trim().length > 0);
+                    const body = bodyLines.length > 0 ? bodyLines.slice(0, 3).join('\n') : undefined;
 
                     const commit: CommitInfo = {
-                        hash: parts[0],
-                        message: parts[1] || ''
+                        hash: parts[0].substring(0, 8), // Short hash for efficiency
+                        subject: subject
                     };
 
-                    // If there are more lines after the first one, they are part of the commit message
-                    if (lines.length > 1) {
-                        // Join all lines from index 1 onwards and add to the message
-                        const additionalLines = lines.slice(1).join('\n');
-                        commit.message = commit.message + '\n' + additionalLines;
+                    // Only include body if it exists and adds value
+                    if (body && body !== subject) {
+                        commit.body = body;
                     }
 
-                    if (includeAuthorInfo && parts.length >= 4) {
+                    if (includeAuthorInfo && parts.length >= 5) {
                         commit.author = parts[2];
                         commit.date = parts[3];
+                        commit.timestamp = parseInt(parts[4], 10);
+                    } else if (!includeAuthorInfo && parts.length >= 3) {
+                        commit.timestamp = parseInt(parts[2], 10);
                     }
 
                     return commit;
                 })
-                .filter((commit): commit is CommitInfo => commit !== null && commit.message.trim().length > 0);
+                .filter((commit): commit is CommitInfo => commit !== null && commit.subject.trim().length > 0);
 
-            debugLog(`[CommitHistory] Retrieved ${commits.length} commits`);
+            debugLog(`[CommitHistory] Retrieved ${commits.length} optimized commits`);
             return commits;
 
         } catch (error) {
@@ -126,10 +134,23 @@ export class CommitHistoryLearningService {
     }
 
     /**
+     * Get the configured maximum commits limit from pro settings
+     */
+    private getMaxCommitsLimit(): number {
+        const config = vscode.workspace.getConfiguration('gitmind');
+        const proSettings = config.get('pro') as any || {};
+        const commitHistorySettings = proSettings.commitHistoryAnalysis || {};
+        
+        // Default to 10, but allow pro users to configure up to 100
+        const configuredLimit = commitHistorySettings.maxCommits || 10;
+        return Math.min(Math.max(configuredLimit, 1), 100); // Clamp between 1-100
+    }
+
+    /**
      * Analyze commit messages using the configured AI provider
      */
     public async analyzeCommitMessages(
-        maxCommits: number = 50,
+        maxCommits?: number,
         includeAuthorInfo: boolean = true
     ): Promise<string> {
         const analysisId = Date.now(); // Unique ID for this analysis
@@ -140,19 +161,30 @@ export class CommitHistoryLearningService {
         }
 
         try {
+            // Use configured limit if maxCommits not provided
+            const actualMaxCommits = maxCommits ?? this.getMaxCommitsLimit();
+            debugLog(`[CommitHistory-${analysisId}] Using maxCommits: ${actualMaxCommits}`);
+            
             // Get commit messages
-            const commits = await this.getCommitMessages(maxCommits, includeAuthorInfo);
+            const commits = await this.getCommitMessages(actualMaxCommits, includeAuthorInfo);
 
             if (commits.length === 0) {
                 return 'No commit messages found in the repository.';
             }
 
-            // Format commit history for analysis
+            // Format optimized commit history for analysis
             let commitHistory = '';
             commits.forEach((commit, index) => {
-                commitHistory += `${index + 1}. ${commit.message}`;
+                // Use concise format with just essential information
+                commitHistory += `${index + 1}. ${commit.subject}`;
+                
+                // Add body only if it exists and provides additional value
+                if (commit.body && commit.body.length > 0) {
+                    commitHistory += `\n   ${commit.body.replace(/\n/g, '\n   ')}`; // Indent body lines
+                }
+                
                 if (includeAuthorInfo && commit.author && commit.date) {
-                    commitHistory += ` (by ${commit.author} on ${commit.date})`;
+                    commitHistory += ` (${commit.author}, ${commit.date})`;
                 }
                 commitHistory += '\n';
             });
@@ -179,7 +211,7 @@ export class CommitHistoryLearningService {
             const result = await generateCommitHistoryAnalysis(
                 apiConfig,
                 commitHistory,
-                maxCommits,
+                actualMaxCommits,
                 includeAuthorInfo
             );
 

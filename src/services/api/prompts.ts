@@ -1281,222 +1281,124 @@ Generate the commit message now following the exact format specified above:`;
 }
 
 /**
- * Generate prompt for analyzing commit history messages
+ * Generate prompt for analyzing commit history messages with length validation
  */
 export function generateCommitHistoryAnalysisPrompt(
   commitHistory: string,
-  _maxCommits?: number,
+  maxCommits?: number,
   includeAuthorInfo?: boolean
 ): string {
-  const prompt = `# GitMind Pro: Commit Message Analysis Report
+  // Calculate base prompt length before adding commit history
+  const basePromptLength = 1200; // Estimated base prompt size
+  const maxTotalLength = 3500; // Conservative limit for most APIs
+  const maxCommitHistoryLength = maxTotalLength - basePromptLength;
 
-You are an expert Git workflow consultant. Analyze the provided commit message history and deliver actionable insights to transform this project's commit practices. Use your expertise to make informed decisions about what's best for this specific codebase. Deliver a comprehensive report on the current state and recommendations for improvement.
+  // Truncate commit history if too long
+  let processedCommitHistory = commitHistory;
+  if (commitHistory.length > maxCommitHistoryLength) {
+    debugLog(`[CommitHistory] Truncating commit history from ${commitHistory.length} to ${maxCommitHistoryLength} characters`);
+    processedCommitHistory = commitHistory.substring(0, maxCommitHistoryLength) + '\n\n[... truncated for length ...]';
+  }
 
-## Analysis Requirements
+  const prompt = `# GitMind Pro: Commit Analysis Report
 
-Please provide a complete analysis covering:
+Analyze commit history and provide actionable insights for improvement.
+${maxCommits ? `**Analyzing last ${maxCommits} commits**` : '**Analyzing available commits**'}
 
-### 1. Format Detection & Classification
-Identify and categorize all commit message patterns found in the history. Consider formats like:
-- Conventional Commits, Angular, Semantic styles
-- Multi-line formats with bodies and bullet points  
-- Open-source patterns (Linux Kernel, Node.js, React, etc.)
-- Enterprise formats (Jira integration, ticket references)
-- Gitmoji, GitHub/GitLab styles, monorepo patterns
-- Any custom or hybrid approaches
+## Required Analysis
 
-### 2. Statistical Analysis Table
-Provide a detailed statistics table including:
-
-| Metric | Value | Percentage |
-|--------|-------|------------|
-| Total Commits Analyzed | [number] | 100% |
-| Single-line Messages | [number] | [%] |
-| Multi-line Messages | [number] | [%] |
-| Messages with Body | [number] | [%] |
-| Messages with Footers | [number] | [%] |
-| Average Subject Length | [number] chars | - |
-| Longest Subject | [number] chars | - |
-| Shortest Subject | [number] chars | - |
-| Messages > 50 chars | [number] | [%] |
+### 1. Key Statistics
+| Metric | Value | % |
+|--------|-------|---|
+| Total Commits | [number] | 100% |
+| Avg Subject Length | [number] chars | - |
 | Messages > 72 chars | [number] | [%] |
-| Properly Capitalized | [number] | [%] |
-| Using Imperative Mood | [number] | [%] |
 | With Type Prefix | [number] | [%] |
 | With Scope | [number] | [%] |
-| With Issue References | [number] | [%] |
+| Imperative Mood | [number] | [%] |
+| Properly Formatted | [number] | [%] |
 
-### 3. Format Distribution Analysis
-Break down the formats found:
+### 2. Format Analysis
+Identify predominant patterns:
+- **Current Style**: [e.g., "Mixed Conventional", "Informal", "Angular"]
+- **Format Distribution**: List main patterns with counts
+- **Quality Breakdown**: Excellent/Good/Average/Poor counts
 
-| Format Type | Count | Percentage | Examples |
-|-------------|-------|------------|----------|
-| [Format 1] | [number] | [%] | [example] |
-| [Format 2] | [number] | [%] | [example] |
-| [etc.] | [number] | [%] | [example] |
+### 3. Current Style Assessment
+\`\`\`
+Pattern: [describe most common format]
+Strengths: [2-3 key positives]
+Weaknesses: [2-3 main issues]
+Examples: [2-3 actual commits from history]
+\`\`\`
 
-### 4. Type & Scope Analysis
-If conventional formats are used:
+### 4. Recommended Improvements
+**Optimal Format for This Project:**
+\`\`\`
+<type>(<scope>): <subject>
 
-| Type | Count | Percentage | Most Common Scopes |
-|------|-------|------------|-------------------|
-| feat | [number] | [%] | [scope1, scope2, scope3] |
-| fix | [number] | [%] | [scope1, scope2, scope3] |
-| docs | [number] | [%] | [scope1, scope2, scope3] |
-| [etc.] | [number] | [%] | [scope1, scope2, scope3] |
+[optional body explaining what/why]
+\`\`\`
 
-### 5. Quality Assessment
-Evaluate and categorize messages by quality:
+**Key Rules:**
+- Types: feat, fix, docs, style, refactor, test, chore
+- Subject: 50 chars max, imperative mood, no period
+- Scope: component/area affected
+- Body: Explain what and why (when needed)
 
-| Quality Level | Count | Percentage | Characteristics |
-|---------------|-------|------------|-----------------|
-| Excellent | [number] | [%] | [description] |
-| Good | [number] | [%] | [description] |
-| Average | [number] | [%] | [description] |
-| Poor | [number] | [%] | [description] |
-| Very Poor | [number] | [%] | [description] |
+### 5. Migration Examples
+\`\`\`
+BEFORE: [actual commit from history]
+AFTER:  [improved version]
+IMPROVEMENTS: [specific changes made]
+\`\`\`
 
-### 6. Current Commit Style Analysis
+### 6. Implementation Steps
+1. **Immediate**: [2-3 critical fixes]
+2. **Short-term**: [adoption strategy]
+3. **Tools**: [specific recommendations]
 
-**Predominant Style Identified:**
-'''
-Style Name: [e.g., "Informal Descriptive", "Partial Conventional", "Mixed Angular", etc.]
-
-    Pattern: [describe the most common pattern]
-
-    Characteristics:
-    -[characteristic 1]
-        - [characteristic 2]
-        - [characteristic 3]
-
-Typical Examples from History:
-    -[actual example 1]
-        - [actual example 2]
-        - [actual example 3]
-
-Strengths of Current Style:
-    -[strength 1]
-        - [strength 2]
-
-Weaknesses of Current Style:
-    -[weakness 1]
-        - [weakness 2]
-            '''
-
-### 7. Improved Style Recommendation
-
-**Recommended Enhanced Style:**
-
-Style Name: [e.g., "Enhanced Conventional Commits", "Structured Descriptive", etc.]
-
-Format Specification:
-    [provide complete format with all components]
-
-    Template:
-    <type>(<scope>): <subject>
-
-        [optional body]
-
-        [optional footer]
-
-Type Definitions:
-    - feat: [definition for this project]
-    - fix: [definition for this project]
-    - docs: [definition for this project]
-    - style: [definition for this project]
-    - refactor: [definition for this project]
-    - test: [definition for this project]
-    - chore: [definition for this project]
-
-Scope Guidelines:
-    -[scope 1]: [when to use]
-        - [scope 2]: [when to use]
-            - [scope 3]: [when to use]
-
-Subject Line Rules:
-    -[rule 1]
-        - [rule 2]
-        - [rule 3]
-
-Body Guidelines:
-    -[guideline 1]
-        - [guideline 2]
-
-Footer Standards:
-    -[standard 1]
-        - [standard 2]
-
-### 8. Style Comparison & Migration
-
-        ** Current vs.Improved Style Comparison:**
-
-| Aspect | Current Style | Improved Style | Benefit |
-| --------| ---------------| ----------------| ---------|
-| Format Consistency | [assessment] | [improvement] | [benefit] |
-| Information Clarity | [assessment] | [improvement] | [benefit] |
-| Tool Integration | [assessment] | [improvement] | [benefit] |
-| Team Scalability | [assessment] | [improvement] | [benefit] |
-| Maintenance Ease | [assessment] | [improvement] | [benefit] |
-
-** Migration Examples:**
-
-        Show how existing commits would be improved:
-
-    '''
-    BEFORE(Current Style):
-    [actual commit from history]
-
-    AFTER(Improved Style):
-    [same commit rewritten in improved style]
-
-Improvements Made:
-    -[improvement 1]
-        - [improvement 2]
-            '''
-
-### 9. Detailed Findings Report
-        ** Strengths:**
-            - List positive patterns and well - executed examples
-                - Highlight consistent practices that work well
-
-                    ** Weaknesses:**
-                        - Identify common problems and anti - patterns
-                            - Point out inconsistencies and missing information
-                                - Show examples of problematic messages
-
-                                    ** Inconsistencies:**
-                                        - Document mixed formats and style variations
-                                            - Note contributor - specific differences
-                                                - Highlight evolution of practices over time
-
-### 10. Implementation Plan
-Provide a practical roadmap:
-- ** Immediate actions ** (templates, tools, critical fixes)
-- ** Short - term goals ** (team adoption, enforcement setup)
-- ** Long - term strategy ** (monitoring, continuous improvement)
-- ** Tool recommendations ** with specific configurations
-
-
-## Expected Output Format
-
-Please structure your response with clear headings and include all the statistical tables requested above.Make specific recommendations rather than general suggestions, and base everything on the actual commit history provided.
-NOTE: The final report should be well-structured MARKDOWN format with table of contents.
-
-${includeAuthorInfo ? `## Team Collaboration Insights
-[Author contribution patterns and collaboration analysis]
+${includeAuthorInfo ? `### 7. Team Patterns
+[Brief author contribution analysis]
 
 ` : ''}
 
-**IMPORTANT:** Focus heavily on identifying the current predominant style and providing a clear, improved style that builds upon what the team is already doing while addressing the identified weaknesses.
+**Focus on practical, specific improvements that build on current practices.**
 
 ---
+**COMMIT HISTORY:**
+${processedCommitHistory}
+---`;
 
-**COMMIT HISTORY TO ANALYZE:**
-
-${commitHistory}
-
----
-`;
-
+  debugLog(`[CommitHistory] Generated prompt length: ${prompt.length} characters`);
   return prompt;
+}
+
+/**
+ * Validate prompt length and provide recommendations
+ */
+export function validatePromptLength(prompt: string, provider: string): { valid: boolean; length: number; recommendation?: string } {
+  const length = prompt.length;
+
+  // Provider-specific limits (conservative estimates)
+  const limits = {
+    'cohere': 3500,
+    'openai': 12000,
+    'anthropic': 15000,
+    'gemini': 8000,
+    'mistral': 6000,
+    'default': 3500
+  };
+
+  const limit = limits[provider as keyof typeof limits] || limits.default;
+
+  if (length > limit) {
+    return {
+      valid: false,
+      length,
+      recommendation: `Prompt length (${length} chars) exceeds ${provider} limit (~${limit}). Consider reducing commit history or using a different provider.`
+    };
+  }
+
+  return { valid: true, length };
 }

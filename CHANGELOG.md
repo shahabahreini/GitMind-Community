@@ -1,5 +1,22 @@
 # Changelog
 
+## v4.2.2 - 2025-08-31
+
+### Enhanced
+
+- **Commit History Analysis Optimization**: Streamlined commit analysis system for improved performance and reliability
+  - **Prompt Optimization**: Reduced analysis prompt size by 75% while preserving key metrics and actionable guidance
+  - **Focused Analysis**: Condensed from 200+ lines to ~70 lines with targeted sections for statistics, assessment, and recommendations
+  - **Extended Timeouts**: Increased API timeouts for commit analysis (3 minutes standard, 8 minutes for large histories)
+  - **Better Reliability**: Enhanced timeout handling for comprehensive reports without token limits
+  - **Practical Insights**: Streamlined output emphasizing actionable improvements over comprehensive documentation
+
+### Technical
+
+- **API Timeout Configuration**: Updated timeout values for commit history analysis operations
+- **Prompt Engineering**: Optimized prompt structure for faster processing while maintaining analysis quality
+- **Performance Improvements**: Reduced memory usage and processing time for commit analysis workflows
+
 ## v4.2.1 - 2025-01-30
 
 ### Enhanced

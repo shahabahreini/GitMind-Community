@@ -45,12 +45,23 @@ import { APIErrorHandler } from "../../utils/errorHandler";
 import { telemetryService } from "../telemetry/telemetryService";
 import { SubscriptionManager } from "../subscription/SubscriptionManager";
 import { DiffProcessor } from "../diffProcessor";
-import { generateCommitHistoryAnalysisPrompt } from "./prompts";
+import { generateCommitHistoryAnalysisPrompt, validatePromptLength } from './prompts';
 
 // Timeout configurations
 const STANDARD_REQUEST_TIMEOUT = 10000; // 10 seconds for regular API requests
-const COMMIT_HISTORY_ANALYSIS_TIMEOUT = 120000; // 2 minutes for commit history analysis
-const LARGE_COMMIT_HISTORY_TIMEOUT = 300000; // 5 minutes for very large commit histories
+const COMMIT_HISTORY_ANALYSIS_TIMEOUT = 180000; // 3 minutes for commit history analysis
+const LARGE_COMMIT_HISTORY_TIMEOUT = 480000; // 8 minutes for very large commit histories
+
+// Circuit breaker for API errors
+interface CircuitBreakerState {
+    failureCount: number;
+    lastFailureTime: number;
+    isOpen: boolean;
+}
+
+const circuitBreakers = new Map<string, CircuitBreakerState>();
+const CIRCUIT_BREAKER_THRESHOLD = 3; // Max failures before opening circuit
+const CIRCUIT_BREAKER_RESET_TIME = 60000; // 1 minute cooldown
 
 
 type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter" | "Anthropic" | "GitHub Copilot" | "DeepSeek" | "Grok" | "Perplexity" | "Custom API";
@@ -225,6 +236,45 @@ export function isRequestActive(): boolean {
     return isCurrentlyActive;
 }
 
+/**
+ * Check circuit breaker status for a provider
+ */
+function checkCircuitBreaker(provider: string): boolean {
+    const state = circuitBreakers.get(provider);
+    if (!state) {
+        return true; // Circuit closed (allow requests)
+    }
+
+    const now = Date.now();
+    
+    // Reset circuit after cooldown period
+    if (state.isOpen && (now - state.lastFailureTime) > CIRCUIT_BREAKER_RESET_TIME) {
+        state.isOpen = false;
+        state.failureCount = 0;
+        debugLog(`[CircuitBreaker] Reset for provider: ${provider}`);
+        return true;
+    }
+
+    return !state.isOpen;
+}
+
+/**
+ * Record failure and potentially open circuit breaker
+ */
+function recordCircuitBreakerFailure(provider: string): void {
+    const state = circuitBreakers.get(provider) || { failureCount: 0, lastFailureTime: 0, isOpen: false };
+    
+    state.failureCount++;
+    state.lastFailureTime = Date.now();
+    
+    if (state.failureCount >= CIRCUIT_BREAKER_THRESHOLD) {
+        state.isOpen = true;
+        debugLog(`[CircuitBreaker] Opened for provider: ${provider} (${state.failureCount} failures)`);
+    }
+    
+    circuitBreakers.set(provider, state);
+}
+
 async function handleApiError(
     error: unknown,
     config: ApiConfig,
@@ -238,6 +288,9 @@ async function handleApiError(
     }
 
     const provider = getProviderName(config.type);
+    
+    // Record failure for circuit breaker
+    recordCircuitBreakerFailure(provider);
 
     // Handle cancellation specifically
     if (error.message === 'Request was cancelled') {
@@ -798,6 +851,12 @@ async function generateAnalysisWithConfig(
         throw new Error(`Unsupported API provider: ${config.type}`);
     }
 
+    // Check circuit breaker before making request
+    const provider = getProviderName(config.type);
+    if (!checkCircuitBreaker(provider)) {
+        throw new Error(`${provider} is temporarily unavailable due to recent failures. Please try again in a minute.`);
+    }
+
     // Generate the analysis prompt
     const analysisPrompt = generateCommitHistoryAnalysisPrompt(
         commitHistory,
@@ -805,10 +864,17 @@ async function generateAnalysisWithConfig(
         includeAuthorInfo
     );
 
+    // Validate prompt length for the specific provider
+    const validation = validatePromptLength(analysisPrompt, config.type.toLowerCase());
+    if (!validation.valid) {
+        debugLog(`[CommitHistory] Prompt validation failed: ${validation.recommendation}`);
+        throw new Error(`Prompt too long for ${config.type}: ${validation.recommendation}`);
+    }
+
     // Log the complete prompt being sent to the AI provider
     debugLog('[CommitHistory] ==================== COMPLETE AI PROMPT ====================');
     debugLog(`[CommitHistory] Provider: ${config.type}, Max Commits: ${maxCommits}, Include Author: ${includeAuthorInfo}`);
-    debugLog(`[CommitHistory] Prompt length: ${analysisPrompt.length} characters`);
+    debugLog(`[CommitHistory] Prompt length: ${analysisPrompt.length} characters (validated: ${validation.valid})`);
     debugLog('[CommitHistory] Full prompt being sent to AI provider:');
     debugLog(analysisPrompt);
     debugLog('[CommitHistory] ================================================================');
@@ -962,7 +1028,7 @@ async function callGeminiAnalysisAPI(apiKey: string, model: string, analysisProm
             temperature: 0.3,
             topK: 40,
             topP: 0.9,
-            // maxOutputTokens: 2000,
+            // No maxOutputTokens limit for full commit analysis reports
         },
     });
 
@@ -1010,7 +1076,7 @@ async function callOpenAIAnalysisAPI(apiKey: string, model: string, analysisProm
                     }
                 ],
                 temperature: 0.3,
-                // max_tokens: 2000,
+                // No max_tokens limit for full commit analysis reports
             }),
             signal: controller.signal
         });
@@ -1066,7 +1132,6 @@ async function callAnthropicAnalysisAPI(apiKey: string, model: string, analysisP
             },
             body: JSON.stringify({
                 model: model,
-                // max_tokens: 2000,
                 temperature: 0.3,
                 messages: [
                     {
@@ -1074,6 +1139,7 @@ async function callAnthropicAnalysisAPI(apiKey: string, model: string, analysisP
                         content: analysisPrompt
                     }
                 ],
+                // No max_tokens limit for full commit analysis reports
             }),
             signal: controller.signal
         });
@@ -1120,7 +1186,7 @@ async function callCohereAnalysisAPI(apiKey: string, model: string, analysisProm
     }, timeout);
 
     try {
-        const response = await fetch("https://api.cohere.ai/v1/generate", {
+        const response = await fetch("https://api.cohere.ai/v1/chat", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -1128,9 +1194,9 @@ async function callCohereAnalysisAPI(apiKey: string, model: string, analysisProm
             },
             body: JSON.stringify({
                 model: model,
-                prompt: analysisPrompt,
-                // max_tokens: 2000,
+                message: analysisPrompt,
                 temperature: 0.3,
+                // No max_tokens limit for full commit analysis reports
             }),
             signal: controller.signal
         });
@@ -1138,11 +1204,13 @@ async function callCohereAnalysisAPI(apiKey: string, model: string, analysisProm
         clearTimeout(timeoutId);
 
         if (!response.ok) {
-            throw new Error(`Cohere API error: ${response.status} ${response.statusText}`);
+            const errorText = await response.text();
+            debugLog(`[CommitHistory] Cohere API error details: ${errorText}`);
+            throw new Error(`Cohere API error: ${response.status} ${response.statusText} - ${errorText}`);
         }
 
         const data = await response.json();
-        const responseText = data.generations[0]?.text || "";
+        const responseText = data.text || data.message || "";
 
         debugLog('[CommitHistory] ==================== COHERE API RESPONSE ====================');
         debugLog(`[CommitHistory] Response length: ${responseText.length} characters`);
