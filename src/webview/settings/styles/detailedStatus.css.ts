@@ -1,8 +1,8 @@
 // src/webview/settings/styles/detailedStatus.css.ts
 export function getDetailedStatusStyles(): string {
     return `
-    /* Modal specific styles */
-    .modal-overlay {
+    /* Modal specific styles - scoped to prevent interference with main page */
+    .status-modal .modal-overlay {
         position: fixed;
         top: 0;
         left: 0;
@@ -13,36 +13,74 @@ export function getDetailedStatusStyles(): string {
         justify-content: center;
         align-items: center;
         z-index: 1000;
-        padding: 20px;
+        padding: 8px;
     }
 
-    .modal-content {
+    @media (min-width: 768px) {
+        .status-modal .modal-overlay {
+            padding: 20px;
+        }
+    }
+
+    .status-modal .modal-content {
         background: var(--vscode-editor-background);
         border-radius: 6px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        width: 90%;
-        max-width: 600px;
-        max-height: 90vh;
+        width: calc(100% - 16px);
+        max-width: 400px;
+        max-height: 95vh;
         display: flex;
         flex-direction: column;
         animation: modalFadeIn 0.2s ease-out;
         margin: 0 auto;
+        overflow: hidden;
+        box-sizing: border-box;
     }
 
-    .modal-header {
-        padding: 16px 20px;
+    @media (min-width: 480px) {
+        .status-modal .modal-content {
+            width: 95%;
+            max-width: 500px;
+            max-height: 90vh;
+        }
+    }
+
+    @media (min-width: 768px) {
+        .status-modal .modal-content {
+            width: 90%;
+            max-width: 600px;
+            max-height: 85vh;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .status-modal .modal-content {
+            width: 80%;
+            max-width: 650px;
+        }
+    }
+
+    .status-modal .modal-header {
+        padding: 8px 12px;
         border-bottom: 1px solid var(--vscode-widget-border);
         display: flex;
         justify-content: space-between;
         align-items: center;
+        flex-shrink: 0;
     }
 
-    .modal-header h3 {
+    @media (min-width: 480px) {
+        .status-modal .modal-header {
+            padding: 12px 16px;
+        }
+    }
+
+    .status-modal .modal-header h3 {
         margin: 0;
         color: var(--vscode-foreground);
     }
 
-    .modal-close {
+    .status-modal .modal-close {
         background: none;
         border: none;
         font-size: 24px;
@@ -54,17 +92,46 @@ export function getDetailedStatusStyles(): string {
         border-radius: 4px;
     }
 
-    .modal-close:hover {
+    .status-modal .modal-close:hover {
         background: var(--vscode-toolbar-hoverBackground);
     }
 
-    .modal-body {
-        padding: 24px;
-        max-height: 500px;
+    .status-modal .modal-body {
+        padding: 8px 12px;
+        flex: 1;
         overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 0;
     }
 
-    .status-details {
+    @media (min-width: 480px) {
+        .status-modal .modal-body {
+            padding: 12px 16px;
+        }
+    }
+
+    @media (min-width: 768px) {
+        .status-modal .modal-body {
+            padding: 16px 20px;
+        }
+    }
+
+    .status-modal .modal-footer {
+        padding: 8px 12px;
+        border-top: 1px solid var(--vscode-widget-border);
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    @media (min-width: 480px) {
+        .status-modal .modal-footer {
+            padding: 12px 16px;
+        }
+    }
+
+    .status-modal .status-details {
         font-family: var(--vscode-editor-font-family);
         font-size: 13px;
         line-height: 1.4;
@@ -76,112 +143,196 @@ export function getDetailedStatusStyles(): string {
         border-radius: 4px;
     }
 
-    .status-html-content {
+    .status-modal .status-html-content {
         font-family: var(--vscode-font-family);
         font-size: 13px;
         line-height: 1.4;
         color: var(--vscode-foreground);
-    }
-
-    .encryption-status-report {
         width: 100%;
+        box-sizing: border-box;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
     }
 
-    .status-header {
+    .status-modal .encryption-status-report {
+        width: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+    .status-modal .status-header {
         margin-bottom: 20px;
     }
 
-    .status-grid {
+    .status-modal .status-grid {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
-        margin-bottom: 24px;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-bottom: 12px;
+        width: 100%;
+        box-sizing: border-box;
+        justify-items: stretch;
+        overflow: hidden;
     }
 
-    .status-item {
+    @media (min-width: 600px) {
+        .status-modal .status-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+            justify-items: center;
+        }
+    }
+
+    @media (min-width: 768px) {
+        .status-modal .status-grid {
+            gap: 16px;
+        }
+    }
+
+    .status-modal .status-item {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 10px 14px;
+        padding: 8px 12px;
         background: var(--vscode-editor-inactiveSelectionBackground);
         border-radius: 4px;
     }
 
-    .status-indicator {
+    .status-modal .status-indicator {
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 12px;
-        border-radius: 8px;
+        gap: 6px;
+        padding: 6px 8px;
+        border-radius: 6px;
         border: 1px solid var(--vscode-widget-border);
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+        box-sizing: border-box;
     }
 
-    .status-indicator.status-active {
+    @media (min-width: 480px) {
+        .status-modal .status-indicator {
+            gap: 8px;
+            padding: 8px 10px;
+        }
+    }
+
+    @media (min-width: 600px) {
+        .status-modal .status-indicator {
+            max-width: 280px;
+            width: auto;
+        }
+    }
+
+    .status-modal .status-indicator.status-active {
         background: rgba(16, 185, 129, 0.1);
         border-color: rgba(16, 185, 129, 0.3);
     }
 
-    .status-indicator.status-inactive {
+    .status-modal .status-indicator.status-inactive {
         background: rgba(239, 68, 68, 0.1);
         border-color: rgba(239, 68, 68, 0.3);
     }
 
-    .status-icon {
-        font-size: 24px;
+    .status-modal .status-icon {
+        font-size: 18px;
+        flex-shrink: 0;
     }
 
-    .status-text {
+    @media (min-width: 480px) {
+        .status-modal .status-icon {
+            font-size: 20px;
+        }
+    }
+
+    @media (min-width: 768px) {
+        .status-modal .status-icon {
+            font-size: 24px;
+        }
+    }
+
+    .status-modal .status-text {
         flex: 1;
+        min-width: 0;
+        overflow: hidden;
     }
 
-    .status-title {
-        font-size: 16px;
+    .status-modal .status-title {
+        font-size: 12px;
         font-weight: 600;
         margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
-    .status-subtitle {
-        font-size: 12px;
+    @media (min-width: 480px) {
+        .status-modal .status-title {
+            font-size: 13px;
+        }
+    }
+
+    @media (min-width: 768px) {
+        .status-modal .status-title {
+            font-size: 14px;
+        }
+    }
+
+    .status-modal .status-subtitle {
+        font-size: 10px;
         opacity: 0.8;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    @media (min-width: 480px) {
+        .status-modal .status-subtitle {
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
     }
     
     /* Status item value variants */
-    .status-item .label {
+    .status-modal .status-item .label {
         font-weight: 500;
         opacity: 0.8;
     }
 
-    .status-item .value {
+    .status-modal .status-item .value {
         font-weight: 600;
     }
 
-    .status-item .value.success {
+    .status-modal .status-item .value.success {
         color: var(--vscode-charts-green);
     }
 
-    .status-item .value.warning {
+    .status-modal .status-item .value.warning {
         color: var(--vscode-charts-orange);
     }
 
-    .status-item .value.error {
+    .status-modal .status-item .value.error {
         color: var(--vscode-charts-red);
     }
     
     /* Section styling */
-    .status-section {
-        margin-bottom: 16px;
+    .status-modal .status-section {
+        margin-bottom: 12px;
     }
 
-    .section-title {
+    .status-modal .section-title {
         font-size: 14px;
         font-weight: 600;
         margin-bottom: 8px;
         color: var(--vscode-foreground);
     }
 
-    .reason-text {
+    .status-modal .reason-text {
         font-size: 13px;
         color: var(--vscode-descriptionForeground);
         background: var(--vscode-textCodeBlock-background);
@@ -191,35 +342,63 @@ export function getDetailedStatusStyles(): string {
     }
     
     /* Provider tags */
-    .provider-list {
+    .status-modal .provider-list {
         display: flex;
         flex-wrap: wrap;
-        gap: 6px;
+        gap: 3px;
+        margin-top: 6px;
+        justify-content: flex-start;
+        width: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
     }
 
-    .provider-tag {
-        padding: 5px 10px;
-        border-radius: 12px;
-        font-size: 11px;
+    @media (min-width: 480px) {
+        .status-modal .provider-list {
+            gap: 4px;
+            margin-top: 8px;
+        }
+    }
+
+    .status-modal .provider-tag {
+        padding: 3px 6px;
+        border-radius: 10px;
+        font-size: 9px;
         font-weight: 500;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.2px;
         display: inline-block;
+        white-space: nowrap;
+        flex-shrink: 1;
+        min-width: 0;
+        box-sizing: border-box;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 80px;
     }
 
-    .provider-tag.encrypted {
+    @media (min-width: 480px) {
+        .status-modal .provider-tag {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            letter-spacing: 0.3px;
+        }
+    }
+
+    .status-modal .provider-tag.encrypted {
         background: rgba(16, 185, 129, 0.1);
         color: var(--vscode-charts-green);
         border: 1px solid rgba(16, 185, 129, 0.3);
     }
 
-    .provider-tag.plain-text {
+    .status-modal .provider-tag.plain-text {
         background: rgba(255, 193, 7, 0.1);
         color: var(--vscode-charts-orange);
         border: 1px solid rgba(255, 193, 7, 0.3);
     }
 
-    .empty-state {
+    .status-modal .empty-state {
         font-size: 13px;
         color: var(--vscode-descriptionForeground);
         font-style: italic;
