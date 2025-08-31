@@ -1,5 +1,25 @@
 # Changelog
 
+## v4.2.1 - 2025-01-30
+
+### Enhanced
+
+- **Settings UI Style Architecture Refactoring**: Complete overhaul of webview settings UI styling system
+  - **External Style Files**: Moved all hardcoded inline styles to external `.css.ts` files in the styles folder
+  - **Theme Compatibility**: Improved light/dark theme support for all UI dialogs and components
+  - **Encryption Status Report**: Refactored dialog styles for full theme compatibility
+  - **Detailed Status Modal**: Extracted modal styles to external files for consistency
+  - **Toast Notifications**: Moved notification styles to external CSS for maintainability
+  - **Dynamic Style Loading**: Implemented style injection functions for on-demand loading
+  - **Code Maintainability**: Eliminated hardcoded styles throughout the webview settings system
+
+### Technical
+
+- **Style Management**: Created dedicated style files for encryption status, detailed status modals, and toast notifications
+- **Build Optimization**: Enhanced CSS loading patterns with dynamic style injection
+- **Type Safety**: Added proper imports for external style functions
+- **Code Organization**: Improved separation of concerns between logic and presentation layers
+
 ## v4.2.0 - 2025-01-30
 
 ### New Features

@@ -2,7 +2,7 @@ import { ExtensionSettings } from "../../../models/ExtensionSettings";
 import { getApiManagerScript } from "./apiManager";
 import { getUiManagerScript } from "./uiManager";
 import { generateFormInitialization, generateSettingsCollection, generateUpdateSettingsCode, generateUpdateSettingsCodePreserveDropdowns } from "./formGenerators";
-import { getTooltipInitializationScript, getToastScript, getDetailedStatusScript } from "./uiUtilities";
+import { getTooltipInitializationScript, getToastScript, getToastStylesScript, getDetailedStatusScript, getEncryptionStatusScript, getDetailedStatusStylesScript } from "./uiUtilities";
 import { getModelHandlingScript, getModelEventListenersScript } from "./modelHandlers";
 import { getMessageHandlersScript } from "./messageHandlers";
 import { getEventHandlersScript } from "./eventHandlers";
@@ -252,7 +252,10 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     
     ${getMessageHandlersScript()}
     ${getToastScript()}
+    ${getToastStylesScript()}
     ${getDetailedStatusScript()}
+    ${getDetailedStatusStylesScript()}
+    ${getEncryptionStatusScript()}
     ${getEventHandlersScript()}
     ${getModelEventListenersScript()}
     

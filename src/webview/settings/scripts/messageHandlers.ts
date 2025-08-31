@@ -388,24 +388,12 @@ export function getMessageHandlersScript(): string {
         const createProviderSection = (providers, title, iconClass) => {
           if (providers.length === 0) return '';
           
-          const isEncrypted = iconClass === 'encrypted';
-          const bgColor = isEncrypted ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
-          const textColor = isEncrypted ? '#10b981' : '#ef4444';
-          const borderColor = isEncrypted ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
-          
           return \`
-            <div style="margin-bottom: 24px;">
-              <h2 style="font-size: 14px; font-weight: 500; margin-bottom: 12px; color: #94a3b8;">\${title}</h2>
-              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <div class="encryption-providers-section">
+              <h2 class="encryption-providers-title">\${title}</h2>
+              <div class="encryption-providers-list">
                 \${providers.map(p => \`
-                  <span style="
-                    padding: 4px 12px; 
-                    background: \${bgColor}; 
-                    color: \${textColor}; 
-                    border-radius: 9999px; 
-                    font-size: 14px;
-                    border: 1px solid \${borderColor};
-                  ">\${p}</span>
+                  <span class="encryption-provider-tag \${iconClass}">\${p}</span>
                 \`).join('')}
               </div>
             </div>
@@ -413,50 +401,50 @@ export function getMessageHandlersScript(): string {
         };
         
         const statusHtml = \`
-          <div style="background: #0f172a; color: #f1f5f9; padding: 24px; border-radius: 8px; max-width: 672px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+          <div class="encryption-status-report">
             
             <!-- Main Grid Layout -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+            <div class="encryption-status-grid">
               
               <!-- Encryption Status Card -->
-              <div style="background: #1e293b; padding: 16px; border-radius: 8px;">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
-                  <svg style="color: \${status.enabled ? '#10b981' : '#ef4444'}; width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="encryption-status-card">
+                <div class="encryption-status-card-header">
+                  <svg class="encryption-icon \${status.enabled ? '' : 'inactive'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="\${status.enabled ? 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' : 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'}"></path>
                   </svg>
-                  <span style="font-weight: 500;">Encryption: \${status.enabled ? 'Active' : 'Inactive'}</span>
+                  <span class="encryption-status-card-title">Encryption: \${status.enabled ? 'Active' : 'Inactive'}</span>
                 </div>
-                <div style="font-size: 14px; color: #94a3b8;">\${detailed.userType.toUpperCase()} USER</div>
+                <div class="encryption-status-card-subtitle">\${detailed.userType.toUpperCase()} USER</div>
               </div>
 
               <!-- API Keys Card -->
-              <div style="background: #1e293b; padding: 16px; border-radius: 8px;">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
-                  <svg style="color: \${detailed.totalProviders > 0 ? '#10b981' : '#94a3b8'}; width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+              <div class="encryption-status-card">
+                <div class="encryption-status-card-header">
+                  <svg class="key-icon \${detailed.totalProviders > 0 ? '' : 'empty'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1721 9z"></path>
                   </svg>
-                  <span style="font-weight: 500;">API Keys: \${detailed.totalProviders}</span>
+                  <span class="encryption-status-card-title">API Keys: \${detailed.totalProviders}</span>
                 </div>
-                <div style="font-size: 14px; color: #94a3b8;">\${detailed.encryptedProviders.length} Encrypted</div>
+                <div class="encryption-status-card-subtitle">\${detailed.encryptedProviders.length} Encrypted</div>
               </div>
 
               <!-- VS Code Version Card -->
-              <div style="background: #1e293b; padding: 16px; border-radius: 8px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <svg style="color: #60a5fa; width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="encryption-status-card">
+                <div class="encryption-status-card-header">
+                  <svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
                   </svg>
-                  <span style="font-weight: 500;">VS Code: \${detailed.vscodeVersion}</span>
+                  <span class="encryption-status-card-title">VS Code: \${detailed.vscodeVersion}</span>
                 </div>
               </div>
 
               <!-- Status Card -->
-              <div style="background: #1e293b; padding: 16px; border-radius: 8px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <svg style="color: #60a5fa; width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="encryption-status-card">
+                <div class="encryption-status-card-header">
+                  <svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
-                  <span style="font-weight: 500;">Status: \${status.available ? 'Available' : 'Unavailable'}</span>
+                  <span class="encryption-status-card-title">Status: \${status.available ? 'Available' : 'Unavailable'}</span>
                 </div>
               </div>
 
@@ -464,14 +452,14 @@ export function getMessageHandlersScript(): string {
 
             <!-- Status Details -->
             \${status.reason ? \`
-              <div style="background: #1e293b; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                  <svg style="color: #60a5fa; width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="encryption-status-details">
+                <div class="encryption-status-details-header">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
-                  <span style="font-weight: 500; font-size: 14px; color: #94a3b8;">Status Details</span>
+                  <span class="encryption-status-details-title">Status Details</span>
                 </div>
-                <div style="color: #e2e8f0; font-size: 14px; line-height: 1.5;">\${status.reason}</div>
+                <div class="encryption-status-details-content">\${status.reason}</div>
               </div>
             \` : ''}
 
@@ -480,15 +468,20 @@ export function getMessageHandlersScript(): string {
             \${createProviderSection(detailed.plainTextProviders, 'Plain Text Providers', 'plain-text')}
             
             \${detailed.totalProviders === 0 ? \`
-              <div style="background: #1e293b; padding: 24px; border-radius: 8px; text-align: center;">
-                <div style="font-size: 32px; margin-bottom: 16px;">🔑</div>
-                <div style="font-weight: 500; margin-bottom: 8px; color: #e2e8f0;">No API Keys Found</div>
-                <div style="color: #94a3b8; font-size: 14px;">Configure your first API key to see encryption status</div>
+              <div class="encryption-no-keys">
+                <div class="encryption-no-keys-icon">🔑</div>
+                <div class="encryption-no-keys-title">No API Keys Found</div>
+                <div class="encryption-no-keys-description">Configure your first API key to see encryption status</div>
               </div>
             \` : ''}
 
           </div>
         \`;
+        
+        // Ensure encryption status styles are loaded
+        if (window.addEncryptionStatusStyles) {
+          window.addEncryptionStatusStyles();
+        }
         
         showDetailedStatus('Encryption Status Report', statusHtml, true);
         showToast('Encryption status checked successfully', 'success', false);
