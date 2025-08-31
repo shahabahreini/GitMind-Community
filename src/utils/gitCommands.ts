@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { debugLog } from '../services/debug/logger';
+import { findGitRepository } from '../services/git/repository';
 
 const execAsync = promisify(exec);
 
@@ -14,15 +16,17 @@ interface GitCommandResult {
 }
 
 /**
- * Execute a git command in the current workspace
+ * Execute a git command in the git repository root
  * @param command The git command to execute
+ * @param workspacePath Optional workspace path to start searching from
  * @returns Promise<GitCommandResult>
  */
-async function executeGitCommand(command: string): Promise<GitCommandResult> {
+async function executeGitCommand(command: string, workspacePath?: string): Promise<GitCommandResult> {
     try {
-        const workspacePath = getWorkspacePath();
+        const searchPath = workspacePath || getWorkspacePath();
+        const repoRoot = await findGitRepository(searchPath);
         const { stdout, stderr } = await execAsync(command, {
-            cwd: workspacePath,
+            cwd: repoRoot,
             maxBuffer: 10 * 1024 * 1024 // 10MB buffer for large git outputs
         });
         return { stdout, stderr };
@@ -129,12 +133,13 @@ export async function getCurrentBranch(): Promise<string> {
 
 /**
  * Get the repository root directory
+ * @param workspacePath Optional workspace path to start searching from
  * @returns Promise<string>
  */
-export async function getRepositoryRoot(): Promise<string> {
+export async function getRepositoryRoot(workspacePath?: string): Promise<string> {
     try {
-        const { stdout } = await executeGitCommand('git rev-parse --show-toplevel');
-        return stdout.trim();
+        const searchPath = workspacePath || getWorkspacePath();
+        return await findGitRepository(searchPath);
     } catch (error) {
         debugLog('Get repository root failed:', error);
         throw new Error('Failed to get repository root directory');
@@ -186,12 +191,13 @@ export async function getCommitHistory(count: number = 10): Promise<string[]> {
 
 /**
  * Check if the current directory is the root of the git repository
+ * @param workspacePath Optional workspace path to check
  * @returns Promise<boolean>
  */
-export async function isRepositoryRoot(): Promise<boolean> {
+export async function isRepositoryRoot(workspacePath?: string): Promise<boolean> {
     try {
-        const currentPath = getWorkspacePath();
-        const rootPath = await getRepositoryRoot();
+        const currentPath = workspacePath || getWorkspacePath();
+        const rootPath = await getRepositoryRoot(currentPath);
         return currentPath === rootPath;
     } catch (error) {
         debugLog('Check repository root failed:', error);

@@ -1,6 +1,19 @@
 import * as vscode from 'vscode';
-import * as appInsights from 'applicationinsights';
 import { debugLog } from '../debug/logger';
+
+// Lazy load applicationinsights to reduce bundle size
+let appInsights: any = null;
+async function loadAppInsights() {
+    if (!appInsights) {
+        try {
+            appInsights = await import('applicationinsights');
+        } catch (error) {
+            debugLog('Failed to load applicationinsights:', error);
+            return null;
+        }
+    }
+    return appInsights;
+}
 
 interface ExtensionInfo {
     version: string;
@@ -27,7 +40,7 @@ interface MessageGenerationError {
 }
 
 class TelemetryService {
-    private client: appInsights.TelemetryClient | null = null;
+    private client: any | null = null;
     private isEnabled: boolean = false;
     private extensionInfo: ExtensionInfo;
     private readonly instrumentationKey: string;
@@ -93,8 +106,16 @@ class TelemetryService {
                 return;
             }
 
+            // Lazy load and configure Application Insights
+            const insights = await loadAppInsights();
+            if (!insights) {
+                debugLog('Application Insights not available, telemetry disabled');
+                this.isEnabled = false;
+                return;
+            }
+
             // Configure Application Insights with MINIMAL auto-collection
-            appInsights.setup(connectionString)
+            insights.setup(connectionString)
                 .setAutoDependencyCorrelation(false)
                 .setAutoCollectRequests(false)
                 .setAutoCollectPerformance(false, false)
@@ -105,7 +126,7 @@ class TelemetryService {
                 .setSendLiveMetrics(false)
                 .start();
 
-            this.client = appInsights.defaultClient;
+            this.client = insights.defaultClient;
 
             // Set minimal common properties
             this.client.commonProperties = {

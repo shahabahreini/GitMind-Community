@@ -283,7 +283,8 @@ async function handleApiError(
 export async function generateCommitMessage(
     config: ApiConfig,
     diff: string,
-    customContext: string = ""
+    customContext: string = "",
+    repositoryRoot?: string
 ): Promise<string> {
     const startTime = Date.now();
 
@@ -306,8 +307,27 @@ export async function generateCommitMessage(
         const tokenEstimate = estimateTokens(diff);
         debugLog(`Estimated tokens for diff: ${tokenEstimate}`);
 
+        // Get repository name for diagnostics
+        let repositoryName: string | undefined;
+        if (repositoryRoot) {
+            // Extract repository name from path
+            repositoryName = repositoryRoot.split('/').pop() || 'Unknown Repository';
+        } else {
+            // Fallback to old behavior for backward compatibility
+            try {
+                const workspaceFolders = vscode.workspace.workspaceFolders;
+                if (workspaceFolders) {
+                    const { validateGitRepository } = await import('../git/repository.js');
+                    const repoPath = await validateGitRepository(workspaceFolders[0]);
+                    repositoryName = repoPath.split('/').pop() || 'Unknown Repository';
+                }
+            } catch (error) {
+                debugLog('Could not get repository name for diagnostics:', error);
+            }
+        }
+
         // Show diagnostics if enabled
-        await showDiagnosticsInfo(validatedConfig, diff);
+        await showDiagnosticsInfo(validatedConfig, diff, repositoryName);
 
         // Show model info if enabled
         showModelInfo(validatedConfig);
@@ -514,7 +534,7 @@ async function getApiKeyFromUser(providerConfig: ProviderConfig): Promise<string
     return null;
 }
 
-async function showDiagnosticsInfo(config: ApiConfig, diff: string): Promise<void> {
+async function showDiagnosticsInfo(config: ApiConfig, diff: string, repositoryName?: string): Promise<void> {
     const showDiagnostics = vscode.workspace.getConfiguration('gitmind').get('showDiagnostics');
 
     if (!showDiagnostics) {
@@ -526,15 +546,22 @@ async function showDiagnosticsInfo(config: ApiConfig, diff: string): Promise<voi
     const modelName = getModelName(config);
 
     // Create a well-formatted message with proper structure
-    const message = [
+    const messageLines = [
         'Request Diagnostics',
         '',
         `Provider: ${providerName}`,
         `Model: ${modelName}`,
-        `Estimated Tokens: ${estimatedTokens.toLocaleString()}`,
-        '',
-        'Would you like to proceed with this request?'
-    ].join('\n');
+        `Estimated Tokens: ${estimatedTokens.toLocaleString()}`
+    ];
+
+    // Add repository name if available
+    if (repositoryName) {
+        messageLines.push(`Repository: ${repositoryName}`);
+    }
+
+    messageLines.push('', 'Would you like to proceed with this request?');
+    
+    const message = messageLines.join('\n');
 
     // Show information message and wait for user confirmation
     const proceed = await vscode.window.showInformationMessage(

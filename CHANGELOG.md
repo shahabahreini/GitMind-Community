@@ -1,10 +1,52 @@
 # Changelog
 
+## v4.2.0 - 2025-01-30
+
+### New Features
+
+- **Multi-Repository Support**: Complete overhaul of Git repository handling for multi-repository workspaces
+  - **Repository-Specific Buttons**: Each repository in VS Code Source Control panel now has independent GitMind buttons
+  - **Context-Aware Operations**: Commands automatically detect which repository button was clicked and operate on the correct repository
+  - **Enhanced Repository Discovery**: Robust repository detection that searches both up the directory tree (parent folders) and down into subdirectories
+  - **Repository-Specific Diagnostics**: Request diagnostics now display the specific repository name being processed
+  - **Independent Git Context**: Each repository maintains its own Git context, diff analysis, and commit message handling
+
+### Enhanced
+
+- **Improved Git Repository Detection**: Enhanced `validateGitRepository` function with comprehensive search capabilities
+  - **Multi-Workspace Support**: Tries all workspace folders when multiple are open
+  - **VS Code Git API Integration**: Matches discovered repositories with VS Code's tracked repositories
+  - **Subfolder Repository Support**: Works regardless of whether root folder or subfolder is opened
+- **Enhanced Request Diagnostics**: Repository-specific information display
+
+  - **Repository Name Display**: Shows clean repository name instead of full path
+  - **Context Awareness**: Diagnostics automatically detect and display the correct repository being processed
+  - **Multi-Repository Transparency**: Clear indication of which repository is being used for commit generation
+
+- **Optimized Extension Build**: Reduced bundle size and improved performance
+  - **Telemetry Service Refactoring**: Lazy-loaded applicationinsights to reduce bundle size while preserving functionality
+  - **Build Optimization**: Enhanced esbuild configuration with tree shaking and minification
+  - **Security Improvements**: Resolved false positive security warnings for SendGrid constants
+
+### Technical
+
+- **Repository Service**: Enhanced repository discovery with comprehensive search algorithms
+- **Command Architecture**: Updated command handlers to accept and utilize repository context from VS Code SCM
+- **API Integration**: Modified commit message generation to pass repository-specific context through the entire call chain
+- **Type Safety**: Extended TypeScript interfaces for repository-specific operations
+- **Bundle Optimization**: Reduced extension bundle size from 5.57 MB to ~1.1 MB
+
+### Fixed
+
+- **Multi-Repository Button Handling**: Fixed issue where all repository buttons used the first repository instead of the clicked one
+- **Repository Context Loss**: Resolved context switching issues in multi-repository workspaces
+- **Diagnostics Accuracy**: Fixed repository information display in request diagnostics
+
 ## v4.1.0 - 2025-01-XX
 
 ### New Features
 
-- **🎨 Gitmoji Support (Pro Feature)**: Enhanced commit messages with emoji integration
+- **Gitmoji Support (Pro Feature)**: Enhanced commit messages with emoji integration
   - **Toggle Control**: Enable/disable gitmoji for each commit style individually
   - **Custom Emoji Mappings**: Customize emoji mappings for different commit types (feat, fix, docs, etc.)
   - **Flexible Placement**: Choose emoji placement in summary line, body, or both

@@ -152,7 +152,7 @@ async function sendApiCheckResult(result: any, provider: string): Promise<void> 
 }
 
 // Command Handlers
-async function handleGenerateCommit(): Promise<void> {
+async function handleGenerateCommit(repository?: any): Promise<void> {
   const startTime = Date.now();
   const apiConfig = await getApiConfig();
   let isGenerating = false;
@@ -179,22 +179,36 @@ async function handleGenerateCommit(): Promise<void> {
     loadingItem.command = "gitmind.cancelGeneration";
     loadingItem.show();
 
-    const workspaceFolders = vscode.workspace.workspaceFolders;
-    if (!workspaceFolders) {
-      telemetryService.trackExtensionError('ConfigurationError', 'No workspace folder is open', 'generateCommit');
-      vscode.window.showErrorMessage("No workspace folder is open");
-      return;
+    // Determine which repository to use
+    let targetRepository: vscode.WorkspaceFolder;
+    let repoRoot: string;
+
+    if (repository?.rootUri) {
+      // Command triggered from SCM button - use specific repository
+      debugLog(`Using repository from SCM context: ${repository.rootUri.fsPath}`);
+      targetRepository = { uri: repository.rootUri, name: repository.rootUri.fsPath.split('/').pop() || 'repo', index: 0 };
+      repoRoot = repository.rootUri.fsPath;
+    } else {
+      // Command triggered from command palette or other source - use workspace logic
+      const workspaceFolders = vscode.workspace.workspaceFolders;
+      if (!workspaceFolders) {
+        telemetryService.trackExtensionError('ConfigurationError', 'No workspace folder is open', 'generateCommit');
+        vscode.window.showErrorMessage("No workspace folder is open");
+        return;
+      }
+
+      try {
+        repoRoot = await validateGitRepository(workspaceFolders[0]);
+        targetRepository = workspaceFolders[0];
+        debugLog(`Found git repository at: ${repoRoot}`);
+      } catch (error) {
+        telemetryService.trackExtensionError('ConfigurationError', 'Not a git repository', 'generateCommit');
+        vscode.window.showErrorMessage("This is not a git repository. Please initialize git first.");
+        return;
+      }
     }
 
-    try {
-      await validateGitRepository(workspaceFolders[0]);
-    } catch (error) {
-      telemetryService.trackExtensionError('ConfigurationError', 'Not a git repository', 'generateCommit');
-      vscode.window.showErrorMessage("This is not a git repository. Please initialize git first.");
-      return;
-    }
-
-    const diff = await getDiff(workspaceFolders[0]);
+    const diff = await getDiff(targetRepository, repoRoot);
     if (!diff?.trim()) {
       telemetryService.trackExtensionError('UserError', 'No changes detected', 'generateCommit');
       vscode.window.showInformationMessage("No changes detected to generate a commit message for.");
@@ -207,7 +221,7 @@ async function handleGenerateCommit(): Promise<void> {
     // to prevent interfering with user style choices during commit generation
 
     const message = await Promise.race([
-      generateCommitMessage(apiConfig, diff, customContext),
+      generateCommitMessage(apiConfig, diff, customContext, repoRoot),
       new Promise<string>((_, reject) =>
         setTimeout(() => reject(new Error("Request timed out after 60 seconds")), TIMEOUT_DURATION)
       )
@@ -230,7 +244,7 @@ async function handleGenerateCommit(): Promise<void> {
       const summary = lines[0] || '';
       const description = lines.slice(2).join('\n').trim(); // Skip empty line after summary
       
-      await setCommitMessage({ summary, description });
+      await setCommitMessage({ summary, description }, repoRoot);
 
       telemetryService.trackCommitGeneration(
         apiConfig.type,

@@ -66,7 +66,7 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 Access 13 different AI providers with unified configuration and intelligent fallback handling. Supports GPT-4o, Claude-opus-4, Gemini-2.5-pro, DeepSeek-chat, Grok-3, Perplexity-sonar, Mistral-large, and 50+ additional models.
 
 **Advanced Git Integration**
-Smart diff analysis with automatic staging detection, binary file handling, and comprehensive repository state management. Handles complex scenarios including merge conflicts and mixed changes.
+Smart diff analysis with automatic staging detection, binary file handling, and comprehensive repository state management. Handles complex scenarios including merge conflicts and mixed changes. **Full multi-repository support** - each repository button works independently with its own Git context and diagnostics.
 
 **Conventional Commits Standard**
 Automatic formatting with proper type categorization (`feat|fix|docs|style|refactor|test|chore`), scope detection, and breaking change identification.
@@ -101,6 +101,7 @@ Native VS Code SCM panel integration with loading indicators, comprehensive stat
 | **Fixed Commit Body Lines (5)**                | ✓    | ✓   |
 | **Fixed Summary Length**                       | ✓    | ✓   |
 | **Single Device License**                      | ✓    | ✓   |
+| **Full multi-repository support**              | ✗    | ✓   |
 | **11 Professional Commit Styles**              | ✗    | ✓   |
 | **Optional Last Prompt Saving**                | ✗    | ✓   |
 | **Encrypted API Key Storage**                  | ✗    | ✓   |
@@ -250,7 +251,7 @@ Comprehensive prompt lifecycle management with automatic saving, intelligent reu
 Standardized prompt engineering across all 13 providers and 50+ models ensures consistent, high-quality commit messages.
 
 **Professional Integration**
-Native VS Code Source Control panel integration with batch processing support for multiple file changes and comprehensive error handling.
+Native VS Code Source Control panel integration with batch processing support for multiple file changes and comprehensive error handling. **Repository-specific buttons** in multi-repository workspaces ensure each repository operates independently.
 
 **Diagnostic & Monitoring Tools**
 Real-time token usage estimation, API response analysis, rate limit monitoring, and model performance analytics.

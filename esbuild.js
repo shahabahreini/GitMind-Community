@@ -35,8 +35,14 @@ async function main() {
 		sourcesContent: false,
 		platform: 'node',
 		outfile: 'dist/extension.js',
-		external: ['vscode'],
+		external: [
+			'vscode',
+			'applicationinsights'
+		],
 		logLevel: 'silent',
+		treeShaking: true,
+		drop: production ? ['console', 'debugger'] : [],
+		target: 'node16',
 		plugins: [
 			/* add to the end of plugins array */
 			esbuildProblemMatcherPlugin,
@@ -46,6 +52,11 @@ async function main() {
 		await ctx.watch();
 	} else {
 		await ctx.rebuild();
+		if (production) {
+			console.log('✓ Production build completed');
+			console.log('✓ Tree shaking enabled');
+			console.log('✓ Console statements dropped');
+		}
 		await ctx.dispose();
 	}
 }
