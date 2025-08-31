@@ -64,7 +64,7 @@ export class CommitHistoryLearningService {
             // We'll parse subject and body separately for better control
             const separator = '|||COMMIT_SEP|||';
             const bodySeparator = '|||BODY_SEP|||';
-            
+
             const format = includeAuthorInfo
                 ? `--pretty=format:"%H|%s${bodySeparator}%b|%an|%ad|%at${separator}"`
                 : `--pretty=format:"%H|%s${bodySeparator}%b|%at${separator}"`;
@@ -88,7 +88,7 @@ export class CommitHistoryLearningService {
                 .filter(entry => entry.trim().length > 0)
                 .map(entry => {
                     const parts = entry.trim().split('|');
-                    
+
                     if (parts.length < 3) {
                         return null;
                     }
@@ -97,7 +97,7 @@ export class CommitHistoryLearningService {
                     const subjectAndBody = parts[1].split(bodySeparator);
                     const subject = subjectAndBody[0]?.trim() || '';
                     const rawBody = subjectAndBody[1]?.trim() || '';
-                    
+
                     // Limit body to first 3 lines to keep it concise
                     const bodyLines = rawBody.split('\n').filter(line => line.trim().length > 0);
                     const body = bodyLines.length > 0 ? bodyLines.slice(0, 3).join('\n') : undefined;
@@ -138,12 +138,32 @@ export class CommitHistoryLearningService {
      */
     private getMaxCommitsLimit(): number {
         const config = vscode.workspace.getConfiguration('gitmind');
-        const proSettings = config.get('pro') as any || {};
-        const commitHistorySettings = proSettings.commitHistoryAnalysis || {};
-        
-        // Default to 10, but allow pro users to configure up to 100
-        const configuredLimit = commitHistorySettings.maxCommits || 10;
-        return Math.min(Math.max(configuredLimit, 1), 100); // Clamp between 1-100
+
+        // Prefer the current settings key
+        let configuredLimit = config.get<number>('pro.learnFromCommitHistory.maxCommits');
+
+        // Fallback to legacy key shape if present (backward compatibility)
+        if (configuredLimit === null || configuredLimit === undefined) {
+            const proSettings = config.get('pro') as any || {};
+            const legacy = proSettings.commitHistoryAnalysis?.maxCommits;
+            if (typeof legacy === 'number') {
+                configuredLimit = legacy;
+                debugLog('[CommitHistory] Using legacy settings key pro.commitHistoryAnalysis.maxCommits');
+            }
+        }
+
+        // Default per schema (package.json): default 50
+        if (typeof configuredLimit !== 'number' || isNaN(configuredLimit)) {
+            configuredLimit = 50;
+        }
+
+        // Clamp per schema: minimum 10, maximum 500
+        const clamped = Math.min(Math.max(configuredLimit, 10), 500);
+        if (clamped !== configuredLimit) {
+            debugLog(`[CommitHistory] maxCommits clamped from ${configuredLimit} to ${clamped}`);
+        }
+        debugLog(`[CommitHistory] maxCommits resolved to ${clamped}`);
+        return clamped;
     }
 
     /**
@@ -161,10 +181,15 @@ export class CommitHistoryLearningService {
         }
 
         try {
-            // Use configured limit if maxCommits not provided
-            const actualMaxCommits = maxCommits ?? this.getMaxCommitsLimit();
+            // Use configured limit if maxCommits not provided, then clamp for safety
+            const configuredOrProvided = maxCommits ?? this.getMaxCommitsLimit();
+            // Clamp per schema: 10-500
+            const actualMaxCommits = Math.min(Math.max(configuredOrProvided, 10), 500);
+            if (actualMaxCommits !== configuredOrProvided) {
+                debugLog(`[CommitHistory-${analysisId}] maxCommits clamped from ${configuredOrProvided} to ${actualMaxCommits}`);
+            }
             debugLog(`[CommitHistory-${analysisId}] Using maxCommits: ${actualMaxCommits}`);
-            
+
             // Get commit messages
             const commits = await this.getCommitMessages(actualMaxCommits, includeAuthorInfo);
 
@@ -177,12 +202,12 @@ export class CommitHistoryLearningService {
             commits.forEach((commit, index) => {
                 // Use concise format with just essential information
                 commitHistory += `${index + 1}. ${commit.subject}`;
-                
+
                 // Add body only if it exists and provides additional value
                 if (commit.body && commit.body.length > 0) {
                     commitHistory += `\n   ${commit.body.replace(/\n/g, '\n   ')}`; // Indent body lines
                 }
-                
+
                 if (includeAuthorInfo && commit.author && commit.date) {
                     commitHistory += ` (${commit.author}, ${commit.date})`;
                 }

@@ -67,10 +67,17 @@ export class ProFeatureRenderer extends BaseRenderer {
                             window.commitHistoryAnalysisInProgress = false;
                         }
                         
-                        const analyzeBtn = document.getElementById('analyzeCommitHistoryBtn');
-                        if (analyzeBtn) {
-                            analyzeBtn.disabled = false;
-                            analyzeBtn.innerHTML = '<span class="button-icon">📊</span> Analyze Commit History';
+                        // Use the same setButtonLoadingState function for consistency
+                        if (typeof setButtonLoadingState === 'function') {
+                            setButtonLoadingState('analyzeCommitHistoryBtn', false, '', 'Analyze Commit History');
+                        } else {
+                            // Fallback if setButtonLoadingState is not available
+                            const analyzeBtn = document.getElementById('analyzeCommitHistoryBtn');
+                            if (analyzeBtn) {
+                                analyzeBtn.disabled = false;
+                                analyzeBtn.innerHTML = 'Analyze Commit History';
+                                analyzeBtn.classList.remove('loading');
+                            }
                         }
                         
                         if (message.success) {
@@ -302,7 +309,7 @@ export class ProFeatureRenderer extends BaseRenderer {
         
         <div class="commit-options-row action-row">
             <button class="action-button primary" id="analyzeCommitHistoryBtn" ${disabledState ? 'disabled' : ''}>
-                <span class="button-icon"></span> Analyze Commit History
+                Analyze Commit History
             </button>
             <div class="button-description">Get AI insights on your commit message style and patterns</div>
         </div>

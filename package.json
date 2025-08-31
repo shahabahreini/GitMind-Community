@@ -587,7 +587,7 @@
           "type": "number",
           "default": 50,
           "minimum": 10,
-          "maximum": 200,
+          "maximum": 500,
           "description": "Maximum number of commits to analyze when learning from commit history"
         },
         "gitmind.pro.learnFromCommitHistory.includeAuthorInfo": {
