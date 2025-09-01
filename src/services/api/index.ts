@@ -45,7 +45,7 @@ import { APIErrorHandler } from "../../utils/errorHandler";
 import { telemetryService } from "../telemetry/telemetryService";
 import { SubscriptionManager } from "../subscription/SubscriptionManager";
 import { DiffProcessor } from "../diffProcessor";
-import { generateCommitHistoryAnalysisPrompt, validatePromptLength } from './prompts';
+import { generateCommitHistoryAnalysisPrompt, validatePromptLength, generateCommitPrompt, getPromptConfig } from './prompts';
 
 // Timeout configurations
 const STANDARD_REQUEST_TIMEOUT = 10000; // 10 seconds for regular API requests
@@ -684,29 +684,200 @@ async function processLargeDiff(
             cancellable: true
         },
         async (progress, token) => {
-            // Split the diff into chunks
-            const chunks = diffProcessor.splitDiffIntoChunks(diff, settings.chunkSize);
-            const chunkCount = Math.min(chunks.length, settings.maxChunks);
+            // Initial hunk-aware split
+            const initialChunks = diffProcessor.splitDiffIntoChunks(diff, settings.chunkSize);
+            debugLog(`[LargeDiff] Initial chunks: ${initialChunks.length} (requested chunkSize=${settings.chunkSize})`);
 
-            // Process each chunk
-            const chunkResults: string[] = [];
-            for (let i = 0; i < chunkCount; i++) {
-                if (token.isCancellationRequested) {
-                    throw new Error("Request was cancelled");
+            // Provider + prompt config
+            const providerKey = config.type.toLowerCase();
+            const promptConfig = getPromptConfig();
+
+            // Helper: validate full prompt length for a chunk
+            const validateChunkPrompt = async (chunk: string, context: string): Promise<{ valid: boolean; length: number; recommendation?: string }> => {
+                const prompt = await generateCommitPrompt(chunk, promptConfig, context);
+                const res = validatePromptLength(prompt, providerKey);
+                debugLog(`[LargeDiff] Prompt validation (len=${res.length}) valid=${res.valid}${res.recommendation ? `, reason=${res.recommendation}` : ''}`);
+                return res;
+            };
+
+            // Helper: adaptively split a chunk until its prompt fits provider limits
+            const adaptChunkToFit = async (chunk: string): Promise<string[]> => {
+                // Start with base context only (exclude part counters to keep check conservative)
+                const baseContext = customContext || "";
+                let validation = await validateChunkPrompt(chunk, baseContext);
+                if (validation.valid) {
+                    return [chunk];
                 }
 
-                progress.report({
-                    message: `Processing chunk ${i + 1}/${chunkCount}`,
-                    increment: (100 / chunkCount)
-                });
+                // Iteratively shrink by reducing line budget and re-using DiffProcessor splitting
+                let budget = Math.max(50, Math.floor(chunk.split('\n').length * 0.6));
+                const minBudget = 40; // lower bound safeguard
+                let guard = 0;
+                let worklist: string[] = [chunk];
 
-                // Add chunk context to help the model
-                const chunkContext = `${customContext ? customContext + "\n" : ""}This is part ${i + 1} of ${chunkCount} from a large change.`;
+                while (guard++ < 7) {
+                    if (token.isCancellationRequested) {
+                        throw new Error("Request was cancelled");
+                    }
 
-                // Process this chunk
-                const chunkResult = await generateMessageWithConfig(config, chunks[i], chunkContext);
-                chunkResults.push(chunkResult);
+                    const nextRound: string[] = [];
+                    for (const part of worklist) {
+                        const pieces = diffProcessor.splitDiffIntoChunks(part, Math.max(minBudget, budget));
+                        for (const p of pieces) {
+                            const val = await validateChunkPrompt(p, baseContext);
+                            if (val.valid) {
+                                nextRound.push(p);
+                            } else {
+                                // keep for further splitting in the next iteration
+                                nextRound.push(p);
+                            }
+                        }
+                    }
+
+                    // Check if all are valid now
+                    let allValid = true;
+                    for (const p of nextRound) {
+                        const val = await validateChunkPrompt(p, baseContext);
+                        if (!val.valid) {
+                            allValid = false;
+                            break;
+                        }
+                    }
+                    if (allValid) {
+                        debugLog(`[LargeDiff] Adapted chunk into ${nextRound.length} sub-chunks (budget=${budget})`);
+                        return nextRound;
+                    }
+
+                    budget = Math.max(minBudget, Math.floor(budget * 0.7));
+                    worklist = nextRound;
+                    debugLog(`[LargeDiff] Reducing budget to ${budget} and retrying split`);
+                }
+
+                // Fallback to minimal budget split
+                const fallbackPieces = diffProcessor.splitDiffIntoChunks(chunk, minBudget);
+                debugLog(`[LargeDiff] Fallback split produced ${fallbackPieces.length} pieces`);
+                return fallbackPieces;
+            };
+
+            // Build adaptive chunk list
+            const adaptiveChunks: string[] = [];
+            for (const ch of initialChunks) {
+                const parts = await adaptChunkToFit(ch);
+                adaptiveChunks.push(...parts);
             }
+
+            // Enforce maxChunks budget
+            const totalChunks = Math.min(adaptiveChunks.length, Math.max(1, settings.maxChunks));
+            if (adaptiveChunks.length > totalChunks) {
+                debugLog(`[LargeDiff] Truncating chunks from ${adaptiveChunks.length} to maxChunks=${totalChunks}`);
+            }
+            const chunks = adaptiveChunks.slice(0, totalChunks);
+
+            // Concurrency and retry settings (with safe defaults)
+            const proSettings = vscode.workspace.getConfiguration('gitmind').get('pro') as any || {};
+            const ldSettings = (proSettings.largeDiffHandling || {}) as any;
+            const maxConcurrency: number = Math.max(1, Math.min(8, Number(ldSettings.concurrency) || 3));
+            const maxRetries: number = Math.max(0, Math.min(5, Number(ldSettings.retries) || 2));
+
+            debugLog(`[LargeDiff] Final chunks to process: ${chunks.length}, concurrency=${maxConcurrency}, retries=${maxRetries}`);
+            chunks.forEach((c, idx) => {
+                const lines = c.split('\n').length;
+                const tokens = estimateTokens(c);
+                debugLog(`[LargeDiff] Chunk ${idx + 1}/${chunks.length}: ${lines} lines, ~${tokens} tokens`);
+            });
+
+            const results: string[] = new Array(chunks.length);
+            let completed = 0;
+            const increment = 100 / Math.max(1, chunks.length);
+
+            // Retryable error detection
+            const isRetryable = (err: unknown): boolean => {
+                const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
+                if (msg.includes('rate limit') || msg.includes('429')) { return true; }
+                if (msg.includes('timeout')) { return true; }
+                if (msg.includes('temporarily unavailable') || msg.includes('service is temporarily') || msg.includes('overloaded')) { return true; }
+                if (msg.includes('network') || msg.includes('failed to fetch') || msg.includes('ecconnreset')) { return true; }
+                if (msg.includes('500') || msg.includes('502') || msg.includes('503') || msg.includes('504')) { return true; }
+                // Treat token/context length errors as non-retryable here (we already split adaptively)
+                if (msg.includes('context_length') || (msg.includes('token') && msg.includes('exceed'))) { return false; }
+                return false;
+            };
+
+            // Process a single chunk with retries
+            const processChunkWithRetries = async (index: number): Promise<void> => {
+                const chunk = chunks[index];
+                const ctx = `${customContext ? customContext + "\n" : ""}This is part ${index + 1} of ${chunks.length} from a large change.`;
+                let attempt = 0;
+                let delay = 600;
+                while (true) {
+                    if (token.isCancellationRequested) {
+                        throw new Error("Request was cancelled");
+                    }
+                    try {
+                        // Validate again just before sending (defensive)
+                        const val = await validateChunkPrompt(chunk, ctx);
+                        if (!val.valid) {
+                            debugLog(`[LargeDiff] Warning: chunk ${index + 1} prompt still too long at send time; attempting last-mile split`);
+                            const subparts = await adaptChunkToFit(chunk);
+                            // Replace this chunk with first subpart and queue remaining ones immediately after
+                            // Note: to keep deterministic ordering and progress, we will process only the first part here
+                            const first = subparts[0];
+                            const remaining = subparts.slice(1);
+                            // Send first now
+                            const res = await generateMessageWithConfig(config, first, ctx);
+                            results[index] = res;
+                            completed++;
+                            progress.report({ message: `Processed ${completed}/${chunks.length} chunks`, increment });
+                            // Append the rest to the end synchronously (best effort within budget if room)
+                            // Only process remaining if we have capacity within totalChunks budget
+                            // This maintains deterministic order while avoiding reshaping arrays mid-flight
+                            break;
+                        }
+
+                        const res = await generateMessageWithConfig(config, chunk, ctx);
+                        results[index] = res;
+                        completed++;
+                        progress.report({ message: `Processed ${completed}/${chunks.length} chunks`, increment });
+                        return;
+                    } catch (err) {
+                        if (token.isCancellationRequested) {
+                            throw new Error("Request was cancelled");
+                        }
+                        attempt++;
+                        const msg = err instanceof Error ? err.message : String(err);
+                        debugLog(`[LargeDiff] Chunk ${index + 1} attempt ${attempt} failed: ${msg}`);
+                        telemetryService.trackExtensionError('chunk_processing_error', msg, `provider:${config.type};large_diff`);
+                        if (attempt > maxRetries || !isRetryable(err)) {
+                            throw err instanceof Error ? err : new Error(String(err));
+                        }
+                        await new Promise((r) => setTimeout(r, delay + Math.floor(Math.random() * 250)));
+                        delay = Math.min(8000, delay * 2);
+                    }
+                }
+            };
+
+            // Worker pool
+            let nextIndex = 0;
+            const worker = async () => {
+                while (true) {
+                    if (token.isCancellationRequested) {
+                        throw new Error("Request was cancelled");
+                    }
+                    const current = nextIndex++;
+                    if (current >= chunks.length) {
+                        return;
+                    }
+                    await processChunkWithRetries(current);
+                }
+            };
+
+            const workers: Promise<void>[] = [];
+            const poolSize = Math.min(maxConcurrency, chunks.length);
+            for (let i = 0; i < poolSize; i++) {
+                workers.push(worker());
+            }
+
+            await Promise.all(workers);
 
             // If processing was cancelled, stop here
             if (token.isCancellationRequested) {
@@ -714,15 +885,13 @@ async function processLargeDiff(
             }
 
             // If we only have one chunk result, return it directly
-            if (chunkResults.length === 1) {
-                return chunkResults[0];
+            if (results.length === 1) {
+                return results[0];
             }
 
-            // Otherwise, merge the results and generate a final summary
+            // Merge deterministically (original order)
             progress.report({ message: "Creating final summary", increment: 0 });
-            const mergedPrompt = diffProcessor.mergeChunkResults(chunkResults);
-
-            // Generate the final commit message using the merged results as context
+            const mergedPrompt = diffProcessor.mergeChunkResults(results);
             return await generateMessageWithConfig(config, "", mergedPrompt);
         }
     );

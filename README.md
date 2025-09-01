@@ -72,7 +72,7 @@ Smart diff analysis with automatic staging detection, binary file handling, and 
 Automatic formatting with proper type categorization (`feat|fix|docs|style|refactor|test|chore`), scope detection, and breaking change identification.
 
 **Intelligent Diff Processing**
-Enhanced change detection for staged and unstaged files with context-aware analysis and user guidance for complex scenarios.
+Enhanced change detection for staged and unstaged files with context-aware analysis. Pro: Large diff processing with adaptive, token-aware chunking, configurable concurrency, retries with exponential backoff, cancellation support, and progress reporting.
 
 **Dynamic Model Selection**
 Real-time model browsing for compatible providers with search and filtering capabilities. 2M+ token context windows supported for large repositories.
@@ -81,7 +81,7 @@ Real-time model browsing for compatible providers with search and filtering capa
 Save Last Custom Prompt feature automatically saves and reuses custom prompts across commit generations. Saved prompts appear as defaults in future sessions.
 
 **Professional Workflow Integration**
-Native VS Code SCM panel integration with loading indicators, comprehensive status feedback, and standardized prompt engineering across all providers.
+Native VS Code SCM panel integration with batch processing support for multiple file changes and comprehensive error handling. **Repository-specific buttons** in multi-repository workspaces ensure each repository operates independently.
 
 ## Plan Comparison
 
@@ -128,7 +128,7 @@ Native VS Code SCM panel integration with loading indicators, comprehensive stat
 | **API Key Management**      | Manual entry only                                  | Copy API key button (works in encrypted and regular mode)                                                                            |
 | **Model Selection**         | Standard models only                               | Latest available models for HuggingFace, Mistral, Open Router, Cohere                                                                |
 | **API Provider Support**    | Standard providers only                            | Custom API provider for private clouds and enterprise endpoints                                                                      |
-| **Large Diff Handling**     | Limited processing capacity                        | Configurable chunking system with custom size and limit controls                                                                     |
+| **Large Diff Handling**     | Limited processing capacity                        | Token-aware adaptive chunking, concurrency, retries with backoff, cancellation, and progress reporting                               |
 | **Commit Body Line Limit**  | Fixed at 5 bullet points                           | Configurable bullet points number in message body                                                                                    |
 | **Summary Length Limit**    | Fixed length                                       | Custom summary length limit for first line                                                                                           |
 | **Commit History Analysis** | Not available                                      | AI analysis of previous commits with optional author data                                                                            |
@@ -155,7 +155,15 @@ Access to the latest available models for HuggingFace, Mistral, Open Router, Gem
 Configure custom API endpoints for private clouds and enterprise environments.
 
 **Advanced Diff Processing**
-Configurable chunking system for large code changes. Customizable chunk sizes and processing limits for handling massive diffs.
+Token-aware, resilient processing of massive diffs:
+- Adaptive chunk splitting using `DiffProcessor.splitDiffIntoChunks()` with shrinking budgets and safe fallbacks
+- Prompt length validation via `validatePromptLength()` using provider-specific limits
+- Worker-pool concurrency with configurable max workers
+- Exponential backoff with jitter for transient errors; skips non-retryable token/context errors
+- Cancellation support with VS Code cancellation tokens
+- Deterministic merging via `DiffProcessor.mergeChunkResults()` to produce a concise final commit message
+- Progress reporting with per-chunk completion and percentage in VS Code UI
+- Debug logging and telemetry for chunk sizes, token estimates, validation outcomes, and retries
 
 **Commit Message Formatting**
 

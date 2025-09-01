@@ -11,6 +11,16 @@
   - **Better Reliability**: Enhanced timeout handling for comprehensive reports without token limits
   - **Practical Insights**: Streamlined output emphasizing actionable improvements over comprehensive documentation
 
+- **Large Diff Processing Overhaul (Pro)**: Robust, token-aware processing for massive diffs
+  - **Adaptive Chunk Splitting**: Iteratively splits diffs using `DiffProcessor.splitDiffIntoChunks()` with shrinking budgets and safe fallbacks for outlier files
+  - **Token-Aware Prompt Validation**: Uses `validatePromptLength()` with provider-specific limits (lowercase provider keys) to ensure safe prompts per model
+  - **Concurrency Control**: Worker-pool processing with configurable max concurrency for faster throughput on many chunks
+  - **Reliable Retries**: Exponential backoff with jitter for transient errors (rate limits, network, 5xx); skips non-retryable token/context errors
+  - **Cancellation Support**: Honors VS Code cancellation tokens at every stage for immediate stop
+  - **Deterministic Merging**: Preserves order and merges chunk results via `DiffProcessor.mergeChunkResults()` for the final concise commit message
+  - **Progress Reporting**: Live progress updates with per-chunk completion counts and percentages in VS Code UI
+  - **Diagnostics & Telemetry**: Detailed debug logging (chunk sizes, estimated tokens, validation results) and telemetry for errors and retries
+
 ### Technical
 
 - **API Timeout Configuration**: Updated timeout values for commit history analysis operations
