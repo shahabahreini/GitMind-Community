@@ -157,8 +157,8 @@ export class CommitHistoryLearningService {
             configuredLimit = 50;
         }
 
-        // Clamp per schema: minimum 10, maximum 500
-        const clamped = Math.min(Math.max(configuredLimit, 10), 500);
+        // Clamp per schema: minimum 10, maximum 2500
+        const clamped = Math.min(Math.max(configuredLimit, 10), 2500);
         if (clamped !== configuredLimit) {
             debugLog(`[CommitHistory] maxCommits clamped from ${configuredLimit} to ${clamped}`);
         }
@@ -183,8 +183,8 @@ export class CommitHistoryLearningService {
         try {
             // Use configured limit if maxCommits not provided, then clamp for safety
             const configuredOrProvided = maxCommits ?? this.getMaxCommitsLimit();
-            // Clamp per schema: 10-500
-            const actualMaxCommits = Math.min(Math.max(configuredOrProvided, 10), 500);
+            // Clamp per schema: 10-2500
+            const actualMaxCommits = Math.min(Math.max(configuredOrProvided, 10), 2500);
             if (actualMaxCommits !== configuredOrProvided) {
                 debugLog(`[CommitHistory-${analysisId}] maxCommits clamped from ${configuredOrProvided} to ${actualMaxCommits}`);
             }

@@ -62,22 +62,22 @@ export class ProFeatureRenderer extends BaseRenderer {
                         break;
                         
                     case 'commitHistoryAnalysisResult':
+                        console.log('[ProFeatureRenderer] Received commitHistoryAnalysisResult:', message);
+                        
                         // Reset global flag
                         if (typeof window.commitHistoryAnalysisInProgress !== 'undefined') {
                             window.commitHistoryAnalysisInProgress = false;
                         }
 
-                        // Use the same setButtonLoadingState function for consistency
-                        if (typeof setButtonLoadingState === 'function') {
-                            setButtonLoadingState('analyzeCommitHistoryBtn', false, '', 'Analyze Commit History');
+                        // Always reset button state, regardless of which method works
+                        const analyzeBtn = document.getElementById('analyzeCommitHistoryBtn');
+                        if (analyzeBtn) {
+                            analyzeBtn.disabled = false;
+                            analyzeBtn.textContent = 'Analyze Commit History';
+                            analyzeBtn.classList.remove('loading');
+                            console.log('[ProFeatureRenderer] Button state reset successfully');
                         } else {
-                            // Fallback if setButtonLoadingState is not available
-                            const analyzeBtn = document.getElementById('analyzeCommitHistoryBtn');
-                            if (analyzeBtn) {
-                                analyzeBtn.disabled = false;
-                                analyzeBtn.innerHTML = 'Analyze Commit History';
-                                analyzeBtn.classList.remove('loading');
-                            }
+                            console.error('[ProFeatureRenderer] Could not find analyzeCommitHistoryBtn');
                         }
 
                         if (message.success) {
@@ -297,7 +297,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                 <input type="number" id="learnFromCommitHistoryMaxCommits" 
                     class="input-field" 
                     value="${learnFromCommitHistory.maxCommits}" 
-                    min="10" max="200" step="10"
+                    min="10" max="2500" step="10"
                     ${disabledState ? 'disabled' : ''} 
                     data-setting="pro.learnFromCommitHistory.maxCommits" />
             </div>
@@ -361,7 +361,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                 <input type="number" id="changelogMaxCommits"
                     class="input-field"
                     value="${changelogConfig.maxCommits}"
-                    min="10" max="500" step="10"
+                    min="10" max="2500" step="10"
                     ${disabledState ? 'disabled' : ''}
                     data-setting="pro.changelog.maxCommits" />
             </div>

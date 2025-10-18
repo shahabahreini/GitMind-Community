@@ -70,10 +70,13 @@ export async function learnFromCommitHistory() {
                     // Send success message back to webview if open
                     const { SettingsWebview } = await import('../../webview/settings/SettingsWebview.js');
                     if (SettingsWebview.isWebviewOpen()) {
+                        debugLog('Sending commitHistoryAnalysisResult success message to webview');
                         SettingsWebview.postMessageToWebview({
                             command: 'commitHistoryAnalysisResult',
                             success: true
                         });
+                    } else {
+                        debugLog('Settings webview is not open, cannot send success message');
                     }
 
                 } catch (error) {
@@ -91,11 +94,14 @@ export async function learnFromCommitHistory() {
         try {
             const { SettingsWebview } = await import('../../webview/settings/SettingsWebview.js');
             if (SettingsWebview.isWebviewOpen()) {
+                debugLog('Sending commitHistoryAnalysisResult error message to webview');
                 SettingsWebview.postMessageToWebview({
                     command: 'commitHistoryAnalysisResult',
                     success: false,
                     error: errorMessage
                 });
+            } else {
+                debugLog('Settings webview is not open, cannot send error message');
             }
         } catch (importError) {
             debugLog('Failed to import SettingsWebview for error reporting:', importError);

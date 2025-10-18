@@ -341,22 +341,45 @@ export class ChangelogService {
             const sortedTags = Array.from(versionTags.entries())
                 .sort((a, b) => this.compareVersions(b[0], a[0]));
 
-            for (let i = 0; i < sortedTags.length; i++) {
-                const [version, date] = sortedTags[i];
-                const nextVersion = i < sortedTags.length - 1 ? sortedTags[i + 1][0] : undefined;
+            debugLog(`Found ${sortedTags.length} version tags, processing for changelog...`);
+
+            // Limit to most recent versions to avoid overwhelming the AI
+            // Get user configuration for max versions to process
+            const vsConfig = vscode.workspace.getConfiguration('gitmind');
+            const maxVersionsToProcess = vsConfig.get<number>('pro.changelog.maxVersions', 10);
+            const tagsToProcess = sortedTags.slice(0, maxVersionsToProcess);
+
+            if (sortedTags.length > maxVersionsToProcess) {
+                debugLog(`Limiting to ${maxVersionsToProcess} most recent versions (out of ${sortedTags.length} total)`);
+                vscode.window.showInformationMessage(
+                    `Found ${sortedTags.length} version tags. Processing the ${maxVersionsToProcess} most recent versions. ` +
+                    `Adjust 'gitmind.pro.changelog.maxVersions' in settings to change this limit.`,
+                    { modal: false }
+                );
+            }
+
+            for (let i = 0; i < tagsToProcess.length; i++) {
+                const [version, date] = tagsToProcess[i];
+                const nextVersion = i < tagsToProcess.length - 1 ? tagsToProcess[i + 1][0] : undefined;
 
                 try {
                     const commits = await this.getGitLog(nextVersion, maxCommits);
                     if (commits.length > 0) {
                         versions.push({ version, date, commits });
+                        debugLog(`Version ${version}: ${commits.length} commits`);
                     }
                 } catch (error) {
                     debugLog(`Failed to get commits for version ${version}:`, error);
                 }
 
                 if (maxCommits && versions.reduce((sum, v) => sum + v.commits.length, 0) >= maxCommits) {
+                    debugLog(`Reached maxCommits limit (${maxCommits}), stopping version processing`);
                     break;
                 }
+            }
+
+            if (versions.length > 0) {
+                debugLog(`Successfully grouped commits into ${versions.length} version(s)`);
             }
 
             return versions;
@@ -699,8 +722,22 @@ export class ChangelogService {
             throw new Error('No commits found to generate changelog from.');
         }
 
-        debugLog(`Found ${versionGroups.length} version groups with total commits:`,
-            versionGroups.reduce((sum, v) => sum + v.commits.length, 0));
+        const totalCommits = versionGroups.reduce((sum, v) => sum + v.commits.length, 0);
+        debugLog(`Found ${versionGroups.length} version groups with ${totalCommits} total commits`);
+
+        // Show user info about version detection
+        if (versionGroups.length > 1) {
+            const versionList = versionGroups.map(v => `${v.version} (${v.commits.length} commits)`).join(', ');
+            debugLog(`Versions to process: ${versionList}`);
+
+            // Notify user if processing multiple versions
+            const versionSummary = versionGroups.slice(0, 5).map(v => v.version).join(', ');
+            const moreVersions = versionGroups.length > 5 ? ` and ${versionGroups.length - 5} more` : '';
+            vscode.window.showInformationMessage(
+                `Generating changelog for ${versionGroups.length} versions: ${versionSummary}${moreVersions}`,
+                { modal: false }
+            );
+        }
 
         // Analyze existing changelog structure if it exists
         const changelogPolicy = existingChangelog
@@ -771,9 +808,16 @@ export class ChangelogService {
     private prepareCommitSummary(versionGroups: VersionInfo[]): string {
         let summary = '';
 
+        // Add metadata about version groups
+        summary += `\n**VERSION GROUPS DETECTED: ${versionGroups.length}**\n`;
+        summary += `**IMPORTANT: Generate a SEPARATE changelog section for EACH version below.**\n\n`;
+
         for (const group of versionGroups) {
-            summary += `\n## Version: ${group.version} (${group.date})\n`;
-            summary += `Total commits: ${group.commits.length}\n\n`;
+            summary += `\n========================================\n`;
+            summary += `## VERSION GROUP: ${group.version}\n`;
+            summary += `Release Date: ${group.date}\n`;
+            summary += `Total commits in this version: ${group.commits.length}\n`;
+            summary += `========================================\n\n`;
 
             for (const commit of group.commits) {
                 summary += `### Commit: ${commit.hash.substring(0, 7)}\n`;
@@ -914,15 +958,19 @@ ${existingChangelog ? `\n**EXISTING CHANGELOG FOR REFERENCE (MUST match this EXA
 - ${policy ? 'STRICTLY adhere to the existing changelog policy and structure outlined above' : 'Use industry-standard Keep a Changelog format'}
 
 **OUTPUT REQUIREMENTS:**
-- Generate ONLY the changelog section for the new version(s)
+- Generate a SEPARATE changelog section for EACH VERSION GROUP provided above
+- DO NOT combine multiple versions into a single generic "[Version]" entry
+- Each version MUST have its own ## header with the actual version number and date
 - Use proper markdown formatting matching existing style
-- ${policy?.versionFormat === 'v1.2.3' ? 'Include "v" prefix in version (e.g., ## v4.3.0)' : policy?.versionFormat === '1.2.3' ? 'NO "v" prefix in version (e.g., ## 4.3.0)' : 'Start with version number and date'}
+- ${policy?.versionFormat === 'v1.2.3' ? 'Include "v" prefix in version (e.g., ## v4.3.0 - 2025-03-15)' : policy?.versionFormat === '1.2.3' ? 'NO "v" prefix in version (e.g., ## 4.3.0 - 2025-03-15)' : 'Start with version number and date (e.g., ## 1.2.3 - 2025-03-15)'}
 - ${policy?.bulletStyle ? `Use "${policy.bulletStyle}" for all bullet points` : 'Use consistent bullet style'}
 - NO introductory text, explanations, or meta-commentary
-- NO placeholder text or template instructions
+- NO placeholder text or template instructions like "[Version]" or "YYYY-MM-DD"
 - Entries must be concrete and based on actual commits
-- If multiple versions detected, generate entries for each in reverse chronological order
+- Generate entries in reverse chronological order (newest version first)
 - Match the existing changelog's tone, style, and structure EXACTLY
+
+**CRITICAL: If you see "VERSION GROUP: v1.2.3" above, you MUST create a section with "## v1.2.3 - [date]" (or without 'v' if policy requires). Do NOT use generic placeholders like "## [Version] - 2025-10-18".**
 
 Generate the changelog now:`;
     }
@@ -936,6 +984,25 @@ Generate the changelog now:`;
 
         // Remove any markdown code blocks if AI wrapped the response
         changelog = changelog.replace(/```markdown\n?/g, '').replace(/```\n?/g, '');
+
+        // Validate that the changelog has proper version headers (not generic placeholders)
+        const hasGenericVersion = /##\s*\[Version\]/.test(changelog);
+        const hasGenericDate = /##\s*.*?\[?YYYY-MM-DD\]?/.test(changelog);
+
+        if (hasGenericVersion || hasGenericDate) {
+            debugLog('WARNING: AI generated changelog with placeholder version/date');
+            // Try to fix by replacing with actual date
+            changelog = changelog.replace(/\[Version\]/g, 'Unreleased');
+            changelog = changelog.replace(/\[?YYYY-MM-DD\]?/g, new Date().toISOString().split('T')[0]);
+        }
+
+        // Count actual version headers (should match number of version groups processed)
+        const versionHeaders = changelog.match(/^##\s+[v]?\d+\.\d+/gm);
+        if (versionHeaders) {
+            debugLog(`Generated changelog contains ${versionHeaders.length} version section(s)`);
+        } else {
+            debugLog('WARNING: No version headers found in generated changelog');
+        }
 
         // Ensure it starts with # Changelog if it's a new file
         if (!existingChangelog && !changelog.startsWith('# Changelog')) {

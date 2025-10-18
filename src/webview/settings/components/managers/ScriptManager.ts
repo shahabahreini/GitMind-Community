@@ -55,6 +55,9 @@ export class ScriptManager {
                     }
                 }
             }
+            
+            // Make setButtonLoadingState globally available for message handlers
+            window.setButtonLoadingState = setButtonLoadingState;
 
             function showToastMessage(message, type, toastShownFlag) {
                 if (typeof showToast === 'function' && !window[toastShownFlag]) {
