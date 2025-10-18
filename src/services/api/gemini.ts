@@ -13,69 +13,49 @@ interface GenerationConfig {
 }
 
 const MODEL_CONFIGS: Record<GeminiModel, GenerationConfig> = {
-    // Latest Models (Recommended)
+    // Gemini 2.5 Series - Max output: 65,536 tokens
     "gemini-2.5-pro": {
         temperature: 0.2,
         topK: 40,
         topP: 0.9,
-        maxOutputTokens: 7000,
+        maxOutputTokens: 65536,
     },
     "gemini-2.5-flash": {
         temperature: 0.2,
         topK: 40,
         topP: 0.9,
-        maxOutputTokens: 7000,
+        maxOutputTokens: 65536,
     },
-    "gemini-2.5-flash-preview-05-20": {
+    "gemini-2.5-flash-preview": {
         temperature: 0.2,
         topK: 40,
         topP: 0.9,
-        maxOutputTokens: 7000,
+        maxOutputTokens: 65536,
     },
-    // Gemini 2.0 Series
+    "gemini-2.5-flash-lite": {
+        temperature: 0.2,
+        topK: 40,
+        topP: 0.9,
+        maxOutputTokens: 65536,
+    },
+    "gemini-2.5-flash-lite-preview": {
+        temperature: 0.2,
+        topK: 40,
+        topP: 0.9,
+        maxOutputTokens: 65536,
+    },
+    // Gemini 2.0 Series - Max output: 8,192 tokens
     "gemini-2.0-flash": {
         temperature: 0.2,
         topK: 40,
         topP: 0.9,
-        maxOutputTokens: 7000,
+        maxOutputTokens: 8192,
     },
     "gemini-2.0-flash-lite": {
         temperature: 0.2,
         topK: 40,
         topP: 0.9,
-        maxOutputTokens: 7000,
-    },
-    // Gemini 1.5 Series
-    "gemini-1.5-flash": {
-        temperature: 0.2,
-        topK: 40,
-        topP: 0.9,
-        maxOutputTokens: 7000,
-    },
-    "gemini-1.5-flash-8b": {
-        temperature: 0.2,
-        topK: 40,
-        topP: 0.9,
-        maxOutputTokens: 7000,
-    },
-    "gemini-1.5-pro": {
-        temperature: 0.2,
-        topK: 40,
-        topP: 0.9,
-        maxOutputTokens: 7000,
-    },
-    // Legacy/Preview Models
-    "gemini-2.5-flash-preview-04-17": {
-        temperature: 0.2,
-        topK: 40,
-        topP: 0.9,
-        maxOutputTokens: 7000,
-    },
-    "gemini-2.5-pro-exp-03-25": {
-        temperature: 0.2,
-        topK: 40,
-        topP: 0.9,
-        maxOutputTokens: 7000,
+        maxOutputTokens: 8192,
     },
 };
 

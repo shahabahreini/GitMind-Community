@@ -39,18 +39,18 @@ export async function generateChangelog() {
             {
                 modal: true,
                 detail: `To get the best results from changelog generation:\n\n` +
-                    `✅ Best Practices:\n` +
+                    `✓ Best Practices:\n` +
                     `• Tag your releases with semantic versions (v1.2.3 or 1.2.3)\n` +
                     `• Include version in commit messages (e.g., "chore: bump version to 4.3.0")\n` +
                     `• Update package.json version before committing\n` +
                     `• Use conventional commit format (feat:, fix:, chore:)\n` +
                     `• Write clear, descriptive commit messages\n\n` +
-                    `🎯 Version Detection:\n` +
+                    `Version Detection:\n` +
                     `• Git tags are detected automatically\n` +
                     `• Version bumps in commit messages are analyzed\n` +
                     `• package.json changes are tracked\n` +
                     `• Fallback to "Unreleased" if no versions found\n\n` +
-                    `📋 Changelog Policy:\n` +
+                    `Changelog Policy:\n` +
                     `• Existing CHANGELOG.md structure will be matched exactly\n` +
                     `• Categories, bullet style, and format will be preserved\n` +
                     `• AI will maintain your established conventions\n\n` +

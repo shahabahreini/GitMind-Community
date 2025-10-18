@@ -99,6 +99,11 @@ export class SettingsManager {
                     enabled: config.get<boolean>("pro.learnFromCommitHistory.enabled") ?? true,
                     maxCommits: config.get<number>("pro.learnFromCommitHistory.maxCommits") ?? 50,
                     includeAuthorInfo: config.get<boolean>("pro.learnFromCommitHistory.includeAuthorInfo") ?? true,
+                },
+                changelog: {
+                    enabled: config.get<boolean>("pro.changelog.enabled") ?? true,
+                    maxCommits: config.get<number>("pro.changelog.maxCommits") ?? 100,
+                    groupByVersion: config.get<boolean>("pro.changelog.groupByVersion") ?? true,
                 }
             },
             subscription: {
@@ -343,6 +348,10 @@ export class SettingsManager {
             config.update("pro.learnFromCommitHistory.enabled", settings.pro?.learnFromCommitHistory?.enabled ?? true, target),
             config.update("pro.learnFromCommitHistory.maxCommits", settings.pro?.learnFromCommitHistory?.maxCommits ?? 50, target),
             config.update("pro.learnFromCommitHistory.includeAuthorInfo", settings.pro?.learnFromCommitHistory?.includeAuthorInfo ?? true, target),
+            // Add changelog settings
+            config.update("pro.changelog.enabled", settings.pro?.changelog?.enabled ?? true, target),
+            config.update("pro.changelog.maxCommits", settings.pro?.changelog?.maxCommits ?? 100, target),
+            config.update("pro.changelog.groupByVersion", settings.pro?.changelog?.groupByVersion ?? true, target),
             config.update("subscription.email", settings.subscription?.email || "", target),
             config.update("subscription.plan", settings.subscription?.plan || "free", target),
             config.update("subscription.status", settings.subscription?.status || "inactive", target),

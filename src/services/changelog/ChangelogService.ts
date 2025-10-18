@@ -2,9 +2,9 @@ import * as vscode from 'vscode';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { debugLog } from '../debug/logger';
-import { generateCommitMessage } from '../api';
 import { getApiConfig } from '../../config/settings';
 import { estimateTokens } from '../../utils/tokenCounter';
+import { ApiConfig } from '../../config/types';
 
 const execAsync = promisify(exec);
 
@@ -129,8 +129,61 @@ export class ChangelogService {
 
             for (const line of lines) {
                 const [tag, date] = line.split('|');
-                // Match version patterns: v1.2.3, 1.2.3, v1.2.3-beta, etc.
-                if (/^v?\d+\.\d+\.\d+/.test(tag)) {
+                
+                // Comprehensive version pattern matching for various development domains
+                const isVersion = 
+                    // Semantic Versioning: v1.2.3, 1.2.3, v1.2.3-alpha.1, 1.0.0-rc.1+build.123
+                    /^v?\d+\.\d+\.\d+/.test(tag) ||
+                    
+                    // Two-part versions: v1.2, 1.2, v2.0
+                    /^v?\d+\.\d+$/.test(tag) ||
+                    
+                    // Single version numbers: v1, v2, r1, r2 (common in data science/ML models)
+                    /^[vr]\d+$/i.test(tag) ||
+                    
+                    // Release tags: release-1.2.3, release/1.2.3, rel-1.2.3
+                    /^(release|rel)[-/]v?\d+\.\d+(\.\d+)?/i.test(tag) ||
+                    
+                    // Date-based versions: 2024.01.15, 2024-01-15, 20240115 (DevOps/deployment)
+                    /^\d{4}[.-]?\d{2}[.-]?\d{2}/.test(tag) ||
+                    
+                    // Year.Month versions: 2024.01, 24.01 (common in enterprise software)
+                    /^\d{2,4}\.\d{1,2}$/.test(tag) ||
+                    
+                    // Build numbers: build-123, build.456, b123
+                    /^(build|b)[-.]?\d+$/i.test(tag) ||
+                    
+                    // Sprint/iteration tags: sprint-12, iteration-5, s12, i5
+                    /^(sprint|iteration|s|i)[-]?\d+$/i.test(tag) ||
+                    
+                    // Stage tags with versions: prod-1.2.3, staging-2.0.0, dev-1.0.0
+                    /^(prod|production|staging|stage|dev|development)[-/]v?\d+\.\d+(\.\d+)?/i.test(tag) ||
+                    
+                    // Database migration versions: db-1.2.3, migration-001, schema-v2
+                    /^(db|database|migration|schema)[-/]v?\d+/i.test(tag) ||
+                    
+                    // API versions: api-v1, api/v2, apiv1.2
+                    /^api[-/]?v?\d+(\.\d+)?$/i.test(tag) ||
+                    
+                    // Docker/container tags: v1.2.3-alpine, 1.2.3-slim, latest-1.2.3
+                    /^(v?\d+\.\d+\.\d+|latest)[-](alpine|slim|debian|ubuntu|node|python)/i.test(tag) ||
+                    
+                    // Hotfix tags: hotfix-1.2.3, hf-1.2.3, patch-1.2.3
+                    /^(hotfix|hf|patch|fix)[-/]v?\d+\.\d+(\.\d+)?/i.test(tag) ||
+                    
+                    // Feature release tags: feature-v1.2, feat-1.0
+                    /^(feature|feat)[-/]v?\d+\.\d+/i.test(tag) ||
+                    
+                    // Version with channel: 1.2.3-stable, 1.2.3-canary, 1.2.3-nightly
+                    /^v?\d+\.\d+\.\d+-(stable|canary|nightly|edge|beta|alpha|rc)/i.test(tag) ||
+                    
+                    // Model versions (ML/AI): model-v1, model-1.2, m1.0
+                    /^(model|m)[-]?v?\d+(\.\d+)?$/i.test(tag) ||
+                    
+                    // Package versions: pkg-1.2.3, package-v1.0
+                    /^(pkg|package)[-/]v?\d+\.\d+(\.\d+)?/i.test(tag);
+                
+                if (isVersion) {
                     versionMap.set(tag, date);
                 }
             }
@@ -154,15 +207,61 @@ export class ChangelogService {
         for (let i = 0; i < commits.length; i++) {
             const commit = commits[i];
 
-            // Check for version bump in commit message
-            const versionMatch = commit.message.match(/(?:bump|update|release|version|chore|build).*?(?:to\s+)?v?(\d+\.\d+\.\d+(?:[.-]\w+)?)/i) ||
-                                commit.body.match(/(?:bump|update|release|version|chore|build).*?(?:to\s+)?v?(\d+\.\d+\.\d+(?:[.-]\w+)?)/i);
-
-            // Check for package.json version changes in commit
-            const packageVersionMatch = commit.message.match(/package\.json.*?v?(\d+\.\d+\.\d+)/i) ||
-                                       commit.body.match(/version.*?v?(\d+\.\d+\.\d+)/i);
-
-            const detectedVersion = versionMatch?.[1] || packageVersionMatch?.[1];
+            // Comprehensive version detection in commit messages
+            // Supports multiple versioning patterns across different development domains
+            const combinedText = `${commit.message} ${commit.body}`;
+            
+            let detectedVersion: string | null = null;
+            
+            // Try multiple patterns in order of specificity
+            const patterns = [
+                // Semantic versioning with keywords: "bump to 1.2.3", "release v1.2.3", "version 1.2.3"
+                /(?:bump|update|release|version|chore|build|deploy|publish|tag).*?(?:to\s+)?v?(\d+\.\d+\.\d+(?:[.-]\w+)?)/i,
+                
+                // Package.json or manifest updates: "package.json: 1.2.3", "version: 1.2.3"
+                /(?:package\.json|manifest|pom\.xml|setup\.py|cargo\.toml|composer\.json).*?v?(\d+\.\d+\.\d+)/i,
+                
+                // Date-based versions in commits: "deploy 2024.01.15", "release 2024-01-15"
+                /(?:deploy|release|version).*?(\d{4}[.-]\d{2}[.-]\d{2})/i,
+                
+                // Two-part versions: "v1.2", "version 2.0"
+                /(?:bump|update|release|version).*?(?:to\s+)?v?(\d+\.\d+)(?:\s|$|[^\d])/i,
+                
+                // Build numbers: "build 123", "build-456"
+                /(?:build|b)[-\s](\d+)/i,
+                
+                // Sprint/iteration: "sprint 12", "iteration 5"
+                /(?:sprint|iteration)[-\s](\d+)/i,
+                
+                // Stage deployments: "prod-1.2.3", "staging 2.0.0"
+                /(?:prod|production|staging|stage|dev|development)[-\s]v?(\d+\.\d+(?:\.\d+)?)/i,
+                
+                // Database migrations: "migration 001", "schema v2", "db-1.2.3"
+                /(?:migration|schema|db|database)[-\s]v?(\d+(?:\.\d+)?)/i,
+                
+                // API versions: "api v1", "api/v2", "api version 1.2"
+                /api[-\s/]?v?(\d+(?:\.\d+)?)/i,
+                
+                // Hotfix releases: "hotfix 1.2.3", "patch-1.2.3"
+                /(?:hotfix|hf|patch|fix)[-\s]v?(\d+\.\d+(?:\.\d+)?)/i,
+                
+                // Model versions (ML/AI): "model v1", "model-1.2"
+                /(?:model|m)[-\s]v?(\d+(?:\.\d+)?)/i,
+                
+                // Release channels: "1.2.3-stable", "1.2.3-canary"
+                /v?(\d+\.\d+\.\d+)[-](stable|canary|nightly|edge|beta|alpha|rc)/i,
+                
+                // Standalone version numbers with context
+                /(?:^|\s)v?(\d+\.\d+\.\d+)(?:\s|$)/i
+            ];
+            
+            for (const pattern of patterns) {
+                const match = combinedText.match(pattern);
+                if (match && match[1]) {
+                    detectedVersion = match[1];
+                    break;
+                }
+            }
 
             if (detectedVersion) {
                 // Save previous version group if exists
@@ -652,14 +751,12 @@ export class ChangelogService {
         debugLog('Calling AI API for changelog generation...');
 
         try {
-            // Use the diff parameter to pass our prompt since generateCommitMessage
-            // is designed for commit messages, we're repurposing it for changelog generation
-            const changelog = await generateCommitMessage(
-                apiConfig,
-                prompt, // Using diff parameter for our changelog prompt
-                '', // No custom context needed
-                this.workspaceRoot // Pass repository root
-            );
+            // Call AI API with raw changelog prompt using the centralized API infrastructure
+            // This uses generateWithRawPrompt to avoid commit-specific prompt formatting
+            // while still benefiting from circuit breaker, error handling, and telemetry
+            // Skip generic validation since we have our own comprehensive token estimation
+            const { generateWithRawPrompt } = await import('../api/index.js');
+            const changelog = await generateWithRawPrompt(apiConfig, prompt, 'changelog', true);
 
             return this.formatChangelog(changelog, existingChangelog);
         } catch (error) {
@@ -850,6 +947,7 @@ Generate the changelog now:`;
 
         return changelog;
     }
+
 
     /**
      * Save changelog to CHANGELOG.md

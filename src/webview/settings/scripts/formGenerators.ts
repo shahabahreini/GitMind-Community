@@ -79,7 +79,22 @@ export function generateFormInitialization(): string {
     `try {`,
     `  const learnFromCommitHistoryIncludeAuthorInfoEl = document.getElementById('learnFromCommitHistoryIncludeAuthorInfo');`,
     `  if (learnFromCommitHistoryIncludeAuthorInfoEl) learnFromCommitHistoryIncludeAuthorInfoEl.checked = currentSettings.pro?.learnFromCommitHistory?.includeAuthorInfo ?? true;`,
-    `} catch (e) { console.warn('Failed to set learnFromCommitHistoryIncludeAuthorInfo:', e); }`
+    `} catch (e) { console.warn('Failed to set learnFromCommitHistoryIncludeAuthorInfo:', e); }`,
+
+    `try {`,
+    `  const changelogEnabledEl = document.getElementById('changelogEnabled');`,
+    `  if (changelogEnabledEl) changelogEnabledEl.checked = currentSettings.pro?.changelog?.enabled ?? true;`,
+    `} catch (e) { console.warn('Failed to set changelogEnabled:', e); }`,
+
+    `try {`,
+    `  const changelogMaxCommitsEl = document.getElementById('changelogMaxCommits');`,
+    `  if (changelogMaxCommitsEl) changelogMaxCommitsEl.value = currentSettings.pro?.changelog?.maxCommits ?? 100;`,
+    `} catch (e) { console.warn('Failed to set changelogMaxCommits:', e); }`,
+
+    `try {`,
+    `  const changelogGroupByVersionEl = document.getElementById('changelogGroupByVersion');`,
+    `  if (changelogGroupByVersionEl) changelogGroupByVersionEl.checked = currentSettings.pro?.changelog?.groupByVersion ?? true;`,
+    `} catch (e) { console.warn('Failed to set changelogGroupByVersion:', e); }`
   ];
 
   Object.entries(PROVIDER_DEFAULTS).forEach(([provider, _defaults]) => {
@@ -160,6 +175,11 @@ export function generateSettingsCollection(): string {
         enabled: (window.currentFormValues || currentFormValues).learnFromCommitHistoryEnabled,
         maxCommits: (window.currentFormValues || currentFormValues).learnFromCommitHistoryMaxCommits,
         includeAuthorInfo: (window.currentFormValues || currentFormValues).learnFromCommitHistoryIncludeAuthorInfo
+      },
+      changelog: {
+        enabled: (window.currentFormValues || currentFormValues).changelogEnabled,
+        maxCommits: (window.currentFormValues || currentFormValues).changelogMaxCommits,
+        groupByVersion: (window.currentFormValues || currentFormValues).changelogGroupByVersion
       }
     },`,
     `subscription: {

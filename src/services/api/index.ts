@@ -943,6 +943,474 @@ async function validateAndUpdateConfig(config: ApiConfig): Promise<ApiConfig | n
     return config;
 }
 
+/**
+ * Generate content using a raw prompt without commit-specific formatting
+ * This is useful for features like changelog generation that need custom prompts
+ * @param config API configuration
+ * @param prompt The raw prompt to send to the AI
+ * @param featureName Name of the feature for telemetry (e.g., 'changelog', 'analysis')
+ * @param skipValidation Skip prompt length validation (use when feature has its own validation)
+ * @returns Generated content from the AI
+ */
+export async function generateWithRawPrompt(
+    config: ApiConfig,
+    prompt: string,
+    featureName: string = 'raw_prompt',
+    skipValidation: boolean = false
+): Promise<string> {
+    const startTime = Date.now();
+
+    try {
+        // Set up request tracking
+        currentRequestController = new AbortController();
+        isCurrentlyActive = true;
+
+        // Track the start of generation
+        telemetryService.trackDailyActiveUser();
+
+        // First validate and potentially update the configuration
+        const validatedConfig = await validateAndUpdateConfig(config);
+        if (!validatedConfig) {
+            debugLog("No valid configuration available");
+            throw new Error(`${getProviderName(config.type)} configuration is invalid. Please check your API key and settings.`);
+        }
+
+        // Show model info if enabled
+        showModelInfo(validatedConfig);
+
+        // Check circuit breaker before making request
+        const provider = getProviderName(config.type);
+        if (!checkCircuitBreaker(provider)) {
+            throw new Error(`${provider} is temporarily unavailable due to recent failures. Please try again in a minute.`);
+        }
+
+        // Validate prompt length for the specific provider (unless validation is skipped)
+        if (!skipValidation) {
+            const validation = validatePromptLength(prompt, config.type.toLowerCase());
+            if (!validation.valid) {
+                debugLog(`[${featureName}] Prompt validation failed: ${validation.recommendation}`);
+                throw new Error(`Prompt too long for ${config.type}: ${validation.recommendation}`);
+            }
+            debugLog(`[${featureName}] Prompt validation passed: ${validation.length} chars`);
+        } else {
+            debugLog(`[${featureName}] Skipping prompt validation (feature has custom validation)`);
+        }
+
+        debugLog(`[${featureName}] Calling ${provider} with prompt length: ${prompt.length}`);
+
+        // Generate the content using the raw prompt
+        const result = await generateWithRawPromptInternal(validatedConfig, prompt);
+
+        const duration = Date.now() - startTime;
+        telemetryService.trackCommitGeneration(config.type, true); // Reuse existing telemetry
+
+        return result;
+    } catch (unknownError) {
+        const duration = Date.now() - startTime;
+        const error = unknownError instanceof Error ? unknownError : new Error(String(unknownError));
+        debugLog(`Generate ${featureName} Error:`, error);
+
+        // Track the error
+        telemetryService.trackExtensionError(
+            `${featureName}_error`,
+            error.message,
+            `provider:${config.type}`
+        );
+        telemetryService.trackCommitGeneration(config.type, false);
+
+        // Handle cancellation specifically
+        if (error.message === 'Request was cancelled') {
+            debugLog("Request was cancelled by user");
+            return "";
+        }
+
+        // Handle API errors with context
+        const errorContext = { diffSize: prompt.length };
+        await handleApiError(error, config, errorContext);
+
+        // Rethrow to be handled upstream
+        throw error;
+    } finally {
+        // Clean up request tracking
+        currentRequestController = null;
+        isCurrentlyActive = false;
+    }
+}
+
+async function generateWithRawPromptInternal(
+    config: ApiConfig,
+    prompt: string
+): Promise<string> {
+    const providerConfig = PROVIDER_CONFIGS[config.type];
+    if (!providerConfig) {
+        throw new Error(`Unsupported API provider: ${config.type}`);
+    }
+
+    // Handle special cases
+    if (config.type === "ollama") {
+        return await handleOllamaRawPromptProvider(config as OllamaApiConfig, prompt);
+    }
+
+    if (config.type === "copilot") {
+        const copilotConfig = config as CopilotApiConfig;
+        if (!copilotConfig.model) {
+            await vscode.window.showErrorMessage(
+                "Please select a GitHub Copilot model in the settings."
+            );
+            await vscode.commands.executeCommand("gitmind.openSettings");
+            return "";
+        }
+        return await callCopilotRawPromptAPI(copilotConfig.model, prompt);
+    }
+
+    // Handle standard providers
+    return await handleStandardRawPromptProvider(config, providerConfig, prompt);
+}
+
+async function handleOllamaRawPromptProvider(
+    config: OllamaApiConfig,
+    prompt: string
+): Promise<string> {
+    if (!config.url) {
+        await vscode.window.showErrorMessage(
+            "Ollama URL not configured. Please check the extension settings."
+        );
+        await vscode.commands.executeCommand("gitmind.openSettings");
+        return "";
+    }
+    if (!config.model) {
+        await vscode.window.showErrorMessage(
+            "Ollama model not specified. Please select a model in the extension settings."
+        );
+        await vscode.commands.executeCommand("gitmind.openSettings");
+        return "";
+    }
+
+    const isOllamaAvailable = await checkOllamaAvailability(config.url);
+    if (!isOllamaAvailable) {
+        const instructions = getOllamaInstallInstructions();
+        await vscode.window.showErrorMessage("Ollama Connection Error", {
+            modal: true,
+            detail: instructions,
+        });
+        return "";
+    }
+
+    return await callOllamaRawPromptAPI(config.url, config.model, prompt);
+}
+
+async function handleStandardRawPromptProvider(
+    config: ApiConfig,
+    providerConfig: ProviderConfig,
+    prompt: string
+): Promise<string> {
+    const typedConfig = config as any;
+
+    // Check for API key if required
+    if (providerConfig.requiresApiKey && !typedConfig.apiKey) {
+        const apiKey = await promptForApiKey(providerConfig);
+        if (!apiKey) {
+            return "";
+        }
+        typedConfig.apiKey = apiKey;
+    }
+
+    // Check for model
+    if (!typedConfig.model) {
+        await vscode.window.showErrorMessage(
+            `Please select a ${providerConfig.displayName} model in the settings.`
+        );
+        await vscode.commands.executeCommand("gitmind.openSettings");
+        return "";
+    }
+
+    return await callProviderRawPromptAPI(
+        config.type,
+        typedConfig.apiKey || "",
+        typedConfig.model,
+        prompt
+    );
+}
+
+async function callProviderRawPromptAPI(
+    providerType: string,
+    apiKey: string,
+    model: string,
+    prompt: string
+): Promise<string> {
+    const requestManager = RequestManager.getInstance();
+    const controller = requestManager.getController();
+
+    switch (providerType) {
+        case 'gemini': {
+            const { GoogleGenerativeAI } = await import('@google/generative-ai');
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const generativeModel = genAI.getGenerativeModel({ model });
+            const result = await generativeModel.generateContent(prompt);
+            return result.response.text();
+        }
+        case 'openai': {
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [{ role: 'user', content: prompt }],
+                    temperature: 0.7
+                }),
+                signal: controller.signal
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`OpenAI API error: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
+            }
+            const data = await response.json();
+            return data.choices[0].message.content;
+        }
+        case 'anthropic': {
+            const response = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': apiKey,
+                    'anthropic-version': '2023-06-01'
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [{ role: 'user', content: prompt }],
+                    max_tokens: 4096
+                }),
+                signal: controller.signal
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`Anthropic API error: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
+            }
+            const data = await response.json();
+            return data.content[0].text;
+        }
+        case 'mistral': {
+            const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [{ role: 'user', content: prompt }]
+                }),
+                signal: controller.signal
+            });
+            if (!response.ok) {
+                throw new Error(`Mistral API error: ${response.status} ${response.statusText}`);
+            }
+            const data = await response.json();
+            return data.choices[0].message.content;
+        }
+        case 'cohere': {
+            const response = await fetch('https://api.cohere.ai/v1/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: model,
+                    prompt: prompt,
+                    max_tokens: 4096
+                }),
+                signal: controller.signal
+            });
+            if (!response.ok) {
+                throw new Error(`Cohere API error: ${response.status} ${response.statusText}`);
+            }
+            const data = await response.json();
+            return data.generations[0].text;
+        }
+        case 'together': {
+            const response = await fetch('https://api.together.xyz/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [{ role: 'user', content: prompt }]
+                }),
+                signal: controller.signal
+            });
+            if (!response.ok) {
+                throw new Error(`Together AI API error: ${response.status} ${response.statusText}`);
+            }
+            const data = await response.json();
+            return data.choices[0].message.content;
+        }
+        case 'openrouter': {
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`,
+                    'HTTP-Referer': 'https://github.com/gitmind',
+                    'X-Title': 'GitMind'
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [{ role: 'user', content: prompt }]
+                }),
+                signal: controller.signal
+            });
+            if (!response.ok) {
+                throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
+            }
+            const data = await response.json();
+            return data.choices[0].message.content;
+        }
+        case 'deepseek': {
+            const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [{ role: 'user', content: prompt }]
+                }),
+                signal: controller.signal
+            });
+            if (!response.ok) {
+                throw new Error(`DeepSeek API error: ${response.status} ${response.statusText}`);
+            }
+            const data = await response.json();
+            return data.choices[0].message.content;
+        }
+        case 'grok': {
+            const response = await fetch('https://api.x.ai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [{ role: 'user', content: prompt }]
+                }),
+                signal: controller.signal
+            });
+            if (!response.ok) {
+                throw new Error(`Grok API error: ${response.status} ${response.statusText}`);
+            }
+            const data = await response.json();
+            return data.choices[0].message.content;
+        }
+        case 'perplexity': {
+            const response = await fetch('https://api.perplexity.ai/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [{ role: 'user', content: prompt }]
+                }),
+                signal: controller.signal
+            });
+            if (!response.ok) {
+                throw new Error(`Perplexity API error: ${response.status} ${response.statusText}`);
+            }
+            const data = await response.json();
+            return data.choices[0].message.content;
+        }
+        case 'huggingface': {
+            const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    inputs: prompt,
+                    parameters: {
+                        max_new_tokens: 4096,
+                        temperature: 0.7
+                    }
+                }),
+                signal: controller.signal
+            });
+            if (!response.ok) {
+                throw new Error(`Hugging Face API error: ${response.status} ${response.statusText}`);
+            }
+            const data = await response.json();
+            return Array.isArray(data) ? data[0].generated_text : data.generated_text;
+        }
+        case 'custom': {
+            const customConfig = vscode.workspace.getConfiguration('gitmind').get('custom') as any;
+            const { callCustomAPI } = await import('./custom.js');
+            return await callCustomAPI(
+                customConfig.baseUrl,
+                customConfig.endpoint,
+                customConfig.authType,
+                apiKey,
+                customConfig.headerKey || '',
+                customConfig.requestFormat,
+                customConfig.responseFormat,
+                model,
+                prompt,
+                ''
+            );
+        }
+        default:
+            throw new Error(`Unsupported API provider: ${providerType}`);
+    }
+}
+
+async function callOllamaRawPromptAPI(url: string, model: string, prompt: string): Promise<string> {
+    const requestManager = RequestManager.getInstance();
+    const controller = requestManager.getController();
+
+    const response = await fetch(`${url}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            model: model,
+            prompt: prompt,
+            stream: false
+        }),
+        signal: controller.signal
+    });
+    if (!response.ok) {
+        throw new Error(`Ollama API error: ${response.status} ${response.statusText}`);
+    }
+    const data = await response.json();
+    return data.response;
+}
+
+async function callCopilotRawPromptAPI(model: string, prompt: string): Promise<string> {
+    const requestManager = RequestManager.getInstance();
+    const controller = requestManager.getController();
+
+    const copilotApi = await vscode.lm.selectChatModels({ family: model });
+    if (!copilotApi || copilotApi.length === 0) {
+        throw new Error('GitHub Copilot not available');
+    }
+    const messages = [vscode.LanguageModelChatMessage.User(prompt)];
+    const cancellationToken = new vscode.CancellationTokenSource();
+    controller.signal.addEventListener('abort', () => cancellationToken.cancel());
+    const response = await copilotApi[0].sendRequest(messages, {}, cancellationToken.token);
+    let result = '';
+    for await (const chunk of response.text) {
+        result += chunk;
+    }
+    return result;
+}
+
 export async function generateCommitHistoryAnalysis(
     config: ApiConfig,
     commitHistory: string,
@@ -1186,30 +1654,51 @@ async function callGeminiAnalysisAPI(apiKey: string, model: string, analysisProm
     debugLog('[CommitHistory] Gemini Analysis Prompt:');
     debugLog(analysisPrompt);
 
-    // Import Gemini API utilities
-    const { GoogleGenerativeAI } = await import("@google/generative-ai");
+    try {
+        // Import Gemini API utilities
+        const { GoogleGenerativeAI } = await import("@google/generative-ai");
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const generativeModel = genAI.getGenerativeModel({
-        model: model,
-        generationConfig: {
-            temperature: 0.3,
-            topK: 40,
-            topP: 0.9,
-            // No maxOutputTokens limit for full commit analysis reports
-        },
-    });
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const generativeModel = genAI.getGenerativeModel({
+            model: model,
+            generationConfig: {
+                temperature: 0.3,
+                topK: 40,
+                topP: 0.9,
+                // No maxOutputTokens limit for full commit analysis reports
+            },
+        });
 
-    const result = await generativeModel.generateContent(analysisPrompt);
-    const responseText = result.response.text();
+        const result = await generativeModel.generateContent(analysisPrompt);
+        const responseText = result.response.text();
 
-    debugLog('[CommitHistory] ==================== GEMINI API RESPONSE ====================');
-    debugLog(`[CommitHistory] Response length: ${responseText.length} characters`);
-    debugLog('[CommitHistory] Response content:');
-    debugLog(responseText);
-    debugLog('[CommitHistory] ===============================================================');
+        debugLog('[CommitHistory] ==================== GEMINI API RESPONSE ====================');
+        debugLog(`[CommitHistory] Response length: ${responseText.length} characters`);
+        debugLog('[CommitHistory] Response content:');
+        debugLog(responseText);
+        debugLog('[CommitHistory] ===============================================================');
 
-    return responseText;
+        return responseText;
+    } catch (error) {
+        debugLog('[CommitHistory] Error in callGeminiAnalysisAPI:', error);
+
+        // Provide more helpful error messages
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        
+        if (errorMessage.includes("404") || errorMessage.includes("not found")) {
+            throw new Error(`Model '${model}' is not found or not supported for this API version. Please check the model name in settings or try a different Gemini model like 'gemini-2.0-flash'.`);
+        } else if (errorMessage.includes("permission") || errorMessage.includes("access") || errorMessage.includes("403")) {
+            throw new Error(`Access denied to model '${model}'. Please verify your API key has access to this model.`);
+        } else if (errorMessage.includes("401") || errorMessage.includes("unauthorized") || errorMessage.includes("API key")) {
+            throw new Error(`Invalid or missing Gemini API key. Please check your API key in settings.`);
+        } else if (errorMessage.includes("429") || errorMessage.includes("rate limit")) {
+            throw new Error(`Gemini API rate limit exceeded. Please wait a few minutes and try again.`);
+        } else if (errorMessage.includes("500") || errorMessage.includes("502") || errorMessage.includes("503") || errorMessage.includes("504")) {
+            throw new Error(`Gemini API service error. The service may be temporarily unavailable. Please try again later.`);
+        } else {
+            throw new Error(`Failed to analyze commit history with Gemini: ${errorMessage}`);
+        }
+    }
 }
 
 async function callOpenAIAnalysisAPI(apiKey: string, model: string, analysisPrompt: string): Promise<string> {

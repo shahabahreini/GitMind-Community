@@ -17,10 +17,8 @@ export type CommitStyle =
 
 // Model types
 export type GeminiModel =
-    | "gemini-2.5-pro" | "gemini-2.5-flash" | "gemini-2.5-flash-preview-05-20"
-    | "gemini-2.0-flash" | "gemini-2.0-flash-lite"
-    | "gemini-1.5-flash" | "gemini-1.5-flash-8b" | "gemini-1.5-pro"
-    | "gemini-2.5-flash-preview-04-17" | "gemini-2.5-pro-exp-03-25";
+    | "gemini-2.5-pro" | "gemini-2.5-flash" | "gemini-2.5-flash-preview" | "gemini-2.5-flash-lite" | "gemini-2.5-flash-lite-preview"
+    | "gemini-2.0-flash" | "gemini-2.0-flash-lite";
 
 export type AnthropicModel =
     | "claude-opus-4" | "claude-sonnet-4" | "claude-sonnet-3.7"

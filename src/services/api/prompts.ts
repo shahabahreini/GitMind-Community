@@ -1380,14 +1380,24 @@ ${processedCommitHistory}
 export function validatePromptLength(prompt: string, provider: string): { valid: boolean; length: number; recommendation?: string } {
   const length = prompt.length;
 
-  // Provider-specific limits (conservative estimates)
+  // Provider-specific limits based on actual model capabilities
+  // Using character counts as rough approximation (1 token ≈ 4 characters)
   const limits = {
-    'cohere': 3500,
-    'openai': 12000,
-    'anthropic': 15000,
-    'gemini': 8000,
-    'mistral': 6000,
-    'default': 3500
+    'cohere': 100000,        // Command models: ~128k tokens
+    'openai': 500000,        // GPT-4: 128k tokens, GPT-4-turbo: 128k tokens
+    'anthropic': 800000,     // Claude 3: 200k tokens
+    'gemini': 4000000,       // Gemini 1.5: 1M tokens (~4M characters)
+    'mistral': 128000,       // Mistral Large: 32k tokens
+    'deepseek': 256000,      // DeepSeek: 64k tokens
+    'grok': 512000,          // Grok: 128k tokens
+    'perplexity': 128000,    // Perplexity: 32k tokens
+    'together': 128000,      // Together AI: varies by model, ~32k typical
+    'openrouter': 512000,    // OpenRouter: varies by model, using conservative estimate
+    'huggingface': 16000,    // HuggingFace: varies widely, conservative estimate
+    'ollama': 128000,        // Ollama: depends on model, ~32k typical
+    'copilot': 512000,       // GitHub Copilot: GPT-4 based, 128k tokens
+    'custom': 128000,        // Custom API: conservative default
+    'default': 128000        // Default conservative limit
   };
 
   const limit = limits[provider as keyof typeof limits] || limits.default;

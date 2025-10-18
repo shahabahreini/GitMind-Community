@@ -48,14 +48,13 @@ export class ProviderConfig {
                     loadButtonId: 'loadGeminiModels',
                     loadCommand: 'gitmind.loadGeminiModels',
                     options: [
-                        { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro (Latest Thinking Model)', group: 'Latest Models (Recommended)' },
-                        { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash (Efficient Thinking)', group: 'Latest Models (Recommended)' },
-                        { value: 'gemini-2.5-flash-preview-05-20', label: 'Gemini 2.5 Flash Preview (05/20)', group: 'Latest Models (Recommended)' },
-                        { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (Multimodal)', group: 'Gemini 2.0 Series' },
-                        { value: 'gemini-2.0-flash-lite', label: 'Gemini 2.0 Flash-Lite', group: 'Gemini 2.0 Series' },
-                        { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', group: 'Gemini 1.5 Series' },
-                        { value: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash-8B', group: 'Gemini 1.5 Series' },
-                        { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', group: 'Gemini 1.5 Series' }
+                        { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', group: 'Gemini 2.5 Series' },
+                        { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', group: 'Gemini 2.5 Series' },
+                        { value: 'gemini-2.5-flash-preview', label: 'Gemini 2.5 Flash Preview', group: 'Gemini 2.5 Series' },
+                        { value: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite', group: 'Gemini 2.5 Series' },
+                        { value: 'gemini-2.5-flash-lite-preview', label: 'Gemini 2.5 Flash-Lite Preview', group: 'Gemini 2.5 Series' },
+                        { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', group: 'Gemini 2.0 Series' },
+                        { value: 'gemini-2.0-flash-lite', label: 'Gemini 2.0 Flash-Lite', group: 'Gemini 2.0 Series' }
                     ]
                 }
             ]

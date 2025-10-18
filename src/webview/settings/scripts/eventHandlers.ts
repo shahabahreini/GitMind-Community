@@ -97,7 +97,10 @@ export function getEventHandlersScript(): string {
         commitLengthOptionsMaxLength: parseInt(document.getElementById('commitLengthOptionsMaxLength')?.value) || 72,
         learnFromCommitHistoryEnabled: document.getElementById('learnFromCommitHistoryEnabled')?.checked || true,
         learnFromCommitHistoryMaxCommits: parseInt(document.getElementById('learnFromCommitHistoryMaxCommits')?.value) || 50,
-        learnFromCommitHistoryIncludeAuthorInfo: document.getElementById('learnFromCommitHistoryIncludeAuthorInfo')?.checked || true
+        learnFromCommitHistoryIncludeAuthorInfo: document.getElementById('learnFromCommitHistoryIncludeAuthorInfo')?.checked || true,
+        changelogEnabled: document.getElementById('changelogEnabled')?.checked || true,
+        changelogMaxCommits: parseInt(document.getElementById('changelogMaxCommits')?.value) || 100,
+        changelogGroupByVersion: document.getElementById('changelogGroupByVersion')?.checked || true
       };
 
       console.log('Form values collected - telemetryEnabled:', currentFormValues.telemetryEnabled);

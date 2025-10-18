@@ -96,7 +96,8 @@ export class APIErrorHandler {
             }
         }
 
-        return this.handleAPIError(error, provider, context);
+        // No pattern matched - return default error info
+        return this.handleGenericError(error, errorInfo, provider);
     }
 
     private static matchesPattern(message: string, patterns: string[]): boolean {
@@ -222,6 +223,39 @@ export class APIErrorHandler {
                 "Review the debug logs for more details",
                 "Verify your API key and permissions",
                 "Consider trying a different provider"
+            ];
+        }
+
+        return errorInfo;
+    }
+
+    private static handleGenericError(error: Error, errorInfo: ErrorInfo, provider: string): ErrorInfo {
+        const message = error.message.toLowerCase();
+
+        // Check for specific error patterns that weren't caught by main patterns
+        if (message.includes("404") || message.includes("not found")) {
+            errorInfo.userMessage = `${provider} resource not found.`;
+            errorInfo.suggestions = [
+                "The requested model or endpoint may not exist",
+                "Check if the model name is correct in settings",
+                "Verify you have access to this model",
+                "Try selecting a different model from the available options"
+            ];
+        } else if (message.includes("500") || message.includes("502") || message.includes("503") || message.includes("504")) {
+            errorInfo.userMessage = `${provider} service error.`;
+            errorInfo.suggestions = [
+                "The service is experiencing issues",
+                "Try again in a few minutes",
+                "Check the provider's status page",
+                "Consider using a different provider temporarily"
+            ];
+        } else {
+            errorInfo.userMessage = `${provider} API error: ${error.message}`;
+            errorInfo.suggestions = [
+                "Check your configuration and API key",
+                "Review the debug logs for more details",
+                "Verify your internet connection",
+                "Try again or consider using a different provider"
             ];
         }
 
