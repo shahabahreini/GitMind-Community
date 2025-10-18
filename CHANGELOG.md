@@ -1,5 +1,27 @@
 # Changelog
 
+## v4.3.0 - 2025-10-18
+
+fix(ui): remove cancel button from diagnostics info modal
+
+- Removed the cancel button from the diagnostics information modal
+- Streamlines user experience by removing unnecessary action option
+- Prevents unintended actions and reduces potential user confusion
+
+
+feat(changelog): add AI-powered changelog generation (Pro)
+
+- Implemented AI-powered changelog generation from Git history
+- Added settings for max commits, grouping by version, and enabling/disabling
+- Requires GitMind Pro subscription to unlock the feature
+
+
+feat(changelog): add AI-powered changelog generation (Pro)
+
+- Implemented changelog generation from git history using AI analysis
+- Added settings for max commits, grouping by version, and enabling/disabling
+- Requires GitMind Pro subscription to unlock the feature
+
 ## v4.2.3 - 2025-10-17
 
 ### Fixed

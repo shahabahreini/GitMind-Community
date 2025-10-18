@@ -133,7 +133,46 @@ Advanced feature that learns from repository commit history:
 - Uses larger timeouts (3-8 minutes) for API calls
 - Configurable commit count and author info inclusion
 
-#### 5. Large Diff Processing (Pro)
+#### 5. Changelog Generation (Pro)
+
+Professional changelog generation from git history with intelligent version detection and policy awareness:
+- **ChangelogService** (`src/services/changelog/ChangelogService.ts`) - Core service with 3-tier version detection
+- **Version Detection Strategy:**
+  1. **Git Tags** (Primary): Detects semantic version tags (v1.2.3, 1.2.3, etc.)
+  2. **Commit Messages** (Secondary): Parses version bumps from commit messages (e.g., "chore: bump version to 4.3.0")
+  3. **package.json** (Enhanced): Reads package.json at each commit to detect version changes
+  4. **Fallback**: Creates "Unreleased" section if no versions detected
+- **Changelog Policy Awareness:**
+  - **Structure Analysis**: Analyzes existing CHANGELOG.md to extract format rules
+  - **Format Preservation**: Detects and matches version format (v1.2.3 vs 1.2.3), bullet style (-, *, +), date format, emoji usage
+  - **Category Detection**: Identifies existing categories and custom categories unique to the project
+  - **Exact Matching**: AI prompt dynamically adapts to match existing changelog's style, tone, and structure exactly
+  - **No Format Drift**: Prevents introduction of new formatting that doesn't match established conventions
+- **Industry-Standard Output:**
+  - Follows Keep a Changelog specification by default
+  - Categories: Added, Changed, Deprecated, Removed, Fixed, Security, Technical (or matches existing)
+  - Professional tone, NO emojis (unless existing changelog uses them)
+  - Factual and concise with technical details
+- **User Guidance:**
+  - Interactive tips modal before generation with best practices
+  - Version detection strategies explained
+  - Changelog policy awareness highlighted
+  - "Learn More" option to view CHANGELOG_FEATURE_GUIDE.md
+- **Multi-Language Support:**
+  - JavaScript/TypeScript: package.json version detection
+  - Python/Go/Other: Git tags and commit message analysis
+  - DevOps/IaC: Universal commit message detection
+  - Works for any project type with intelligent fallbacks
+- **Commands:**
+  - `gitmind.generateChangelog` - Interactive with 3 modes (create, update, preview)
+  - `gitmind.updateChangelog` - Quick update command
+- **Configuration:**
+  - `gitmind.pro.changelog.enabled` (default: true)
+  - `gitmind.pro.changelog.maxCommits` (default: 100, range: 10-500)
+  - `gitmind.pro.changelog.groupByVersion` (default: true)
+- Uses 8-minute timeout for comprehensive changelog generation
+
+#### 6. Large Diff Processing (Pro)
 
 Handles repositories with massive diffs via adaptive chunking:
 - **DiffProcessor** (`src/services/diffProcessor.ts`) - Splits large diffs into manageable chunks
@@ -148,7 +187,7 @@ Handles repositories with massive diffs via adaptive chunking:
 - `validatePromptLength()` - Provider-specific token validation
 - `mergeChunkResults()` - Combines chunk analyses into final message
 
-#### 6. Telemetry System
+#### 7. Telemetry System
 
 Anonymous usage analytics via Azure Application Insights:
 - **TelemetryService** (`src/services/telemetry/telemetryService.ts`)
