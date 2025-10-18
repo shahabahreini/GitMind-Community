@@ -1,5 +1,21 @@
 # Changelog
 
+## v4.2.3 - 2025-10-17
+
+### Fixed
+
+- **Diagnostics UI Improvement**: Removed cancel button from diagnostics info modal
+  - **Simplified User Flow**: Eliminated the 'Cancel' button from diagnostics information modal to streamline user experience
+  - **Reduced Confusion**: Removed unnecessary action option since the only logical step is to proceed
+  - **Cleaner Interface**: Enhanced modal clarity by focusing on the primary action (proceed/close)
+  - **Prevented Unintended Actions**: Eliminated potential confusion or accidental cancellation during diagnostics review
+
+### Technical
+
+- Updated DiagnosticsWebview component to remove cancel button from modal UI
+- Streamlined modal HTML template for better user experience
+- Enhanced modal button layout for improved clarity
+
 ## v4.2.2 - 2025-08-31
 
 ### Enhanced
