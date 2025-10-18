@@ -19,6 +19,57 @@ Generate commits following Angular, Conventional Commits, Linux Kernel, jQuery, 
 Adaptive chunking processes massive diffs without hitting token limits. Tested with 10MB+ repositories.
 
 ---
+## Screenshots
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="50%">
+        <img src="images/s-14.png" alt="GitMind AI Commit Generation" width="250"/>
+        <br/>
+        <em>Advanced Settings Panel (Pro Users)</em>
+      </td>
+      <td align="center" width="50%">
+        <img src="images/s-15.png" alt="Git Integration" width="250"/>
+        <br/>
+        <em>Professional Commit Styles</em>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" width="50%">
+        <img src="images/s-12.png" alt="Settings Configuration" width="250"/>
+        <br/>
+        <em>Lifetime Pro Subscription</em>
+      </td>
+      <td align="center" width="50%">
+        <img src="images/s-11.png" alt="API Keys Encryption Feature" width="250"/>
+        <br/>
+        <em>API Key Encryption (Pro Users)</em>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" width="50%">
+        <img src="images/s-13.png" alt="Multi-Provider Support" width="250"/>
+        <br/>
+        <em>Commit History Analysis (Pro Users)</em>
+      </td>
+      <td align="center" width="50%">
+        <img src="images/s-16.png" alt="Model Selection" width="250"/>
+        <br/>
+        <em>Short/Verbose Message Style, Customize Prompt, Token Calculator</em>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" colspan="2">
+        <img src="images/s-17.png" alt="Diagnostics Dashboard" width="400"/>
+        <br/>
+        <em>UI Settings with 13 AI Provider Support</em>
+      </td>
+    </tr>
+  </table>
+</div>
+
+---
 
 ## Installation
 
@@ -42,6 +93,13 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 | **DeepSeek** | Advanced reasoning, cost-effective | 50 RPM | 2 min |
 | **OpenAI** | Industry standard, multimodal | No | 2 min |
 | **Anthropic** | Superior reasoning, long context | No | 2 min |
+| **Grok** | Real-time information, X.AI models | No | 2 min |
+| **Perplexity** | Web search capabilities, real-time data | No | 2 min |
+| **Mistral** | European AI, multilingual support | No | 2 min |
+| **Cohere** | Enterprise-grade, multilingual | Trial | 2 min |
+| **Together AI** | Open-source models, cost-effective | Trial | 2 min |
+| **OpenRouter** | Multi-model access, unified API | Trial | 2 min |
+| **Hugging Face** | Custom models, research access | Trial | 2 min |
 
 ### 2. Configure
 
@@ -111,10 +169,10 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 ### Core (Free)
 
 **Multi-Provider AI**
-Access 13 providers with unified configuration. Switch providers instantly.
+Access 13 providers with unified configuration: OpenAI, Anthropic, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot. Switch providers instantly.
 
-**Conventional Commits**
-Automatic type detection (`feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`), scope extraction, breaking change identification.
+**Basic Commit Style**
+Simple, straightforward commit messages without prefixes or conventions.
 
 **Smart Diff Analysis**
 Automatic staging detection, binary file handling, merge conflict awareness.
@@ -128,55 +186,64 @@ Token estimation, provider/model summary, request preview.
 ### Pro Features
 
 **Professional Commit Styles**
-11 industry-standard formats: Angular, Ember.js, EmojiGit, Gitmoji, Semantic Release, Commitizen, Karma, Linux Kernel, jQuery, plus Basic and Conventional.
+10 industry-standard formats:
+- **Conventional Commits**: Semantic versioning support with types and scopes
+- **Angular**: Enterprise-grade with strict conventions
+- **Ember.js**: Tag-based semantic categorization
+- **EmojiGit**: Visual semantic commits with custom emojis
+- **Gitmoji**: Official gitmoji.dev specification
+- **Semantic Release**: Automated release-optimized commits
+- **Commitizen**: Interactive guided commits with validation
+- **Karma (Google)**: Google's strict enterprise convention
+- **Linux Kernel**: Traditional kernel development convention
+- **jQuery**: JavaScript project convention with issue tracking
 
 **Changelog Generation**
 AI-powered changelog from git history with:
 - 3-tier version detection (git tags, commit messages, package.json)
 - Existing changelog policy awareness (format, categories, emoji usage preserved)
 - Keep a Changelog specification compliance
-- Token management for 1000+ commits
-- Multi-language project support
+- Configurable commit analysis (10-500 commits, default 100)
+- Group by version tags option
+- Create new, update existing, or preview modes
 
 **Commit History Analysis**
-Learn from repository patterns. Analyzes past commits to match your project's conventions and style.
+Learn from repository patterns:
+- Analyzes 10-500 past commits (default 50)
+- Optional author and date information
+- AI-powered pattern recognition
+- Markdown report generation
+- Configurable analysis depth
 
 **Large Diff Processing**
 Token-aware adaptive chunking with:
+- Hunk-aware intelligent splitting
 - Automatic split/merge for massive diffs
-- Configurable concurrency
-- Exponential backoff retry logic
-- Progress reporting
+- Configurable concurrency (1-8 workers, default 3)
+- Retry logic with exponential backoff (0-5 retries, default 2)
+- Retryable error detection (rate limits, timeouts, network errors)
+- Progress reporting with real-time updates
 
 **API Key Encryption**
-Secure storage using VS Code SecretStorage API. Keys encrypted at rest.
+Secure storage using VS Code SecretStorage API:
+- Keys encrypted at rest
+- Inaccessible to other extensions
+- Automatic migration from plaintext
+- Pro-only feature
 
 **Advanced Customization**
 - Custom commit body line limits (3-15 lines)
-- Custom summary length limits (50-100 chars)
+- Custom summary length limits (50-100 characters)
 - Save/reuse custom prompts
-- Gitmoji support with placement control
+- Gitmoji support with placement control (summary, body, or both)
+- Custom emoji mappings for commit types
 - Custom API provider endpoints
 
 **Multi-Device License**
-Use across multiple development machines.
+Use across multiple development machines with subscription-based access.
 
 ---
 
-## Screenshots
-
-<div align="center">
-  <img src="images/s-17.png" alt="Settings UI with 13 AI Providers" width="500"/>
-  <br/><em>Settings UI with 13 AI Provider Support</em>
-  <br/><br/>
-  <img src="images/s-14.png" alt="Advanced Settings" width="400"/>
-  <br/><em>Advanced Settings Panel (Pro)</em>
-  <br/><br/>
-  <img src="images/s-15.png" alt="Professional Commit Styles" width="400"/>
-  <br/><em>Professional Commit Styles</em>
-</div>
-
----
 
 ## Configuration
 
@@ -215,7 +282,6 @@ GitMind collects anonymous usage data (provider statistics, error reports, usage
 ## Requirements
 
 - Visual Studio Code ^1.100.0
-- Git repository (initialized)
 - API key from chosen provider OR Ollama for local deployment
 
 ---
@@ -223,7 +289,6 @@ GitMind collects anonymous usage data (provider statistics, error reports, usage
 ## Support
 
 - Report issues: [GitHub Issues](https://github.com/shahabahreini/AI-Commit-Assistant/issues)
-- Email: shahab.ahreini@gmail.com
 
 ---
 
