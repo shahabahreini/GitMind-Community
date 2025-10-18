@@ -2,23 +2,30 @@
 
 ### New Features
 
--   Implemented AI-powered changelog generation from Git history.
--   Added `ChangelogService` for version detection from Git tags, commit messages, and `package.json`.
--   Implemented changelog structure analysis to preserve existing formatting and categories.
--   Enhanced AI prompt with policy-aware instructions for exact style matching.
--   Included user guidance with a tips modal and feature guide integration.
--   Supported multi-language projects with intelligent version detection fallbacks.
--   Configured settings for maximum commit analysis, grouping by version, and feature toggling.
+-   **AI-Powered Changelog Generation (Pro)**: Introduced AI-powered changelog generation from Git commit history.
+    -   **Policy-Aware Generation**: Implemented changelog structure analysis to preserve existing formatting, categories, and style.
+    -   **Intelligent Version Detection**: Added automatic version detection from git tags, commit messages, and `package.json`.
+    -   **User Configuration**: Included settings to configure the maximum number of commits for analysis and to group changes by version.
+-   **Git History Statistics Preview**: Added a "Preview Stats" feature for Git history analysis.
+    -   **Token Usage Estimation**: Enabled users to estimate token usage and assess data quality before running AI-powered features.
+    -   **Informed Analysis**: Provided insights into repository statistics to help guide the analysis process.
 
-### Breaking Changes
+### Fixed
 
--   AI-powered changelog generation now requires a GitMind Pro subscription to unlock.
+-   **Diagnostics Modal Improvement**: Removed the cancel button from the diagnostics information modal.
+    -   **Simplified User Flow**: Streamlined the user experience by removing an unnecessary action.
+    -   **Reduced User Confusion**: Prevented potential confusion by focusing the modal on its primary informational purpose.
 
 ### Technical
 
--   Added comprehensive test coverage for core utilities and new AI features, including 35 tests for `ChangelogService`, 35 for `DiffProcessor`, 45 for `TokenCounter` utility, and over 25 new tests for `ResponseProcessor`.
--   Achieved 70%+ overall test coverage, with critical paths at 100%, reducing regression risk.
--   Resolved compilation issues and type errors.
+-   **Expanded Test Coverage**: Added comprehensive test suites for new features to improve stability and reduce regression risk.
+    -   **New Test Suites**: Created dedicated test files including `changelogService.test.ts`, `diffProcessor.test.ts`, and `tokenCounter.test.ts`.
+    -   **Increased Coverage**: Achieved over 70% overall test coverage, with 100% coverage on critical paths.
+    -   **Extensive Testing**: Added over 140 new unit tests covering version detection, policy analysis, and processing edge cases.
+
+### Breaking Changes
+
+-   The AI-Powered Changelog Generation feature now requires a GitMind Pro subscription.
 
 ## v4.2.3 - 2025-10-17
 
