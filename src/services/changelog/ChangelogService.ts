@@ -358,12 +358,17 @@ export class ChangelogService {
                 );
             }
 
+            // Calculate commits per version to distribute evenly if maxCommits is set
+            const commitsPerVersion = maxCommits ? Math.ceil(maxCommits / tagsToProcess.length) : undefined;
+            
             for (let i = 0; i < tagsToProcess.length; i++) {
                 const [version, date] = tagsToProcess[i];
                 const nextVersion = i < tagsToProcess.length - 1 ? tagsToProcess[i + 1][0] : undefined;
 
                 try {
-                    const commits = await this.getGitLog(nextVersion, maxCommits);
+                    // Use distributed commit limit per version, or no limit if maxCommits not set
+                    const versionCommitLimit = commitsPerVersion;
+                    const commits = await this.getGitLog(nextVersion, versionCommitLimit);
                     if (commits.length > 0) {
                         versions.push({ version, date, commits });
                         debugLog(`Version ${version}: ${commits.length} commits`);
@@ -371,12 +376,11 @@ export class ChangelogService {
                 } catch (error) {
                     debugLog(`Failed to get commits for version ${version}:`, error);
                 }
-
-                if (maxCommits && versions.reduce((sum, v) => sum + v.commits.length, 0) >= maxCommits) {
-                    debugLog(`Reached maxCommits limit (${maxCommits}), stopping version processing`);
-                    break;
-                }
             }
+            
+            // Log total commits processed
+            const totalCommits = versions.reduce((sum, v) => sum + v.commits.length, 0);
+            debugLog(`Processed ${versions.length} versions with ${totalCommits} total commits`);
 
             if (versions.length > 0) {
                 debugLog(`Successfully grouped commits into ${versions.length} version(s)`);
@@ -775,12 +779,24 @@ export class ChangelogService {
         // Use adjusted groups
         versionGroups = adjustedGroups;
 
+        // Apply version ordering based on user preference
+        const vsConfig = vscode.workspace.getConfiguration('gitmind');
+        const versionOrder = vsConfig.get<string>('pro.changelog.versionOrder', 'newest-first');
+        
+        if (versionOrder === 'oldest-first') {
+            // Reverse the order to show oldest versions first
+            versionGroups = versionGroups.reverse();
+            debugLog('Version order set to oldest-first, reversing version groups');
+        } else {
+            debugLog('Version order set to newest-first (default)');
+        }
+
         // Prepare context for AI
         const commitSummary = this.prepareCommitSummary(versionGroups);
 
         // Generate changelog using AI
         const apiConfig = await getApiConfig();
-        const prompt = this.buildChangelogPrompt(commitSummary, existingChangelog, changelogPolicy);
+        const prompt = this.buildChangelogPrompt(commitSummary, existingChangelog, changelogPolicy, versionOrder);
 
         // Final token estimation for logging
         const finalEstimation = this.estimateChangelogTokens(commitSummary, existingChangelog, policyInstructions);
@@ -842,7 +858,8 @@ export class ChangelogService {
     private buildChangelogPrompt(
         commitSummary: string,
         existingChangelog: string | null,
-        policy: ReturnType<typeof this.analyzeChangelogStructure> | null
+        policy: ReturnType<typeof this.analyzeChangelogStructure> | null,
+        versionOrder: string = 'newest-first'
     ): string {
         // Build policy-aware instructions
         let policyInstructions = '';
@@ -967,7 +984,7 @@ ${existingChangelog ? `\n**EXISTING CHANGELOG FOR REFERENCE (MUST match this EXA
 - NO introductory text, explanations, or meta-commentary
 - NO placeholder text or template instructions like "[Version]" or "YYYY-MM-DD"
 - Entries must be concrete and based on actual commits
-- Generate entries in reverse chronological order (newest version first)
+- ${versionOrder === 'oldest-first' ? 'Generate entries in chronological order (oldest version first)' : 'Generate entries in reverse chronological order (newest version first)'}
 - Match the existing changelog's tone, style, and structure EXACTLY
 
 **CRITICAL: If you see "VERSION GROUP: v1.2.3" above, you MUST create a section with "## v1.2.3 - [date]" (or without 'v' if policy requires). Do NOT use generic placeholders like "## [Version] - 2025-10-18".**

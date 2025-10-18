@@ -397,6 +397,14 @@ export const proFeaturesModernCSS: string = `
     -moz-appearance: textfield;
 }
 
+/* Select dropdowns need more height to prevent text cutoff */
+.pro-feature-container select.input-field {
+    height: 34px;
+    padding: 7px 8px;
+    text-align: left;
+    line-height: 1.4;
+}
+
 /* Ensure spinner buttons are visible */
 .pro-feature-container .input-field::-webkit-outer-spin-button,
 .pro-feature-container .input-field::-webkit-inner-spin-button {

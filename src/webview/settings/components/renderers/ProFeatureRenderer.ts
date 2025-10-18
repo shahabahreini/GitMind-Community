@@ -293,7 +293,7 @@ export class ProFeatureRenderer extends BaseRenderer {
         
         <div class="commit-options-row">
             <div class="compact-setting input-setting">
-                <span>Maximum Commits to Analyze</span>
+                <span>Max Commits</span>
                 <input type="number" id="learnFromCommitHistoryMaxCommits" 
                     class="input-field" 
                     value="${learnFromCommitHistory.maxCommits}" 
@@ -301,12 +301,9 @@ export class ProFeatureRenderer extends BaseRenderer {
                     ${disabledState ? 'disabled' : ''} 
                     data-setting="pro.learnFromCommitHistory.maxCommits" />
             </div>
-        </div>
-        
-        <div class="commit-options-row">
             <div class="compact-setting toggle-setting">
                 <div class="setting-info">
-                    <div class="setting-label">Include Author Information</div>
+                    <div class="setting-label">Include Author Info</div>
                 </div>
                 <div class="switch-container ${disabledState ? 'disabled' : ''}">
                     <input class="switch-input" type="checkbox" id="learnFromCommitHistoryIncludeAuthorInfo" 
@@ -344,7 +341,9 @@ export class ProFeatureRenderer extends BaseRenderer {
     }
 
     private renderChangelogGenerationSection(): string {
-        const changelogConfig = this.settings.pro?.changelog || { enabled: true, maxCommits: 100, groupByVersion: true };
+        const changelogConfig = this.settings.pro?.changelog || { enabled: true, maxCommits: 100, groupByVersion: true, versionOrder: 'newest-first', maxVersions: 10 };
+        const versionOrder = (changelogConfig as any).versionOrder || 'newest-first';
+        const maxVersions = (changelogConfig as any).maxVersions || 10;
         const hasValidLicense = (this.settings.pro?.licenseKey || this.settings.pro?.orderId) && this.settings.pro?.validationStatus === 'valid';
         const disabledState = !hasValidLicense;
         const proRequiredMessage = !hasValidLicense ? '(Pro feature)' : '';
@@ -357,13 +356,22 @@ export class ProFeatureRenderer extends BaseRenderer {
 
         <div class="commit-options-row">
             <div class="compact-setting input-setting">
-                <span>Maximum Commits to Analyze</span>
+                <span>Max Commits</span>
                 <input type="number" id="changelogMaxCommits"
                     class="input-field"
                     value="${changelogConfig.maxCommits}"
                     min="10" max="2500" step="10"
                     ${disabledState ? 'disabled' : ''}
                     data-setting="pro.changelog.maxCommits" />
+            </div>
+            <div class="compact-setting input-setting">
+                <span>Max Versions</span>
+                <input type="number" id="changelogMaxVersions"
+                    class="input-field"
+                    value="${maxVersions}"
+                    min="1" max="25" step="1"
+                    ${disabledState ? 'disabled' : ''}
+                    data-setting="pro.changelog.maxVersions" />
             </div>
         </div>
 
@@ -381,6 +389,16 @@ export class ProFeatureRenderer extends BaseRenderer {
                         <div class="switch-slider"></div>
                     </div>
                 </div>
+            </div>
+            <div class="compact-setting select-setting">
+                <span>Version Order</span>
+                <select id="changelogVersionOrder" 
+                    class="input-field"
+                    ${disabledState ? 'disabled' : ''}
+                    data-setting="pro.changelog.versionOrder">
+                    <option value="newest-first" ${versionOrder === 'newest-first' ? 'selected' : ''}>Newest First</option>
+                    <option value="oldest-first" ${versionOrder === 'oldest-first' ? 'selected' : ''}>Oldest First</option>
+                </select>
             </div>
         </div>
 

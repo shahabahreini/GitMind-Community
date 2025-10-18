@@ -613,6 +613,13 @@
           "description": "Maximum number of versions to process at once (limits token usage)",
           "markdownDescription": "Maximum number of version tags to process in a single changelog generation. Lower values reduce token usage and improve AI accuracy. Recommended: 5-10 versions."
         },
+        "gitmind.pro.changelog.versionOrder": {
+          "type": "string",
+          "enum": ["newest-first", "oldest-first"],
+          "default": "newest-first",
+          "description": "Order of versions in generated changelog",
+          "markdownDescription": "**newest-first**: Latest versions appear at the top (recommended for CHANGELOG.md)\n\n**oldest-first**: Oldest versions appear at the top"
+        },
         "gitmind.commitStyle.gitmoji.enabled": {
           "type": "boolean",
           "default": false,
