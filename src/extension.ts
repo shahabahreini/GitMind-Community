@@ -32,6 +32,7 @@ import { SettingsMigrationService } from "./services/migration/SettingsMigration
 import { learnFromCommitHistory } from "./services/ai/learnFromCommitHistory";
 import { CommitStyleManager } from "./services/commitStyleManager";
 import { GitmojiService } from "./services/gitmoji/GitmojiService";
+import { generateChangelog, updateChangelog } from "./services/changelog/generateChangelog";
 
 // Constants
 const TIMEOUT_DURATION = 60000;
@@ -788,6 +789,8 @@ function registerCommands(context: vscode.ExtensionContext): vscode.Disposable[]
     vscode.commands.registerCommand("gitmind.checkApiSetup", handleApiSetupCheck),
     vscode.commands.registerCommand("gitmind.checkRateLimits", handleRateLimitsCheck),
     vscode.commands.registerCommand("gitmind.learnFromCommitHistory", learnFromCommitHistory),
+    vscode.commands.registerCommand("gitmind.generateChangelog", generateChangelog),
+    vscode.commands.registerCommand("gitmind.updateChangelog", updateChangelog),
 
     vscode.commands.registerCommand("gitmind.loadMistralModels", () =>
       handleLoadModels('mistral', fetchMistralModels)

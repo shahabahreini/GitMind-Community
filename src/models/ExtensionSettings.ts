@@ -111,6 +111,11 @@ export interface ExtensionSettings {
             maxCommits: number;  // Maximum number of commits to analyze
             includeAuthorInfo: boolean;  // Whether to include author info in the analysis
         };
+        changelog?: {
+            enabled: boolean;
+            maxCommits: number;  // Maximum number of commits to analyze for changelog
+            groupByVersion: boolean;  // Whether to group changelog entries by version tags
+        };
     };
     // Subscription Settings (Lemon Squeezy)
     subscription?: {

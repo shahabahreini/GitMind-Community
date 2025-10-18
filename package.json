@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: Professional Commit Assistant",
   "description": "🚀 Professional AI-powered commit message generation for Visual Studio Code. Leverage 13 different AI providers including OpenAI GPT-4o, Claude-3-5-sonnet, Gemini-2.5-flash, DeepSeek-reasoner, Grok-3, Perplexity-sonar, and 50+ models to create consistent, conventional commit messages",
-  "version": "4.2.3",
+  "version": "4.3.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -595,6 +595,24 @@
           "default": true,
           "description": "Include author and date information when analyzing commit history"
         },
+        "gitmind.pro.changelog.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable changelog generation from git history (Pro feature)",
+          "markdownDescription": "**Pro Feature**: Generate professional changelogs from git commit history. AI analyzes commits and creates industry-standard changelog documentation."
+        },
+        "gitmind.pro.changelog.maxCommits": {
+          "type": "number",
+          "default": 100,
+          "minimum": 10,
+          "maximum": 500,
+          "description": "Maximum number of commits to analyze when generating changelog"
+        },
+        "gitmind.pro.changelog.groupByVersion": {
+          "type": "boolean",
+          "default": true,
+          "description": "Group changelog entries by version tags"
+        },
         "gitmind.commitStyle.gitmoji.enabled": {
           "type": "boolean",
           "default": false,
@@ -720,6 +738,16 @@
       {
         "command": "gitmind.learnFromCommitHistory",
         "title": "Learn from Commit History (Pro)",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.generateChangelog",
+        "title": "Generate Changelog from Git History (Pro)",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.updateChangelog",
+        "title": "Update Changelog (Pro)",
         "category": "GitMind"
       },
       {

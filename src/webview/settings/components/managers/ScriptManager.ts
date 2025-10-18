@@ -281,34 +281,71 @@ export class ScriptManager {
                         showProUpgradeMessage('Commit History Analysis');
                         return;
                     }
-                    
+
                     // Check global flag to prevent concurrent analyses
                     if (window.commitHistoryAnalysisInProgress) {
                         console.log('Commit history analysis already in progress, ignoring duplicate request');
                         return;
                     }
-                    
+
                     const button = document.getElementById('analyzeCommitHistoryBtn');
                     if (button && button.disabled) {
                         console.log('Analysis button is disabled, ignoring click');
                         return;
                     }
-                    
+
                     // Set global flag and button state
                     window.commitHistoryAnalysisInProgress = true;
                     setButtonLoadingState('analyzeCommitHistoryBtn', true, 'Analyzing...', 'Analyze Commit History');
-                    
+
                     if (typeof vscode !== 'undefined') {
                         vscode.postMessage({
                             command: 'executeCommand',
                             commandId: 'gitmind.learnFromCommitHistory'
                         });
-                        
+
                         // Fallback timeout in case no response is received
                         setTimeout(() => {
                             window.commitHistoryAnalysisInProgress = false;
                             setButtonLoadingState('analyzeCommitHistoryBtn', false, '', 'Analyze Commit History');
                         }, 30000); // 30 seconds timeout
+                    }
+                });
+
+                // Generate Changelog button handler
+                attachButtonHandler('generateChangelogBtn', () => {
+                    if (!isProUser()) {
+                        showProUpgradeMessage('Changelog Generation');
+                        return;
+                    }
+
+                    // Check global flag to prevent concurrent generations
+                    if (window.changelogGenerationInProgress) {
+                        console.log('Changelog generation already in progress, ignoring duplicate request');
+                        return;
+                    }
+
+                    const button = document.getElementById('generateChangelogBtn');
+                    if (button && button.disabled) {
+                        console.log('Changelog button is disabled, ignoring click');
+                        return;
+                    }
+
+                    // Set global flag and button state
+                    window.changelogGenerationInProgress = true;
+                    setButtonLoadingState('generateChangelogBtn', true, 'Generating...', 'Generate Changelog');
+
+                    if (typeof vscode !== 'undefined') {
+                        vscode.postMessage({
+                            command: 'executeCommand',
+                            commandId: 'gitmind.generateChangelog'
+                        });
+
+                        // Fallback timeout in case no response is received
+                        setTimeout(() => {
+                            window.changelogGenerationInProgress = false;
+                            setButtonLoadingState('generateChangelogBtn', false, '', 'Generate Changelog');
+                        }, 60000); // 60 seconds timeout for changelog generation
                     }
                 });
                 

@@ -66,7 +66,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                         if (typeof window.commitHistoryAnalysisInProgress !== 'undefined') {
                             window.commitHistoryAnalysisInProgress = false;
                         }
-                        
+
                         // Use the same setButtonLoadingState function for consistency
                         if (typeof setButtonLoadingState === 'function') {
                             setButtonLoadingState('analyzeCommitHistoryBtn', false, '', 'Analyze Commit History');
@@ -79,7 +79,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                                 analyzeBtn.classList.remove('loading');
                             }
                         }
-                        
+
                         if (message.success) {
                             if (typeof showToast === 'function') {
                                 showToast('Commit history analysis completed successfully!', 'success');
@@ -87,6 +87,36 @@ export class ProFeatureRenderer extends BaseRenderer {
                         } else {
                             if (typeof showToast === 'function') {
                                 showToast('Commit history analysis failed: ' + (message.error || 'Unknown error'), 'error');
+                            }
+                        }
+                        break;
+
+                    case 'changelogGenerationResult':
+                        // Reset global flag
+                        if (typeof window.changelogGenerationInProgress !== 'undefined') {
+                            window.changelogGenerationInProgress = false;
+                        }
+
+                        // Use the same setButtonLoadingState function for consistency
+                        if (typeof setButtonLoadingState === 'function') {
+                            setButtonLoadingState('generateChangelogBtn', false, '', 'Generate Changelog');
+                        } else {
+                            // Fallback if setButtonLoadingState is not available
+                            const changelogBtn = document.getElementById('generateChangelogBtn');
+                            if (changelogBtn) {
+                                changelogBtn.disabled = false;
+                                changelogBtn.innerHTML = 'Generate Changelog';
+                                changelogBtn.classList.remove('loading');
+                            }
+                        }
+
+                        if (message.success) {
+                            if (typeof showToast === 'function') {
+                                showToast('Changelog generated successfully!', 'success');
+                            }
+                        } else {
+                            if (typeof showToast === 'function') {
+                                showToast('Changelog generation failed: ' + (message.error || 'Unknown error'), 'error');
                             }
                         }
                         break;
@@ -313,7 +343,11 @@ export class ProFeatureRenderer extends BaseRenderer {
             </button>
             <div class="button-description">Get AI insights on your commit message style and patterns</div>
         </div>
-        
+
+        <div class="section-divider"></div>
+
+        ${this.renderChangelogGenerationSection()}
+
         ${!hasValidLicense ? `
         <div class="pro-upsell">
             <p>Upgrade to GitMind Pro to enable custom commit message options.</p>
@@ -321,6 +355,73 @@ export class ProFeatureRenderer extends BaseRenderer {
         </div>` : ''}
     </div>
     `;
+    }
+
+    private renderChangelogGenerationSection(): string {
+        const changelogConfig = this.settings.pro?.changelog || { enabled: true, maxCommits: 100, groupByVersion: true };
+        const hasValidLicense = (this.settings.pro?.licenseKey || this.settings.pro?.orderId) && this.settings.pro?.validationStatus === 'valid';
+        const disabledState = !hasValidLicense;
+        const proRequiredMessage = !hasValidLicense ? '(Pro feature)' : '';
+
+        return `
+        <div class="section-header">
+            <h4 class="subsection-title">Changelog Generation ${proRequiredMessage}</h4>
+            <div class="section-description">Generate professional CHANGELOG.md from your git history using AI</div>
+        </div>
+
+        <div class="commit-options-row">
+            <div class="compact-setting toggle-setting">
+                <div class="setting-info">
+                    <div class="setting-label">Enable Changelog Generation</div>
+                </div>
+                <div class="switch-container ${disabledState ? 'disabled' : ''}">
+                    <input class="switch-input" type="checkbox" id="changelogEnabled"
+                        ${changelogConfig.enabled ? 'checked' : ''}
+                        ${disabledState ? 'disabled' : ''}
+                        data-setting="pro.changelog.enabled" />
+                    <div class="switch-button">
+                        <div class="switch-slider"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="commit-options-row">
+            <div class="compact-setting input-setting">
+                <span>Maximum Commits to Analyze</span>
+                <input type="number" id="changelogMaxCommits"
+                    class="input-field"
+                    value="${changelogConfig.maxCommits}"
+                    min="10" max="500" step="10"
+                    ${disabledState ? 'disabled' : ''}
+                    data-setting="pro.changelog.maxCommits" />
+            </div>
+        </div>
+
+        <div class="commit-options-row">
+            <div class="compact-setting toggle-setting">
+                <div class="setting-info">
+                    <div class="setting-label">Group by Version Tags</div>
+                </div>
+                <div class="switch-container ${disabledState ? 'disabled' : ''}">
+                    <input class="switch-input" type="checkbox" id="changelogGroupByVersion"
+                        ${changelogConfig.groupByVersion ? 'checked' : ''}
+                        ${disabledState ? 'disabled' : ''}
+                        data-setting="pro.changelog.groupByVersion" />
+                    <div class="switch-button">
+                        <div class="switch-slider"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="commit-options-row action-row">
+            <button class="action-button primary" id="generateChangelogBtn" ${disabledState ? 'disabled' : ''}>
+                Generate Changelog
+            </button>
+            <div class="button-description">Create or update CHANGELOG.md using AI analysis of git history</div>
+        </div>
+        `;
     }
 
     private renderLargeDiffHandlingSection(): string {
