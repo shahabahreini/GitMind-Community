@@ -94,7 +94,17 @@ export function generateFormInitialization(): string {
     `try {`,
     `  const changelogGroupByVersionEl = document.getElementById('changelogGroupByVersion');`,
     `  if (changelogGroupByVersionEl) changelogGroupByVersionEl.checked = currentSettings.pro?.changelog?.groupByVersion ?? true;`,
-    `} catch (e) { console.warn('Failed to set changelogGroupByVersion:', e); }`
+    `} catch (e) { console.warn('Failed to set changelogGroupByVersion:', e); }`,
+
+    `try {`,
+    `  const changelogMaxVersionsEl = document.getElementById('changelogMaxVersions');`,
+    `  if (changelogMaxVersionsEl) changelogMaxVersionsEl.value = currentSettings.pro?.changelog?.maxVersions ?? 10;`,
+    `} catch (e) { console.warn('Failed to set changelogMaxVersions:', e); }`,
+
+    `try {`,
+    `  const changelogVersionOrderEl = document.getElementById('changelogVersionOrder');`,
+    `  if (changelogVersionOrderEl) changelogVersionOrderEl.value = currentSettings.pro?.changelog?.versionOrder ?? 'newest-first';`,
+    `} catch (e) { console.warn('Failed to set changelogVersionOrder:', e); }`
   ];
 
   Object.entries(PROVIDER_DEFAULTS).forEach(([provider, _defaults]) => {
@@ -217,7 +227,9 @@ export function generateProviderForm(_provider: string, _settings: any, _default
     `document.getElementById('learnFromCommitHistoryMaxCommits').value = currentSettings.pro?.learnFromCommitHistory?.maxCommits ?? 50;`,
     `document.getElementById('learnFromCommitHistoryIncludeAuthorInfo').checked = currentSettings.pro?.learnFromCommitHistory?.includeAuthorInfo ?? true;`,
     `document.getElementById('changelogMaxCommits').value = currentSettings.pro?.changelog?.maxCommits ?? 100;`,
-    `document.getElementById('changelogGroupByVersion').checked = currentSettings.pro?.changelog?.groupByVersion ?? true;`
+    `document.getElementById('changelogMaxVersions').value = currentSettings.pro?.changelog?.maxVersions ?? 10;`,
+    `document.getElementById('changelogGroupByVersion').checked = currentSettings.pro?.changelog?.groupByVersion ?? true;`,
+    `document.getElementById('changelogVersionOrder').value = currentSettings.pro?.changelog?.versionOrder ?? 'newest-first';`
   ];
 
   // Update API keys but NOT model dropdowns to preserve dropdown state
@@ -269,7 +281,9 @@ export function generateUpdateSettingsCode(): string {
     `document.getElementById('learnFromCommitHistoryMaxCommits').value = currentSettings.pro?.learnFromCommitHistory?.maxCommits ?? 50;`,
     `document.getElementById('learnFromCommitHistoryIncludeAuthorInfo').checked = currentSettings.pro?.learnFromCommitHistory?.includeAuthorInfo ?? true;`,
     `document.getElementById('changelogMaxCommits').value = currentSettings.pro?.changelog?.maxCommits ?? 100;`,
-    `document.getElementById('changelogGroupByVersion').checked = currentSettings.pro?.changelog?.groupByVersion ?? true;`
+    `document.getElementById('changelogMaxVersions').value = currentSettings.pro?.changelog?.maxVersions ?? 10;`,
+    `document.getElementById('changelogGroupByVersion').checked = currentSettings.pro?.changelog?.groupByVersion ?? true;`,
+    `document.getElementById('changelogVersionOrder').value = currentSettings.pro?.changelog?.versionOrder ?? 'newest-first';`
   ];
 
   Object.entries(PROVIDER_DEFAULTS).forEach(([provider, _defaults]) => {
@@ -318,7 +332,9 @@ export function generateUpdateSettingsCodePreserveDropdowns(): string {
     `document.getElementById('learnFromCommitHistoryMaxCommits').value = currentSettings.pro?.learnFromCommitHistory?.maxCommits ?? 50;`,
     `document.getElementById('learnFromCommitHistoryIncludeAuthorInfo').checked = currentSettings.pro?.learnFromCommitHistory?.includeAuthorInfo ?? true;`,
     `document.getElementById('changelogMaxCommits').value = currentSettings.pro?.changelog?.maxCommits ?? 100;`,
-    `document.getElementById('changelogGroupByVersion').checked = currentSettings.pro?.changelog?.groupByVersion ?? true;`
+    `document.getElementById('changelogMaxVersions').value = currentSettings.pro?.changelog?.maxVersions ?? 10;`,
+    `document.getElementById('changelogGroupByVersion').checked = currentSettings.pro?.changelog?.groupByVersion ?? true;`,
+    `document.getElementById('changelogVersionOrder').value = currentSettings.pro?.changelog?.versionOrder ?? 'newest-first';`
   ];
 
   // Update API keys but NOT model dropdowns to preserve dropdown state
