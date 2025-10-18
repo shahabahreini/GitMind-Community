@@ -31,7 +31,7 @@ az group create \
     --output table
 
 # Deploy Application Insights using the template
-echo "📊 Deploying Application Insights..."
+echo "Deploying Application Insights..."
 az deployment group create \
     --resource-group "$RESOURCE_GROUP" \
     --template-file deployment-template.json \

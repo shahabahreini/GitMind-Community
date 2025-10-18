@@ -275,6 +275,27 @@ export class ScriptManager {
                     navigateToSubscriptionTab();
                 });
                 
+                // Preview Commit History Stats button handler
+                attachButtonHandler('previewCommitHistoryBtn', () => {
+                    if (!isProUser()) {
+                        showProUpgradeMessage('Commit History Analysis');
+                        return;
+                    }
+
+                    const maxCommits = parseInt(document.getElementById('learnFromCommitHistoryMaxCommits')?.value) || 50;
+                    const includeAuthorInfo = document.getElementById('learnFromCommitHistoryIncludeAuthorInfo')?.checked ?? true;
+
+                    setButtonLoadingState('previewCommitHistoryBtn', true, 'Analyzing...', 'Preview Stats');
+
+                    if (typeof vscode !== 'undefined') {
+                        vscode.postMessage({
+                            command: 'previewCommitHistoryStats',
+                            maxCommits,
+                            includeAuthorInfo
+                        });
+                    }
+                });
+
                 // Analyze Commit History button handler
                 attachButtonHandler('analyzeCommitHistoryBtn', () => {
                     if (!isProUser()) {
@@ -309,6 +330,27 @@ export class ScriptManager {
                             window.commitHistoryAnalysisInProgress = false;
                             setButtonLoadingState('analyzeCommitHistoryBtn', false, '', 'Analyze Commit History');
                         }, 30000); // 30 seconds timeout
+                    }
+                });
+
+                // Preview Changelog Stats button handler
+                attachButtonHandler('previewChangelogBtn', () => {
+                    if (!isProUser()) {
+                        showProUpgradeMessage('Changelog Generation');
+                        return;
+                    }
+
+                    const maxCommits = parseInt(document.getElementById('changelogMaxCommits')?.value) || 100;
+                    const groupByVersion = document.getElementById('changelogGroupByVersion')?.checked ?? true;
+
+                    setButtonLoadingState('previewChangelogBtn', true, 'Analyzing...', 'Preview Stats');
+
+                    if (typeof vscode !== 'undefined') {
+                        vscode.postMessage({
+                            command: 'previewChangelogStats',
+                            maxCommits,
+                            groupByVersion
+                        });
                     }
                 });
 

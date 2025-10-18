@@ -272,7 +272,7 @@ class PrivacyValidator {
   }
 
   generateReport() {
-    console.log("\n📊 Privacy Compliance Report\n");
+    console.log("\nPrivacy Compliance Report\n");
     console.log("=".repeat(50));
 
     if (this.errors.length > 0) {

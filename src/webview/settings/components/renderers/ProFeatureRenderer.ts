@@ -292,23 +292,6 @@ export class ProFeatureRenderer extends BaseRenderer {
         </div>
         
         <div class="commit-options-row">
-            <div class="compact-setting toggle-setting">
-                <div class="setting-info">
-                    <div class="setting-label">Enable Commit History Analysis</div>
-                </div>
-                <div class="switch-container ${disabledState ? 'disabled' : ''}">
-                    <input class="switch-input" type="checkbox" id="learnFromCommitHistoryEnabled" 
-                        ${learnFromCommitHistory.enabled ? 'checked' : ''} 
-                        ${disabledState ? 'disabled' : ''} 
-                        data-setting="pro.learnFromCommitHistory.enabled" />
-                    <div class="switch-button">
-                        <div class="switch-slider"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="commit-options-row">
             <div class="compact-setting input-setting">
                 <span>Maximum Commits to Analyze</span>
                 <input type="number" id="learnFromCommitHistoryMaxCommits" 
@@ -338,11 +321,14 @@ export class ProFeatureRenderer extends BaseRenderer {
         </div>
         
         <div class="commit-options-row action-row">
+            <button class="action-button secondary" id="previewCommitHistoryBtn" ${disabledState ? 'disabled' : ''}>
+                Preview Stats
+            </button>
             <button class="action-button primary" id="analyzeCommitHistoryBtn" ${disabledState ? 'disabled' : ''}>
                 Analyze Commit History
             </button>
-            <div class="button-description">Get AI insights on your commit message style and patterns</div>
         </div>
+        <div class="button-description">Preview shows token count, commit stats, and data quality warnings</div>
 
         <div class="section-divider"></div>
 
@@ -367,23 +353,6 @@ export class ProFeatureRenderer extends BaseRenderer {
         <div class="section-header">
             <h4 class="subsection-title">Changelog Generation ${proRequiredMessage}</h4>
             <div class="section-description">Generate professional CHANGELOG.md from your git history using AI</div>
-        </div>
-
-        <div class="commit-options-row">
-            <div class="compact-setting toggle-setting">
-                <div class="setting-info">
-                    <div class="setting-label">Enable Changelog Generation</div>
-                </div>
-                <div class="switch-container ${disabledState ? 'disabled' : ''}">
-                    <input class="switch-input" type="checkbox" id="changelogEnabled"
-                        ${changelogConfig.enabled ? 'checked' : ''}
-                        ${disabledState ? 'disabled' : ''}
-                        data-setting="pro.changelog.enabled" />
-                    <div class="switch-button">
-                        <div class="switch-slider"></div>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <div class="commit-options-row">
@@ -416,11 +385,14 @@ export class ProFeatureRenderer extends BaseRenderer {
         </div>
 
         <div class="commit-options-row action-row">
+            <button class="action-button secondary" id="previewChangelogBtn" ${disabledState ? 'disabled' : ''}>
+                Preview Stats
+            </button>
             <button class="action-button primary" id="generateChangelogBtn" ${disabledState ? 'disabled' : ''}>
                 Generate Changelog
             </button>
-            <div class="button-description">Create or update CHANGELOG.md using AI analysis of git history</div>
         </div>
+        <div class="button-description">Preview shows token count, commit stats, and data quality warnings</div>
         `;
     }
 

@@ -172,12 +172,12 @@ export function generateSettingsCollection(): string {
         maxLength: (window.currentFormValues || currentFormValues).commitLengthOptionsMaxLength
       },
       learnFromCommitHistory: {
-        enabled: (window.currentFormValues || currentFormValues).learnFromCommitHistoryEnabled,
+        enabled: true,
         maxCommits: (window.currentFormValues || currentFormValues).learnFromCommitHistoryMaxCommits,
         includeAuthorInfo: (window.currentFormValues || currentFormValues).learnFromCommitHistoryIncludeAuthorInfo
       },
       changelog: {
-        enabled: (window.currentFormValues || currentFormValues).changelogEnabled,
+        enabled: true,
         maxCommits: (window.currentFormValues || currentFormValues).changelogMaxCommits,
         groupByVersion: (window.currentFormValues || currentFormValues).changelogGroupByVersion
       }
@@ -214,9 +214,10 @@ export function generateProviderForm(_provider: string, _settings: any, _default
     `document.getElementById('commitBodyOptionsMaxLines').value = currentSettings.pro?.commitBodyOptions?.maxLines ?? 5;`,
     `document.getElementById('commitLengthOptionsEnabled').checked = currentSettings.pro?.commitLengthOptions?.enabled ?? false;`,
     `document.getElementById('commitLengthOptionsMaxLength').value = currentSettings.pro?.commitLengthOptions?.maxLength ?? 72;`,
-    `document.getElementById('learnFromCommitHistoryEnabled').checked = currentSettings.pro?.learnFromCommitHistory?.enabled ?? true;`,
     `document.getElementById('learnFromCommitHistoryMaxCommits').value = currentSettings.pro?.learnFromCommitHistory?.maxCommits ?? 50;`,
-    `document.getElementById('learnFromCommitHistoryIncludeAuthorInfo').checked = currentSettings.pro?.learnFromCommitHistory?.includeAuthorInfo ?? true;`
+    `document.getElementById('learnFromCommitHistoryIncludeAuthorInfo').checked = currentSettings.pro?.learnFromCommitHistory?.includeAuthorInfo ?? true;`,
+    `document.getElementById('changelogMaxCommits').value = currentSettings.pro?.changelog?.maxCommits ?? 100;`,
+    `document.getElementById('changelogGroupByVersion').checked = currentSettings.pro?.changelog?.groupByVersion ?? true;`
   ];
 
   // Update API keys but NOT model dropdowns to preserve dropdown state
@@ -265,9 +266,10 @@ export function generateUpdateSettingsCode(): string {
     `document.getElementById('commitBodyOptionsMaxLines').value = currentSettings.pro?.commitBodyOptions?.maxLines ?? 5;`,
     `document.getElementById('commitLengthOptionsEnabled').checked = currentSettings.pro?.commitLengthOptions?.enabled ?? false;`,
     `document.getElementById('commitLengthOptionsMaxLength').value = currentSettings.pro?.commitLengthOptions?.maxLength ?? 72;`,
-    `document.getElementById('learnFromCommitHistoryEnabled').checked = currentSettings.pro?.learnFromCommitHistory?.enabled ?? true;`,
     `document.getElementById('learnFromCommitHistoryMaxCommits').value = currentSettings.pro?.learnFromCommitHistory?.maxCommits ?? 50;`,
-    `document.getElementById('learnFromCommitHistoryIncludeAuthorInfo').checked = currentSettings.pro?.learnFromCommitHistory?.includeAuthorInfo ?? true;`
+    `document.getElementById('learnFromCommitHistoryIncludeAuthorInfo').checked = currentSettings.pro?.learnFromCommitHistory?.includeAuthorInfo ?? true;`,
+    `document.getElementById('changelogMaxCommits').value = currentSettings.pro?.changelog?.maxCommits ?? 100;`,
+    `document.getElementById('changelogGroupByVersion').checked = currentSettings.pro?.changelog?.groupByVersion ?? true;`
   ];
 
   Object.entries(PROVIDER_DEFAULTS).forEach(([provider, _defaults]) => {
@@ -313,9 +315,10 @@ export function generateUpdateSettingsCodePreserveDropdowns(): string {
     `document.getElementById('commitBodyOptionsMaxLines').value = currentSettings.pro?.commitBodyOptions?.maxLines ?? 5;`,
     `document.getElementById('commitLengthOptionsEnabled').checked = currentSettings.pro?.commitLengthOptions?.enabled ?? false;`,
     `document.getElementById('commitLengthOptionsMaxLength').value = currentSettings.pro?.commitLengthOptions?.maxLength ?? 72;`,
-    `document.getElementById('learnFromCommitHistoryEnabled').checked = currentSettings.pro?.learnFromCommitHistory?.enabled ?? true;`,
     `document.getElementById('learnFromCommitHistoryMaxCommits').value = currentSettings.pro?.learnFromCommitHistory?.maxCommits ?? 50;`,
-    `document.getElementById('learnFromCommitHistoryIncludeAuthorInfo').checked = currentSettings.pro?.learnFromCommitHistory?.includeAuthorInfo ?? true;`
+    `document.getElementById('learnFromCommitHistoryIncludeAuthorInfo').checked = currentSettings.pro?.learnFromCommitHistory?.includeAuthorInfo ?? true;`,
+    `document.getElementById('changelogMaxCommits').value = currentSettings.pro?.changelog?.maxCommits ?? 100;`,
+    `document.getElementById('changelogGroupByVersion').checked = currentSettings.pro?.changelog?.groupByVersion ?? true;`
   ];
 
   // Update API keys but NOT model dropdowns to preserve dropdown state

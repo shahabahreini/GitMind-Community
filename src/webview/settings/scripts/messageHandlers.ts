@@ -36,7 +36,11 @@ export function getMessageHandlersScript(): string {
         proDeactivationResult: () => handleProDeactivationResult(message),
         proActivationResult: () => handleProActivationResult(message),
         licenseValidationResult: () => handleLicenseValidationResult(message),
-        actualApiKeyResponse: () => handleActualApiKeyResponse(message)
+        actualApiKeyResponse: () => handleActualApiKeyResponse(message),
+        commitHistoryStatsReady: () => handleCommitHistoryStatsReady(message),
+        commitHistoryStatsError: () => handleCommitHistoryStatsError(message),
+        changelogStatsReady: () => handleChangelogStatsReady(message),
+        changelogStatsError: () => handleChangelogStatsError(message)
       };
       
       const handler = messageHandlers[message.command];
@@ -747,5 +751,384 @@ export function getMessageHandlersScript(): string {
     
     // Make showCopiedHint available globally
     window.showCopiedHint = showCopiedHint;
+
+    function handleCommitHistoryStatsReady(message) {
+      setButtonLoadingState('previewCommitHistoryBtn', false, '', 'Preview Stats');
+      
+      if (message.stats) {
+        const stats = message.stats;
+        const statsHtml = createStatsDisplay(stats, 'Commit History Analysis');
+        showDetailedStatus('Git History Statistics', statsHtml, true);
+      }
+    }
+
+    function handleCommitHistoryStatsError(message) {
+      setButtonLoadingState('previewCommitHistoryBtn', false, '', 'Preview Stats');
+      showToast('Failed to analyze git history: ' + (message.error || 'Unknown error'), 'error', true);
+    }
+
+    function handleChangelogStatsReady(message) {
+      setButtonLoadingState('previewChangelogBtn', false, '', 'Preview Stats');
+      
+      if (message.stats) {
+        const stats = message.stats;
+        const statsHtml = createStatsDisplay(stats, 'Changelog Generation');
+        showDetailedStatus('Changelog Statistics', statsHtml, true);
+      }
+    }
+
+    function handleChangelogStatsError(message) {
+      setButtonLoadingState('previewChangelogBtn', false, '', 'Preview Stats');
+      showToast('Failed to analyze git history: ' + (message.error || 'Unknown error'), 'error', true);
+    }
+
+    function createStatsDisplay(stats, context) {
+      const warningClass = stats.warnings.length > 0 ? 'has-warnings' : '';
+      const recommendationClass = stats.recommendations.length > 0 ? 'has-recommendations' : '';
+      
+      return \`
+        <div class="git-stats-container">
+          <!-- Summary Cards -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-value">\${stats.actualCommitsFound.toLocaleString()}</div>
+              <div class="stat-label">Commits\${stats.actualCommitsFound < stats.totalCommits ? \` (\${stats.totalCommits} requested)\` : ''}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">\${stats.estimatedTokens.toLocaleString()}</div>
+              <div class="stat-label">Tokens\${stats.estimatedTokens > 50000 ? ' (High)' : stats.estimatedTokens < 500 ? ' (Low)' : ''}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">\${stats.uniqueAuthors}</div>
+              <div class="stat-label">Authors</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">\${stats.conventionalCommitPercentage}%</div>
+              <div class="stat-label">Conventional</div>
+            </div>
+          </div>
+
+          <!-- Date Range -->
+          <div class="stats-section compact">
+            <h3>Date Range</h3>
+            <div class="date-range">\${stats.dateRange.oldest} → \${stats.dateRange.newest}</div>
+          </div>
+
+          <!-- Commit Types -->
+          \${Object.keys(stats.commitTypes).length > 0 ? \`
+            <div class="stats-section compact">
+              <h3>Commit Types</h3>
+              <div class="commit-types">
+                \${Object.entries(stats.commitTypes)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([type, count]) => \`
+                    <div class="commit-type-item">
+                      <span class="commit-type-label">\${type}</span>
+                      <span class="commit-type-count">\${count}</span>
+                      <div class="commit-type-bar" style="width: \${(count / stats.actualCommitsFound) * 100}%"></div>
+                    </div>
+                  \`).join('')}
+              </div>
+            </div>
+          \` : ''}
+
+          <!-- Top Authors -->
+          \${stats.topAuthors.length > 0 ? \`
+            <div class="stats-section compact">
+              <h3>Top Contributors</h3>
+              <div class="top-authors">
+                \${stats.topAuthors.map((author, index) => \`
+                  <div class="author-item">
+                    <span class="author-rank">#\${index + 1}</span>
+                    <span class="author-name">\${author.name}</span>
+                    <span class="author-count">\${author.count}</span>
+                  </div>
+                \`).join('')}
+              </div>
+            </div>
+          \` : ''}
+
+          <!-- File Changes Stats -->
+          <div class="stats-section compact">
+            <h3>File Changes</h3>
+            <div class="file-stats">
+              <span>Total: <strong>\${stats.filesChangedStats.total.toLocaleString()}</strong></span>
+              <span>Avg: <strong>\${stats.filesChangedStats.average}</strong></span>
+              <span>Max: <strong>\${stats.filesChangedStats.max}</strong></span>
+            </div>
+          </div>
+
+          <!-- Version Tags -->
+          \${stats.hasVersionTags ? \`
+            <div class="stats-section compact">
+              <h3>Version Tags</h3>
+              <p>\${stats.versionTagCount} version tags found</p>
+            </div>
+          \` : ''}
+
+          <!-- Warnings -->
+          \${stats.warnings.length > 0 ? \`
+            <div class="stats-section compact warnings-section \${warningClass}">
+              <h3>Warnings</h3>
+              <ul class="warnings-list">
+                \${stats.warnings.map(warning => \`<li>\${warning}</li>\`).join('')}
+              </ul>
+            </div>
+          \` : ''}
+
+          <!-- Recommendations -->
+          \${stats.recommendations.length > 0 ? \`
+            <div class="stats-section compact recommendations-section \${recommendationClass}">
+              <h3>Recommendations</h3>
+              <ul class="recommendations-list">
+                \${stats.recommendations.map(rec => \`<li>\${rec}</li>\`).join('')}
+              </ul>
+            </div>
+          \` : ''}
+
+          <!-- Message Quality -->
+          <div class="stats-section compact">
+            <h3>Message Quality</h3>
+            <p>Average length: <strong>\${stats.averageMessageLength}</strong> characters\${stats.averageMessageLength < 20 ? ' (too short)' : stats.averageMessageLength > 100 ? ' (good detail)' : ''}</p>
+          </div>
+        </div>
+
+        <style>
+          .git-stats-container {
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+          }
+          
+          .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+          }
+          
+          .stat-card {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+          }
+          
+          .stat-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+          }
+          
+          .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--vscode-textLink-foreground);
+            margin-bottom: 4px;
+          }
+          
+          .stat-label {
+            font-size: 12px;
+            color: var(--vscode-descriptionForeground);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          
+          .stat-note {
+            font-size: 11px;
+            color: var(--vscode-descriptionForeground);
+            margin-top: 4px;
+          }
+          
+          .stat-warning {
+            color: var(--vscode-editorWarning-foreground);
+            font-size: 11px;
+            margin-top: 4px;
+          }
+          
+          .stat-success {
+            color: var(--vscode-testing-iconPassed);
+            font-size: 11px;
+            margin-top: 4px;
+          }
+          
+          .stats-section {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+          }
+          
+          .stats-section h3 {
+            margin: 0 0 12px 0;
+            font-size: 16px;
+            color: var(--vscode-foreground);
+          }
+          
+          .date-range {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+          }
+          
+          .date-label {
+            color: var(--vscode-descriptionForeground);
+          }
+          
+          .date-separator {
+            color: var(--vscode-descriptionForeground);
+          }
+          
+          .commit-types {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          }
+          
+          .commit-type-item {
+            display: grid;
+            grid-template-columns: 100px 50px 1fr;
+            align-items: center;
+            gap: 12px;
+          }
+          
+          .commit-type-label {
+            font-family: monospace;
+            font-weight: bold;
+          }
+          
+          .commit-type-count {
+            text-align: right;
+            color: var(--vscode-descriptionForeground);
+          }
+          
+          .commit-type-bar {
+            height: 20px;
+            background: var(--vscode-textLink-foreground);
+            border-radius: 4px;
+            min-width: 2px;
+          }
+          
+          .top-authors {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          }
+          
+          .author-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            background: var(--vscode-input-background);
+            border-radius: 4px;
+          }
+          
+          .author-rank {
+            font-weight: bold;
+            color: var(--vscode-textLink-foreground);
+            min-width: 30px;
+          }
+          
+          .author-name {
+            flex: 1;
+          }
+          
+          .author-count {
+            color: var(--vscode-descriptionForeground);
+            font-size: 12px;
+          }
+          
+          .file-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          }
+          
+          .file-stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--vscode-panel-border);
+          }
+          
+          .file-stat-item:last-child {
+            border-bottom: none;
+          }
+          
+          .file-stat-label {
+            color: var(--vscode-descriptionForeground);
+          }
+          
+          .version-tags-info {
+            padding: 8px;
+          }
+          
+          .info-note {
+            color: var(--vscode-descriptionForeground);
+            font-size: 12px;
+            margin-top: 8px;
+          }
+          
+          .warnings-section {
+            border-left: 4px solid var(--vscode-editorWarning-foreground);
+          }
+          
+          .warnings-list {
+            margin: 0;
+            padding-left: 20px;
+          }
+          
+          .warnings-list li {
+            color: var(--vscode-editorWarning-foreground);
+            margin-bottom: 8px;
+          }
+          
+          .recommendations-section {
+            border-left: 4px solid var(--vscode-textLink-foreground);
+          }
+          
+          .recommendations-list {
+            margin: 0;
+            padding-left: 20px;
+          }
+          
+          .recommendations-list li {
+            color: var(--vscode-textLink-foreground);
+            margin-bottom: 8px;
+          }
+          
+          .message-quality {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          }
+          
+          .quality-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+          }
+          
+          .quality-label {
+            color: var(--vscode-descriptionForeground);
+          }
+          
+          .quality-warning {
+            color: var(--vscode-editorWarning-foreground);
+            font-size: 13px;
+            margin: 8px 0 0 0;
+          }
+          
+          .quality-success {
+            color: var(--vscode-testing-iconPassed);
+            font-size: 13px;
+            margin: 8px 0 0 0;
+          }
+        </style>
+      \`;
+    }
   `;
 }

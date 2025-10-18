@@ -35,7 +35,7 @@ echo ""
 echo "🔧 Step 5: Test Encryption Features"
 echo "1. Add some API keys in regular provider settings"
 echo "2. Click '🔄 Migrate Keys' button"
-echo "3. Click '📊 Check Status' button"
+echo "3. Click 'Check Status' button"
 echo "4. Verify keys are moved to encrypted storage"
 
 echo ""

@@ -1,6 +1,6 @@
 # GitMind Telemetry & Privacy Guide
 
-## 📊 Overview
+## Overview
 
 GitMind implements privacy-first telemetry to improve the extension while respecting user privacy. This guide covers setup, configuration, and privacy compliance.
 

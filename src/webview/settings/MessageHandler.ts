@@ -6,6 +6,7 @@ import { ExtensionSettings } from "../../models/ExtensionSettings";
 import { getOllamaModels } from "../../services/api/ollama";
 import { debugLog } from "../../services/debug/logger";
 import { SecureKeyManager } from "../../services/encryption/SecureKeyManager";
+import { GitHistoryAnalyzer } from "../../services/git/GitHistoryAnalyzer";
 
 export class MessageHandler {
     private _settingsManager: SettingsManager;
@@ -51,6 +52,54 @@ export class MessageHandler {
                 break;
             case "executeCommand":
                 await vscode.commands.executeCommand(message.commandId);
+                break;
+            case 'previewCommitHistoryStats':
+                try {
+                    debugLog('Previewing commit history stats:', { maxCommits: message.maxCommits, includeAuthorInfo: message.includeAuthorInfo });
+                    const commitHistoryStats = await GitHistoryAnalyzer.analyzeHistory(
+                        message.maxCommits,
+                        message.includeAuthorInfo
+                    );
+                    
+                    if (SettingsWebview.isWebviewOpen()) {
+                        SettingsWebview.postMessageToWebview({
+                            command: 'commitHistoryStatsReady',
+                            stats: commitHistoryStats
+                        });
+                    }
+                } catch (error) {
+                    debugLog('Failed to preview commit history stats:', error);
+                    if (SettingsWebview.isWebviewOpen()) {
+                        SettingsWebview.postMessageToWebview({
+                            command: 'commitHistoryStatsError',
+                            error: error instanceof Error ? error.message : 'Failed to analyze git history'
+                        });
+                    }
+                }
+                break;
+            case 'previewChangelogStats':
+                try {
+                    debugLog('Previewing changelog stats:', { maxCommits: message.maxCommits, groupByVersion: message.groupByVersion });
+                    const changelogStats = await GitHistoryAnalyzer.analyzeHistory(
+                        message.maxCommits,
+                        false // Don't include author info for changelog
+                    );
+                    
+                    if (SettingsWebview.isWebviewOpen()) {
+                        SettingsWebview.postMessageToWebview({
+                            command: 'changelogStatsReady',
+                            stats: changelogStats
+                        });
+                    }
+                } catch (error) {
+                    debugLog('Failed to preview changelog stats:', error);
+                    if (SettingsWebview.isWebviewOpen()) {
+                        SettingsWebview.postMessageToWebview({
+                            command: 'changelogStatsError',
+                            error: error instanceof Error ? error.message : 'Failed to analyze git history'
+                        });
+                    }
+                }
                 break;
             case 'updateSetting':
                 // Prevent duplicate updates for the same setting key

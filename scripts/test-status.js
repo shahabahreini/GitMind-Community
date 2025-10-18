@@ -172,7 +172,7 @@ providers.forEach((provider) => {
 });
 
 // Quality metrics
-console.log("\n📊 Quality Metrics:");
+console.log("\nQuality Metrics:");
 console.log("✅ TypeScript compilation: No errors");
 console.log("✅ Test modularity: Independent test suites");
 console.log("✅ Production API coverage: Complete integration testing");

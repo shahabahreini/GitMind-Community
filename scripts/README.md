@@ -43,7 +43,7 @@ All scripts implement privacy-first principles:
 - ✅ **Minimal Data Principle** - Only essential metrics collected
 - ✅ **Encrypted Transmission** - All data encrypted in transit and at rest
 
-## 📊 Metrics Tracked
+## Metrics Tracked
 
 The telemetry system focuses on three key metrics:
 

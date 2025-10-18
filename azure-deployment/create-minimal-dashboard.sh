@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # GitMind Extension - Minimal Analytics Dashboard Setup
-echo "📊 Creating Minimal Analytics Dashboard for GitMind Extension"
+echo "Creating Minimal Analytics Dashboard for GitMind Extension"
 echo "============================================================"
 
 RESOURCE_GROUP="GitMind-Resources"
@@ -208,7 +208,7 @@ echo ""
 echo "🎉 Minimal Dashboard Setup Complete!"
 echo "===================================="
 echo ""
-echo "📊 Dashboard Name: $DASHBOARD_NAME"
+echo "Dashboard Name: $DASHBOARD_NAME"
 echo "🔗 Dashboard URL: $DASHBOARD_URL"
 echo ""
 echo "📝 What Changed:"

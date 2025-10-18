@@ -8,7 +8,7 @@
 
 ---
 
-## 📊 Azure Resources Created
+## Azure Resources Created
 
 ### Application Insights
 

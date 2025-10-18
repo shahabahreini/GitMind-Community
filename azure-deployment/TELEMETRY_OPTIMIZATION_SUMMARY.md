@@ -42,7 +42,7 @@ The new `trackMessageGenerationFailure()` method automatically categorizes error
 - `token_limit_error` - Token/context size issues
 - `unknown_error` - Other issues
 
-## 📊 New Dashboard Queries
+## New Dashboard Queries
 
 Your new minimal dashboard only shows:
 

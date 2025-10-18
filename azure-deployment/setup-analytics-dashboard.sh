@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # GitMind Extension - Complete Azure Analytics Setup
-echo "📊 GitMind Extension - Azure Analytics Dashboard Setup"
+echo "GitMind Extension - Azure Analytics Dashboard Setup"
 echo "===================================================="
 
 RESOURCE_GROUP="GitMind-Resources"

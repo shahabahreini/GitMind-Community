@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # GitMind Extension - Azure Dashboard Creation Script
-echo "📊 Creating Azure Dashboard for GitMind Extension Analytics"
+echo "Creating Azure Dashboard for GitMind Extension Analytics"
 echo "========================================================="
 
 RESOURCE_GROUP="GitMind-Resources"
@@ -285,7 +285,7 @@ echo ""
 echo "🎉 Dashboard Setup Complete!"
 echo "=========================="
 echo ""
-echo "📊 Dashboard Name: $DASHBOARD_NAME"
+echo "Dashboard Name: $DASHBOARD_NAME"
 echo "🔗 Dashboard URL: $DASHBOARD_URL"
 echo ""
 echo "📋 Manual Setup Instructions (if needed):"

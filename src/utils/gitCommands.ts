@@ -21,7 +21,7 @@ interface GitCommandResult {
  * @param workspacePath Optional workspace path to start searching from
  * @returns Promise<GitCommandResult>
  */
-async function executeGitCommand(command: string, workspacePath?: string): Promise<GitCommandResult> {
+export async function executeGitCommand(command: string, workspacePath?: string): Promise<GitCommandResult> {
     try {
         const searchPath = workspacePath || getWorkspacePath();
         const repoRoot = await findGitRepository(searchPath);
