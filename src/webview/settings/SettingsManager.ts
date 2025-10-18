@@ -104,6 +104,8 @@ export class SettingsManager {
                     enabled: config.get<boolean>("pro.changelog.enabled") ?? true,
                     maxCommits: config.get<number>("pro.changelog.maxCommits") ?? 100,
                     groupByVersion: config.get<boolean>("pro.changelog.groupByVersion") ?? true,
+                    maxVersions: config.get<number>("pro.changelog.maxVersions") ?? 10,
+                    versionOrder: config.get<'newest-first' | 'oldest-first'>("pro.changelog.versionOrder") ?? 'newest-first',
                 }
             },
             subscription: {
@@ -352,6 +354,8 @@ export class SettingsManager {
             config.update("pro.changelog.enabled", settings.pro?.changelog?.enabled ?? true, target),
             config.update("pro.changelog.maxCommits", settings.pro?.changelog?.maxCommits ?? 100, target),
             config.update("pro.changelog.groupByVersion", settings.pro?.changelog?.groupByVersion ?? true, target),
+            config.update("pro.changelog.maxVersions", settings.pro?.changelog?.maxVersions ?? 10, target),
+            config.update("pro.changelog.versionOrder", settings.pro?.changelog?.versionOrder ?? 'newest-first', target),
             config.update("subscription.email", settings.subscription?.email || "", target),
             config.update("subscription.plan", settings.subscription?.plan || "free", target),
             config.update("subscription.status", settings.subscription?.status || "inactive", target),

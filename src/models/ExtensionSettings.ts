@@ -115,6 +115,8 @@ export interface ExtensionSettings {
             enabled: boolean;
             maxCommits: number;  // Maximum number of commits to analyze for changelog
             groupByVersion: boolean;  // Whether to group changelog entries by version tags
+            maxVersions: number;  // Maximum number of versions to include in changelog
+            versionOrder: 'newest-first' | 'oldest-first';  // Order of versions in changelog
         };
     };
     // Subscription Settings (Lemon Squeezy)
