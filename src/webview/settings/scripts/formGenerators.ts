@@ -189,7 +189,9 @@ export function generateSettingsCollection(): string {
       changelog: {
         enabled: true,
         maxCommits: (window.currentFormValues || currentFormValues).changelogMaxCommits,
-        groupByVersion: (window.currentFormValues || currentFormValues).changelogGroupByVersion
+        maxVersions: (window.currentFormValues || currentFormValues).changelogMaxVersions,
+        groupByVersion: (window.currentFormValues || currentFormValues).changelogGroupByVersion,
+        versionOrder: (window.currentFormValues || currentFormValues).changelogVersionOrder
       }
     },`,
     `subscription: {
