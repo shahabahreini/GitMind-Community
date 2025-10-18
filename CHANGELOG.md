@@ -1,3 +1,22 @@
+## v4.3.1 - 2025-10-18
+
+### New Features
+
+-   **Changelog Version Limit**: Added `pro.changelog.maxVersions` setting to limit the number of recent versions processed in changelog generation.
+-   **Git History Statistics Preview**: Introduced a GitHistoryAnalyzer service and "Preview Stats" feature to estimate token usage and data quality for AI-powered features.
+-   **Configurable Changelog Version Order**: Added a setting to control the version order in generated changelogs, allowing users to select 'newest-first' or 'oldest-first'.
+
+### Enhanced
+
+-   **AI Changelog Generation**: Increased the maximum commit limit for history analysis and changelogs to 2500.
+-   **AI Changelog Generation**: Enhanced the AI prompt and added validation for accurate multi-version changelogs.
+
+### Other
+
+-   Updated documentation for AI-powered changelog generation and Git stats preview features.
+-   Updated feature descriptions and added screenshots to the README.
+-   Updated provider list to include Grok, Perplexity, and Mistral.
+
 ## v4.3.0 - 2025-10-18
 
 ### New Features
