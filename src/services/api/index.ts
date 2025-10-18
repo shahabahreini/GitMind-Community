@@ -620,8 +620,7 @@ async function showDiagnosticsInfo(config: ApiConfig, diff: string, repositoryNa
     const proceed = await vscode.window.showInformationMessage(
         message,
         { modal: true },
-        'Proceed',
-        'Cancel'
+        'Proceed'
     );
 
     if (proceed !== 'Proceed') {
