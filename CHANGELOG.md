@@ -1,35 +1,40 @@
 ## v4.3.0 - 2025-10-18
 
-feat(changelog): implement ai-powered changelog generation
+### New Features
 
-- Implemented AI-powered changelog generation from git history.
-- Added settings for max commits, grouping by version, and enabling/disabling.
-- Requires GitMind Pro subscription to unlock the feature.
+-   Implemented AI-powered changelog generation from Git history.
+-   Added `ChangelogService` for version detection from Git tags, commit messages, and `package.json`.
+-   Implemented changelog structure analysis to preserve existing formatting and categories.
+-   Enhanced AI prompt with policy-aware instructions for exact style matching.
+-   Included user guidance with a tips modal and feature guide integration.
+-   Supported multi-language projects with intelligent version detection fallbacks.
+-   Configured settings for maximum commit analysis, grouping by version, and feature toggling.
 
+### Breaking Changes
 
-test(testing): add comprehensive coverage for new features
+-   AI-powered changelog generation now requires a GitMind Pro subscription to unlock.
 
-- Added extensive test suites for ChangelogService, DiffProcessor, TokenCounter, and ResponseProcessor.
-- Ensures robustness and reliability of new AI-powered features and core utilities.
-- Achieved 70%+ overall test coverage, with critical paths at 100%, reducing regression risk.
+### Technical
 
-
+-   Added comprehensive test coverage for core utilities and new AI features, including 35 tests for `ChangelogService`, 35 for `DiffProcessor`, 45 for `TokenCounter` utility, and over 25 new tests for `ResponseProcessor`.
+-   Achieved 70%+ overall test coverage, with critical paths at 100%, reducing regression risk.
+-   Resolved compilation issues and type errors.
 
 ## v4.2.3 - 2025-10-17
 
 ### Fixed
 
-- **Diagnostics UI Improvement**: Removed cancel button from diagnostics info modal
-  - **Simplified User Flow**: Eliminated the 'Cancel' button from diagnostics information modal to streamline user experience
-  - **Reduced Confusion**: Removed unnecessary action option since the only logical step is to proceed
-  - **Cleaner Interface**: Enhanced modal clarity by focusing on the primary action (proceed/close)
-  - **Prevented Unintended Actions**: Eliminated potential confusion or accidental cancellation during diagnostics review
+-   **Diagnostics UI Improvement**: Removed cancel button from diagnostics info modal
+    -   **Simplified User Flow**: Eliminated the 'Cancel' button from diagnostics information modal to streamline user experience
+    -   **Reduced Confusion**: Removed unnecessary action option since the only logical step is to proceed
+    -   **Cleaner Interface**: Enhanced modal clarity by focusing on the primary action (proceed/close)
+    -   **Prevented Unintended Actions**: Eliminated potential confusion or accidental cancellation during diagnostics review
 
 ### Technical
 
-- Updated DiagnosticsWebview component to remove cancel button from modal UI
-- Streamlined modal HTML template for better user experience
-- Enhanced modal button layout for improved clarity
+-   Updated DiagnosticsWebview component to remove cancel button from modal UI
+-   Streamlined modal HTML template for better user experience
+-   Enhanced modal button layout for improved clarity
 
 ## v4.2.2 - 2025-08-31
 
