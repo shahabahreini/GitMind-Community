@@ -186,7 +186,7 @@ This includes *italic* text and \`code\` blocks.`;
 
     test('Services should handle concurrent operations', async () => {
         const manager = SecureKeyManager.getInstance();
-        
+
         // Create mock context
         const mockSecrets = new Map<string, string>();
         const mockContext = {
@@ -200,25 +200,257 @@ This includes *italic* text and \`code\` blocks.`;
 
         try {
             manager.initialize(mockContext);
-            
+
             // Test concurrent operations
             const operations = [
                 manager.storeApiKey('provider1', 'key1'),
                 manager.storeApiKey('provider2', 'key2'),
                 manager.storeApiKey('provider3', 'key3')
             ];
-            
+
             await Promise.all(operations);
-            
+
             const key1 = await manager.getApiKey('provider1');
             const key2 = await manager.getApiKey('provider2');
             const key3 = await manager.getApiKey('provider3');
-            
+
             assert.strictEqual(key1, 'key1', 'Should handle concurrent store 1');
             assert.strictEqual(key2, 'key2', 'Should handle concurrent store 2');
             assert.strictEqual(key3, 'key3', 'Should handle concurrent store 3');
         } catch (error) {
             console.log('Concurrent operations test completed with expected limitation');
         }
+    });
+
+    // Enhanced ResponseProcessor tests
+    test('ResponseProcessor should handle conventional commit format', () => {
+        const responses = [
+            'feat: add new feature',
+            'fix(auth): resolve login bug',
+            'docs: update README',
+            'style(ui): improve button spacing',
+            'refactor(api): simplify error handling',
+            'test: add unit tests',
+            'chore: update dependencies',
+            'perf(db): optimize queries',
+            'ci: update GitHub actions',
+            'build: configure webpack'
+        ];
+
+        responses.forEach(response => {
+            const result = processCommitMessage(response);
+            assert.ok(result, `Should process ${response}`);
+            assert.ok(result.summary.includes(':'), 'Should preserve conventional format');
+        });
+    });
+
+    test('ResponseProcessor should throw on empty response', () => {
+        assert.throws(() => {
+            processCommitMessage('');
+        }, /Empty response/, 'Should throw on empty response');
+
+        assert.throws(() => {
+            processCommitMessage('   \n\n  \t  ');
+        }, /Empty response/, 'Should throw on whitespace-only response');
+    });
+
+    test('ResponseProcessor should handle multiple paragraphs', () => {
+        const multiParagraph = `feat: add user authentication
+
+This implements JWT-based authentication.
+
+It includes login and logout functionality.
+
+Users can now securely access the application.`;
+
+        const result = processCommitMessage(multiParagraph);
+
+        assert.ok(result, 'Should process multi-paragraph response');
+        assert.strictEqual(result.summary, 'feat: add user authentication', 'Should extract first line as summary');
+        assert.ok(result.description.length > 0, 'Should have description');
+    });
+
+    test('ResponseProcessor should convert non-bullet lines to bullets', () => {
+        const withoutBullets = `feat: add feature
+
+Added authentication
+Added validation
+Added error handling`;
+
+        const result = processCommitMessage(withoutBullets);
+
+        assert.ok(result.description.includes('- Added authentication'), 'Should convert to bullet');
+        assert.ok(result.description.includes('- Added validation'), 'Should convert to bullet');
+        assert.ok(result.description.includes('- Added error handling'), 'Should convert to bullet');
+    });
+
+    test('ResponseProcessor should preserve existing bullets', () => {
+        const withBullets = `feat: add feature
+
+- Added authentication
+- Added validation
+- Added error handling`;
+
+        const result = processCommitMessage(withBullets);
+
+        assert.ok(result.description.includes('- Added authentication'), 'Should preserve bullet');
+        assert.ok(result.description.includes('- Added validation'), 'Should preserve bullet');
+        assert.ok(result.description.includes('- Added error handling'), 'Should preserve bullet');
+    });
+
+    test('ResponseProcessor should handle code blocks', () => {
+        const withCodeBlock = `feat: add function
+
+\`\`\`javascript
+function test() {
+    return true;
+}
+\`\`\`
+
+This adds a new test function`;
+
+        const result = processCommitMessage(withCodeBlock);
+
+        assert.ok(result, 'Should remove code blocks');
+        assert.ok(!result.description.includes('```'), 'Should not contain code block markers');
+    });
+
+    test('ResponseProcessor should handle markdown formatting', () => {
+        const withMarkdown = `feat: add **bold** feature
+
+This includes *italic* text and \`code\` blocks`;
+
+        const result = processCommitMessage(withMarkdown);
+
+        assert.ok(result, 'Should clean markdown');
+        // The exact cleaning behavior depends on cleanMarkdown implementation
+        assert.ok(typeof result.summary === 'string', 'Should return string summary');
+    });
+
+    test('ResponseProcessor should handle emoji styles', () => {
+        const emojiCommit = '✨ feat: add new feature';
+        const result = processCommitMessage(emojiCommit, { style: 'gitmoji' });
+
+        assert.ok(result, 'Should process emoji commit');
+        assert.ok(result.summary.includes('✨'), 'Should preserve emoji');
+    });
+
+    test('ResponseProcessor should handle ember style', () => {
+        const emberCommit = '[FEATURE] Add user authentication';
+        const result = processCommitMessage(emberCommit, { style: 'ember' });
+
+        assert.ok(result, 'Should process ember style');
+        assert.ok(result.summary.includes('[FEATURE]'), 'Should preserve ember format');
+    });
+
+    test('ResponseProcessor should handle linux style', () => {
+        const linuxCommit = 'net: fix memory leak in packet handler';
+        const result = processCommitMessage(linuxCommit, { style: 'linux' });
+
+        assert.ok(result, 'Should process linux style');
+        assert.ok(result.summary.includes('net:'), 'Should preserve linux format');
+    });
+
+    test('ResponseProcessor should add default type for basic style', () => {
+        const basicCommit = 'add new feature';
+        const result = processCommitMessage(basicCommit, { style: 'basic' });
+
+        assert.ok(result, 'Should process basic style');
+        assert.ok(result.summary.includes(':'), 'Should add conventional type');
+    });
+
+    test('ResponseProcessor should handle special characters', () => {
+        const specialChars = 'feat: add "quotes" and \'apostrophes\' with <tags> & symbols';
+        const result = processCommitMessage(specialChars);
+
+        assert.ok(result, 'Should handle special characters');
+        assert.ok(result.summary.includes('quotes'), 'Should preserve quotes');
+    });
+
+    test('ResponseProcessor should handle very long summary', () => {
+        const longSummary = 'feat: ' + 'A'.repeat(500);
+        const result = processCommitMessage(longSummary);
+
+        assert.ok(result, 'Should handle very long summary');
+        assert.ok(result.summary.length > 100, 'Should preserve long summary');
+    });
+
+    test('ResponseProcessor should handle very long description', () => {
+        const longDescription = `feat: add feature
+
+${Array(100).fill('- Detail line').join('\n')}`;
+
+        const result = processCommitMessage(longDescription);
+
+        assert.ok(result, 'Should handle very long description');
+        assert.ok(result.description.length > 500, 'Should preserve long description');
+    });
+
+    test('ResponseProcessor should filter out AI response artifacts', () => {
+        const withArtifacts = `feat: add feature
+
+DIFF TO ANALYZE:
+Here is the diff you provided
+
+- Actual change 1
+- Actual change 2`;
+
+        const result = processCommitMessage(withArtifacts);
+
+        assert.ok(!result.description.includes('DIFF TO ANALYZE'), 'Should filter out artifacts');
+        assert.ok(!result.description.includes('Here is the diff'), 'Should filter out artifacts');
+        assert.ok(result.description.includes('Actual change 1'), 'Should keep actual content');
+    });
+
+    test('ResponseProcessor should handle only summary with no description', () => {
+        const summaryOnly = 'feat: add feature';
+        const result = processCommitMessage(summaryOnly);
+
+        assert.ok(result, 'Should handle summary-only response');
+        assert.strictEqual(result.summary, 'feat: add feature', 'Should have summary');
+        assert.strictEqual(result.description, '', 'Should have empty description');
+    });
+
+    test('ResponseProcessor should normalize whitespace', () => {
+        const messyWhitespace = `feat:   add    feature
+
+-    Item   with   spaces
+-  Another  item`;
+
+        const result = processCommitMessage(messyWhitespace);
+
+        assert.ok(result, 'Should handle messy whitespace');
+        assert.ok(result.summary.trim().length > 0, 'Should normalize summary whitespace');
+    });
+
+    test('ResponseProcessor consistency: same input should give same output', () => {
+        const input = `feat: add feature
+
+- Change 1
+- Change 2
+- Change 3`;
+
+        const result1 = processCommitMessage(input);
+        const result2 = processCommitMessage(input);
+
+        assert.deepStrictEqual(result1, result2, 'Should be consistent');
+    });
+
+    test('ResponseProcessor edge case: single line with newlines', () => {
+        const singleLineWithNewlines = '\n\nfeat: add feature\n\n';
+        const result = processCommitMessage(singleLineWithNewlines);
+
+        assert.strictEqual(result.summary, 'feat: add feature', 'Should trim newlines');
+    });
+
+    test('ResponseProcessor edge case: all bullet points', () => {
+        const allBullets = `- First item
+- Second item
+- Third item`;
+
+        const result = processCommitMessage(allBullets);
+
+        assert.ok(result.summary === '- First item', 'Should use first bullet as summary');
+        assert.ok(result.description.includes('- Second item'), 'Should include other bullets');
     });
 });

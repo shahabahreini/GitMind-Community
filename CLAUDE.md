@@ -153,11 +153,20 @@ Professional changelog generation from git history with intelligent version dete
   - Categories: Added, Changed, Deprecated, Removed, Fixed, Security, Technical (or matches existing)
   - Professional tone, NO emojis (unless existing changelog uses them)
   - Factual and concise with technical details
+- **Robust Token Management:**
+  - **Automatic Estimation**: Calculates commit tokens, changelog tokens, policy tokens, and response reserve
+  - **Token Formula**: `total = basePrompt(1500) + commits + changelog + policy + response(2500)`
+  - **Safety Limit**: 100,000 tokens (conservative across all providers)
+  - **Auto-Adjustment**: Proportionally reduces commits if over limit
+  - **User Warnings**: Modal dialog with adjustment details and confirmation
+  - **Debug Logging**: Detailed token breakdown when debug mode enabled
+  - **Large Repo Support**: Handles 1000+ commits with intelligent reduction
 - **User Guidance:**
   - Interactive tips modal before generation with best practices
   - Version detection strategies explained
   - Changelog policy awareness highlighted
-  - "Learn More" option to view CHANGELOG_FEATURE_GUIDE.md
+  - Token management and optimization tips
+  - Comprehensive documentation in `docs/CHANGELOG_GENERATION.md`
 - **Multi-Language Support:**
   - JavaScript/TypeScript: package.json version detection
   - Python/Go/Other: Git tags and commit message analysis

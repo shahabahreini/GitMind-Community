@@ -4,6 +4,7 @@ import { promisify } from 'util';
 import { debugLog } from '../debug/logger';
 import { generateCommitMessage } from '../api';
 import { getApiConfig } from '../../config/settings';
+import { estimateTokens } from '../../utils/tokenCounter';
 
 const execAsync = promisify(exec);
 
@@ -437,6 +438,138 @@ export class ChangelogService {
     }
 
     /**
+     * Build policy instructions string for token estimation
+     */
+    private buildPolicyInstructions(policy: ReturnType<typeof this.analyzeChangelogStructure> | null): string {
+        if (!policy) {
+            return '';
+        }
+
+        let instructions = 'POLICY:\n';
+
+        if (policy.versionFormat !== 'mixed') {
+            instructions += `Version: ${policy.versionFormat}\n`;
+        }
+        instructions += `Bullets: ${policy.bulletStyle}\n`;
+        if (policy.usesEmojis) {
+            instructions += 'Emojis: Yes\n';
+        }
+        if (policy.categoriesUsed.length > 0) {
+            instructions += `Categories: ${policy.categoriesUsed.join(', ')}\n`;
+        }
+
+        return instructions;
+    }
+
+    /**
+     * Estimate token count for changelog generation
+     */
+    private estimateChangelogTokens(
+        commitSummary: string,
+        existingChangelog: string | null,
+        policyInstructions: string
+    ): {
+        commitTokens: number;
+        changelogTokens: number;
+        policyTokens: number;
+        promptTokens: number;
+        totalTokens: number;
+        isWithinLimit: boolean;
+        recommendedMaxCommits: number | null;
+    } {
+        const commitTokens = estimateTokens(commitSummary);
+        const changelogTokens = existingChangelog ? estimateTokens(existingChangelog.substring(0, 5000)) : 0;
+        const policyTokens = estimateTokens(policyInstructions);
+
+        // Base prompt tokens (template text)
+        const basePromptTokens = 1500;
+        const promptTokens = basePromptTokens + commitTokens + changelogTokens + policyTokens;
+
+        // Reserve tokens for response (typical changelog entry is 500-2000 tokens)
+        const responseReserve = 2500;
+        const totalTokens = promptTokens + responseReserve;
+
+        // Most models have context limits between 8k-200k tokens
+        // Use conservative limit of 100k for safety with all providers
+        const maxTokenLimit = 100000;
+        const isWithinLimit = totalTokens <= maxTokenLimit;
+
+        // Calculate recommended max commits if over limit
+        let recommendedMaxCommits = null;
+        if (!isWithinLimit) {
+            const currentCommitCount = commitSummary.split('### Commit:').length - 1;
+            const tokensPerCommit = commitTokens / Math.max(1, currentCommitCount);
+            const availableTokens = maxTokenLimit - (basePromptTokens + changelogTokens + policyTokens + responseReserve);
+            recommendedMaxCommits = Math.floor(availableTokens / tokensPerCommit);
+        }
+
+        return {
+            commitTokens,
+            changelogTokens,
+            policyTokens,
+            promptTokens,
+            totalTokens,
+            isWithinLimit,
+            recommendedMaxCommits
+        };
+    }
+
+    /**
+     * Validate and adjust commit count based on token limits
+     */
+    private async validateTokenLimits(
+        versionGroups: VersionInfo[],
+        existingChangelog: string | null,
+        policyInstructions: string
+    ): Promise<{ adjustedGroups: VersionInfo[]; warnings: string[] }> {
+        const warnings: string[] = [];
+
+        // Prepare initial summary
+        let commitSummary = this.prepareCommitSummary(versionGroups);
+        let estimation = this.estimateChangelogTokens(commitSummary, existingChangelog, policyInstructions);
+
+        debugLog('Token estimation:', estimation);
+
+        // If within limits, return as-is
+        if (estimation.isWithinLimit) {
+            return { adjustedGroups: versionGroups, warnings };
+        }
+
+        // Over limit - try to reduce
+        warnings.push(`Initial prompt size (${estimation.totalTokens} tokens) exceeds recommended limit.`);
+
+        if (estimation.recommendedMaxCommits) {
+            warnings.push(`Reducing to ${estimation.recommendedMaxCommits} commits to fit within token limits.`);
+
+            // Reduce commits proportionally across versions
+            const totalCommits = versionGroups.reduce((sum, v) => sum + v.commits.length, 0);
+            const adjustedGroups: VersionInfo[] = [];
+
+            for (const group of versionGroups) {
+                const proportion = group.commits.length / totalCommits;
+                const targetCommits = Math.ceil(estimation.recommendedMaxCommits * proportion);
+                const commits = group.commits.slice(0, targetCommits);
+
+                if (commits.length > 0) {
+                    adjustedGroups.push({
+                        ...group,
+                        commits
+                    });
+                }
+            }
+
+            // Re-validate
+            commitSummary = this.prepareCommitSummary(adjustedGroups);
+            estimation = this.estimateChangelogTokens(commitSummary, existingChangelog, policyInstructions);
+            debugLog('Adjusted token estimation:', estimation);
+
+            return { adjustedGroups, warnings };
+        }
+
+        return { adjustedGroups: versionGroups, warnings };
+    }
+
+    /**
      * Generate changelog using AI
      */
     public async generateChangelog(config: ChangelogConfig = {}): Promise<string> {
@@ -470,18 +603,52 @@ export class ChangelogService {
         debugLog(`Found ${versionGroups.length} version groups with total commits:`,
             versionGroups.reduce((sum, v) => sum + v.commits.length, 0));
 
-        // Prepare context for AI
-        const commitSummary = this.prepareCommitSummary(versionGroups);
-
         // Analyze existing changelog structure if it exists
         const changelogPolicy = existingChangelog
             ? this.analyzeChangelogStructure(existingChangelog)
             : null;
 
+        // Build policy instructions for token estimation
+        const policyInstructions = this.buildPolicyInstructions(changelogPolicy);
+
+        // Validate token limits and adjust if needed
+        const { adjustedGroups, warnings } = await this.validateTokenLimits(
+            versionGroups,
+            existingChangelog,
+            policyInstructions
+        );
+
+        // Show warnings to user if any adjustments were made
+        if (warnings.length > 0) {
+            const warningMessage = warnings.join('\n');
+            const proceed = await vscode.window.showWarningMessage(
+                'Token Limit Warning',
+                {
+                    modal: true,
+                    detail: `${warningMessage}\n\nThis ensures the prompt fits within AI model limits. Do you want to proceed?`
+                },
+                'Proceed',
+                'Cancel'
+            );
+
+            if (proceed !== 'Proceed') {
+                throw new Error('Changelog generation cancelled by user.');
+            }
+        }
+
+        // Use adjusted groups
+        versionGroups = adjustedGroups;
+
+        // Prepare context for AI
+        const commitSummary = this.prepareCommitSummary(versionGroups);
+
         // Generate changelog using AI
         const apiConfig = await getApiConfig();
         const prompt = this.buildChangelogPrompt(commitSummary, existingChangelog, changelogPolicy);
 
+        // Final token estimation for logging
+        const finalEstimation = this.estimateChangelogTokens(commitSummary, existingChangelog, policyInstructions);
+        debugLog('Final token estimation before API call:', finalEstimation);
         debugLog('Calling AI API for changelog generation...');
 
         try {

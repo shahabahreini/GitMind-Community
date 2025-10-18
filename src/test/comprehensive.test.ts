@@ -9,6 +9,10 @@ import './suites/gitIntegration.test';
 import './suites/webviewComponents.test';
 import './suites/errorHandling.test';
 import './suites/configurationManagement.test';
+import './suites/coreServices.test';
+import './suites/changelogService.test';
+import './suites/diffProcessor.test';
+import './suites/tokenCounter.test';
 
 // Import core services for testing
 import { getApiConfig } from '../config/settings';
