@@ -72,6 +72,11 @@ const PROVIDER_DISPLAY_CONFIG: Record<string, ProviderDisplayConfig> = {
     displayName: "Perplexity",
     model: "sonar-pro",
     apiConfigured: (s) => !!s.perplexity?.apiKey
+  },
+  custom: {
+    displayName: "Custom API",
+    model: "Custom",
+    apiConfigured: (s) => !!(s.custom?.baseUrl && s.custom?.endpoint)
   }
 };
 

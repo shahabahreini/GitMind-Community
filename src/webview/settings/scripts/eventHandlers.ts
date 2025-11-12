@@ -320,7 +320,7 @@ export function getEventHandlersScript(): string {
     function setupProviderEventListeners() {
       // Provider field patterns - API keys, models, and URLs
       const apiKeyProviders = ['gemini', 'huggingface', 'mistral', 'cohere', 'openai', 'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'perplexity'];
-      const allProviders = ['gemini', 'huggingface', 'ollama', 'mistral', 'cohere', 'openai', 'together', 'openrouter', 'anthropic', 'copilot', 'deepseek', 'grok', 'perplexity'];
+      const allProviders = ['gemini', 'huggingface', 'ollama', 'mistral', 'cohere', 'openai', 'together', 'openrouter', 'anthropic', 'copilot', 'deepseek', 'grok', 'perplexity', 'custom'];
       
       allProviders.forEach(provider => {
         // Set up API key listener with debouncing

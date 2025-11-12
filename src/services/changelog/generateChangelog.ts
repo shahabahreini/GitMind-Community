@@ -26,7 +26,38 @@ export async function generateChangelog() {
             return;
         }
 
+        // Handle multi-root workspace selection
+        let workspaceFolder: vscode.WorkspaceFolder | undefined;
+        
+        if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 1) {
+            // Multiple workspace folders - let user choose
+            const selectedFolder = await vscode.window.showQuickPick(
+                vscode.workspace.workspaceFolders.map(folder => ({
+                    label: folder.name,
+                    description: folder.uri.fsPath,
+                    folder: folder
+                })),
+                {
+                    placeHolder: 'Select workspace folder for changelog generation',
+                    title: 'GitMind Pro - Select Workspace'
+                }
+            );
+
+            if (!selectedFolder) {
+                return; // User cancelled
+            }
+
+            workspaceFolder = selectedFolder.folder;
+        } else if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length === 1) {
+            workspaceFolder = vscode.workspace.workspaceFolders[0];
+        } else {
+            throw new Error('No workspace folder found. Please open a folder or workspace.');
+        }
+
         const changelogService = ChangelogService.getInstance();
+        
+        // Set the workspace root for the changelog service
+        (changelogService as any).workspaceRoot = workspaceFolder.uri.fsPath;
 
         // Check if feature is enabled
         if (!changelogService.isFeatureAvailable()) {
@@ -62,7 +93,7 @@ export async function generateChangelog() {
 
         if (showTips === 'Learn More') {
             // Open the feature guide
-            const guideUri = vscode.Uri.file(`${vscode.workspace.workspaceFolders?.[0]?.uri.fsPath}/CHANGELOG_FEATURE_GUIDE.md`);
+            const guideUri = vscode.Uri.file(`${workspaceFolder.uri.fsPath}/CHANGELOG_FEATURE_GUIDE.md`);
             try {
                 const doc = await vscode.workspace.openTextDocument(guideUri);
                 await vscode.window.showTextDocument(doc);
@@ -159,12 +190,9 @@ export async function generateChangelog() {
                         await changelogService.saveChangelog(changelog, options.mode);
 
                         // Open the saved file
-                        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-                        if (workspaceRoot) {
-                            const changelogUri = vscode.Uri.file(`${workspaceRoot}/CHANGELOG.md`);
-                            const document = await vscode.workspace.openTextDocument(changelogUri);
-                            await vscode.window.showTextDocument(document);
-                        }
+                        const changelogUri = vscode.Uri.file(`${workspaceFolder.uri.fsPath}/CHANGELOG.md`);
+                        const document = await vscode.workspace.openTextDocument(changelogUri);
+                        await vscode.window.showTextDocument(document);
 
                         vscode.window.showInformationMessage(
                             `Changelog ${options.mode === 'create' ? 'created' : 'updated'} successfully!`

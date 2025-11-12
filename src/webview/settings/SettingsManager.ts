@@ -33,7 +33,8 @@ export class SettingsManager {
         copilot: { model: "gpt-4o" },
         deepseek: { model: "deepseek-chat" },
         grok: { model: "grok-3" },
-        perplexity: { model: "llama-3.1-sonar-large-128k-online" }
+        perplexity: { model: "llama-3.1-sonar-large-128k-online" },
+        custom: { model: "" }
     };
 
     private static readonly API_KEY_PROVIDERS = [
@@ -41,7 +42,7 @@ export class SettingsManager {
         'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'perplexity'
     ];
 
-    private static readonly NO_API_KEY_PROVIDERS = ['ollama', 'copilot'];
+    private static readonly NO_API_KEY_PROVIDERS = ['ollama', 'copilot', 'custom'];
 
     public async getSettings(): Promise<ExtensionSettings> {
         const config = vscode.workspace.getConfiguration(SettingsManager.CONFIG_PREFIX);

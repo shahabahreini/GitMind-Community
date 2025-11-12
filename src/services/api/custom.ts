@@ -91,18 +91,41 @@ export async function callCustomAPI(
  */
 function buildRequestBody(requestFormat: string, prompt: string, model: string): any {
     try {
+        // If requestFormat is empty or "openai", use OpenAI-compatible format with messages array
+        if (!requestFormat || requestFormat.trim() === '' || requestFormat.toLowerCase() === 'openai') {
+            return {
+                model: model,
+                messages: [
+                    { role: 'system', content: 'You are a helpful assistant that generates git commit messages.' },
+                    { role: 'user', content: prompt }
+                ]
+            };
+        }
+
         // Replace placeholders in the template
-        const formatted = requestFormat
-            .replace('{{PROMPT}}', prompt)
-            .replace('{{MODEL}}', model);
+        let formatted = requestFormat
+            .replace(/\{\{MODEL\}\}/g, model)
+            .replace(/\{\{PROMPT\}\}/g, prompt);
+
+        // Also support {{MESSAGES}} placeholder for OpenAI-style APIs
+        if (formatted.includes('{{MESSAGES}}')) {
+            const messagesArray = [
+                { role: 'system', content: 'You are a helpful assistant that generates git commit messages.' },
+                { role: 'user', content: prompt }
+            ];
+            formatted = formatted.replace('{{MESSAGES}}', JSON.stringify(messagesArray));
+        }
 
         return JSON.parse(formatted);
     } catch (error) {
         debugLog('Error parsing request format:', error);
-        // Fallback to a simple format
+        // Fallback to OpenAI-compatible format with messages array
         return {
             model: model,
-            prompt: prompt
+            messages: [
+                { role: 'system', content: 'You are a helpful assistant that generates git commit messages.' },
+                { role: 'user', content: prompt }
+            ]
         };
     }
 }

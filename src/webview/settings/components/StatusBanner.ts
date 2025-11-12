@@ -77,6 +77,11 @@ export class StatusBanner {
       displayName: "Perplexity",
       defaultModel: "sonar-pro",
       getApiConfigured: (s) => !!s.perplexity?.apiKey
+    },
+    custom: {
+      displayName: "Custom API",
+      defaultModel: "Custom",
+      getApiConfigured: (s) => !!(s.custom?.baseUrl && s.custom?.endpoint)
     }
   };
 

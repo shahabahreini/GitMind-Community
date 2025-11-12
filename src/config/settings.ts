@@ -38,7 +38,20 @@ const PROVIDER_DEFAULTS: Record<string, ProviderDefaults> = {
     copilot: { model: "gpt-4o", enabled: false },
     deepseek: { model: "deepseek-chat", enabled: false },
     grok: { model: "grok-3", enabled: false },
-    perplexity: { model: "sonar-pro", enabled: false }
+    perplexity: { model: "sonar-pro", enabled: false },
+    custom: {
+        model: "",
+        enabled: false,
+        extras: {
+            baseUrl: "",
+            endpoint: "",
+            authType: "bearer",
+            authToken: "",
+            headerKey: "",
+            requestFormat: "",
+            responseFormat: ""
+        }
+    }
 };
 
 export function getConfiguration(): ExtensionConfig {
@@ -106,7 +119,7 @@ export async function getApiConfig(): Promise<ApiConfig> {
     };
 
     // Add API key for providers that need it
-    if (provider !== 'ollama' && provider !== 'copilot') {
+    if (provider !== 'ollama' && provider !== 'copilot' && provider !== 'custom') {
         // Use SecureKeyManager to get the appropriate API key based on encryption settings
         const secureKeyManager = SecureKeyManager.getInstance();
         // Always get the actual API key for API calls, not the display placeholder
@@ -121,6 +134,15 @@ export async function getApiConfig(): Promise<ApiConfig> {
             break;
         case 'huggingface':
             baseConfig.temperature = providerConfig.temperature;
+            break;
+        case 'custom':
+            baseConfig.baseUrl = providerConfig.baseUrl || "";
+            baseConfig.endpoint = providerConfig.endpoint || "";
+            baseConfig.authType = providerConfig.authType || "bearer";
+            baseConfig.authToken = providerConfig.authToken || "";
+            baseConfig.headerKey = providerConfig.headerKey || "";
+            baseConfig.requestFormat = providerConfig.requestFormat || "";
+            baseConfig.responseFormat = providerConfig.responseFormat || "";
             break;
     }
 

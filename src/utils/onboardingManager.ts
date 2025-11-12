@@ -359,7 +359,7 @@ export class OnboardingManager {
         const config = vscode.workspace.getConfiguration('gitmind');
 
         // List of all providers that could be configured
-        const providers = ['gemini', 'huggingface', 'ollama', 'mistral', 'cohere', 'openai', 'together', 'openrouter', 'anthropic', 'copilot', 'deepseek', 'grok', 'perplexity'];
+        const providers = ['gemini', 'huggingface', 'ollama', 'mistral', 'cohere', 'openai', 'together', 'openrouter', 'anthropic', 'copilot', 'deepseek', 'grok', 'perplexity', 'custom'];
 
         debugLog('Checking API configuration for all providers...');
 
@@ -370,6 +370,15 @@ export class OnboardingManager {
                 const currentProvider = config.get<string>('apiProvider');
                 if (currentProvider === provider) {
                     debugLog(`Found configured provider: ${provider} (no API key required)`);
+                    return true;
+                }
+            } else if (provider === 'custom') {
+                // Custom provider uses authToken and baseUrl instead of apiKey
+                const baseUrl = config.get<string>('custom.baseUrl');
+                const endpoint = config.get<string>('custom.endpoint');
+                debugLog(`Checking custom API: baseUrl=${!!baseUrl}, endpoint=${!!endpoint}`);
+                if (baseUrl && endpoint && baseUrl.trim().length > 0 && endpoint.trim().length > 0) {
+                    debugLog('Found configured custom API provider');
                     return true;
                 }
             } else {

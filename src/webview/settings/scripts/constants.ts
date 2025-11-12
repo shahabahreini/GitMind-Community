@@ -19,7 +19,8 @@ export const PROVIDER_DEFAULTS: ProviderDefaults = {
   copilot: { model: "gpt-4o" },
   deepseek: { model: "deepseek-chat" },
   grok: { model: "grok-3" },
-  perplexity: { model: "llama-3.1-sonar-large-128k-online" }
+  perplexity: { model: "llama-3.1-sonar-large-128k-online" },
+  custom: { model: "" }
 };
 
 export const API_KEY_PROVIDERS = [
@@ -27,7 +28,7 @@ export const API_KEY_PROVIDERS = [
   'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'perplexity'
 ];
 
-export const NO_API_KEY_PROVIDERS = ['ollama', 'copilot'];
+export const NO_API_KEY_PROVIDERS = ['ollama', 'copilot', 'custom'];
 
 export const DEFAULT_MODELS = {
   mistral: ['mistral-tiny', 'mistral-small', 'mistral-medium', 'mistral-large-latest'],
