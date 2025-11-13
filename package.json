@@ -490,6 +490,12 @@
           "default": "sonar-pro",
           "description": "Perplexity model to use for generating commit messages"
         },
+        "gitmind.custom.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable custom API provider (Pro feature)",
+          "markdownDescription": "**Pro Feature**: Enable custom API endpoint for commit message generation"
+        },
         "gitmind.custom.baseUrl": {
           "type": "string",
           "default": "",
