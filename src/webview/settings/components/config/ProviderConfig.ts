@@ -526,9 +526,41 @@ export class ProviderConfig {
                         <button id="customTestConnection" class="button small">Test Connection</button>
                     </div>
                     <div class="help-text">
-                        <a href="https://github.com/gitmind-io/gitmind/blob/main/docs/custom-api-guide.md" target="_blank">
-                            View documentation for Custom API configuration
-                        </a>
+                        <details>
+                            <summary>View guidelines for Custom API configuration</summary>
+                            <div class="guidelines">
+                                <p>Use these settings to connect to your private AI endpoint. Supported auth types: Bearer, API Key (custom header), Basic, or None.</p>
+                                <ul>
+                                    <li><strong>Base URL</strong>: e.g. <code>https://api.example.com</code></li>
+                                    <li><strong>Endpoint Path</strong>: e.g. <code>/v1/chat/completions</code></li>
+                                    <li><strong>Authentication</strong>:
+                                        <ul>
+                                            <li><strong>Bearer</strong>: Sends <code>Authorization: Bearer &lt;token&gt;</code></li>
+                                            <li><strong>API Key</strong>: Sends <code>&lt;Header Key&gt;: &lt;token&gt;</code> (e.g., <code>X-API-Key</code>)</li>
+                                            <li><strong>Basic</strong>: Sends <code>Authorization: Basic &lt;base64(token)&gt;</code></li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>Request Format</strong>: JSON template. Placeholders:
+                                        <ul>
+                                            <li><code>{{model}}</code> or <code>{{MODEL}}</code></li>
+                                            <li><code>{{prompt}}</code> or <code>{{PROMPT}}</code></li>
+                                            <li><code>{{messages}}</code> or <code>{{MESSAGES}}</code> (OpenAI-style array)</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>Response Format</strong>:
+                                        <p>Choose a known format (<code>openai</code>, <code>anthropic</code>) or provide a JSON path like <code>choices[0].message.content</code>.</p>
+                                    </li>
+                                </ul>
+                                <p><strong>Examples</strong></p>
+<pre><code>{
+  "model": "{{model}}",
+  "messages": {{MESSAGES}},
+  "temperature": 0.2
+}</code></pre>
+<pre><code>choices[0].message.content</code></pre>
+                                <p>Use "Test Connection" to see a summary including latency, detected format, and a suggested response path.</p>
+                            </div>
+                        </details>
                     </div>`
                 }
             ]

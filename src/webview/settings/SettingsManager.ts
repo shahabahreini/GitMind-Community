@@ -108,6 +108,7 @@ export class SettingsManager {
                     maxVersions: config.get<number>("pro.changelog.maxVersions") ?? 10,
                     versionOrder: config.get<'newest-first' | 'oldest-first'>("pro.changelog.versionOrder") ?? 'newest-first',
                 }
+
             },
             subscription: {
                 email: config.get<string>("subscription.email") || "",
@@ -149,7 +150,13 @@ export class SettingsManager {
                 (providerConfig as any).baseUrl = config.get<string>('custom.baseUrl') || "";
                 (providerConfig as any).endpoint = config.get<string>('custom.endpoint') || "";
                 (providerConfig as any).authType = config.get<string>('custom.authType') || 'bearer';
-                (providerConfig as any).authToken = config.get<string>('custom.authToken') || "";
+                // Retrieve token using SecureKeyManager for proper placeholder display when encrypted
+                try {
+                    const tokenDisplay = await secureKeyManager.getApiKey('custom');
+                    (providerConfig as any).authToken = tokenDisplay || "";
+                } catch (err) {
+                    (providerConfig as any).authToken = config.get<string>('custom.authToken') || "";
+                }
                 (providerConfig as any).headerKey = config.get<string>('custom.headerKey') || "";
                 (providerConfig as any).requestFormat = config.get<string>('custom.requestFormat') || "";
                 (providerConfig as any).responseFormat = config.get<string>('custom.responseFormat') || "";
@@ -319,6 +326,26 @@ export class SettingsManager {
             }
         }
 
+        // Handle custom provider authToken storage using the same secure mechanism
+        const newCustom = (newSettings as any).custom;
+        const currentCustom = (currentSettings as any).custom;
+        if (newCustom && typeof newCustom.authToken === 'string') {
+            const token = newCustom.authToken.trim();
+            const currentToken = currentCustom?.authToken || "";
+            if (token.length > 0 && token !== currentToken) {
+                try {
+                    debugLog('Storing updated custom auth token');
+                    await secureKeyManager.storeApiKey('custom', token);
+                    if (encryptionAvailable && encryptionEnabled) {
+                        const cfg = vscode.workspace.getConfiguration(SettingsManager.CONFIG_PREFIX);
+                        await cfg.update('custom.authToken', "", vscode.ConfigurationTarget.Global);
+                    }
+                } catch (e) {
+                    debugLog('Failed to store custom auth token:', e);
+                }
+            }
+        }
+
         // Handle subscription changes that might affect encryption availability
         const subscriptionChanged = currentSettings.subscription?.email !== newSettings.subscription?.email ||
             currentSettings.subscription?.status !== newSettings.subscription?.status;
@@ -404,9 +431,20 @@ export class SettingsManager {
                     providerUpdates.push(
                         config.update('custom.authType', providerSettings.authType, target)
                     );
-                    providerUpdates.push(
-                        config.update('custom.authToken', providerSettings.authToken, target)
-                    );
+                    // Handle authToken with encryption rules similar to other providers
+                    {
+                        const encryptionEnabled = settings.pro?.encryptionEnabled ?? false;
+                        const encryptionAvailable = !!(settings.subscription?.email) || process.env.GITMIND_ENCRYPTION_DEV_MODE === 'true';
+                        if (!encryptionEnabled || !encryptionAvailable) {
+                            providerUpdates.push(
+                                config.update('custom.authToken', providerSettings.authToken, target)
+                            );
+                        } else {
+                            providerUpdates.push(
+                                config.update('custom.authToken', undefined, target)
+                            );
+                        }
+                    }
                     providerUpdates.push(
                         config.update('custom.headerKey', providerSettings.headerKey, target)
                     );
@@ -423,7 +461,7 @@ export class SettingsManager {
 
                 // Handle API key - only save to plain text if encryption is not being used
                 const encryptionEnabled = settings.pro?.encryptionEnabled ?? false;
-                const encryptionAvailable = settings.subscription?.email || process.env.GITMIND_ENCRYPTION_DEV_MODE === 'true';
+                const encryptionAvailable = !!(settings.subscription?.email) || process.env.GITMIND_ENCRYPTION_DEV_MODE === 'true';
 
                 if (!encryptionEnabled || !encryptionAvailable) {
                     providerUpdates.push(

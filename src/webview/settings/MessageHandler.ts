@@ -523,6 +523,18 @@ export class MessageHandler {
                     const endpoint = settings.endpoint?.trim();
                     const authType = settings.authType;
 
+                    // Resolve token: prefer secure storage if UI holds placeholder/empty
+                    const secureKeyManager = SecureKeyManager.getInstance();
+                    let tokenForUse: string = settings.authToken || '';
+                    try {
+                        const storedToken = await secureKeyManager.getApiKey('custom', false);
+                        if (storedToken && (tokenForUse.trim().length === 0 || tokenForUse.trim() === '[ENCRYPTED]')) {
+                            tokenForUse = storedToken;
+                        }
+                    } catch (e) {
+                        debugLog('Test Connection: Unable to retrieve secure custom token', e);
+                    }
+
                     // Validation checks
                     if (!baseUrl) {
                         debugLog('Test Connection: Validation failed - Base URL is missing');
@@ -541,15 +553,12 @@ export class MessageHandler {
                     }
 
                     // If auth type requires token (bearer, apikey, basic), make sure it's provided
-                    if ((authType === 'bearer' || authType === 'apikey' || authType === 'basic') && !settings.authToken) {
+                    if ((authType === 'bearer' || authType === 'apikey' || authType === 'basic') && !tokenForUse) {
                         debugLog('Test Connection: Validation failed - Auth token is missing');
                         throw new Error('Authentication token is required for the selected authentication type');
                     }
 
                     debugLog('Test Connection: Validation passed, preparing test request');
-
-                    // Import the custom API function
-                    const { callCustomAPI } = await import('../../services/api/custom.js');
 
                     // Create minimal test payload
                     const testPayload = {
@@ -565,57 +574,223 @@ export class MessageHandler {
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
+                    // Build headers based on auth type
+                    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+                    if (authType === 'bearer') {
+                        headers['Authorization'] = `Bearer ${tokenForUse}`;
+                    } else if (authType === 'apikey') {
+                        headers[settings.headerKey?.trim() || 'x-api-key'] = tokenForUse;
+                    } else if (authType === 'basic') {
+                        headers['Authorization'] = `Basic ${Buffer.from(tokenForUse).toString('base64')}`;
+                    }
+
+                    // Build request body using simple templating similar to custom.ts
+                    const buildTestBody = (): any => {
+                        const requestFormat: string = settings.requestFormat || 'openai';
+                        const model = settings.model || 'gpt-3.5-turbo';
+                        const prompt = JSON.stringify(testPayload);
+
+                        try {
+                            if (!requestFormat || requestFormat.trim() === '' || requestFormat.toLowerCase() === 'openai') {
+                                return {
+                                    model,
+                                    messages: [
+                                        { role: 'system', content: 'You are a helpful assistant that generates git commit messages.' },
+                                        { role: 'user', content: 'Hello, this is a test message to verify the connection.' }
+                                    ]
+                                };
+                            }
+
+                            let formatted = requestFormat
+                                .replace(/\{\{MODEL\}\}/g, model)
+                                .replace(/\{\{PROMPT\}\}/g, prompt)
+                                .replace(/\{\{model\}\}/g, model)
+                                .replace(/\{\{prompt\}\}/g, prompt);
+
+                            if (formatted.includes('{{MESSAGES}}') || formatted.includes('{{messages}}')) {
+                                const messagesArray = [
+                                    { role: 'system', content: 'You are a helpful assistant that generates git commit messages.' },
+                                    { role: 'user', content: 'Hello, this is a test message to verify the connection.' }
+                                ];
+                                formatted = formatted
+                                    .replace('{{MESSAGES}}', JSON.stringify(messagesArray))
+                                    .replace('{{messages}}', JSON.stringify(messagesArray));
+                            }
+
+                            return JSON.parse(formatted);
+                        } catch (e) {
+                            debugLog('Test Connection: Failed to parse custom request format, falling back to OpenAI format');
+                            return {
+                                model,
+                                messages: [
+                                    { role: 'system', content: 'You are a helpful assistant that generates git commit messages.' },
+                                    { role: 'user', content: 'Hello, this is a test message to verify the connection.' }
+                                ]
+                            };
+                        }
+                    };
+
                     debugLog('Test Connection: Sending request to API (5 second timeout)');
 
                     try {
-                        // Make a test call with minimal content
                         const startTime = Date.now();
-                        await callCustomAPI(
-                            baseUrl,
-                            endpoint,
-                            authType,
-                            settings.authToken || '',
-                            settings.headerKey || '',
-                            settings.requestFormat || 'openai',
-                            settings.responseFormat || 'openai',
-                            settings.model || 'gpt-3.5-turbo',
-                            JSON.stringify(testPayload)
-                        );
+                        const response = await fetch(`${baseUrl}${endpoint}`, {
+                            method: 'POST',
+                            headers,
+                            body: JSON.stringify(buildTestBody()),
+                            signal: controller.signal
+                        });
                         const duration = Date.now() - startTime;
+
+                        const status = response.status;
+                        const ok = response.ok;
+                        const contentType = response.headers.get('content-type') || 'unknown';
+                        const rawText = await response.text();
+                        const responseSize = Buffer.byteLength(rawText || '', 'utf8');
+
+                        if (!ok) {
+                            let errorMessage = `Connection failed: HTTP ${status}`;
+                            if (rawText) {
+                                const snippet = rawText.length > 300 ? `${rawText.slice(0, 300)}…` : rawText;
+                                errorMessage += `\nResponse: ${snippet}`;
+                            }
+
+                            // Add hints based on status
+                            if (status === 401 || status === 403) {
+                                errorMessage += `\nHint: Authentication failed. Verify token/key, auth type, and header key name.`;
+                            } else if (status === 404) {
+                                errorMessage += `\nHint: Endpoint not found. Verify the endpoint path (${endpoint}).`;
+                            } else if (status === 400) {
+                                errorMessage += `\nHint: Bad request. Check your Request Format template.`;
+                            } else if (status === 415) {
+                                errorMessage += `\nHint: Unsupported Media Type. Ensure 'Content-Type: application/json'.`;
+                            }
+
+                            throw new Error(errorMessage);
+                        }
+
+                        // Try to parse JSON to detect structure
+                        let data: any = undefined;
+                        try {
+                            data = contentType.includes('application/json') ? JSON.parse(rawText) : JSON.parse(rawText);
+                        } catch {
+                            // Non-JSON response; proceed with raw text
+                        }
+
+                        const detectStructure = (payload: any): { format: string; path?: string; valuePreview?: string } => {
+                            const truncate = (s: string) => (s.length > 200 ? `${s.slice(0, 200)}…` : s);
+                            if (payload && typeof payload === 'object') {
+                                const openai = payload?.choices?.[0];
+                                const openaiText = openai?.message?.content ?? openai?.text;
+                                if (typeof openaiText === 'string' && openaiText.length > 0) {
+                                    return { format: 'openai-like', path: 'choices[0].message.content', valuePreview: truncate(openaiText) };
+                                }
+                                const claudeText = payload?.content?.[0]?.text ?? payload?.content;
+                                if (typeof claudeText === 'string' && claudeText.length > 0) {
+                                    return { format: 'anthropic-like', path: 'content[0].text', valuePreview: truncate(claudeText) };
+                                }
+                                const geminiText = payload?.candidates?.[0]?.content?.parts?.[0]?.text
+                                    ?? payload?.candidates?.[0]?.content?.parts?.find?.((p: any) => typeof p?.text === 'string')?.text
+                                    ?? payload?.output_text;
+                                if (typeof geminiText === 'string' && geminiText.length > 0) {
+                                    return { format: 'gemini-like', path: 'candidates[0].content.parts[0].text', valuePreview: truncate(geminiText) };
+                                }
+
+                                // Generic DFS to find first string and path
+                                const seen = new Set<any>();
+                                const dfs = (obj: any, path: string): { path: string; value: string } | undefined => {
+                                    if (!obj || typeof obj !== 'object' || seen.has(obj)) {
+                                        return undefined;
+                                    }
+                                    seen.add(obj);
+                                    if (Array.isArray(obj)) {
+                                        for (let i = 0; i < obj.length; i++) {
+                                            const v = obj[i];
+                                            if (typeof v === 'string' && v.trim()) {
+                                                return { path: `${path}[${i}]`, value: v };
+                                            }
+                                            const child = dfs(v, `${path}[${i}]`);
+                                            if (child) { return child; }
+                                        }
+                                    } else {
+                                        for (const k of Object.keys(obj)) {
+                                            const v = obj[k];
+                                            if (typeof v === 'string' && v.trim()) {
+                                                return { path: path ? `${path}.${k}` : k, value: v };
+                                            }
+                                            const child = dfs(v, path ? `${path}.${k}` : k);
+                                            if (child) { return child; }
+                                        }
+                                    }
+                                    return undefined;
+                                };
+                                const found = dfs(payload, '');
+                                if (found) {
+                                    return { format: 'custom', path: found.path || '', valuePreview: truncate(found.value) };
+                                }
+                                return { format: 'unknown' };
+                            }
+                            if (typeof payload === 'string' && payload.trim()) {
+                                return { format: 'text', valuePreview: truncate(payload) };
+                            }
+                            return { format: 'unknown' };
+                        };
+
+                        const structure = detectStructure(data ?? rawText);
 
                         debugLog('Test Connection: SUCCESS', {
                             duration: `${duration}ms`,
                             endpoint: `${baseUrl}${endpoint}`,
-                            model: settings.model || 'gpt-3.5-turbo'
+                            status,
+                            contentType,
+                            responseSize,
+                            structure
                         });
 
-                        // If we get here, it was successful
+                        const lines: string[] = [];
+                        lines.push('Connection successful!');
+                        lines.push(`- Endpoint: ${baseUrl}${endpoint}`);
+                        lines.push(`- HTTP Status: ${status}`);
+                        lines.push(`- Latency: ${duration}ms`);
+                        lines.push(`- Content-Type: ${contentType}`);
+                        lines.push(`- Response Size: ${responseSize} bytes`);
+                        lines.push(`- Detected Format: ${structure.format}`);
+                        if (structure.path) { lines.push(`- Suggested Response Path: ${structure.path}`); }
+                        if (structure.valuePreview) { lines.push(`- Preview: ${structure.valuePreview}`); }
+
                         if (SettingsWebview.isWebviewOpen()) {
                             SettingsWebview.postMessageToWebview({
                                 command: 'customApiTestResult',
                                 success: true,
-                                message: 'Connection successful! Your custom API is configured correctly.'
+                                message: lines.join('\n')
                             });
                         }
                     } catch (apiError: any) {
                         // API call failed
                         let errorMessage = 'Connection failed: ';
 
-                        if (apiError.name === 'AbortError') {
+                        if (apiError?.name === 'AbortError') {
                             errorMessage += 'Request timed out after 5 seconds.';
+                        } else if (typeof apiError?.message === 'string') {
+                            errorMessage += apiError.message;
                         } else {
-                            errorMessage += apiError.message || 'Unknown error occurred';
+                            errorMessage += 'Unknown error occurred';
                         }
 
-                        // Add status code if available
-                        if (apiError.statusCode) {
-                            errorMessage += ` (Status code: ${apiError.statusCode})`;
+                        // Common actionable hints for network-level failures
+                        if (typeof apiError?.message === 'string') {
+                            if (apiError.message.includes('ENOTFOUND') || apiError.message.includes('getaddrinfo')) {
+                                errorMessage += '\nHint: Host not reachable. Check Base URL and network connectivity.';
+                            } else if (apiError.message.includes('ECONNREFUSED')) {
+                                errorMessage += '\nHint: Connection refused. Ensure the server is running and accessible.';
+                            } else if (apiError.message.includes('EAI_AGAIN')) {
+                                errorMessage += '\nHint: DNS lookup timed out. Try again or verify DNS configuration.';
+                            }
                         }
 
                         debugLog('Test Connection: FAILED', {
-                            error: apiError.message || 'Unknown error',
-                            errorName: apiError.name,
-                            statusCode: apiError.statusCode,
+                            error: apiError?.message || 'Unknown error',
+                            errorName: apiError?.name,
                             endpoint: `${baseUrl}${endpoint}`
                         });
 
