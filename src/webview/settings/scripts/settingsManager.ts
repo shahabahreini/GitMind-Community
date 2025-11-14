@@ -657,7 +657,11 @@ function generateUtilityFunctions(): string {
       
       if (isEncrypted) {
         // For encrypted keys, request the actual decrypted key from backend
-        const provider = fieldId.replace('ApiKey', '').toLowerCase();
+        // Handle both ApiKey and AuthToken field naming patterns
+        let provider = fieldId.replace('ApiKey', '').toLowerCase();
+        if (fieldId === 'customAuthToken') {
+          provider = 'custom';
+        }
         
         if (typeof vscode !== 'undefined') {
           // Request the actual API key from the backend
@@ -692,7 +696,10 @@ function generateUtilityFunctions(): string {
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(valueToCopy).then(() => {
           // Show "Copied" hint
-          const provider = fieldId.replace('ApiKey', '').toLowerCase();
+          let provider = fieldId.replace('ApiKey', '').toLowerCase();
+          if (fieldId === 'customAuthToken') {
+            provider = 'custom';
+          }
           if (window.showCopiedHint) {
             window.showCopiedHint(provider);
           }
@@ -727,7 +734,10 @@ function generateUtilityFunctions(): string {
         if (successful) {
           // Show "Copied" hint
           if (fieldId) {
-            const provider = fieldId.replace('ApiKey', '').toLowerCase();
+            let provider = fieldId.replace('ApiKey', '').toLowerCase();
+            if (fieldId === 'customAuthToken') {
+              provider = 'custom';
+            }
             if (window.showCopiedHint) {
               window.showCopiedHint(provider);
             }

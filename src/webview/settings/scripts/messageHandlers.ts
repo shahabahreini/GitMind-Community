@@ -728,7 +728,9 @@ export function getMessageHandlersScript(): string {
 
     // Show "Copied" hint on the copy button
     function showCopiedHint(provider) {
-      const copyButton = document.querySelector(\`button[onclick="copyAPIKey('\${provider}ApiKey')"]\`);
+      // Handle custom provider's different field naming
+      const fieldId = provider === 'custom' ? 'customAuthToken' : \`\${provider}ApiKey\`;
+      const copyButton = document.querySelector(\`button[onclick="copyAPIKey('\${fieldId}')"]\`);
       if (copyButton) {
         const originalText = copyButton.innerHTML;
         const originalTitle = copyButton.title;
