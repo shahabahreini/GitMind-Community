@@ -1,3 +1,43 @@
+## v4.4.0 - 2025-11-14
+
+### New Features
+
+-   **Enhanced AI Model Support**: Added support for latest AI models across multiple providers
+    -   **OpenAI**: Added GPT-4.1, GPT-4.1 Mini, GPT-4.1 Nano, o3, and o4-mini models
+    -   **Google Gemini**: Added Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash-Lite, Gemini 2.0 Flash, and Gemini 2.0 Flash-Lite models with enhanced token limits (up to 65,536 tokens)
+    -   **Grok**: Added Grok 3, Grok 3 Mini, and enhanced Grok 2 model variants including Vision, Turbo, and Fast versions
+
+### Enhanced
+
+-   **Settings UI Improvements**: Enhanced webview message handling and state management for better reliability
+-   **Model Configuration**: Improved model selection interface with updated model descriptions and capabilities
+
+### Technical
+
+-   **Type Safety**: Enhanced TypeScript interfaces for better type safety across the extension
+-   **Message Handler**: Improved MessageHandler implementation for more robust webview communication
+
+## v4.3.2 - 2025-10-20
+
+### Fixed
+
+-   **Commit History Analysis UI**: Fixed loading state issue where button remained in loading state after receiving results
+    -   **Consistent State Management**: Resolved inconsistency between `setButtonLoadingState` (uses textContent) and ProFeatureRenderer reset logic (uses innerHTML)
+    -   **Button State Reset**: Updated to use consistent `setButtonLoadingState` function for both setting and resetting button state
+    -   **UI Consistency**: Updated button HTML to match expected format with proper icon handling
+
+### Enhanced
+
+-   **Test Coverage**: Improved test suite reliability and coverage
+    -   **Settings UI Tests**: Enhanced timeout protection for Settings webview state preservation tests
+    -   **Pro Features Tests**: Added timeout protection for subscription management tests
+    -   **Test Stability**: Implemented Promise.race pattern to prevent test hanging on async operations
+
+### Technical
+
+-   **Test Infrastructure**: Enhanced test environment stability with multi-layer timeout protection
+-   **Error Handling**: Improved error handling in test scenarios with proper TypeScript type casting
+
 ## v4.3.1 - 2025-10-18
 
 ### New Features

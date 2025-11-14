@@ -747,22 +747,56 @@ export class MessageHandler {
                             structure
                         });
 
-                        const lines: string[] = [];
-                        lines.push('Connection successful!');
-                        lines.push(`- Endpoint: ${baseUrl}${endpoint}`);
-                        lines.push(`- HTTP Status: ${status}`);
-                        lines.push(`- Latency: ${duration}ms`);
-                        lines.push(`- Content-Type: ${contentType}`);
-                        lines.push(`- Response Size: ${responseSize} bytes`);
-                        lines.push(`- Detected Format: ${structure.format}`);
-                        if (structure.path) { lines.push(`- Suggested Response Path: ${structure.path}`); }
-                        if (structure.valuePreview) { lines.push(`- Preview: ${structure.valuePreview}`); }
+                        // Build formatted HTML message
+                        const messageHtml = `
+                            <div class="test-result-header">Connection Successful</div>
+                            <div class="test-result-section">
+                                <div class="test-result-label">Endpoint</div>
+                                <div class="test-result-value">${baseUrl}${endpoint}</div>
+                            </div>
+                            <div class="test-result-row">
+                                <div class="test-result-item">
+                                    <span class="test-result-label">HTTP Status:</span>
+                                    <span class="test-result-value">${status}</span>
+                                </div>
+                                <div class="test-result-item">
+                                    <span class="test-result-label">Latency:</span>
+                                    <span class="test-result-value">${duration}ms</span>
+                                </div>
+                            </div>
+                            <div class="test-result-row">
+                                <div class="test-result-item">
+                                    <span class="test-result-label">Content-Type:</span>
+                                    <span class="test-result-value">${contentType}</span>
+                                </div>
+                                <div class="test-result-item">
+                                    <span class="test-result-label">Response Size:</span>
+                                    <span class="test-result-value">${responseSize} bytes</span>
+                                </div>
+                            </div>
+                            <div class="test-result-section">
+                                <div class="test-result-label">Detected Format</div>
+                                <div class="test-result-value test-result-format">${structure.format}</div>
+                            </div>
+                            ${structure.path ? `
+                            <div class="test-result-section">
+                                <div class="test-result-label">Suggested Response Path</div>
+                                <div class="test-result-value test-result-path">${structure.path}</div>
+                            </div>
+                            ` : ''}
+                            ${structure.valuePreview ? `
+                            <div class="test-result-section">
+                                <div class="test-result-label">Response Preview</div>
+                                <div class="test-result-value test-result-preview">${structure.valuePreview}</div>
+                            </div>
+                            ` : ''}
+                        `;
 
                         if (SettingsWebview.isWebviewOpen()) {
                             SettingsWebview.postMessageToWebview({
                                 command: 'customApiTestResult',
                                 success: true,
-                                message: lines.join('\n')
+                                message: messageHtml
                             });
                         }
                     } catch (apiError: any) {

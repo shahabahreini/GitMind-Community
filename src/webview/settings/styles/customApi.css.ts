@@ -44,9 +44,10 @@ export function getCustomApiStyles(): string {
     
     .custom-api-test-result {
         margin-top: 0.5rem;
-        padding: 0.5rem;
+        padding: 0.75rem;
         border-radius: 4px;
         font-size: 0.9rem;
+        line-height: 1.5;
     }
     
     .custom-api-test-success {
@@ -64,6 +65,74 @@ export function getCustomApiStyles(): string {
     .custom-api-test-loading {
         color: var(--vscode-foreground);
         opacity: 0.7;
+    }
+    
+    /* Test result formatting */
+    .test-result-header {
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid currentColor;
+        opacity: 0.9;
+    }
+    
+    .test-result-section {
+        margin-bottom: 0.5rem;
+    }
+    
+    .test-result-row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .test-result-item {
+        flex: 1;
+        min-width: 150px;
+    }
+    
+    .test-result-label {
+        font-weight: 500;
+        opacity: 0.8;
+        font-size: 0.85rem;
+        display: block;
+        margin-bottom: 0.15rem;
+    }
+    
+    .test-result-value {
+        font-family: var(--vscode-editor-font-family, monospace);
+        opacity: 1;
+        word-break: break-all;
+    }
+    
+    .test-result-format {
+        display: inline-block;
+        padding: 0.15rem 0.4rem;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        font-size: 0.85rem;
+    }
+    
+    .test-result-path {
+        font-size: 0.85rem;
+        background-color: rgba(255, 255, 255, 0.05);
+        padding: 0.25rem 0.4rem;
+        border-radius: 3px;
+        display: inline-block;
+    }
+    
+    .test-result-preview {
+        font-size: 0.85rem;
+        font-style: italic;
+        opacity: 0.9;
+        margin-top: 0.25rem;
+        display: block;
+        padding: 0.4rem;
+        background-color: rgba(255, 255, 255, 0.05);
+        border-radius: 3px;
+        border-left: 2px solid currentColor;
     }
     
     /* Show/hide header key field based on auth type */

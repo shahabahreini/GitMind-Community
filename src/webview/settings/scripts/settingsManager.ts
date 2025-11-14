@@ -100,7 +100,12 @@ function getCustomApiHandlerScript(): string {
             resultDiv.className = 'custom-api-test-result custom-api-test-error';
           }
           
-          resultDiv.textContent = message.message;
+          // Use innerHTML for success messages (formatted HTML), textContent for errors (plain text)
+          if (message.success) {
+            resultDiv.innerHTML = message.message;
+          } else {
+            resultDiv.textContent = message.message;
+          }
           
           // Re-enable the test button
           const testButton = document.getElementById('customTestConnection');
