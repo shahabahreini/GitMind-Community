@@ -496,6 +496,15 @@ export function getEventHandlersScript(): string {
               }
             }
           });
+
+          // Handle the custom provider enable toggle separately (checkbox)
+          const customEnabledEl = document.getElementById('customEnabled');
+          if (customEnabledEl && !customEnabledEl.hasAttribute('data-listener-added')) {
+            customEnabledEl.setAttribute('data-listener-added', 'true');
+            customEnabledEl.addEventListener('change', function() {
+              createSettingHandler('custom.enabled', (el) => el.checked)(this);
+            });
+          }
         }
       });
     }

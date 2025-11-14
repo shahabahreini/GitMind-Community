@@ -144,6 +144,18 @@ export class SettingsManager {
                 providerConfig.url = config.get<string>(`${provider}.url`) || "";
             }
 
+            // Read custom provider extras and enabled flag
+            if (provider === 'custom') {
+                (providerConfig as any).baseUrl = config.get<string>('custom.baseUrl') || "";
+                (providerConfig as any).endpoint = config.get<string>('custom.endpoint') || "";
+                (providerConfig as any).authType = config.get<string>('custom.authType') || 'bearer';
+                (providerConfig as any).authToken = config.get<string>('custom.authToken') || "";
+                (providerConfig as any).headerKey = config.get<string>('custom.headerKey') || "";
+                (providerConfig as any).requestFormat = config.get<string>('custom.requestFormat') || "";
+                (providerConfig as any).responseFormat = config.get<string>('custom.responseFormat') || "";
+                (providerConfig as any).enabled = config.get<boolean>('custom.enabled') ?? false;
+            }
+
             (settings as any)[provider] = providerConfig;
         }
 
@@ -378,6 +390,34 @@ export class SettingsManager {
                 if (provider === 'ollama' && providerSettings.url !== undefined) {
                     providerUpdates.push(
                         config.update(`${provider}.url`, providerSettings.url, target)
+                    );
+                }
+
+                // Persist custom provider extras and enabled flag
+                if (provider === 'custom') {
+                    providerUpdates.push(
+                        config.update('custom.baseUrl', providerSettings.baseUrl, target)
+                    );
+                    providerUpdates.push(
+                        config.update('custom.endpoint', providerSettings.endpoint, target)
+                    );
+                    providerUpdates.push(
+                        config.update('custom.authType', providerSettings.authType, target)
+                    );
+                    providerUpdates.push(
+                        config.update('custom.authToken', providerSettings.authToken, target)
+                    );
+                    providerUpdates.push(
+                        config.update('custom.headerKey', providerSettings.headerKey, target)
+                    );
+                    providerUpdates.push(
+                        config.update('custom.requestFormat', providerSettings.requestFormat, target)
+                    );
+                    providerUpdates.push(
+                        config.update('custom.responseFormat', providerSettings.responseFormat, target)
+                    );
+                    providerUpdates.push(
+                        config.update('custom.enabled', providerSettings.enabled ?? false, target)
                     );
                 }
 

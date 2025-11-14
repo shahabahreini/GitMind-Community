@@ -139,6 +139,10 @@ export function generateFormInitialization(): string {
         `  if (customBaseUrlEl) customBaseUrlEl.value = currentSettings.custom?.baseUrl || '';`,
         `} catch (e) { console.warn('Failed to set customBaseUrl:', e); }`,
         `try {`,
+        `  const customEnabledEl = document.getElementById('customEnabled');`,
+        `  if (customEnabledEl) customEnabledEl.checked = currentSettings.custom?.enabled ?? false;`,
+        `} catch (e) { console.warn('Failed to set customEnabled:', e); }`,
+        `try {`,
         `  const customEndpointEl = document.getElementById('customEndpoint');`,
         `  if (customEndpointEl) customEndpointEl.value = currentSettings.custom?.endpoint || '';`,
         `} catch (e) { console.warn('Failed to set customEndpoint:', e); }`,
@@ -188,7 +192,7 @@ export function generateSettingsCollection(): string {
       fields.push(`requestFormat: (document.getElementById('customRequestFormat')?.value || 'openai')`);
       fields.push(`responseFormat: (document.getElementById('customResponseFormat')?.value || 'openai')`);
       fields.push(`model: (document.getElementById('customModel')?.value || '')`);
-      fields.push(`enabled: currentSettings.custom?.enabled ?? false`);
+      fields.push(`enabled: (document.getElementById('customEnabled')?.checked ?? false)`);
     } else {
       if (API_KEY_PROVIDERS.includes(provider)) {
         fields.push(`apiKey: (document.getElementById('${provider}ApiKey')?.value || '')`);
@@ -349,6 +353,7 @@ export function generateUpdateSettingsCode(): string {
     updates.push(`if (currentSettings.${provider}) {`);
 
     if (provider === 'custom') {
+      updates.push(`  document.getElementById('customEnabled').checked = currentSettings.custom.enabled ?? false;`);
       updates.push(`  document.getElementById('customBaseUrl').value = currentSettings.custom.baseUrl || '';`);
       updates.push(`  document.getElementById('customEndpoint').value = currentSettings.custom.endpoint || '';`);
       updates.push(`  document.getElementById('customAuthType').value = currentSettings.custom.authType || 'bearer';`);
