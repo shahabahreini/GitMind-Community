@@ -260,6 +260,12 @@ export function getStatusBannerStyles(): string {
         box-shadow: 0 2px 6px rgba(0, 212, 170, 0.3);
       }
 
+      .provider-icon.custom {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        color: white;
+        box-shadow: 0 2px 6px rgba(139, 92, 246, 0.3);
+      }
+
       .provider-title-info {
         display: flex;
         flex-direction: column;

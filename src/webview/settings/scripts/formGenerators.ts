@@ -131,6 +131,39 @@ export function generateFormInitialization(): string {
         `} catch (e) { console.warn('Failed to set ${provider}Url:', e); }`
       );
     }
+
+    if (provider === 'custom') {
+      formInits.push(
+        `try {`,
+        `  const customBaseUrlEl = document.getElementById('customBaseUrl');`,
+        `  if (customBaseUrlEl) customBaseUrlEl.value = currentSettings.custom?.baseUrl || '';`,
+        `} catch (e) { console.warn('Failed to set customBaseUrl:', e); }`,
+        `try {`,
+        `  const customEndpointEl = document.getElementById('customEndpoint');`,
+        `  if (customEndpointEl) customEndpointEl.value = currentSettings.custom?.endpoint || '';`,
+        `} catch (e) { console.warn('Failed to set customEndpoint:', e); }`,
+        `try {`,
+        `  const customAuthTypeEl = document.getElementById('customAuthType');`,
+        `  if (customAuthTypeEl) customAuthTypeEl.value = currentSettings.custom?.authType || 'bearer';`,
+        `} catch (e) { console.warn('Failed to set customAuthType:', e); }`,
+        `try {`,
+        `  const customAuthTokenEl = document.getElementById('customAuthToken');`,
+        `  if (customAuthTokenEl) customAuthTokenEl.value = currentSettings.custom?.authToken || '';`,
+        `} catch (e) { console.warn('Failed to set customAuthToken:', e); }`,
+        `try {`,
+        `  const customHeaderKeyEl = document.getElementById('customHeaderKey');`,
+        `  if (customHeaderKeyEl) customHeaderKeyEl.value = currentSettings.custom?.headerKey || '';`,
+        `} catch (e) { console.warn('Failed to set customHeaderKey:', e); }`,
+        `try {`,
+        `  const customRequestFormatEl = document.getElementById('customRequestFormat');`,
+        `  if (customRequestFormatEl) customRequestFormatEl.value = currentSettings.custom?.requestFormat || 'openai';`,
+        `} catch (e) { console.warn('Failed to set customRequestFormat:', e); }`,
+        `try {`,
+        `  const customResponseFormatEl = document.getElementById('customResponseFormat');`,
+        `  if (customResponseFormatEl) customResponseFormatEl.value = currentSettings.custom?.responseFormat || 'openai';`,
+        `} catch (e) { console.warn('Failed to set customResponseFormat:', e); }`
+      );
+    }
   });
 
   return formInits.join('\n    ');
@@ -145,13 +178,26 @@ export function generateSettingsCollection(): string {
   Object.keys(PROVIDER_DEFAULTS).forEach(provider => {
     const fields: string[] = [];
 
-    if (API_KEY_PROVIDERS.includes(provider)) {
-      fields.push(`apiKey: (document.getElementById('${provider}ApiKey')?.value || '')`);
-    }
-    fields.push(`model: (document.getElementById('${provider}Model')?.value || currentSettings.${provider}?.model || '')`);
+    if (provider === 'custom') {
+      // Handle custom API with its special fields
+      fields.push(`baseUrl: (document.getElementById('customBaseUrl')?.value || '')`);
+      fields.push(`endpoint: (document.getElementById('customEndpoint')?.value || '')`);
+      fields.push(`authType: (document.getElementById('customAuthType')?.value || 'bearer')`);
+      fields.push(`authToken: (document.getElementById('customAuthToken')?.value || '')`);
+      fields.push(`headerKey: (document.getElementById('customHeaderKey')?.value || '')`);
+      fields.push(`requestFormat: (document.getElementById('customRequestFormat')?.value || 'openai')`);
+      fields.push(`responseFormat: (document.getElementById('customResponseFormat')?.value || 'openai')`);
+      fields.push(`model: (document.getElementById('customModel')?.value || '')`);
+      fields.push(`enabled: currentSettings.custom?.enabled ?? false`);
+    } else {
+      if (API_KEY_PROVIDERS.includes(provider)) {
+        fields.push(`apiKey: (document.getElementById('${provider}ApiKey')?.value || '')`);
+      }
+      fields.push(`model: (document.getElementById('${provider}Model')?.value || currentSettings.${provider}?.model || '')`);
 
-    if (provider === 'ollama') {
-      fields.push(`url: (document.getElementById('${provider}Url')?.value || '')`);
+      if (provider === 'ollama') {
+        fields.push(`url: (document.getElementById('${provider}Url')?.value || '')`);
+      }
     }
 
     settingsObj.push(`${provider}: { ${fields.join(', ')} },`);
@@ -238,15 +284,26 @@ export function generateProviderForm(_provider: string, _settings: any, _default
   Object.entries(PROVIDER_DEFAULTS).forEach(([provider, _defaults]) => {
     formInits.push(`if (currentSettings.${provider}) {`);
 
-    if (API_KEY_PROVIDERS.includes(provider)) {
-      formInits.push(`  document.getElementById('${provider}ApiKey').value = currentSettings.${provider}.apiKey || '';`);
-    }
+    if (provider === 'custom') {
+      formInits.push(`  document.getElementById('customBaseUrl').value = currentSettings.custom.baseUrl || '';`);
+      formInits.push(`  document.getElementById('customEndpoint').value = currentSettings.custom.endpoint || '';`);
+      formInits.push(`  document.getElementById('customAuthType').value = currentSettings.custom.authType || 'bearer';`);
+      formInits.push(`  document.getElementById('customAuthToken').value = currentSettings.custom.authToken || '';`);
+      formInits.push(`  document.getElementById('customHeaderKey').value = currentSettings.custom.headerKey || '';`);
+      formInits.push(`  document.getElementById('customRequestFormat').value = currentSettings.custom.requestFormat || 'openai';`);
+      formInits.push(`  document.getElementById('customResponseFormat').value = currentSettings.custom.responseFormat || 'openai';`);
+      // Skip model dropdown for custom to preserve dropdown state
+    } else {
+      if (API_KEY_PROVIDERS.includes(provider)) {
+        formInits.push(`  document.getElementById('${provider}ApiKey').value = currentSettings.${provider}.apiKey || '';`);
+      }
 
-    // Skip model dropdown updates to preserve open dropdowns
-    // formInits.push(`  document.getElementById('${provider}Model').value = currentSettings.${provider}?.model || '${defaults.model}';`);
+      // Skip model dropdown updates to preserve open dropdowns
+      // formInits.push(`  document.getElementById('${provider}Model').value = currentSettings.${provider}?.model || '${defaults.model}';`);
 
-    if (provider === 'ollama') {
-      formInits.push(`  document.getElementById('${provider}Url').value = currentSettings.${provider}.url || '';`);
+      if (provider === 'ollama') {
+        formInits.push(`  document.getElementById('${provider}Url').value = currentSettings.${provider}.url || '';`);
+      }
     }
 
     formInits.push(`}`);
@@ -291,13 +348,24 @@ export function generateUpdateSettingsCode(): string {
   Object.entries(PROVIDER_DEFAULTS).forEach(([provider, _defaults]) => {
     updates.push(`if (currentSettings.${provider}) {`);
 
-    if (API_KEY_PROVIDERS.includes(provider)) {
-      updates.push(`  document.getElementById('${provider}ApiKey').value = currentSettings.${provider}.apiKey || '';`);
-    }
-    updates.push(`  document.getElementById('${provider}Model').value = currentSettings.${provider}?.model || '${_defaults.model}';`);
+    if (provider === 'custom') {
+      updates.push(`  document.getElementById('customBaseUrl').value = currentSettings.custom.baseUrl || '';`);
+      updates.push(`  document.getElementById('customEndpoint').value = currentSettings.custom.endpoint || '';`);
+      updates.push(`  document.getElementById('customAuthType').value = currentSettings.custom.authType || 'bearer';`);
+      updates.push(`  document.getElementById('customAuthToken').value = currentSettings.custom.authToken || '';`);
+      updates.push(`  document.getElementById('customHeaderKey').value = currentSettings.custom.headerKey || '';`);
+      updates.push(`  document.getElementById('customRequestFormat').value = currentSettings.custom.requestFormat || 'openai';`);
+      updates.push(`  document.getElementById('customResponseFormat').value = currentSettings.custom.responseFormat || 'openai';`);
+      updates.push(`  document.getElementById('customModel').value = currentSettings.custom.model || '';`);
+    } else {
+      if (API_KEY_PROVIDERS.includes(provider)) {
+        updates.push(`  document.getElementById('${provider}ApiKey').value = currentSettings.${provider}.apiKey || '';`);
+      }
+      updates.push(`  document.getElementById('${provider}Model').value = currentSettings.${provider}?.model || '${_defaults.model}';`);
 
-    if (provider === 'ollama') {
-      updates.push(`  document.getElementById('${provider}Url').value = currentSettings.${provider}.url || '';`);
+      if (provider === 'ollama') {
+        updates.push(`  document.getElementById('${provider}Url').value = currentSettings.${provider}.url || '';`);
+      }
     }
 
     updates.push(`}`);
@@ -343,15 +411,26 @@ export function generateUpdateSettingsCodePreserveDropdowns(): string {
   Object.entries(PROVIDER_DEFAULTS).forEach(([provider, _defaults]) => {
     updates.push(`if (currentSettings.${provider}) {`);
 
-    if (API_KEY_PROVIDERS.includes(provider)) {
-      updates.push(`  document.getElementById('${provider}ApiKey').value = currentSettings.${provider}.apiKey || '';`);
-    }
+    if (provider === 'custom') {
+      updates.push(`  document.getElementById('customBaseUrl').value = currentSettings.custom.baseUrl || '';`);
+      updates.push(`  document.getElementById('customEndpoint').value = currentSettings.custom.endpoint || '';`);
+      updates.push(`  document.getElementById('customAuthType').value = currentSettings.custom.authType || 'bearer';`);
+      updates.push(`  document.getElementById('customAuthToken').value = currentSettings.custom.authToken || '';`);
+      updates.push(`  document.getElementById('customHeaderKey').value = currentSettings.custom.headerKey || '';`);
+      updates.push(`  document.getElementById('customRequestFormat').value = currentSettings.custom.requestFormat || 'openai';`);
+      updates.push(`  document.getElementById('customResponseFormat').value = currentSettings.custom.responseFormat || 'openai';`);
+      // Skip model dropdown for custom to preserve dropdown state
+    } else {
+      if (API_KEY_PROVIDERS.includes(provider)) {
+        updates.push(`  document.getElementById('${provider}ApiKey').value = currentSettings.${provider}.apiKey || '';`);
+      }
 
-    // Skip model dropdown updates to preserve open dropdowns
-    // updates.push(`  document.getElementById('${provider}Model').value = currentSettings.${provider}?.model || '${defaults.model}';`);
+      // Skip model dropdown updates to preserve open dropdowns
+      // updates.push(`  document.getElementById('${provider}Model').value = currentSettings.${provider}?.model || '${defaults.model}';`);
 
-    if (provider === 'ollama') {
-      updates.push(`  document.getElementById('${provider}Url').value = currentSettings.${provider}.url || '';`);
+      if (provider === 'ollama') {
+        updates.push(`  document.getElementById('${provider}Url').value = currentSettings.${provider}.url || '';`);
+      }
     }
 
     updates.push(`}`);

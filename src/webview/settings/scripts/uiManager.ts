@@ -75,7 +75,7 @@ const PROVIDER_DISPLAY_CONFIG: Record<string, ProviderDisplayConfig> = {
   },
   custom: {
     displayName: "Custom API",
-    model: "Custom",
+    model: "Not configured",
     apiConfigured: (s) => !!(s.custom?.baseUrl && s.custom?.endpoint)
   }
 };
@@ -183,7 +183,8 @@ export function getUiManagerScript(): string {
         copilot: { displayName: "GitHub Copilot", defaultModel: "gpt-4o", getApiConfigured: () => true },
         deepseek: { displayName: "DeepSeek", defaultModel: "deepseek-chat", getApiConfigured: (s) => !!s.deepseek?.apiKey },
         grok: { displayName: "Grok", defaultModel: "grok-3", getApiConfigured: (s) => !!s.grok?.apiKey },
-        perplexity: { displayName: "Perplexity", defaultModel: "sonar-pro", getApiConfigured: (s) => !!s.perplexity?.apiKey }
+        perplexity: { displayName: "Perplexity", defaultModel: "sonar-pro", getApiConfigured: (s) => !!s.perplexity?.apiKey },
+        custom: { displayName: "Custom API", defaultModel: "Not configured", getApiConfigured: (s) => !!(s.custom?.baseUrl && s.custom?.endpoint) }
       };
       
       this.getProviderInfo = function() {

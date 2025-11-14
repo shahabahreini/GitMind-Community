@@ -453,6 +453,50 @@ export function getEventHandlersScript(): string {
             });
           }
         }
+        
+        // Set up custom API field listeners with debouncing
+        if (provider === 'custom') {
+          const customFields = [
+            { id: 'customBaseUrl', key: 'custom.baseUrl' },
+            { id: 'customEndpoint', key: 'custom.endpoint' },
+            { id: 'customAuthType', key: 'custom.authType' },
+            { id: 'customAuthToken', key: 'custom.authToken' },
+            { id: 'customHeaderKey', key: 'custom.headerKey' },
+            { id: 'customRequestFormat', key: 'custom.requestFormat' },
+            { id: 'customResponseFormat', key: 'custom.responseFormat' },
+            { id: 'customModel', key: 'custom.model' }
+          ];
+          
+          customFields.forEach(field => {
+            const element = document.getElementById(field.id);
+            if (element && !element.hasAttribute('data-listener-added')) {
+              element.setAttribute('data-listener-added', 'true');
+              
+              // For select elements (authType, requestFormat, responseFormat), use change event
+              if (element.tagName === 'SELECT') {
+                element.addEventListener('change', createSettingHandler(field.key, (el) => el.value));
+              } else {
+                // For text/password inputs, use debounced input with blur save
+                let fieldTimeout;
+                element.addEventListener('input', function() {
+                  if (fieldTimeout) {
+                    clearTimeout(fieldTimeout);
+                  }
+                  fieldTimeout = setTimeout(() => {
+                    createSettingHandler(field.key, (el) => el.value)(this);
+                  }, 500);
+                });
+                
+                element.addEventListener('blur', function() {
+                  if (fieldTimeout) {
+                    clearTimeout(fieldTimeout);
+                  }
+                  createSettingHandler(field.key, (el) => el.value)(this);
+                });
+              }
+            }
+          });
+        }
       });
     }
 

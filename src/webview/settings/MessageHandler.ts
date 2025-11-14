@@ -60,7 +60,7 @@ export class MessageHandler {
                         message.maxCommits,
                         message.includeAuthorInfo
                     );
-                    
+
                     if (SettingsWebview.isWebviewOpen()) {
                         SettingsWebview.postMessageToWebview({
                             command: 'commitHistoryStatsReady',
@@ -84,7 +84,7 @@ export class MessageHandler {
                         message.maxCommits,
                         false // Don't include author info for changelog
                     );
-                    
+
                     if (SettingsWebview.isWebviewOpen()) {
                         SettingsWebview.postMessageToWebview({
                             command: 'changelogStatsReady',
@@ -481,12 +481,17 @@ export class MessageHandler {
 
             case 'testCustomApiConnection':
                 try {
+                    debugLog('Test Connection: Initiated custom API connection test');
+
                     // Check if user is Pro first
                     const { SubscriptionManager } = await import('../../services/subscription/SubscriptionManager.js');
                     const subscriptionManager = SubscriptionManager.getInstance();
                     const isProUser = await subscriptionManager.isProUser();
 
+                    debugLog('Test Connection: Pro user status', { isProUser });
+
                     if (!isProUser) {
+                        debugLog('Test Connection: Access denied - user is not Pro');
                         if (SettingsWebview.isWebviewOpen()) {
                             SettingsWebview.postMessageToWebview({
                                 command: 'customApiTestResult',
@@ -500,6 +505,19 @@ export class MessageHandler {
                     // Get custom API settings from the message
                     const settings = message.settings || {};
 
+                    // Sanitize settings for logging (hide sensitive data)
+                    const sanitizedSettings = {
+                        baseUrl: settings.baseUrl?.trim(),
+                        endpoint: settings.endpoint?.trim(),
+                        authType: settings.authType,
+                        headerKey: settings.headerKey?.trim(),
+                        requestFormat: settings.requestFormat || 'openai',
+                        responseFormat: settings.responseFormat || 'openai',
+                        model: settings.model?.trim(),
+                        authToken: settings.authToken ? `[${settings.authToken.length} chars]` : '[not provided]'
+                    };
+                    debugLog('Test Connection: Configuration', sanitizedSettings);
+
                     // Validate required fields
                     const baseUrl = settings.baseUrl?.trim();
                     const endpoint = settings.endpoint?.trim();
@@ -507,22 +525,28 @@ export class MessageHandler {
 
                     // Validation checks
                     if (!baseUrl) {
+                        debugLog('Test Connection: Validation failed - Base URL is missing');
                         throw new Error('Base URL is required');
                     }
 
                     if (!endpoint) {
+                        debugLog('Test Connection: Validation failed - Endpoint is missing');
                         throw new Error('API endpoint path is required');
                     }
 
                     // If auth type is apikey, make sure a header key is provided
                     if (authType === 'apikey' && !settings.headerKey?.trim()) {
+                        debugLog('Test Connection: Validation failed - Header key is missing for API Key auth');
                         throw new Error('Header key name is required for API Key authentication');
                     }
 
                     // If auth type requires token (bearer, apikey, basic), make sure it's provided
                     if ((authType === 'bearer' || authType === 'apikey' || authType === 'basic') && !settings.authToken) {
+                        debugLog('Test Connection: Validation failed - Auth token is missing');
                         throw new Error('Authentication token is required for the selected authentication type');
                     }
+
+                    debugLog('Test Connection: Validation passed, preparing test request');
 
                     // Import the custom API function
                     const { callCustomAPI } = await import('../../services/api/custom.js');
@@ -535,12 +559,17 @@ export class MessageHandler {
                         ]
                     };
 
+                    debugLog('Test Connection: Test payload', testPayload);
+
                     // Attempt to call the API with a short timeout
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
+                    debugLog('Test Connection: Sending request to API (5 second timeout)');
+
                     try {
                         // Make a test call with minimal content
+                        const startTime = Date.now();
                         await callCustomAPI(
                             baseUrl,
                             endpoint,
@@ -552,6 +581,13 @@ export class MessageHandler {
                             settings.model || 'gpt-3.5-turbo',
                             JSON.stringify(testPayload)
                         );
+                        const duration = Date.now() - startTime;
+
+                        debugLog('Test Connection: SUCCESS', {
+                            duration: `${duration}ms`,
+                            endpoint: `${baseUrl}${endpoint}`,
+                            model: settings.model || 'gpt-3.5-turbo'
+                        });
 
                         // If we get here, it was successful
                         if (SettingsWebview.isWebviewOpen()) {
@@ -576,6 +612,13 @@ export class MessageHandler {
                             errorMessage += ` (Status code: ${apiError.statusCode})`;
                         }
 
+                        debugLog('Test Connection: FAILED', {
+                            error: apiError.message || 'Unknown error',
+                            errorName: apiError.name,
+                            statusCode: apiError.statusCode,
+                            endpoint: `${baseUrl}${endpoint}`
+                        });
+
                         if (SettingsWebview.isWebviewOpen()) {
                             SettingsWebview.postMessageToWebview({
                                 command: 'customApiTestResult',
@@ -588,6 +631,11 @@ export class MessageHandler {
                     }
                 } catch (error: any) {
                     // General error in validation or setup
+                    debugLog('Test Connection: Configuration error', {
+                        error: error.message || 'Unknown error',
+                        stack: error.stack
+                    });
+
                     if (SettingsWebview.isWebviewOpen()) {
                         SettingsWebview.postMessageToWebview({
                             command: 'customApiTestResult',
@@ -595,7 +643,6 @@ export class MessageHandler {
                             message: `Configuration error: ${error.message || 'Unknown error'}`
                         });
                     }
-                    debugLog('Custom API test error:', error);
                 }
                 break;
 
