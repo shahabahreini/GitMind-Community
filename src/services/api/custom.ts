@@ -266,3 +266,144 @@ function formatCommitMessage(message: string): string {
 
     return formattedMessage;
 }
+
+/**
+ * Validates custom API configuration by making a test request
+ * @param baseUrl The base URL of the API
+ * @param endpoint The API endpoint path
+ * @param authType Authentication type
+ * @param authToken Authentication token
+ * @param headerKey Custom header key for API key auth
+ * @param requestFormat JSON template for request
+ * @param model Model identifier
+ * @returns Validation result with success status and optional error message
+ */
+export async function validateCustomAPI(
+    baseUrl: string,
+    endpoint: string,
+    authType: string,
+    authToken: string,
+    headerKey: string,
+    requestFormat: string,
+    model: string
+): Promise<{ success: boolean; error?: string; troubleshooting?: string }> {
+    const requestManager = RequestManager.getInstance();
+    const controller = requestManager.getController();
+
+    try {
+        // Validate required fields
+        if (!baseUrl || !endpoint) {
+            return {
+                success: false,
+                error: "Base URL and endpoint are required",
+                troubleshooting: "Please configure Base URL and Endpoint in settings"
+            };
+        }
+
+        if (!model) {
+            return {
+                success: false,
+                error: "Model name is required",
+                troubleshooting: "Please configure the model name in settings"
+            };
+        }
+
+        if (authType !== "none" && !authToken) {
+            return {
+                success: false,
+                error: "Authentication token is required",
+                troubleshooting: `Please configure authentication token for ${authType} authentication`
+            };
+        }
+
+        if (authType === "apikey" && !headerKey) {
+            return {
+                success: false,
+                error: "Header key is required for API Key authentication",
+                troubleshooting: "Please specify the header key name (e.g., 'x-api-key')"
+            };
+        }
+
+        // Build headers based on auth type
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json'
+        };
+
+        switch (authType) {
+            case "bearer":
+                headers['Authorization'] = `Bearer ${authToken}`;
+                break;
+            case "apikey":
+                headers[headerKey || 'x-api-key'] = authToken;
+                break;
+            case "basic":
+                headers['Authorization'] = `Basic ${Buffer.from(authToken).toString('base64')}`;
+                break;
+        }
+
+        // Build minimal test request body
+        const testPrompt = "Hello, this is a test message to verify the connection.";
+        const requestBody = buildRequestBody(requestFormat, testPrompt, model);
+
+        debugLog(`Validating Custom API at ${baseUrl}${endpoint}`);
+
+        // Make test request with timeout
+        const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("Connection test timed out after 10 seconds")), 10000)
+        );
+
+        const fetchPromise = fetch(`${baseUrl}${endpoint}`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(requestBody),
+            signal: controller.signal
+        });
+
+        const response = await Promise.race([fetchPromise, timeoutPromise]);
+
+        if (!response.ok) {
+            const errorText = await response.text().catch(() => 'Unable to read error response');
+            let troubleshooting = "Please check your API configuration";
+
+            if (response.status === 401 || response.status === 403) {
+                troubleshooting = "Authentication failed. Verify your token/key, auth type, and header key name";
+            } else if (response.status === 404) {
+                troubleshooting = `Endpoint not found. Verify the endpoint path: ${endpoint}`;
+            } else if (response.status === 400) {
+                troubleshooting = "Bad request. Check your Request Format template";
+            } else if (response.status === 415) {
+                troubleshooting = "Unsupported Media Type. Ensure Content-Type is application/json";
+            }
+
+            return {
+                success: false,
+                error: `HTTP ${response.status}: ${errorText.substring(0, 200)}`,
+                troubleshooting
+            };
+        }
+
+        // Try to parse response
+        const data = await response.json();
+        debugLog('Custom API validation successful');
+
+        return {
+            success: true
+        };
+    } catch (error) {
+        debugLog('Error validating custom API:', error);
+
+        if (error instanceof Error && error.name === 'AbortError') {
+            return {
+                success: false,
+                error: 'Request was cancelled',
+                troubleshooting: 'The request was aborted. Please try again'
+            };
+        }
+
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+            troubleshooting: 'An unexpected error occurred during validation. Check your network connection and API configuration'
+        };
+    }
+}

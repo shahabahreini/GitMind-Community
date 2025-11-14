@@ -5,9 +5,10 @@ import { validateDeepSeekAPIKey } from "./deepseek";
 import { validateGrokAPIKey } from "./grok";
 import { validatePerplexityAPIKey } from "./perplexity";
 import { getApiConfig } from "../../config/settings";
-import { ApiConfig, MistralRateLimit, ApiProvider } from "../../config/types";
+import { ApiConfig, MistralRateLimit, ApiProvider, CustomApiConfig } from "../../config/types";
 import { RequestManager } from "../../utils/requestManager";
 import { isCopilotAvailable, validateCopilotAccess } from "./copilot";
+import { validateCustomAPI } from "./custom";
 
 interface ApiCheckResult {
     success: boolean;
@@ -177,6 +178,21 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
             remaining: 18,
             notes: "Perplexity has 20 requests per minute for free tier users. Pro users have higher limits."
         }
+    },
+    custom: {
+        requiresApiKey: false,
+        validator: async () => {
+            // Custom API validation is handled separately in checkApiSetup
+            // because it requires multiple config parameters
+            return { success: true };
+        },
+        defaultModel: "",
+        responseTime: 500,
+        rateLimits: {
+            limit: 0,
+            remaining: 0,
+            notes: "Rate limits depend on your custom API provider configuration"
+        }
     }
 };
 
@@ -197,6 +213,31 @@ export async function checkApiSetup(): Promise<ApiCheckResult> {
     }
 
     try {
+        // Special handling for custom API provider
+        if (config.type === "custom") {
+            const customConfig = config as CustomApiConfig;
+            const validation = await validateCustomAPI(
+                customConfig.baseUrl,
+                customConfig.endpoint,
+                customConfig.authType,
+                customConfig.authToken || '',
+                customConfig.headerKey || '',
+                customConfig.requestFormat || 'openai',
+                customConfig.model
+            );
+
+            result.success = validation.success;
+            if (validation.success) {
+                result.model = customConfig.model;
+                result.responseTime = validatorConfig.responseTime;
+                result.details = "Connection test successful";
+            } else {
+                result.error = validation.error || "Connection test failed";
+                result.troubleshooting = validation.troubleshooting || "Please check your custom API configuration";
+            }
+            return result;
+        }
+
         if (validatorConfig.requiresApiKey && !('apiKey' in config && config.apiKey)) {
             result.error = "API key not configured";
             result.troubleshooting = `Please enter your ${config.type} API key in the settings`;
