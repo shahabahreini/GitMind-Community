@@ -10,6 +10,7 @@ import {
     PerplexityModel,
 } from "./types";
 import { SecureKeyManager } from "../services/encryption/SecureKeyManager";
+import { debugLog } from "../services/debug/logger";
 
 interface ProviderDefaults {
     model: string;
@@ -127,6 +128,28 @@ export async function getApiConfig(): Promise<ApiConfig> {
         baseConfig.apiKey = secureApiKey || "";
     }
 
+    // Handle custom API authToken separately
+    if (provider === 'custom') {
+        const secureKeyManager = SecureKeyManager.getInstance();
+
+        debugLog(`[Custom API] Starting token retrieval for provider: ${provider}`);
+        debugLog(`[Custom API] Config authToken from settings: ${providerConfig.authToken ? `[${providerConfig.authToken.length} chars]` : 'empty/undefined'}`);
+
+        // Get the actual auth token for API calls, not the display placeholder
+        const secureAuthToken = await secureKeyManager.getApiKey('custom', false);
+        debugLog(`[Custom API] Secure token from SecureKeyManager: ${secureAuthToken ? `[${secureAuthToken.length} chars]` : 'empty/undefined'}`);
+
+        // Use secure token if available, otherwise fall back to config
+        const authToken = secureAuthToken || providerConfig.authToken || "";
+        baseConfig.authToken = authToken;
+
+        debugLog(`[Custom API] Final token to be used: ${authToken ? `[${authToken.length} chars]` : 'EMPTY - THIS WILL CAUSE 401 ERROR'}`);
+
+        if (!authToken || authToken.length === 0) {
+            debugLog(`[Custom API] WARNING: No token available! This will cause authentication failure.`);
+        }
+    }
+
     // Add provider-specific properties
     switch (provider) {
         case 'ollama':
@@ -139,7 +162,7 @@ export async function getApiConfig(): Promise<ApiConfig> {
             baseConfig.baseUrl = providerConfig.baseUrl || "";
             baseConfig.endpoint = providerConfig.endpoint || "";
             baseConfig.authType = providerConfig.authType || "bearer";
-            baseConfig.authToken = providerConfig.authToken || "";
+            // authToken is already set above using SecureKeyManager
             baseConfig.headerKey = providerConfig.headerKey || "";
             baseConfig.requestFormat = providerConfig.requestFormat || "";
             baseConfig.responseFormat = providerConfig.responseFormat || "";

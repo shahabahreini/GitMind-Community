@@ -454,7 +454,7 @@ export class SecureKeyManager {
 
             const providers = [
                 'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-                'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'perplexity'
+                'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'perplexity', 'custom'
             ];
 
             // Get all encrypted keys and move them back to plain text
@@ -537,7 +537,7 @@ export class SecureKeyManager {
         try {
             const providers = [
                 'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-                'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'perplexity'
+                'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'perplexity', 'custom'
             ];
 
             const isProUser = this.isProUser();
@@ -626,7 +626,7 @@ export class SecureKeyManager {
         try {
             const providers = [
                 'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-                'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'perplexity'
+                'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'perplexity', 'custom'
             ];
 
             let migratedCount = 0;
@@ -719,7 +719,7 @@ export class SecureKeyManager {
     public async getProvidersWithKeys(): Promise<string[]> {
         const providers = [
             'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-            'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'perplexity'
+            'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'perplexity', 'custom'
         ];
 
         const providersWithKeys: string[] = [];
@@ -800,7 +800,7 @@ export class SecureKeyManager {
 
         const providers = [
             'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-            'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'perplexity'
+            'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'perplexity', 'custom'
         ];
 
         const encryptedProviders: string[] = [];
@@ -958,7 +958,7 @@ export class SecureKeyManager {
 
             const providers = [
                 'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-                'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'perplexity'
+                'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'perplexity', 'custom'
             ];
 
             // Check each provider and restore if it has [ENCRYPTED] placeholder

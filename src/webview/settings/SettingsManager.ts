@@ -332,18 +332,35 @@ export class SettingsManager {
         if (newCustom && typeof newCustom.authToken === 'string') {
             const token = newCustom.authToken.trim();
             const currentToken = currentCustom?.authToken || "";
-            if (token.length > 0 && token !== currentToken) {
+
+            debugLog(`Custom token save check: newToken=${token ? `[${token.length} chars]` : 'empty'}, currentToken=${currentToken ? `[${currentToken.length} chars]` : 'empty'}, isPlaceholder=${currentToken === '[ENCRYPTED]'}`);
+
+            // Store if token is not empty and not a placeholder
+            // Skip if token is the placeholder (means user didn't change it)
+            const isPlaceholder = token === '[ENCRYPTED]';
+            const shouldStore = token.length > 0 && !isPlaceholder && token !== currentToken;
+
+            debugLog(`Custom token shouldStore: ${shouldStore}`);
+
+            if (shouldStore) {
                 try {
-                    debugLog('Storing updated custom auth token');
+                    debugLog(`Storing custom auth token (length: ${token.length})`);
                     await secureKeyManager.storeApiKey('custom', token);
+                    debugLog('Custom auth token stored successfully in SecureKeyManager');
+
                     if (encryptionAvailable && encryptionEnabled) {
                         const cfg = vscode.workspace.getConfiguration(SettingsManager.CONFIG_PREFIX);
                         await cfg.update('custom.authToken', "", vscode.ConfigurationTarget.Global);
+                        debugLog('Cleared custom auth token from plain text settings');
                     }
                 } catch (e) {
                     debugLog('Failed to store custom auth token:', e);
                 }
+            } else {
+                debugLog(`Skipping custom token storage - shouldStore=false`);
             }
+        } else {
+            debugLog(`Custom token not found in newSettings or not a string`);
         }
 
         // Handle subscription changes that might affect encryption availability

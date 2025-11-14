@@ -599,7 +599,11 @@ export class ScriptManager {
                 
                 if (isEncrypted) {
                     // For encrypted keys, request the actual decrypted key from backend
-                    const provider = fieldId.replace('ApiKey', '').toLowerCase();
+                    // Handle both ApiKey and AuthToken field naming patterns
+                    let provider = fieldId.replace('ApiKey', '').toLowerCase();
+                    if (fieldId === 'customAuthToken') {
+                        provider = 'custom';
+                    }
                     
                     if (typeof vscode !== 'undefined') {
                         // Request the actual API key from the backend
