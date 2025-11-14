@@ -15,6 +15,7 @@ import {
     DeepSeekApiConfig,
     GrokApiConfig,
     PerplexityApiConfig,
+    CustomApiConfig,
 } from "../../config/types";
 import { callGeminiAPI } from "./gemini";
 import { callHuggingFaceAPI } from "./huggingface";
@@ -173,29 +174,10 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         displayName: "Custom API",
         settingPath: "custom.authToken",
         docsUrl: "",
-        requiresApiKey: true,
-        apiCall: async (authToken, model, diff, customContext) => {
-            // Pro feature check - only allow Custom API for Pro users
-            const subscriptionManager = SubscriptionManager.getInstance();
-            const isProUser = await subscriptionManager.isProUser();
-
-            if (!isProUser) {
-                throw new Error("Custom API is a Pro feature. Please upgrade to GitMind Pro to use custom API endpoints.");
-            }
-
-            const config = vscode.workspace.getConfiguration("gitmind").get("custom") as any;
-            return callCustomAPI(
-                config.baseUrl,
-                config.endpoint,
-                config.authType,
-                authToken,
-                config.headerKey || '',
-                config.requestFormat,
-                config.responseFormat,
-                model,
-                diff,
-                customContext
-            );
+        requiresApiKey: false, // Handled separately in handleCustomProvider
+        apiCall: async (_authToken, _model, _diff, _customContext) => {
+            // This should not be called directly - custom provider is handled in handleCustomProvider
+            throw new Error("Custom API should be handled through handleCustomProvider");
         },
     },
     ollama: {
@@ -474,8 +456,84 @@ async function generateMessageWithConfig(
         return await callCopilotAPI(copilotConfig.model, diff, customContext);
     }
 
+    if (config.type === "custom") {
+        return await handleCustomProvider(config as CustomApiConfig, diff, customContext);
+    }
+
     // Handle standard providers
     return await handleStandardProvider(config, providerConfig, diff, customContext);
+}
+
+async function handleCustomProvider(
+    config: CustomApiConfig,
+    diff: string,
+    customContext: string
+): Promise<string> {
+    // Check Pro status
+    const subscriptionManager = SubscriptionManager.getInstance();
+    const isProUser = await subscriptionManager.isProUser();
+
+    if (!isProUser) {
+        await vscode.window.showErrorMessage(
+            "Custom API is a Pro feature. Please upgrade to GitMind Pro to use custom API endpoints.",
+            "Learn More"
+        ).then(selection => {
+            if (selection === "Learn More") {
+                vscode.env.openExternal(vscode.Uri.parse("https://gitmind.com/pro"));
+            }
+        });
+        return "";
+    }
+
+    // Validate required fields
+    if (!config.baseUrl || !config.endpoint) {
+        await vscode.window.showErrorMessage(
+            "Custom API configuration incomplete. Please configure Base URL and Endpoint in settings.",
+            "Open Settings"
+        ).then(selection => {
+            if (selection === "Open Settings") {
+                vscode.commands.executeCommand("gitmind.openSettings");
+            }
+        });
+        return "";
+    }
+
+    if (!config.authToken && config.authType !== "none") {
+        await vscode.window.showErrorMessage(
+            "Custom API authentication token is required. Please configure it in settings.",
+            "Open Settings"
+        ).then(selection => {
+            if (selection === "Open Settings") {
+                vscode.commands.executeCommand("gitmind.openSettings");
+            }
+        });
+        return "";
+    }
+
+    if (!config.model) {
+        await vscode.window.showErrorMessage(
+            "Custom API model name is required. Please configure it in settings.",
+            "Open Settings"
+        ).then(selection => {
+            if (selection === "Open Settings") {
+                vscode.commands.executeCommand("gitmind.openSettings");
+            }
+        });
+        return "";
+    }
+
+    return await callCustomAPI(
+        config.baseUrl,
+        config.endpoint,
+        config.authType,
+        config.authToken,
+        config.headerKey || '',
+        config.requestFormat,
+        config.responseFormat,
+        config.model,
+        diff,
+        customContext
+    );
 }
 
 async function handleOllamaProvider(
