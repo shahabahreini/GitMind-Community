@@ -1,112 +1,137 @@
+## v4.5.0 - 2025-11-18
+
+### New Features
+
+- **Custom API Provider (Pro)**: Added support for custom API endpoints, enabling integration with private cloud AI models or other compatible LLM APIs
+  - **Flexible Authentication**: Support for multiple authentication methods (Bearer token, API Key, Basic Auth, or no authentication)
+  - **Configurable Request/Response**: Customizable JSON templates for request bodies and response parsing with placeholder support (`{{model}}`, `{{prompt}}`)
+  - **Connection Testing**: Built-in connection test functionality to validate API configuration before use
+  - **Secure Token Storage**: Authentication credentials stored securely using VS Code's secure storage
+  - **Enhanced Settings UI**: User-friendly interface for managing custom API configuration with real-time validation
+  - **Comprehensive Documentation**: Added detailed [Custom API Integration Guide](docs/custom-api-guide.md) with examples for OpenAI-compatible and custom LLM APIs
+
+### Enhanced
+
+- **Custom API Response Parsing**: Improved response parsing logic to handle various API response formats
+- **Settings Validation**: Enhanced validation for custom provider authentication token field recognition
+- **Test Result Display**: Improved visual feedback for custom API connection test results in settings UI
+
+### Technical
+
+- **Secure Token Handling**: Implemented secure authentication token handling with encryption support for Pro users
+- **API Configuration**: Enhanced API provider configuration system to support custom endpoint definitions
+- **Error Handling**: Improved error handling and user guidance for custom API setup and troubleshooting
+
 ## v4.4.0 - 2025-11-14
 
 ### New Features
 
--   **Enhanced AI Model Support**: Added support for latest AI models across multiple providers
-    -   **OpenAI**: Added GPT-4.1, GPT-4.1 Mini, GPT-4.1 Nano, o3, and o4-mini models
-    -   **Google Gemini**: Added Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash-Lite, Gemini 2.0 Flash, and Gemini 2.0 Flash-Lite models with enhanced token limits (up to 65,536 tokens)
-    -   **Grok**: Added Grok 3, Grok 3 Mini, and enhanced Grok 2 model variants including Vision, Turbo, and Fast versions
+- **Enhanced AI Model Support**: Added support for latest AI models across multiple providers
+  - **OpenAI**: Added GPT-4.1, GPT-4.1 Mini, GPT-4.1 Nano, o3, and o4-mini models
+  - **Google Gemini**: Added Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash-Lite, Gemini 2.0 Flash, and Gemini 2.0 Flash-Lite models with enhanced token limits (up to 65,536 tokens)
+  - **Grok**: Added Grok 3, Grok 3 Mini, and enhanced Grok 2 model variants including Vision, Turbo, and Fast versions
 
 ### Enhanced
 
--   **Settings UI Improvements**: Enhanced webview message handling and state management for better reliability
--   **Model Configuration**: Improved model selection interface with updated model descriptions and capabilities
+- **Settings UI Improvements**: Enhanced webview message handling and state management for better reliability
+- **Model Configuration**: Improved model selection interface with updated model descriptions and capabilities
 
 ### Technical
 
--   **Type Safety**: Enhanced TypeScript interfaces for better type safety across the extension
--   **Message Handler**: Improved MessageHandler implementation for more robust webview communication
+- **Type Safety**: Enhanced TypeScript interfaces for better type safety across the extension
+- **Message Handler**: Improved MessageHandler implementation for more robust webview communication
 
 ## v4.3.2 - 2025-10-20
 
 ### Fixed
 
--   **Commit History Analysis UI**: Fixed loading state issue where button remained in loading state after receiving results
-    -   **Consistent State Management**: Resolved inconsistency between `setButtonLoadingState` (uses textContent) and ProFeatureRenderer reset logic (uses innerHTML)
-    -   **Button State Reset**: Updated to use consistent `setButtonLoadingState` function for both setting and resetting button state
-    -   **UI Consistency**: Updated button HTML to match expected format with proper icon handling
+- **Commit History Analysis UI**: Fixed loading state issue where button remained in loading state after receiving results
+  - **Consistent State Management**: Resolved inconsistency between `setButtonLoadingState` (uses textContent) and ProFeatureRenderer reset logic (uses innerHTML)
+  - **Button State Reset**: Updated to use consistent `setButtonLoadingState` function for both setting and resetting button state
+  - **UI Consistency**: Updated button HTML to match expected format with proper icon handling
 
 ### Enhanced
 
--   **Test Coverage**: Improved test suite reliability and coverage
-    -   **Settings UI Tests**: Enhanced timeout protection for Settings webview state preservation tests
-    -   **Pro Features Tests**: Added timeout protection for subscription management tests
-    -   **Test Stability**: Implemented Promise.race pattern to prevent test hanging on async operations
+- **Test Coverage**: Improved test suite reliability and coverage
+  - **Settings UI Tests**: Enhanced timeout protection for Settings webview state preservation tests
+  - **Pro Features Tests**: Added timeout protection for subscription management tests
+  - **Test Stability**: Implemented Promise.race pattern to prevent test hanging on async operations
 
 ### Technical
 
--   **Test Infrastructure**: Enhanced test environment stability with multi-layer timeout protection
--   **Error Handling**: Improved error handling in test scenarios with proper TypeScript type casting
+- **Test Infrastructure**: Enhanced test environment stability with multi-layer timeout protection
+- **Error Handling**: Improved error handling in test scenarios with proper TypeScript type casting
 
 ## v4.3.1 - 2025-10-18
 
 ### New Features
 
--   **Changelog Version Limit**: Added `pro.changelog.maxVersions` setting to limit the number of recent versions processed in changelog generation.
--   **Git History Statistics Preview**: Introduced a GitHistoryAnalyzer service and "Preview Stats" feature to estimate token usage and data quality for AI-powered features.
--   **Configurable Changelog Version Order**: Added a setting to control the version order in generated changelogs, allowing users to select 'newest-first' or 'oldest-first'.
+- **Changelog Version Limit**: Added `pro.changelog.maxVersions` setting to limit the number of recent versions processed in changelog generation.
+- **Git History Statistics Preview**: Introduced a GitHistoryAnalyzer service and "Preview Stats" feature to estimate token usage and data quality for AI-powered features.
+- **Configurable Changelog Version Order**: Added a setting to control the version order in generated changelogs, allowing users to select 'newest-first' or 'oldest-first'.
 
 ### Enhanced
 
--   **AI Changelog Generation**: Increased the maximum commit limit for history analysis and changelogs to 2500.
--   **AI Changelog Generation**: Enhanced the AI prompt and added validation for accurate multi-version changelogs.
+- **AI Changelog Generation**: Increased the maximum commit limit for history analysis and changelogs to 2500.
+- **AI Changelog Generation**: Enhanced the AI prompt and added validation for accurate multi-version changelogs.
 
 ### Other
 
--   Updated documentation for AI-powered changelog generation and Git stats preview features.
--   Updated feature descriptions and added screenshots to the README.
--   Updated provider list to include Grok, Perplexity, and Mistral.
+- Updated documentation for AI-powered changelog generation and Git stats preview features.
+- Updated feature descriptions and added screenshots to the README.
+- Updated provider list to include Grok, Perplexity, and Mistral.
 
 ## v4.3.0 - 2025-10-18
 
 ### New Features
 
--   **AI-Powered Changelog Generation (Pro)**: Introduced AI-powered changelog generation from Git commit history.
-    -   **Policy-Aware Generation**: Implemented changelog structure analysis to preserve existing formatting, categories, and style.
-    -   **Intelligent Version Detection**: Added automatic version detection from git tags, commit messages, and `package.json`.
-    -   **User Configuration**: Included settings to configure the maximum number of commits for analysis and to group changes by version.
--   **Git History Statistics Preview**: Added a "Preview Stats" feature for Git history analysis.
-    -   **Token Usage Estimation**: Enabled users to estimate token usage and assess data quality before running AI-powered features.
-    -   **Informed Analysis**: Provided insights into repository statistics to help guide the analysis process.
+- **AI-Powered Changelog Generation (Pro)**: Introduced AI-powered changelog generation from Git commit history.
+  - **Policy-Aware Generation**: Implemented changelog structure analysis to preserve existing formatting, categories, and style.
+  - **Intelligent Version Detection**: Added automatic version detection from git tags, commit messages, and `package.json`.
+  - **User Configuration**: Included settings to configure the maximum number of commits for analysis and to group changes by version.
+- **Git History Statistics Preview**: Added a "Preview Stats" feature for Git history analysis.
+  - **Token Usage Estimation**: Enabled users to estimate token usage and assess data quality before running AI-powered features.
+  - **Informed Analysis**: Provided insights into repository statistics to help guide the analysis process.
 
 ### Fixed
 
--   **Diagnostics Modal Improvement**: Removed the cancel button from the diagnostics information modal.
-    -   **Simplified User Flow**: Streamlined the user experience by removing an unnecessary action.
-    -   **Reduced User Confusion**: Prevented potential confusion by focusing the modal on its primary informational purpose.
+- **Diagnostics Modal Improvement**: Removed the cancel button from the diagnostics information modal.
+  - **Simplified User Flow**: Streamlined the user experience by removing an unnecessary action.
+  - **Reduced User Confusion**: Prevented potential confusion by focusing the modal on its primary informational purpose.
 
 ### Technical
 
--   **Expanded Test Coverage**: Added comprehensive test suites for new features to improve stability and reduce regression risk.
-    -   **New Test Suites**: Created dedicated test files including `changelogService.test.ts`, `diffProcessor.test.ts`, and `tokenCounter.test.ts`.
-    -   **Increased Coverage**: Achieved over 70% overall test coverage, with 100% coverage on critical paths.
-    -   **Extensive Testing**: Added over 140 new unit tests covering version detection, policy analysis, and processing edge cases.
+- **Expanded Test Coverage**: Added comprehensive test suites for new features to improve stability and reduce regression risk.
+  - **New Test Suites**: Created dedicated test files including `changelogService.test.ts`, `diffProcessor.test.ts`, and `tokenCounter.test.ts`.
+  - **Increased Coverage**: Achieved over 70% overall test coverage, with 100% coverage on critical paths.
+  - **Extensive Testing**: Added over 140 new unit tests covering version detection, policy analysis, and processing edge cases.
 
 ### Breaking Changes
 
--   The AI-Powered Changelog Generation feature now requires a GitMind Pro subscription.
+- The AI-Powered Changelog Generation feature now requires a GitMind Pro subscription.
 
 ## v4.2.3 - 2025-10-17
 
 ### Fixed
 
--   **Diagnostics UI Improvement**: Removed cancel button from diagnostics info modal
-    -   **Simplified User Flow**: Eliminated the 'Cancel' button from diagnostics information modal to streamline user experience
-    -   **Reduced Confusion**: Removed unnecessary action option since the only logical step is to proceed
-    -   **Cleaner Interface**: Enhanced modal clarity by focusing on the primary action (proceed/close)
-    -   **Prevented Unintended Actions**: Eliminated potential confusion or accidental cancellation during diagnostics review
+- **Diagnostics UI Improvement**: Removed cancel button from diagnostics info modal
+  - **Simplified User Flow**: Eliminated the 'Cancel' button from diagnostics information modal to streamline user experience
+  - **Reduced Confusion**: Removed unnecessary action option since the only logical step is to proceed
+  - **Cleaner Interface**: Enhanced modal clarity by focusing on the primary action (proceed/close)
+  - **Prevented Unintended Actions**: Eliminated potential confusion or accidental cancellation during diagnostics review
 
 ### Technical
 
--   Updated DiagnosticsWebview component to remove cancel button from modal UI
--   Streamlined modal HTML template for better user experience
--   Enhanced modal button layout for improved clarity
+- Updated DiagnosticsWebview component to remove cancel button from modal UI
+- Streamlined modal HTML template for better user experience
+- Enhanced modal button layout for improved clarity
 
 ## v4.2.2 - 2025-08-31
 
 ### Enhanced
 
 - **Commit History Analysis Optimization**: Streamlined commit analysis system for improved performance and reliability
+
   - **Prompt Optimization**: Reduced analysis prompt size by 75% while preserving key metrics and actionable guidance
   - **Focused Analysis**: Condensed from 200+ lines to ~70 lines with targeted sections for statistics, assessment, and recommendations
   - **Extended Timeouts**: Increased API timeouts for commit analysis (3 minutes standard, 8 minutes for large histories)

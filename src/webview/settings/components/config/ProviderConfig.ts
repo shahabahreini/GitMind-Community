@@ -140,11 +140,33 @@ export class ProviderConfig {
                     id: 'copilotModel',
                     key: 'model',
                     label: 'Model',
-                    type: 'select',
+                    type: 'model-with-load',
                     tooltip: 'Select which model to use with GitHub Copilot',
+                    loadButtonText: 'Detect Available Models',
+                    loadButtonId: 'loadCopilotModels',
+                    loadCommand: 'gitmind.loadCopilotModels',
                     options: [
-                        { value: 'gpt-4o', label: 'GPT-4o' },
-                        { value: 'gpt-4', label: 'GPT-4' }
+                        { value: 'auto', label: 'Auto (Let Copilot choose)', group: 'Recommended' },
+                        { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', group: 'OpenAI Models (Legacy)' },
+                        { value: 'gpt-4', label: 'GPT-4', group: 'OpenAI Models (Legacy)' },
+                        { value: 'gpt-4-turbo', label: 'GPT-4 Turbo', group: 'OpenAI Models (Legacy)' },
+                        { value: 'gpt-4o', label: 'GPT-4o', group: 'OpenAI Models (Legacy)' },
+                        { value: 'gpt-4o-mini', label: 'GPT-4o mini', group: 'OpenAI Models (Legacy)' },
+                        { value: 'gpt-4.1', label: 'GPT-4.1', group: 'OpenAI Models' },
+                        { value: 'gpt-5', label: 'GPT-5', group: 'OpenAI Models' },
+                        { value: 'gpt-5-mini', label: 'GPT-5 mini', group: 'OpenAI Models' },
+                        { value: 'gpt-5-codex', label: 'GPT-5-Codex', group: 'OpenAI Models' },
+                        { value: 'gpt-5.1', label: 'GPT-5.1', group: 'OpenAI Models' },
+                        { value: 'gpt-5.1-codex', label: 'GPT-5.1-Codex', group: 'OpenAI Models' },
+                        { value: 'gpt-5.1-codex-mini', label: 'GPT-5.1-Codex-Mini', group: 'OpenAI Models' },
+                        { value: 'claude-haiku-4.5', label: 'Claude Haiku 4.5', group: 'Anthropic Models' },
+                        { value: 'claude-opus-4.1', label: 'Claude Opus 4.1', group: 'Anthropic Models' },
+                        { value: 'claude-sonnet-4', label: 'Claude Sonnet 4', group: 'Anthropic Models' },
+                        { value: 'claude-sonnet-4.5', label: 'Claude Sonnet 4.5', group: 'Anthropic Models' },
+                        { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', group: 'Google Models' },
+                        { value: 'gemini-3-pro', label: 'Gemini 3 Pro', group: 'Google Models' },
+                        { value: 'grok-code-fast-1', label: 'Grok Code Fast 1', group: 'Other Models' },
+                        { value: 'raptor-mini', label: 'Raptor mini', group: 'Other Models' }
                     ]
                 }
             ]

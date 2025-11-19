@@ -26,9 +26,16 @@ export type AnthropicModel =
     | "claude-3-opus-20240229" | "claude-3-sonnet-20240229" | "claude-3-haiku-20240307";
 
 export type CopilotModel =
-    | "gpt-4o" | "gpt-4.1" | "gpt-4.5-preview" | "o1-preview" | "o3" | "o3-mini" | "o4-mini"
-    | "claude-3.5-sonnet" | "claude-3.7-sonnet" | "claude-3.7-sonnet-thinking" | "claude-sonnet-4" | "claude-opus-4"
-    | "gemini-2.0-flash" | "gemini-2.5-pro-preview";
+    | "auto"
+    // OpenAI Models
+    | "gpt-3.5-turbo" | "gpt-4" | "gpt-4-turbo" | "gpt-4o" | "gpt-4o-mini"
+    | "gpt-4.1" | "gpt-5" | "gpt-5-mini" | "gpt-5-codex" | "gpt-5.1" | "gpt-5.1-codex" | "gpt-5.1-codex-mini"
+    // Anthropic Models
+    | "claude-haiku-4.5" | "claude-opus-4.1" | "claude-sonnet-4" | "claude-sonnet-4.5"
+    // Google Models
+    | "gemini-2.5-pro" | "gemini-3-pro"
+    // Other Models
+    | "grok-code-fast-1" | "raptor-mini";
 
 export type DeepSeekModel = "deepseek-chat" | "deepseek-reasoner";
 

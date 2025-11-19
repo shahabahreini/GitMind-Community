@@ -22,6 +22,7 @@ import { fetchGrokModels } from "./services/api/grok";
 import { fetchGeminiModels } from "./services/api/gemini";
 import { fetchAnthropicModels } from "./services/api/anthropic";
 import { fetchOpenRouterModels } from "./services/api/openrouter";
+import { fetchCopilotModels } from "./services/api/copilot";
 import { PromptManager } from "./services/promptManager";
 import { telemetryService } from "./services/telemetry/telemetryService";
 import { SecureKeyManager } from "./services/encryption/SecureKeyManager";
@@ -232,19 +233,19 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
 
     if (message?.trim()) {
       const formattedMessage = processCommitMessage(message, getPromptConfig());
-      
+
       // Apply gitmoji if enabled and user has Pro access
       const gitmojiService = GitmojiService.getInstance();
-      const messageString = formattedMessage.description 
+      const messageString = formattedMessage.description
         ? `${formattedMessage.summary}\n\n${formattedMessage.description}`
         : formattedMessage.summary;
       const finalMessageString = await gitmojiService.addEmojiToCommit(messageString);
-      
+
       // Convert back to CommitMessage format
       const lines = finalMessageString.split('\n');
       const summary = lines[0] || '';
       const description = lines.slice(2).join('\n').trim(); // Skip empty line after summary
-      
+
       await setCommitMessage({ summary, description }, repoRoot);
 
       telemetryService.trackCommitGeneration(
@@ -488,6 +489,50 @@ async function handleLoadModels(
     );
   } finally {
     // Always remove from tracking set when done
+    modelLoadingInProgress.delete(modelType);
+  }
+}
+
+async function handleLoadCopilotModels(): Promise<void> {
+  const modelType = 'copilot';
+
+  if (modelLoadingInProgress.has(modelType)) {
+    debugLog(`Model loading already in progress for ${modelType}, ignoring duplicate request`);
+    return;
+  }
+
+  modelLoadingInProgress.add(modelType);
+
+  try {
+    await withProgress(`Loading ${modelType} models...`, async () => {
+      try {
+        const models = await fetchCopilotModels();
+
+        if (SettingsWebview.isWebviewOpen()) {
+          SettingsWebview.postMessageToWebview({
+            command: 'copilotModelsLoaded',
+            success: true,
+            models
+          });
+        }
+      } catch (error) {
+        debugLog(`Load ${modelType} Models Error:`, error);
+
+        if (SettingsWebview.isWebviewOpen()) {
+          SettingsWebview.postMessageToWebview({
+            command: 'copilotModelsLoaded',
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
+    });
+  } catch (error) {
+    debugLog(`Load ${modelType} Models Error:`, error);
+    vscode.window.showErrorMessage(
+      `Error loading ${modelType} models: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
+  } finally {
     modelLoadingInProgress.delete(modelType);
   }
 }
@@ -823,6 +868,8 @@ function registerCommands(context: vscode.ExtensionContext): vscode.Disposable[]
     vscode.commands.registerCommand("gitmind.loadAnthropicModels", () =>
       handleLoadModels('anthropic', fetchAnthropicModels)
     ),
+
+    vscode.commands.registerCommand("gitmind.loadCopilotModels", handleLoadCopilotModels),
 
     vscode.commands.registerCommand("gitmind.clearLastPrompt", () =>
       handlePromptAction('clear')

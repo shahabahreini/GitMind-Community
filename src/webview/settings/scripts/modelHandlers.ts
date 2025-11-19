@@ -240,6 +240,10 @@ export function getModelEventListenersScript(): string {
       handleModelLoad('anthropic', ${JSON.stringify(DEFAULT_MODELS.anthropic)}, 'gitmind.loadAnthropicModels');
     });
     
+    document.getElementById('loadCopilotModels')?.addEventListener('click', () => {
+      handleModelLoad('copilot', ${JSON.stringify(DEFAULT_MODELS.copilot)}, 'gitmind.loadCopilotModels');
+    });
+    
     // NOTE: loadOpenRouterModels handler is managed by ScriptManager.ts for filterable dropdown like Hugging Face
     // document.getElementById('loadOpenRouterModels') handler managed separately
     

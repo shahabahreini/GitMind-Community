@@ -11,63 +11,94 @@ interface GenerationConfig {
 }
 
 const MODEL_CONFIGS: Record<CopilotModel, GenerationConfig> = {
-    // OpenAI Models
+    // Auto
+    "auto": {
+        maxTokens: 350,
+        temperature: 0.3
+    },
+    // OpenAI Models (Legacy)
+    "gpt-3.5-turbo": {
+        maxTokens: 300,
+        temperature: 0.3
+    },
+    "gpt-4": {
+        maxTokens: 350,
+        temperature: 0.3
+    },
+    "gpt-4-turbo": {
+        maxTokens: 400,
+        temperature: 0.3
+    },
     "gpt-4o": {
         maxTokens: 350,
         temperature: 0.3
     },
+    "gpt-4o-mini": {
+        maxTokens: 300,
+        temperature: 0.3
+    },
+    // OpenAI Models (Current)
     "gpt-4.1": {
-        maxTokens: 350,
-        temperature: 0.3
-    },
-    "gpt-4.5-preview": {
-        maxTokens: 350,
-        temperature: 0.3
-    },
-    "o1-preview": {
         maxTokens: 400,
+        temperature: 0.3
+    },
+    "gpt-5": {
+        maxTokens: 500,
         temperature: 0.2
     },
-    "o3": {
+    "gpt-5-mini": {
         maxTokens: 400,
-        temperature: 0.2
-    },
-    "o3-mini": {
-        maxTokens: 350,
         temperature: 0.3
     },
-    "o4-mini": {
-        maxTokens: 350,
+    "gpt-5-codex": {
+        maxTokens: 500,
+        temperature: 0.2
+    },
+    "gpt-5.1": {
+        maxTokens: 500,
+        temperature: 0.2
+    },
+    "gpt-5.1-codex": {
+        maxTokens: 500,
+        temperature: 0.2
+    },
+    "gpt-5.1-codex-mini": {
+        maxTokens: 400,
         temperature: 0.3
     },
     // Anthropic Models
-    "claude-3.5-sonnet": {
+    "claude-haiku-4.5": {
         maxTokens: 350,
         temperature: 0.3
     },
-    "claude-3.7-sonnet": {
-        maxTokens: 350,
+    "claude-opus-4.1": {
+        maxTokens: 450,
         temperature: 0.3
-    },
-    "claude-3.7-sonnet-thinking": {
-        maxTokens: 400,
-        temperature: 0.2
     },
     "claude-sonnet-4": {
-        maxTokens: 350,
+        maxTokens: 400,
         temperature: 0.3
     },
-    "claude-opus-4": {
+    "claude-sonnet-4.5": {
         maxTokens: 400,
         temperature: 0.3
     },
     // Google Models
-    "gemini-2.0-flash": {
+    "gemini-2.5-pro": {
+        maxTokens: 400,
+        temperature: 0.3
+    },
+    "gemini-3-pro": {
+        maxTokens: 500,
+        temperature: 0.3
+    },
+    // Other Models
+    "grok-code-fast-1": {
         maxTokens: 350,
         temperature: 0.3
     },
-    "gemini-2.5-pro-preview": {
-        maxTokens: 400,
+    "raptor-mini": {
+        maxTokens: 350,
         temperature: 0.3
     }
 };
@@ -155,12 +186,18 @@ export async function callCopilotAPI(model: string, diff: string, customContext:
 
         // Select Copilot chat models based on model provider
         let family: string;
-        if (model.startsWith('gpt-') || model.startsWith('o')) {
+        if (model === 'auto') {
+            family = 'gpt-4'; // Auto defaults to GPT
+        } else if (model.startsWith('gpt-')) {
             family = 'gpt-4'; // OpenAI models
         } else if (model.startsWith('claude-')) {
             family = 'claude'; // Anthropic models
         } else if (model.startsWith('gemini-')) {
             family = 'gemini'; // Google models
+        } else if (model.startsWith('grok-')) {
+            family = 'gpt-4'; // Grok models
+        } else if (model.startsWith('raptor-')) {
+            family = 'gpt-4'; // Raptor models (fine-tuned GPT-5 mini)
         } else {
             family = 'gpt-4'; // Default fallback
         }
@@ -297,5 +334,95 @@ export async function validateCopilotAccess(): Promise<{ success: boolean, error
     } catch (error) {
         debugLog("Copilot validation failed:", error);
         return { success: false, error: "Unexpected error during Copilot validation" };
+    }
+}
+
+/**
+ * Fetches available GitHub Copilot models
+ * @returns Array of available model IDs
+ */
+export async function fetchCopilotModels(): Promise<string[]> {
+    try {
+        debugLog("Fetching available Copilot models");
+
+        const isAvailable = await isCopilotAvailable();
+        if (!isAvailable) {
+            throw new Error("GitHub Copilot is not available");
+        }
+
+        const models = await vscode.lm.selectChatModels({
+            vendor: 'copilot'
+        });
+
+        if (models.length === 0) {
+            throw new Error("No Copilot models found");
+        }
+
+        const detectedModels = new Set<string>();
+
+        // Define all models we support in our configuration
+        const supportedModels = new Set([
+            'auto',
+            'gpt-3.5-turbo',
+            'gpt-4',
+            'gpt-4-turbo',
+            'gpt-4o',
+            'gpt-4o-mini',
+            'gpt-4.1',
+            'gpt-5',
+            'gpt-5-mini',
+            'gpt-5-codex',
+            'gpt-5.1',
+            'gpt-5.1-codex',
+            'gpt-5.1-codex-mini',
+            'claude-haiku-4.5',
+            'claude-opus-4.1',
+            'claude-sonnet-4',
+            'claude-sonnet-4.5',
+            'gemini-2.5-pro',
+            'gemini-3-pro',
+            'grok-code-fast-1',
+            'raptor-mini'
+        ]);
+
+        for (const model of models) {
+            // Log full model details for debugging
+            debugLog("Detected Copilot model:", {
+                id: model.id,
+                name: model.name,
+                family: model.family,
+                vendor: model.vendor,
+                version: model.version
+            });
+
+            const modelId = model.id;
+
+            // Handle special cases where VS Code uses different IDs
+            if (modelId === 'oswe-vscode-secondary') {
+                detectedModels.add('raptor-mini');
+            } else if (modelId === 'copilot-fast') {
+                detectedModels.add('gpt-4o-mini');
+            } else if (modelId === 'gpt-4-0125-preview') {
+                detectedModels.add('gpt-4-turbo');
+            } else if (modelId === 'gemini-3-pro-preview') {
+                detectedModels.add('gemini-3-pro');
+            } else if (supportedModels.has(modelId)) {
+                // If the model ID directly matches our supported models, add it
+                detectedModels.add(modelId);
+            } else {
+                // For unknown models, log them but don't add (could be future models)
+                debugLog(`Unknown model ID detected: ${modelId} (${model.name})`);
+            }
+        }
+
+        // Always include 'auto' at the beginning
+        const result = ['auto', ...Array.from(detectedModels).filter(id => id !== 'auto')];
+
+        debugLog(`Detected ${detectedModels.size} unique Copilot models:`, Array.from(detectedModels));
+
+        return result;
+    } catch (error) {
+        debugLog("Error fetching Copilot models:", error);
+        throw error;
     }
 }

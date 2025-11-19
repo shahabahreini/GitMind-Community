@@ -16,7 +16,7 @@ export const PROVIDER_DEFAULTS: ProviderDefaults = {
   together: { model: "meta-llama/Llama-3.3-70B-Instruct-Turbo" },
   openrouter: { model: "google/gemma-3-27b-it:free" },
   anthropic: { model: "claude-3-5-sonnet-20241022" },
-  copilot: { model: "gpt-4o" },
+  copilot: { model: "auto" },
   deepseek: { model: "deepseek-chat" },
   grok: { model: "grok-3" },
   perplexity: { model: "llama-3.1-sonar-large-128k-online" },
@@ -92,5 +92,28 @@ export const DEFAULT_MODELS = {
     'claude-2.1',
     'claude-2.0',
     'claude-instant-1.2'
+  ],
+  copilot: [
+    'auto',
+    'gpt-3.5-turbo',
+    'gpt-4',
+    'gpt-4-turbo',
+    'gpt-4o',
+    'gpt-4o-mini',
+    'gpt-4.1',
+    'gpt-5',
+    'gpt-5-mini',
+    'gpt-5-codex',
+    'gpt-5.1',
+    'gpt-5.1-codex',
+    'gpt-5.1-codex-mini',
+    'claude-haiku-4.5',
+    'claude-opus-4.1',
+    'claude-sonnet-4',
+    'claude-sonnet-4.5',
+    'gemini-2.5-pro',
+    'gemini-3-pro',
+    'grok-code-fast-1',
+    'raptor-mini'
   ]
 };

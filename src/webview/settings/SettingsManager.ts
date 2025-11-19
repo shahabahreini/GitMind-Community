@@ -30,7 +30,7 @@ export class SettingsManager {
         together: { model: "meta-llama/Llama-3.3-70B-Instruct-Turbo" },
         openrouter: { model: "google/gemma-3-27b-it:free" },
         anthropic: { model: "claude-3-5-sonnet-20241022" },
-        copilot: { model: "gpt-4o" },
+        copilot: { model: "auto" },
         deepseek: { model: "deepseek-chat" },
         grok: { model: "grok-3" },
         perplexity: { model: "llama-3.1-sonar-large-128k-online" },
