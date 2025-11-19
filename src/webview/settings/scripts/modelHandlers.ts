@@ -163,9 +163,21 @@ export function getModelHandlingScript(): string {
           }
         }
         
-        if (loadButton) {
+        // Reset button state using global setButtonLoadingState function
+        const buttonId = 'load' + provider.charAt(0).toUpperCase() + provider.slice(1) + 'Models';
+        if (typeof window.setButtonLoadingState === 'function') {
+          window.setButtonLoadingState(buttonId, false);
+        } else if (loadButton) {
+          // Fallback if setButtonLoadingState is not available
           loadButton.textContent = loadButton.textContent.replace('Loading...', 'Load Available Models');
           loadButton.disabled = false;
+          loadButton.classList.remove('loading');
+        }
+
+        // Reset loading flag
+        const loadingFlagName = provider + 'ModelsLoading';
+        if (typeof window[loadingFlagName] !== 'undefined') {
+          window[loadingFlagName] = false;
         }
       }
     }

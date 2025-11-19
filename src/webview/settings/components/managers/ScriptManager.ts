@@ -413,6 +413,7 @@ export class ScriptManager {
                 });
                 
                 // Model loading handlers - using shared configuration
+                // Simple button-based model loading (non-dropdown providers)
                 const modelConfigs = [
                     {
                         buttonId: 'loadMistralModels',
@@ -427,41 +428,12 @@ export class ScriptManager {
                         loadingFlag: 'cohereModelsLoading'
                     },
                     {
-                        buttonId: 'loadTogetherModels',
-                        commandId: 'gitmind.loadTogetherModels',
-                        name: 'Together AI',
-                        loadingFlag: 'togetherModelsLoading'
-                    },
-                    {
-                        buttonId: 'loadHuggingFaceModels',
-                        commandId: 'gitmind.loadHuggingFaceModels',
-                        name: 'Hugging Face',
-                        loadingFlag: 'huggingfaceModelsLoading',
-                        dropdownId: 'huggingfaceModelDropdown',
-                        toastShownFlag: '_huggingFaceToastShown'
-                    },
-                    {
-                        buttonId: 'loadOpenRouterModels',
-                        commandId: 'gitmind.loadOpenRouterModels',
-                        name: 'OpenRouter',
-                        loadingFlag: 'openrouterModelsLoading',
-                        dropdownId: 'openrouterModelDropdown',
-                        toastShownFlag: '_openrouterToastShown'
-                    },
-                    {
-                        buttonId: 'loadOllamaModels',
-                        commandId: 'gitmind.loadOllamaModels',
-                        name: 'Ollama',
-                        loadingFlag: 'ollamaModelsLoading',
-                        dropdownId: 'ollamaModelDropdown',
-                        toastShownFlag: '_ollamaToastShown'
-                    },
-                    {
                         buttonId: 'loadGrokModels',
                         commandId: 'gitmind.loadGrokModels',
                         name: 'Grok',
                         loadingFlag: 'grokModelsLoading'
                     }
+                    // Note: Hugging Face, OpenRouter, Together AI, and Ollama use the dropdown system below
                 ];
 
                 modelConfigs.forEach(config => {
@@ -1040,6 +1012,19 @@ export class ScriptManager {
                         filterTimeoutKey: '_openrouterFilterTimeout',
                         messageHandlerKey: '_openRouterMessageHandler',
                         clickHandlerKey: '_openRouterClickHandler'
+                    },
+                    {
+                        name: 'Together AI',
+                        inputId: 'togetherModel',
+                        dropdownId: 'togetherModelDropdown',
+                        buttonId: 'loadTogetherModels',
+                        messageCommand: 'togetherModelsLoaded',
+                        loadingFlag: 'togetherModelsLoading',
+                        toastShownFlag: '_togetherToastShown',
+                        initFlag: 'togetherDropdownInitialized',
+                        filterTimeoutKey: '_togetherFilterTimeout',
+                        messageHandlerKey: '_togetherMessageHandler',
+                        clickHandlerKey: '_togetherClickHandler'
                     },
                     {
                         name: 'Ollama',

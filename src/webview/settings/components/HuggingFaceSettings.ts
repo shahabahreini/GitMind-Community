@@ -49,22 +49,39 @@ export class HuggingFaceSettings {
       { url: 'https://huggingface.co/settings/tokens', text: 'Learn more' }
     )}
       <div class="form-group">
-        <label for="huggingfaceModel">Model</label>
-        <div class="searchable-select-container">
-          <!-- Use text input instead of select to work with ScriptManager dropdown system -->
-          <input type="text" id="huggingfaceModel" value="${currentModel}" placeholder="Enter model name (e.g., microsoft/DialoGPT-medium)" data-custom-handler="true" data-prevent-auto-save="true" />
-          <div id="huggingfaceModelDropdown" class="model-dropdown" style="display: none;">
-            <div class="dropdown-content">
-              <div class="loading" style="display: none;">Loading models...</div>
-              <div class="error" style="display: none;"></div>
-              <div class="empty" style="display: none;">No models found</div>
+        <div class="label-container">
+          <label for="huggingfaceModel">Model</label>
+          <a href="https://huggingface.co/models" class="learn-more" target="_blank">Learn more</a>
+        </div>
+        <div class="model-input-container">
+          <div class="searchable-dropdown">
+            <input type="text"
+                   id="huggingfaceModel"
+                   placeholder="Type or select a model (e.g., microsoft/DialoGPT-medium)"
+                   value="${currentModel}"
+                   autocomplete="off"
+                   data-custom-handler="true"
+                   data-prevent-auto-save="true" />
+            <button type="button"
+                    id="loadHuggingFaceModels"
+                    class="load-models-btn"
+                    data-tooltip="Load available models from Hugging Face">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+                <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+              </svg>
+            </button>
+            <div id="huggingfaceModelDropdown" class="dropdown-content" style="display: none;">
+              <div class="dropdown-loading" style="display: none;">Loading models...</div>
+              <div class="dropdown-error" style="display: none;"></div>
+              <div class="dropdown-empty" style="display: none;">No models found</div>
               <ul class="model-list"></ul>
             </div>
           </div>
         </div>
-        <button id="loadHuggingFaceModels" class="button small" style="margin-top: 8px;">Load Available Models</button>
         <div class="description">
-          Enter a Hugging Face model name or click "Load Available Models" to browse all available models. Popular models: microsoft/DialoGPT-medium, facebook/blenderbot-400M-distill
+          Popular models: microsoft/DialoGPT-medium, facebook/blenderbot-400M-distill<br>
+          <small>Click the refresh button to load available models from Hugging Face</small>
         </div>
       </div>
     </div>`;

@@ -397,8 +397,53 @@ async function handleLoadModels(
     // Get the actual API key (not the display placeholder) for the specific provider
     const apiKey = await secureKeyManager.getActualApiKey(modelType);
 
+    // Validate API key before proceeding
     if (!apiKey || apiKey.trim() === '') {
-      throw new Error(`${modelType} API key is required to load models`);
+      const errorMessage = `${modelType.charAt(0).toUpperCase() + modelType.slice(1)} API key is required to load models. Please add your API key in the settings.`;
+
+      // Determine the correct message command suffix
+      let commandSuffix: string;
+      switch (modelType) {
+        case 'mistral':
+          commandSuffix = 'mistralModelsLoaded';
+          break;
+        case 'cohere':
+          commandSuffix = 'cohereModelsLoaded';
+          break;
+        case 'together':
+          commandSuffix = 'togetherModelsLoaded';
+          break;
+        case 'openrouter':
+          commandSuffix = 'openrouterModelsLoaded';
+          break;
+        case 'huggingface':
+          commandSuffix = 'huggingfaceModelsLoaded';
+          break;
+        case 'grok':
+          commandSuffix = 'grokModelsLoaded';
+          break;
+        case 'gemini':
+          commandSuffix = 'geminiModelsLoaded';
+          break;
+        case 'anthropic':
+          commandSuffix = 'anthropicModelsLoaded';
+          break;
+        default:
+          commandSuffix = `${modelType}ModelsLoaded`;
+      }
+
+      // Send error message to webview to reset button state
+      if (SettingsWebview.isWebviewOpen()) {
+        SettingsWebview.postMessageToWebview({
+          command: commandSuffix,
+          success: false,
+          error: errorMessage
+        });
+      }
+
+      // Also show user-friendly error notification
+      vscode.window.showErrorMessage(errorMessage);
+      return;
     }
 
     await withProgress(`Loading ${modelType} models...`, async () => {
