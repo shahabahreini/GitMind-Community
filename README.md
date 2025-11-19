@@ -8,6 +8,7 @@ Stop writing commit messages manually. GitMind analyzes your code changes and ge
 Choose from OpenAI, Anthropic, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, or GitHub Copilot. Switch anytime.
 
 **Zero Setup Options Available**
+
 - GitHub Copilot: Works instantly if you have an active subscription
 - Ollama: Free, private, offline AI running locally
 - Google Gemini: Industry-leading free tier (15 RPM, 2M context)
@@ -19,6 +20,7 @@ Generate commits following Angular, Conventional Commits, Linux Kernel, jQuery, 
 Adaptive chunking processes massive diffs without hitting token limits. Tested with 10MB+ repositories.
 
 ---
+
 ## Screenshots
 
 <div align="center">
@@ -85,21 +87,21 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 
 ### 1. Pick Your AI Provider
 
-| Provider | Best For | Free Tier | Setup Time |
-|----------|----------|-----------|------------|
-| **GitHub Copilot** | Zero setup, existing subscribers | No | 0 min |
-| **Google Gemini** | Best free tier (15 RPM, 2M context) | Yes | 2 min |
-| **Ollama** | Complete privacy, offline usage | Unlimited | 5 min |
-| **DeepSeek** | Advanced reasoning, cost-effective | 50 RPM | 2 min |
-| **OpenAI** | Industry standard, multimodal | No | 2 min |
-| **Anthropic** | Superior reasoning, long context | No | 2 min |
-| **Grok** | Real-time information, X.AI models | No | 2 min |
-| **Perplexity** | Web search capabilities, real-time data | No | 2 min |
-| **Mistral** | European AI, multilingual support | No | 2 min |
-| **Cohere** | Enterprise-grade, multilingual | Trial | 2 min |
-| **Together AI** | Open-source models, cost-effective | Trial | 2 min |
-| **OpenRouter** | Multi-model access, unified API | Trial | 2 min |
-| **Hugging Face** | Custom models, research access | Trial | 2 min |
+| Provider           | Best For                                | Free Tier | Setup Time |
+| ------------------ | --------------------------------------- | --------- | ---------- |
+| **GitHub Copilot** | Zero setup, existing subscribers        | No        | 0 min      |
+| **Google Gemini**  | Best free tier (15 RPM, 2M context)     | Yes       | 2 min      |
+| **Ollama**         | Complete privacy, offline usage         | Unlimited | 5 min      |
+| **DeepSeek**       | Advanced reasoning, cost-effective      | 50 RPM    | 2 min      |
+| **OpenAI**         | Industry standard, multimodal           | No        | 2 min      |
+| **Anthropic**      | Superior reasoning, long context        | No        | 2 min      |
+| **Grok**           | Real-time information, X.AI models      | No        | 2 min      |
+| **Perplexity**     | Web search capabilities, real-time data | No        | 2 min      |
+| **Mistral**        | European AI, multilingual support       | No        | 2 min      |
+| **Cohere**         | Enterprise-grade, multilingual          | Trial     | 2 min      |
+| **Together AI**    | Open-source models, cost-effective      | Trial     | 2 min      |
+| **OpenRouter**     | Multi-model access, unified API         | Trial     | 2 min      |
+| **Hugging Face**   | Custom models, research access          | Trial     | 2 min      |
 
 ### 2. Configure
 
@@ -122,45 +124,45 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 
 ### All Supported Providers
 
-| Provider | Featured Models | Context | API Setup |
-|----------|----------------|---------|-----------|
-| **GitHub Copilot** | gpt-4o, claude-3.5-sonnet, o3 | 128k | [VS Code Copilot](https://copilot.github.com/) |
-| **Google Gemini** | 2.5-flash, 2.5-pro, 2.0-flash | 2M | [AI Studio](https://ai.google.dev/gemini-api/docs/api-key) |
-| **Grok (X.ai)** | grok-3, grok-3-fast, grok-3-mini | 128k | [X.ai Console](https://console.x.ai/) |
-| **DeepSeek** | reasoner, chat | 128k | [DeepSeek Platform](https://platform.deepseek.com/) |
-| **Perplexity** | sonar-pro, sonar-reasoning, sonar | 127k | [Perplexity Settings](https://www.perplexity.ai/settings/api) |
-| **Mistral AI** | large-latest, medium, small | 128k | [Mistral Console](https://console.mistral.ai/) |
-| **Ollama** | deepseek-r1, llama3.3, phi4, qwen3 | 128k | [Ollama Download](https://ollama.com/download) |
-| **OpenAI** | gpt-4o, gpt-4.1, o3, o4-mini | 128k | [OpenAI Platform](https://platform.openai.com/signup) |
-| **Anthropic** | claude-opus-4, sonnet-4, haiku | 200k | [Anthropic Console](https://console.anthropic.com/) |
-| **Together AI** | Llama-3.3-70B, Mixtral-8x7B | 128k | [Together Platform](https://api.together.ai/) |
-| **Hugging Face** | Mistral-7B, Zephyr-7B, OpenHermes | 32k | [HF Token](https://huggingface.co/settings/tokens) |
-| **Cohere** | command-r, command-a-03-2025 | 128k | [Cohere Dashboard](https://dashboard.cohere.ai/) |
-| **OpenRouter** | Multiple providers & models | Varies | [OpenRouter Keys](https://openrouter.ai/keys) |
+| Provider           | Featured Models                    | Context | API Setup                                                     |
+| ------------------ | ---------------------------------- | ------- | ------------------------------------------------------------- |
+| **GitHub Copilot** | gpt-4o, claude-3.5-sonnet, o3      | 128k    | [VS Code Copilot](https://copilot.github.com/)                |
+| **Google Gemini**  | 2.5-flash, 2.5-pro, 2.0-flash      | 2M      | [AI Studio](https://ai.google.dev/gemini-api/docs/api-key)    |
+| **Grok (X.ai)**    | grok-3, grok-3-fast, grok-3-mini   | 128k    | [X.ai Console](https://console.x.ai/)                         |
+| **DeepSeek**       | reasoner, chat                     | 128k    | [DeepSeek Platform](https://platform.deepseek.com/)           |
+| **Perplexity**     | sonar-pro, sonar-reasoning, sonar  | 127k    | [Perplexity Settings](https://www.perplexity.ai/settings/api) |
+| **Mistral AI**     | large-latest, medium, small        | 128k    | [Mistral Console](https://console.mistral.ai/)                |
+| **Ollama**         | deepseek-r1, llama3.3, phi4, qwen3 | 128k    | [Ollama Download](https://ollama.com/download)                |
+| **OpenAI**         | gpt-4o, gpt-4.1, o3, o4-mini       | 128k    | [OpenAI Platform](https://platform.openai.com/signup)         |
+| **Anthropic**      | claude-opus-4, sonnet-4, haiku     | 200k    | [Anthropic Console](https://console.anthropic.com/)           |
+| **Together AI**    | Llama-3.3-70B, Mixtral-8x7B        | 128k    | [Together Platform](https://api.together.ai/)                 |
+| **Hugging Face**   | Mistral-7B, Zephyr-7B, OpenHermes  | 32k     | [HF Token](https://huggingface.co/settings/tokens)            |
+| **Cohere**         | command-r, command-a-03-2025       | 128k    | [Cohere Dashboard](https://dashboard.cohere.ai/)              |
+| **OpenRouter**     | Multiple providers & models        | Varies  | [OpenRouter Keys](https://openrouter.ai/keys)                 |
 
 ---
 
 ## Free vs Pro
 
-| Feature | Free | Pro |
-|---------|------|-----|
-| **AI Providers** | 13 providers (all) | 13 providers (all) |
-| **Models** | 50+ models | 50+ models |
-| **Commit Styles** | Basic, Conventional | 11 professional styles |
-| **Git Integration** | Yes | Yes |
-| **Multi-Repository Support** | Yes | Yes |
-| **Diagnostics & Token Estimation** | Yes | Yes |
-| **Verbose/Concise Messages** | Yes | Yes |
-| **Prompt Customization** | Yes | Yes + Save Last Prompt |
-| **API Key Storage** | Plain text | Encrypted (SecretStorage) |
-| **Large Diff Processing** | Limited | Token-aware chunking |
-| **Commit Body Lines** | Fixed (5 lines) | Configurable (3-15) |
-| **Summary Length** | Fixed | Configurable (50-100 chars) |
-| **Commit History Analysis** | ✗ | ✓ |
-| **Changelog Generation** | ✗ | ✓ |
-| **Gitmoji Support** | ✗ | ✓ |
-| **Custom API Endpoints** | ✗ | ✓ |
-| **Multi-Device License** | Single device | Multiple devices |
+| Feature                            | Free                | Pro                         |
+| ---------------------------------- | ------------------- | --------------------------- |
+| **AI Providers**                   | 13 providers (all)  | 13 providers (all)          |
+| **Models**                         | 50+ models          | 50+ models                  |
+| **Commit Styles**                  | Basic, Conventional | 11 professional styles      |
+| **Git Integration**                | Yes                 | Yes                         |
+| **Multi-Repository Support**       | Yes                 | Yes                         |
+| **Diagnostics & Token Estimation** | Yes                 | Yes                         |
+| **Verbose/Concise Messages**       | Yes                 | Yes                         |
+| **Prompt Customization**           | Yes                 | Yes + Save Last Prompt      |
+| **API Key Storage**                | Plain text          | Encrypted (SecretStorage)   |
+| **Large Diff Processing**          | Limited             | Token-aware chunking        |
+| **Commit Body Lines**              | Fixed (5 lines)     | Configurable (3-15)         |
+| **Summary Length**                 | Fixed               | Configurable (50-100 chars) |
+| **Commit History Analysis**        | ✗                   | ✓                           |
+| **Changelog Generation**           | ✗                   | ✓                           |
+| **Gitmoji Support**                | ✗                   | ✓                           |
+| **Custom API Endpoints**           | ✗                   | ✓                           |
+| **Multi-Device License**           | Single device       | Multiple devices            |
 
 ---
 
@@ -187,6 +189,7 @@ Token estimation, provider/model summary, request preview.
 
 **Professional Commit Styles**
 10 industry-standard formats:
+
 - **Conventional Commits**: Semantic versioning support with types and scopes
 - **Angular**: Enterprise-grade with strict conventions
 - **Ember.js**: Tag-based semantic categorization
@@ -200,6 +203,7 @@ Token estimation, provider/model summary, request preview.
 
 **Changelog Generation**
 AI-powered changelog from git history with:
+
 - 3-tier version detection (git tags, commit messages, package.json)
 - Existing changelog policy awareness (format, categories, emoji usage preserved)
 - Keep a Changelog specification compliance
@@ -209,6 +213,7 @@ AI-powered changelog from git history with:
 
 **Commit History Analysis**
 Learn from repository patterns:
+
 - Analyzes 10-500 past commits (default 50)
 - Optional author and date information
 - AI-powered pattern recognition
@@ -217,6 +222,7 @@ Learn from repository patterns:
 
 **Large Diff Processing**
 Token-aware adaptive chunking with:
+
 - Hunk-aware intelligent splitting
 - Automatic split/merge for massive diffs
 - Configurable concurrency (1-8 workers, default 3)
@@ -226,40 +232,53 @@ Token-aware adaptive chunking with:
 
 **API Key Encryption**
 Secure storage using VS Code SecretStorage API:
+
 - Keys encrypted at rest
 - Inaccessible to other extensions
 - Automatic migration from plaintext
 - Pro-only feature
 
+**Custom API Provider**
+Connect to private cloud AI models or custom LLM endpoints:
+
+- Support for any REST API with text generation capabilities
+- Multiple authentication methods (Bearer token, API Key, Basic Auth, or none)
+- Configurable request/response JSON templates with placeholders
+- Built-in connection testing and validation
+- Secure token storage with encryption support
+- Comprehensive [setup guide](docs/custom-api-guide.md) with examples
+
 **Advanced Customization**
+
 - Custom commit body line limits (3-15 lines)
 - Custom summary length limits (50-100 characters)
 - Save/reuse custom prompts
 - Gitmoji support with placement control (summary, body, or both)
 - Custom emoji mappings for commit types
-- Custom API provider endpoints
 
 **Multi-Device License**
 Use across multiple development machines with subscription-based access.
 
 ---
 
-
 ## Configuration
 
 Access via Command Palette: `GitMind: Open Settings`
 
 **Provider Settings**
+
 - AI provider selection
 - Secure API key configuration
 - Model selection
 
 **Message Formatting**
+
 - Commit style (11 professional formats in Pro)
 - Verbosity control (verbose/concise)
 - Custom scope and type
 
 **Pro Settings**
+
 - Encrypted API key storage
 - Commit history analysis
 - Custom body/summary limits
@@ -273,6 +292,7 @@ Access via Command Palette: `GitMind: Open Settings`
 GitMind collects anonymous usage data (provider statistics, error reports, usage analytics). No code content, file names, personal information, API keys, or repository details are collected.
 
 **Disable telemetry:**
+
 1. Open VS Code Settings (Ctrl/Cmd + ,)
 2. Search "telemetry"
 3. Set "Telemetry: Telemetry Level" to "off"
