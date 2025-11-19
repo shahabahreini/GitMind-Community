@@ -359,15 +359,16 @@ export class ProviderConfig {
                     tooltip: 'Select which OpenRouter model to use',
                     loadButtonText: 'Load Available Models',
                     loadButtonId: 'loadOpenRouterModels',
-                    options: [
-                        { value: 'google/gemma-3-27b-it:free', label: 'Gemma 3 27B Instruct (Free)' },
-                        { value: 'openai/gpt-4o-mini', label: 'GPT-4o Mini' },
-                        { value: 'openai/gpt-4-turbo', label: 'GPT-4 Turbo' },
-                        { value: 'anthropic/claude-3-haiku', label: 'Claude 3 Haiku' },
-                        { value: 'meta-llama/llama-3.1-8b-instruct:free', label: 'Llama 3.1 8B (Free)' },
-                        { value: 'meta-llama/llama-3.1-70b-instruct', label: 'Llama 3.1 70B' },
-                        { value: 'mistralai/mistral-7b-instruct:free', label: 'Mistral 7B (Free)' },
-                        { value: 'qwen/qwen-2-7b-instruct:free', label: 'Qwen 2 7B (Free)' }
+                    loadCommand: 'gitmind.loadOpenRouterModels',
+                    defaultOptions: [
+                        'google/gemma-3-27b-it:free',
+                        'openai/gpt-4o-mini',
+                        'openai/gpt-4-turbo',
+                        'anthropic/claude-3-haiku',
+                        'meta-llama/llama-3.1-8b-instruct:free',
+                        'meta-llama/llama-3.1-70b-instruct',
+                        'mistralai/mistral-7b-instruct:free',
+                        'qwen/qwen-2-7b-instruct:free'
                     ]
                 }
             ]

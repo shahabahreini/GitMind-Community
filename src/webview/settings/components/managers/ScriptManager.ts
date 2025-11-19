@@ -432,8 +432,35 @@ export class ScriptManager {
                         commandId: 'gitmind.loadDeepSeekModels',
                         name: 'DeepSeek',
                         loadingFlag: 'deepseekModelsLoading'
+                    },
+                    {
+                        buttonId: 'loadHuggingFaceModels',
+                        commandId: 'gitmind.loadHuggingFaceModels',
+                        name: 'HuggingFace',
+                        loadingFlag: 'huggingfaceModelsLoading',
+                        dropdownId: 'huggingfaceModelDropdown'
+                    },
+                    {
+                        buttonId: 'loadOpenRouterModels',
+                        commandId: 'gitmind.loadOpenRouterModels',
+                        name: 'OpenRouter',
+                        loadingFlag: 'openrouterModelsLoading',
+                        dropdownId: 'openrouterModelDropdown'
+                    },
+                    {
+                        buttonId: 'loadTogetherModels',
+                        commandId: 'gitmind.loadTogetherModels',
+                        name: 'Together',
+                        loadingFlag: 'togetherModelsLoading',
+                        dropdownId: 'togetherModelDropdown'
+                    },
+                    {
+                        buttonId: 'loadOllamaModels',
+                        commandId: 'gitmind.loadOllamaModels',
+                        name: 'Ollama',
+                        loadingFlag: 'ollamaModelsLoading',
+                        dropdownId: 'ollamaModelDropdown'
                     }
-                    // Note: Hugging Face, OpenRouter, Together AI, and Ollama use the dropdown system below
                 ];
 
                 modelConfigs.forEach(config => {
