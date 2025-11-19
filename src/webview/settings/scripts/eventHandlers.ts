@@ -580,10 +580,6 @@ export function getEventHandlersScript(): string {
         });
       }
 
-      // Initialize Ollama model dropdown functionality
-      console.log('About to initialize Ollama dropdown');
-      initializeOllamaModelDropdown();
-      
       // Set up provider field event listeners
       setupProviderEventListeners();
     });

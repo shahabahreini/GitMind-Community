@@ -22,15 +22,22 @@ export function getOllamaStyles(): string {
             position: absolute;
             right: 8px;
             top: 50%;
-            transform: translateY(-50%);
+            margin-top: -14px;
             background: transparent;
             border: none;
             cursor: pointer;
-            padding: 6px;
+            padding: 6px 8px;
             border-radius: 6px;
             color: var(--vscode-foreground);
-            transition: all 0.2s ease;
+            transition: background-color 0.2s ease, color 0.2s ease;
             z-index: 2;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 28px;
+            height: 28px;
+            white-space: nowrap;
+            font-size: 12px;
         }
 
         .load-models-btn:hover {
@@ -44,7 +51,10 @@ export function getOllamaStyles(): string {
         }
 
         .load-models-btn svg {
-            animation: none;
+            display: block;
+            width: 16px;
+            height: 16px;
+            pointer-events: none;
         }
 
         .load-models-btn.loading svg {

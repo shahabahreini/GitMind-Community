@@ -61,10 +61,10 @@ npm run clean
 ```
 
 ### VS Code Debugging
-- **Run Extension**: F5 or use "Run Extension" launch config
-- **Run Extension (Dev Mode)**: Use "Run Extension (Dev Mode)" with `GITMIND_ENCRYPTION_DEV_MODE=true`
-- **Run Extension (Watch Mode)**: Use "Run Extension (Watch Mode)" for live reload during development
-- **Extension Tests**: Use "Extension Tests" launch config
+- **Run Extension**: Press F5 in VS Code to launch Extension Development Host
+- **Watch Mode**: Use `npm run watch` for live TypeScript compilation during development
+- **Dev Mode**: Set environment variable `GITMIND_ENCRYPTION_DEV_MODE=true` for enhanced encryption logging
+- **Extension Tests**: Use `npm test` or the VS Code test runner
 
 ## Architecture Overview
 
