@@ -115,5 +115,9 @@ export const DEFAULT_MODELS = {
     'gemini-3-pro',
     'grok-code-fast-1',
     'raptor-mini'
+  ],
+  deepseek: [
+    'deepseek-chat',
+    'deepseek-reasoner'
   ]
 };

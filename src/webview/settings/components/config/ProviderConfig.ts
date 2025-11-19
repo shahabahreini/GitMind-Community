@@ -388,12 +388,14 @@ export class ProviderConfig {
                     id: 'deepseekModel',
                     key: 'model',
                     label: 'Model',
-                    type: 'select',
+                    type: 'model-with-load',
                     tooltip: 'Select which DeepSeek model to use',
+                    loadButtonText: 'Load Available Models',
+                    loadButtonId: 'loadDeepSeekModels',
+                    loadCommand: 'gitmind.loadDeepSeekModels',
                     options: [
-                        { value: 'deepseek-reasoner', label: 'DeepSeek Reasoner (Latest)' },
                         { value: 'deepseek-chat', label: 'DeepSeek Chat' },
-                        { value: 'deepseek-coder', label: 'DeepSeek Coder' }
+                        { value: 'deepseek-reasoner', label: 'DeepSeek Reasoner' }
                     ]
                 }
             ]

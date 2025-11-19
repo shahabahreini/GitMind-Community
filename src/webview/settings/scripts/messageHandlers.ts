@@ -18,6 +18,7 @@ export function getMessageHandlersScript(): string {
         cohereModelsLoaded: () => handleModelsLoaded('cohere', message, ${JSON.stringify(DEFAULT_MODELS.cohere)}),
         togetherModelsLoaded: () => handleModelsLoaded('together', message, ${JSON.stringify(DEFAULT_MODELS.together)}),
         grokModelsLoaded: () => handleModelsLoaded('grok', message, ${JSON.stringify(DEFAULT_MODELS.grok)}),
+        deepseekModelsLoaded: () => handleModelsLoaded('deepseek', message, ${JSON.stringify(DEFAULT_MODELS.deepseek)}),
         geminiModelsLoaded: () => handleModelsLoaded('gemini', message, ${JSON.stringify(DEFAULT_MODELS.gemini)}),
         anthropicModelsLoaded: () => handleModelsLoaded('anthropic', message, ${JSON.stringify(DEFAULT_MODELS.anthropic)}),
         copilotModelsLoaded: () => handleModelsLoaded('copilot', message, ${JSON.stringify(DEFAULT_MODELS.copilot)}),

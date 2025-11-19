@@ -19,6 +19,7 @@ import { fetchHuggingFaceModels } from "./services/api/huggingface";
 import { fetchCohereModels } from "./services/api/cohere";
 import { fetchTogetherModels } from "./services/api/together";
 import { fetchGrokModels } from "./services/api/grok";
+import { fetchDeepSeekModels } from "./services/api/deepseek";
 import { fetchGeminiModels } from "./services/api/gemini";
 import { fetchAnthropicModels } from "./services/api/anthropic";
 import { fetchOpenRouterModels } from "./services/api/openrouter";
@@ -378,7 +379,7 @@ async function handleRateLimitsCheck(): Promise<void> {
 const modelLoadingInProgress = new Set<string>();
 
 async function handleLoadModels(
-  modelType: 'mistral' | 'huggingface' | 'cohere' | 'together' | 'openrouter' | 'grok' | 'gemini' | 'anthropic',
+  modelType: 'mistral' | 'huggingface' | 'cohere' | 'together' | 'openrouter' | 'grok' | 'deepseek' | 'gemini' | 'anthropic',
   fetchFunction: (apiKey: string) => Promise<any[]>
 ): Promise<void> {
   // Prevent duplicate concurrent calls for the same provider
@@ -421,6 +422,9 @@ async function handleLoadModels(
           break;
         case 'grok':
           commandSuffix = 'grokModelsLoaded';
+          break;
+        case 'deepseek':
+          commandSuffix = 'deepseekModelsLoaded';
           break;
         case 'gemini':
           commandSuffix = 'geminiModelsLoaded';
@@ -469,6 +473,9 @@ async function handleLoadModels(
           case 'grok':
             commandSuffix = 'grokModelsLoaded';
             break;
+          case 'deepseek':
+            commandSuffix = 'deepseekModelsLoaded';
+            break;
           case 'gemini':
             commandSuffix = 'geminiModelsLoaded';
             break;
@@ -507,6 +514,9 @@ async function handleLoadModels(
             break;
           case 'grok':
             commandSuffix = 'grokModelsLoaded';
+            break;
+          case 'deepseek':
+            commandSuffix = 'deepseekModelsLoaded';
             break;
           case 'gemini':
             commandSuffix = 'geminiModelsLoaded';
@@ -904,6 +914,10 @@ function registerCommands(context: vscode.ExtensionContext): vscode.Disposable[]
 
     vscode.commands.registerCommand("gitmind.loadGrokModels", () =>
       handleLoadModels('grok', fetchGrokModels)
+    ),
+
+    vscode.commands.registerCommand("gitmind.loadDeepSeekModels", () =>
+      handleLoadModels('deepseek', fetchDeepSeekModels)
     ),
 
     vscode.commands.registerCommand("gitmind.loadGeminiModels", () =>

@@ -234,6 +234,76 @@ export async function callDeepSeekAPI(apiKey: string, model: string, diff: strin
 }
 
 /**
+ * Fetches available models from DeepSeek API
+ * @param apiKey The DeepSeek API key
+ * @returns Array of model IDs
+ */
+export async function fetchDeepSeekModels(apiKey: string): Promise<string[]> {
+    if (!apiKey || apiKey.trim() === '') {
+        throw new Error("DeepSeek API key is required to fetch models");
+    }
+
+    try {
+        debugLog("Fetching DeepSeek models from API");
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+        const response = await fetch('https://api.deepseek.com/models', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            debugLog(`DeepSeek models API error: ${response.status} ${errorText}`);
+
+            if (response.status === 401) {
+                throw new Error("Authentication failed. Please check your DeepSeek API key.");
+            } else if (response.status === 429) {
+                throw new Error("Rate limit exceeded. Please try again later.");
+            } else {
+                throw new Error(`Failed to fetch models: ${response.status} ${errorText}`);
+            }
+        }
+
+        const data = await response.json();
+        debugLog("DeepSeek models API response:", data);
+
+        // DeepSeek API returns models in OpenAI-compatible format
+        if (data.data && Array.isArray(data.data)) {
+            const modelIds = data.data
+                .map((model: any) => model.id)
+                .filter((id: string) => id && typeof id === 'string')
+                .sort();
+
+            debugLog(`Found ${modelIds.length} DeepSeek models:`, modelIds);
+            return modelIds;
+        } else {
+            throw new Error('Invalid response format from DeepSeek models API');
+        }
+    } catch (error) {
+        debugLog("Failed to fetch DeepSeek models:", error);
+
+        if (error instanceof Error && error.name === 'AbortError') {
+            throw new Error('Request timeout. Please try again.');
+        }
+
+        if (error instanceof Error) {
+            throw error;
+        }
+
+        throw new Error(`Unexpected error fetching DeepSeek models: ${String(error)}`);
+    }
+}
+
+/**
  * Validates a DeepSeek API key by making a simple request
  * @param apiKey The API key to validate
  * @returns Boolean indicating if the API key is valid

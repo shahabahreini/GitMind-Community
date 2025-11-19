@@ -24,13 +24,14 @@ export class DeepSeekSettings {
       <div class="form-group">
         <label for="deepseekModel">Model</label>
         <select id="deepseekModel">
-          <optgroup label="Available Models">
-            <option value="deepseek-chat" ${this._settings.deepseek?.model === "deepseek-chat" ? "selected" : ""}>DeepSeek Chat (General Purpose)</option>
-            <option value="deepseek-reasoner" ${this._settings.deepseek?.model === "deepseek-reasoner" ? "selected" : ""}>DeepSeek Reasoner (Advanced Reasoning)</option>
+          <optgroup label="Default Models">
+            <option value="deepseek-chat" ${this._settings.deepseek?.model === "deepseek-chat" ? "selected" : ""}>deepseek-chat</option>
+            <option value="deepseek-reasoner" ${this._settings.deepseek?.model === "deepseek-reasoner" ? "selected" : ""}>deepseek-reasoner</option>
           </optgroup>
         </select>
+        <button id="loadDeepSeekModels" class="button small" style="margin-top: 8px;">Load Available Models</button>
         <div class="description">
-          Choose the DeepSeek model that fits your needs. DeepSeek Chat is optimized for general conversation and code generation, while DeepSeek Reasoner provides advanced reasoning capabilities.
+          Default models shown. Click "Load Available Models" to fetch all available models from DeepSeek API.
         </div>
       </div>
     </div>`;

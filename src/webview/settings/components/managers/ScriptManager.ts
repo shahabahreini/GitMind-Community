@@ -113,28 +113,22 @@ export class ScriptManager {
 
                     if (typeof vscode !== 'undefined') {
                         console.log('Sending ' + config.name + ' models load request');
-                        
-                        // Build the message based on the provider type
-                        const message = {
-                            command: 'load' + config.name.replace(/\s+/g, '') + 'Models'
-                        };
-                        
-                        // Add provider-specific parameters
+
+                        // Special case for Ollama which needs baseUrl parameter
                         if (config.name === 'Ollama') {
                             const ollamaUrlInput = document.getElementById('ollamaUrl');
-                            message.baseUrl = (ollamaUrlInput?.value || 'http://localhost:11434').trim();
-                            message.command = 'loadOllamaModels';
-                        } else if (config.name === 'HuggingFace') {
-                            message.command = 'loadHuggingFaceModels';
-                        } else if (config.name === 'OpenRouter') {
-                            message.command = 'loadOpenRouterModels';
-                        } else if (config.name === 'Together') {
-                            message.command = 'loadTogetherModels';
-                        } else if (config.name === 'Grok') {
-                            message.command = 'loadGrokModels';
+                            const baseUrl = (ollamaUrlInput?.value || 'http://localhost:11434').trim();
+                            vscode.postMessage({
+                                command: 'loadOllamaModels',
+                                baseUrl: baseUrl
+                            });
+                        } else {
+                            // Use executeCommand for all other providers
+                            vscode.postMessage({
+                                command: 'executeCommand',
+                                commandId: config.commandId
+                            });
                         }
-                        
-                        vscode.postMessage(message);
                     }
                 };
             }
@@ -432,6 +426,12 @@ export class ScriptManager {
                         commandId: 'gitmind.loadGrokModels',
                         name: 'Grok',
                         loadingFlag: 'grokModelsLoading'
+                    },
+                    {
+                        buttonId: 'loadDeepSeekModels',
+                        commandId: 'gitmind.loadDeepSeekModels',
+                        name: 'DeepSeek',
+                        loadingFlag: 'deepseekModelsLoading'
                     }
                     // Note: Hugging Face, OpenRouter, Together AI, and Ollama use the dropdown system below
                 ];

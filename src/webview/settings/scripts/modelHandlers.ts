@@ -2,10 +2,22 @@ import { DEFAULT_MODELS } from './constants';
 
 export function getModelHandlingScript(): string {
   return `
+    // Helper function to get correct button ID for providers
+    function getLoadButtonId(provider) {
+      const buttonIdMap = {
+        'deepseek': 'loadDeepSeekModels',
+        'huggingface': 'loadHuggingFaceModels',
+        'openrouter': 'loadOpenRouterModels'
+      };
+
+      // Use mapped ID if exists, otherwise use standard capitalization
+      return buttonIdMap[provider] || ('load' + provider.charAt(0).toUpperCase() + provider.slice(1) + 'Models');
+    }
+
     // Model loading handlers
     function handleModelLoad(provider, defaultModels, commandId) {
       const modelSelect = document.getElementById(provider + 'Model');
-      const loadButton = document.getElementById('load' + provider.charAt(0).toUpperCase() + provider.slice(1) + 'Models');
+      const loadButton = document.getElementById(getLoadButtonId(provider));
       
       if (modelSelect) {
         const currentValue = modelSelect.value;
@@ -92,7 +104,7 @@ export function getModelHandlingScript(): string {
 
     function handleModelsLoaded(provider, message, defaultModels) {
       const modelSelect = document.getElementById(provider + 'Model');
-      const loadButton = document.getElementById('load' + provider.charAt(0).toUpperCase() + provider.slice(1) + 'Models');
+      const loadButton = document.getElementById(getLoadButtonId(provider));
       
       if (modelSelect) {
         const currentValue = modelSelect.value;
@@ -164,7 +176,7 @@ export function getModelHandlingScript(): string {
         }
         
         // Reset button state using global setButtonLoadingState function
-        const buttonId = 'load' + provider.charAt(0).toUpperCase() + provider.slice(1) + 'Models';
+        const buttonId = getLoadButtonId(provider);
         if (typeof window.setButtonLoadingState === 'function') {
           window.setButtonLoadingState(buttonId, false);
         } else if (loadButton) {
