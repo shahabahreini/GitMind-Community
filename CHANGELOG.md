@@ -1,3 +1,35 @@
+## v4.5.2 - 2025-11-20
+
+### New Features
+
+- Integrated OpenAI model fetching and settings to display available OpenAI models within the extension's settings.
+  - Implemented `fetchOpenAIModels` to query the OpenAI API for compatible chat models.
+  - Updated `MODEL_CONFIGS` in `openai.ts` with current and upcoming OpenAI models.
+- Implemented unsaved changes indicator and save state management in the settings UI.
+  - Introduced a visual indicator for unsaved changes on the "Save Settings" button and badge.
+  - Added logic to track changes and update UI state accordingly.
+- Added dynamic model loading for DeepSeek, allowing retrieval of available models directly from the DeepSeek API.
+  - Implemented `fetchDeepSeekModels` to dynamically retrieve models.
+  - Integrated DeepSeek into the model loading mechanism and added a "Load Available Models" button.
+- Enabled dynamic model loading for AI providers (HuggingFace, OpenRouter, Together, Ollama) to fetch up-to-date model lists directly from providers.
+  - Refactored `ProviderConfig` to use `defaultOptions` and `loadCommand` for model dropdowns.
+  - Integrated providers into `ScriptManager` for dynamic model loading.
+
+### Enhanced
+
+- Prevented Flash of Unstyled Content (FOUC) in the settings page by introducing critical CSS and inline scripts.
+- Updated commit tab button styles to improve contrast, visual hierarchy, and user feedback.
+- Modernized UI elements with cleaner CSS across various components, enhancing visual hierarchy and user experience.
+
+### Technical
+
+- Lazy loaded API provider modules, reducing initial bundle size by approximately 200-300KB and improving startup performance.
+- Removed `node-fetch` dependency and `src/utils/networkRetry.ts` as part of API provider optimization.
+
+### Other
+
+- Documented v4.5.1 release notes in `CHANGELOG.md`.
+
 ## v4.5.1 - 2025-11-19
 
 ### New Features
