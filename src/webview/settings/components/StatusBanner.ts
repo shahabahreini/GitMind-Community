@@ -142,224 +142,29 @@ export class StatusBanner {
     const analytics = this._settings.telemetry?.enabled !== false ? 'Enabled' : 'Disabled';
 
     return `
-      <div class="status-banner-compact">
-        <div class="banner-header">
+      <div class="status-banner-compact" style="background: var(--vscode-editor-background); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+        <div class="banner-header" style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
           ${ProviderIcon.renderIcon(provider, 28)}
-          <div class="header-content">
-            <div class="provider-info">
-              <span class="provider-name">${providerInfo.displayName}</span>
+          <div class="header-content" style="flex: 1; min-width: 0;">
+            <div class="provider-info" style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
+              <span class="provider-name" style="font-size: 18px; font-weight: 600; color: var(--vscode-foreground);">${providerInfo.displayName}</span>
               ${isProUser ? '<span class="pro-badge">PRO</span>' : '<span class="free-badge">FREE</span>'}
             </div>
             <div class="model-display">${providerInfo.model}</div>
           </div>
         </div>
-        
-        <div class="status-content">
-          <div class="status-row primary">
+
+        <div class="status-content" style="display: flex; flex-direction: column; gap: 6px;">
+          <div class="status-row primary" style="display: flex; gap: 16px; flex-wrap: wrap;">
             ${this.renderInlineStatus('API', apiStatus)}
             ${this.renderInlineStatus('Commit', commitStyle)}
           </div>
-          <div class="status-row secondary">
+          <div class="status-row secondary" style="display: flex; gap: 16px; flex-wrap: wrap;">
             ${this.renderInlineStatus('Prompts', promptCustomization)}
             ${this.renderInlineStatus('Analytics', analytics)}
           </div>
         </div>
       </div>
-      
-      <style>
-        .status-banner-compact {
-          background: var(--vscode-editor-background);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 8px;
-          padding: 16px;
-          margin-bottom: 20px;
-          transition: all 0.3s ease;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-        }
-
-        .status-banner-compact:hover {
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.16);
-          border-color: rgba(255, 255, 255, 0.12);
-        }
-
-        .banner-header {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-bottom: 12px;
-        }
-
-        .header-content {
-          flex: 1;
-          min-width: 0;
-        }
-
-        .provider-info {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-bottom: 2px;
-        }
-
-        .provider-name {
-          font-size: 18px;
-          font-weight: 600;
-          color: var(--vscode-foreground);
-        }
-
-        .pro-badge, .free-badge {
-          font-size: 9px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          padding: 2px 6px;
-          border-radius: 8px;
-        }
-
-        .pro-badge {
-          background: linear-gradient(135deg, #ffd700, #ffb000);
-          color: #8b4513;
-          box-shadow: 0 1px 3px rgba(255, 215, 0, 0.4);
-        }
-
-        .free-badge {
-          background: rgba(156, 163, 175, 0.2);
-          color: #9ca3af;
-          border: 1px solid rgba(156, 163, 175, 0.3);
-        }
-
-        .model-display {
-          font-size: 11px;
-          color: var(--vscode-descriptionForeground);
-          font-family: var(--vscode-editor-font-family, 'SF Mono', monospace);
-          background: rgba(255, 255, 255, 0.03);
-          padding: 3px 6px;
-          border-radius: 4px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          max-width: fit-content;
-          word-break: break-all;
-        }
-
-        .status-content {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-        }
-
-        .status-row {
-          display: flex;
-          gap: 16px;
-          flex-wrap: wrap;
-        }
-
-        .status-row.primary .inline-status {
-          flex: 1;
-          min-width: 120px;
-        }
-
-        .status-row.secondary .inline-status {
-          flex: 1;
-          min-width: 100px;
-        }
-
-        .inline-status {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .inline-label {
-          font-size: 10px;
-          color: var(--vscode-descriptionForeground);
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          opacity: 0.7;
-        }
-
-        .inline-value {
-          font-size: 11px;
-          font-weight: 500;
-          color: var(--vscode-foreground);
-          display: flex;
-          align-items: center;
-          gap: 3px;
-        }
-
-        .status-indicator {
-          font-size: 8px;
-          margin-right: 2px;
-        }
-
-        .status-indicator.configured {
-          color: #10b981;
-        }
-
-        .status-indicator.disabled {
-          color: #6b7280;
-        }
-
-        /* Responsive design */
-        @media (max-width: 768px) {
-          .status-banner-compact {
-            padding: 14px;
-          }
-
-          .banner-header {
-            gap: 10px;
-            margin-bottom: 10px;
-          }
-
-          .provider-name {
-            font-size: 20px;
-          }
-
-          .model-display {
-            font-size: 10px;
-          }
-
-          .status-row {
-            gap: 12px;
-          }
-
-          .status-row.primary .inline-status,
-          .status-row.secondary .inline-status {
-            min-width: 90px;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .status-banner-compact {
-            padding: 12px;
-          }
-
-          .banner-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 8px;
-          }
-
-          .provider-info {
-            align-self: stretch;
-            justify-content: space-between;
-          }
-
-          .status-row {
-            flex-direction: column;
-            gap: 4px;
-          }
-
-          .inline-status {
-            justify-content: space-between;
-            padding: 4px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-          }
-
-          .inline-status:last-child {
-            border-bottom: none;
-          }
-        }
-      </style>
     `;
   }
 }

@@ -145,6 +145,49 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
   return `
   <div id="toast" class="toast"></div>
   <script nonce="${nonce}">
+    // CRITICAL: Remove loading class to show content after styles are applied
+    // This prevents FOUC (Flash of Unstyled Content) in VS Code webviews
+    (function() {
+      function showContent() {
+        // Use double requestAnimationFrame to ensure styles are fully parsed
+        // First RAF: waits for next frame after DOM ready
+        // Second RAF: waits for next frame after first paint
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            // Add ready class to html
+            document.documentElement.classList.add('ready');
+
+            // Restore visibility on all hidden elements
+            document.documentElement.style.visibility = 'visible';
+            document.documentElement.style.opacity = '1';
+            document.body.style.visibility = 'visible';
+            document.body.classList.remove('loading');
+
+            // Restore opacity on containers with smooth transition
+            const container = document.querySelector('.settings-container');
+            const bannerContainer = document.getElementById('statusBannerContainer');
+
+            if (container) {
+              container.style.transition = 'opacity 0.15s ease-in';
+              container.style.opacity = '1';
+            }
+            if (bannerContainer) {
+              bannerContainer.style.transition = 'opacity 0.15s ease-in';
+              bannerContainer.style.opacity = '1';
+            }
+          });
+        });
+      }
+
+      // Show content when DOM is ready and styles are parsed
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', showContent);
+      } else {
+        // DOM is already ready, show immediately
+        showContent();
+      }
+    })();
+
     // Windows service worker fix - prevent service worker registration errors
     if (typeof navigator !== 'undefined' && navigator.serviceWorker) {
       // Override service worker registration to prevent Windows-specific errors
@@ -154,7 +197,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
         return Promise.reject(new Error('Service worker registration disabled for webview compatibility'));
       };
     }
-    
+
     // Global error handler for unhandled service worker errors
     window.addEventListener('error', function(e) {
       if (e.message && e.message.includes('ServiceWorker') && e.message.includes('InvalidStateError')) {

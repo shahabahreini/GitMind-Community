@@ -39,7 +39,7 @@ export function getStatusBannerStyles(): string {
       }
 
       .provider-name {
-        font-size: 16px;
+        font-size: 18px;
         font-weight: 600;
         color: var(--vscode-foreground);
       }
@@ -597,7 +597,7 @@ export function getStatusBannerStyles(): string {
         }
 
         .provider-name {
-          font-size: 14px;
+          font-size: 16px;
         }
 
         .model-display {
