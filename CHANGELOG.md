@@ -1,3 +1,27 @@
+## v4.5.3 - 2025-11-20
+
+### New Features
+
+- Updated Copilot configuration to use "auto" as the default model for a more seamless user experience.
+- Refactored the `callCopilotAPI` function to correctly map internal model names (e.g., "raptor-mini") to their corresponding API families for improved model compatibility.
+- Implemented OpenAI model fetching and settings to display available OpenAI models within the extension's settings.
+  - Integrated `fetchOpenAIModels` to query the OpenAI API for compatible chat models.
+  - Updated `MODEL_CONFIGS` in `openai.ts` with current and upcoming OpenAI models, including GPT-5 and GPT-4o series, and reasoning models.
+- Implemented unsaved changes indicator and save state management in the settings UI.
+  - Introduced a visual indicator for unsaved changes, including a pulsing dot on the "Save Settings" button and a badge in the button group.
+  - Implemented logic to track changes to settings inputs and update the UI state accordingly.
+- Enabled dynamic model loading for AI providers (HuggingFace, OpenRouter, Together, Ollama) to fetch up-to-date model lists directly from providers.
+
+### Enhanced
+
+- Prevented Flash of Unstyled Content (FOUC) in the settings page by introducing critical CSS and inline scripts to hide content until styles are loaded.
+- Updated commit tab button styles to improve contrast, visual hierarchy, and user feedback.
+- Modernized UI elements with cleaner CSS across various components, enhancing visual hierarchy and user experience.
+
+### Fixed
+
+- Enhanced error handling for missing Copilot models in settings, prompting the user to select a model if none is configured.
+
 ## v4.5.2 - 2025-11-20
 
 ### New Features
