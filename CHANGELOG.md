@@ -1,3 +1,36 @@
+## v4.5.1 - 2025-11-19
+
+### New Features
+
+- Enabled dynamic model loading for AI providers (HuggingFace, OpenRouter, Together, Ollama) to fetch up-to-date model lists directly from providers.
+- Implemented dynamic model loading for DeepSeek, allowing retrieval of available models directly from the DeepSeek API.
+  - Added a "Load Available Models" button to the DeepSeek settings UI.
+- Added dynamic detection of available GitHub Copilot models within VS Code.
+  - Expanded supported GitHub Copilot model families and enabled auto-selection through updated settings UI and configuration.
+- Implemented connection validation for custom API endpoints, providing immediate feedback on configuration and supporting various authentication types.
+  - Provided specific troubleshooting guidance for common HTTP errors and timeouts during custom API connection tests.
+
+### Enhanced
+
+- Reduced initial application bundle size by approximately 200-300KB by implementing lazy loading for API provider modules.
+- Improved API key validation to display user-friendly error messages and reset UI state on failure.
+- Redesigned model loading buttons for Hugging Face, OpenRouter, and Together AI into inline refresh icons for a cleaner UI.
+- Streamlined the model loading mechanism for AI providers by dynamically constructing commands with provider-specific parameters.
+- Updated Ollama settings UI with refined dropdown display logic and clearer element IDs.
+- Refactored custom API connection test results to use structured HTML and new CSS styles for improved readability and visual organization.
+
+### Technical
+
+- Removed `node-fetch` dependency and `src/utils/networkRetry.ts` as part of API provider optimization.
+- Excluded additional development environment and tooling files from VS Code indexing for improved IDE performance and reduced clutter.
+- Adjusted `npm` log level from `warn` to `error` to suppress non-critical warnings during build processes.
+- Configured `yarn` to ignore engine checks for improved VS Code extension compatibility.
+- Updated build scripts and npm configuration to suppress verbose warnings during package creation.
+
+### Other
+
+- Enhanced README tables with consistent column alignment and improved readability.
+
 ## v4.5.0 - 2025-11-18
 
 ### New Features
