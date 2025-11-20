@@ -487,18 +487,89 @@ export function getButtonStyles(): string {
         button {
           transition: none;
         }
-        
+
         button:hover:not([disabled]):not(.disabled) {
           transform: none;
         }
-        
+
         .copy-toggle:hover:not(.disabled) {
           transform: none;
         }
-        
+
         @keyframes buttonSpin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(0deg); }
+        }
+      }
+
+      /* Unsaved Changes Indicator */
+      .unsaved-indicator {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background-color: #ffc107;
+        border-radius: 50%;
+        margin-right: 6px;
+        animation: pulse 2s ease-in-out infinite;
+        box-shadow: 0 0 4px rgba(255, 193, 7, 0.5);
+      }
+
+      @keyframes pulse {
+        0%, 100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.7;
+          transform: scale(1.1);
+        }
+      }
+
+      button.has-unsaved-changes {
+        background-color: #ffc107 !important;
+        color: #212529 !important;
+        border-color: #ffc107 !important;
+        font-weight: 600;
+      }
+
+      button.has-unsaved-changes:hover:not([disabled]):not(.disabled) {
+        background-color: #e0a800 !important;
+        border-color: #d39e00 !important;
+      }
+
+      .unsaved-changes-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        background-color: rgba(255, 193, 7, 0.15);
+        color: #ffc107;
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+        animation: fadeIn 0.3s ease-in-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-5px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .unsaved-indicator {
+          animation: none;
+        }
+
+        .unsaved-changes-badge {
+          animation: none;
         }
       }
     `;

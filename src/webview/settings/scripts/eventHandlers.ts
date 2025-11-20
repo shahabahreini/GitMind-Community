@@ -1,5 +1,49 @@
 export function getEventHandlersScript(): string {
   return `
+    // Track unsaved changes
+    let hasUnsavedChanges = false;
+
+    // Function to mark settings as changed
+    function markAsUnsaved() {
+      hasUnsavedChanges = true;
+      updateSaveButtonState();
+    }
+
+    // Function to mark settings as saved
+    function markAsSaved() {
+      hasUnsavedChanges = false;
+      updateSaveButtonState();
+    }
+
+    // Update save button appearance based on unsaved changes
+    function updateSaveButtonState() {
+      const saveButton = document.querySelector('button[onclick="saveSettings()"]');
+      const buttonGroup = document.querySelector('.button-group');
+
+      if (saveButton) {
+        if (hasUnsavedChanges) {
+          saveButton.classList.add('has-unsaved-changes');
+          saveButton.innerHTML = '<span class="unsaved-indicator"></span>Save Settings';
+        } else {
+          saveButton.classList.remove('has-unsaved-changes');
+          saveButton.textContent = 'Save Settings';
+        }
+      }
+
+      // Also update button group indicator
+      if (buttonGroup) {
+        let indicator = buttonGroup.querySelector('.unsaved-changes-badge');
+        if (hasUnsavedChanges && !indicator) {
+          indicator = document.createElement('span');
+          indicator.className = 'unsaved-changes-badge';
+          indicator.textContent = 'Unsaved Changes';
+          buttonGroup.appendChild(indicator);
+        } else if (!hasUnsavedChanges && indicator) {
+          indicator.remove();
+        }
+      }
+    }
+
     // Debounce utility function
     function debounce(func, wait) {
       let timeout;
@@ -21,32 +65,35 @@ export function getEventHandlersScript(): string {
           console.log('Skipping setting handler - models are being populated');
           return;
         }
-        
+
         // Skip handling if a dropdown is currently open
         if (window.isDropdownOpen) {
           console.log('Skipping setting handler - dropdown is open');
           return;
         }
-        
+
         const value = getValue(target);
         const keys = key.split('.');
         let targetObj = currentSettings;
-        
+
         for (let i = 0; i < keys.length - 1; i++) {
           if (!targetObj[keys[i]]) {
             targetObj[keys[i]] = {};
           }
           targetObj = targetObj[keys[i]];
         }
-        
+
         targetObj[keys[keys.length - 1]] = value;
-        
+
         // Update status banner immediately with new settings
         updateStatusBanner(currentSettings);
-        
+
+        // Mark as unsaved whenever a setting changes
+        markAsUnsaved();
+
         // All auto-save is disabled - changes will only be saved when Save button is clicked
         // Changes are tracked in the UI but not sent to backend until manual save
-        
+
         if (key === 'promptCustomization.enabled') {
           toggleSaveLastPromptVisibility(value);
         }
@@ -68,13 +115,16 @@ export function getEventHandlersScript(): string {
     function saveSettings() {
       // Add debugging to understand when this function is called
       console.log('saveSettings() called - stack trace:', new Error().stack);
-      
+
       // Skip saving if models are being populated
       if (window.isPopulatingModels) {
         console.log('saveSettings() skipped - models are being populated');
         return;
       }
-      
+
+      // Mark as saved immediately (will show on UI before backend confirmation)
+      markAsSaved();
+
       // Save current tab state before making any changes
       const currentActiveTab = document.querySelector('.tab-button.active')?.getAttribute('data-tab') || 'model-tab';
       sessionStorage.setItem('gitmind_active_tab', currentActiveTab);
@@ -163,14 +213,17 @@ export function getEventHandlersScript(): string {
     document.getElementById('encryptionEnabled')?.addEventListener('change', function() {
       const checked = this.checked;
       console.log('Encryption toggle changed:', checked, '(not saved until Save button is clicked)');
-      
+
       // Update current settings immediately (local only)
       if (!currentSettings.pro) currentSettings.pro = {};
       currentSettings.pro.encryptionEnabled = checked;
-      
+
       // Update status banner immediately
       updateStatusBanner(currentSettings);
-      
+
+      // Mark as unsaved
+      markAsUnsaved();
+
       // NO AUTO-SAVE: Encryption setting is only saved when user clicks Save button
       // This prevents the infinite loop issues with secure key management
     });
@@ -178,14 +231,17 @@ export function getEventHandlersScript(): string {
     // Subscription email changes affect Pro status - NO AUTO-SAVE
     const debouncedEmailHandler = debounce(function() {
       const email = this.value;
-      
+
       // Update current settings immediately for UI responsiveness (local only)
       if (!currentSettings.subscription) currentSettings.subscription = {};
       currentSettings.subscription.email = email;
-      
+
       // Update status banner to reflect potential Pro status change
       updateStatusBanner(currentSettings);
-      
+
+      // Mark as unsaved
+      markAsUnsaved();
+
       // NO AUTO-SAVING - email is only saved when user subscribes or explicitly saves settings
     }, 500);
 
@@ -295,23 +351,26 @@ export function getEventHandlersScript(): string {
     // Provider change handler - NO AUTO-SAVE (only visual update)
     document.getElementById('apiProvider')?.addEventListener('change', function() {
       const provider = this.value;
-      
+
       // Immediately update UI (no delay for visual feedback)
       document.querySelectorAll('.api-settings').forEach(el => {
         el.classList.add('hidden');
       });
-      
+
       const selectedProviderSettings = document.getElementById(provider + 'Settings');
       if (selectedProviderSettings) {
         selectedProviderSettings.classList.remove('hidden');
       }
-      
+
       // Update current settings locally (for UI consistency) but don't auto-save
       currentSettings.apiProvider = provider;
-      
+
       // Update status banner with new provider (local only)
       updateStatusBanner(currentSettings);
-      
+
+      // Mark as unsaved
+      markAsUnsaved();
+
       // NO AUTO-SAVE: Provider changes are only saved when user clicks Save button
       console.log('Provider changed to ' + provider + ' (not saved until Save button is clicked)');
     });
@@ -584,10 +643,24 @@ export function getEventHandlersScript(): string {
       setupProviderEventListeners();
     });
 
+    // Listen for settings updates from backend
+    window.addEventListener('message', event => {
+      const message = event.data;
+
+      if (message.command === 'settingsUpdated' || message.command === 'updateSettings') {
+        // Clear unsaved changes indicator when settings are loaded/updated from backend
+        markAsSaved();
+      }
+    });
+
     // Make saveSettings function globally available for inline event handlers
     window.saveSettings = saveSettings;
 
     // Make setupProviderEventListeners function globally available
     window.setupProviderEventListeners = setupProviderEventListeners;
+
+    // Make unsaved changes functions globally available
+    window.markAsUnsaved = markAsUnsaved;
+    window.markAsSaved = markAsSaved;
   `;
 }
