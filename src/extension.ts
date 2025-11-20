@@ -24,6 +24,7 @@ import { fetchGeminiModels } from "./services/api/gemini";
 import { fetchAnthropicModels } from "./services/api/anthropic";
 import { fetchOpenRouterModels } from "./services/api/openrouter";
 import { fetchCopilotModels } from "./services/api/copilot";
+import { fetchOpenAIModels } from "./services/api/openai";
 import { PromptManager } from "./services/promptManager";
 import { telemetryService } from "./services/telemetry/telemetryService";
 import { SecureKeyManager } from "./services/encryption/SecureKeyManager";
@@ -379,7 +380,7 @@ async function handleRateLimitsCheck(): Promise<void> {
 const modelLoadingInProgress = new Set<string>();
 
 async function handleLoadModels(
-  modelType: 'mistral' | 'huggingface' | 'cohere' | 'together' | 'openrouter' | 'grok' | 'deepseek' | 'gemini' | 'anthropic',
+  modelType: 'mistral' | 'huggingface' | 'cohere' | 'together' | 'openrouter' | 'grok' | 'deepseek' | 'gemini' | 'anthropic' | 'openai',
   fetchFunction: (apiKey: string) => Promise<any[]>
 ): Promise<void> {
   // Prevent duplicate concurrent calls for the same provider
@@ -432,6 +433,9 @@ async function handleLoadModels(
         case 'anthropic':
           commandSuffix = 'anthropicModelsLoaded';
           break;
+        case 'openai':
+          commandSuffix = 'openaiModelsLoaded';
+          break;
         default:
           commandSuffix = `${modelType}ModelsLoaded`;
       }
@@ -482,6 +486,9 @@ async function handleLoadModels(
           case 'anthropic':
             commandSuffix = 'anthropicModelsLoaded';
             break;
+          case 'openai':
+            commandSuffix = 'openaiModelsLoaded';
+            break;
           default:
             commandSuffix = `${modelType}ModelsLoaded`;
         }
@@ -523,6 +530,9 @@ async function handleLoadModels(
             break;
           case 'anthropic':
             commandSuffix = 'anthropicModelsLoaded';
+            break;
+          case 'openai':
+            commandSuffix = 'openaiModelsLoaded';
             break;
           default:
             commandSuffix = `${modelType}ModelsLoaded`;
@@ -926,6 +936,10 @@ function registerCommands(context: vscode.ExtensionContext): vscode.Disposable[]
 
     vscode.commands.registerCommand("gitmind.loadAnthropicModels", () =>
       handleLoadModels('anthropic', fetchAnthropicModels)
+    ),
+
+    vscode.commands.registerCommand("gitmind.loadOpenAIModels", () =>
+      handleLoadModels('openai', fetchOpenAIModels)
     ),
 
     vscode.commands.registerCommand("gitmind.loadCopilotModels", handleLoadCopilotModels),

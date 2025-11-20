@@ -21,6 +21,7 @@ export function getMessageHandlersScript(): string {
         deepseekModelsLoaded: () => handleModelsLoaded('deepseek', message, ${JSON.stringify(DEFAULT_MODELS.deepseek)}),
         geminiModelsLoaded: () => handleModelsLoaded('gemini', message, ${JSON.stringify(DEFAULT_MODELS.gemini)}),
         anthropicModelsLoaded: () => handleModelsLoaded('anthropic', message, ${JSON.stringify(DEFAULT_MODELS.anthropic)}),
+        openaiModelsLoaded: () => handleModelsLoaded('openai', message, ${JSON.stringify(DEFAULT_MODELS.openai)}),
         copilotModelsLoaded: () => handleModelsLoaded('copilot', message, ${JSON.stringify(DEFAULT_MODELS.copilot)}),
         
         openrouterModelsLoaded: () => handleAdvancedModelsLoaded('openrouter', message, ${JSON.stringify(DEFAULT_MODELS.openrouter)}, 100),

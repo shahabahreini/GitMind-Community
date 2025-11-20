@@ -263,7 +263,15 @@ export function getModelEventListenersScript(): string {
       }
       handleModelLoad('anthropic', ${JSON.stringify(DEFAULT_MODELS.anthropic)}, 'gitmind.loadAnthropicModels');
     });
-    
+
+    document.getElementById('loadOpenAIModels')?.addEventListener('click', () => {
+      if (!isProUser()) {
+        showProUpgradeMessage('Load Available Models');
+        return;
+      }
+      handleModelLoad('openai', ${JSON.stringify(DEFAULT_MODELS.openai)}, 'gitmind.loadOpenAIModels');
+    });
+
     document.getElementById('loadCopilotModels')?.addEventListener('click', () => {
       handleModelLoad('copilot', ${JSON.stringify(DEFAULT_MODELS.copilot)}, 'gitmind.loadCopilotModels');
     });

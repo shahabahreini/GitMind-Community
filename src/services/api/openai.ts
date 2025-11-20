@@ -24,7 +24,49 @@ interface ModelConfig {
 }
 
 const MODEL_CONFIGS: Record<string, ModelConfig> = {
-    // Latest GPT-4.1 Series
+    // GPT-5.1 Series
+    "gpt-5.1": {
+        maxTokens: 2500,
+        temperature: 0.2,
+    },
+    "gpt-5.1-chat-latest": {
+        maxTokens: 2500,
+        temperature: 0.2,
+    },
+    "gpt-5.1-codex": {
+        maxTokens: 2500,
+        temperature: 0.2,
+    },
+    "gpt-5.1-codex-mini": {
+        maxTokens: 2000,
+        temperature: 0.2,
+    },
+    // GPT-5 Series
+    "gpt-5": {
+        maxTokens: 2500,
+        temperature: 0.2,
+    },
+    "gpt-5-chat-latest": {
+        maxTokens: 2500,
+        temperature: 0.2,
+    },
+    "gpt-5-mini": {
+        maxTokens: 2000,
+        temperature: 0.2,
+    },
+    "gpt-5-nano": {
+        maxTokens: 1500,
+        temperature: 0.2,
+    },
+    "gpt-5-pro": {
+        maxTokens: 3000,
+        temperature: 0.2,
+    },
+    "gpt-5-codex": {
+        maxTokens: 2500,
+        temperature: 0.2,
+    },
+    // GPT-4.1 Series
     "gpt-4.1": {
         maxTokens: 2000,
         temperature: 0.2,
@@ -38,18 +80,23 @@ const MODEL_CONFIGS: Record<string, ModelConfig> = {
         temperature: 0.2,
     },
     // Reasoning Models
+    "o4-mini": {
+        maxTokens: 2000,
+        temperature: 0.1,
+        supportsReasoning: true,
+    },
     "o3": {
         maxTokens: 2000,
         temperature: 0.1,
         supportsReasoning: true,
     },
-    "o4-mini": {
-        maxTokens: 1500,
+    "o3-mini": {
+        maxTokens: 1000,
         temperature: 0.1,
         supportsReasoning: true,
     },
-    "o3-mini": {
-        maxTokens: 1000,
+    "o1": {
+        maxTokens: 2000,
         temperature: 0.1,
         supportsReasoning: true,
     },
@@ -59,6 +106,10 @@ const MODEL_CONFIGS: Record<string, ModelConfig> = {
         temperature: 0.2,
     },
     "gpt-4o-mini": {
+        maxTokens: 1000,
+        temperature: 0.2,
+    },
+    "gpt-4o-mini-tts": {
         maxTokens: 1000,
         temperature: 0.2,
     },
@@ -227,4 +278,122 @@ function formatCommitMessage(message: string): string {
     formattedMessage = formattedMessage.replace(/^["']|["']$/g, '');
 
     return formattedMessage;
+}
+
+/**
+ * Fetches available models from OpenAI API
+ * @param apiKey The OpenAI API key
+ * @returns Array of model IDs suitable for chat completions
+ */
+export async function fetchOpenAIModels(apiKey: string): Promise<string[]> {
+    try {
+        debugLog('Fetching OpenAI models');
+
+        const response = await fetch("https://api.openai.com/v1/models", {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${apiKey}`,
+                "Accept": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            debugLog(`OpenAI API error while fetching models: ${response.status} ${errorText}`);
+
+            // Parse error for better user feedback
+            let parsedError: OpenAIError | null = null;
+            try {
+                parsedError = JSON.parse(errorText) as OpenAIError;
+            } catch (parseError) {
+                debugLog('Failed to parse OpenAI error response');
+            }
+
+            const userFriendlyError = getUserFriendlyErrorMessage(response.status, parsedError);
+            throw new Error(userFriendlyError);
+        }
+
+        const data = await response.json();
+        debugLog(`Received ${data.data?.length || 0} models from OpenAI API`);
+
+        // Filter to only include chat-capable models (exclude TTS, DALL-E, Whisper, embeddings, etc.)
+        const chatModels = data.data
+            .filter((model: any) => {
+                const id = model.id.toLowerCase();
+                // Exclude non-chat models
+                return !id.includes('tts-') &&
+                       !id.includes('dall-e') &&
+                       !id.includes('whisper') &&
+                       !id.includes('embedding') &&
+                       !id.includes('davinci-002') &&
+                       !id.includes('babbage-002') &&
+                       !id.includes('moderation') &&
+                       !id.includes('instruct') &&
+                       !id.includes('audio') &&
+                       !id.includes('transcribe') &&
+                       !id.includes('sora') &&
+                       !id.includes('image') &&
+                       !id.includes('codex') &&
+                       !id.includes('search') &&
+                       // Include only GPT chat models and reasoning models (o-series)
+                       (id.startsWith('gpt-') || id.startsWith('o') || id.startsWith('chatgpt'));
+            })
+            .map((model: any) => model.id)
+            .sort((a: string, b: string) => {
+                // Sort by model series priority
+                const getPriority = (id: string): number => {
+                    if (id.startsWith('gpt-5')) {
+                        return 0;
+                    }
+                    if (id.startsWith('gpt-4.1')) {
+                        return 1;
+                    }
+                    if (id.startsWith('o4')) {
+                        return 2;
+                    }
+                    if (id.startsWith('o3')) {
+                        return 3;
+                    }
+                    if (id.startsWith('o1')) {
+                        return 4;
+                    }
+                    if (id.startsWith('gpt-4o')) {
+                        return 5;
+                    }
+                    if (id.startsWith('gpt-4-turbo')) {
+                        return 6;
+                    }
+                    if (id.startsWith('gpt-4')) {
+                        return 7;
+                    }
+                    if (id.startsWith('gpt-3.5')) {
+                        return 8;
+                    }
+                    return 9;
+                };
+
+                const priorityA = getPriority(a);
+                const priorityB = getPriority(b);
+
+                if (priorityA !== priorityB) {
+                    return priorityA - priorityB;
+                }
+
+                // Within same priority, sort by name
+                return a.localeCompare(b);
+            });
+
+        debugLog(`Filtered to ${chatModels.length} chat-capable models`);
+        return chatModels;
+
+    } catch (error) {
+        debugLog('Error fetching OpenAI models:', error);
+
+        // If it's already a user-friendly error, rethrow it
+        if (error instanceof Error && error.message.includes('OpenAI')) {
+            throw error;
+        }
+
+        throw new Error(`Failed to load OpenAI models: ${error instanceof Error ? error.message : String(error)}`);
+    }
 }
