@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-GitMind is a VS Code extension that provides AI-powered commit message generation. It supports 13 different AI providers (OpenAI, Anthropic, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot) with 50+ models and multiple commit message styles.
+GitMind is a VS Code extension that provides AI-powered commit message generation. It supports 15 different AI providers (OpenAI, Anthropic, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot, Cursor Agent, Windsurf Agent*) with 50+ models and multiple commit message styles.
+
+*Note: Windsurf Agent is currently non-functional due to Windsurf IDE not exposing the VS Code Language Model API.
 
 **Technology Stack:**
 - TypeScript
@@ -81,8 +83,10 @@ The extension follows a modular architecture with clear separation between:
 
 #### 1. Multi-Provider AI Abstraction
 
-The extension uses a **unified provider configuration system** (`PROVIDER_CONFIGS` in `src/services/api/index.ts`):
+The extension uses a **unified provider configuration system** with lazy-loaded modules:
 - Each provider has a dedicated module in `src/services/api/` (e.g., `gemini.ts`, `openai.ts`, `anthropic.ts`)
+- **Lazy Loading**: Provider modules are dynamically imported only when needed, reducing initial bundle size by ~200-300KB
+- Provider module cache prevents re-importing (`providerModuleCache` in `src/services/api/index.ts`)
 - All providers implement a common interface for API calls
 - Provider-specific configurations are stored in `src/config/types.ts` with strongly-typed interfaces
 - Main API orchestration happens in `src/services/api/index.ts` via `generateCommitMessage()`
@@ -90,9 +94,10 @@ The extension uses a **unified provider configuration system** (`PROVIDER_CONFIG
 **Flow:**
 1. User triggers commit generation
 2. `getApiConfig()` retrieves provider configuration from VS Code settings
-3. Provider-specific API call function is invoked (e.g., `callGeminiAPI()`)
-4. Response is processed through `processCommitMessage()` for formatting
-5. Result is injected into Git SCM panel
+3. Provider module is lazy-loaded via `loadProviderModule()` if not cached
+4. Provider-specific API call function is invoked (e.g., `callGeminiAPI()`)
+5. Response is processed through `processCommitMessage()` for formatting
+6. Result is injected into Git SCM panel
 
 #### 2. Secure API Key Management
 
@@ -110,19 +115,31 @@ The extension supports both plain-text and encrypted API key storage:
 
 The extension uses three main webviews:
 - **Settings Webview** (`src/webview/settings/`) - Main configuration UI
-  - `SettingsWebview.ts` - Webview controller
-  - `SettingsTemplateGenerator.ts` - HTML/CSS generation
-  - `MessageHandler.ts` - Extension-webview communication
-  - `SettingsManager.ts` - Client-side form handling
+  - `SettingsWebview.ts` - Webview controller and lifecycle management
+  - `SettingsTemplateGenerator.ts` - HTML/CSS generation with component system
+  - `MessageHandler.ts` - Extension-webview bidirectional communication
+  - `SettingsManager.ts` - Settings persistence and retrieval
+  - `components/` - Modular provider-specific settings components
+  - `styles/` - CSS modules for theming and layout
 - **Onboarding Webview** (`src/webview/onboarding/`) - First-time user experience
+  - `OnboardingWebview.ts` - Onboarding controller
+  - `OnboardingTemplateGenerator.ts` - HTML/CSS for onboarding flow
+  - `OnboardingMessageHandler.ts` - Handles onboarding step navigation
 - **Diagnostics Webview** (`src/webview/diagnostics/`) - Token estimation and request details
 
 **Communication Pattern:**
 1. Extension creates webview and registers message handlers
 2. Webview sends messages via `vscode.postMessage()`
 3. Extension processes via `MessageHandler.handleMessage()`
-4. Extension sends responses back to webview
+4. Extension sends responses back to webview via `postMessageToWebview()`
 5. Webview updates UI accordingly
+
+**Important Webview Messages:**
+- `saveSettings` - Persist configuration changes
+- `loadOllamaModels` / `loadMistralModels` / `loadHuggingFaceModels` - Dynamic model discovery
+- `activateWithLicenseKey` / `activateWithOrderId` - Pro subscription activation
+- `testCustomApi` - Validate custom API endpoint configuration
+- `migrateToEncryption` - Migrate API keys to encrypted storage
 
 #### 4. Commit History Analysis (Pro)
 
@@ -196,7 +213,51 @@ Handles repositories with massive diffs via adaptive chunking:
 - `validatePromptLength()` - Provider-specific token validation
 - `mergeChunkResults()` - Combines chunk analyses into final message
 
-#### 7. Telemetry System
+#### 7. IDE-Specific AI Agent Integration (Pro)
+
+Built-in AI agent support for compatible IDEs:
+- **IDE Detection** (`src/utils/ideDetection.ts`) - Detects VS Code, Cursor, Windsurf, or unknown environments
+- **Cursor Agent** (`src/services/api/cursor-agent.ts`) - Uses VS Code Language Model API in Cursor IDE
+- **Windsurf Agent** (`src/services/api/windsurf-agent.ts`) - **NOT CURRENTLY FUNCTIONAL** (see limitation below)
+- **GitHub Copilot** (`src/services/api/copilot.ts`) - Works in VS Code with Copilot extension
+
+**How IDE Agents Work:**
+1. Extension detects the IDE environment using multiple signals (appName, uriScheme, appRoot, environment variables)
+2. If running in compatible IDE, agent provider option appears in settings
+3. Agent providers use VS Code Language Model API (`vscode.lm.selectChatModels()`) to access built-in models
+4. No API key required - uses IDE's native authentication
+5. Model selection is dynamic based on available models in the IDE
+
+**Cursor Agent Implementation:**
+- Uses `vscode.lm.selectChatModels()` to discover available models
+- Supports auto-selection (first available model) or specific model selection
+- Integrates with VS Code's cancellation tokens for request cancellation
+- Streams response fragments for efficiency
+- Pro feature with subscription validation
+
+**Critical Limitation - Windsurf Agent:**
+Windsurf IDE **does not expose the VS Code Language Model API** (`vscode.lm`) that GitMind requires for AI integration. This is a fundamental limitation that cannot be fixed with code changes.
+
+- **What works**: VS Code with GitHub Copilot, Cursor IDE
+- **What doesn't work**: Windsurf IDE (despite having Codeium AI built-in)
+- **Why**: Windsurf uses a proprietary integration that doesn't implement the standard VS Code Language Model API
+- **User impact**: Windsurf users see clear error message directing them to use one of 13+ other AI providers
+- **Code location**: Error message in `src/services/api/windsurf-agent.ts:136-143`
+- **Future**: Requires Windsurf to implement `vscode.lm` API or alternative integration method
+
+**Detection Logic:**
+```typescript
+// Checks multiple signals for each IDE type
+- Cursor: appName/uriAuthority/appRoot contains "cursor", CURSOR_IDE env var
+- Windsurf: contains "windsurf", "codeium", "cascade" (internal name), WINDSURF_IDE env var
+- VS Code: appName contains "visual studio code" or "vscode"
+```
+
+**Commands:**
+- `gitmind.loadCursorAgentModels` - Fetch available Cursor models dynamically
+- `gitmind.loadWindsurfAgentModels` - (Non-functional due to API limitation)
+
+#### 8. Telemetry System
 
 Anonymous usage analytics via Azure Application Insights:
 - **TelemetryService** (`src/services/telemetry/telemetryService.ts`)
@@ -245,6 +306,11 @@ Extension state is maintained in:
 - **Global State** - Onboarding completion, last validation times
 - **Workspace State** - Repository-specific settings
 - **SecretStorage** - Encrypted API keys (Pro)
+- **RequestManager** - Singleton pattern for request cancellation (`src/utils/requestManager.ts`)
+  - Manages active AbortController instances
+  - Ensures only one API request active at a time
+  - Provides `abortCurrentRequest()` for user cancellation
+  - Powers the cancel button in SCM panel during generation
 
 ## Important Implementation Details
 
@@ -326,13 +392,24 @@ The extension uses aggressive tree-shaking and code splitting:
 1. Create provider module in `src/services/api/newprovider.ts`
 2. Define types in `src/config/types.ts` (e.g., `NewProviderApiConfig`)
 3. Add provider to `ApiProvider` union type
-4. Implement `callNewProviderAPI()` function
-5. Add provider config to `PROVIDER_CONFIGS` in `src/services/api/index.ts`
-6. Update `getApiConfig()` in `src/config/settings.ts`
-7. Add settings schema in `package.json` under `contributes.configuration.properties`
-8. Create UI component in `src/webview/settings/components/NewProviderSettings.ts`
-9. Update `SettingsTemplateGenerator.ts` to include new provider UI
-10. Add validation logic in `src/services/api/validation.ts`
+4. Implement `callNewProviderAPI()` function following the pattern:
+   ```typescript
+   export async function callNewProviderAPI(
+     apiKey: string,
+     model: string,
+     diff: string,
+     customContext: string
+   ): Promise<string>
+   ```
+5. Add lazy-loading case to `loadProviderModule()` switch statement in `src/services/api/index.ts`
+6. Update `getApiConfig()` in `src/config/settings.ts` to handle new provider
+7. Add provider defaults to `PROVIDER_DEFAULTS` in `src/config/settings.ts`
+8. Add settings schema in `package.json` under `contributes.configuration.properties`
+9. Create UI component in `src/webview/settings/components/NewProviderSettings.ts`
+10. Update `SettingsTemplateGenerator.ts` to include new provider UI
+11. Add validation logic in `src/services/api/validation.ts`
+12. (Optional) Implement `fetchNewProviderModels()` function in provider module for dynamic model loading
+13. (Optional) Register model loading command in `src/extension.ts` (e.g., `gitmind.loadNewProviderModels`)
 
 ### Adding a New Commit Style
 
@@ -374,15 +451,22 @@ The extension uses aggressive tree-shaking and code splitting:
 - **`src/webview/settings/SettingsWebview.ts`** - Settings UI webview controller
 - **`src/services/subscription/SubscriptionManager.ts`** - Pro subscription validation
 - **`src/utils/errorHandler.ts`** - Centralized error processing and user feedback
+- **`src/utils/ideDetection.ts`** - IDE environment detection (VS Code, Cursor, Windsurf)
+- **`src/services/api/cursor-agent.ts`** - Cursor IDE agent integration via Language Model API
+- **`src/services/api/windsurf-agent.ts`** - Windsurf agent (non-functional - API limitation)
+- **`src/services/api/copilot.ts`** - GitHub Copilot integration via Language Model API
 - **`package.json`** - Extension manifest, commands, settings schema, and dependencies
 
 ## Notes for Future Development
 
-- The extension maintains backward compatibility with VS Code 1.63.0+
+- The extension maintains backward compatibility with VS Code 1.63.0+ and Node 16+
 - Pro features are feature-flagged through subscription validation
 - All webviews use VS Code's built-in theme variables for consistency
 - Error messages should be actionable and provider-specific
 - Large diff processing uses adaptive chunking - test with repositories >10MB
 - Telemetry is disabled by default and respects VS Code global setting
 - Multi-repository support requires testing with nested Git repositories
-- API timeouts vary: 10s (standard), 3min (commit history), 8min (large histories)
+- API timeouts vary: 10s (standard), 3min (commit history), 8min (large histories/changelog)
+- The extension activates on `onStartupFinished` and `workspaceContains:.git` events
+- Production builds use esbuild with tree-shaking, minification, and drop console statements
+- The extension is virtualWorkspace compatible and supports untrustedWorkspaces
