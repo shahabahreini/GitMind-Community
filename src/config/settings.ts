@@ -36,7 +36,7 @@ const PROVIDER_DEFAULTS: Record<string, ProviderDefaults> = {
     together: { model: "meta-llama/Llama-3.3-70B-Instruct-Turbo", enabled: false },
     openrouter: { model: "google/gemma-3-27b-it:free", enabled: false },
     anthropic: { model: "claude-3-5-sonnet-20241022", enabled: false },
-    copilot: { model: "gpt-4o", enabled: false },
+    copilot: { model: "auto", enabled: false },
     deepseek: { model: "deepseek-chat", enabled: false },
     grok: { model: "grok-3", enabled: false },
     perplexity: { model: "sonar-pro", enabled: false },
@@ -211,5 +211,18 @@ function getEffectiveModel(provider: string, providerConfig: any): string {
         providerConfig.customModel) {
         return providerConfig.customModel;
     }
-    return providerConfig.model || PROVIDER_DEFAULTS[provider]?.model || "";
+    // Handle empty strings and undefined/null values by falling back to defaults
+    const rawModel = providerConfig.model;
+    const model = providerConfig.model?.trim();
+    const defaultModel = PROVIDER_DEFAULTS[provider]?.model;
+
+    debugLog(`[getEffectiveModel] Provider: ${provider}, Raw model: "${rawModel}", Trimmed: "${model}", Default: "${defaultModel}"`);
+
+    if (!model || model.length === 0) {
+        const fallback = defaultModel || "";
+        debugLog(`[getEffectiveModel] Using fallback model: "${fallback}"`);
+        return fallback;
+    }
+    debugLog(`[getEffectiveModel] Using configured model: "${model}"`);
+    return model;
 }

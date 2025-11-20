@@ -526,7 +526,10 @@ async function generateMessageWithConfig(
 
     if (config.type === "copilot") {
         const copilotConfig = config as CopilotApiConfig;
-        if (!copilotConfig.model) {
+        debugLog(`[Copilot Handler] Model from config: "${copilotConfig.model}", Type: ${typeof copilotConfig.model}, Falsy: ${!copilotConfig.model}`);
+
+        if (!copilotConfig.model || copilotConfig.model.trim() === "") {
+            debugLog(`[Copilot Handler] Invalid model detected, showing error message`);
             await vscode.window.showErrorMessage(
                 "Please select a GitHub Copilot model in the settings."
             );
@@ -534,6 +537,7 @@ async function generateMessageWithConfig(
             return "";
         }
         // Lazy-load the Copilot API call function
+        debugLog(`[Copilot Handler] Calling Copilot API with model: "${copilotConfig.model}"`);
         const copilotApiCall = await loadProviderModule('copilot');
         return await copilotApiCall("", copilotConfig.model, diff, customContext);
     }

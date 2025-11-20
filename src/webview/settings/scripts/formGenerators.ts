@@ -197,7 +197,9 @@ export function generateSettingsCollection(): string {
       if (API_KEY_PROVIDERS.includes(provider)) {
         fields.push(`apiKey: (document.getElementById('${provider}ApiKey')?.value || '')`);
       }
-      fields.push(`model: (document.getElementById('${provider}Model')?.value || currentSettings.${provider}?.model || '')`);
+      // Use provider defaults as fallback for model to ensure copilot and other providers always have a valid model
+      const defaultModel = PROVIDER_DEFAULTS[provider]?.model || '';
+      fields.push(`model: (document.getElementById('${provider}Model')?.value || currentSettings.${provider}?.model || '${defaultModel}')`);
 
       if (provider === 'ollama') {
         fields.push(`url: (document.getElementById('${provider}Url')?.value || '')`);

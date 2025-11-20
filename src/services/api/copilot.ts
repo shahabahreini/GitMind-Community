@@ -150,12 +150,13 @@ export async function isCopilotAvailable(): Promise<boolean> {
 
 /**
  * Makes a request to GitHub Copilot via VS Code Language Model API to generate a commit message
+ * @param _apiKey Unused for Copilot (required for unified API signature)
  * @param model The model to use (from CopilotModel enum)
  * @param diff Git diff to analyze
  * @param customContext Additional context provided by the user
  * @returns Generated commit message
  */
-export async function callCopilotAPI(model: string, diff: string, customContext: string = ""): Promise<string> {
+export async function callCopilotAPI(_apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
     const requestManager = RequestManager.getInstance();
     const controller = requestManager.getController();
 
@@ -188,6 +189,8 @@ export async function callCopilotAPI(model: string, diff: string, customContext:
         let family: string;
         if (model === 'auto') {
             family = 'gpt-4'; // Auto defaults to GPT
+        } else if (model === 'raptor-mini') {
+            family = 'gpt-5-mini'; // Raptor models use gpt-5-mini family
         } else if (model.startsWith('gpt-')) {
             family = 'gpt-4'; // OpenAI models
         } else if (model.startsWith('claude-')) {
@@ -196,8 +199,6 @@ export async function callCopilotAPI(model: string, diff: string, customContext:
             family = 'gemini'; // Google models
         } else if (model.startsWith('grok-')) {
             family = 'gpt-4'; // Grok models
-        } else if (model.startsWith('raptor-')) {
-            family = 'gpt-4'; // Raptor models (fine-tuned GPT-5 mini)
         } else {
             family = 'gpt-4'; // Default fallback
         }
@@ -398,7 +399,8 @@ export async function fetchCopilotModels(): Promise<string[]> {
             const modelId = model.id;
 
             // Handle special cases where VS Code uses different IDs
-            if (modelId === 'oswe-vscode-secondary') {
+            if (modelId === 'oswe-vscode-secondary' || modelId === 'oswe-vscode-prime') {
+                // Both oswe-vscode-secondary and oswe-vscode-prime map to raptor-mini
                 detectedModels.add('raptor-mini');
             } else if (modelId === 'copilot-fast') {
                 detectedModels.add('gpt-4o-mini');
