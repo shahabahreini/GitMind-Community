@@ -63,7 +63,7 @@ export function getFormStyles(): string {
         padding: 8px 10px;
         background-color: var(--vscode-input-background);
         color: var(--vscode-input-foreground);
-        border: 1px solid rgba(128, 128, 128, 0.2);
+        border: 1px solid rgba(128, 128, 128, 0.12);
         border-radius: 6px;
         font-size: 13px;
         font-family: var(--vscode-font-family);
@@ -87,7 +87,7 @@ export function getFormStyles(): string {
         background-repeat: no-repeat;
         background-position: right 10px center;
         background-size: 14px;
-        border: 1px solid rgba(128, 128, 128, 0.2);
+        border: 1px solid rgba(128, 128, 128, 0.12);
         box-shadow: none;
         cursor: pointer;
       }

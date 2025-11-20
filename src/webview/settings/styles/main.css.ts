@@ -39,20 +39,20 @@ export function getMainStyles(): string {
 
     /* Pro Features Section Styles */
     .pro-features-section {
-      background: var(--vscode-editor-background);
-      border: 1px solid var(--vscode-panel-border);
-      border-radius: 8px;
-      padding: 16px;
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      padding: 0;
       margin-bottom: 20px;
     }
 
     /* Card Styles for Settings */
     .minimalist-card {
       background: var(--vscode-editor-background);
-      border-radius: 8px;
+      border-radius: 6px;
       overflow: visible; /* Changed from hidden to allow tooltips to display above card boundaries */
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-      border: none;
+      box-shadow: none;
+      border: 1px solid rgba(128, 128, 128, 0.12);
       margin-bottom: 16px;
     }
 
@@ -73,11 +73,11 @@ export function getMainStyles(): string {
       font-size: 13px;
     }
 
-    .form-group input, 
+    .form-group input,
     .form-group select {
       width: 100%;
       padding: 8px 10px;
-      border: 1px solid rgba(128, 128, 128, 0.2);
+      border: 1px solid rgba(128, 128, 128, 0.12);
       border-radius: 6px;
       background: var(--vscode-input-background);
       color: var(--vscode-input-foreground);

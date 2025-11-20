@@ -41,22 +41,20 @@ export function getSubscriptionStyles(): string {
         padding: 0.75rem;
         border-radius: 6px;
         margin-top: 1rem;
-        border: 1px solid var(--vscode-panel-border);
+        border: 1px solid rgba(128, 128, 128, 0.12);
+        background: var(--vscode-editor-background);
     }
-    
+
     .subscription-status-card.pro-active {
-        background: rgba(16, 185, 129, 0.1);
-        border-color: #10b981;
+        background: var(--vscode-inputValidation-infoBackground);
     }
-    
+
     .subscription-status-card.email-configured {
-        background: rgba(59, 130, 246, 0.1);
-        border-color: #3b82f6;
+        background: var(--vscode-inputValidation-infoBackground);
     }
-    
+
     .subscription-status-card.not-configured {
-        background: rgba(107, 114, 128, 0.1);
-        border-color: #6b7280;
+        background: var(--vscode-editor-background);
     }
     
     .status-info {
@@ -68,18 +66,19 @@ export function getSubscriptionStyles(): string {
     .status-icon {
         font-size: 1.2rem;
         font-weight: 600;
+        color: var(--vscode-foreground);
     }
-    
+
     .pro-active .status-icon {
-        color: #10b981;
+        color: var(--vscode-testing-iconPassed);
     }
-    
+
     .email-configured .status-icon {
-        color: #3b82f6;
+        color: var(--vscode-symbolIcon-colorForeground);
     }
-    
+
     .not-configured .status-icon {
-        color: #6b7280;
+        color: var(--vscode-descriptionForeground);
     }
     
     .status-details {

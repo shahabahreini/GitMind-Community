@@ -47,60 +47,66 @@ export function getCommitStyleStyles(): string {
         }
 
         .gm-content-wrapper {
-            background: var(--vscode-editor-background);
-            border: 1px solid var(--vscode-widget-border);
-            border-radius: 8px;
-            overflow: hidden;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            overflow: visible;
         }
 
         .gm-tab-navigation {
             display: flex;
-            background: var(--vscode-tab-inactiveBackground);
-            border-bottom: 1px solid var(--vscode-widget-border);
-            margin: 0;
+            background: transparent;
+            border-bottom: none;
+            margin: 0 0 1rem 0;
             padding: 0;
+            gap: 8px;
+            justify-content: flex-start;
         }
 
         .gm-tab-btn {
-            background: transparent;
-            border: none;
-            padding: 14px 20px;
-            color: var(--vscode-tab-inactiveForeground);
+            background: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+            border: 1px solid rgba(128, 128, 128, 0.12);
+            border-radius: 6px;
+            padding: 8px 16px;
             cursor: pointer;
             transition: all 0.2s ease;
-            border-bottom: 3px solid transparent;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
-            flex: 1;
+            flex: 0 1 auto;
             text-align: center;
             outline: none;
+            position: relative;
+            white-space: nowrap;
         }
 
         .gm-tab-btn:hover {
-            background: var(--vscode-tab-hoverBackground);
-            color: var(--vscode-tab-activeForeground);
+            background: var(--vscode-button-secondaryHoverBackground);
+            border-color: var(--vscode-button-background);
+            color: var(--vscode-button-secondaryForeground);
         }
 
         .gm-tab-btn:focus {
-            outline: 1px solid var(--vscode-focusBorder);
-            outline-offset: -1px;
+            outline: 2px solid var(--vscode-focusBorder);
+            outline-offset: 2px;
         }
 
         .gm-tab-btn-active {
-            background: var(--vscode-tab-activeBackground) !important;
-            color: var(--vscode-tab-activeForeground) !important;
-            border-bottom-color: var(--vscode-focusBorder) !important;
+            background: var(--vscode-button-background) !important;
+            color: var(--vscode-button-foreground) !important;
+            border-color: var(--vscode-button-background) !important;
+            font-weight: 600;
         }
 
         .gm-tab-container {
             position: relative;
             min-height: 400px;
-            background: var(--vscode-editor-background);
+            background: transparent;
         }
 
         .gm-tab-content {
             display: none;
-            padding: 20px;
+            padding: 0;
             width: 100%;
             box-sizing: border-box;
         }
@@ -116,29 +122,27 @@ export function getCommitStyleStyles(): string {
         }
 
         .gm-style-option {
-            border: 1px solid var(--vscode-widget-border);
-            border-radius: 8px;
+            border: 1px solid rgba(128, 128, 128, 0.12);
+            border-radius: 6px;
             padding: 12px 16px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             position: relative;
             background: var(--vscode-editor-background);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            box-shadow: none;
         }
 
         .gm-style-option:hover:not(.gm-style-disabled) {
-            border-color: var(--gm-accent-color);
-            background: var(--gm-hover-bg);
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-color: var(--vscode-button-background);
+            background: var(--vscode-list-hoverBackground);
+            box-shadow: none;
         }
 
         .gm-style-option-selected {
-            border-color: var(--gm-selected-border) !important;
-            background: var(--gm-selected-bg) !important;
-            box-shadow: 0 0 0 2px var(--gm-accent-color), 0 2px 8px var(--gm-selected-shadow) !important;
+            border-color: var(--vscode-button-background) !important;
+            background: var(--vscode-list-activeSelectionBackground) !important;
+            box-shadow: none !important;
             position: relative;
-            transform: translateY(-1px) !important;
         }
 
         .gm-style-option-selected .gm-style-name {

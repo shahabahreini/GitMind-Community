@@ -1,17 +1,25 @@
 // src/webview/settings/styles/cards.css.ts
 export function getCardStyles(): string {
     return `
-        /* Card Styles */
+        /* Clean Minimal Card Styles */
         .minimalist-card {
             background: var(--vscode-editor-background);
-            border-radius: 4px;
-            border: 1px solid var(--vscode-panel-border);
+            border-radius: 6px;
+            border: 1px solid rgba(128, 128, 128, 0.12);
             margin: 0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: relative;
         }
-        
+
         .card-content {
-            padding: 1rem;
+            padding: 1.25rem;
+            position: relative;
+        }
+
+        /* High contrast support */
+        @media (prefers-contrast: high) {
+            .minimalist-card {
+                border-width: 2px;
+            }
         }
     `;
 }
