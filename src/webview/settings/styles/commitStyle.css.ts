@@ -64,8 +64,8 @@ export function getCommitStyleStyles(): string {
         }
 
         .gm-tab-btn {
-            background: var(--vscode-button-secondaryBackground);
-            color: var(--vscode-button-secondaryForeground);
+            background: transparent;
+            color: var(--vscode-descriptionForeground);
             border: 1px solid rgba(128, 128, 128, 0.12);
             border-radius: 6px;
             padding: 8px 16px;
@@ -78,12 +78,14 @@ export function getCommitStyleStyles(): string {
             outline: none;
             position: relative;
             white-space: nowrap;
+            opacity: 0.7;
         }
 
-        .gm-tab-btn:hover {
-            background: var(--vscode-button-secondaryHoverBackground);
+        .gm-tab-btn:hover:not(.gm-tab-btn-active) {
+            background: var(--vscode-button-secondaryBackground);
             border-color: var(--vscode-button-background);
-            color: var(--vscode-button-secondaryForeground);
+            color: var(--vscode-foreground);
+            opacity: 0.9;
         }
 
         .gm-tab-btn:focus {
@@ -96,6 +98,7 @@ export function getCommitStyleStyles(): string {
             color: var(--vscode-button-foreground) !important;
             border-color: var(--vscode-button-background) !important;
             font-weight: 600;
+            opacity: 1 !important;
         }
 
         .gm-tab-container {
