@@ -14,6 +14,8 @@ interface ProviderField {
     loadButtonText?: string;
     loadButtonId?: string;
     loadCommand?: string;
+    loadButtonDisabled?: boolean;
+    loadButtonDisabledTooltip?: string;
     defaultOptions?: string[];
 }
 
@@ -137,6 +139,35 @@ export class ProviderConfig {
                         { value: 'claude-2.1', label: 'Claude 2.1' },
                         { value: 'claude-2.0', label: 'Claude 2.0' },
                         { value: 'claude-instant-1.2', label: 'Claude Instant 1.2' }
+                    ]
+                }
+            ]
+        },
+        {
+            id: 'minimax',
+            name: 'MiniMax',
+            fields: [
+                {
+                    id: 'minimaxApiKey',
+                    key: 'apiKey',
+                    label: 'API Key',
+                    type: 'password',
+                    tooltip: 'Your MiniMax API key for accessing the API',
+                    link: { url: 'https://platform.minimax.io/docs/api-reference/text-anthropic-api', text: 'Get a MiniMax API key' }
+                },
+                {
+                    id: 'minimaxModel',
+                    key: 'model',
+                    label: 'Model',
+                    type: 'model-with-load',
+                    tooltip: 'Select which MiniMax model to use',
+                    loadButtonText: 'Load Available Models',
+                    loadButtonId: 'loadMiniMaxModels',
+                    loadButtonDisabled: true,
+                    loadButtonDisabledTooltip: "MiniMax won't support model fetch yet!",
+                    options: [
+                        { value: 'MiniMax-M2', label: 'MiniMax M2' },
+                        { value: 'MiniMax-M2-Stable', label: 'MiniMax M2 Stable' }
                     ]
                 }
             ]

@@ -1,8 +1,8 @@
 {
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI-Powered Commit Messages",
-  "description": "Generate professional commit messages in seconds using 13 AI providers (OpenAI, Anthropic, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot) and 50+ models. Zero setup options available.",
-  "version": "4.5.3",
+  "description": "Generate professional commit messages in seconds using 14 AI providers (OpenAI, Anthropic, MiniMax, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot) and 50+ models. Zero setup options available.",
+  "version": "4.5.4",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -43,6 +43,7 @@
             "together",
             "openrouter",
             "anthropic",
+            "minimax",
             "copilot",
             "deepseek",
             "grok",
@@ -59,6 +60,7 @@
             "Use Together AI for generating commit messages",
             "Use OpenRouter for accessing multiple AI models",
             "Use Anthropic Claude for generating commit messages",
+            "Use MiniMax M2 for generating commit messages",
             "Use GitHub Copilot for generating commit messages (no API key required)",
             "Use DeepSeek AI for generating commit messages",
             "Use Grok AI for generating commit messages",
@@ -364,6 +366,24 @@
           ],
           "default": "claude-opus-4",
           "description": "Anthropic Claude model to use for generating commit messages"
+        },
+        "gitmind.minimax.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API key for MiniMax [Learn more](https://platform.minimax.io/docs/api-reference/text-anthropic-api)"
+        },
+        "gitmind.minimax.model": {
+          "type": "string",
+          "enum": [
+            "MiniMax-M2",
+            "MiniMax-M2-Stable"
+          ],
+          "enumDescriptions": [
+            "MiniMax M2 - Text generation model",
+            "MiniMax M2 Stable - Text generation model (stable)"
+          ],
+          "default": "MiniMax-M2",
+          "description": "MiniMax model to use for generating commit messages"
         },
         "gitmind.copilot.model": {
           "type": "string",

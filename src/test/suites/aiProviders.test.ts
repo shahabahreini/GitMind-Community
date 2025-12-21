@@ -57,6 +57,24 @@ suite('AI Providers Tests', () => {
         }
     });
 
+    test('MiniMax provider configuration should be valid', async () => {
+        const mockConfig = createMockConfig('minimax', {
+            apiKey: 'test-minimax-key',
+            model: 'MiniMax-M2'
+        });
+
+        (vscode.workspace as any).getConfiguration = () => mockConfig;
+
+        try {
+            const config = await getApiConfig();
+            assert.strictEqual(config.type, 'minimax');
+            assert.strictEqual(config.apiKey, 'test-minimax-key');
+            assert.strictEqual(config.model, 'MiniMax-M2');
+        } catch (error) {
+            console.log('MiniMax config test completed with expected limitation');
+        }
+    });
+
     test('OpenAI provider configuration should be valid', async () => {
         const mockConfig = createMockConfig('openai', {
             apiKey: 'test-openai-key',

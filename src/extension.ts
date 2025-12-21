@@ -22,6 +22,7 @@ import { fetchGrokModels } from "./services/api/grok";
 import { fetchDeepSeekModels } from "./services/api/deepseek";
 import { fetchGeminiModels } from "./services/api/gemini";
 import { fetchAnthropicModels } from "./services/api/anthropic";
+import { fetchMiniMaxModels } from "./services/api/minimax";
 import { fetchOpenRouterModels } from "./services/api/openrouter";
 import { fetchCopilotModels } from "./services/api/copilot";
 import { fetchOpenAIModels } from "./services/api/openai";
@@ -42,12 +43,12 @@ const TIMEOUT_DURATION = 60000;
 const API_CHECK_TIMEOUT = 15000;
 const SUPPORTED_PROVIDERS = [
   "Gemini", "Hugging Face", "Ollama", "Mistral", "Cohere", "OpenAI",
-  "Together AI", "OpenRouter", "Anthropic", "GitHub Copilot", "DeepSeek", "Grok", "Perplexity"
+  "Together AI", "OpenRouter", "Anthropic", "MiniMax", "GitHub Copilot", "DeepSeek", "Grok", "Perplexity"
 ];
 
 const API_KEY_PROVIDERS = [
   'gemini', 'openai', 'mistral', 'cohere', 'huggingface', 'anthropic',
-  'together', 'openrouter', 'deepseek', 'grok', 'perplexity'
+  'minimax', 'together', 'openrouter', 'deepseek', 'grok', 'perplexity'
 ];
 
 const state: ExtensionState = {
@@ -380,7 +381,7 @@ async function handleRateLimitsCheck(): Promise<void> {
 const modelLoadingInProgress = new Set<string>();
 
 async function handleLoadModels(
-  modelType: 'mistral' | 'huggingface' | 'cohere' | 'together' | 'openrouter' | 'grok' | 'deepseek' | 'gemini' | 'anthropic' | 'openai',
+  modelType: 'mistral' | 'huggingface' | 'cohere' | 'together' | 'openrouter' | 'grok' | 'deepseek' | 'gemini' | 'anthropic' | 'minimax' | 'openai',
   fetchFunction: (apiKey: string) => Promise<any[]>
 ): Promise<void> {
   // Prevent duplicate concurrent calls for the same provider
@@ -936,6 +937,10 @@ function registerCommands(context: vscode.ExtensionContext): vscode.Disposable[]
 
     vscode.commands.registerCommand("gitmind.loadAnthropicModels", () =>
       handleLoadModels('anthropic', fetchAnthropicModels)
+    ),
+
+    vscode.commands.registerCommand("gitmind.loadMiniMaxModels", () =>
+      handleLoadModels('minimax', fetchMiniMaxModels)
     ),
 
     vscode.commands.registerCommand("gitmind.loadOpenAIModels", () =>

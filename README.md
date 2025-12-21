@@ -1,11 +1,11 @@
 # GitMind: AI-Powered Commit Messages
 
-Stop writing commit messages manually. GitMind analyzes your code changes and generates meaningful commits in seconds using 13 AI providers and 50+ models.
+Stop writing commit messages manually. GitMind analyzes your code changes and generates meaningful commits in seconds using 14 AI providers and 50+ models.
 
 ## Why GitMind?
 
-**One Extension, 13 AI Providers**
-Choose from OpenAI, Anthropic, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, or GitHub Copilot. Switch anytime.
+**One Extension, 14 AI Providers**
+Choose from OpenAI, Anthropic, MiniMax, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, or GitHub Copilot. Switch anytime.
 
 **Zero Setup Options Available**
 
@@ -95,6 +95,7 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 | **DeepSeek**       | Advanced reasoning, cost-effective      | 50 RPM    | 2 min      |
 | **OpenAI**         | Industry standard, multimodal           | No        | 2 min      |
 | **Anthropic**      | Superior reasoning, long context        | No        | 2 min      |
+| **MiniMax**        | Fast text generation, Anthropic-style API | No      | 2 min      |
 | **Grok**           | Real-time information, X.AI models      | No        | 2 min      |
 | **Perplexity**     | Web search capabilities, real-time data | No        | 2 min      |
 | **Mistral**        | European AI, multilingual support       | No        | 2 min      |

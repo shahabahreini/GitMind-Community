@@ -5,9 +5,9 @@ import { debugLog } from './debug/logger';
  */
 export class DiffProcessor {
     private static instance: DiffProcessor;
-    
-    private constructor() {}
-    
+
+    private constructor() { }
+
     /**
      * Get the singleton instance
      */
@@ -17,7 +17,7 @@ export class DiffProcessor {
         }
         return DiffProcessor.instance;
     }
-    
+
     /**
      * Checks if a diff is large enough to require chunking
      * @param diff The git diff
@@ -28,7 +28,7 @@ export class DiffProcessor {
         debugLog(`Diff line count: ${lineCount}, threshold: ${settings.threshold}`);
         return lineCount > settings.threshold;
     }
-    
+
     /**
      * Split a large diff into manageable chunks
      * @param diff The git diff
@@ -53,6 +53,12 @@ export class DiffProcessor {
             // Collect hunk segments (each starts with @@) or treat the remainder as a single segment
             const segments = this.splitIntoHunkSegments(lines, headerEnd);
 
+            // Header-only diffs (binary, rename-only, etc.) should still yield a chunk.
+            if (segments.length === 0) {
+                chunks.push(minimalHeader);
+                continue;
+            }
+
             // Pack segments respecting chunkSize; ensure each emitted chunk includes minimal header
             const packed = this.packSegmentsIntoChunks(minimalHeader, segments, chunkSize);
             chunks.push(...packed);
@@ -61,7 +67,7 @@ export class DiffProcessor {
         debugLog(`Created ${chunks.length} diff chunks`);
         return chunks;
     }
-    
+
     /**
      * Split diff by file headers to maintain context
      */
@@ -218,26 +224,26 @@ export class DiffProcessor {
         pushCurrent();
         return chunks;
     }
-    
+
     /**
      * Merge chunk results into a consolidated summary
      * @param chunkResults Results from individual chunks
      */
     public mergeChunkResults(chunkResults: string[]): string {
         debugLog(`Merging ${chunkResults.length} chunk results`);
-        
+
         // If only one chunk, return it directly
         if (chunkResults.length === 1) {
             return chunkResults[0];
         }
-        
+
         // Create a summary prompt from all chunks
         const summaryPrompt = `I have analyzed ${chunkResults.length} parts of a large code change. Here are the key changes from each part:
 
-${chunkResults.map((result, i) => `Part ${i+1}: ${result}`).join('\n\n')}
+${chunkResults.map((result, i) => `Part ${i + 1}: ${result}`).join('\n\n')}
 
 Based on these parts, provide a concise and well-structured git commit message that summarizes all the changes. Follow conventional commit format with a clear subject line (under 72 chars) and bullet points for major changes.`;
-        
+
         return summaryPrompt;
     }
 }

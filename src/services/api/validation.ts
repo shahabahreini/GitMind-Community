@@ -4,6 +4,7 @@ import { validateGeminiAPIKey } from "./gemini";
 import { validateDeepSeekAPIKey } from "./deepseek";
 import { validateGrokAPIKey } from "./grok";
 import { validatePerplexityAPIKey } from "./perplexity";
+import { validateMiniMaxAPIKey } from "./minimax";
 import { getApiConfig } from "../../config/settings";
 import { ApiConfig, MistralRateLimit, ApiProvider, CustomApiConfig } from "../../config/types";
 import { RequestManager } from "../../utils/requestManager";
@@ -134,6 +135,17 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
             limit: 1000,
             remaining: 950,
             notes: "Rate limits depend on your account tier and model usage"
+        }
+    },
+    minimax: {
+        requiresApiKey: true,
+        validator: validateMiniMaxAPIKey,
+        defaultModel: "MiniMax-M2",
+        responseTime: 800,
+        rateLimits: {
+            limit: 0,
+            remaining: 0,
+            notes: "Rate limits depend on your MiniMax plan and model usage"
         }
     },
     copilot: {

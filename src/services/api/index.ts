@@ -53,7 +53,7 @@ const CIRCUIT_BREAKER_THRESHOLD = 3; // Max failures before opening circuit
 const CIRCUIT_BREAKER_RESET_TIME = 60000; // 1 minute cooldown
 
 
-type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter" | "Anthropic" | "GitHub Copilot" | "DeepSeek" | "Grok" | "Perplexity" | "Custom API";
+type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter" | "Anthropic" | "MiniMax" | "GitHub Copilot" | "DeepSeek" | "Grok" | "Perplexity" | "Custom API";
 
 // Type for lazy-loaded API call functions
 type ApiCallFunction = (apiKey: string, model: string, diff: string, customContext: string) => Promise<string>;
@@ -124,6 +124,10 @@ async function loadProviderModule(provider: string): Promise<ApiCallFunction> {
             case 'anthropic':
                 const anthropicModule = await import('./anthropic.js');
                 apiCallFunction = anthropicModule.callAnthropicAPI;
+                break;
+            case 'minimax':
+                const minimaxModule = await import('./minimax.js');
+                apiCallFunction = minimaxModule.callMiniMaxAPI;
                 break;
             case 'copilot':
                 const copilotModule = await import('./copilot.js');
@@ -230,6 +234,15 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         defaultModel: "claude-3-5-sonnet-20241022",
         getApiCall: async () => loadProviderModule('anthropic'),
     },
+    minimax: {
+        name: "MiniMax",
+        displayName: "MiniMax",
+        settingPath: "minimax.apiKey",
+        docsUrl: "https://platform.minimax.io/docs/api-reference/text-anthropic-api",
+        requiresApiKey: true,
+        defaultModel: "MiniMax-M2",
+        getApiCall: async () => loadProviderModule('minimax'),
+    },
     deepseek: {
         name: "DeepSeek",
         displayName: "DeepSeek",
@@ -308,7 +321,7 @@ function checkCircuitBreaker(provider: string): boolean {
     }
 
     const now = Date.now();
-    
+
     // Reset circuit after cooldown period
     if (state.isOpen && (now - state.lastFailureTime) > CIRCUIT_BREAKER_RESET_TIME) {
         state.isOpen = false;
@@ -325,15 +338,15 @@ function checkCircuitBreaker(provider: string): boolean {
  */
 function recordCircuitBreakerFailure(provider: string): void {
     const state = circuitBreakers.get(provider) || { failureCount: 0, lastFailureTime: 0, isOpen: false };
-    
+
     state.failureCount++;
     state.lastFailureTime = Date.now();
-    
+
     if (state.failureCount >= CIRCUIT_BREAKER_THRESHOLD) {
         state.isOpen = true;
         debugLog(`[CircuitBreaker] Opened for provider: ${provider} (${state.failureCount} failures)`);
     }
-    
+
     circuitBreakers.set(provider, state);
 }
 
@@ -350,7 +363,7 @@ async function handleApiError(
     }
 
     const provider = getProviderName(config.type);
-    
+
     // Record failure for circuit breaker
     recordCircuitBreakerFailure(provider);
 
@@ -765,7 +778,7 @@ async function showDiagnosticsInfo(config: ApiConfig, diff: string, repositoryNa
     }
 
     messageLines.push('', 'Would you like to proceed with this request?');
-    
+
     const message = messageLines.join('\n');
 
     // Show information message and wait for user confirmation
@@ -1836,7 +1849,7 @@ async function callGeminiAnalysisAPI(apiKey: string, model: string, analysisProm
 
         // Provide more helpful error messages
         const errorMessage = error instanceof Error ? error.message : String(error);
-        
+
         if (errorMessage.includes("404") || errorMessage.includes("not found")) {
             throw new Error(`Model '${model}' is not found or not supported for this API version. Please check the model name in settings or try a different Gemini model like 'gemini-2.0-flash'.`);
         } else if (errorMessage.includes("permission") || errorMessage.includes("access") || errorMessage.includes("403")) {

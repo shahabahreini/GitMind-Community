@@ -36,6 +36,7 @@ const PROVIDER_DEFAULTS: Record<string, ProviderDefaults> = {
     together: { model: "meta-llama/Llama-3.3-70B-Instruct-Turbo", enabled: false },
     openrouter: { model: "google/gemma-3-27b-it:free", enabled: false },
     anthropic: { model: "claude-3-5-sonnet-20241022", enabled: false },
+    minimax: { model: "MiniMax-M2", enabled: false },
     copilot: { model: "auto", enabled: false },
     deepseek: { model: "deepseek-chat", enabled: false },
     grok: { model: "grok-3", enabled: false },

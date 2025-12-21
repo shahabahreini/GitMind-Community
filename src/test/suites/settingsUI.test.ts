@@ -146,6 +146,7 @@ suite('Settings UI Tests', () => {
                     together: { apiKey: '', model: '' },
                     openrouter: { apiKey: '', model: '' },
                     anthropic: { apiKey: '', model: '' },
+                    minimax: { apiKey: '', model: '' },
                     copilot: { model: '' },
                     deepseek: { apiKey: '', model: '' },
                     grok: { apiKey: '', model: '' },
@@ -178,7 +179,7 @@ suite('Settings UI Tests', () => {
                 // Use timeout for saveSettings operation
                 await Promise.race([
                     SettingsManager.saveSettings(testSettings),
-                    new Promise((_, reject) => 
+                    new Promise((_, reject) =>
                         setTimeout(() => reject(new Error('saveSettings operation timeout')), 10000)
                     )
                 ]);
@@ -187,13 +188,13 @@ suite('Settings UI Tests', () => {
                 assert.strictEqual(savedSettings['debug'], true);
                 assert.strictEqual(savedSettings['gemini.apiKey'], 'new-gemini-key');
                 assert.strictEqual(savedSettings['gemini.model'], 'gemini-2.5-pro');
-                
+
                 return true;
             })();
 
             await Promise.race([testPromise, timeoutPromise]);
         } catch (error) {
-            console.log('SettingsManager save test completed with expected limitation:', 
+            console.log('SettingsManager save test completed with expected limitation:',
                 error instanceof Error ? error.message : 'Unknown error');
             // Test passes even if timeout occurs in test environment
         } finally {
@@ -208,7 +209,7 @@ suite('Settings UI Tests', () => {
             assert.ok(typeof SettingsWebview.createOrShow === 'function', 'createOrShow method should exist');
             assert.ok(typeof SettingsWebview.postMessageToWebview === 'function', 'postMessageToWebview method should exist');
             assert.ok(typeof SettingsWebview.isWebviewOpen === 'function', 'isWebviewOpen method should exist');
-            
+
             // Test webview panel properties
             assert.ok(mockWebviewPanel.onDidDispose, 'WebviewPanel should have onDidDispose method');
             assert.ok(typeof mockWebviewPanel.onDidDispose === 'function', 'onDidDispose should be a function');
@@ -220,7 +221,7 @@ suite('Settings UI Tests', () => {
     test('MessageHandler should process apiProvider message correctly', async () => {
         let updatedKey: string | undefined;
         let updatedValue: string | undefined;
-        
+
         const mockConfig = {
             get: (key: string) => key === 'apiProvider' ? 'openai' : undefined,
             update: async (key: string, value: any) => {
@@ -229,10 +230,10 @@ suite('Settings UI Tests', () => {
                 return Promise.resolve();
             }
         };
-        
+
         const originalGetConfiguration = vscode.workspace.getConfiguration;
         (vscode.workspace as any).getConfiguration = () => mockConfig;
-        
+
         try {
             const mockSettingsManager = {
                 getSettings: async () => ({
@@ -333,7 +334,7 @@ suite('Settings UI Tests', () => {
                 // Use timeout for saveSettings operation
                 await Promise.race([
                     SettingsManager.saveSettings(testSettings),
-                    new Promise((_, reject) => 
+                    new Promise((_, reject) =>
                         setTimeout(() => reject(new Error('saveSettings timeout')), 5000)
                     )
                 ]);
@@ -342,7 +343,7 @@ suite('Settings UI Tests', () => {
                 const settingsManager2 = new SettingsManager();
                 const loadedSettings = await Promise.race([
                     settingsManager2.getSettings(),
-                    new Promise((_, reject) => 
+                    new Promise((_, reject) =>
                         setTimeout(() => reject(new Error('getSettings timeout')), 5000)
                     )
                 ]) as any;
@@ -351,13 +352,13 @@ suite('Settings UI Tests', () => {
                 assert.strictEqual(loadedSettings.debug, true);
                 assert.strictEqual(loadedSettings.anthropic.apiKey, 'test-anthropic-key');
                 assert.strictEqual(loadedSettings.anthropic.model, 'claude-3-5-sonnet-20241022');
-                
+
                 return true;
             })();
 
             await Promise.race([testPromise, timeoutPromise]);
         } catch (error) {
-            console.log('Settings persistence test completed with expected limitation:', 
+            console.log('Settings persistence test completed with expected limitation:',
                 error instanceof Error ? error.message : 'Unknown error');
             // Test passes even if timeout occurs in test environment
         } finally {

@@ -17,6 +17,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   together: { apiKey: true, model: false, displayName: 'Together AI' },
   openrouter: { apiKey: true, model: false, displayName: 'OpenRouter' },
   anthropic: { apiKey: true, model: false, displayName: 'Anthropic' },
+  minimax: { apiKey: true, model: false, displayName: 'MiniMax' },
   copilot: { model: true, displayName: 'GitHub Copilot' },
   deepseek: { apiKey: true, model: false, displayName: 'DeepSeek' },
   grok: { apiKey: true, model: false, displayName: 'Grok' },

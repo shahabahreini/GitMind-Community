@@ -22,15 +22,15 @@ export class ModelSettingsRenderer extends BaseRenderer {
 
     private renderProviderSelector(): string {
         // Check if user is Pro (has active subscription or valid license)
-        const isPro = this.settings.pro?.validationStatus === 'valid' || 
-                     this.settings.subscription?.status === 'active';
-        
+        const isPro = this.settings.pro?.validationStatus === 'valid' ||
+            this.settings.subscription?.status === 'active';
+
         // Get all providers but filter out Pro-only ones if user is not Pro
         let providers = ProviderConfig.getAllProviders();
         if (!isPro) {
             providers = providers.filter(provider => !provider.isPro);
         }
-        
+
         const currentProvider = this.settings.apiProvider;
 
         return FormUtils.createFormGroup(
@@ -151,6 +151,12 @@ export class ModelSettingsRenderer extends BaseRenderer {
             const options = field.options || [];
             let optionsHtml = '';
 
+            const isLoadDisabled = Boolean(field.loadButtonDisabled);
+            const loadDisabledTooltip =
+                typeof field.loadButtonDisabledTooltip === 'string'
+                    ? field.loadButtonDisabledTooltip
+                    : '';
+
             // Add current model if not in default options
             if (value && !options.some((opt: any) => opt.value === value)) {
                 optionsHtml += `<option value="${value}" selected>${value}</option>`;
@@ -168,11 +174,13 @@ export class ModelSettingsRenderer extends BaseRenderer {
                     <select id="${field.id}">
                         ${optionsHtml}
                     </select>
-                    <button id="${field.loadButtonId}" class="button small" style="margin-top: 8px;">
+                    <button id="${field.loadButtonId}" class="button small" style="margin-top: 8px;" ${isLoadDisabled ? 'disabled title="' + loadDisabledTooltip.replace(/"/g, '&quot;') + '"' : ''}>
                         ${field.loadButtonText}
                     </button>
                     <div class="description">
-                        Default models shown. Click "${field.loadButtonText}" to fetch all models that support chat completion.
+                        ${isLoadDisabled
+                    ? loadDisabledTooltip
+                    : `Default models shown. Click "${field.loadButtonText}" to fetch all models that support chat completion.`}
                     </div>
                 </div>`
             );

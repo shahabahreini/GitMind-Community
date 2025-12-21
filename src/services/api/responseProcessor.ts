@@ -62,7 +62,10 @@ export function processCommitMessage(response: string, config: PromptConfig = {}
         debugLog("Summary already has correct format for style, not modifying");
     } else if (isBasicStyle) {
         // Only add default type for basic style when no recognizable format is present
-        if (!summary.match(/^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|add|update|remove|create|delete|implement|improve)(\(.+\))?: /i)) {
+        if (
+            !summary.startsWith('- ') &&
+            !summary.match(/^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|add|update|remove|create|delete|implement|improve)(\(.+\))?: /i)
+        ) {
             summary = `refactor: ${summary}`;
             debugLog("Added default type", summary);
         }

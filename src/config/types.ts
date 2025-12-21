@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 // Core types
-export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic" | "copilot" | "deepseek" | "grok" | "perplexity" | "custom";
+export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic" | "minimax" | "copilot" | "deepseek" | "grok" | "perplexity" | "custom";
 export type CommitStyle =
     | 'basic'
     | 'conventional'
@@ -24,6 +24,8 @@ export type AnthropicModel =
     | "claude-opus-4" | "claude-sonnet-4" | "claude-sonnet-3.7"
     | "claude-3-5-sonnet-20241022" | "claude-3-5-sonnet-20240620" | "claude-3-5-haiku-20241022"
     | "claude-3-opus-20240229" | "claude-3-sonnet-20240229" | "claude-3-haiku-20240307";
+
+export type MiniMaxModel = "MiniMax-M2" | "MiniMax-M2-Stable";
 
 export type CopilotModel =
     | "auto"
@@ -140,6 +142,11 @@ export interface AnthropicApiConfig extends ApiKeyConfig {
     model: AnthropicModel;
 }
 
+export interface MiniMaxApiConfig extends ApiKeyConfig {
+    type: "minimax";
+    model: MiniMaxModel;
+}
+
 export interface CopilotApiConfig extends BaseApiConfig {
     type: "copilot";
     model: CopilotModel;
@@ -174,7 +181,7 @@ export interface CustomApiConfig extends BaseApiConfig {
 export type ApiConfig =
     | GeminiApiConfig | HuggingFaceApiConfig | OllamaApiConfig | MistralApiConfig
     | CohereApiConfig | OpenAIApiConfig | TogetherApiConfig | OpenRouterApiConfig
-    | AnthropicApiConfig | CopilotApiConfig | DeepSeekApiConfig | GrokApiConfig
+    | AnthropicApiConfig | MiniMaxApiConfig | CopilotApiConfig | DeepSeekApiConfig | GrokApiConfig
     | PerplexityApiConfig | CustomApiConfig;
 
 // Response types

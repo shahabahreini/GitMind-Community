@@ -35,7 +35,7 @@ suite('Configuration Management Tests', () => {
     test('API configuration should be retrievable for all providers', async () => {
         const providers = [
             'gemini', 'openai', 'anthropic', 'huggingface', 'ollama',
-            'mistral', 'cohere', 'together', 'openrouter', 'copilot',
+            'mistral', 'cohere', 'together', 'openrouter', 'copilot', 'minimax',
             'deepseek', 'grok', 'perplexity'
         ];
 

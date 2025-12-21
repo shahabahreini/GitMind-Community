@@ -7,7 +7,8 @@ export function getModelHandlingScript(): string {
       const buttonIdMap = {
         'deepseek': 'loadDeepSeekModels',
         'huggingface': 'loadHuggingFaceModels',
-        'openrouter': 'loadOpenRouterModels'
+        'openrouter': 'loadOpenRouterModels',
+        'minimax': 'loadMiniMaxModels'
       };
 
       // Use mapped ID if exists, otherwise use standard capitalization

@@ -13,6 +13,8 @@ import './suites/coreServices.test';
 import './suites/changelogService.test';
 import './suites/diffProcessor.test';
 import './suites/tokenCounter.test';
+import './suites/minimaxIntegrationChecklist.test';
+import './suites/minimaxApiSetupErrors.test';
 
 // Import core services for testing
 import { getApiConfig } from '../config/settings';

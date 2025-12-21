@@ -39,8 +39,8 @@ export function estimateTokens(text: string): number {
         // High special character density (code, non-Latin text)
         estimate = charBasedEstimate + extraTokens;
     } else {
-        // Regular text - use word-based with character fallback
-        estimate = Math.max(wordBasedEstimate + extraTokens, charBasedEstimate);
+        // Regular text - prefer word-based estimate for stability
+        estimate = wordBasedEstimate + extraTokens;
     }
 
     return Math.ceil(Math.max(1, estimate));

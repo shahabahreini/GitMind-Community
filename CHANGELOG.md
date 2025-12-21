@@ -1,3 +1,11 @@
+## v4.5.4 - 2025-12-21
+
+### New Features
+
+- Added MiniMax provider integration using the Anthropic-compatible Text API.
+  - Exposes text-generation models only: `MiniMax-M2` and `MiniMax-M2-Stable`.
+  - Added settings, validation, and model loading support across the extension and settings UI.
+
 ## v4.5.3 - 2025-11-20
 
 ### New Features
