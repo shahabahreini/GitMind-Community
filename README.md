@@ -136,6 +136,7 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 | **Ollama**         | deepseek-r1, llama3.3, phi4, qwen3 | 128k    | [Ollama Download](https://ollama.com/download)                |
 | **OpenAI**         | gpt-4o, gpt-4.1, o3, o4-mini       | 128k    | [OpenAI Platform](https://platform.openai.com/signup)         |
 | **Anthropic**      | claude-opus-4, sonnet-4, haiku     | 200k    | [Anthropic Console](https://console.anthropic.com/)           |
+| **MiniMax**        | MiniMax-M2, MiniMax-M2-Stable      | 128k    | [MiniMax Platform](https://platform.minimax.io/docs)          |
 | **Together AI**    | Llama-3.3-70B, Mixtral-8x7B        | 128k    | [Together Platform](https://api.together.ai/)                 |
 | **Hugging Face**   | Mistral-7B, Zephyr-7B, OpenHermes  | 32k     | [HF Token](https://huggingface.co/settings/tokens)            |
 | **Cohere**         | command-r, command-a-03-2025       | 128k    | [Cohere Dashboard](https://dashboard.cohere.ai/)              |
@@ -147,7 +148,7 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 
 | Feature                            | Free                | Pro                         |
 | ---------------------------------- | ------------------- | --------------------------- |
-| **AI Providers**                   | 13 providers (all)  | 13 providers (all)          |
+| **AI Providers**                   | 14 providers        | 15 providers (includes Custom API) |
 | **Models**                         | 50+ models          | 50+ models                  |
 | **Commit Styles**                  | Basic, Conventional | 11 professional styles      |
 | **Git Integration**                | Yes                 | Yes                         |
@@ -172,7 +173,7 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 ### Core (Free)
 
 **Multi-Provider AI**
-Access 13 providers with unified configuration: OpenAI, Anthropic, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot. Switch providers instantly.
+Access 14 providers with unified configuration: OpenAI, Anthropic, MiniMax, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot. Switch providers instantly.
 
 **Basic Commit Style**
 Simple, straightforward commit messages without prefixes or conventions.
