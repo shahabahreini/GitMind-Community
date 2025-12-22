@@ -165,6 +165,22 @@ export class SecureKeyManager {
     private async isProUserAsync(): Promise<boolean> {
         const config = vscode.workspace.getConfiguration('gitmind');
 
+        // If a valid license/order ID exists, treat as Pro without requiring subscription email.
+        // This avoids interactive prompts during background checks (and in test runners).
+        const validationStatus = config.get<string>('pro.validationStatus');
+        const licenseKey = config.get<string>('pro.licenseKey');
+        const orderId = config.get<string>('pro.orderId');
+        if (validationStatus === 'valid' && ((licenseKey && licenseKey.length > 0) || (orderId && orderId.length > 0))) {
+            return true;
+        }
+
+        // Never prompt the user for email during a Pro check. If no email is configured,
+        // we can't validate subscription status.
+        const subscriptionEmail = config.get<string>('subscription.email');
+        if (!subscriptionEmail || subscriptionEmail.trim().length === 0) {
+            return false;
+        }
+
         // Legacy license key check removed - now only using subscription
 
         // Check subscription via SubscriptionManager
@@ -173,13 +189,10 @@ export class SecureKeyManager {
             const subscriptionManager = SubscriptionManager.getInstance();
 
             // Check if user has an active subscription
-            const email = await subscriptionManager.getUserEmail();
-            if (email) {
-                const isProUser = await subscriptionManager.isProUser(email);
-                if (isProUser) {
-                    debugLog('Pro user detected via Lemon Squeezy subscription');
-                    return true;
-                }
+            const isProUser = await subscriptionManager.isProUser(subscriptionEmail);
+            if (isProUser) {
+                debugLog('Pro user detected via Lemon Squeezy subscription');
+                return true;
             }
         } catch (error) {
             debugLog('Failed to check subscription status:', error);
@@ -187,15 +200,12 @@ export class SecureKeyManager {
         }
 
         // Fallback: Check subscription via email (cached result)
-        const subscriptionEmail = config.get<string>('subscription.email');
-        if (subscriptionEmail) {
-            // Note: This only checks cached subscription status for performance
-            // Real-time validation happens in SubscriptionManager
-            const cached = this.getCachedSubscriptionStatus(subscriptionEmail);
-            if (cached?.isActive) {
-                debugLog('Pro user detected via cached Lemon Squeezy subscription');
-                return true;
-            }
+        // Note: This only checks cached subscription status for performance.
+        // Real-time validation happens in SubscriptionManager.
+        const cached = this.getCachedSubscriptionStatus(subscriptionEmail);
+        if (cached?.isActive) {
+            debugLog('Pro user detected via cached Lemon Squeezy subscription');
+            return true;
         }
 
         return false;

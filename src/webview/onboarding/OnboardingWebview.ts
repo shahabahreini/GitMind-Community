@@ -47,6 +47,7 @@ export class OnboardingWebview {
                 localResourceRoots: [
                     vscode.Uri.joinPath(extensionUri, "media"),
                     vscode.Uri.joinPath(extensionUri, "dist"),
+                    vscode.Uri.joinPath(extensionUri, "images"),
                     vscode.Uri.joinPath(extensionUri, "resources"),
                 ],
                 retainContextWhenHidden: true
