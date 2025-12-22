@@ -5,6 +5,11 @@
 - Added MiniMax provider integration using the Anthropic-compatible Text API.
   - Exposes text-generation models only: `MiniMax-M2` and `MiniMax-M2-Stable`.
   - Added settings, validation, and model loading support across the extension and settings UI.
+  - Updated the onboarding form to new UI/UX.
+
+### Fixed
+
+- Fixed onboarding "Don't show this again" action to reliably close the onboarding webview and show the confirmation message.
 
 ## v4.5.3 - 2025-11-20
 

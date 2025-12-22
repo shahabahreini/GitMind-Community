@@ -690,8 +690,8 @@ async function handleOnboardingAction(action: 'complete' | 'skip', context: vsco
   await actionMethod(context);
 
   const message = action === 'complete'
-    ? "🎉 Welcome to GitMind! You're all set up and ready to generate amazing commit messages. Try it out by making some changes to your files and using the Source Control panel."
-    : "Onboarding has been permanently disabled. GitMind will no longer show the setup wizard automatically. You can still access settings manually through the command palette.";
+    ? "Welcome to GitMind! Onboarding is complete. You can now generate commit messages from the Source Control view."
+    : "Onboarding has been disabled. GitMind will no longer show the setup wizard automatically. You can reopen settings anytime from the Command Palette.";
 
   const actionButton = action === 'complete' ? "Try It Now" : "Open Settings Now";
 

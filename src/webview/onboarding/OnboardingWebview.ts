@@ -12,6 +12,10 @@ export class OnboardingWebview {
     private _disposables: vscode.Disposable[] = [];
     private _messageHandler: OnboardingMessageHandler;
 
+    public static close(): void {
+        OnboardingWebview.currentPanel?.dispose();
+    }
+
     public static postMessageToWebview(message: any): void {
         if (OnboardingWebview.currentPanel) {
             OnboardingWebview.currentPanel._panel.webview.postMessage(message);
@@ -52,10 +56,14 @@ export class OnboardingWebview {
         new OnboardingWebview(panel, extensionUri);
     }
 
-    private static currentPanel: OnboardingWebview | undefined; private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
+    private static currentPanel: OnboardingWebview | undefined;
+
+    private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
         this._panel = panel;
         this._extensionUri = extensionUri;
-        this._messageHandler = new OnboardingMessageHandler();
+        this._messageHandler = new OnboardingMessageHandler(() => {
+            OnboardingWebview.close();
+        });
 
         // Track onboarding webview creation
         telemetryService.trackDailyActiveUser();
