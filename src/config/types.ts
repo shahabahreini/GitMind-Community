@@ -5,6 +5,7 @@ export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "coh
 export type CommitStyle =
     | 'basic'
     | 'conventional'
+    | 'conventional-no-scope'
     | 'angular'
     | 'ember'
     | 'emojigit'

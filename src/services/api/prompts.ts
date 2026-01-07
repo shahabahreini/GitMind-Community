@@ -284,6 +284,62 @@ OUTPUT FORMAT:
 }
 
 /**
+ * Generate prompt for Conventional Commits (No Scope)
+ */
+function generateConventionalNoScopeStylePrompt(config: PromptConfig, customContext: string = ""): string {
+  return `${getBaseInstructions(config, customContext)}
+
+CONVENTIONAL COMMITS SPECIFICATION (v1.0.0 - NO SCOPE):
+Format: <type>: <description>
+
+This is the official Conventional Commits style, but scopes are DISABLED for this project.
+
+CRITICAL FORMAT RULES:
+- Do NOT use scopes
+- Do NOT use parentheses in the subject line
+- The subject MUST match exactly: <type>: <description>
+
+COMMIT TYPES (choose the most appropriate):
+- **feat**: New functionality
+- **fix**: Bug fix
+- **docs**: Documentation only
+- **refactor**: Code change that neither fixes a bug nor adds a feature
+- **style**: Formatting changes only (no functional changes)
+- **perf**: Performance improvements
+- **test**: Adding or updating tests
+- **build**: Build system or dependencies
+- **ci**: CI configuration
+- **chore**: Maintenance tasks
+- **revert**: Revert a previous commit
+
+DESCRIPTION REQUIREMENTS:
+- Maximum ${config.maxLength} characters including type
+- Use imperative mood: "add" not "added"
+- Lowercase first letter after the colon
+- No period at the end
+
+BREAKING CHANGES:
+- Add "!" after type for breaking changes: feat!: redesign user endpoints
+- Explain breaking changes in the body
+
+${getBodyRules(config)}
+
+EXAMPLES:
+feat: add OAuth2 social login integration
+fix: resolve timeout issue in user profile requests
+docs: update installation instructions for Docker
+refactor: extract reusable button component logic
+perf: optimize user query with proper indexing
+
+OUTPUT FORMAT:
+<type>: <description>
+
+- <detailed explanation>
+- <rationale or context>
+- <impact or breaking changes if any>`;
+}
+
+/**
  * Generate prompt for Angular style - Enterprise-grade with strict conventions
  */
 function generateAngularStylePrompt(config: PromptConfig, customContext: string = ""): string {
@@ -1222,6 +1278,10 @@ export async function generateCommitPrompt(
     case 'conventional':
       prompt = generateConventionalStylePrompt(config, customContext);
       debugLog('[DEBUG] Generated conventional commits prompt');
+      break;
+    case 'conventional-no-scope':
+      prompt = generateConventionalNoScopeStylePrompt(config, customContext);
+      debugLog('[DEBUG] Generated conventional commits (no scope) prompt');
       break;
     case 'angular':
       prompt = generateAngularStylePrompt(config, customContext);

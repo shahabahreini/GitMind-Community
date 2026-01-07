@@ -56,6 +56,20 @@ export class CommitStyleManager {
             ]
         });
 
+        // Conventional Commits (No Scope) (Pro)
+        this.styles.set('conventional-no-scope', {
+            id: 'conventional-no-scope',
+            name: 'Conventional Commits (No Scope)',
+            description: 'Conventional Commits types without scopes',
+            isPro: true,
+            examples: [
+                'feat: add two-factor authentication',
+                'fix: resolve user login timeout issue',
+                'docs: update installation instructions',
+                'refactor: simplify button component logic'
+            ]
+        });
+
         // Angular Style (Pro)
         this.styles.set('angular', {
             id: 'angular',

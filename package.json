@@ -283,6 +283,7 @@
           "enum": [
             "basic",
             "conventional",
+            "conventional-no-scope",
             "angular",
             "ember",
             "emojigit",
@@ -297,6 +298,7 @@
           "enumDescriptions": [
             "Simple, straightforward commit messages",
             "Conventional Commits standard with types and scopes (Pro)",
+            "Conventional Commits types without scopes (Pro)",
             "Angular commit convention with detailed type definitions (Pro)",
             "Ember.js style with tags and detailed descriptions (Pro)",
             "Visual semantic commits with custom emojis (Pro)",

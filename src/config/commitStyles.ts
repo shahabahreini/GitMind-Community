@@ -28,6 +28,14 @@ export const COMMIT_STYLE_OPTIONS: CommitStyleOption[] = [
         isPro: true
     },
     {
+        id: 'conventional-no-scope',
+        label: 'Conventional Commits (No Scope)',
+        description: 'Conventional Commits types without scopes (feat: ..., fix: ...)',
+        example: 'feat: add OAuth2 integration',
+        category: 'standard',
+        isPro: true
+    },
+    {
         id: 'angular',
         label: 'Angular',
         description: 'Enterprise-grade with strict conventions',

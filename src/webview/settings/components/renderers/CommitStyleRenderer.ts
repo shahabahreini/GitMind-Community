@@ -39,6 +39,7 @@ export class CommitStyleRenderer extends BaseRenderer {
                             <div class="gm-style-grid">
                                 ${this.renderSimpleStyleOption('basic', 'Basic', 'Simple, straightforward commit messages', false, currentStyle, hasValidLicense)}
                                 ${this.renderSimpleStyleOption('conventional', 'Conventional Commits', 'Standard with types and scopes (feat, fix, docs, etc.)', false, currentStyle, hasValidLicense)}
+                                ${this.renderSimpleStyleOption('conventional-no-scope', 'Conventional Commits (No Scope)', 'Types without scopes (feat: ..., fix: ...)', false, currentStyle, hasValidLicense)}
                                 ${this.renderSimpleStyleOption('angular', 'Angular', 'Angular commit convention with detailed type definitions', true, currentStyle, hasValidLicense)}
                                 ${this.renderSimpleStyleOption('ember', 'Ember.js', 'Ember.js style with tags like [FEATURE], [BUGFIX]', true, currentStyle, hasValidLicense)}
                                 ${this.renderSimpleStyleOption('emojigit', 'EmojiGit', 'Visual semantic commits with custom emojis', true, currentStyle, hasValidLicense)}
