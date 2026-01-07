@@ -1,3 +1,83 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+
+## v4.7.0 - 2026-01-07
+
+### New Features
+
+- Added manual commit limit option for changelog generation.
+  - Introduced a new setting to manually cap the number of commits considered for changelog generation.
+  - Added an "Unreleased" section showing changes since the last tagged version.
+  - Implemented logic to respect the manual commit limit when enabled.
+  - Updated UI to include a toggle for enabling/disabling the manual commit limit.
+
+- Added intelligent version conflict resolution during changelog regeneration.
+  - Extracted all versions from the existing changelog with full content.
+  - Detected duplicate versions and added an overwrite control setting (`gitmind.pro.changelog.overwriteExisting`).
+  - Merged new and existing changelog content intelligently while preserving existing versions in safe mode (default).
+
+- Added capture all changes option in settings.
+  - Introduced a new configuration option to capture staged, unstaged, and untracked changes.
+  - Updated diff generation logic to include all changes when the option is enabled.
+  - Added a UI toggle in settings for enabling/disabling the feature.
+  - Updated settings synchronization to include the new option while maintaining backward compatibility.
+
+- Added Conventional Commits no-scope option.
+  - Introduced a new commit style option for Conventional Commits without scopes.
+  - Provided a simplified version of the Conventional Commits standard for projects that don't require scopes.
+  - Updated configuration, prompts, and UI elements to support the new style.
+
+### Enhanced
+
+- Improved Gemini API error handling and validation.
+  - Added detailed error handling for Gemini API requests, including specific messages for rate limits, authentication failures, and access restrictions.
+  - Enhanced API key validation to return structured results with success status, error messages, and troubleshooting tips.
+  - Improved user feedback by providing actionable guidance for common API issues.
+
+### Technical
+
+- Enforced consistent commit body line limits.
+  - Added `clampCommitBodyDescription` function to truncate commit descriptions based on `maxBodyLines` configuration.
+  - Updated `processCommitMessage` to use clamped bullet points for consistent body length.
+  - Introduced `clampBulletPoints` function to limit the number of bullet points in commit bodies according to configuration.
+
+## v4.6.0 - 2026-01-07
+
+### New Features
+
+- Added extension version and footer metadata to the settings UI.
+  - Included a footer section displaying the extension version, author attribution, and a link for reporting issues/improvements.
+  - Enhanced transparency by showing the current version in use.
+  - Provided direct access to GitHub issues for user feedback.
+  - Improved CSS styling for the footer with responsive layout and theming.
+
+- Added a new configuration option to capture staged, unstaged, and untracked changes.
+  - Updated diff generation logic to include all changes when the option is enabled.
+  - Added a UI toggle in settings for enabling/disabling the feature.
+  - Updated settings synchronization to include the new option.
+  - Maintained backward compatibility with existing behavior when disabled.
+
+- Added a new commit style option for Conventional Commits without scopes.
+  - Provided a simplified version of the Conventional Commits standard for projects that don't require scopes.
+  - Included updated configuration, prompts, and UI elements to support the new style.
+
+- Improved Gemini API error handling and validation.
+  - Added detailed error handling for Gemini API requests, including specific messages for rate limits, authentication failures, and access restrictions.
+  - Enhanced API key validation to return structured results with success status, error messages, and troubleshooting tips.
+  - Improved user feedback by providing actionable guidance for common API issues.
+
+### Enhanced
+
+- Enforced consistent commit body line limits.
+  - Added `clampCommitBodyDescription` function to truncate commit descriptions based on `maxBodyLines` configuration.
+  - Updated `processCommitMessage` to use clamped bullet points for consistent body length.
+  - Introduced `clampBulletPoints` function to limit the number of bullet points in commit bodies according to configuration.
+
 ## v4.5.4 - 2025-12-21
 
 ### New Features
