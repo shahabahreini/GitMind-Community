@@ -105,6 +105,7 @@ export class SettingsManager {
                 },
                 changelog: {
                     enabled: config.get<boolean>("pro.changelog.enabled") ?? true,
+                    maxCommitsEnabled: config.get<boolean>("pro.changelog.maxCommitsEnabled") ?? false,
                     maxCommits: config.get<number>("pro.changelog.maxCommits") ?? 100,
                     groupByVersion: config.get<boolean>("pro.changelog.groupByVersion") ?? true,
                     maxVersions: config.get<number>("pro.changelog.maxVersions") ?? 10,
@@ -412,6 +413,7 @@ export class SettingsManager {
             config.update("pro.learnFromCommitHistory.maxCommits", settings.pro?.learnFromCommitHistory?.maxCommits ?? 50, target),
             config.update("pro.learnFromCommitHistory.includeAuthorInfo", settings.pro?.learnFromCommitHistory?.includeAuthorInfo ?? true, target),
             config.update("pro.changelog.enabled", settings.pro?.changelog?.enabled ?? true, target),
+            config.update("pro.changelog.maxCommitsEnabled", settings.pro?.changelog?.maxCommitsEnabled ?? false, target),
             config.update("pro.changelog.maxCommits", settings.pro?.changelog?.maxCommits ?? 100, target),
             config.update("pro.changelog.groupByVersion", settings.pro?.changelog?.groupByVersion ?? true, target),
             config.update("pro.changelog.maxVersions", settings.pro?.changelog?.maxVersions ?? 10, target),

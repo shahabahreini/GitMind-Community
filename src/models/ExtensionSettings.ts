@@ -114,6 +114,7 @@ export interface ExtensionSettings {
         };
         changelog?: {
             enabled: boolean;
+            maxCommitsEnabled?: boolean;
             maxCommits: number;  // Maximum number of commits to analyze for changelog
             groupByVersion: boolean;  // Whether to group changelog entries by version tags
             maxVersions: number;  // Maximum number of versions to include in changelog

@@ -92,6 +92,11 @@ export function generateFormInitialization(): string {
     `} catch (e) { console.warn('Failed to set changelogEnabled:', e); }`,
 
     `try {`,
+    `  const changelogMaxCommitsEnabledEl = document.getElementById('changelogMaxCommitsEnabled');`,
+    `  if (changelogMaxCommitsEnabledEl) changelogMaxCommitsEnabledEl.checked = currentSettings.pro?.changelog?.maxCommitsEnabled ?? false;`,
+    `} catch (e) { console.warn('Failed to set changelogMaxCommitsEnabled:', e); }`,
+
+    `try {`,
     `  const changelogMaxCommitsEl = document.getElementById('changelogMaxCommits');`,
     `  if (changelogMaxCommitsEl) changelogMaxCommitsEl.value = currentSettings.pro?.changelog?.maxCommits ?? 100;`,
     `} catch (e) { console.warn('Failed to set changelogMaxCommits:', e); }`,
@@ -248,6 +253,7 @@ export function generateSettingsCollection(): string {
       },
       changelog: {
         enabled: true,
+        maxCommitsEnabled: (window.currentFormValues || currentFormValues).changelogMaxCommitsEnabled,
         maxCommits: (window.currentFormValues || currentFormValues).changelogMaxCommits,
         maxVersions: (window.currentFormValues || currentFormValues).changelogMaxVersions,
         groupByVersion: (window.currentFormValues || currentFormValues).changelogGroupByVersion,
@@ -288,6 +294,7 @@ export function generateProviderForm(_provider: string, _settings: any, _default
     `document.getElementById('commitLengthOptionsMaxLength').value = currentSettings.pro?.commitLengthOptions?.maxLength ?? 72;`,
     `document.getElementById('learnFromCommitHistoryMaxCommits').value = currentSettings.pro?.learnFromCommitHistory?.maxCommits ?? 50;`,
     `document.getElementById('learnFromCommitHistoryIncludeAuthorInfo').checked = currentSettings.pro?.learnFromCommitHistory?.includeAuthorInfo ?? true;`,
+    `document.getElementById('changelogMaxCommitsEnabled').checked = currentSettings.pro?.changelog?.maxCommitsEnabled ?? false;`,
     `document.getElementById('changelogMaxCommits').value = currentSettings.pro?.changelog?.maxCommits ?? 100;`,
     `document.getElementById('changelogMaxVersions').value = currentSettings.pro?.changelog?.maxVersions ?? 10;`,
     `document.getElementById('changelogGroupByVersion').checked = currentSettings.pro?.changelog?.groupByVersion ?? true;`,
@@ -353,6 +360,7 @@ export function generateUpdateSettingsCode(): string {
     `document.getElementById('commitLengthOptionsMaxLength').value = currentSettings.pro?.commitLengthOptions?.maxLength ?? 72;`,
     `document.getElementById('learnFromCommitHistoryMaxCommits').value = currentSettings.pro?.learnFromCommitHistory?.maxCommits ?? 50;`,
     `document.getElementById('learnFromCommitHistoryIncludeAuthorInfo').checked = currentSettings.pro?.learnFromCommitHistory?.includeAuthorInfo ?? true;`,
+    `document.getElementById('changelogMaxCommitsEnabled').checked = currentSettings.pro?.changelog?.maxCommitsEnabled ?? false;`,
     `document.getElementById('changelogMaxCommits').value = currentSettings.pro?.changelog?.maxCommits ?? 100;`,
     `document.getElementById('changelogMaxVersions').value = currentSettings.pro?.changelog?.maxVersions ?? 10;`,
     `document.getElementById('changelogGroupByVersion').checked = currentSettings.pro?.changelog?.groupByVersion ?? true;`,
@@ -416,6 +424,7 @@ export function generateUpdateSettingsCodePreserveDropdowns(): string {
     `document.getElementById('commitLengthOptionsMaxLength').value = currentSettings.pro?.commitLengthOptions?.maxLength ?? 72;`,
     `document.getElementById('learnFromCommitHistoryMaxCommits').value = currentSettings.pro?.learnFromCommitHistory?.maxCommits ?? 50;`,
     `document.getElementById('learnFromCommitHistoryIncludeAuthorInfo').checked = currentSettings.pro?.learnFromCommitHistory?.includeAuthorInfo ?? true;`,
+    `document.getElementById('changelogMaxCommitsEnabled').checked = currentSettings.pro?.changelog?.maxCommitsEnabled ?? false;`,
     `document.getElementById('changelogMaxCommits').value = currentSettings.pro?.changelog?.maxCommits ?? 100;`,
     `document.getElementById('changelogMaxVersions').value = currentSettings.pro?.changelog?.maxVersions ?? 10;`,
     `document.getElementById('changelogGroupByVersion').checked = currentSettings.pro?.changelog?.groupByVersion ?? true;`,

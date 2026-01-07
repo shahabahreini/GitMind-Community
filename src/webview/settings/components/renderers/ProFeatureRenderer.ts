@@ -341,10 +341,11 @@ export class ProFeatureRenderer extends BaseRenderer {
     }
 
     private renderChangelogGenerationSection(): string {
-        const changelogConfig = this.settings.pro?.changelog || { enabled: true, maxCommits: 100, groupByVersion: true, versionOrder: 'newest-first', maxVersions: 10, overwriteExisting: false };
+        const changelogConfig = this.settings.pro?.changelog || { enabled: true, maxCommitsEnabled: false, maxCommits: 100, groupByVersion: true, versionOrder: 'newest-first', maxVersions: 10, overwriteExisting: false };
         const versionOrder = (changelogConfig as any).versionOrder || 'newest-first';
         const maxVersions = (changelogConfig as any).maxVersions || 10;
         const overwriteExisting = (changelogConfig as any).overwriteExisting || false;
+        const maxCommitsEnabled = (changelogConfig as any).maxCommitsEnabled ?? false;
         const hasValidLicense = (this.settings.pro?.licenseKey || this.settings.pro?.orderId) && this.settings.pro?.validationStatus === 'valid';
         const disabledState = !hasValidLicense;
         const proRequiredMessage = !hasValidLicense ? '(Pro feature)' : '';
@@ -356,13 +357,28 @@ export class ProFeatureRenderer extends BaseRenderer {
         </div>
 
         <div class="commit-options-row">
+            <div class="compact-setting toggle-setting">
+                <div class="setting-info">
+                    <div class="setting-label">Limit Commits</div>
+                    <div class="setting-desc">When disabled, commit range is determined automatically from version tags</div>
+                </div>
+                <div class="switch-container ${disabledState ? 'disabled' : ''}">
+                    <input class="switch-input" type="checkbox" id="changelogMaxCommitsEnabled"
+                        ${maxCommitsEnabled ? 'checked' : ''}
+                        ${disabledState ? 'disabled' : ''}
+                        data-setting="pro.changelog.maxCommitsEnabled" />
+                    <div class="switch-button">
+                        <div class="switch-slider"></div>
+                    </div>
+                </div>
+            </div>
             <div class="compact-setting input-setting">
                 <span>Max Commits</span>
                 <input type="number" id="changelogMaxCommits"
                     class="input-field"
                     value="${changelogConfig.maxCommits}"
                     min="10" max="2500" step="10"
-                    ${disabledState ? 'disabled' : ''}
+                    ${disabledState || !maxCommitsEnabled ? 'disabled' : ''}
                     data-setting="pro.changelog.maxCommits" />
             </div>
             <div class="compact-setting input-setting">

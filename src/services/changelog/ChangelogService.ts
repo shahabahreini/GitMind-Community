@@ -25,6 +25,7 @@ interface GitCommit {
 interface ChangelogConfig {
     sinceVersion?: string;
     maxCommits?: number;
+    maxCommitsEnabled?: boolean;
     includeAllCommits?: boolean;
     groupByVersion?: boolean;
 }
@@ -340,7 +341,7 @@ export class ChangelogService {
     /**
      * Get commits grouped by version
      */
-    private async getCommitsByVersion(maxCommits?: number): Promise<VersionInfo[]> {
+    private async getCommitsByVersion(maxCommits?: number, maxCommitsEnabled?: boolean): Promise<VersionInfo[]> {
         const versionTags = await this.getVersionTags();
 
         // If we have git tags, use them
@@ -368,7 +369,25 @@ export class ChangelogService {
 
             // When tags are detected, get ALL commits between tags (ignore maxCommits)
             // maxCommits only applies to fallback scenarios without tags
-            debugLog('Version tags detected: Getting ALL commits between tags (maxCommits ignored)');
+            debugLog('Version tags detected: Getting commit ranges from tag positions in history');
+
+            // Add an "Unreleased" group (latest tag -> HEAD). This captures changes since the last release.
+            const latestTag = tagsToProcess[0]?.[0];
+            if (latestTag) {
+                try {
+                    const unreleasedCommits = await this.getGitLog(latestTag, undefined, undefined);
+                    if (unreleasedCommits.length > 0) {
+                        versions.push({
+                            version: 'Unreleased',
+                            date: new Date().toISOString().split('T')[0],
+                            commits: unreleasedCommits
+                        });
+                        debugLog(`Unreleased: ${unreleasedCommits.length} commits (from ${latestTag} to HEAD)`);
+                    }
+                } catch (error) {
+                    debugLog('Failed to get commits for Unreleased group:', error);
+                }
+            }
 
             for (let i = 0; i < tagsToProcess.length; i++) {
                 const [currentVersion, date] = tagsToProcess[i];
@@ -385,6 +404,14 @@ export class ChangelogService {
                 } catch (error) {
                     debugLog(`Failed to get commits for version ${currentVersion}:`, error);
                 }
+            }
+
+            if (maxCommitsEnabled && typeof maxCommits === 'number' && !isNaN(maxCommits)) {
+                const clampedMaxCommits = Math.min(Math.max(maxCommits, 10), 2500);
+                const limited = this.applyGlobalCommitLimit(versions, clampedMaxCommits);
+                const limitedTotal = limited.reduce((sum, v) => sum + v.commits.length, 0);
+                debugLog(`Max commits enabled. Limited total commits to ${limitedTotal} (cap=${clampedMaxCommits})`);
+                return limited;
             }
 
             // Log total commits processed
@@ -424,6 +451,25 @@ export class ChangelogService {
             date: new Date().toISOString().split('T')[0],
             commits: allCommits
         }];
+    }
+
+    private applyGlobalCommitLimit(groups: VersionInfo[], maxCommits: number): VersionInfo[] {
+        if (maxCommits <= 0) {
+            return [];
+        }
+
+        let remaining = maxCommits;
+
+        return groups
+            .map((group) => {
+                if (remaining <= 0) {
+                    return { ...group, commits: [] };
+                }
+                const slice = group.commits.slice(0, remaining);
+                remaining -= slice.length;
+                return { ...group, commits: slice };
+            })
+            .filter((g) => g.commits.length > 0);
     }
 
     /**
@@ -823,10 +869,14 @@ export class ChangelogService {
         const sinceVersion = config.sinceVersion || latestVersion || undefined;
         const maxCommits = config.maxCommits || 100;
 
+        const vsConfig = vscode.workspace.getConfiguration('gitmind');
+        const maxCommitsEnabled =
+            config.maxCommitsEnabled ?? vsConfig.get<boolean>('pro.changelog.maxCommitsEnabled', false);
+
         let versionGroups: VersionInfo[];
 
         if (config.groupByVersion !== false) {
-            versionGroups = await this.getCommitsByVersion(maxCommits);
+            versionGroups = await this.getCommitsByVersion(maxCommits, maxCommitsEnabled);
         } else {
             const commits = await this.getGitLog(sinceVersion, undefined, maxCommits);
             versionGroups = [{
@@ -894,7 +944,6 @@ export class ChangelogService {
         versionGroups = adjustedGroups;
 
         // Apply version ordering based on user preference
-        const vsConfig = vscode.workspace.getConfiguration('gitmind');
         const versionOrder = vsConfig.get<string>('pro.changelog.versionOrder', 'newest-first');
 
         if (versionOrder === 'oldest-first') {

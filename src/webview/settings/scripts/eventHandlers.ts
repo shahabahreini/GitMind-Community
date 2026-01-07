@@ -148,6 +148,7 @@ export function getEventHandlersScript(): string {
         commitLengthOptionsMaxLength: parseInt(document.getElementById('commitLengthOptionsMaxLength')?.value) || 72,
         learnFromCommitHistoryMaxCommits: parseInt(document.getElementById('learnFromCommitHistoryMaxCommits')?.value) || 50,
         learnFromCommitHistoryIncludeAuthorInfo: document.getElementById('learnFromCommitHistoryIncludeAuthorInfo')?.checked || true,
+        changelogMaxCommitsEnabled: document.getElementById('changelogMaxCommitsEnabled')?.checked || false,
         changelogMaxCommits: parseInt(document.getElementById('changelogMaxCommits')?.value) || 100,
         changelogMaxVersions: parseInt(document.getElementById('changelogMaxVersions')?.value) || 10,
         changelogGroupByVersion: document.getElementById('changelogGroupByVersion')?.checked || true,
@@ -623,7 +624,8 @@ export function getEventHandlersScript(): string {
         ['showDiagnostics', 'showDiagnostics', (el) => el.checked],
         ['telemetryEnabled', 'telemetry.enabled', (el) => el.checked],
         ['promptCustomizationEnabled', 'promptCustomization.enabled', (el) => el.checked],
-        ['saveLastPrompt', 'promptCustomization.saveLastPrompt', (el) => el.checked]
+        ['saveLastPrompt', 'promptCustomization.saveLastPrompt', (el) => el.checked],
+        ['changelogMaxCommitsEnabled', 'pro.changelog.maxCommitsEnabled', (el) => el.checked]
       ];
 
       handlers.forEach(([elementId, settingKey, getValue]) => {
@@ -642,6 +644,23 @@ export function getEventHandlersScript(): string {
 
       // Set up provider field event listeners
       setupProviderEventListeners();
+
+      // Changelog Max Commits toggle: enable/disable numeric input locally (no auto-save)
+      const changelogMaxCommitsEnabledEl = document.getElementById('changelogMaxCommitsEnabled');
+      const changelogMaxCommitsEl = document.getElementById('changelogMaxCommits');
+      if (changelogMaxCommitsEnabledEl && changelogMaxCommitsEl) {
+        const applyToggleState = (enabled) => {
+          // Keep disabled if Pro is disabled by overall state; this only controls the additional constraint
+          changelogMaxCommitsEl.disabled = !enabled || changelogMaxCommitsEl.hasAttribute('data-force-disabled');
+        };
+
+        applyToggleState(changelogMaxCommitsEnabledEl.checked);
+        changelogMaxCommitsEnabledEl.addEventListener('change', function() {
+          applyToggleState(this.checked);
+          // Mark unsaved (value is captured via createSettingHandler -> currentSettings)
+          markAsUnsaved();
+        });
+      }
     });
 
     // Listen for settings updates from backend
