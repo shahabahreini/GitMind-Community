@@ -194,9 +194,20 @@ export async function generateChangelog() {
                         const document = await vscode.workspace.openTextDocument(changelogUri);
                         await vscode.window.showTextDocument(document);
 
+                        // Provide helpful feedback about what was done
+                        const overwriteSetting = config.get<boolean>('pro.changelog.overwriteExisting', false);
+                        const settingsHint = overwriteSetting
+                            ? ' (Overwrite mode: existing versions were replaced with new content)'
+                            : ' (Safe mode: existing versions were preserved, only new versions added)';
+
                         vscode.window.showInformationMessage(
-                            `Changelog ${options.mode === 'create' ? 'created' : 'updated'} successfully!`
-                        );
+                            `Changelog ${options.mode === 'create' ? 'created' : 'updated'} successfully!${settingsHint}`,
+                            'Open Settings'
+                        ).then(action => {
+                            if (action === 'Open Settings') {
+                                vscode.commands.executeCommand('workbench.action.openSettings', 'gitmind.pro.changelog');
+                            }
+                        });
                     }
 
                 } catch (error) {

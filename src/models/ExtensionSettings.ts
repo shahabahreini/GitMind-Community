@@ -118,6 +118,7 @@ export interface ExtensionSettings {
             groupByVersion: boolean;  // Whether to group changelog entries by version tags
             maxVersions: number;  // Maximum number of versions to include in changelog
             versionOrder: 'newest-first' | 'oldest-first';  // Order of versions in changelog
+            overwriteExisting: boolean;  // Whether to overwrite existing changelog entries when regenerating
         };
     };
     // Subscription Settings (Lemon Squeezy)

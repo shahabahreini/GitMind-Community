@@ -109,6 +109,7 @@ export class SettingsManager {
                     groupByVersion: config.get<boolean>("pro.changelog.groupByVersion") ?? true,
                     maxVersions: config.get<number>("pro.changelog.maxVersions") ?? 10,
                     versionOrder: config.get<'newest-first' | 'oldest-first'>("pro.changelog.versionOrder") ?? 'newest-first',
+                    overwriteExisting: config.get<boolean>("pro.changelog.overwriteExisting") ?? false,
                 }
 
             },
@@ -415,6 +416,7 @@ export class SettingsManager {
             config.update("pro.changelog.groupByVersion", settings.pro?.changelog?.groupByVersion ?? true, target),
             config.update("pro.changelog.maxVersions", settings.pro?.changelog?.maxVersions ?? 10, target),
             config.update("pro.changelog.versionOrder", settings.pro?.changelog?.versionOrder ?? "newest-first", target),
+            config.update("pro.changelog.overwriteExisting", settings.pro?.changelog?.overwriteExisting ?? false, target),
         ];
 
         const providerUpdates: Thenable<void>[] = [];

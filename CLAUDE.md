@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-GitMind is a VS Code extension that provides AI-powered commit message generation. It supports 15 different AI providers (OpenAI, Anthropic, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot, Cursor Agent, Windsurf Agent*) with 50+ models and multiple commit message styles.
+GitMind is a VS Code extension that provides AI-powered commit message generation. It supports 15 different AI providers (OpenAI, Anthropic, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot, Cursor Agent, Windsurf Agent*) with 50+ models and 11 professional commit message styles.
 
 *Note: Windsurf Agent is currently non-functional due to Windsurf IDE not exposing the VS Code Language Model API.
 
@@ -14,6 +14,12 @@ GitMind is a VS Code extension that provides AI-powered commit message generatio
 - esbuild for bundling
 - Multiple AI provider APIs
 - VS Code SecretStorage for encrypted API keys
+
+**Key Features:**
+- 14 AI providers (15 with Custom API in Pro)
+- 11 professional commit styles (including Conventional Commits No Scope)
+- Flexible change capture (staged-only or all changes including untracked)
+- Pro features: Changelog generation, commit history analysis, API key encryption, large diff processing
 
 ## Build & Development Commands
 
@@ -153,22 +159,33 @@ Advanced feature that learns from repository commit history:
 #### 5. Changelog Generation (Pro)
 
 Professional changelog generation from git history with intelligent version detection and policy awareness:
-- **ChangelogService** (`src/services/changelog/ChangelogService.ts`) - Core service with 3-tier version detection
+- **ChangelogService** (`src/services/changelog/ChangelogService.ts`) - Core service with 3-tier version detection and version-aware merging
 - **Version Detection Strategy:**
   1. **Git Tags** (Primary): Detects semantic version tags (v1.2.3, 1.2.3, etc.)
   2. **Commit Messages** (Secondary): Parses version bumps from commit messages (e.g., "chore: bump version to 4.3.0")
   3. **package.json** (Enhanced): Reads package.json at each commit to detect version changes
   4. **Fallback**: Creates "Unreleased" section if no versions detected
+- **Version Boundary Filtering (FIXED):**
+  - **Precise Commit Filtering**: Uses `git log previous_tag..current_tag` to get commits ONLY for that specific version
+  - **No Bleed-Over**: Prevents commits from bleeding across version boundaries when maxCommits is specified
+  - **Proper Range Handling**: Each version gets commits strictly between its tag and the previous tag
 - **Changelog Policy Awareness:**
   - **Structure Analysis**: Analyzes existing CHANGELOG.md to extract format rules
   - **Format Preservation**: Detects and matches version format (v1.2.3 vs 1.2.3), bullet style (-, *, +), date format, emoji usage
   - **Category Detection**: Identifies existing categories and custom categories unique to the project
   - **Exact Matching**: AI prompt dynamically adapts to match existing changelog's style, tone, and structure exactly
   - **No Format Drift**: Prevents introduction of new formatting that doesn't match established conventions
+- **Version Conflict Resolution (NEW):**
+  - **Duplicate Detection**: Automatically detects when regenerating a version that already exists in CHANGELOG.md
+  - **Smart Merging**: Intelligently merges new and existing changelog content preserving all versions
+  - **Overwrite Control**: `gitmind.pro.changelog.overwriteExisting` setting (default: false)
+    - **Safe Mode (false)**: Existing version entries are preserved, only new versions added
+    - **Overwrite Mode (true)**: Regenerated versions replace existing entries (useful for fixing/improving descriptions)
+  - **User Feedback**: Clear notifications about conflict resolution strategy used
 - **Industry-Standard Output:**
   - Follows Keep a Changelog specification by default
   - Categories: Added, Changed, Deprecated, Removed, Fixed, Security, Technical (or matches existing)
-  - Professional tone, NO emojis (unless existing changelog uses them)
+  - Professional tone, NO emojis ever (strict policy for professional documentation)
   - Factual and concise with technical details
 - **Robust Token Management:**
   - **Automatic Estimation**: Calculates commit tokens, changelog tokens, policy tokens, and response reserve
@@ -194,9 +211,13 @@ Professional changelog generation from git history with intelligent version dete
   - `gitmind.updateChangelog` - Quick update command
 - **Configuration:**
   - `gitmind.pro.changelog.enabled` (default: true)
-  - `gitmind.pro.changelog.maxCommits` (default: 100, range: 10-500)
+  - `gitmind.pro.changelog.maxCommits` (default: 100, range: 10-2500) - **Only applies when NO tags detected** (fallback scenarios)
   - `gitmind.pro.changelog.groupByVersion` (default: true)
+  - `gitmind.pro.changelog.maxVersions` (default: 10, range: 1-25) - Limits number of version tags processed
+  - `gitmind.pro.changelog.versionOrder` (default: newest-first)
+  - `gitmind.pro.changelog.overwriteExisting` (default: false) - Control version conflict resolution
 - Uses 8-minute timeout for comprehensive changelog generation
+- **Important**: When version tags are detected, ALL commits between tags are retrieved (maxCommits is ignored to ensure complete version history)
 
 #### 6. Large Diff Processing (Pro)
 
@@ -286,9 +307,12 @@ Settings are stored in VS Code's workspace/user configuration:
 
 **Important Settings:**
 - `gitmind.apiProvider` - Selected AI provider
-- `gitmind.commitStyle.style` - Commit message format
+- `gitmind.commitStyle.style` - Commit message format (11 styles: basic, conventional, conventional-no-scope, angular, ember, emojigit, gitmoji, semantic-release, commitizen, karma, linux-kernel, jquery)
+- `gitmind.commit.captureAllChanges` - Capture all changes (staged + unstaged + untracked) without staging prompt (default: false)
+- `gitmind.commit.verbose` - Generate verbose commit messages with detailed descriptions (default: true)
 - `gitmind.pro.encryptionEnabled` - Enable encrypted API key storage
 - `gitmind.pro.learnFromCommitHistory.enabled` - Enable commit history analysis
+- `gitmind.pro.changelog.overwriteExisting` - Overwrite existing changelog versions when regenerating (default: false)
 
 ### Error Handling
 
@@ -318,7 +342,9 @@ Extension state is maintained in:
 
 1. User clicks "Generate GitMind Commit Message" in SCM panel
 2. Extension validates Git repository and checks for changes
-3. `getDiff()` retrieves staged/unstaged changes
+3. `getDiff()` retrieves changes based on capture mode:
+   - **Traditional mode** (default): Staged changes only (prompts if nothing staged)
+   - **Capture All Changes mode** (`gitmind.commit.captureAllChanges: true`): Staged + unstaged + untracked files
 4. If diagnostics enabled, shows token estimation dialog
 5. If prompt customization enabled, prompts for custom context
 6. If Pro + commit history analysis enabled, includes historical context
@@ -414,11 +440,19 @@ The extension uses aggressive tree-shaking and code splitting:
 ### Adding a New Commit Style
 
 1. Add style to `CommitStyle` type in `src/config/types.ts`
-2. Define style configuration in `src/config/commitStyles.ts`
+2. Define style configuration in `src/config/commitStyles.ts` with:
+   - `id`: Unique identifier
+   - `label`: Display name
+   - `description`: Short description
+   - `example`: Example commit message
+   - `category`: 'basic' | 'standard' | 'framework' | 'emoji' | 'specialized'
+   - `isPro`: Boolean (true for Pro-only styles)
 3. Update `COMMIT_STYLES` constant with style details
-4. Add enum option to `gitmind.commitStyle.style` in `package.json`
-5. Update `CommitStyleManager` (`src/services/commitStyleManager.ts`) if custom logic needed
-6. Update settings webview to display new style option
+4. Add prompt template in `src/services/api/prompts.ts` under `getCommitMessagePrompt()` switch statement
+5. Add enum option to `gitmind.commitStyle.style` in `package.json`
+6. Update `CommitStyleManager` (`src/services/commitStyleManager.ts`) to register the style
+7. Update settings webview renderer in `src/webview/settings/components/renderers/CommitStyleRenderer.ts`
+8. Test both free and Pro user experiences
 
 ### Modifying Webview UI
 
@@ -455,18 +489,39 @@ The extension uses aggressive tree-shaking and code splitting:
 - **`src/services/api/cursor-agent.ts`** - Cursor IDE agent integration via Language Model API
 - **`src/services/api/windsurf-agent.ts`** - Windsurf agent (non-functional - API limitation)
 - **`src/services/api/copilot.ts`** - GitHub Copilot integration via Language Model API
+- **`src/services/changelog/ChangelogService.ts`** - Changelog generation with version detection and conflict resolution
+- **`src/services/changelog/generateChangelog.ts`** - Changelog command handlers
 - **`package.json`** - Extension manifest, commands, settings schema, and dependencies
 
 ## Notes for Future Development
 
+### Compatibility & Performance
 - The extension maintains backward compatibility with VS Code 1.63.0+ and Node 16+
+- Production builds use esbuild with tree-shaking, minification, and drop console statements
+- The extension is virtualWorkspace compatible and supports untrustedWorkspaces
+- The extension activates on `onStartupFinished` and `workspaceContains:.git` events
+- Large diff processing uses adaptive chunking - test with repositories >10MB
+
+### Feature Development
 - Pro features are feature-flagged through subscription validation
 - All webviews use VS Code's built-in theme variables for consistency
 - Error messages should be actionable and provider-specific
-- Large diff processing uses adaptive chunking - test with repositories >10MB
 - Telemetry is disabled by default and respects VS Code global setting
 - Multi-repository support requires testing with nested Git repositories
-- API timeouts vary: 10s (standard), 3min (commit history), 8min (large histories/changelog)
-- The extension activates on `onStartupFinished` and `workspaceContains:.git` events
-- Production builds use esbuild with tree-shaking, minification, and drop console statements
-- The extension is virtualWorkspace compatible and supports untrustedWorkspaces
+
+### API & Timeouts
+- API timeouts vary by operation:
+  - Standard commit generation: 10 seconds
+  - Commit history analysis: 3 minutes
+  - Large history/changelog generation: 8 minutes
+- All API calls support cancellation via AbortController
+- Circuit breaker activates after 3 consecutive failures (1-minute cooldown)
+
+### Recent Improvements (v4.6.0+)
+- **Changelog Generation**: Fixed version boundary filtering to prevent commit bleed-over between versions
+- **Changelog Conflict Resolution**: Added intelligent duplicate detection and overwrite control
+- **Changelog maxCommits Behavior**: When version tags detected, ALL commits between tags are retrieved (maxCommits ignored) - ensures complete version history
+- **Commit Styles**: Added Conventional Commits (No Scope) style for simpler workflows
+- **Change Capture**: Added flexible mode to capture all changes (staged + unstaged + untracked) without staging prompt
+- **Token Management**: Improved changelog token estimation with configurable commit limits (10-2500, only for non-tagged repos)
+- **Emoji Policy**: Strict no-emoji policy for all changelog generation (professional documentation standards)

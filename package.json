@@ -652,7 +652,7 @@
         "gitmind.pro.commitBodyOptions.maxLines": {
           "type": "number",
           "default": 5,
-          "minimum": 3,
+          "minimum": 2,
           "maximum": 15,
           "description": "Maximum number of lines in commit message body (Pro feature)",
           "markdownDescription": "**Pro Feature**: Set the maximum number of lines for commit message body. Controls how detailed the commit descriptions will be while maintaining readability.",
@@ -700,9 +700,10 @@
         "gitmind.pro.changelog.maxCommits": {
           "type": "number",
           "default": 100,
-          "minimum": 10,
+          "minimum": 2,
           "maximum": 2500,
-          "description": "Maximum number of commits to analyze when generating changelog"
+          "description": "Maximum number of commits to analyze when generating changelog (only applies when NO version tags detected - with tags, ALL commits between tags are retrieved)",
+          "markdownDescription": "Maximum number of commits to analyze when generating changelog.\n\n**Important:** This setting only applies to repositories **without version tags** (fallback scenarios). When version tags are detected, ALL commits between tags are retrieved to ensure complete version history."
         },
         "gitmind.pro.changelog.groupByVersion": {
           "type": "boolean",
@@ -726,6 +727,12 @@
           "default": "newest-first",
           "description": "Order of versions in generated changelog",
           "markdownDescription": "**newest-first**: Latest versions appear at the top (recommended for CHANGELOG.md)\n\n**oldest-first**: Oldest versions appear at the top"
+        },
+        "gitmind.pro.changelog.overwriteExisting": {
+          "type": "boolean",
+          "default": false,
+          "description": "Overwrite existing version entries when updating changelog",
+          "markdownDescription": "**Pro Feature**: When enabled, regenerating a changelog version will overwrite the existing entry. When disabled (default), existing versions are preserved and only new versions are added.\n\n**Use Cases:**\n- **Enabled**: Regenerate and improve existing version entries, fix formatting issues, or update descriptions\n- **Disabled (Safe Mode)**: Never lose manually written changelog entries, only add new versions"
         },
         "gitmind.commitStyle.gitmoji.enabled": {
           "type": "boolean",

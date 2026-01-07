@@ -1377,24 +1377,50 @@ async function callProviderRawPromptAPI(
             return data.choices[0].message.content;
         }
         case 'cohere': {
-            const response = await fetch('https://api.cohere.ai/v1/generate', {
+            const response = await fetch('https://api.cohere.ai/v2/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify({
                     model: model,
-                    prompt: prompt,
+                    messages: [{ role: 'user', content: prompt }],
                     max_tokens: 4096
                 }),
                 signal: controller.signal
             });
+
             if (!response.ok) {
-                throw new Error(`Cohere API error: ${response.status} ${response.statusText}`);
+                const errorText = await response.text().catch(() => '');
+                const baseMessage = `Cohere API error: ${response.status} ${response.statusText}`;
+                if (response.status === 404) {
+                    throw new Error(
+                        `${baseMessage}. The requested model or endpoint may not exist. ` +
+                        `Check the model name in settings and ensure it's a Cohere chat-capable model. ` +
+                        `${errorText ? `Details: ${errorText}` : ''}`
+                    );
+                }
+                throw new Error(`${baseMessage}${errorText ? ` - ${errorText}` : ''}`);
             }
+
             const data = await response.json();
-            return data.generations[0].text;
+            const contentItems = data?.message?.content;
+            if (!Array.isArray(contentItems)) {
+                throw new Error('Cohere API returned an unexpected response format (missing message.content).');
+            }
+            const responseText = contentItems
+                .filter((item: any) => item?.type === 'text' && typeof item?.text === 'string')
+                .map((item: any) => item.text)
+                .join('')
+                .trim();
+
+            if (!responseText) {
+                throw new Error('Cohere API returned no text content.');
+            }
+
+            return responseText;
         }
         case 'together': {
             const response = await fetch('https://api.together.xyz/v1/chat/completions', {
@@ -2008,15 +2034,21 @@ async function callCohereAnalysisAPI(apiKey: string, model: string, analysisProm
     }, timeout);
 
     try {
-        const response = await fetch("https://api.cohere.ai/v1/chat", {
+        const response = await fetch("https://api.cohere.ai/v2/chat", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${apiKey}`,
+                "Accept": "application/json",
             },
             body: JSON.stringify({
                 model: model,
-                message: analysisPrompt,
+                messages: [
+                    {
+                        role: "user",
+                        content: analysisPrompt
+                    }
+                ],
                 temperature: 0.3,
                 // No max_tokens limit for full commit analysis reports
             }),
@@ -2026,13 +2058,30 @@ async function callCohereAnalysisAPI(apiKey: string, model: string, analysisProm
         clearTimeout(timeoutId);
 
         if (!response.ok) {
-            const errorText = await response.text();
+            const errorText = await response.text().catch(() => '');
             debugLog(`[CommitHistory] Cohere API error details: ${errorText}`);
-            throw new Error(`Cohere API error: ${response.status} ${response.statusText} - ${errorText}`);
+
+            const baseMessage = `Cohere API error: ${response.status} ${response.statusText}`;
+            if (response.status === 404) {
+                throw new Error(
+                    `${baseMessage}. The requested model or endpoint may not exist. ` +
+                    `Check the model name in settings and ensure you have access to it. ` +
+                    `${errorText ? `Details: ${errorText}` : ''}`
+                );
+            }
+
+            throw new Error(`${baseMessage}${errorText ? ` - ${errorText}` : ''}`);
         }
 
         const data = await response.json();
-        const responseText = data.text || data.message || "";
+        const contentItems = data?.message?.content;
+        const responseText = Array.isArray(contentItems)
+            ? contentItems
+                .filter((item: any) => item?.type === 'text' && typeof item?.text === 'string')
+                .map((item: any) => item.text)
+                .join('')
+                .trim()
+            : "";
 
         debugLog('[CommitHistory] ==================== COHERE API RESPONSE ====================');
         debugLog(`[CommitHistory] Response length: ${responseText.length} characters`);

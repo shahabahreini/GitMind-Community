@@ -114,10 +114,18 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 
 ### 3. Generate
 
+**Option A: Traditional Workflow**
 1. Stage changes
 2. Click AI button in Source Control
 3. Review generated message
 4. Commit
+
+**Option B: Capture All Changes** (no staging needed)
+1. Enable "Capture All Changes" in settings
+2. Make changes (no need to stage)
+3. Click AI button in Source Control
+4. Review generated message
+5. Commit
 
 ---
 
@@ -181,6 +189,11 @@ Simple, straightforward commit messages without prefixes or conventions.
 **Smart Diff Analysis**
 Automatic staging detection, binary file handling, merge conflict awareness.
 
+**Flexible Change Capture**
+Choose between two workflows:
+- **Traditional** (default): Stage changes first, then generate commit message
+- **Capture All Changes**: Enable to analyze all changes (staged + unstaged + untracked) automatically without staging prompt
+
 **Repository Integration**
 Native VS Code SCM panel. Multi-repository workspace support with independent buttons per repository.
 
@@ -190,9 +203,10 @@ Token estimation, provider/model summary, request preview.
 ### Pro Features
 
 **Professional Commit Styles**
-10 industry-standard formats:
+11 industry-standard formats:
 
-- **Conventional Commits**: Semantic versioning support with types and scopes
+- **Conventional Commits**: Semantic versioning support with types and scopes (`feat(auth): add login`)
+- **Conventional Commits (No Scope)**: Types without scopes for simpler commits (`feat: add OAuth2 integration`)
 - **Angular**: Enterprise-grade with strict conventions
 - **Ember.js**: Tag-based semantic categorization
 - **EmojiGit**: Visual semantic commits with custom emojis
@@ -207,9 +221,14 @@ Token estimation, provider/model summary, request preview.
 AI-powered changelog from git history with:
 
 - 3-tier version detection (git tags, commit messages, package.json)
-- Existing changelog policy awareness (format, categories, emoji usage preserved)
+- Precise version boundary filtering (no commit bleed-over between versions)
+- Complete version history (when tags detected, ALL commits retrieved - no artificial limits)
+- Intelligent duplicate detection and conflict resolution
+- Overwrite control (preserve existing entries or regenerate them)
+- Existing changelog policy awareness (format, categories, bullet style preserved)
 - Keep a Changelog specification compliance
-- Configurable commit analysis (10-500 commits, default 100)
+- Professional documentation standards (no emojis, factual tone)
+- Configurable commit limit (10-2500, default 100) - only for repositories without tags
 - Group by version tags option
 - Create new, update existing, or preview modes
 
@@ -275,8 +294,9 @@ Access via Command Palette: `GitMind: Open Settings`
 
 **Message Formatting**
 
-- Commit style (11 professional formats in Pro)
+- Commit style (11 professional formats in Pro, including Conventional Commits No Scope)
 - Verbosity control (verbose/concise)
+- Capture all changes (staged + unstaged + untracked)
 - Custom scope and type
 
 **Pro Settings**
@@ -285,7 +305,7 @@ Access via Command Palette: `GitMind: Open Settings`
 - Commit history analysis
 - Custom body/summary limits
 - Gitmoji configuration
-- Changelog generation
+- Changelog generation with version conflict resolution
 
 ---
 

@@ -341,9 +341,10 @@ export class ProFeatureRenderer extends BaseRenderer {
     }
 
     private renderChangelogGenerationSection(): string {
-        const changelogConfig = this.settings.pro?.changelog || { enabled: true, maxCommits: 100, groupByVersion: true, versionOrder: 'newest-first', maxVersions: 10 };
+        const changelogConfig = this.settings.pro?.changelog || { enabled: true, maxCommits: 100, groupByVersion: true, versionOrder: 'newest-first', maxVersions: 10, overwriteExisting: false };
         const versionOrder = (changelogConfig as any).versionOrder || 'newest-first';
         const maxVersions = (changelogConfig as any).maxVersions || 10;
+        const overwriteExisting = (changelogConfig as any).overwriteExisting || false;
         const hasValidLicense = (this.settings.pro?.licenseKey || this.settings.pro?.orderId) && this.settings.pro?.validationStatus === 'valid';
         const disabledState = !hasValidLicense;
         const proRequiredMessage = !hasValidLicense ? '(Pro feature)' : '';
@@ -392,13 +393,31 @@ export class ProFeatureRenderer extends BaseRenderer {
             </div>
             <div class="compact-setting select-setting">
                 <span>Version Order</span>
-                <select id="changelogVersionOrder" 
+                <select id="changelogVersionOrder"
                     class="input-field"
                     ${disabledState ? 'disabled' : ''}
                     data-setting="pro.changelog.versionOrder">
                     <option value="newest-first" ${versionOrder === 'newest-first' ? 'selected' : ''}>Newest First</option>
                     <option value="oldest-first" ${versionOrder === 'oldest-first' ? 'selected' : ''}>Oldest First</option>
                 </select>
+            </div>
+        </div>
+
+        <div class="commit-options-row">
+            <div class="compact-setting toggle-setting">
+                <div class="setting-info">
+                    <div class="setting-label">Overwrite Existing Versions</div>
+                    <div class="setting-desc">Replace existing changelog entries when regenerating (otherwise preserves them)</div>
+                </div>
+                <div class="switch-container ${disabledState ? 'disabled' : ''}">
+                    <input class="switch-input" type="checkbox" id="changelogOverwriteExisting"
+                        ${overwriteExisting ? 'checked' : ''}
+                        ${disabledState ? 'disabled' : ''}
+                        data-setting="pro.changelog.overwriteExisting" />
+                    <div class="switch-button">
+                        <div class="switch-slider"></div>
+                    </div>
+                </div>
             </div>
         </div>
 

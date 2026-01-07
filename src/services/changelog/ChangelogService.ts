@@ -55,7 +55,7 @@ export class ChangelogService {
     /**
      * Get git log with detailed information
      */
-    private async getGitLog(since?: string, maxCommits?: number): Promise<GitCommit[]> {
+    private async getGitLog(since?: string, until?: string, maxCommits?: number): Promise<GitCommit[]> {
         if (!this.workspaceRoot) {
             throw new Error('No workspace folder found');
         }
@@ -63,8 +63,16 @@ export class ChangelogService {
         // Build git log command
         let command = 'git log --pretty=format:"%H%n%an%n%ad%n%s%n%b%n---END---" --date=short';
 
-        if (since) {
+        // Handle version range properly
+        if (since && until) {
+            // Get commits between two specific tags/commits
+            command += ` ${since}..${until}`;
+        } else if (since) {
+            // Get commits from since to HEAD
             command += ` ${since}..HEAD`;
+        } else if (until) {
+            // Get commits up to a specific point
+            command += ` ${until}`;
         }
 
         if (maxCommits) {
@@ -358,23 +366,24 @@ export class ChangelogService {
                 );
             }
 
-            // Calculate commits per version to distribute evenly if maxCommits is set
-            const commitsPerVersion = maxCommits ? Math.ceil(maxCommits / tagsToProcess.length) : undefined;
+            // When tags are detected, get ALL commits between tags (ignore maxCommits)
+            // maxCommits only applies to fallback scenarios without tags
+            debugLog('Version tags detected: Getting ALL commits between tags (maxCommits ignored)');
 
             for (let i = 0; i < tagsToProcess.length; i++) {
-                const [version, date] = tagsToProcess[i];
-                const nextVersion = i < tagsToProcess.length - 1 ? tagsToProcess[i + 1][0] : undefined;
+                const [currentVersion, date] = tagsToProcess[i];
+                const previousVersion = i < tagsToProcess.length - 1 ? tagsToProcess[i + 1][0] : undefined;
 
                 try {
-                    // Use distributed commit limit per version, or no limit if maxCommits not set
-                    const versionCommitLimit = commitsPerVersion;
-                    const commits = await this.getGitLog(nextVersion, versionCommitLimit);
+                    // Get ALL commits between tags - no limit
+                    // This ensures we capture complete version history for each release
+                    const commits = await this.getGitLog(previousVersion, currentVersion, undefined);
                     if (commits.length > 0) {
-                        versions.push({ version, date, commits });
-                        debugLog(`Version ${version}: ${commits.length} commits`);
+                        versions.push({ version: currentVersion, date, commits });
+                        debugLog(`Version ${currentVersion}: ${commits.length} commits (from ${previousVersion || 'start'} to ${currentVersion})`);
                     }
                 } catch (error) {
-                    debugLog(`Failed to get commits for version ${version}:`, error);
+                    debugLog(`Failed to get commits for version ${currentVersion}:`, error);
                 }
             }
 
@@ -391,7 +400,7 @@ export class ChangelogService {
 
         // No git tags found, try to detect versions from commit messages and package.json
         debugLog('No git tags found, attempting to detect versions from commit messages...');
-        const allCommits = await this.getGitLog(undefined, maxCommits);
+        const allCommits = await this.getGitLog(undefined, undefined, maxCommits);
 
         if (allCommits.length === 0) {
             return [];
@@ -486,6 +495,113 @@ export class ChangelogService {
     }
 
     /**
+     * Extract all versions from existing changelog
+     * Returns a Map of version number to the full section content
+     */
+    private extractAllVersionsFromChangelog(changelog: string): Map<string, { version: string; fullLine: string; content: string }> {
+        const versionMap = new Map<string, { version: string; fullLine: string; content: string }>();
+
+        // Match all version headers (## v1.2.3 - 2024-01-01 or ## 1.2.3 - 2024-01-01)
+        const versionRegex = /^##\s+(v?\d+\.\d+\.[\d\w.-]+(?:\s+-\s+\d{4}-\d{2}-\d{2})?[^\n]*)/gm;
+        const matches = [...changelog.matchAll(versionRegex)];
+
+        for (let i = 0; i < matches.length; i++) {
+            const match = matches[i];
+            const fullLine = match[1].trim();
+            const versionWithDate = fullLine.split(' - ')[0].trim();
+            const version = versionWithDate.replace(/^v/, ''); // Normalize to version without 'v'
+
+            // Extract content between this version and the next
+            const startIndex = match.index! + match[0].length;
+            const endIndex = i < matches.length - 1 ? matches[i + 1].index! : changelog.length;
+            const content = changelog.substring(startIndex, endIndex).trim();
+
+            versionMap.set(version, { version: versionWithDate, fullLine, content });
+            debugLog(`Extracted existing version: ${version} (${fullLine})`);
+        }
+
+        return versionMap;
+    }
+
+    /**
+     * Check if a version already exists in the changelog
+     */
+    private versionExistsInChangelog(changelog: string, version: string): boolean {
+        const normalizedVersion = version.replace(/^v/, '');
+        const versionMap = this.extractAllVersionsFromChangelog(changelog);
+        return versionMap.has(normalizedVersion);
+    }
+
+    /**
+     * Merge new changelog with existing changelog, handling version conflicts
+     */
+    private mergeChangelogs(
+        newChangelog: string,
+        existingChangelog: string,
+        overwriteExisting: boolean
+    ): string {
+        // Extract versions from both changelogs
+        const existingVersions = this.extractAllVersionsFromChangelog(existingChangelog);
+        const newVersions = this.extractAllVersionsFromChangelog(newChangelog);
+
+        debugLog(`Existing versions: ${Array.from(existingVersions.keys()).join(', ')}`);
+        debugLog(`New versions: ${Array.from(newVersions.keys()).join(', ')}`);
+        debugLog(`Overwrite mode: ${overwriteExisting}`);
+
+        // Extract header if exists
+        const headerMatch = existingChangelog.match(/(# Changelog[\s\S]*?)(##\s+)/);
+        const header = headerMatch ? headerMatch[1] : '# Changelog\n\nAll notable changes to this project will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),\nand this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).\n\n';
+
+        // Build merged content
+        const mergedVersions = new Map<string, { version: string; fullLine: string; content: string }>();
+
+        // Process new versions
+        for (const [version, versionData] of newVersions) {
+            if (existingVersions.has(version)) {
+                if (overwriteExisting) {
+                    // Use new version, replacing existing
+                    mergedVersions.set(version, versionData);
+                    debugLog(`Overwriting existing version: ${version}`);
+                } else {
+                    // Keep existing version, skip new one
+                    mergedVersions.set(version, existingVersions.get(version)!);
+                    debugLog(`Keeping existing version: ${version}`);
+                }
+            } else {
+                // New version, add it
+                mergedVersions.set(version, versionData);
+                debugLog(`Adding new version: ${version}`);
+            }
+        }
+
+        // Add remaining existing versions that weren't in the new changelog
+        for (const [version, versionData] of existingVersions) {
+            if (!mergedVersions.has(version)) {
+                mergedVersions.set(version, versionData);
+                debugLog(`Preserving existing version: ${version}`);
+            }
+        }
+
+        // Sort versions (newest first)
+        const sortedVersions = Array.from(mergedVersions.entries()).sort((a, b) => {
+            // Handle "Unreleased" specially - always first
+            if (a[0] === 'Unreleased') { return -1; }
+            if (b[0] === 'Unreleased') { return 1; }
+
+            return this.compareVersions(b[0], a[0]);
+        });
+
+        // Build final changelog
+        let finalChangelog = header;
+
+        for (const [_, versionData] of sortedVersions) {
+            finalChangelog += `\n## ${versionData.fullLine}\n\n${versionData.content}\n`;
+        }
+
+        return finalChangelog.trim() + '\n';
+    }
+
+    /**
      * Analyze existing changelog to extract structure and policies
      */
     private analyzeChangelogStructure(changelog: string): {
@@ -577,9 +693,7 @@ export class ChangelogService {
             instructions += `Version: ${policy.versionFormat}\n`;
         }
         instructions += `Bullets: ${policy.bulletStyle}\n`;
-        if (policy.usesEmojis) {
-            instructions += 'Emojis: Yes\n';
-        }
+        instructions += 'Emojis: Never\n'; // Strict no-emoji policy
         if (policy.categoriesUsed.length > 0) {
             instructions += `Categories: ${policy.categoriesUsed.join(', ')}\n`;
         }
@@ -714,7 +828,7 @@ export class ChangelogService {
         if (config.groupByVersion !== false) {
             versionGroups = await this.getCommitsByVersion(maxCommits);
         } else {
-            const commits = await this.getGitLog(sinceVersion, maxCommits);
+            const commits = await this.getGitLog(sinceVersion, undefined, maxCommits);
             versionGroups = [{
                 version: 'Recent Changes',
                 date: new Date().toISOString().split('T')[0],
@@ -882,12 +996,8 @@ export class ChangelogService {
                 policyInstructions += `- Date format: Include date in YYYY-MM-DD format after version (## Version - YYYY-MM-DD)\n`;
             }
 
-            // Emojis
-            if (policy.usesEmojis) {
-                policyInstructions += `- Emojis: This changelog DOES use emojis - match the existing style\n`;
-            } else {
-                policyInstructions += `- Emojis: This changelog does NOT use emojis - do not add any\n`;
-            }
+            // Emojis - ALWAYS prohibited in changelog generation
+            policyInstructions += `- Emojis: NEVER use emojis in changelog entries - maintain professional documentation standards\n`;
 
             // Categories
             if (policy.categoriesUsed.length > 0) {
@@ -924,7 +1034,7 @@ export class ChangelogService {
 **CRITICAL REQUIREMENTS:**
 1. Follow industry-standard changelog format (Keep a Changelog specification)
 2. Be factual, specific, and concise - avoid marketing language or superlatives
-3. ${policy?.usesEmojis ? 'Match the emoji usage from the existing changelog' : 'NO emojis, exclamation marks, or casual language'}
+3. NO emojis, exclamation marks, or casual language - maintain strict professional documentation standards
 4. Focus on WHAT changed, not WHY or HOW (implementation details belong in commit messages)
 5. Group changes by category: ${policy?.categoriesUsed.length ? policy.categoriesUsed.join(', ') : 'Added, Changed, Deprecated, Removed, Fixed, Security, Technical'}
 6. Use past tense for all entries (e.g., "Added feature" not "Add feature")
@@ -1036,12 +1146,16 @@ Generate the changelog now:`;
     /**
      * Save changelog to CHANGELOG.md
      */
-    public async saveChangelog(content: string, mode: 'create' | 'update' | 'prepend'): Promise<void> {
+    public async saveChangelog(content: string, mode: 'create' | 'update' | 'prepend', overwriteExisting?: boolean): Promise<void> {
         if (!this.workspaceRoot) {
             throw new Error('No workspace folder found');
         }
 
         const changelogUri = vscode.Uri.file(`${this.workspaceRoot}/CHANGELOG.md`);
+
+        // Get overwrite setting from configuration if not explicitly provided
+        const config = vscode.workspace.getConfiguration('gitmind');
+        const shouldOverwrite = overwriteExisting ?? config.get<boolean>('pro.changelog.overwriteExisting', false);
 
         try {
             let finalContent = content;
@@ -1049,23 +1163,21 @@ Generate the changelog now:`;
             if (mode === 'update' || mode === 'prepend') {
                 const existing = await this.readExistingChangelog();
 
-                if (mode === 'prepend' && existing) {
-                    // Extract header if exists
-                    const headerMatch = existing.match(/(# Changelog[\s\S]*?)(##\s+)/);
-                    if (headerMatch) {
-                        const header = headerMatch[1];
-                        const restOfChangelog = existing.substring(headerMatch[0].length - 3);
+                if (existing) {
+                    // Use intelligent merge logic to handle version conflicts
+                    finalContent = this.mergeChangelogs(content, existing, shouldOverwrite);
 
-                        // Remove header from new content if it exists
-                        const newContent = content.replace(/# Changelog[\s\S]*?(##\s+)/, '$1');
+                    // Log what happened
+                    const existingVersions = this.extractAllVersionsFromChangelog(existing);
+                    const newVersions = this.extractAllVersionsFromChangelog(content);
+                    const conflicts = Array.from(newVersions.keys()).filter(v =>
+                        existingVersions.has(v)
+                    );
 
-                        finalContent = `${header}\n${newContent}\n${restOfChangelog}`;
-                    } else {
-                        finalContent = `${content}\n\n${existing}`;
+                    if (conflicts.length > 0) {
+                        debugLog(`Version conflicts detected: ${conflicts.join(', ')}`);
+                        debugLog(`Conflict resolution: ${shouldOverwrite ? 'OVERWRITE' : 'KEEP EXISTING'}`);
                     }
-                } else if (mode === 'update' && existing) {
-                    // For update mode, the AI should have generated content that can replace sections
-                    finalContent = content;
                 }
             }
 
