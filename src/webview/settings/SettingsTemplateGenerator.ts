@@ -12,11 +12,18 @@ export class SettingsTemplateGenerator {
   private _settings: ExtensionSettings;
   private _nonce: string;
   private _webview: vscode.Webview;
+  private _extensionVersion: string;
 
-  constructor(settings: ExtensionSettings, nonce: string, webview: vscode.Webview) {
+  constructor(
+    settings: ExtensionSettings,
+    nonce: string,
+    webview: vscode.Webview,
+    extensionVersion: string
+  ) {
     this._settings = settings;
     this._nonce = nonce;
     this._webview = webview;
+    this._extensionVersion = extensionVersion;
   }
 
   public generateHtml(): string {
@@ -99,6 +106,20 @@ export class SettingsTemplateGenerator {
         ${proFeaturesSettings.render()}
         ${generalSettings.render()}
         ${buttonGroup.render()}
+        <footer class="settings-footer" aria-label="Settings footer">
+          <div class="settings-footer-row">
+            <span class="settings-footer-meta">v${this._extensionVersion}</span>
+            <span class="settings-footer-sep">•</span>
+            <span class="settings-footer-meta">Shahab Bahreini</span>
+            <span class="settings-footer-sep">•</span>
+            <a
+              class="settings-footer-link"
+              href="https://github.com/shahabahreini/AI-Commit-Assistant/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+            >Report a bug / improvement</a>
+          </div>
+        </footer>
       </div>
       ${getSettingsScript(this._settings, this._nonce)}
     </body>

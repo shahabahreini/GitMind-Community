@@ -185,6 +185,41 @@ export function getMainStyles(): string {
       margin-top: 3px;
     }
 
+    .settings-footer {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(128, 128, 128, 0.12);
+    }
+
+    .settings-footer-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      font-size: 11px;
+      color: var(--vscode-descriptionForeground);
+      opacity: 0.9;
+    }
+
+    .settings-footer-meta {
+      white-space: nowrap;
+    }
+
+    .settings-footer-sep {
+      opacity: 0.6;
+    }
+
+    .settings-footer-link {
+      color: var(--vscode-textLink-foreground);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .settings-footer-link:hover {
+      color: var(--vscode-textLink-activeForeground);
+      text-decoration: underline;
+    }
+
     /* Toast Notification */
     .toast {
       position: fixed;

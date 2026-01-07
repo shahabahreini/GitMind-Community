@@ -109,7 +109,15 @@ export class SettingsWebview {
   private async _update() {
     const webview = this._panel.webview;
     const settings = await this._settingsManager.getSettings();
-    const templateGenerator = new SettingsTemplateGenerator(settings, getNonce(), webview);
+    const extensionId = "ShahabBahreiniJangjoo.ai-commit-assistant";
+    const extensionVersion =
+      vscode.extensions.getExtension(extensionId)?.packageJSON?.version ?? "";
+    const templateGenerator = new SettingsTemplateGenerator(
+      settings,
+      getNonce(),
+      webview,
+      extensionVersion
+    );
     this._panel.webview.html = templateGenerator.generateHtml();
   }
 
