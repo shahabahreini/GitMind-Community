@@ -4,6 +4,19 @@ import { CommitMessage } from '../../config/types';
 import { PromptConfig } from './prompts';
 import { removeCodeBlocks, cleanMarkdown } from './utils';
 
+function clampBulletPoints(bulletPoints: string[], maxBodyLines?: number): string[] {
+    if (!maxBodyLines || maxBodyLines <= 0) {
+        return bulletPoints;
+    }
+
+    if (bulletPoints.length <= maxBodyLines) {
+        return bulletPoints;
+    }
+
+    debugLog(`[DEBUG] Clamping commit body bullet points from ${bulletPoints.length} to ${maxBodyLines}`);
+    return bulletPoints.slice(0, maxBodyLines);
+}
+
 export function processCommitMessage(response: string, config: PromptConfig = {}): CommitMessage {
     debugLog("Processing Response (original)");
     debugLog(response);
@@ -94,9 +107,12 @@ export function processCommitMessage(response: string, config: PromptConfig = {}
         }
     }
 
-    debugLog("Processed bullet points", bulletPoints);
+    const clampedBulletPoints = clampBulletPoints(bulletPoints, config.maxBodyLines);
 
-    const description = bulletPoints.join('\n');
+    debugLog("Processed bullet points", bulletPoints);
+    debugLog("Clamped bullet points", clampedBulletPoints);
+
+    const description = clampedBulletPoints.join('\n');
 
     const result: CommitMessage = {
         summary: summary.trim(),

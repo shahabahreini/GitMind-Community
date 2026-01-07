@@ -100,8 +100,10 @@ BODY REQUIREMENTS:
 - Focus on business logic, user impact, or technical rationale
 - Be concise but informative - avoid redundancy with the subject
 - Reference issue numbers, tickets, or breaking changes if relevant${config.maxBodyLines ? `
-- Generate EXACTLY ${config.maxBodyLines} bullet points or fewer. Do not exceed ${config.maxBodyLines} lines.` : `
-- Keep to 3-5 bullet points for optimal readability`}
+- Generate up to ${config.maxBodyLines} bullet points (do not exceed ${config.maxBodyLines} lines).
+- If there are more changes, prioritize the most important ones.
+- Do NOT add headings, numbering, or extra blank lines in the body.` : `
+- Try to keep to 3-5 bullet points for optimal readability`}
 
 Body should answer: What was changed? Why was it changed? Any important details or impacts?`;
 }
@@ -137,7 +139,7 @@ EXAMPLES:
 Add two-factor authentication support
 Fix navigation crash on iOS devices  
 Update API documentation for v2.0
-Remove deprecated payment gateway integration
+Remove deprecated payment gateway integrationpro
 Refactor user service for better performance
 
 OUTPUT FORMAT:

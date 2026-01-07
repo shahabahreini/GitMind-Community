@@ -235,7 +235,8 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
     const duration = Date.now() - startTime;
 
     if (message?.trim()) {
-      const formattedMessage = processCommitMessage(message, getPromptConfig());
+      const promptConfig = getPromptConfig();
+      const formattedMessage = processCommitMessage(message, promptConfig);
 
       // Apply gitmoji if enabled and user has Pro access
       const gitmojiService = GitmojiService.getInstance();
@@ -247,7 +248,10 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
       // Convert back to CommitMessage format
       const lines = finalMessageString.split('\n');
       const summary = lines[0] || '';
-      const description = lines.slice(2).join('\n').trim(); // Skip empty line after summary
+      const description = clampCommitBodyDescription(
+        lines.slice(2).join('\n').trim(),
+        promptConfig.maxBodyLines
+      ); // Skip empty line after summary
 
       await setCommitMessage({ summary, description }, repoRoot);
 
@@ -379,6 +383,27 @@ async function handleRateLimitsCheck(): Promise<void> {
 
 // Track ongoing model loading operations to prevent duplicates
 const modelLoadingInProgress = new Set<string>();
+
+function clampCommitBodyDescription(description: string, maxBodyLines?: number): string {
+  if (!maxBodyLines || maxBodyLines <= 0) {
+    return description;
+  }
+
+  const lines = description
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+  if (lines.length <= maxBodyLines) {
+    return lines.join('\n');
+  }
+
+  debugLog(
+    `Clamping commit body description from ${lines.length} to ${maxBodyLines} lines (Custom Body Line Limit)`
+  );
+
+  return lines.slice(0, maxBodyLines).join('\n');
+}
 
 async function handleLoadModels(
   modelType: 'mistral' | 'huggingface' | 'cohere' | 'together' | 'openrouter' | 'grok' | 'deepseek' | 'gemini' | 'anthropic' | 'minimax' | 'openai',
