@@ -268,8 +268,8 @@ export async function checkApiSetup(): Promise<ApiCheckResult> {
                 result.responseTime = validatorConfig.responseTime;
                 result.details = "Connection test successful";
             } else {
-                result.error = "Invalid API key";
-                result.troubleshooting = `Please check your ${config.type} configuration`;
+                result.error = "Connection test failed";
+                result.troubleshooting = `Please check your ${config.type} API key and your network connection, then try again.`;
             }
         } else {
             result.success = validation.success;

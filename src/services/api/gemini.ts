@@ -140,6 +140,32 @@ export async function callGeminiAPI(apiKey: string, model: string, diff: string,
             throw new Error('Request was cancelled');
         }
 
+        const status =
+            typeof error === "object" &&
+                error !== null &&
+                "status" in error &&
+                typeof (error as { status?: unknown }).status === "number"
+                ? (error as { status: number }).status
+                : undefined;
+
+        if (status === 429) {
+            const retryDelay = getRetryDelaySeconds(error);
+            const retryMessage = retryDelay ? ` Please retry in ${retryDelay}.` : " Please retry shortly.";
+            throw new Error(
+                `Gemini rate limit / quota exceeded.${retryMessage} You can check quotas at https://ai.google.dev/gemini-api/docs/rate-limits and usage at https://ai.dev/rate-limit.`
+            );
+        }
+
+        if (status === 401) {
+            throw new Error("Authentication failed. Please verify your Gemini API key in settings.");
+        }
+
+        if (status === 403) {
+            throw new Error(
+                `Access forbidden. Your Gemini API key may not have access to model '${model}' or you may have billing/quota restrictions.`
+            );
+        }
+
         // Provide more helpful error message
         const errorMessage = error instanceof Error ? error.message : String(error);
         if (errorMessage.includes("not found") || errorMessage.includes("invalid model")) {
@@ -152,10 +178,49 @@ export async function callGeminiAPI(apiKey: string, model: string, diff: string,
     }
 }
 
-export async function validateGeminiAPIKey(apiKey: string): Promise<boolean> {
+export async function validateGeminiAPIKey(apiKey: string): Promise<boolean | GeminiValidationResult> {
+    return validateGeminiAPIKeyDetailed(apiKey);
+}
+
+type GeminiValidationResult = {
+    success: boolean;
+    error?: string;
+    warning?: string;
+    troubleshooting?: string;
+};
+
+function getRetryDelaySeconds(error: unknown): string | undefined {
+    if (typeof error !== "object" || error === null) {
+        return undefined;
+    }
+
+    const retryDelay = (error as { errorDetails?: unknown }).errorDetails;
+    if (!Array.isArray(retryDelay)) {
+        return undefined;
+    }
+
+    for (const detail of retryDelay) {
+        if (
+            typeof detail === "object" &&
+            detail !== null &&
+            "@type" in detail &&
+            (detail as { "@type"?: unknown })["@type"] === "type.googleapis.com/google.rpc.RetryInfo" &&
+            "retryDelay" in detail
+        ) {
+            const value = (detail as { retryDelay?: unknown }).retryDelay;
+            if (typeof value === "string" && value.trim().length > 0) {
+                return value;
+            }
+        }
+    }
+
+    return undefined;
+}
+
+async function validateGeminiAPIKeyDetailed(apiKey: string): Promise<GeminiValidationResult> {
     try {
         if (!apiKey) {
-            return false;
+            return { success: false, error: "API key not configured", troubleshooting: "Please enter your Gemini API key in the settings" };
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
@@ -168,10 +233,60 @@ export async function validateGeminiAPIKey(apiKey: string): Promise<boolean> {
         // Simple validation request
         const result = await model.generateContent("Test connection");
         debugLog("Gemini API validation successful:", result);
-        return result.response !== undefined;
+
+        if ((result as { response?: unknown }).response !== undefined) {
+            return { success: true };
+        }
+
+        return {
+            success: false,
+            error: "Connection test failed",
+            troubleshooting: "The Gemini API did not return a valid response. Please try again.",
+        };
     } catch (error) {
         debugLog("Gemini API validation error:", error);
-        return false;
+
+        const status =
+            typeof error === "object" &&
+                error !== null &&
+                "status" in error &&
+                typeof (error as { status?: unknown }).status === "number"
+                ? (error as { status: number }).status
+                : undefined;
+
+        if (status === 429) {
+            const retryDelay = getRetryDelaySeconds(error);
+            return {
+                success: true,
+                warning: "Rate limit / quota exceeded",
+                troubleshooting: retryDelay
+                    ? `Gemini returned 429 Too Many Requests. Please wait ${retryDelay} before retrying, or upgrade your plan / increase quotas.`
+                    : "Gemini returned 429 Too Many Requests. Please wait and retry, or upgrade your plan / increase quotas.",
+            };
+        }
+
+        if (status === 401) {
+            return {
+                success: false,
+                error: "Authentication failed",
+                troubleshooting: "Invalid or missing Gemini API key. Please verify your key in settings.",
+            };
+        }
+
+        if (status === 403) {
+            return {
+                success: false,
+                error: "Access forbidden",
+                troubleshooting: "Your Gemini API key may not have access to this model or your project may have restrictions. Check permissions and billing/quota settings.",
+            };
+        }
+
+        const message = error instanceof Error ? error.message : String(error);
+        return {
+            success: false,
+            error: "Connection test failed",
+            troubleshooting: message.trim().length > 0 ? message : "Please check your network connection and try again.",
+        };
     }
 }
 
