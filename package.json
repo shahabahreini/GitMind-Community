@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI-Powered Commit Messages",
   "description": "Generate professional commit messages in seconds using 14 AI providers (OpenAI, Anthropic, MiniMax, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot) and 50+ models. Zero setup options available.",
-  "version": "4.5.4",
+  "version": "4.6.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -147,6 +147,12 @@
           "default": true,
           "description": "Generate verbose commit messages with detailed descriptions. When disabled, only generates the summary line.",
           "order": 10
+        },
+        "gitmind.commit.captureAllChanges": {
+          "type": "boolean",
+          "default": false,
+          "description": "When enabled, GitMind captures both staged and unstaged changes (including untracked files) and will not prompt you to stage changes before generating a commit message.",
+          "order": 11
         },
         "gitmind.showDiagnostics": {
           "type": "boolean",

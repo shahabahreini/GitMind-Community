@@ -18,12 +18,12 @@ const stat = promisify(fs.stat);
  */
 async function findGitRepositoriesInSubdirectories(searchPath: string, maxDepth: number = 3): Promise<string[]> {
     const repositories: string[] = [];
-    
+
     async function searchRecursive(currentPath: string, depth: number): Promise<void> {
         if (depth > maxDepth) {
             return;
         }
-        
+
         try {
             // Check if current directory is a git repository
             try {
@@ -31,12 +31,12 @@ async function findGitRepositoriesInSubdirectories(searchPath: string, maxDepth:
                     cwd: currentPath,
                     maxBuffer: 1024 * 1024
                 });
-                
+
                 const { stdout } = await execAsync("git rev-parse --show-toplevel", {
                     cwd: currentPath,
                     maxBuffer: 1024 * 1024
                 });
-                
+
                 const repoRoot = stdout.trim();
                 if (!repositories.includes(repoRoot)) {
                     repositories.push(repoRoot);
@@ -45,14 +45,14 @@ async function findGitRepositoriesInSubdirectories(searchPath: string, maxDepth:
             } catch {
                 // Not a git repository, continue searching subdirectories
             }
-            
+
             // Search subdirectories
             const entries = await readdir(currentPath);
             for (const entry of entries) {
                 if (entry.startsWith('.')) {
                     continue; // Skip hidden directories
                 }
-                
+
                 const fullPath = path.join(currentPath, entry);
                 try {
                     const stats = await stat(fullPath);
@@ -67,7 +67,7 @@ async function findGitRepositoriesInSubdirectories(searchPath: string, maxDepth:
             // Skip if we can't read the directory
         }
     }
-    
+
     await searchRecursive(searchPath, 0);
     return repositories;
 }
@@ -80,39 +80,39 @@ async function findGitRepositoriesInSubdirectories(searchPath: string, maxDepth:
 export async function findGitRepository(startPath: string): Promise<string> {
     // First, try searching up the directory tree (current behavior)
     let currentPath = startPath;
-    
+
     while (currentPath !== path.dirname(currentPath)) {
         try {
             await execAsync("git rev-parse --is-inside-work-tree", {
                 cwd: currentPath,
                 maxBuffer: 1024 * 1024
             });
-            
+
             // Get the actual repository root
             const { stdout } = await execAsync("git rev-parse --show-toplevel", {
                 cwd: currentPath,
                 maxBuffer: 1024 * 1024
             });
-            
+
             return stdout.trim();
         } catch (error) {
             // Continue searching in parent directory
             currentPath = path.dirname(currentPath);
         }
     }
-    
+
     // If no repository found going up, search subdirectories
     debugLog(`No git repository found going up from ${startPath}, searching subdirectories...`);
     const repositories = await findGitRepositoriesInSubdirectories(startPath);
-    
+
     if (repositories.length === 0) {
         throw new Error("Not a git repository");
     }
-    
+
     // If multiple repositories found, try to use VS Code's Git extension to find the active one
     if (repositories.length > 1) {
         debugLog(`Found ${repositories.length} repositories:`, repositories);
-        
+
         const gitExtension = vscode.extensions.getExtension("vscode.git");
         if (gitExtension) {
             const git = gitExtension.exports.getAPI(1);
@@ -127,7 +127,7 @@ export async function findGitRepository(startPath: string): Promise<string> {
             }
         }
     }
-    
+
     // Return the first repository found
     debugLog(`Using first discovered repository: ${repositories[0]}`);
     return repositories[0];
@@ -144,21 +144,21 @@ export async function validateGitRepository(workspaceFolder?: vscode.WorkspaceFo
     if (!workspaceFolders || workspaceFolders.length === 0) {
         throw new Error("No workspace folder is open");
     }
-    
+
     const searchFolder = workspaceFolder || workspaceFolders[0];
-    
+
     try {
         return await findGitRepository(searchFolder.uri.fsPath);
     } catch (error) {
         // If we have multiple workspace folders, try searching them too
         if (workspaceFolders.length > 1) {
             debugLog(`Repository not found in ${searchFolder.uri.fsPath}, trying other workspace folders...`);
-            
+
             for (const folder of workspaceFolders) {
                 if (folder === searchFolder) {
                     continue; // Skip the one we already tried
                 }
-                
+
                 try {
                     return await findGitRepository(folder.uri.fsPath);
                 } catch {
@@ -166,7 +166,7 @@ export async function validateGitRepository(workspaceFolder?: vscode.WorkspaceFo
                 }
             }
         }
-        
+
         throw new Error("Not a git repository");
     }
 }
@@ -174,7 +174,72 @@ export async function validateGitRepository(workspaceFolder?: vscode.WorkspaceFo
 export async function getDiff(workspaceFolder: vscode.WorkspaceFolder, repositoryRoot?: string): Promise<string> {
     // Use provided repository root or find it
     const repoRoot = repositoryRoot || await validateGitRepository(workspaceFolder);
-    
+
+    const config = vscode.workspace.getConfiguration("gitmind");
+    const captureAllChanges = config.get<boolean>("commit.captureAllChanges", false);
+
+    if (captureAllChanges) {
+        const diffParts: string[] = [];
+
+        const { stdout: stagedDiff } = await execAsync("git diff --staged", {
+            cwd: repoRoot,
+            maxBuffer: 10 * 1024 * 1024 // 10MB buffer for large diffs
+        });
+
+        const { stdout: unstagedDiff } = await execAsync("git diff", {
+            cwd: repoRoot,
+            maxBuffer: 10 * 1024 * 1024 // 10MB buffer for large diffs
+        });
+
+        const { stdout: untrackedFilesStdout } = await execAsync("git ls-files --others --exclude-standard", {
+            cwd: repoRoot,
+            maxBuffer: 1024 * 1024
+        });
+
+        const untrackedFiles = untrackedFilesStdout
+            .split("\n")
+            .map((f) => f.trim())
+            .filter((f) => f.length > 0);
+
+        if (stagedDiff?.trim()) {
+            diffParts.push(stagedDiff);
+        }
+
+        if (unstagedDiff?.trim()) {
+            diffParts.push(unstagedDiff);
+        }
+
+        for (const filePath of untrackedFiles) {
+            try {
+                const { stdout: filePatch } = await execAsync(
+                    `git diff --no-index -- /dev/null "${filePath.replace(/"/g, '\\"')}"`,
+                    {
+                        cwd: repoRoot,
+                        maxBuffer: 10 * 1024 * 1024
+                    }
+                );
+                if (filePatch?.trim()) {
+                    diffParts.push(filePatch);
+                }
+            } catch (error: unknown) {
+                // git diff --no-index exits with code 1 when there are differences; capture stdout anyway
+                const stdout: unknown = (error as { stdout?: unknown } | null)?.stdout;
+                if (typeof stdout === "string" && stdout.trim().length > 0) {
+                    diffParts.push(stdout);
+                } else {
+                    debugLog(`Failed to include untracked file diff for ${filePath}:`, error);
+                }
+            }
+        }
+
+        const combinedDiff = diffParts.join("\n\n").trim();
+        if (!combinedDiff) {
+            throw new Error("No changes detected");
+        }
+
+        return combinedDiff;
+    }
+
     const { stdout: stagedDiff } = await execAsync("git diff --staged", {
         cwd: repoRoot,
         maxBuffer: 10 * 1024 * 1024 // 10MB buffer for large diffs
@@ -223,13 +288,13 @@ export async function setCommitMessage(message: CommitMessage, repositoryRoot?: 
     }
 
     let targetRepository = repositories[0]; // fallback to first repository
-    
+
     if (repositoryRoot) {
         // Use the specific repository root provided
         const matchingRepo = repositories.find((repo: any) => {
             return repo.rootUri && repo.rootUri.fsPath === repositoryRoot;
         });
-        
+
         if (matchingRepo) {
             targetRepository = matchingRepo;
             debugLog(`Using specific repository: ${repositoryRoot}`);
@@ -249,7 +314,7 @@ export async function setCommitMessage(message: CommitMessage, repositoryRoot?: 
             const matchingRepo = repositories.find((repo: any) => {
                 return repo.rootUri && repo.rootUri.fsPath === repoRoot;
             });
-            
+
             if (matchingRepo) {
                 targetRepository = matchingRepo;
             }

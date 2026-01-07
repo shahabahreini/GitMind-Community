@@ -76,6 +76,7 @@ export interface ExtensionSettings {
     };
     commit?: {
         verbose: boolean;
+        captureAllChanges?: boolean;
     };
     commitStyle?: {
         style: string;  // 'basic' | 'conventional' | 'angular' | 'ember' | 'emojigit' | 'gitmoji' | 'semantic' | 'commitizen' | 'karma' | 'linux' | 'jquery'

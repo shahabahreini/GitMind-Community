@@ -74,6 +74,7 @@ export class SettingsManager {
             },
             commit: {
                 verbose: config.get<boolean>("commit.verbose") ?? true,
+                captureAllChanges: config.get<boolean>("commit.captureAllChanges") ?? false,
             },
             commitStyle: {
                 style: config.get<string>("commitStyle.style") || "conventional",
@@ -383,14 +384,14 @@ export class SettingsManager {
     ): Promise<void> {
         const target = vscode.ConfigurationTarget.Global;
 
-        // Core settings
-        const coreUpdates = [
+        const coreUpdates: Thenable<void>[] = [
             config.update("apiProvider", settings.apiProvider, target),
-            config.update("debug", settings.debug, target),
-            config.update("promptCustomization.enabled", settings.promptCustomization.enabled, target),
-            config.update("promptCustomization.saveLastPrompt", settings.promptCustomization.saveLastPrompt, target),
-            config.update("promptCustomization.lastPrompt", settings.promptCustomization.lastPrompt, target),
+            config.update("debug", settings.debug ?? false, target),
+            config.update("promptCustomization.enabled", settings.promptCustomization?.enabled ?? false, target),
+            config.update("promptCustomization.saveLastPrompt", settings.promptCustomization?.saveLastPrompt ?? false, target),
+            config.update("promptCustomization.lastPrompt", settings.promptCustomization?.lastPrompt ?? "", target),
             config.update("commit.verbose", settings.commit?.verbose ?? true, target),
+            config.update("commit.captureAllChanges", settings.commit?.captureAllChanges ?? false, target),
             config.update("commitStyle.style", settings.commitStyle?.style || "conventional", target),
             config.update("showDiagnostics", settings.showDiagnostics ?? false, target),
             config.update("telemetry.enabled", settings.telemetry?.enabled ?? false, target),
@@ -398,99 +399,62 @@ export class SettingsManager {
             config.update("pro.licenseKey", settings.pro?.licenseKey || "", target),
             config.update("pro.orderId", settings.pro?.orderId || "", target),
             config.update("pro.instanceId", settings.pro?.instanceId || "", target),
-            config.update("pro.validationStatus", settings.pro?.validationStatus || "invalid", target),
-            config.update("pro.lastValidation", settings.pro?.lastValidation || "", target),
+            config.update("subscription.email", settings.subscription?.email || "", target),
+            config.update("subscription.plan", settings.subscription?.plan || "free", target),
+            config.update("subscription.status", settings.subscription?.status || "inactive", target),
+            config.update("subscription.lastChecked", settings.subscription?.lastChecked || "", target),
             config.update("pro.commitBodyOptions.enabled", settings.pro?.commitBodyOptions?.enabled ?? false, target),
             config.update("pro.commitBodyOptions.maxLines", settings.pro?.commitBodyOptions?.maxLines ?? 5, target),
             config.update("pro.commitLengthOptions.enabled", settings.pro?.commitLengthOptions?.enabled ?? false, target),
             config.update("pro.commitLengthOptions.maxLength", settings.pro?.commitLengthOptions?.maxLength ?? 72, target),
-            // Add the missing Learn from Commit History settings
             config.update("pro.learnFromCommitHistory.enabled", settings.pro?.learnFromCommitHistory?.enabled ?? true, target),
             config.update("pro.learnFromCommitHistory.maxCommits", settings.pro?.learnFromCommitHistory?.maxCommits ?? 50, target),
             config.update("pro.learnFromCommitHistory.includeAuthorInfo", settings.pro?.learnFromCommitHistory?.includeAuthorInfo ?? true, target),
-            // Add changelog settings
             config.update("pro.changelog.enabled", settings.pro?.changelog?.enabled ?? true, target),
             config.update("pro.changelog.maxCommits", settings.pro?.changelog?.maxCommits ?? 100, target),
             config.update("pro.changelog.groupByVersion", settings.pro?.changelog?.groupByVersion ?? true, target),
             config.update("pro.changelog.maxVersions", settings.pro?.changelog?.maxVersions ?? 10, target),
-            config.update("pro.changelog.versionOrder", settings.pro?.changelog?.versionOrder ?? 'newest-first', target),
-            config.update("subscription.email", settings.subscription?.email || "", target),
-            config.update("subscription.plan", settings.subscription?.plan || "free", target),
-            config.update("subscription.status", settings.subscription?.status || "inactive", target),
-            config.update("subscription.lastChecked", settings.subscription?.lastChecked || "", target)
+            config.update("pro.changelog.versionOrder", settings.pro?.changelog?.versionOrder ?? "newest-first", target),
         ];
 
-        // Provider settings (excluding API keys for now - they're handled separately)
         const providerUpdates: Thenable<void>[] = [];
 
-        Object.keys(SettingsManager.PROVIDER_DEFAULTS).forEach(provider => {
-            const providerSettings = (settings as any)[provider];
-            if (providerSettings) {
-                // Update model and URL settings
-                providerUpdates.push(
-                    config.update(`${provider}.model`, providerSettings.model, target)
-                );
+        Object.keys(SettingsManager.PROVIDER_DEFAULTS).forEach((provider) => {
+            const providerSettings = (settings as any)[provider] as any;
+            if (!providerSettings) {
+                return;
+            }
 
-                // Update URL for Ollama
-                if (provider === 'ollama' && providerSettings.url !== undefined) {
-                    providerUpdates.push(
-                        config.update(`${provider}.url`, providerSettings.url, target)
-                    );
-                }
+            providerUpdates.push(config.update(`${provider}.model`, providerSettings.model, target));
 
-                // Persist custom provider extras and enabled flag
-                if (provider === 'custom') {
-                    providerUpdates.push(
-                        config.update('custom.baseUrl', providerSettings.baseUrl, target)
-                    );
-                    providerUpdates.push(
-                        config.update('custom.endpoint', providerSettings.endpoint, target)
-                    );
-                    providerUpdates.push(
-                        config.update('custom.authType', providerSettings.authType, target)
-                    );
-                    // Handle authToken with encryption rules similar to other providers
-                    {
-                        const encryptionEnabled = settings.pro?.encryptionEnabled ?? false;
-                        const encryptionAvailable = !!(settings.subscription?.email) || process.env.GITMIND_ENCRYPTION_DEV_MODE === 'true';
-                        if (!encryptionEnabled || !encryptionAvailable) {
-                            providerUpdates.push(
-                                config.update('custom.authToken', providerSettings.authToken, target)
-                            );
-                        } else {
-                            providerUpdates.push(
-                                config.update('custom.authToken', undefined, target)
-                            );
-                        }
-                    }
-                    providerUpdates.push(
-                        config.update('custom.headerKey', providerSettings.headerKey, target)
-                    );
-                    providerUpdates.push(
-                        config.update('custom.requestFormat', providerSettings.requestFormat, target)
-                    );
-                    providerUpdates.push(
-                        config.update('custom.responseFormat', providerSettings.responseFormat, target)
-                    );
-                    providerUpdates.push(
-                        config.update('custom.enabled', providerSettings.enabled ?? false, target)
-                    );
-                }
+            if (provider === "ollama" && providerSettings.url !== undefined) {
+                providerUpdates.push(config.update(`${provider}.url`, providerSettings.url, target));
+            }
 
-                // Handle API key - only save to plain text if encryption is not being used
+            if (provider === "custom") {
+                providerUpdates.push(config.update("custom.baseUrl", providerSettings.baseUrl, target));
+                providerUpdates.push(config.update("custom.endpoint", providerSettings.endpoint, target));
+                providerUpdates.push(config.update("custom.authType", providerSettings.authType, target));
+                providerUpdates.push(config.update("custom.headerKey", providerSettings.headerKey, target));
+                providerUpdates.push(config.update("custom.requestFormat", providerSettings.requestFormat, target));
+                providerUpdates.push(config.update("custom.responseFormat", providerSettings.responseFormat, target));
+                providerUpdates.push(config.update("custom.enabled", providerSettings.enabled ?? false, target));
+
                 const encryptionEnabled = settings.pro?.encryptionEnabled ?? false;
-                const encryptionAvailable = !!(settings.subscription?.email) || process.env.GITMIND_ENCRYPTION_DEV_MODE === 'true';
-
+                const encryptionAvailable = Boolean(settings.subscription?.email) || process.env.GITMIND_ENCRYPTION_DEV_MODE === "true";
                 if (!encryptionEnabled || !encryptionAvailable) {
-                    providerUpdates.push(
-                        config.update(`${provider}.apiKey`, providerSettings.apiKey, target)
-                    );
+                    providerUpdates.push(config.update("custom.authToken", providerSettings.authToken, target));
                 } else {
-                    // When encryption is enabled, explicitly remove any existing API keys from settings.json
-                    providerUpdates.push(
-                        config.update(`${provider}.apiKey`, undefined, target)
-                    );
+                    providerUpdates.push(config.update("custom.authToken", undefined, target));
                 }
+            }
+
+            const encryptionEnabled = settings.pro?.encryptionEnabled ?? false;
+            const encryptionAvailable = Boolean(settings.subscription?.email) || process.env.GITMIND_ENCRYPTION_DEV_MODE === "true";
+            if (!encryptionEnabled || !encryptionAvailable) {
+                providerUpdates.push(config.update(`${provider}.apiKey`, providerSettings.apiKey, target));
+            } else {
+                providerUpdates.push(config.update(`${provider}.apiKey`, undefined, target));
             }
         });
 

@@ -13,6 +13,11 @@ export function generateFormInitialization(): string {
     `} catch (e) { console.warn('Failed to set commitVerbose:', e); }`,
 
     `try {`,
+    `  const commitCaptureAllChangesEl = document.getElementById('commitCaptureAllChanges');`,
+    `  if (commitCaptureAllChangesEl) commitCaptureAllChangesEl.checked = currentSettings.commit?.captureAllChanges ?? false;`,
+    `} catch (e) { console.warn('Failed to set commitCaptureAllChanges:', e); }`,
+
+    `try {`,
     `  const showDiagnosticsEl = document.getElementById('showDiagnostics');`,
     `  if (showDiagnosticsEl) showDiagnosticsEl.checked = currentSettings.showDiagnostics ?? false;`,
     `} catch (e) { console.warn('Failed to set showDiagnostics:', e); }`,
@@ -215,7 +220,10 @@ export function generateSettingsCollection(): string {
       saveLastPrompt: (window.currentFormValues || currentFormValues).saveLastPrompt,
       lastPrompt: currentSettings.promptCustomization?.lastPrompt || '',
     },`,
-    `commit: { verbose: (window.currentFormValues || currentFormValues).commitVerbose },`,
+    `commit: {
+      verbose: (window.currentFormValues || currentFormValues).commitVerbose,
+      captureAllChanges: (window.currentFormValues || currentFormValues).commitCaptureAllChanges,
+    },`,
     `commitStyle: { style: (window.currentFormValues || currentFormValues).commitStyle },`,
     `showDiagnostics: (window.currentFormValues || currentFormValues).showDiagnostics,`,
     `telemetry: { enabled: (window.currentFormValues || currentFormValues).telemetryEnabled },`,

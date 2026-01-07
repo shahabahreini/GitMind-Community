@@ -27,6 +27,13 @@ export class FreeFeatureRenderer extends BaseRenderer {
                 setting: 'commit.verbose'
             },
             {
+                id: 'commitCaptureAllChanges',
+                label: 'Capture All Changes',
+                tooltip: 'Capture staged + unstaged changes (including untracked files) and skip the staging prompt',
+                checked: this.settings.commit?.captureAllChanges ?? false,
+                setting: 'commit.captureAllChanges'
+            },
+            {
                 id: 'promptCustomizationEnabled',
                 label: 'Prompt Customization',
                 tooltip: 'Customize the commit message prompt to fit your needs',

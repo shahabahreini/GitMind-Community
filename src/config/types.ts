@@ -70,6 +70,7 @@ export interface CommitConfig {
     includeScope: boolean;
     addBulletPoints: boolean;
     verbose: boolean;
+    captureAllChanges?: boolean;
     gitmoji?: GitmojiConfig;
 }
 

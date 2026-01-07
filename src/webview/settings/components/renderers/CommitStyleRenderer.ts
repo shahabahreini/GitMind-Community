@@ -10,7 +10,7 @@ export class CommitStyleRenderer extends BaseRenderer {
 
     public render(): string {
         const currentStyle = this.settings.commitStyle?.style || 'conventional';
-        const hasValidLicense = Boolean((this.settings.pro?.licenseKey || this.settings.pro?.orderId) && this.settings.pro?.validationStatus === 'valid');
+        const hasProAccess = this.isProUser() || this.isDevModeEnabled();
 
         return `
             <div class="gm-commit-style-section">
@@ -28,7 +28,7 @@ export class CommitStyleRenderer extends BaseRenderer {
                         <button class="gm-tab-btn gm-tab-btn-active" data-gm-tab="selection" type="button">
                             Style Selection
                         </button>
-                        ${hasValidLicense ? '<button class="gm-tab-btn" data-gm-tab="emoji" type="button">Emoji Enhancement</button>' : ''}
+                        ${hasProAccess ? '<button class="gm-tab-btn" data-gm-tab="emoji" type="button">Emoji Enhancement</button>' : ''}
                         <button class="gm-tab-btn" data-gm-tab="reference" type="button">
                             Reference Guide
                         </button>
@@ -37,24 +37,24 @@ export class CommitStyleRenderer extends BaseRenderer {
                     <div class="gm-tab-container">
                         <div class="gm-tab-content gm-tab-content-active" data-gm-content="selection">
                             <div class="gm-style-grid">
-                                ${this.renderSimpleStyleOption('basic', 'Basic', 'Simple, straightforward commit messages', false, currentStyle, hasValidLicense)}
-                                ${this.renderSimpleStyleOption('conventional', 'Conventional Commits', 'Standard with types and scopes (feat, fix, docs, etc.)', false, currentStyle, hasValidLicense)}
-                                ${this.renderSimpleStyleOption('conventional-no-scope', 'Conventional Commits (No Scope)', 'Types without scopes (feat: ..., fix: ...)', false, currentStyle, hasValidLicense)}
-                                ${this.renderSimpleStyleOption('angular', 'Angular', 'Angular commit convention with detailed type definitions', true, currentStyle, hasValidLicense)}
-                                ${this.renderSimpleStyleOption('ember', 'Ember.js', 'Ember.js style with tags like [FEATURE], [BUGFIX]', true, currentStyle, hasValidLicense)}
-                                ${this.renderSimpleStyleOption('emojigit', 'EmojiGit', 'Visual semantic commits with custom emojis', true, currentStyle, hasValidLicense)}
-                                ${this.renderSimpleStyleOption('gitmoji', 'Gitmoji', 'Official gitmoji.dev specification with standardized emojis', true, currentStyle, hasValidLicense)}
-                                ${this.renderSimpleStyleOption('semantic', 'Semantic Release', 'Automated release-optimized commits for semantic versioning', true, currentStyle, hasValidLicense)}
-                                ${this.renderSimpleStyleOption('commitizen', 'Commitizen', 'Interactive guided commits with validation', true, currentStyle, hasValidLicense)}
-                                ${this.renderSimpleStyleOption('karma', 'Karma (Google)', 'Google\'s strict enterprise convention with mandatory scopes', true, currentStyle, hasValidLicense)}
-                                ${this.renderSimpleStyleOption('linux', 'Linux Kernel', 'Traditional kernel development convention with subsystems', true, currentStyle, hasValidLicense)}
-                                ${this.renderSimpleStyleOption('jquery', 'jQuery', 'JavaScript project convention with issue tracking', true, currentStyle, hasValidLicense)}
+                                ${this.renderSimpleStyleOption('basic', 'Basic', 'Simple, straightforward commit messages', false, currentStyle, hasProAccess)}
+                                ${this.renderSimpleStyleOption('conventional', 'Conventional Commits', 'Standard with types and scopes (feat, fix, docs, etc.)', false, currentStyle, hasProAccess)}
+                                ${this.renderSimpleStyleOption('conventional-no-scope', 'Conventional Commits (No Scope)', 'Types without scopes (feat: ..., fix: ...)', true, currentStyle, hasProAccess)}
+                                ${this.renderSimpleStyleOption('angular', 'Angular', 'Angular commit convention with detailed type definitions', true, currentStyle, hasProAccess)}
+                                ${this.renderSimpleStyleOption('ember', 'Ember.js', 'Ember.js style with tags like [FEATURE], [BUGFIX]', true, currentStyle, hasProAccess)}
+                                ${this.renderSimpleStyleOption('emojigit', 'EmojiGit', 'Visual semantic commits with custom emojis', true, currentStyle, hasProAccess)}
+                                ${this.renderSimpleStyleOption('gitmoji', 'Gitmoji', 'Official gitmoji.dev specification with standardized emojis', true, currentStyle, hasProAccess)}
+                                ${this.renderSimpleStyleOption('semantic', 'Semantic Release', 'Automated release-optimized commits for semantic versioning', true, currentStyle, hasProAccess)}
+                                ${this.renderSimpleStyleOption('commitizen', 'Commitizen', 'Interactive guided commits with validation', true, currentStyle, hasProAccess)}
+                                ${this.renderSimpleStyleOption('karma', 'Karma (Google)', 'Google\'s strict enterprise convention with mandatory scopes', true, currentStyle, hasProAccess)}
+                                ${this.renderSimpleStyleOption('linux', 'Linux Kernel', 'Traditional kernel development convention with subsystems', true, currentStyle, hasProAccess)}
+                                ${this.renderSimpleStyleOption('jquery', 'jQuery', 'JavaScript project convention with issue tracking', true, currentStyle, hasProAccess)}
                             </div>
                             
-                            ${!hasValidLicense ? this.renderProUpgradeSection() : ''}
+                            ${!hasProAccess ? this.renderProUpgradeSection() : ''}
                         </div>
 
-                        ${hasValidLicense ? this.renderEmojiTab(currentStyle) : ''}
+                        ${hasProAccess ? this.renderEmojiTab(currentStyle) : ''}
                         
                         <div class="gm-tab-content" data-gm-content="reference">
                             <div class="gm-reference-container">
@@ -65,7 +65,7 @@ export class CommitStyleRenderer extends BaseRenderer {
                 </div>
             </div>
 
-            ${this.renderScript(hasValidLicense, currentStyle)}
+            ${this.renderScript(hasProAccess, currentStyle)}
         `;
     }
 
@@ -74,7 +74,7 @@ export class CommitStyleRenderer extends BaseRenderer {
         return '';
     }
 
-    private renderScript(hasValidLicense: boolean, currentStyle: string): string {
+    private renderScript(hasProAccess: boolean, currentStyle: string): string {
         return `
             <script>
                 (function() {
@@ -136,7 +136,7 @@ export class CommitStyleRenderer extends BaseRenderer {
                                     
                                     const styleId = radioInput.value;
                                     const isProStyle = radioInput.getAttribute('data-gm-is-pro') === 'true';
-                                    const hasLicense = ${hasValidLicense};
+                                    const hasLicense = ${hasProAccess};
 
                                     if (isProStyle && !hasLicense) {
                                         console.log('[CommitStyleRenderer] Pro style requires license');

@@ -68,6 +68,7 @@ export function getConfiguration(): ExtensionConfig {
             includeScope: config.get("commit.includeScope", true),
             addBulletPoints: config.get("commit.addBulletPoints", true),
             verbose: config.get("commit.verbose", true),
+            captureAllChanges: config.get("commit.captureAllChanges", false),
         },
         promptCustomization: {
             enabled: config.get("promptCustomization.enabled", false),
