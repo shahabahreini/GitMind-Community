@@ -1086,6 +1086,14 @@ export class CommitStyleRenderer extends BaseRenderer {
 - Add retry logic for failed requests
 - Improve error messaging for timeouts`
             ],
+            'conventional-no-scope': [
+                'feat: add two-factor authentication',
+                `fix: resolve user login timeout issue
+
+- Increase connection timeout to 30 seconds
+- Add retry logic for failed requests
+- Improve error messaging for timeouts`
+            ],
             'angular': [
                 'feat(directive): add new user directive',
                 `fix(service): handle null response in data service
@@ -1324,11 +1332,11 @@ export class CommitStyleRenderer extends BaseRenderer {
                 'Projects requiring automated releases',
                 'Open-source projects with multiple contributors'
             ],
-            example: `feat(auth): add OAuth2 social login integration
+            example: `feat: add two-factor authentication
 
-- Implement Google and GitHub OAuth providers
-- Add social account linking to existing users
-- Include fallback for authentication failures`
+- Add TOTP-based 2FA support for user accounts
+- Include backup recovery codes for account recovery
+- Add verification flow and validation messages`
         })}
 
         ${this.renderStyleCard('angular', 'Angular Style', 'Enterprise Angular framework convention', {
