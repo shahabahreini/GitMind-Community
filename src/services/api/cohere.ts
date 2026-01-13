@@ -1,6 +1,8 @@
 // src/services/api/cohere.ts
 import { debugLog } from "../debug/logger";
 import { generateCommitPrompt, getPromptConfig } from './prompts';
+import { RequestManager } from "../../utils/requestManager";
+import { BaseAIProvider, GenerationOptions } from "./base";
 
 // Define Cohere model types
 export enum CohereModel {
@@ -104,193 +106,276 @@ const MODEL_CONFIGS: Record<string, GenerationConfig> = {
     }
 };
 
-/**
- * Enforces proper commit message format
- * @param message Raw message from API
- * @returns Properly formatted commit message
- */
-function enforceCommitMessageFormat(message: string): string {
-    // Split the message into lines
-    const lines = message.split('\n');
-
-    if (lines.length === 0) {
-        return message;
+export class CohereProvider extends BaseAIProvider {
+    constructor(apiKey: string, model: string) {
+        super(apiKey, model);
     }
 
-    // Get the first line (subject line)
-    let subjectLine = lines[0].trim();
+    protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
+        const requestManager = RequestManager.getInstance();
+        const controller = requestManager.getController();
 
-    // Truncate the subject line if it exceeds 72 characters
-    if (subjectLine.length > 72) {
-        subjectLine = subjectLine.substring(0, 72);
-        // Ensure we don't cut in the middle of a word
-        if (subjectLine.lastIndexOf(' ') > 0) {
-            subjectLine = subjectLine.substring(0, subjectLine.lastIndexOf(' '));
-        }
-    }
-
-    // Reconstruct the message with the truncated subject line
-    return [subjectLine, ...lines.slice(1)].join('\n');
-}
-
-/**
- * Makes a request to the Cohere API to generate a commit message
- * @param apiKey The Cohere API key
- * @param model The model to use (from CohereModel enum)
- * @param diff Git diff to analyze
- * @param customContext Additional context provided by the user
- * @returns Generated commit message
- */
-export async function callCohereAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
-    if (!apiKey || apiKey.trim() === '') {
-        debugLog("Error: Cohere API key is missing or empty");
-        throw new Error("Cohere API key is required but not configured");
-    }
-
-    // Validate model
-    const validModels = Object.values(CohereModel);
-    if (!validModels.includes(model as CohereModel)) {
-        debugLog("Error: Invalid Cohere model specified", { model });
-        throw new Error(`Invalid Cohere model specified: ${model}`);
-    }
-
-    try {
-        debugLog(`Calling Cohere API with model: ${model}`);
-        const promptText = await generateCommitPrompt(diff, getPromptConfig(), customContext);
-        debugLog("Sending prompt to Cohere API");
-        debugLog("Prompt:", promptText);
-
-        // Get model-specific configuration
-        const config = MODEL_CONFIGS[model];
-        if (!config) {
-            throw new Error(`Configuration not found for model: ${model}`);
+        if (!this.apiKey || this.apiKey.trim() === '') {
+            debugLog("Error: Cohere API key is missing or empty");
+            throw new Error("Cohere API key is required but not configured");
         }
 
-        // Using the v2 chat API
-        const response = await fetch('https://api.cohere.ai/v2/chat', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                model: model,
-                messages: [
-                    {
-                        role: "user",
-                        content: promptText
-                    }
-                ],
-                temperature: config.temperature,
-                max_tokens: config.maxOutputTokens,
-                p: config.topP,
-                k: config.topK
-            })
-        });
+        // Validate model
+        const validModels = Object.values(CohereModel);
+        if (!validModels.includes(this.model as CohereModel)) {
+            debugLog("Error: Invalid Cohere model specified", { model: this.model });
+            throw new Error(`Invalid Cohere model specified: ${this.model}`);
+        }
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            debugLog(`Cohere API error: ${response.status} ${errorText}`);
+        try {
+            debugLog(`Calling Cohere API with model: ${this.model}`);
+            debugLog("Sending prompt to Cohere API");
+            debugLog("Prompt:", prompt);
 
-            // Handle specific error cases based on status codes
-            switch (response.status) {
-                case 400:
-                    throw new Error("Bad Request: Invalid request body. Please check the request format and required fields.");
-                case 401:
-                    throw new Error("Invalid API key. Please check your Cohere API key.");
-                case 402:
-                    throw new Error("Payment Required: Account has reached billing limit. Please add or update your payment method at https://dashboard.cohere.com/billing?tab=payment");
-                case 404:
-                    throw new Error("Not Found: The requested model or resource was not found. Please check the model ID.");
-                case 429:
-                    const rateLimitMessage = errorText.includes("Trial key")
-                        ? "Trial key rate limit exceeded (40 API calls/minute). Consider upgrading to a Production key at https://dashboard.cohere.com/api-keys"
-                        : "Rate limit exceeded. Please wait and try again later.";
-                    throw new Error(rateLimitMessage);
-                case 499:
-                    throw new Error("Request was cancelled. Please try again.");
-                case 500:
-                    throw new Error("Internal server error. Please contact Cohere support if this persists.");
-                default:
-                    throw new Error(`Cohere API error: ${response.status} - ${errorText}`);
+            // Get model-specific configuration
+            const config = MODEL_CONFIGS[this.model];
+            if (!config) {
+                throw new Error(`Configuration not found for model: ${this.model}`);
             }
-        }
 
-        const data = await response.json();
-        debugLog(`Cohere API response received`);
+            const temperature = options?.temperature ?? config.temperature;
+            const maxOutputTokens = options?.maxTokens ?? config.maxOutputTokens;
 
-        // Process the response based on v2 chat API format
-        if (data.message && data.message.content && data.message.content.length > 0) {
-            let fullText = "";
-            for (const contentItem of data.message.content) {
-                if (contentItem.type === "text") {
-                    fullText += contentItem.text;
+            // Using the v2 chat API
+            const response = await fetch('https://api.cohere.ai/v2/chat', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.apiKey}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: this.model,
+                    messages: [
+                        {
+                            role: "user",
+                            content: prompt
+                        }
+                    ],
+                    temperature: temperature,
+                    max_tokens: maxOutputTokens,
+                    p: config.topP,
+                    k: config.topK
+                }),
+                signal: controller.signal
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                debugLog(`Cohere API error: ${response.status} ${errorText}`);
+
+                // Handle specific error cases based on status codes
+                switch (response.status) {
+                    case 400:
+                        throw new Error("Bad Request: Invalid request body. Please check the request format and required fields.");
+                    case 401:
+                        throw new Error("Invalid API key. Please check your Cohere API key.");
+                    case 402:
+                        throw new Error("Payment Required: Account has reached billing limit. Please add or update your payment method at https://dashboard.cohere.com/billing?tab=payment");
+                    case 404:
+                        throw new Error("Not Found: The requested model or resource was not found. Please check the model ID.");
+                    case 429:
+                        const rateLimitMessage = errorText.includes("Trial key")
+                            ? "Trial key rate limit exceeded (40 API calls/minute). Consider upgrading to a Production key at https://dashboard.cohere.com/api-keys"
+                            : "Rate limit exceeded. Please wait and try again later.";
+                        throw new Error(rateLimitMessage);
+                    case 499:
+                        throw new Error("Request was cancelled. Please try again.");
+                    case 500:
+                        throw new Error("Internal server error. Please contact Cohere support if this persists.");
+                    default:
+                        throw new Error(`Cohere API error: ${response.status} - ${errorText}`);
                 }
             }
 
-            debugLog(`Processing Response:\n${fullText}`);
+            const data = await response.json();
+            debugLog(`Cohere API response received`);
 
-            // Process the full text into a formatted commit message
-            const formattedMessage = enforceCommitMessageFormat(fullText);
-            debugLog("Cohere API Response:", formattedMessage);
-            return formattedMessage;
-        } else {
-            throw new Error('No text content found in Cohere API response');
+            // Process the response based on v2 chat API format
+            if (data.message && data.message.content && data.message.content.length > 0) {
+                let fullText = "";
+                for (const contentItem of data.message.content) {
+                    if (contentItem.type === "text") {
+                        fullText += contentItem.text;
+                    }
+                }
+
+                debugLog(`Processing Response:\n${fullText}`);
+
+                // Process the full text into a formatted commit message
+                const formattedMessage = this.enforceCommitMessageFormat(fullText);
+                debugLog("Cohere API Response:", formattedMessage);
+                return formattedMessage;
+            } else {
+                throw new Error('No text content found in Cohere API response');
+            }
+        } catch (error) {
+            debugLog("Cohere API Call Failed:", error);
+
+            // Handle specific error types
+            if (error instanceof Error) {
+                // Rate limiting errors
+                if (error.message.includes("rate limit") || error.message.includes("Rate limit")) {
+                    throw error; // Re-throw the detailed rate limit message
+                }
+
+                // Authentication errors
+                if (error.message.includes("Invalid API key") || error.message.includes("Unauthorized")) {
+                    throw error; // Re-throw the detailed auth message
+                }
+
+                // Payment/billing errors
+                if (error.message.includes("Payment Required") || error.message.includes("billing")) {
+                    throw error; // Re-throw the detailed billing message
+                }
+
+                // Resource not found errors
+                if (error.message.includes("Not Found") || error.message.includes("not found")) {
+                    throw error; // Re-throw the detailed not found message
+                }
+
+                // Request cancellation errors
+                if (error.message.includes("cancelled") || error.message.includes("Request was cancelled")) {
+                    throw error; // Re-throw the detailed cancellation message
+                }
+
+                // Server errors
+                if (error.message.includes("Internal server error") || error.message.includes("500")) {
+                    throw error; // Re-throw the detailed server error message
+                }
+
+                // Response processing errors
+                if (error.message.includes("text") || error.message.includes("response")) {
+                    throw new Error("Failed to process Cohere response: " + error.message);
+                }
+
+                // Generic API errors
+                throw new Error(`Cohere API call failed: ${error.message}`);
+            }
+
+            throw new Error(`Unexpected error during Cohere API call: ${String(error)}`);
         }
-    } catch (error) {
-        debugLog("Cohere API Call Failed:", error);
+    }
 
-        // Handle specific error types
-        if (error instanceof Error) {
-            // Rate limiting errors
-            if (error.message.includes("rate limit") || error.message.includes("Rate limit")) {
-                throw error; // Re-throw the detailed rate limit message
+    async getModels(): Promise<string[]> {
+        try {
+            const response = await fetch("https://api.cohere.com/v1/models", {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${this.apiKey}`,
+                    "Accept": "application/json"
+                }
+            });
+
+            if (!response.ok) {
+                // Handle specific Cohere API errors
+                let errorMessage = `Failed to fetch models: ${response.status} ${response.statusText}`;
+
+                switch (response.status) {
+                    case 400:
+                        errorMessage = "Bad request - please check your API key format";
+                        break;
+                    case 401:
+                        errorMessage = "Unauthorized - invalid API key";
+                        break;
+                    case 403:
+                        errorMessage = "Forbidden - API key lacks necessary permissions";
+                        break;
+                    case 404:
+                        errorMessage = "Models endpoint not found";
+                        break;
+                    case 422:
+                        errorMessage = "Unprocessable entity - request format error";
+                        break;
+                    case 429:
+                        errorMessage = "Rate limit exceeded - please try again later";
+                        break;
+                    case 498:
+                        errorMessage = "Invalid token - please check your API key";
+                        break;
+                    case 499:
+                        errorMessage = "Client closed request - request timeout";
+                        break;
+                    case 500:
+                        errorMessage = "Internal server error - Cohere service issue";
+                        break;
+                    case 501:
+                        errorMessage = "Not implemented - feature not available";
+                        break;
+                    case 503:
+                        errorMessage = "Service unavailable - Cohere service temporarily down";
+                        break;
+                    case 504:
+                        errorMessage = "Gateway timeout - request took too long";
+                        break;
+                    default:
+                        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                }
+
+                throw new Error(errorMessage);
             }
 
-            // Authentication errors
-            if (error.message.includes("Invalid API key") || error.message.includes("Unauthorized")) {
-                throw error; // Re-throw the detailed auth message
-            }
+            const data = await response.json();
 
-            // Payment/billing errors
-            if (error.message.includes("Payment Required") || error.message.includes("billing")) {
-                throw error; // Re-throw the detailed billing message
-            }
+            // Filter models that support chat endpoint and are not deprecated
+            const chatModels = data.models
+                .filter((model: any) =>
+                    model.endpoints?.includes('chat') &&
+                    !model.is_deprecated
+                )
+                .map((model: any) => model.name)
+                .sort(); // Sort alphabetically
 
-            // Resource not found errors
-            if (error.message.includes("Not Found") || error.message.includes("not found")) {
-                throw error; // Re-throw the detailed not found message
-            }
+            debugLog("Available Cohere chat models:", chatModels);
+            return chatModels;
+        } catch (error) {
+            debugLog("Failed to fetch Cohere models:", error);
+            throw error;
+        }
+    }
 
-            // Request cancellation errors
-            if (error.message.includes("cancelled") || error.message.includes("Request was cancelled")) {
-                throw error; // Re-throw the detailed cancellation message
-            }
+    async validateApiKey(): Promise<boolean | { success: boolean; error?: string; warning?: string; troubleshooting?: string }> {
+        return validateCohereAPIKey(this.apiKey);
+    }
 
-            // Server errors
-            if (error.message.includes("Internal server error") || error.message.includes("500")) {
-                throw error; // Re-throw the detailed server error message
-            }
+    private enforceCommitMessageFormat(message: string): string {
+        // Split the message into lines
+        const lines = message.split('\n');
 
-            // Response processing errors
-            if (error.message.includes("text") || error.message.includes("response")) {
-                throw new Error("Failed to process Cohere response: " + error.message);
-            }
-
-            // Generic API errors
-            throw new Error(`Cohere API call failed: ${error.message}`);
+        if (lines.length === 0) {
+            return message;
         }
 
-        throw new Error(`Unexpected error during Cohere API call: ${String(error)}`);
+        // Get the first line (subject line)
+        let subjectLine = lines[0].trim();
+
+        // Truncate the subject line if it exceeds 72 characters
+        if (subjectLine.length > 72) {
+            subjectLine = subjectLine.substring(0, 72);
+            // Ensure we don't cut in the middle of a word
+            if (subjectLine.lastIndexOf(' ') > 0) {
+                subjectLine = subjectLine.substring(0, subjectLine.lastIndexOf(' '));
+            }
+        }
+
+        // Reconstruct the message with the truncated subject line
+        return [subjectLine, ...lines.slice(1)].join('\n');
     }
 }
 
 /**
- * Validates a Cohere API key by making a simple request
- * @param apiKey The API key to validate
- * @returns Object with success status and optional warning/troubleshooting information
+ * Backward compatibility functions
  */
+export async function callCohereAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
+    const provider = new CohereProvider(apiKey, model);
+    return provider.generateCommitMessage(diff, customContext);
+}
+
 export async function validateCohereAPIKey(
     apiKey: string
 ): Promise<{ success: boolean; error?: string; warning?: string; troubleshooting?: string }> {
@@ -419,78 +504,6 @@ export async function validateCohereAPIKey(
 }
 
 export async function fetchCohereModels(apiKey: string): Promise<string[]> {
-    try {
-        const response = await fetch("https://api.cohere.com/v1/models", {
-            method: "GET",
-            headers: {
-                "Authorization": `Bearer ${apiKey}`,
-                "Accept": "application/json"
-            }
-        });
-
-        if (!response.ok) {
-            // Handle specific Cohere API errors
-            let errorMessage = `Failed to fetch models: ${response.status} ${response.statusText}`;
-
-            switch (response.status) {
-                case 400:
-                    errorMessage = "Bad request - please check your API key format";
-                    break;
-                case 401:
-                    errorMessage = "Unauthorized - invalid API key";
-                    break;
-                case 403:
-                    errorMessage = "Forbidden - API key lacks necessary permissions";
-                    break;
-                case 404:
-                    errorMessage = "Models endpoint not found";
-                    break;
-                case 422:
-                    errorMessage = "Unprocessable entity - request format error";
-                    break;
-                case 429:
-                    errorMessage = "Rate limit exceeded - please try again later";
-                    break;
-                case 498:
-                    errorMessage = "Invalid token - please check your API key";
-                    break;
-                case 499:
-                    errorMessage = "Client closed request - request timeout";
-                    break;
-                case 500:
-                    errorMessage = "Internal server error - Cohere service issue";
-                    break;
-                case 501:
-                    errorMessage = "Not implemented - feature not available";
-                    break;
-                case 503:
-                    errorMessage = "Service unavailable - Cohere service temporarily down";
-                    break;
-                case 504:
-                    errorMessage = "Gateway timeout - request took too long";
-                    break;
-                default:
-                    errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-            }
-
-            throw new Error(errorMessage);
-        }
-
-        const data = await response.json();
-
-        // Filter models that support chat endpoint and are not deprecated
-        const chatModels = data.models
-            .filter((model: any) =>
-                model.endpoints?.includes('chat') &&
-                !model.is_deprecated
-            )
-            .map((model: any) => model.name)
-            .sort(); // Sort alphabetically
-
-        debugLog("Available Cohere chat models:", chatModels);
-        return chatModels;
-    } catch (error) {
-        debugLog("Failed to fetch Cohere models:", error);
-        throw error;
-    }
+    const provider = new CohereProvider(apiKey, "");
+    return provider.getModels();
 }

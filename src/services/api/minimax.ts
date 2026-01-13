@@ -2,6 +2,7 @@ import { debugLog } from "../debug/logger";
 import { generateCommitPrompt, getPromptConfig } from "./prompts";
 import { RequestManager } from "../../utils/requestManager";
 import type { MiniMaxModel } from "../../config/types";
+import { BaseAIProvider, GenerationOptions } from "./base";
 
 const MINIMAX_ANTHROPIC_BASE_URL = "https://api.minimax.io/anthropic";
 
@@ -46,123 +47,135 @@ function extractTextFromAnthropicContent(content: unknown): string {
     return fullText;
 }
 
-export async function callMiniMaxAPI(
-    apiKey: string,
-    model: string,
-    diff: string,
-    customContext: string = ""
-): Promise<string> {
-    const requestManager = RequestManager.getInstance();
-    const controller = requestManager.getController();
-
-    if (!apiKey || apiKey.trim() === "") {
-        debugLog("Error: MiniMax API key is missing or empty");
-        throw new Error("MiniMax API key is required but not configured");
+export class MiniMaxProvider extends BaseAIProvider {
+    constructor(apiKey: string, model: string) {
+        super(apiKey, model);
     }
 
-    const selectedModel = model as MiniMaxModel;
-    const validModels: MiniMaxModel[] = ["MiniMax-M2", "MiniMax-M2-Stable"];
-    if (!validModels.includes(selectedModel)) {
-        debugLog("Error: Invalid MiniMax model specified", { model });
-        throw new Error(`Invalid MiniMax model specified: ${model}`);
-    }
+    protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
+        const requestManager = RequestManager.getInstance();
+        const controller = requestManager.getController();
 
-    const config = MODEL_CONFIGS[selectedModel];
+        if (!this.apiKey || this.apiKey.trim() === "") {
+            debugLog("Error: MiniMax API key is missing or empty");
+            throw new Error("MiniMax API key is required but not configured");
+        }
 
-    try {
-        debugLog(`Calling MiniMax (Anthropic-compatible) API with model: ${selectedModel}`);
+        const selectedModel = this.model as MiniMaxModel;
+        const validModels: MiniMaxModel[] = ["MiniMax-M2", "MiniMax-M2-Stable"];
+        if (!validModels.includes(selectedModel)) {
+            debugLog("Error: Invalid MiniMax model specified", { model: this.model });
+            throw new Error(`Invalid MiniMax model specified: ${this.model}`);
+        }
 
-        const promptText = await generateCommitPrompt(diff, getPromptConfig(), customContext);
+        const config = MODEL_CONFIGS[selectedModel];
 
-        const response = await fetch(`${MINIMAX_ANTHROPIC_BASE_URL}/v1/messages`, {
-            method: "POST",
-            headers: {
-                "x-api-key": apiKey,
-                "Content-Type": "application/json",
-                "anthropic-version": "2023-06-01",
-            },
-            body: JSON.stringify({
-                model: selectedModel,
-                max_tokens: config.max_tokens,
-                temperature: config.temperature,
-                top_p: config.top_p,
-                messages: [
-                    {
-                        role: "user",
-                        content: promptText,
-                    },
-                ],
-            }),
-            signal: controller.signal,
-        });
+        try {
+            debugLog(`Calling MiniMax (Anthropic-compatible) API with model: ${selectedModel}`);
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            debugLog(`MiniMax API error: ${response.status} ${errorText}`);
+            const response = await fetch(`${MINIMAX_ANTHROPIC_BASE_URL}/v1/messages`, {
+                method: "POST",
+                headers: {
+                    "x-api-key": this.apiKey,
+                    "Content-Type": "application/json",
+                    "anthropic-version": "2023-06-01",
+                },
+                body: JSON.stringify({
+                    model: selectedModel,
+                    max_tokens: options?.maxTokens ?? config.max_tokens,
+                    temperature: options?.temperature ?? config.temperature,
+                    top_p: options?.topP ?? config.top_p,
+                    messages: [
+                        {
+                            role: "user",
+                            content: prompt,
+                        },
+                    ],
+                }),
+                signal: controller.signal,
+            });
 
-            let errorMessage = `MiniMax API error: ${response.status}`;
-            try {
-                const errorData: unknown = JSON.parse(errorText);
-                if (
-                    typeof errorData === "object" &&
-                    errorData !== null &&
-                    "error" in errorData &&
-                    typeof (errorData as { error?: unknown }).error === "object" &&
-                    (errorData as { error?: unknown }).error !== null &&
-                    "message" in ((errorData as { error: Record<string, unknown> }).error as Record<string, unknown>)
-                ) {
-                    const msg = ((errorData as { error: Record<string, unknown> }).error as Record<string, unknown>)[
-                        "message"
-                    ];
-                    if (typeof msg === "string") {
-                        errorMessage = msg;
+            if (!response.ok) {
+                const errorText = await response.text();
+                debugLog(`MiniMax API error: ${response.status} ${errorText}`);
+
+                let errorMessage = `MiniMax API error: ${response.status}`;
+                try {
+                    const errorData: unknown = JSON.parse(errorText);
+                    if (
+                        typeof errorData === "object" &&
+                        errorData !== null &&
+                        "error" in errorData &&
+                        typeof (errorData as { error?: unknown }).error === "object" &&
+                        (errorData as { error?: unknown }).error !== null &&
+                        "message" in ((errorData as { error: Record<string, unknown> }).error as Record<string, unknown>)
+                    ) {
+                        const msg = ((errorData as { error: Record<string, unknown> }).error as Record<string, unknown>)[
+                            "message"
+                        ];
+                        if (typeof msg === "string") {
+                            errorMessage = msg;
+                        }
+                    } else if (typeof (errorData as { message?: unknown }).message === "string") {
+                        errorMessage = (errorData as { message: string }).message;
                     }
-                } else if (typeof (errorData as { message?: unknown }).message === "string") {
-                    errorMessage = (errorData as { message: string }).message;
+                } catch {
+                    errorMessage = errorText || errorMessage;
                 }
-            } catch {
-                errorMessage = errorText || errorMessage;
+
+                if (response.status === 429) {
+                    const retryAfter = response.headers.get("retry-after");
+                    throw new Error(
+                        retryAfter
+                            ? `Rate limit exceeded. Please wait ${retryAfter} seconds before retrying.`
+                            : "Rate limit exceeded. Please try again later."
+                    );
+                }
+
+                throw new Error(errorMessage);
             }
 
-            if (response.status === 429) {
-                const retryAfter = response.headers.get("retry-after");
-                throw new Error(
-                    retryAfter
-                        ? `Rate limit exceeded. Please wait ${retryAfter} seconds before retrying.`
-                        : "Rate limit exceeded. Please try again later."
-                );
+            const data: unknown = await response.json();
+            debugLog("MiniMax API response received");
+
+            const content = (data as { content?: unknown }).content;
+            const text = extractTextFromAnthropicContent(content);
+
+            if (!text) {
+                throw new Error("No text content found in MiniMax API response");
             }
 
-            throw new Error(errorMessage);
+            debugLog("MiniMax API Response:", text);
+            return text;
+        } catch (error) {
+            debugLog("MiniMax API Call Failed:", error);
+
+            if (error instanceof Error && (error.message === "Request was cancelled" || error.name === "AbortError")) {
+                throw new Error("Request was cancelled");
+            }
+
+            if (error instanceof Error) {
+                throw new Error(`MiniMax API call failed: ${error.message}`);
+            }
+
+            throw new Error(`Unexpected error during MiniMax API call: ${String(error)}`);
         }
+    }
 
-        const data: unknown = await response.json();
-        debugLog("MiniMax API response received");
+    async getModels(): Promise<string[]> {
+        // MiniMax docs list supported Anthropic-compatible text models explicitly.
+        // There is no public models endpoint documented for the Anthropic-compatible gateway.
+        return ["MiniMax-M2", "MiniMax-M2-Stable"];
+    }
 
-        const content = (data as { content?: unknown }).content;
-        const text = extractTextFromAnthropicContent(content);
-
-        if (!text) {
-            throw new Error("No text content found in MiniMax API response");
-        }
-
-        debugLog("MiniMax API Response:", text);
-        return text;
-    } catch (error) {
-        debugLog("MiniMax API Call Failed:", error);
-
-        if (error instanceof Error && (error.message === "Request was cancelled" || error.name === "AbortError")) {
-            throw new Error("Request was cancelled");
-        }
-
-        if (error instanceof Error) {
-            throw new Error(`MiniMax API call failed: ${error.message}`);
-        }
-
-        throw new Error(`Unexpected error during MiniMax API call: ${String(error)}`);
+    async validateApiKey(): Promise<boolean | { success: boolean; error?: string; warning?: string; troubleshooting?: string }> {
+        return validateMiniMaxAPIKey(this.apiKey);
     }
 }
 
+/**
+ * Validates a MiniMax API key
+ */
 export async function validateMiniMaxAPIKey(
     apiKey: string
 ): Promise<
@@ -288,8 +301,19 @@ export async function validateMiniMaxAPIKey(
     }
 }
 
+/**
+ * Backward compatibility functions
+ */
+export async function callMiniMaxAPI(
+    apiKey: string,
+    model: string,
+    diff: string,
+    customContext: string = ""
+): Promise<string> {
+    const provider = new MiniMaxProvider(apiKey, model);
+    return provider.generateCommitMessage(diff, customContext);
+}
+
 export async function fetchMiniMaxModels(_apiKey: string): Promise<string[]> {
-    // MiniMax docs list supported Anthropic-compatible text models explicitly.
-    // There is no public models endpoint documented for the Anthropic-compatible gateway.
     return ["MiniMax-M2", "MiniMax-M2-Stable"];
 }

@@ -1,8 +1,8 @@
 import { debugLog } from "../debug/logger";
 import { RequestManager } from "../../utils/requestManager";
-import { APIErrorHandler } from "../../utils/errorHandler";
 import { generateCommitPrompt, getPromptConfig } from './prompts';
 import { PerplexityModel } from "../../config/types";
+import { BaseAIProvider, GenerationOptions } from "./base";
 
 const PERPLEXITY_BASE_URL = "https://api.perplexity.ai";
 
@@ -50,183 +50,184 @@ const MODEL_CONFIGS: Record<PerplexityModel, GenerationConfig> = {
     }
 };
 
-/**
- * Makes a request to the Perplexity API to generate a commit message
- * @param apiKey The Perplexity API key
- * @param model The model to use (from PerplexityModel enum)
- * @param diff Git diff to analyze
- * @param customContext Additional context provided by the user
- * @returns Generated commit message
- */
-export async function callPerplexityAPI(
-    apiKey: string,
-    model: string,
-    diff: string,
-    customContext: string = ""
-): Promise<string> {
-    const requestManager = RequestManager.getInstance();
-    const controller = requestManager.getController();
-
-    debugLog(`Making API call to Perplexity with model: ${model}`);
-
-    if (!apiKey || apiKey.trim() === '') {
-        debugLog("Error: Perplexity API key is missing or empty");
-        throw new Error("Perplexity API key is required but not configured");
+export class PerplexityProvider extends BaseAIProvider {
+    constructor(apiKey: string, model: string) {
+        super(apiKey, model);
     }
 
-    // Validate model
-    const validModels = Object.keys(MODEL_CONFIGS) as PerplexityModel[];
-    if (!validModels.includes(model as PerplexityModel)) {
-        debugLog("Error: Invalid Perplexity model specified", { model });
-        throw new Error(`Invalid Perplexity model specified: ${model}`);
-    }
+    protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
+        const requestManager = RequestManager.getInstance();
+        const controller = requestManager.getController();
 
-    try {
-        const promptText = await generateCommitPrompt(diff, getPromptConfig(), customContext);
-        debugLog("Sending prompt to Perplexity API");
+        debugLog(`Making API call to Perplexity with model: ${this.model}`);
 
-        // Get model-specific configuration
-        const config = MODEL_CONFIGS[model as PerplexityModel];
-        if (!config) {
-            throw new Error(`Configuration not found for model: ${model}`);
+        if (!this.apiKey || this.apiKey.trim() === '') {
+            debugLog("Error: Perplexity API key is missing or empty");
+            throw new Error("Perplexity API key is required but not configured");
         }
 
-        const headers = {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-        };
+        // Validate model
+        const validModels = Object.keys(MODEL_CONFIGS) as PerplexityModel[];
+        if (!validModels.includes(this.model as PerplexityModel)) {
+            debugLog("Error: Invalid Perplexity model specified", { model: this.model });
+            throw new Error(`Invalid Perplexity model specified: ${this.model}`);
+        }
 
-        const messages = [
-            {
-                role: "system",
-                content: "You are an expert at creating concise, informative git commit messages. Focus on the most important changes and use conventional commit format when appropriate."
-            },
-            {
-                role: "user",
-                content: `${customContext ? customContext + "\n\n" : ""
-                    }Here's the git diff:\n\n${diff}`,
-            },
-        ];
+        try {
+            debugLog("Sending prompt to Perplexity API");
 
-        const body = {
-            model: model,
-            messages: messages,
-            max_tokens: config.max_tokens,
-            temperature: config.temperature,
-        };
+            // Get model-specific configuration
+            const config = MODEL_CONFIGS[this.model as PerplexityModel];
+            if (!config) {
+                throw new Error(`Configuration not found for model: ${this.model}`);
+            }
 
-        const response = await fetch(`${PERPLEXITY_BASE_URL}/chat/completions`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify(body),
-            signal: controller.signal,
-        });
+            const headers = {
+                Authorization: `Bearer ${this.apiKey}`,
+                "Content-Type": "application/json",
+            };
 
-        if (!response.ok) {
-            let errorText = "";
-            let errorDetails = "";
+            const messages = [
+                {
+                    role: "system",
+                    content: "You are an expert at creating concise, informative git commit messages. Focus on the most important changes and use conventional commit format when appropriate."
+                },
+                {
+                    role: "user",
+                    content: prompt,
+                },
+            ];
 
-            try {
-                errorText = await response.text();
+            const body = {
+                model: this.model,
+                messages: messages,
+                max_tokens: options?.maxTokens ?? config.max_tokens,
+                temperature: options?.temperature ?? config.temperature,
+            };
 
-                // Check if response is HTML (common for 401 errors from proxies/load balancers)
-                if (errorText.toLowerCase().includes('<html>') || errorText.toLowerCase().includes('<!doctype html>')) {
-                    // Extract title from HTML if available
-                    const titleMatch = errorText.match(/<title>\s*(.*?)\s*<\/title>/i);
-                    if (titleMatch && titleMatch[1].trim()) {
-                        errorDetails = titleMatch[1].trim();
-                    } else {
-                        // Fallback: look for common HTML error patterns
-                        const h1Match = errorText.match(/<h1[^>]*>\s*(.*?)\s*<\/h1>/i);
-                        if (h1Match && h1Match[1].trim()) {
-                            errorDetails = h1Match[1].trim();
+            const response = await fetch(`${PERPLEXITY_BASE_URL}/chat/completions`, {
+                method: "POST",
+                headers,
+                body: JSON.stringify(body),
+                signal: controller.signal,
+            });
+
+            if (!response.ok) {
+                let errorText = "";
+                let errorDetails = "";
+
+                try {
+                    errorText = await response.text();
+
+                    // Check if response is HTML (common for 401 errors from proxies/load balancers)
+                    if (errorText.toLowerCase().includes('<html>') || errorText.toLowerCase().includes('<!doctype html>')) {
+                        // Extract title from HTML if available
+                        const titleMatch = errorText.match(/<title>\s*(.*?)\s*<\/title>/i);
+                        if (titleMatch && titleMatch[1].trim()) {
+                            errorDetails = titleMatch[1].trim();
                         } else {
-                            errorDetails = "HTML error page returned";
+                            // Fallback: look for common HTML error patterns
+                            const h1Match = errorText.match(/<h1[^>]*>\s*(.*?)\s*<\/h1>/i);
+                            if (h1Match && h1Match[1].trim()) {
+                                errorDetails = h1Match[1].trim();
+                            } else {
+                                errorDetails = "HTML error page returned";
+                            }
                         }
+                        debugLog(`Perplexity API returned HTML error: ${response.status} - ${errorDetails}`);
+                    } else {
+                        // Try to parse as JSON
+                        try {
+                            const errorData = JSON.parse(errorText);
+                            errorDetails = errorData.error?.message || errorData.message || errorText;
+                        } catch {
+                            errorDetails = errorText;
+                        }
+                        debugLog(`Perplexity API error: ${response.status} - ${errorDetails}`);
                     }
-                    debugLog(`Perplexity API returned HTML error: ${response.status} - ${errorDetails}`);
-                } else {
-                    // Try to parse as JSON
-                    try {
-                        const errorData = JSON.parse(errorText);
-                        errorDetails = errorData.error?.message || errorData.message || errorText;
-                    } catch {
-                        errorDetails = errorText;
-                    }
-                    debugLog(`Perplexity API error: ${response.status} - ${errorDetails}`);
+                } catch (parseError) {
+                    errorDetails = `Unable to parse error response`;
+                    debugLog(`Perplexity API error parsing failed: ${response.status} - ${parseError}`);
                 }
-            } catch (parseError) {
-                errorDetails = `Unable to parse error response`;
-                debugLog(`Perplexity API error parsing failed: ${response.status} - ${parseError}`);
+
+                // Handle specific error cases with improved messaging
+                if (response.status === 401) {
+                    if (errorText.includes('<html>') || errorText.includes('<HTML>')) {
+                        throw new Error(`Authentication failed: ${errorDetails}. Please verify your Perplexity API key in the settings. Make sure you're using a valid API key from https://perplexity.ai/settings/api`);
+                    } else {
+                        throw new Error("Invalid or expired API key. Please verify your Perplexity API key in the settings. If you just created the key, it may take a few minutes to become active.");
+                    }
+                } else if (response.status === 429) {
+                    throw new Error("Rate limit exceeded. Perplexity has usage limits based on your account tier. Please wait a moment before trying again.");
+                } else if (response.status === 400) {
+                    throw new Error(`Bad request: ${errorDetails}. Please check your request format and try again.`);
+                } else if (response.status === 403) {
+                    throw new Error("Access forbidden. Please check your API key permissions, account status, or ensure you have an active Perplexity subscription.");
+                } else if (response.status === 402) {
+                    throw new Error("Insufficient credits or payment required. Please check your Perplexity account balance and billing information.");
+                } else if (response.status === 500) {
+                    throw new Error("Perplexity server error. Please try again in a few moments.");
+                } else if (response.status === 502 || response.status === 503 || response.status === 504) {
+                    throw new Error("Perplexity service temporarily unavailable. Please try again in a few moments.");
+                } else {
+                    throw new Error(`Perplexity API error (${response.status}): ${errorDetails || 'Unknown error occurred'}`);
+                }
             }
 
-            // Handle specific error cases with improved messaging
-            if (response.status === 401) {
-                if (errorText.includes('<html>') || errorText.includes('<HTML>')) {
-                    throw new Error(`Authentication failed: ${errorDetails}. Please verify your Perplexity API key in the settings. Make sure you're using a valid API key from https://perplexity.ai/settings/api`);
-                } else {
-                    throw new Error("Invalid or expired API key. Please verify your Perplexity API key in the settings. If you just created the key, it may take a few minutes to become active.");
-                }
-            } else if (response.status === 429) {
-                throw new Error("Rate limit exceeded. Perplexity has usage limits based on your account tier. Please wait a moment before trying again.");
-            } else if (response.status === 400) {
-                throw new Error(`Bad request: ${errorDetails}. Please check your request format and try again.`);
-            } else if (response.status === 403) {
-                throw new Error("Access forbidden. Please check your API key permissions, account status, or ensure you have an active Perplexity subscription.");
-            } else if (response.status === 402) {
-                throw new Error("Insufficient credits or payment required. Please check your Perplexity account balance and billing information.");
-            } else if (response.status === 500) {
-                throw new Error("Perplexity server error. Please try again in a few moments.");
-            } else if (response.status === 502 || response.status === 503 || response.status === 504) {
-                throw new Error("Perplexity service temporarily unavailable. Please try again in a few moments.");
-            } else {
-                throw new Error(`Perplexity API error (${response.status}): ${errorDetails || 'Unknown error occurred'}`);
+            const data = await response.json();
+            const message =
+                data.choices?.[0]?.message?.content || data.message?.content;
+
+            if (!message) {
+                throw new Error("No valid response from Perplexity API");
             }
+
+            debugLog(`Perplexity API response received successfully`);
+            return message.trim();
+        } catch (error) {
+            debugLog(`Perplexity API call failed: ${error}`);
+
+            // Handle abort error specifically
+            if (error instanceof Error && error.name === 'AbortError') {
+                throw new Error('Request was cancelled');
+            }
+
+            // Handle network errors
+            if (error instanceof Error &&
+                (error.message.includes('fetch') ||
+                    error.message.includes('network') ||
+                    error.message.includes('ENOTFOUND') ||
+                    error.message.includes('ECONNREFUSED'))) {
+                throw new Error('Network error: Unable to connect to Perplexity API. Please check your internet connection and try again.');
+            }
+
+            // Re-throw our structured errors (from the response handling above)
+            if (error instanceof Error &&
+                (error.message.includes('Authentication failed') ||
+                    error.message.includes('Invalid or expired API key') ||
+                    error.message.includes('Rate limit') ||
+                    error.message.includes('Bad request') ||
+                    error.message.includes('Access forbidden') ||
+                    error.message.includes('Insufficient credits') ||
+                    error.message.includes('server error') ||
+                    error.message.includes('temporarily unavailable'))) {
+                throw error;
+            }
+
+            // For unexpected errors, provide a helpful message
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            throw new Error(`Unexpected error while calling Perplexity API: ${errorMessage}. Please try again or contact support if the issue persists.`);
         }
+    }
 
-        const data = await response.json();
-        const message =
-            data.choices?.[0]?.message?.content || data.message?.content;
+    async getModels(): Promise<string[]> {
+        // Perplexity doesn't have a public models endpoint that lists available models dynamically
+        // Return hardcoded list of known models
+        return Object.keys(MODEL_CONFIGS);
+    }
 
-        if (!message) {
-            throw new Error("No valid response from Perplexity API");
-        }
-
-        debugLog(`Perplexity API response received successfully`);
-        return message.trim();
-    } catch (error) {
-        debugLog(`Perplexity API call failed: ${error}`);
-
-        // Handle abort error specifically
-        if (error instanceof Error && error.name === 'AbortError') {
-            throw new Error('Request was cancelled');
-        }
-
-        // Handle network errors
-        if (error instanceof Error &&
-            (error.message.includes('fetch') ||
-                error.message.includes('network') ||
-                error.message.includes('ENOTFOUND') ||
-                error.message.includes('ECONNREFUSED'))) {
-            throw new Error('Network error: Unable to connect to Perplexity API. Please check your internet connection and try again.');
-        }
-
-        // Re-throw our structured errors (from the response handling above)
-        if (error instanceof Error &&
-            (error.message.includes('Authentication failed') ||
-                error.message.includes('Invalid or expired API key') ||
-                error.message.includes('Rate limit') ||
-                error.message.includes('Bad request') ||
-                error.message.includes('Access forbidden') ||
-                error.message.includes('Insufficient credits') ||
-                error.message.includes('server error') ||
-                error.message.includes('temporarily unavailable'))) {
-            throw error;
-        }
-
-        // For unexpected errors, provide a helpful message
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        throw new Error(`Unexpected error while calling Perplexity API: ${errorMessage}. Please try again or contact support if the issue persists.`);
+    async validateApiKey(): Promise<boolean | { success: boolean; error?: string; warning?: string; troubleshooting?: string }> {
+        return validatePerplexityAPIKey(this.apiKey);
     }
 }
 
@@ -388,4 +389,12 @@ export async function validatePerplexityAPIKey(apiKey: string): Promise<{ succes
             troubleshooting: "An unexpected error occurred during validation. Please check your API key and try again."
         };
     }
+}
+
+/**
+ * Backward compatibility functions
+ */
+export async function callPerplexityAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
+    const provider = new PerplexityProvider(apiKey, model);
+    return provider.generateCommitMessage(diff, customContext);
 }

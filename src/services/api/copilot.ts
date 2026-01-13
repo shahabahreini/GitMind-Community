@@ -3,6 +3,7 @@ import { debugLog } from "../debug/logger";
 import { generateCommitPrompt, getPromptConfig } from './prompts';
 import { CopilotModel } from "../../config/types";
 import { RequestManager } from "../../utils/requestManager";
+import { BaseAIProvider, GenerationOptions } from './base';
 
 // Configuration for different Copilot models
 interface GenerationConfig {
@@ -103,33 +104,166 @@ const MODEL_CONFIGS: Record<CopilotModel, GenerationConfig> = {
     }
 };
 
-/**
- * Enforces proper commit message format
- * @param message Raw message from API
- * @returns Properly formatted commit message
- */
-function enforceCommitMessageFormat(message: string): string {
-    // Split the message into lines
-    const lines = message.split('\n');
-
-    if (lines.length === 0) {
-        return message;
+export class CopilotProvider extends BaseAIProvider {
+    constructor(_apiKey: string, model: string) {
+        // Copilot does not use API key, so we pass empty string
+        super("", model);
     }
 
-    // Get the first line (subject line)
-    let subjectLine = lines[0].trim();
+    protected async generateResponse(prompt: string, _options?: GenerationOptions): Promise<string> {
+        const requestManager = RequestManager.getInstance();
+        const controller = requestManager.getController();
 
-    // Truncate the subject line if it exceeds 72 characters
-    if (subjectLine.length > 72) {
-        subjectLine = subjectLine.substring(0, 72);
-        // Ensure we don't cut in the middle of a word
-        if (subjectLine.lastIndexOf(' ') > 0) {
-            subjectLine = subjectLine.substring(0, subjectLine.lastIndexOf(' '));
+        // Validate model - use Object.keys to get all valid models from MODEL_CONFIGS
+        const validModels = Object.keys(MODEL_CONFIGS) as CopilotModel[];
+        if (!validModels.includes(this.model as CopilotModel)) {
+            debugLog("Error: Invalid Copilot model specified", { model: this.model });
+            throw new Error(`Invalid Copilot model specified: ${this.model}`);
+        }
+
+        try {
+            debugLog(`Calling GitHub Copilot API with model: ${this.model}`);
+            debugLog("Sending prompt to Copilot API");
+            debugLog("Prompt:", prompt);
+
+            // Get model-specific configuration
+            const config = MODEL_CONFIGS[this.model as CopilotModel];
+            if (!config) {
+                throw new Error(`Configuration not found for model: ${this.model}`);
+            }
+
+            // Check if Copilot is available
+            const isAvailable = await isCopilotAvailable();
+            if (!isAvailable) {
+                throw new Error("GitHub Copilot is not available. Please ensure GitHub Copilot extension is installed and you have access to Copilot Chat.");
+            }
+
+            // Select Copilot chat models based on model provider
+            let family: string;
+            if (this.model === 'auto') {
+                family = 'gpt-4'; // Auto defaults to GPT
+            } else if (this.model === 'raptor-mini') {
+                family = 'gpt-5-mini'; // Raptor models use gpt-5-mini family
+            } else if (this.model.startsWith('gpt-')) {
+                family = 'gpt-4'; // OpenAI models
+            } else if (this.model.startsWith('claude-')) {
+                family = 'claude'; // Anthropic models
+            } else if (this.model.startsWith('gemini-')) {
+                family = 'gemini'; // Google models
+            } else if (this.model.startsWith('grok-')) {
+                family = 'gpt-4'; // Grok models
+            } else {
+                family = 'gpt-4'; // Default fallback
+            }
+
+            const models = await vscode.lm.selectChatModels({
+                vendor: 'copilot',
+                family: family
+            });
+
+            if (models.length === 0) {
+                throw new Error(`No Copilot models available for family: ${this.model}`);
+            }
+
+            const selectedModel = models[0];
+            debugLog(`Selected Copilot model: ${selectedModel.id}`);
+
+            // Create chat messages
+            const messages = [
+                vscode.LanguageModelChatMessage.User(prompt)
+            ];
+
+            // Create cancellation token from controller
+            const token = new vscode.CancellationTokenSource();
+            controller.signal.addEventListener('abort', () => {
+                token.cancel();
+            });
+
+            // Send request to Copilot
+            const response = await selectedModel.sendRequest(messages, {}, token.token);
+
+            // Collect the response
+            let fullText = "";
+            for await (const fragment of response.text) {
+                if (token.token.isCancellationRequested) {
+                    throw new Error('Request was cancelled');
+                }
+                fullText += fragment;
+            }
+
+            debugLog(`Processing Response:\n${fullText}`);
+
+            // Process the full text into a formatted commit message
+            const formattedMessage = this.enforceCommitMessageFormat(fullText);
+            debugLog("Copilot API Response:", formattedMessage);
+            return formattedMessage;
+
+        } catch (error) {
+            debugLog("Copilot API Call Failed:", error);
+
+            // Handle abort error specifically
+            if (error instanceof Error && (error.message === 'Request was cancelled' || error.name === 'AbortError')) {
+                throw new Error('Request was cancelled');
+            }
+
+            // Handle VS Code Language Model specific errors
+            if (error instanceof vscode.LanguageModelError) {
+                debugLog(`Language Model Error - Message: ${error.message}`);
+                const errorName = error.constructor.name;
+
+                if (errorName === 'NoPermissions') {
+                    throw new Error("No permission to use GitHub Copilot. Please ensure you have access to Copilot Chat.");
+                } else if (errorName === 'Blocked') {
+                    throw new Error("Request was blocked by GitHub Copilot content filters.");
+                } else if (errorName === 'NotFound') {
+                    throw new Error("GitHub Copilot model not found. Please check your Copilot subscription.");
+                } else if (errorName === 'RequestFailed') {
+                    throw new Error("GitHub Copilot request failed. Please try again.");
+                } else {
+                    throw new Error(`GitHub Copilot error: ${error.message}`);
+                }
+            }
+
+            // Handle other errors
+            if (error instanceof Error) {
+                throw new Error(`GitHub Copilot API call failed: ${error.message}`);
+            }
+
+            throw new Error(`Unexpected error during GitHub Copilot API call: ${String(error)}`);
         }
     }
 
-    // Reconstruct the message with the truncated subject line
-    return [subjectLine, ...lines.slice(1)].join('\n');
+    async getModels(): Promise<string[]> {
+        return fetchCopilotModels();
+    }
+
+    async validateApiKey(): Promise<boolean | { success: boolean; error?: string; warning?: string; troubleshooting?: string }> {
+        return validateCopilotAccess();
+    }
+
+    private enforceCommitMessageFormat(message: string): string {
+        // Split the message into lines
+        const lines = message.split('\n');
+
+        if (lines.length === 0) {
+            return message;
+        }
+
+        // Get the first line (subject line)
+        let subjectLine = lines[0].trim();
+
+        // Truncate the subject line if it exceeds 72 characters
+        if (subjectLine.length > 72) {
+            subjectLine = subjectLine.substring(0, 72);
+            // Ensure we don't cut in the middle of a word
+            if (subjectLine.lastIndexOf(' ') > 0) {
+                subjectLine = subjectLine.substring(0, subjectLine.lastIndexOf(' '));
+            }
+        }
+
+        // Reconstruct the message with the truncated subject line
+        return [subjectLine, ...lines.slice(1)].join('\n');
+    }
 }
 
 /**
@@ -145,138 +279,6 @@ export async function isCopilotAvailable(): Promise<boolean> {
     } catch (error) {
         debugLog("Copilot availability check failed:", error);
         return false;
-    }
-}
-
-/**
- * Makes a request to GitHub Copilot via VS Code Language Model API to generate a commit message
- * @param _apiKey Unused for Copilot (required for unified API signature)
- * @param model The model to use (from CopilotModel enum)
- * @param diff Git diff to analyze
- * @param customContext Additional context provided by the user
- * @returns Generated commit message
- */
-export async function callCopilotAPI(_apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
-    const requestManager = RequestManager.getInstance();
-    const controller = requestManager.getController();
-
-    // Validate model - use Object.keys to get all valid models from MODEL_CONFIGS
-    const validModels = Object.keys(MODEL_CONFIGS) as CopilotModel[];
-    if (!validModels.includes(model as CopilotModel)) {
-        debugLog("Error: Invalid Copilot model specified", { model });
-        throw new Error(`Invalid Copilot model specified: ${model}`);
-    }
-
-    try {
-        debugLog(`Calling GitHub Copilot API with model: ${model}`);
-        const promptText = await generateCommitPrompt(diff, getPromptConfig(), customContext);
-        debugLog("Sending prompt to Copilot API");
-        debugLog("Prompt:", promptText);
-
-        // Get model-specific configuration
-        const config = MODEL_CONFIGS[model as CopilotModel];
-        if (!config) {
-            throw new Error(`Configuration not found for model: ${model}`);
-        }
-
-        // Check if Copilot is available
-        const isAvailable = await isCopilotAvailable();
-        if (!isAvailable) {
-            throw new Error("GitHub Copilot is not available. Please ensure GitHub Copilot extension is installed and you have access to Copilot Chat.");
-        }
-
-        // Select Copilot chat models based on model provider
-        let family: string;
-        if (model === 'auto') {
-            family = 'gpt-4'; // Auto defaults to GPT
-        } else if (model === 'raptor-mini') {
-            family = 'gpt-5-mini'; // Raptor models use gpt-5-mini family
-        } else if (model.startsWith('gpt-')) {
-            family = 'gpt-4'; // OpenAI models
-        } else if (model.startsWith('claude-')) {
-            family = 'claude'; // Anthropic models
-        } else if (model.startsWith('gemini-')) {
-            family = 'gemini'; // Google models
-        } else if (model.startsWith('grok-')) {
-            family = 'gpt-4'; // Grok models
-        } else {
-            family = 'gpt-4'; // Default fallback
-        }
-
-        const models = await vscode.lm.selectChatModels({
-            vendor: 'copilot',
-            family: family
-        });
-
-        if (models.length === 0) {
-            throw new Error(`No Copilot models available for family: ${model}`);
-        }
-
-        const selectedModel = models[0];
-        debugLog(`Selected Copilot model: ${selectedModel.id}`);
-
-        // Create chat messages
-        const messages = [
-            vscode.LanguageModelChatMessage.User(promptText)
-        ];
-
-        // Create cancellation token from controller
-        const token = new vscode.CancellationTokenSource();
-        controller.signal.addEventListener('abort', () => {
-            token.cancel();
-        });
-
-        // Send request to Copilot
-        const response = await selectedModel.sendRequest(messages, {}, token.token);
-
-        // Collect the response
-        let fullText = "";
-        for await (const fragment of response.text) {
-            if (token.token.isCancellationRequested) {
-                throw new Error('Request was cancelled');
-            }
-            fullText += fragment;
-        }
-
-        debugLog(`Processing Response:\n${fullText}`);
-
-        // Process the full text into a formatted commit message
-        const formattedMessage = enforceCommitMessageFormat(fullText);
-        debugLog("Copilot API Response:", formattedMessage);
-        return formattedMessage;
-
-    } catch (error) {
-        debugLog("Copilot API Call Failed:", error);
-
-        // Handle abort error specifically
-        if (error instanceof Error && (error.message === 'Request was cancelled' || error.name === 'AbortError')) {
-            throw new Error('Request was cancelled');
-        }
-
-        // Handle VS Code Language Model specific errors
-        if (error instanceof vscode.LanguageModelError) {
-            debugLog(`Language Model Error - Message: ${error.message}`);
-            const errorName = error.constructor.name;
-
-            if (errorName === 'NoPermissions') {
-                throw new Error("No permission to use GitHub Copilot. Please ensure you have access to Copilot Chat.");
-            } else if (errorName === 'Blocked') {
-                throw new Error("Request was blocked by GitHub Copilot content filters.");
-            } else if (errorName === 'NotFound') {
-                throw new Error("GitHub Copilot model not found. Please check your Copilot subscription.");
-            } else if (errorName === 'RequestFailed') {
-                throw new Error("GitHub Copilot request failed. Please try again.");
-            } else {
-                throw new Error(`GitHub Copilot error: ${error.message}`);
-            }
-        }
-
-        // Handle other errors
-        if (error instanceof Error) {
-            throw new Error(`GitHub Copilot API call failed: ${error.message}`);
-        }
-
-        throw new Error(`Unexpected error during GitHub Copilot API call: ${String(error)}`);
     }
 }
 
@@ -427,4 +429,12 @@ export async function fetchCopilotModels(): Promise<string[]> {
         debugLog("Error fetching Copilot models:", error);
         throw error;
     }
+}
+
+/**
+ * Backward compatibility functions
+ */
+export async function callCopilotAPI(_apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
+    const provider = new CopilotProvider("", model);
+    return provider.generateCommitMessage(diff, customContext);
 }
