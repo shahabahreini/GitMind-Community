@@ -271,7 +271,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                         <div class="setting-desc">Select the language for AI-generated commit messages. Uses professional developer terminology.</div>
                     </div>
                     <select id="commitTargetLanguage"
-                        class="select-field"
+                        class="input-field"
                         ${disabledState ? 'disabled' : ''}
                         data-setting="commit.targetLanguage">
                         ${languageOptions.map(opt => `<option value="${opt.value}" ${targetLanguage === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
