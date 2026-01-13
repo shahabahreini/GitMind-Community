@@ -98,13 +98,15 @@ export class HuggingFaceProvider extends BaseAIProvider {
                         throw new Error(`Model '${this.model}' not found on Hugging Face. Please try a verified model like '${suggestion.model}' or check the model name.`);
                     }
                 } else if (response.status === 401) {
-                    throw new Error(`Invalid or missing Hugging Face API key. Please check your API key configuration.`);
+                    throw new Error(`Authentication failed. Please verify your Hugging Face API key in settings. You can get one at https://huggingface.co/settings/tokens`);
                 } else if (response.status === 403) {
-                    throw new Error(`Access denied to model '${this.model}'. This model may be private or require special permissions.`);
+                    throw new Error(`Access denied to model '${this.model}'. This model may be private or require special permissions. Please check https://huggingface.co/models for available models.`);
+                } else if (response.status === 410) {
+                    throw new Error(`Hugging Face API endpoint is no longer supported. Please update to use the new inference API at https://huggingface.co/docs/api-inference. You can also try using the Hugging Face Serverless API with a compatible model.`);
                 } else if (response.status === 429) {
-                    throw new Error(`Rate limit exceeded for Hugging Face API. Please try again later.`);
+                    throw new Error(`Rate limit exceeded for Hugging Face API. Please wait before retrying. Check your usage at https://huggingface.co/settings/billing`);
                 } else if (response.status === 503) {
-                    throw new Error(`Model '${this.model}' is currently loading or unavailable. Please try again in a few minutes or select a different model.`);
+                    throw new Error(`Model '${this.model}' is currently loading or unavailable. This is usually temporary - please try again in a few minutes or select a different model.`);
                 } else {
                     throw new Error(`Hugging Face API error (${response.status}): ${errorMessage}`);
                 }
@@ -207,11 +209,15 @@ export class HuggingFaceProvider extends BaseAIProvider {
             debugLog('Error fetching Hugging Face models:', error);
             if (axios.isAxiosError(error)) {
                 if (error.response?.status === 401) {
-                    throw new Error('Invalid Hugging Face API key');
+                    throw new Error('Invalid Hugging Face API key. Please verify your API key at https://huggingface.co/settings/tokens');
+                } else if (error.response?.status === 403) {
+                    throw new Error('Access forbidden. Your Hugging Face API key may not have permission to fetch models.');
+                } else if (error.response?.status === 410) {
+                    throw new Error('Hugging Face API endpoint has been deprecated. Please update your API integration. See https://huggingface.co/docs/api-inference for migration details.');
                 } else if (error.response?.status === 429) {
-                    throw new Error('Rate limit exceeded. Please try again later.');
+                    throw new Error('Rate limit exceeded. Please wait before trying to fetch models again. Check https://huggingface.co/settings/billing for your usage limits.');
                 } else {
-                    throw new Error(`API request failed: ${error.response?.status || 'Unknown error'}`);
+                    throw new Error(`Failed to fetch models (${error.response?.status}): ${error.response?.statusText || 'Unknown error'}`);
                 }
             }
             throw error;
