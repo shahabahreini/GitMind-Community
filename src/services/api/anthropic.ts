@@ -15,24 +15,24 @@ const MODEL_CONFIGS: Record<AnthropicModel, GenerationConfig> = {
     // Claude 4 Series (Latest)
     "claude-opus-4": {
         max_tokens: 350,
-        temperature: 0.3,
+        temperature: 0.2,
         top_p: 0.8
     },
     "claude-sonnet-4": {
         max_tokens: 350,
-        temperature: 0.3,
+        temperature: 0.2,
         top_p: 0.8
     },
 
     // Claude 3.5 Series
     "claude-3-5-sonnet-20241022": {
         max_tokens: 350,
-        temperature: 0.3,
+        temperature: 0.2,
         top_p: 0.8
     },
     "claude-3-5-haiku-20241022": {
         max_tokens: 350,
-        temperature: 0.3,
+        temperature: 0.2,
         top_p: 0.8
     }
 };

@@ -16,7 +16,7 @@ const MODEL_CONFIGS: Record<PerplexityModel, GenerationConfig> = {
     // Latest Sonar Models (Recommended)
     "sonar-pro": {
         max_tokens: 350,
-        temperature: 0.3
+        temperature: 0.2
     },
     "sonar-reasoning": {
         max_tokens: 400,
@@ -24,29 +24,29 @@ const MODEL_CONFIGS: Record<PerplexityModel, GenerationConfig> = {
     },
     "sonar": {
         max_tokens: 350,
-        temperature: 0.3
+        temperature: 0.2
     },
     // Chat Models
     "llama-3.1-sonar-small-128k-chat": {
         max_tokens: 350,
-        temperature: 0.3
+        temperature: 0.2
     },
     "llama-3.1-sonar-large-128k-chat": {
         max_tokens: 350,
-        temperature: 0.3
+        temperature: 0.2
     },
     "llama-3.1-sonar-huge-128k-online": {
         max_tokens: 350,
-        temperature: 0.3
+        temperature: 0.2
     },
     // Online Models with Real-time Information
     "llama-3.1-sonar-small-128k-online": {
         max_tokens: 350,
-        temperature: 0.3
+        temperature: 0.2
     },
     "llama-3.1-sonar-large-128k-online": {
         max_tokens: 350,
-        temperature: 0.3
+        temperature: 0.2
     }
 };
 
@@ -256,7 +256,7 @@ export async function validatePerplexityAPIKey(apiKey: string): Promise<{ succes
                     }
                 ],
                 max_tokens: 1,
-                temperature: 0.3
+                temperature: 0.2
             }),
             signal: controller.signal,
         });

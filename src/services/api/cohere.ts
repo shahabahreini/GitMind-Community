@@ -35,19 +35,19 @@ interface GenerationConfig {
 const MODEL_CONFIGS: Record<string, GenerationConfig> = {
     // Latest Models
     [CohereModel.COMMAND_A_03_2025]: {
-        temperature: 0.3,
+        temperature: 0.2,
         maxOutputTokens: 350,
         topP: 0.8,
         topK: 40
     },
     [CohereModel.COMMAND_R_08_2024]: {
-        temperature: 0.3,
+        temperature: 0.2,
         maxOutputTokens: 350,
         topP: 0.8,
         topK: 40
     },
     [CohereModel.COMMAND_R_PLUS_08_2024]: {
-        temperature: 0.3,
+        temperature: 0.2,
         maxOutputTokens: 350,
         topP: 0.8,
         topK: 40
@@ -55,19 +55,19 @@ const MODEL_CONFIGS: Record<string, GenerationConfig> = {
 
     // Specialized Models
     [CohereModel.AYA_EXPANSE_8B]: {
-        temperature: 0.3,
+        temperature: 0.2,
         maxOutputTokens: 350,
         topP: 0.8,
         topK: 40
     },
     [CohereModel.AYA_EXPANSE_32B]: {
-        temperature: 0.3,
+        temperature: 0.2,
         maxOutputTokens: 350,
         topP: 0.8,
         topK: 40
     },
     [CohereModel.COMMAND_R7B_ARABIC]: {
-        temperature: 0.3,
+        temperature: 0.2,
         maxOutputTokens: 350,
         topP: 0.8,
         topK: 40
@@ -75,31 +75,31 @@ const MODEL_CONFIGS: Record<string, GenerationConfig> = {
 
     // Legacy Models
     [CohereModel.COMMAND_R]: {
-        temperature: 0.3,
+        temperature: 0.2,
         maxOutputTokens: 350,
         topP: 0.8,
         topK: 40
     },
     [CohereModel.COMMAND_R_PLUS]: {
-        temperature: 0.3,
+        temperature: 0.2,
         maxOutputTokens: 350,
         topP: 0.8,
         topK: 40
     },
     [CohereModel.COMMAND]: {
-        temperature: 0.3,
+        temperature: 0.2,
         maxOutputTokens: 350,
         topP: 0.8,
         topK: 40
     },
     [CohereModel.COMMAND_LIGHT]: {
-        temperature: 0.3,
+        temperature: 0.2,
         maxOutputTokens: 350,
         topP: 0.8,
         topK: 40
     },
     [CohereModel.COMMAND_NIGHTLY]: {
-        temperature: 0.3,
+        temperature: 0.2,
         maxOutputTokens: 350,
         topP: 0.8,
         topK: 40

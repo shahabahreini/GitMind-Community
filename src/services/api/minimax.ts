@@ -15,12 +15,12 @@ interface GenerationConfig {
 const MODEL_CONFIGS: Record<MiniMaxModel, GenerationConfig> = {
     "MiniMax-M2": {
         max_tokens: 350,
-        temperature: 0.3,
+        temperature: 0.2,
         top_p: 0.8,
     },
     "MiniMax-M2-Stable": {
         max_tokens: 350,
-        temperature: 0.3,
+        temperature: 0.2,
         top_p: 0.8,
     },
 };
