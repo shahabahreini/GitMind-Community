@@ -10,7 +10,7 @@ export interface GenerationOptions {
 }
 
 export abstract class BaseAIProvider implements AIProvider {
-    protected constructor(protected apiKey: string, protected model: string) {}
+    protected constructor(protected apiKey: string, protected model: string) { }
 
     async generateCommitMessage(diff: string, customContext: string = ""): Promise<string> {
         debugLog(`Generating commit message with model: ${this.model}`);
@@ -28,7 +28,7 @@ export abstract class BaseAIProvider implements AIProvider {
         debugLog(`Generating commit history analysis with model: ${this.model}`);
         const prompt = generateCommitHistoryAnalysisPrompt(commitHistory, maxCommits, includeAuthorInfo);
         // Analysis typically uses slightly higher temperature
-        return this.generateResponse(prompt, { temperature: 0.3 });
+        return this.generateResponse(prompt, { temperature: 0.2 });
     }
 
     protected abstract generateResponse(prompt: string, options?: GenerationOptions): Promise<string>;

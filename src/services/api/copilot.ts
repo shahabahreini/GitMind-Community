@@ -15,33 +15,21 @@ const MODEL_CONFIGS: Record<CopilotModel, GenerationConfig> = {
     // Auto
     "auto": {
         maxTokens: 350,
-        temperature: 0.3
+        temperature: 0.2
     },
     // OpenAI Models (Legacy)
-    "gpt-3.5-turbo": {
-        maxTokens: 300,
-        temperature: 0.3
-    },
-    "gpt-4": {
-        maxTokens: 350,
-        temperature: 0.3
-    },
-    "gpt-4-turbo": {
-        maxTokens: 400,
-        temperature: 0.3
-    },
     "gpt-4o": {
         maxTokens: 350,
-        temperature: 0.3
+        temperature: 0.2
     },
     "gpt-4o-mini": {
         maxTokens: 300,
-        temperature: 0.3
+        temperature: 0.2
     },
     // OpenAI Models (Current)
     "gpt-4.1": {
         maxTokens: 400,
-        temperature: 0.3
+        temperature: 0.2
     },
     "gpt-5": {
         maxTokens: 500,
@@ -49,7 +37,7 @@ const MODEL_CONFIGS: Record<CopilotModel, GenerationConfig> = {
     },
     "gpt-5-mini": {
         maxTokens: 400,
-        temperature: 0.3
+        temperature: 0.2
     },
     "gpt-5-codex": {
         maxTokens: 500,
@@ -65,42 +53,42 @@ const MODEL_CONFIGS: Record<CopilotModel, GenerationConfig> = {
     },
     "gpt-5.1-codex-mini": {
         maxTokens: 400,
-        temperature: 0.3
+        temperature: 0.2
     },
     // Anthropic Models
     "claude-haiku-4.5": {
         maxTokens: 350,
-        temperature: 0.3
+        temperature: 0.2
     },
     "claude-opus-4.1": {
         maxTokens: 450,
-        temperature: 0.3
+        temperature: 0.2
     },
     "claude-sonnet-4": {
         maxTokens: 400,
-        temperature: 0.3
+        temperature: 0.2
     },
     "claude-sonnet-4.5": {
         maxTokens: 400,
-        temperature: 0.3
+        temperature: 0.2
     },
     // Google Models
     "gemini-2.5-pro": {
         maxTokens: 400,
-        temperature: 0.3
+        temperature: 0.2
     },
     "gemini-3-pro": {
         maxTokens: 500,
-        temperature: 0.3
+        temperature: 0.2
     },
     // Other Models
     "grok-code-fast-1": {
         maxTokens: 350,
-        temperature: 0.3
+        temperature: 0.2
     },
     "raptor-mini": {
         maxTokens: 350,
-        temperature: 0.3
+        temperature: 0.2
     }
 };
 
@@ -366,9 +354,6 @@ export async function fetchCopilotModels(): Promise<string[]> {
         // Define all models we support in our configuration
         const supportedModels = new Set([
             'auto',
-            'gpt-3.5-turbo',
-            'gpt-4',
-            'gpt-4-turbo',
             'gpt-4o',
             'gpt-4o-mini',
             'gpt-4.1',

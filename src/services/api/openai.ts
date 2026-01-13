@@ -113,19 +113,6 @@ const MODEL_CONFIGS: Record<string, ModelConfig> = {
         maxTokens: 1000,
         temperature: 0.2,
     },
-    // Legacy Models
-    "gpt-4-turbo": {
-        maxTokens: 1500,
-        temperature: 0.2,
-    },
-    "gpt-4": {
-        maxTokens: 1500,
-        temperature: 0.2,
-    },
-    "gpt-3.5-turbo": {
-        maxTokens: 1000,
-        temperature: 0.3,
-    },
 };
 
 export class OpenAIProvider extends BaseAIProvider {
@@ -141,7 +128,7 @@ export class OpenAIProvider extends BaseAIProvider {
             debugLog(`Calling OpenAI API with model: ${this.model}`);
 
             // Get model-specific configuration or use provided options
-            const modelConfig = MODEL_CONFIGS[this.model] || MODEL_CONFIGS["gpt-3.5-turbo"];
+            const modelConfig = MODEL_CONFIGS[this.model] || MODEL_CONFIGS["gpt-4o"];
             const temperature = options?.temperature ?? modelConfig.temperature;
             const maxTokens = options?.maxTokens ?? modelConfig.maxTokens;
 
@@ -287,10 +274,7 @@ export class OpenAIProvider extends BaseAIProvider {
                         if (id.startsWith('gpt-4')) {
                             return 7;
                         }
-                        if (id.startsWith('gpt-3.5')) {
-                            return 8;
-                        }
-                        return 9;
+                        return 8;
                     };
 
                     const priorityA = getPriority(a);

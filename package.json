@@ -312,7 +312,7 @@
             "gemini-2.0-flash",
             "gemini-2.0-flash-lite"
           ],
-          "default": "gemini-2.5-flash",
+          "default": "gemini-2.0-flash",
           "description": "Select which Gemini model to use",
           "enumDescriptions": [
             "Gemini 2.5 Pro - Advanced model with 65,536 token output limit",
@@ -376,10 +376,7 @@
             "o4-mini",
             "o3-mini",
             "gpt-4o",
-            "gpt-4o-mini",
-            "gpt-4-turbo",
-            "gpt-4",
-            "gpt-3.5-turbo"
+            "gpt-4o-mini"
           ],
           "default": "gpt-4o",
           "description": "OpenAI model to use for generating commit messages",
@@ -391,10 +388,7 @@
             "o4-mini - Fast reasoning model",
             "o3-mini - Efficient reasoning model",
             "GPT-4o - Multimodal model with vision capabilities",
-            "GPT-4o Mini - Efficient multimodal model",
-            "GPT-4 Turbo - High-performance GPT-4 variant",
-            "GPT-4 - Base GPT-4 model",
-            "GPT-3.5 Turbo - Fast and cost-effective model"
+            "GPT-4o Mini - Efficient multimodal model"
           ],
           "order": 13
         },
@@ -482,26 +476,16 @@
           "enum": [
             "claude-opus-4",
             "claude-sonnet-4",
-            "claude-sonnet-3.7",
             "claude-3-5-sonnet-20241022",
-            "claude-3-5-sonnet-20240620",
-            "claude-3-5-haiku-20241022",
-            "claude-3-opus-20240229",
-            "claude-3-sonnet-20240229",
-            "claude-3-haiku-20240307"
+            "claude-3-5-haiku-20241022"
           ],
           "enumDescriptions": [
             "Claude Opus 4 - Latest and most capable Claude model",
             "Claude Sonnet 4 - High-performance Claude 4 model",
-            "Claude Sonnet 3.7 - Advanced Claude 3.7 model",
-            "Claude 3.5 Sonnet (Latest) - Most capable model with enhanced reasoning",
-            "Claude 3.5 Sonnet (June) - High-performance model for complex tasks",
-            "Claude 3.5 Haiku - Fast and efficient for quick responses",
-            "Claude 3 Opus - Most capable Claude 3 model for complex reasoning",
-            "Claude 3 Sonnet - Balanced performance and speed",
-            "Claude 3 Haiku - Fast and cost-effective"
+            "Claude 3.5 Sonnet - Most capable model with enhanced reasoning",
+            "Claude 3.5 Haiku - Fast and efficient for quick responses"
           ],
-          "default": "claude-opus-4",
+          "default": "claude-3-5-sonnet-20241022",
           "description": "Anthropic Claude model to use for generating commit messages"
         },
         "gitmind.minimax.apiKey": {
@@ -526,9 +510,6 @@
           "type": "string",
           "enum": [
             "auto",
-            "gpt-3.5-turbo",
-            "gpt-4",
-            "gpt-4-turbo",
             "gpt-4o",
             "gpt-4o-mini",
             "gpt-4.1",
@@ -549,9 +530,6 @@
           ],
           "enumDescriptions": [
             "Auto - Let GitHub Copilot automatically choose the best model",
-            "GPT-3.5 Turbo - Legacy OpenAI model",
-            "GPT-4 - Legacy OpenAI model",
-            "GPT-4 Turbo - Legacy OpenAI model",
             "GPT-4o - Legacy OpenAI model",
             "GPT-4o mini - Legacy OpenAI compact model",
             "GPT-4.1 - OpenAI's latest general purpose model",

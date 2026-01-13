@@ -169,7 +169,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         settingPath: "gemini.apiKey",
         docsUrl: "https://aistudio.google.com/app/apikey",
         requiresApiKey: true,
-        defaultModel: "gemini-pro",
+        defaultModel: "gemini-2.0-flash",
         getProviderClass: async () => loadProviderModule('gemini'),
     },
     huggingface: {

@@ -23,7 +23,7 @@ const PROVIDER_DEFAULTS: Record<string, ProviderDefaults> = {
     huggingface: {
         model: "mistralai/Mistral-7B-Instruct-v0.3",
         enabled: true,
-        extras: { temperature: 0.3 }
+        extras: { temperature: 0.2 }
     },
     ollama: {
         model: "phi4",

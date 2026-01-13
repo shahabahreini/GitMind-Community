@@ -12,7 +12,7 @@ interface GenerationConfig {
 const MODEL_CONFIGS: Record<DeepSeekModel, GenerationConfig> = {
     "deepseek-chat": {
         max_tokens: 350,
-        temperature: 0.3
+        temperature: 0.2
     },
     "deepseek-reasoner": {
         max_tokens: 400,
