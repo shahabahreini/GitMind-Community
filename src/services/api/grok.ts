@@ -2,162 +2,324 @@ import { debugLog } from "../debug/logger";
 import { RequestManager } from "../../utils/requestManager";
 import { APIErrorHandler } from "../../utils/errorHandler";
 import { generateCommitPrompt, getPromptConfig } from "./prompts";
+import { BaseAIProvider, GenerationOptions } from "./base";
 
 const GROK_BASE_URL = "https://api.x.ai/v1";
 
-export async function callGrokAPI(
-    apiKey: string,
-    model: string,
-    diff: string,
-    customContext?: string
-): Promise<string> {
-    const requestManager = RequestManager.getInstance();
-    const controller = requestManager.getController();
+export class GrokProvider extends BaseAIProvider {
+    constructor(apiKey: string, model: string) {
+        super(apiKey, model);
+    }
 
-    debugLog(`Making API call to Grok with model: ${model}`);
+    protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
+        const requestManager = RequestManager.getInstance();
+        const controller = requestManager.getController();
 
-    try {
-        const promptText = await generateCommitPrompt(diff, getPromptConfig(), customContext);
+        debugLog(`Making API call to Grok with model: ${this.model}`);
 
-        const response = await fetch(`${GROK_BASE_URL}/chat/completions`, {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${apiKey}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                model: model,
-                messages: [
-                    {
-                        role: "user",
-                        content: promptText,
-                    },
-                ],
-                max_tokens: 150,
-                temperature: 0.3,
-                stream: false,
-            }),
-            signal: controller.signal,
-        });
+        try {
+            const response = await fetch(`${GROK_BASE_URL}/chat/completions`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${this.apiKey}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    model: this.model,
+                    messages: [
+                        {
+                            role: "user",
+                            content: prompt,
+                        },
+                    ],
+                    max_tokens: options?.maxTokens ?? 150,
+                    temperature: options?.temperature ?? 0.3,
+                    stream: false,
+                }),
+                signal: controller.signal,
+            });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            debugLog(`Grok API error: ${response.status} - ${errorText}`);
+            if (!response.ok) {
+                const errorText = await response.text();
+                debugLog(`Grok API error: ${response.status} - ${errorText}`);
 
-            // Parse and handle structured error responses
-            try {
-                const errorData = JSON.parse(errorText);
+                // Parse and handle structured error responses
+                try {
+                    const errorData = JSON.parse(errorText);
 
-                // Handle X.ai specific error structure
-                if (errorData.error || errorData.code) {
-                    const errorMessage = errorData.error || errorData.code;
+                    // Handle X.ai specific error structure
+                    if (errorData.error || errorData.code) {
+                        const errorMessage = errorData.error || errorData.code;
 
-                    // Handle specific error cases based on Grok API documentation
-                    if (response.status === 400) {
-                        // Bad Request: Invalid argument or incorrect API key
-                        if (errorMessage.toLowerCase().includes('api key') ||
-                            errorMessage.toLowerCase().includes('incorrect api key') ||
-                            errorMessage.toLowerCase().includes('invalid api key')) {
+                        // Handle specific error cases based on Grok API documentation
+                        if (response.status === 400) {
+                            // Bad Request: Invalid argument or incorrect API key
+                            if (errorMessage.toLowerCase().includes('api key') ||
+                                errorMessage.toLowerCase().includes('incorrect api key') ||
+                                errorMessage.toLowerCase().includes('invalid api key')) {
+                                throw new Error("Invalid API key. Please check your Grok API key configuration.");
+                            } else {
+                                throw new Error(`Bad request: ${errorMessage}. Please check your request parameters.`);
+                            }
+                        } else if (response.status === 401) {
+                            // Unauthorized: No authorization header or invalid token
                             throw new Error("Invalid API key. Please check your Grok API key configuration.");
+                        } else if (response.status === 403) {
+                            // Forbidden: No permission or API key blocked
+                            if (errorMessage.includes('credits') || errorMessage.includes('balance')) {
+                                throw new Error("Insufficient credits. Please purchase credits at https://console.x.ai to continue using Grok API.");
+                            } else if (errorMessage.includes('permission') || errorMessage.includes('access')) {
+                                throw new Error("Access denied. Your API key doesn't have permission. Ask your team admin for permission.");
+                            } else if (errorMessage.includes('blocked')) {
+                                throw new Error("Your API key or team is blocked. Please contact support.");
+                            } else {
+                                throw new Error(`Access forbidden: ${errorMessage}. Check your API key permissions.`);
+                            }
+                        } else if (response.status === 404) {
+                            // Not Found: Model not found or invalid endpoint
+                            if (errorMessage.toLowerCase().includes('model')) {
+                                throw new Error(`Model not found: ${errorMessage}. Please check your model selection.`);
+                            } else {
+                                throw new Error("Endpoint not found. Please check the API endpoint URL.");
+                            }
+                        } else if (response.status === 405) {
+                            // Method Not Allowed: Wrong HTTP method
+                            throw new Error("HTTP method not allowed. This is likely a configuration issue.");
+                        } else if (response.status === 415) {
+                            // Unsupported Media Type: Missing Content-Type or empty body
+                            throw new Error("Unsupported media type. Please ensure proper request headers are set.");
+                        } else if (response.status === 422) {
+                            // Unprocessable Entity: Invalid format in request body
+                            throw new Error(`Invalid request format: ${errorMessage}. Please check your request parameters.`);
+                        } else if (response.status === 429) {
+                            // Too Many Requests: Rate limit exceeded
+                            throw new Error("Rate limit exceeded. Please reduce your request rate or increase your rate limit at https://console.x.ai");
+                        } else if (response.status === 202) {
+                            // Accepted: Request queued for processing
+                            throw new Error("Request is being processed. Please try again in a moment.");
+                        } else if (response.status >= 500) {
+                            // 5XX Server errors
+                            throw new Error(`Grok server error (${response.status}): ${errorMessage}. Please try again later or check https://status.x.ai for service status.`);
                         } else {
-                            throw new Error(`Bad request: ${errorMessage}. Please check your request parameters.`);
+                            // Any other error codes
+                            throw new Error(`Grok API error (${response.status}): ${errorMessage}`);
                         }
+                    }
+                } catch (parseError) {
+                    // If JSON parsing fails, fall back to generic error
+                    if (parseError instanceof Error && parseError.message.includes('Grok API')) {
+                        throw parseError; // Re-throw our structured errors
+                    }
+
+                    // Handle non-JSON error responses based on status code
+                    if (response.status === 400) {
+                        throw new Error("Bad request. Please check your API key and request parameters.");
                     } else if (response.status === 401) {
-                        // Unauthorized: No authorization header or invalid token
                         throw new Error("Invalid API key. Please check your Grok API key configuration.");
                     } else if (response.status === 403) {
-                        // Forbidden: No permission or API key blocked
-                        if (errorMessage.includes('credits') || errorMessage.includes('balance')) {
-                            throw new Error("Insufficient credits. Please purchase credits at https://console.x.ai to continue using Grok API.");
-                        } else if (errorMessage.includes('permission') || errorMessage.includes('access')) {
-                            throw new Error("Access denied. Your API key doesn't have permission. Ask your team admin for permission.");
-                        } else if (errorMessage.includes('blocked')) {
-                            throw new Error("Your API key or team is blocked. Please contact support.");
-                        } else {
-                            throw new Error(`Access forbidden: ${errorMessage}. Check your API key permissions.`);
-                        }
+                        throw new Error("Access forbidden. Please check your API key permissions or purchase credits at https://console.x.ai");
                     } else if (response.status === 404) {
-                        // Not Found: Model not found or invalid endpoint
-                        if (errorMessage.toLowerCase().includes('model')) {
-                            throw new Error(`Model not found: ${errorMessage}. Please check your model selection.`);
-                        } else {
-                            throw new Error("Endpoint not found. Please check the API endpoint URL.");
-                        }
+                        throw new Error("Model or endpoint not found. Please check your model selection and API endpoint.");
                     } else if (response.status === 405) {
-                        // Method Not Allowed: Wrong HTTP method
                         throw new Error("HTTP method not allowed. This is likely a configuration issue.");
                     } else if (response.status === 415) {
-                        // Unsupported Media Type: Missing Content-Type or empty body
                         throw new Error("Unsupported media type. Please ensure proper request headers are set.");
                     } else if (response.status === 422) {
-                        // Unprocessable Entity: Invalid format in request body
-                        throw new Error(`Invalid request format: ${errorMessage}. Please check your request parameters.`);
+                        throw new Error("Invalid request format. Please check your request parameters.");
                     } else if (response.status === 429) {
-                        // Too Many Requests: Rate limit exceeded
                         throw new Error("Rate limit exceeded. Please reduce your request rate or increase your rate limit at https://console.x.ai");
-                    } else if (response.status === 202) {
-                        // Accepted: Request queued for processing
-                        throw new Error("Request is being processed. Please try again in a moment.");
                     } else if (response.status >= 500) {
-                        // 5XX Server errors
-                        throw new Error(`Grok server error (${response.status}): ${errorMessage}. Please try again later or check https://status.x.ai for service status.`);
-                    } else {
-                        // Any other error codes
-                        throw new Error(`Grok API error (${response.status}): ${errorMessage}`);
+                        throw new Error(`Grok server error (${response.status}). Please try again later or check https://status.x.ai for service status.`);
                     }
                 }
-            } catch (parseError) {
-                // If JSON parsing fails, fall back to generic error
-                if (parseError instanceof Error && parseError.message.includes('Grok API')) {
-                    throw parseError; // Re-throw our structured errors
+
+                // Fallback for non-JSON errors
+                throw new Error(`Grok API error: ${response.status} - ${errorText}. Check https://status.x.ai for service status.`);
+            }
+
+            const data = await response.json();
+            const message =
+                data.choices?.[0]?.message?.content || data.message?.content;
+
+            if (!message) {
+                throw new Error("No valid response from Grok API");
+            }
+
+            debugLog(`Grok API response received successfully`);
+            return message.trim();
+        } catch (error) {
+            debugLog(`Grok API call failed: ${error}`);
+            if (error instanceof Error && error.name === 'AbortError') {
+                throw new Error('Request was cancelled');
+            }
+            const errorInfo = APIErrorHandler.handleAPIError(error as Error, "grok");
+            throw new Error(errorInfo.userMessage);
+        }
+    }
+
+    async getModels(): Promise<string[]> {
+        try {
+            debugLog("Fetching Grok models from API...");
+
+            const response = await fetch(`${GROK_BASE_URL}/language-models`, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${this.apiKey}`,
+                    "Accept": "application/json"
+                }
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                debugLog(`Grok models API error: ${response.status} - ${errorText}`);
+
+                // Parse and handle structured error responses
+                try {
+                    const errorData = JSON.parse(errorText);
+
+                    // Handle X.ai specific error structure
+                    if (errorData.error || errorData.code) {
+                        const errorMessage = errorData.error || errorData.code;
+
+                        // Handle specific error cases based on Grok API documentation
+                        if (response.status === 400) {
+                            // Bad Request: Invalid argument or incorrect API key
+                            if (errorMessage.toLowerCase().includes('api key') ||
+                                errorMessage.toLowerCase().includes('incorrect api key') ||
+                                errorMessage.toLowerCase().includes('invalid api key')) {
+                                throw new Error("Invalid API key. Please check your Grok API key configuration.");
+                            } else {
+                                throw new Error(`Bad request: ${errorMessage}. Please check your request parameters.`);
+                            }
+                        } else if (response.status === 401) {
+                            // Unauthorized: No authorization header or invalid token
+                            throw new Error("Invalid API key. Please check your Grok API key configuration.");
+                        } else if (response.status === 403) {
+                            // Forbidden: No permission or API key blocked
+                            if (errorMessage.includes('credits') || errorMessage.includes('balance')) {
+                                throw new Error("Insufficient credits. Please purchase credits at https://console.x.ai to continue using Grok API.");
+                            } else if (errorMessage.includes('permission') || errorMessage.includes('access')) {
+                                throw new Error("Access denied. Your API key doesn't have permission to access models. Ask your team admin for permission.");
+                            } else if (errorMessage.includes('blocked')) {
+                                throw new Error("Your API key or team is blocked. Please contact support.");
+                            } else {
+                                throw new Error(`Access forbidden: ${errorMessage}. Check your API key permissions.`);
+                            }
+                        } else if (response.status === 404) {
+                            // Not Found: Invalid endpoint URL or model not found
+                            throw new Error("The Grok models endpoint was not found. This may indicate the endpoint is not available for your account or has been moved.");
+                        } else if (response.status === 405) {
+                            // Method Not Allowed: Wrong HTTP method
+                            throw new Error("HTTP method not allowed. This is likely a configuration issue.");
+                        } else if (response.status === 415) {
+                            // Unsupported Media Type: Missing Content-Type or empty body
+                            throw new Error("Unsupported media type. Please ensure proper request headers are set.");
+                        } else if (response.status === 422) {
+                            // Unprocessable Entity: Invalid format in request body
+                            throw new Error(`Invalid request format: ${errorMessage}. Please check the request parameters.`);
+                        } else if (response.status === 429) {
+                            // Too Many Requests: Rate limit exceeded
+                            throw new Error("Rate limit exceeded. Please reduce your request rate or increase your rate limit at https://console.x.ai");
+                        } else if (response.status === 202) {
+                            // Accepted: Request queued for processing (shouldn't happen for models endpoint, but handle it)
+                            throw new Error("Request is being processed. Please try again in a moment.");
+                        } else if (response.status >= 500) {
+                            // 5XX Server errors
+                            throw new Error(`Grok server error (${response.status}): ${errorMessage}. Please try again later or check https://status.x.ai for service status.`);
+                        } else {
+                            // Any other error codes
+                            throw new Error(`Grok API error (${response.status}): ${errorMessage}`);
+                        }
+                    }
+                } catch (parseError) {
+                    // If JSON parsing fails, fall back to generic error
+                    if (parseError instanceof Error && parseError.message.includes('Grok')) {
+                        throw parseError; // Re-throw our structured errors
+                    }
+
+                    // Handle non-JSON error responses based on status code
+                    if (response.status === 400) {
+                        throw new Error("Bad request. Please check your API key and request parameters.");
+                    } else if (response.status === 401) {
+                        throw new Error("Invalid API key. Please check your Grok API key configuration.");
+                    } else if (response.status === 403) {
+                        throw new Error("Access forbidden. Please check your API key permissions or purchase credits at https://console.x.ai");
+                    } else if (response.status === 404) {
+                        throw new Error("The Grok models endpoint was not found. This may not be available for your account.");
+                    } else if (response.status === 405) {
+                        throw new Error("HTTP method not allowed. This is likely a configuration issue.");
+                    } else if (response.status === 415) {
+                        throw new Error("Unsupported media type. Please ensure proper request headers are set.");
+                    } else if (response.status === 422) {
+                        throw new Error("Invalid request format. Please check the request parameters.");
+                    } else if (response.status === 429) {
+                        throw new Error("Rate limit exceeded. Please reduce your request rate or increase your rate limit at https://console.x.ai");
+                    } else if (response.status >= 500) {
+                        throw new Error(`Grok server error (${response.status}). Please try again later or check https://status.x.ai for service status.`);
+                    }
                 }
 
-                // Handle non-JSON error responses based on status code
-                if (response.status === 400) {
-                    throw new Error("Bad request. Please check your API key and request parameters.");
-                } else if (response.status === 401) {
-                    throw new Error("Invalid API key. Please check your Grok API key configuration.");
-                } else if (response.status === 403) {
-                    throw new Error("Access forbidden. Please check your API key permissions or purchase credits at https://console.x.ai");
-                } else if (response.status === 404) {
-                    throw new Error("Model or endpoint not found. Please check your model selection and API endpoint.");
-                } else if (response.status === 405) {
-                    throw new Error("HTTP method not allowed. This is likely a configuration issue.");
-                } else if (response.status === 415) {
-                    throw new Error("Unsupported media type. Please ensure proper request headers are set.");
-                } else if (response.status === 422) {
-                    throw new Error("Invalid request format. Please check your request parameters.");
-                } else if (response.status === 429) {
-                    throw new Error("Rate limit exceeded. Please reduce your request rate or increase your rate limit at https://console.x.ai");
-                } else if (response.status >= 500) {
-                    throw new Error(`Grok server error (${response.status}). Please try again later or check https://status.x.ai for service status.`);
+                // Fallback for non-JSON errors
+                throw new Error(`Grok API error: ${response.status} - ${errorText}. Check https://status.x.ai for service status.`);
+            }
+
+            const data = await response.json();
+            debugLog("Grok API response:", data);
+
+            // Validate response structure
+            if (!data.models || !Array.isArray(data.models)) {
+                debugLog("Invalid response structure - missing or invalid 'models' array");
+                throw new Error("Invalid response format from Grok API");
+            }
+
+            // Extract model IDs from the response
+            const modelIds = data.models
+                .map((model: any) => {
+                    if (!model || typeof model !== 'object') {
+                        debugLog("Invalid model object:", model);
+                        return null;
+                    }
+                    return model.id;
+                })
+                .filter((id: string) => id && typeof id === 'string'); // Filter out null/undefined/empty IDs
+
+            debugLog(`Successfully fetched ${modelIds.length} Grok models:`, modelIds);
+
+            if (modelIds.length === 0) {
+                throw new Error("No valid models found in Grok API response");
+            }
+
+            return modelIds;
+        } catch (error) {
+            debugLog("Error fetching Grok models:", error);
+
+            // Re-throw with a more user-friendly message if it's a generic error
+            if (error instanceof Error) {
+                // If it's already a meaningful error message from above, keep it
+                if (error.message.includes("HTTP") ||
+                    error.message.includes("credits") ||
+                    error.message.includes("permission") ||
+                    error.message.includes("Invalid response") ||
+                    error.message.includes("No valid models")) {
+                    throw error;
                 }
             }
 
-            // Fallback for non-JSON errors
-            throw new Error(`Grok API error: ${response.status} - ${errorText}. Check https://status.x.ai for service status.`);
+            // Generic network/connection errors
+            throw new Error("Failed to load Grok models. Please check your internet connection and API key, then try again.");
         }
+    }
 
-        const data = await response.json();
-        const message =
-            data.choices?.[0]?.message?.content || data.message?.content;
-
-        if (!message) {
-            throw new Error("No valid response from Grok API");
-        }
-
-        debugLog(`Grok API response received successfully`);
-        return message.trim();
-    } catch (error) {
-        debugLog(`Grok API call failed: ${error}`);
-        if (error instanceof Error && error.name === 'AbortError') {
-            throw new Error('Request was cancelled');
-        }
-        const errorInfo = APIErrorHandler.handleAPIError(error as Error, "grok");
-        throw new Error(errorInfo.userMessage);
+    async validateApiKey(): Promise<boolean | { success: boolean; error?: string; warning?: string; troubleshooting?: string }> {
+        return validateGrokAPIKey(this.apiKey);
     }
 }
 
+/**
+ * Validates a Grok API key by making a simple request
+ * @param apiKey The API key to validate
+ * @returns Object with success status and optional warning/troubleshooting information
+ */
 export async function validateGrokAPIKey(
     apiKey: string
 ): Promise<{ success: boolean; error?: string; warning?: string; troubleshooting?: string }> {
@@ -384,155 +546,15 @@ export async function validateGrokAPIKey(
     }
 }
 
+/**
+ * Backward compatibility functions
+ */
+export async function callGrokAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
+    const provider = new GrokProvider(apiKey, model);
+    return provider.generateCommitMessage(diff, customContext);
+}
+
 export async function fetchGrokModels(apiKey: string): Promise<string[]> {
-    try {
-        debugLog("Fetching Grok models from API...");
-
-        const response = await fetch(`${GROK_BASE_URL}/language-models`, {
-            method: "GET",
-            headers: {
-                "Authorization": `Bearer ${apiKey}`,
-                "Accept": "application/json"
-            }
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            debugLog(`Grok models API error: ${response.status} - ${errorText}`);
-
-            // Parse and handle structured error responses
-            try {
-                const errorData = JSON.parse(errorText);
-
-                // Handle X.ai specific error structure
-                if (errorData.error || errorData.code) {
-                    const errorMessage = errorData.error || errorData.code;
-
-                    // Handle specific error cases based on Grok API documentation
-                    if (response.status === 400) {
-                        // Bad Request: Invalid argument or incorrect API key
-                        if (errorMessage.toLowerCase().includes('api key') ||
-                            errorMessage.toLowerCase().includes('incorrect api key') ||
-                            errorMessage.toLowerCase().includes('invalid api key')) {
-                            throw new Error("Invalid API key. Please check your Grok API key configuration.");
-                        } else {
-                            throw new Error(`Bad request: ${errorMessage}. Please check your request parameters.`);
-                        }
-                    } else if (response.status === 401) {
-                        // Unauthorized: No authorization header or invalid token
-                        throw new Error("Invalid API key. Please check your Grok API key configuration.");
-                    } else if (response.status === 403) {
-                        // Forbidden: No permission or API key blocked
-                        if (errorMessage.includes('credits') || errorMessage.includes('balance')) {
-                            throw new Error("Insufficient credits. Please purchase credits at https://console.x.ai to continue using Grok API.");
-                        } else if (errorMessage.includes('permission') || errorMessage.includes('access')) {
-                            throw new Error("Access denied. Your API key doesn't have permission to access models. Ask your team admin for permission.");
-                        } else if (errorMessage.includes('blocked')) {
-                            throw new Error("Your API key or team is blocked. Please contact support.");
-                        } else {
-                            throw new Error(`Access forbidden: ${errorMessage}. Check your API key permissions.`);
-                        }
-                    } else if (response.status === 404) {
-                        // Not Found: Invalid endpoint URL or model not found
-                        throw new Error("The Grok models endpoint was not found. This may indicate the endpoint is not available for your account or has been moved.");
-                    } else if (response.status === 405) {
-                        // Method Not Allowed: Wrong HTTP method
-                        throw new Error("HTTP method not allowed. This is likely a configuration issue.");
-                    } else if (response.status === 415) {
-                        // Unsupported Media Type: Missing Content-Type or empty body
-                        throw new Error("Unsupported media type. Please ensure proper request headers are set.");
-                    } else if (response.status === 422) {
-                        // Unprocessable Entity: Invalid format in request body
-                        throw new Error(`Invalid request format: ${errorMessage}. Please check the request parameters.`);
-                    } else if (response.status === 429) {
-                        // Too Many Requests: Rate limit exceeded
-                        throw new Error("Rate limit exceeded. Please reduce your request rate or increase your rate limit at https://console.x.ai");
-                    } else if (response.status === 202) {
-                        // Accepted: Request queued for processing (shouldn't happen for models endpoint, but handle it)
-                        throw new Error("Request is being processed. Please try again in a moment.");
-                    } else if (response.status >= 500) {
-                        // 5XX Server errors
-                        throw new Error(`Grok server error (${response.status}): ${errorMessage}. Please try again later or check https://status.x.ai for service status.`);
-                    } else {
-                        // Any other error codes
-                        throw new Error(`Grok API error (${response.status}): ${errorMessage}`);
-                    }
-                }
-            } catch (parseError) {
-                // If JSON parsing fails, fall back to generic error
-                if (parseError instanceof Error && parseError.message.includes('Grok')) {
-                    throw parseError; // Re-throw our structured errors
-                }
-
-                // Handle non-JSON error responses based on status code
-                if (response.status === 400) {
-                    throw new Error("Bad request. Please check your API key and request parameters.");
-                } else if (response.status === 401) {
-                    throw new Error("Invalid API key. Please check your Grok API key configuration.");
-                } else if (response.status === 403) {
-                    throw new Error("Access forbidden. Please check your API key permissions or purchase credits at https://console.x.ai");
-                } else if (response.status === 404) {
-                    throw new Error("The Grok models endpoint was not found. This may not be available for your account.");
-                } else if (response.status === 405) {
-                    throw new Error("HTTP method not allowed. This is likely a configuration issue.");
-                } else if (response.status === 415) {
-                    throw new Error("Unsupported media type. Please ensure proper request headers are set.");
-                } else if (response.status === 422) {
-                    throw new Error("Invalid request format. Please check the request parameters.");
-                } else if (response.status === 429) {
-                    throw new Error("Rate limit exceeded. Please reduce your request rate or increase your rate limit at https://console.x.ai");
-                } else if (response.status >= 500) {
-                    throw new Error(`Grok server error (${response.status}). Please try again later or check https://status.x.ai for service status.`);
-                }
-            }
-
-            // Fallback for non-JSON errors
-            throw new Error(`Grok API error: ${response.status} - ${errorText}. Check https://status.x.ai for service status.`);
-        }
-
-        const data = await response.json();
-        debugLog("Grok API response:", data);
-
-        // Validate response structure
-        if (!data.models || !Array.isArray(data.models)) {
-            debugLog("Invalid response structure - missing or invalid 'models' array");
-            throw new Error("Invalid response format from Grok API");
-        }
-
-        // Extract model IDs from the response
-        const modelIds = data.models
-            .map((model: any) => {
-                if (!model || typeof model !== 'object') {
-                    debugLog("Invalid model object:", model);
-                    return null;
-                }
-                return model.id;
-            })
-            .filter((id: string) => id && typeof id === 'string'); // Filter out null/undefined/empty IDs
-
-        debugLog(`Successfully fetched ${modelIds.length} Grok models:`, modelIds);
-
-        if (modelIds.length === 0) {
-            throw new Error("No valid models found in Grok API response");
-        }
-
-        return modelIds;
-    } catch (error) {
-        debugLog("Error fetching Grok models:", error);
-
-        // Re-throw with a more user-friendly message if it's a generic error
-        if (error instanceof Error) {
-            // If it's already a meaningful error message from above, keep it
-            if (error.message.includes("HTTP") ||
-                error.message.includes("credits") ||
-                error.message.includes("permission") ||
-                error.message.includes("Invalid response") ||
-                error.message.includes("No valid models")) {
-                throw error;
-            }
-        }
-
-        // Generic network/connection errors
-        throw new Error("Failed to load Grok models. Please check your internet connection and API key, then try again.");
-    }
+    const provider = new GrokProvider(apiKey, "");
+    return provider.getModels();
 }

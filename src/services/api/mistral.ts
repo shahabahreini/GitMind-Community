@@ -1,7 +1,7 @@
 import { debugLog } from "../debug/logger";
 import { MistralResponse, MistralRateLimit } from "../../config/types";
-import { generateCommitPrompt, getPromptConfig } from './prompts';
 import { RequestManager } from "../../utils/requestManager";
+import { BaseAIProvider, GenerationOptions } from "./base";
 
 function extractRateLimits(headers: Headers): MistralRateLimit {
     return {
@@ -17,188 +17,223 @@ function extractRateLimits(headers: Headers): MistralRateLimit {
     };
 }
 
-function enforceCommitMessageFormat(message: string): string {
-    // Split the message into lines
-    const lines = message.split('\n');
-
-    if (lines.length === 0) {
-        return message;
+export class MistralProvider extends BaseAIProvider {
+    constructor(apiKey: string, model: string) {
+        super(apiKey, model);
     }
 
-    // Get the first line (subject line)
-    let subjectLine = lines[0].trim();
+    protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
+        const requestManager = RequestManager.getInstance();
+        const controller = requestManager.getController();
 
-    // Truncate the subject line if it exceeds 72 characters
-    if (subjectLine.length > 72) {
-        subjectLine = subjectLine.substring(0, 72);
-        // Ensure we don't cut in the middle of a word
-        if (subjectLine.lastIndexOf(' ') > 0) {
-            subjectLine = subjectLine.substring(0, subjectLine.lastIndexOf(' '));
+        debugLog("Calling Mistral API", { model: this.model });
+
+        try {
+            const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    "Authorization": `Bearer ${this.apiKey}`
+                },
+                body: JSON.stringify({
+                    model: this.model,
+                    messages: [
+                        { role: "user", content: prompt }
+                    ],
+                    temperature: options?.temperature
+                }),
+                signal: controller.signal
+            });
+
+            // Extract and log rate limits
+            const rateLimits = extractRateLimits(response.headers);
+            debugLog("Mistral API Rate Limits:", rateLimits);
+
+            // Check if all rate limits are 0, which might indicate auth issues
+            if (rateLimits.limit === 0 && rateLimits.remaining === 0 && rateLimits.monthlyLimit === 0) {
+                debugLog("Warning: All Mistral rate limits are 0 - possible auth issue");
+            }
+
+            // Check rate limits
+            if (rateLimits.remaining <= 0 && rateLimits.remaining !== 0) {
+                const resetTime = new Date(Date.now() + rateLimits.reset * 1000);
+                throw new Error(`Rate limit exceeded. Reset at ${resetTime.toLocaleString()}`);
+            }
+
+            if (!response.ok) {
+                let errorData: any;
+                try {
+                    errorData = await response.json();
+                    debugLog("Mistral API Error Response:", {
+                        status: response.status,
+                        statusText: response.statusText,
+                        errorData: errorData
+                    });
+                } catch {
+                    errorData = { message: response.statusText };
+                    debugLog("Mistral API Error (no JSON):", {
+                        status: response.status,
+                        statusText: response.statusText
+                    });
+                }
+
+                const userFriendlyError = this.getUserFriendlyErrorMessage(response.status, errorData);
+                throw new Error(userFriendlyError);
+            }
+
+            const result = await response.json() as MistralResponse;
+            const generatedText = result.choices[0]?.message?.content;
+
+            if (!generatedText) {
+                throw new Error("No generated text in response");
+            }
+
+            const formattedMessage = this.enforceCommitMessageFormat(generatedText);
+            debugLog("Mistral API Response:", formattedMessage);
+            return formattedMessage;
+
+        } catch (error) {
+            // Handle abort error specifically
+            if (error instanceof Error && error.name === 'AbortError') {
+                throw new Error('Request was cancelled');
+            }
+
+            if (error instanceof Error) {
+                debugLog("Mistral API Error Details:", {
+                    message: error.message,
+                    name: error.name,
+                    stack: error.stack
+                });
+
+                if (error.message.includes("Mistral API error") || error.message.includes("Rate limit")) {
+                    throw error;
+                }
+                throw new Error(`Mistral API call failed: ${error.message}`);
+            }
+
+            debugLog("Unknown Mistral API Error:", error);
+            throw new Error(`Unexpected error during Mistral API call: ${String(error)}`);
         }
     }
 
-    // Reconstruct the message with the truncated subject line
-    return [subjectLine, ...lines.slice(1)].join('\n');
+    async getModels(): Promise<string[]> {
+        try {
+            const response = await fetch("https://api.mistral.ai/v1/models", {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${this.apiKey}`,
+                    "Accept": "application/json"
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch models: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+
+            // Filter models that have completion_chat capability set to true
+            const chatModels = data.data
+                .filter((model: any) => model.capabilities?.completion_chat === true)
+                .map((model: any) => model.id);
+
+            debugLog("Available Mistral chat models:", chatModels);
+            return chatModels;
+        } catch (error) {
+            debugLog("Error fetching Mistral models:", error);
+            throw error;
+        }
+    }
+
+    async validateApiKey(): Promise<boolean> {
+         // Mistral specific rate limit check as used in validation.ts is complex.
+         // For now using simple model check similar to other providers.
+         try {
+            const response = await fetch("https://api.mistral.ai/v1/models", {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${this.apiKey}`,
+                    "Accept": "application/json"
+                }
+            });
+            return response.ok;
+         } catch (error) {
+             return false;
+         }
+    }
+
+    private enforceCommitMessageFormat(message: string): string {
+        // Split the message into lines
+        const lines = message.split('\n');
+
+        if (lines.length === 0) {
+            return message;
+        }
+
+        // Get the first line (subject line)
+        let subjectLine = lines[0].trim();
+
+        // Truncate the subject line if it exceeds 72 characters
+        if (subjectLine.length > 72) {
+            subjectLine = subjectLine.substring(0, 72);
+            // Ensure we don't cut in the middle of a word
+            if (subjectLine.lastIndexOf(' ') > 0) {
+                subjectLine = subjectLine.substring(0, subjectLine.lastIndexOf(' '));
+            }
+        }
+
+        // Reconstruct the message with the truncated subject line
+        return [subjectLine, ...lines.slice(1)].join('\n');
+    }
+
+    /**
+     * Converts Mistral API errors to user-friendly messages
+     */
+    private getUserFriendlyErrorMessage(statusCode: number, errorData: any): string {
+        switch (statusCode) {
+            case 401:
+                return "Mistral API key is invalid or missing. Please check your API key in settings.";
+
+            case 422:
+                if (errorData?.message?.includes("context_length")) {
+                    return "The git diff is too large for the selected model. Try:\n• Staging fewer files\n• Using mistral-large-latest for larger context\n• Breaking changes into smaller commits";
+                }
+                return `Mistral request validation failed: ${errorData?.message || 'Invalid request'}`;
+
+            case 429:
+                const resetTime = errorData?.reset_time ? new Date(errorData.reset_time * 1000).toLocaleTimeString() : 'soon';
+                return `Mistral rate limit exceeded. Reset at ${resetTime}. Please wait and try again.`;
+
+            case 400:
+                return `Mistral API request error: ${errorData?.message || 'Bad request'}. Please check your model selection.`;
+
+            case 403:
+                return "Access denied to Mistral API. Please check your API key permissions.";
+
+            case 404:
+                return "Mistral model not found. Please select a different model in settings.";
+
+            case 500:
+            case 502:
+            case 503:
+                return "Mistral AI service is temporarily unavailable. Please try again later.";
+
+            default:
+                return `Mistral API error (${statusCode}): ${errorData?.message || 'Unknown error'}`;
+        }
+    }
 }
 
 /**
- * Converts Mistral API errors to user-friendly messages
+ * Backward compatibility functions
  */
-function getUserFriendlyErrorMessage(statusCode: number, errorData: any): string {
-    switch (statusCode) {
-        case 401:
-            return "Mistral API key is invalid or missing. Please check your API key in settings.";
-
-        case 422:
-            if (errorData?.message?.includes("context_length")) {
-                return "The git diff is too large for the selected model. Try:\n• Staging fewer files\n• Using mistral-large-latest for larger context\n• Breaking changes into smaller commits";
-            }
-            return `Mistral request validation failed: ${errorData?.message || 'Invalid request'}`;
-
-        case 429:
-            const resetTime = errorData?.reset_time ? new Date(errorData.reset_time * 1000).toLocaleTimeString() : 'soon';
-            return `Mistral rate limit exceeded. Reset at ${resetTime}. Please wait and try again.`;
-
-        case 400:
-            return `Mistral API request error: ${errorData?.message || 'Bad request'}. Please check your model selection.`;
-
-        case 403:
-            return "Access denied to Mistral API. Please check your API key permissions.";
-
-        case 404:
-            return "Mistral model not found. Please select a different model in settings.";
-
-        case 500:
-        case 502:
-        case 503:
-            return "Mistral AI service is temporarily unavailable. Please try again later.";
-
-        default:
-            return `Mistral API error (${statusCode}): ${errorData?.message || 'Unknown error'}`;
-    }
-}
-
 export async function callMistralAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
-    const requestManager = RequestManager.getInstance();
-    const controller = requestManager.getController();
-    const prompt = await generateCommitPrompt(diff, getPromptConfig(), customContext);
-
-    debugLog("Calling Mistral API", { model });
-    debugLog("Prompt:", prompt);
-
-    try {
-        const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-                "Authorization": `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                model: model,
-                messages: [
-                    { role: "user", content: prompt }
-                ]
-            }),
-            signal: controller.signal
-        });
-
-        // Extract and log rate limits
-        const rateLimits = extractRateLimits(response.headers);
-        debugLog("Mistral API Rate Limits:", rateLimits);
-
-        // Check if all rate limits are 0, which might indicate auth issues
-        if (rateLimits.limit === 0 && rateLimits.remaining === 0 && rateLimits.monthlyLimit === 0) {
-            debugLog("Warning: All Mistral rate limits are 0 - possible auth issue");
-        }
-
-        // Check rate limits
-        if (rateLimits.remaining <= 0 && rateLimits.remaining !== 0) {
-            const resetTime = new Date(Date.now() + rateLimits.reset * 1000);
-            throw new Error(`Rate limit exceeded. Reset at ${resetTime.toLocaleString()}`);
-        }
-
-        if (!response.ok) {
-            let errorData: any;
-            try {
-                errorData = await response.json();
-                debugLog("Mistral API Error Response:", {
-                    status: response.status,
-                    statusText: response.statusText,
-                    errorData: errorData
-                });
-            } catch {
-                errorData = { message: response.statusText };
-                debugLog("Mistral API Error (no JSON):", {
-                    status: response.status,
-                    statusText: response.statusText
-                });
-            }
-
-            const userFriendlyError = getUserFriendlyErrorMessage(response.status, errorData);
-            throw new Error(userFriendlyError);
-        }
-
-        const result = await response.json() as MistralResponse;
-        const generatedText = result.choices[0]?.message?.content;
-
-        if (!generatedText) {
-            throw new Error("No generated text in response");
-        }
-
-        const formattedMessage = enforceCommitMessageFormat(generatedText);
-        debugLog("Mistral API Response:", formattedMessage);
-        return formattedMessage;
-
-    } catch (error) {
-        // Handle abort error specifically
-        if (error instanceof Error && error.name === 'AbortError') {
-            throw new Error('Request was cancelled');
-        }
-
-        if (error instanceof Error) {
-            debugLog("Mistral API Error Details:", {
-                message: error.message,
-                name: error.name,
-                stack: error.stack
-            });
-
-            if (error.message.includes("Mistral API error") || error.message.includes("Rate limit")) {
-                throw error;
-            }
-            throw new Error(`Mistral API call failed: ${error.message}`);
-        }
-
-        debugLog("Unknown Mistral API Error:", error);
-        throw new Error(`Unexpected error during Mistral API call: ${String(error)}`);
-    }
+    const provider = new MistralProvider(apiKey, model);
+    return provider.generateCommitMessage(diff, customContext);
 }
 
 export async function fetchMistralModels(apiKey: string): Promise<string[]> {
-    try {
-        const response = await fetch("https://api.mistral.ai/v1/models", {
-            method: "GET",
-            headers: {
-                "Authorization": `Bearer ${apiKey}`,
-                "Accept": "application/json"
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Failed to fetch models: ${response.status} ${response.statusText}`);
-        }
-
-        const data = await response.json();
-
-        // Filter models that have completion_chat capability set to true
-        const chatModels = data.data
-            .filter((model: any) => model.capabilities?.completion_chat === true)
-            .map((model: any) => model.id);
-
-        debugLog("Available Mistral chat models:", chatModels);
-        return chatModels;
-    } catch (error) {
-        debugLog("Error fetching Mistral models:", error);
-        throw error;
-    }
+    const provider = new MistralProvider(apiKey, "");
+    return provider.getModels();
 }

@@ -18,8 +18,6 @@ import {
     CustomApiConfig,
 } from "../../config/types";
 // Lazy-loaded provider imports - loaded only when needed to reduce bundle size
-// This significantly reduces initial bundle size by ~200-300KB
-import { OnboardingManager } from "../../utils/onboardingManager";
 import {
     checkOllamaAvailability,
     getOllamaInstallInstructions,
@@ -28,13 +26,12 @@ import { debugLog } from "../debug/logger";
 import { getApiConfig } from "../../config/settings";
 import { estimateTokens } from "../../utils/tokenCounter";
 import { workspace } from "vscode";
-import { DiagnosticsWebview } from "../../webview/diagnostics/DiagnosticsWebview";
-import { RequestManager } from "../../utils/requestManager";
 import { APIErrorHandler } from "../../utils/errorHandler";
 import { telemetryService } from "../telemetry/telemetryService";
 import { SubscriptionManager } from "../subscription/SubscriptionManager";
 import { DiffProcessor } from "../diffProcessor";
 import { generateCommitHistoryAnalysisPrompt, validatePromptLength, generateCommitPrompt, getPromptConfig } from './prompts';
+import { BaseAIProvider } from "./base";
 
 // Timeout configurations
 const STANDARD_REQUEST_TIMEOUT = 10000; // 10 seconds for regular API requests
@@ -55,8 +52,8 @@ const CIRCUIT_BREAKER_RESET_TIME = 60000; // 1 minute cooldown
 
 type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter" | "Anthropic" | "MiniMax" | "GitHub Copilot" | "DeepSeek" | "Grok" | "Perplexity" | "Custom API";
 
-// Type for lazy-loaded API call functions
-type ApiCallFunction = (apiKey: string, model: string, diff: string, customContext: string) => Promise<string>;
+// Type for lazy-loaded provider class
+type ProviderClass = new (...args: any[]) => BaseAIProvider;
 
 interface ProviderConfig {
     name: ApiProvider;
@@ -65,18 +62,18 @@ interface ProviderConfig {
     docsUrl: string;
     requiresApiKey: boolean;
     defaultModel?: string;
-    // Lazy-load the API call function on demand
-    getApiCall: () => Promise<ApiCallFunction>;
+    // Lazy-load the provider class on demand
+    getProviderClass: () => Promise<ProviderClass>;
 }
 
 // Cache for loaded provider modules to avoid re-importing
-const providerModuleCache = new Map<string, ApiCallFunction>();
+const providerModuleCache = new Map<string, ProviderClass>();
 
 /**
- * Lazy-load a provider's API call function
+ * Lazy-load a provider's class
  * This reduces initial bundle size by loading providers only when used
  */
-async function loadProviderModule(provider: string): Promise<ApiCallFunction> {
+async function loadProviderModule(provider: string): Promise<ProviderClass> {
     // Check cache first
     if (providerModuleCache.has(provider)) {
         debugLog(`[LazyLoad] Using cached module for provider: ${provider}`);
@@ -85,81 +82,79 @@ async function loadProviderModule(provider: string): Promise<ApiCallFunction> {
 
     debugLog(`[LazyLoad] Loading module for provider: ${provider}`);
 
-    let apiCallFunction: ApiCallFunction;
+    let providerClass: ProviderClass;
 
     try {
         switch (provider) {
             case 'gemini':
                 const geminiModule = await import('./gemini.js');
-                apiCallFunction = geminiModule.callGeminiAPI;
+                providerClass = geminiModule.GeminiProvider;
                 break;
             case 'huggingface':
                 const huggingfaceModule = await import('./huggingface.js');
-                apiCallFunction = huggingfaceModule.callHuggingFaceAPI;
+                providerClass = huggingfaceModule.HuggingFaceProvider;
                 break;
             case 'ollama':
                 const ollamaModule = await import('./ollama.js');
-                apiCallFunction = ollamaModule.callOllamaAPI;
+                providerClass = ollamaModule.OllamaProvider;
                 break;
             case 'mistral':
                 const mistralModule = await import('./mistral.js');
-                apiCallFunction = mistralModule.callMistralAPI;
+                providerClass = mistralModule.MistralProvider;
                 break;
             case 'cohere':
                 const cohereModule = await import('./cohere.js');
-                apiCallFunction = cohereModule.callCohereAPI;
+                providerClass = cohereModule.CohereProvider;
                 break;
             case 'openai':
                 const openaiModule = await import('./openai.js');
-                apiCallFunction = openaiModule.callOpenAIAPI;
+                providerClass = openaiModule.OpenAIProvider;
                 break;
             case 'together':
                 const togetherModule = await import('./together.js');
-                apiCallFunction = togetherModule.callTogetherAPI;
+                providerClass = togetherModule.TogetherAIProvider;
                 break;
             case 'openrouter':
                 const openrouterModule = await import('./openrouter.js');
-                apiCallFunction = openrouterModule.callOpenRouterAPI;
+                providerClass = openrouterModule.OpenRouterProvider;
                 break;
             case 'anthropic':
                 const anthropicModule = await import('./anthropic.js');
-                apiCallFunction = anthropicModule.callAnthropicAPI;
+                providerClass = anthropicModule.AnthropicProvider;
                 break;
             case 'minimax':
                 const minimaxModule = await import('./minimax.js');
-                apiCallFunction = minimaxModule.callMiniMaxAPI;
+                providerClass = minimaxModule.MiniMaxProvider;
                 break;
             case 'copilot':
                 const copilotModule = await import('./copilot.js');
-                apiCallFunction = copilotModule.callCopilotAPI;
+                providerClass = copilotModule.CopilotProvider;
                 break;
             case 'deepseek':
                 const deepseekModule = await import('./deepseek.js');
-                apiCallFunction = deepseekModule.callDeepSeekAPI;
+                providerClass = deepseekModule.DeepSeekProvider;
                 break;
             case 'grok':
                 const grokModule = await import('./grok.js');
-                apiCallFunction = grokModule.callGrokAPI;
+                providerClass = grokModule.GrokProvider;
                 break;
             case 'perplexity':
                 const perplexityModule = await import('./perplexity.js');
-                apiCallFunction = perplexityModule.callPerplexityAPI;
+                providerClass = perplexityModule.PerplexityProvider;
                 break;
             case 'custom':
                 const customModule = await import('./custom.js');
-                // Custom API has a different signature, but we still need to return it
-                // It will be called with its full parameter list in handleCustomProvider
-                apiCallFunction = customModule.callCustomAPI as any;
+                providerClass = customModule.CustomProvider;
                 break;
             default:
                 throw new Error(`Unknown provider: ${provider}`);
         }
 
-        // Cache the loaded function
-        providerModuleCache.set(provider, apiCallFunction);
+        // Cache the loaded class
+        providerModuleCache.set(provider, providerClass);
         debugLog(`[LazyLoad] Successfully loaded and cached module for provider: ${provider}`);
 
-        return apiCallFunction;
+        return providerClass;
     } catch (error) {
         debugLog(`[LazyLoad] Failed to load module for provider ${provider}:`, error);
         throw new Error(`Failed to load provider module for ${provider}: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -175,7 +170,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         docsUrl: "https://aistudio.google.com/app/apikey",
         requiresApiKey: true,
         defaultModel: "gemini-pro",
-        getApiCall: async () => loadProviderModule('gemini'),
+        getProviderClass: async () => loadProviderModule('gemini'),
     },
     huggingface: {
         name: "Hugging Face",
@@ -183,7 +178,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         settingPath: "huggingface.apiKey",
         docsUrl: "https://huggingface.co/settings/tokens",
         requiresApiKey: true,
-        getApiCall: async () => loadProviderModule('huggingface'),
+        getProviderClass: async () => loadProviderModule('huggingface'),
     },
     mistral: {
         name: "Mistral",
@@ -191,7 +186,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         settingPath: "mistral.apiKey",
         docsUrl: "https://console.mistral.ai/api-keys/",
         requiresApiKey: true,
-        getApiCall: async () => loadProviderModule('mistral'),
+        getProviderClass: async () => loadProviderModule('mistral'),
     },
     cohere: {
         name: "Cohere",
@@ -199,7 +194,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         settingPath: "cohere.apiKey",
         docsUrl: "https://dashboard.cohere.com/api-keys",
         requiresApiKey: true,
-        getApiCall: async () => loadProviderModule('cohere'),
+        getProviderClass: async () => loadProviderModule('cohere'),
     },
     openai: {
         name: "OpenAI",
@@ -207,7 +202,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         settingPath: "openai.apiKey",
         docsUrl: "https://platform.openai.com/api-keys",
         requiresApiKey: true,
-        getApiCall: async () => loadProviderModule('openai'),
+        getProviderClass: async () => loadProviderModule('openai'),
     },
     together: {
         name: "Together AI",
@@ -215,7 +210,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         settingPath: "together.apiKey",
         docsUrl: "https://api.together.xyz/settings/api-keys",
         requiresApiKey: true,
-        getApiCall: async () => loadProviderModule('together'),
+        getProviderClass: async () => loadProviderModule('together'),
     },
     openrouter: {
         name: "OpenRouter",
@@ -223,7 +218,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         settingPath: "openrouter.apiKey",
         docsUrl: "https://openrouter.ai/keys",
         requiresApiKey: true,
-        getApiCall: async () => loadProviderModule('openrouter'),
+        getProviderClass: async () => loadProviderModule('openrouter'),
     },
     anthropic: {
         name: "Anthropic",
@@ -232,7 +227,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         docsUrl: "https://console.anthropic.com/",
         requiresApiKey: true,
         defaultModel: "claude-3-5-sonnet-20241022",
-        getApiCall: async () => loadProviderModule('anthropic'),
+        getProviderClass: async () => loadProviderModule('anthropic'),
     },
     minimax: {
         name: "MiniMax",
@@ -241,7 +236,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         docsUrl: "https://platform.minimax.io/docs/api-reference/text-anthropic-api",
         requiresApiKey: true,
         defaultModel: "MiniMax-M2",
-        getApiCall: async () => loadProviderModule('minimax'),
+        getProviderClass: async () => loadProviderModule('minimax'),
     },
     deepseek: {
         name: "DeepSeek",
@@ -249,7 +244,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         settingPath: "deepseek.apiKey",
         docsUrl: "https://platform.deepseek.com/api_keys",
         requiresApiKey: true,
-        getApiCall: async () => loadProviderModule('deepseek'),
+        getProviderClass: async () => loadProviderModule('deepseek'),
     },
     grok: {
         name: "Grok",
@@ -257,7 +252,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         settingPath: "grok.apiKey",
         docsUrl: "https://console.x.ai/",
         requiresApiKey: true,
-        getApiCall: async () => loadProviderModule('grok'),
+        getProviderClass: async () => loadProviderModule('grok'),
     },
     perplexity: {
         name: "Perplexity",
@@ -265,15 +260,15 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         settingPath: "perplexity.apiKey",
         docsUrl: "https://www.perplexity.ai/settings/api",
         requiresApiKey: true,
-        getApiCall: async () => loadProviderModule('perplexity'),
+        getProviderClass: async () => loadProviderModule('perplexity'),
     },
     custom: {
         name: "Custom API",
         displayName: "Custom API",
         settingPath: "custom.authToken",
         docsUrl: "",
-        requiresApiKey: false, // Handled separately in handleCustomProvider
-        getApiCall: async () => loadProviderModule('custom'),
+        requiresApiKey: false, // Handled separately
+        getProviderClass: async () => loadProviderModule('custom'),
     },
     ollama: {
         name: "Ollama",
@@ -281,7 +276,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         settingPath: "",
         docsUrl: "",
         requiresApiKey: false,
-        getApiCall: async () => loadProviderModule('ollama'),
+        getProviderClass: async () => loadProviderModule('ollama'),
     },
     copilot: {
         name: "GitHub Copilot",
@@ -290,7 +285,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         docsUrl: "",
         requiresApiKey: false,
         defaultModel: "gpt-4o",
-        getApiCall: async () => loadProviderModule('copilot'),
+        getProviderClass: async () => loadProviderModule('copilot'),
     },
 };
 
@@ -519,179 +514,142 @@ export async function generateCommitMessage(
     }
 }
 
-async function generateMessageWithConfig(
-    config: ApiConfig,
-    diff: string,
-    customContext: string = ""
-): Promise<string> {
-    // Model info is displayed in the parent function
-    showModelInfo(config);
-
+/**
+ * Helper to instantiate the correct provider class
+ */
+async function getProviderInstance(config: ApiConfig): Promise<BaseAIProvider> {
     const providerConfig = PROVIDER_CONFIGS[config.type];
     if (!providerConfig) {
         throw new Error(`Unsupported API provider: ${config.type}`);
     }
 
-    // Handle special cases
-    if (config.type === "ollama") {
-        return await handleOllamaProvider(config as OllamaApiConfig, diff, customContext);
+    const ProviderClass = await providerConfig.getProviderClass();
+
+    if (config.type === 'custom') {
+        const customConfig = config as CustomApiConfig;
+        return new ProviderClass(
+            customConfig.baseUrl,
+            customConfig.endpoint,
+            customConfig.authType,
+            customConfig.authToken,
+            customConfig.headerKey || '',
+            customConfig.requestFormat,
+            customConfig.responseFormat,
+            customConfig.model
+        );
     }
 
+    if (config.type === 'ollama') {
+        const ollamaConfig = config as OllamaApiConfig;
+        return new ProviderClass(ollamaConfig.url, ollamaConfig.model);
+    }
+
+    if (config.type === 'copilot') {
+        const copilotConfig = config as CopilotApiConfig;
+        return new ProviderClass("", copilotConfig.model);
+    }
+
+    // Standard providers (API key + model)
+    const typedConfig = config as any;
+
+    // Check for API key requirements (should have been validated earlier, but good safety check)
+    if (providerConfig.requiresApiKey && !typedConfig.apiKey) {
+        throw new Error(`${providerConfig.displayName} API key is required.`);
+    }
+
+    return new ProviderClass(typedConfig.apiKey || "", typedConfig.model);
+}
+
+async function generateMessageWithConfig(
+    config: ApiConfig,
+    diff: string,
+    customContext: string = ""
+): Promise<string> {
+    // Check specific requirements first
+    const providerConfig = PROVIDER_CONFIGS[config.type];
+
+    // Handle Ollama specific checks
+    if (config.type === "ollama") {
+        const ollamaConfig = config as OllamaApiConfig;
+        if (!ollamaConfig.url) {
+            await vscode.window.showErrorMessage(
+                "Ollama URL not configured. Please check the extension settings."
+            );
+            await vscode.commands.executeCommand("gitmind.openSettings");
+            return "";
+        }
+        if (!ollamaConfig.model) {
+            await vscode.window.showErrorMessage(
+                "Ollama model not specified. Please select a model in the extension settings."
+            );
+            await vscode.commands.executeCommand("gitmind.openSettings");
+            return "";
+        }
+        const isOllamaAvailable = await checkOllamaAvailability(ollamaConfig.url);
+        if (!isOllamaAvailable) {
+            const instructions = getOllamaInstallInstructions();
+            await vscode.window.showErrorMessage("Ollama Connection Error", {
+                modal: true,
+                detail: instructions,
+            });
+            return "";
+        }
+    }
+
+    // Handle Copilot specific checks
     if (config.type === "copilot") {
         const copilotConfig = config as CopilotApiConfig;
-        debugLog(`[Copilot Handler] Model from config: "${copilotConfig.model}", Type: ${typeof copilotConfig.model}, Falsy: ${!copilotConfig.model}`);
-
         if (!copilotConfig.model || copilotConfig.model.trim() === "") {
-            debugLog(`[Copilot Handler] Invalid model detected, showing error message`);
             await vscode.window.showErrorMessage(
                 "Please select a GitHub Copilot model in the settings."
             );
             await vscode.commands.executeCommand("gitmind.openSettings");
             return "";
         }
-        // Lazy-load the Copilot API call function
-        debugLog(`[Copilot Handler] Calling Copilot API with model: "${copilotConfig.model}"`);
-        const copilotApiCall = await loadProviderModule('copilot');
-        return await copilotApiCall("", copilotConfig.model, diff, customContext);
     }
 
+    // Handle Custom API specific checks
     if (config.type === "custom") {
-        return await handleCustomProvider(config as CustomApiConfig, diff, customContext);
+        const subscriptionManager = SubscriptionManager.getInstance();
+        const isProUser = await subscriptionManager.isProUser();
+
+        if (!isProUser) {
+            await vscode.window.showErrorMessage(
+                "Custom API is a Pro feature. Please upgrade to GitMind Pro to use custom API endpoints.",
+                "Learn More"
+            ).then(selection => {
+                if (selection === "Learn More") {
+                    vscode.env.openExternal(vscode.Uri.parse("https://gitmind.com/pro"));
+                }
+            });
+            return "";
+        }
+
+        const customConfig = config as CustomApiConfig;
+        if (!customConfig.baseUrl || !customConfig.endpoint) {
+            await vscode.window.showErrorMessage(
+                "Custom API configuration incomplete. Please configure Base URL and Endpoint in settings.",
+                "Open Settings"
+            ).then(selection => {
+                if (selection === "Open Settings") {
+                    vscode.commands.executeCommand("gitmind.openSettings");
+                }
+            });
+            return "";
+        }
     }
 
-    // Handle standard providers
-    return await handleStandardProvider(config, providerConfig, diff, customContext);
-}
-
-async function handleCustomProvider(
-    config: CustomApiConfig,
-    diff: string,
-    customContext: string
-): Promise<string> {
-    // Check Pro status
-    const subscriptionManager = SubscriptionManager.getInstance();
-    const isProUser = await subscriptionManager.isProUser();
-
-    if (!isProUser) {
-        await vscode.window.showErrorMessage(
-            "Custom API is a Pro feature. Please upgrade to GitMind Pro to use custom API endpoints.",
-            "Learn More"
-        ).then(selection => {
-            if (selection === "Learn More") {
-                vscode.env.openExternal(vscode.Uri.parse("https://gitmind.com/pro"));
-            }
-        });
-        return "";
-    }
-
-    // Validate required fields
-    if (!config.baseUrl || !config.endpoint) {
-        await vscode.window.showErrorMessage(
-            "Custom API configuration incomplete. Please configure Base URL and Endpoint in settings.",
-            "Open Settings"
-        ).then(selection => {
-            if (selection === "Open Settings") {
-                vscode.commands.executeCommand("gitmind.openSettings");
-            }
-        });
-        return "";
-    }
-
-    if (!config.authToken && config.authType !== "none") {
-        await vscode.window.showErrorMessage(
-            "Custom API authentication token is required. Please configure it in settings.",
-            "Open Settings"
-        ).then(selection => {
-            if (selection === "Open Settings") {
-                vscode.commands.executeCommand("gitmind.openSettings");
-            }
-        });
-        return "";
-    }
-
-    if (!config.model) {
-        await vscode.window.showErrorMessage(
-            "Custom API model name is required. Please configure it in settings.",
-            "Open Settings"
-        ).then(selection => {
-            if (selection === "Open Settings") {
-                vscode.commands.executeCommand("gitmind.openSettings");
-            }
-        });
-        return "";
-    }
-
-    // Lazy-load the custom API call function
-    // Note: customApiCall has a different signature than the standard ApiCallFunction
-    const customApiCall = (await loadProviderModule('custom')) as any;
-    return await customApiCall(
-        config.baseUrl,
-        config.endpoint,
-        config.authType,
-        config.authToken,
-        config.headerKey || '',
-        config.requestFormat,
-        config.responseFormat,
-        config.model,
-        diff,
-        customContext
-    );
-}
-
-async function handleOllamaProvider(
-    config: OllamaApiConfig,
-    diff: string,
-    customContext: string
-): Promise<string> {
-    if (!config.url) {
-        await vscode.window.showErrorMessage(
-            "Ollama URL not configured. Please check the extension settings."
-        );
-        await vscode.commands.executeCommand("gitmind.openSettings");
-        return "";
-    }
-    if (!config.model) {
-        await vscode.window.showErrorMessage(
-            "Ollama model not specified. Please select a model in the extension settings."
-        );
-        await vscode.commands.executeCommand("gitmind.openSettings");
-        return "";
-    }
-
-    const isOllamaAvailable = await checkOllamaAvailability(config.url);
-    if (!isOllamaAvailable) {
-        const instructions = getOllamaInstallInstructions();
-        await vscode.window.showErrorMessage("Ollama Connection Error", {
-            modal: true,
-            detail: instructions,
-        });
-        return "";
-    }
-
-    // Lazy-load the Ollama API call function
-    const ollamaApiCall = await loadProviderModule('ollama');
-    return await ollamaApiCall(config.url, config.model, diff, customContext);
-}
-
-async function handleStandardProvider(
-    config: ApiConfig,
-    providerConfig: ProviderConfig,
-    diff: string,
-    customContext: string
-): Promise<string> {
-    const typedConfig = config as any;
-
-    // Check for API key if required
-    if (providerConfig.requiresApiKey && !typedConfig.apiKey) {
+    // Handle Standard providers API key check
+    if (providerConfig.requiresApiKey && !(config as any).apiKey) {
         const apiKey = await promptForApiKey(providerConfig);
         if (!apiKey) {
             return "";
         }
-        typedConfig.apiKey = apiKey;
+        (config as any).apiKey = apiKey;
     }
 
-    // Check for model
-    if (!typedConfig.model) {
+    // Standard model check
+    if (!(config as any).model && config.type !== 'custom') {
         await vscode.window.showErrorMessage(
             `Please select a ${providerConfig.displayName} model in the settings.`
         );
@@ -699,15 +657,8 @@ async function handleStandardProvider(
         return "";
     }
 
-    // Lazy-load the provider's API call function
-    const apiCallFunction = await providerConfig.getApiCall();
-
-    return await apiCallFunction(
-        typedConfig.apiKey || "",
-        typedConfig.model,
-        diff,
-        customContext
-    );
+    const provider = await getProviderInstance(config);
+    return provider.generateCommitMessage(diff, customContext);
 }
 
 async function promptForApiKey(providerConfig: ProviderConfig): Promise<string | null> {
@@ -1206,400 +1157,8 @@ async function generateWithRawPromptInternal(
     config: ApiConfig,
     prompt: string
 ): Promise<string> {
-    const providerConfig = PROVIDER_CONFIGS[config.type];
-    if (!providerConfig) {
-        throw new Error(`Unsupported API provider: ${config.type}`);
-    }
-
-    // Handle special cases
-    if (config.type === "ollama") {
-        return await handleOllamaRawPromptProvider(config as OllamaApiConfig, prompt);
-    }
-
-    if (config.type === "copilot") {
-        const copilotConfig = config as CopilotApiConfig;
-        if (!copilotConfig.model) {
-            await vscode.window.showErrorMessage(
-                "Please select a GitHub Copilot model in the settings."
-            );
-            await vscode.commands.executeCommand("gitmind.openSettings");
-            return "";
-        }
-        return await callCopilotRawPromptAPI(copilotConfig.model, prompt);
-    }
-
-    // Handle standard providers
-    return await handleStandardRawPromptProvider(config, providerConfig, prompt);
-}
-
-async function handleOllamaRawPromptProvider(
-    config: OllamaApiConfig,
-    prompt: string
-): Promise<string> {
-    if (!config.url) {
-        await vscode.window.showErrorMessage(
-            "Ollama URL not configured. Please check the extension settings."
-        );
-        await vscode.commands.executeCommand("gitmind.openSettings");
-        return "";
-    }
-    if (!config.model) {
-        await vscode.window.showErrorMessage(
-            "Ollama model not specified. Please select a model in the extension settings."
-        );
-        await vscode.commands.executeCommand("gitmind.openSettings");
-        return "";
-    }
-
-    const isOllamaAvailable = await checkOllamaAvailability(config.url);
-    if (!isOllamaAvailable) {
-        const instructions = getOllamaInstallInstructions();
-        await vscode.window.showErrorMessage("Ollama Connection Error", {
-            modal: true,
-            detail: instructions,
-        });
-        return "";
-    }
-
-    return await callOllamaRawPromptAPI(config.url, config.model, prompt);
-}
-
-async function handleStandardRawPromptProvider(
-    config: ApiConfig,
-    providerConfig: ProviderConfig,
-    prompt: string
-): Promise<string> {
-    const typedConfig = config as any;
-
-    // Check for API key if required
-    if (providerConfig.requiresApiKey && !typedConfig.apiKey) {
-        const apiKey = await promptForApiKey(providerConfig);
-        if (!apiKey) {
-            return "";
-        }
-        typedConfig.apiKey = apiKey;
-    }
-
-    // Check for model
-    if (!typedConfig.model) {
-        await vscode.window.showErrorMessage(
-            `Please select a ${providerConfig.displayName} model in the settings.`
-        );
-        await vscode.commands.executeCommand("gitmind.openSettings");
-        return "";
-    }
-
-    return await callProviderRawPromptAPI(
-        config.type,
-        typedConfig.apiKey || "",
-        typedConfig.model,
-        prompt
-    );
-}
-
-async function callProviderRawPromptAPI(
-    providerType: string,
-    apiKey: string,
-    model: string,
-    prompt: string
-): Promise<string> {
-    const requestManager = RequestManager.getInstance();
-    const controller = requestManager.getController();
-
-    switch (providerType) {
-        case 'gemini': {
-            const { GoogleGenerativeAI } = await import('@google/generative-ai');
-            const genAI = new GoogleGenerativeAI(apiKey);
-            const generativeModel = genAI.getGenerativeModel({ model });
-            const result = await generativeModel.generateContent(prompt);
-            return result.response.text();
-        }
-        case 'openai': {
-            const response = await fetch('https://api.openai.com/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({
-                    model: model,
-                    messages: [{ role: 'user', content: prompt }],
-                    temperature: 0.7
-                }),
-                signal: controller.signal
-            });
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(`OpenAI API error: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
-            }
-            const data = await response.json();
-            return data.choices[0].message.content;
-        }
-        case 'anthropic': {
-            const response = await fetch('https://api.anthropic.com/v1/messages', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': apiKey,
-                    'anthropic-version': '2023-06-01'
-                },
-                body: JSON.stringify({
-                    model: model,
-                    messages: [{ role: 'user', content: prompt }],
-                    max_tokens: 4096
-                }),
-                signal: controller.signal
-            });
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(`Anthropic API error: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
-            }
-            const data = await response.json();
-            return data.content[0].text;
-        }
-        case 'mistral': {
-            const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({
-                    model: model,
-                    messages: [{ role: 'user', content: prompt }]
-                }),
-                signal: controller.signal
-            });
-            if (!response.ok) {
-                throw new Error(`Mistral API error: ${response.status} ${response.statusText}`);
-            }
-            const data = await response.json();
-            return data.choices[0].message.content;
-        }
-        case 'cohere': {
-            const response = await fetch('https://api.cohere.ai/v2/chat', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`,
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    model: model,
-                    messages: [{ role: 'user', content: prompt }],
-                    max_tokens: 4096
-                }),
-                signal: controller.signal
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text().catch(() => '');
-                const baseMessage = `Cohere API error: ${response.status} ${response.statusText}`;
-                if (response.status === 404) {
-                    throw new Error(
-                        `${baseMessage}. The requested model or endpoint may not exist. ` +
-                        `Check the model name in settings and ensure it's a Cohere chat-capable model. ` +
-                        `${errorText ? `Details: ${errorText}` : ''}`
-                    );
-                }
-                throw new Error(`${baseMessage}${errorText ? ` - ${errorText}` : ''}`);
-            }
-
-            const data = await response.json();
-            const contentItems = data?.message?.content;
-            if (!Array.isArray(contentItems)) {
-                throw new Error('Cohere API returned an unexpected response format (missing message.content).');
-            }
-            const responseText = contentItems
-                .filter((item: any) => item?.type === 'text' && typeof item?.text === 'string')
-                .map((item: any) => item.text)
-                .join('')
-                .trim();
-
-            if (!responseText) {
-                throw new Error('Cohere API returned no text content.');
-            }
-
-            return responseText;
-        }
-        case 'together': {
-            const response = await fetch('https://api.together.xyz/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({
-                    model: model,
-                    messages: [{ role: 'user', content: prompt }]
-                }),
-                signal: controller.signal
-            });
-            if (!response.ok) {
-                throw new Error(`Together AI API error: ${response.status} ${response.statusText}`);
-            }
-            const data = await response.json();
-            return data.choices[0].message.content;
-        }
-        case 'openrouter': {
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`,
-                    'HTTP-Referer': 'https://github.com/gitmind',
-                    'X-Title': 'GitMind'
-                },
-                body: JSON.stringify({
-                    model: model,
-                    messages: [{ role: 'user', content: prompt }]
-                }),
-                signal: controller.signal
-            });
-            if (!response.ok) {
-                throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
-            }
-            const data = await response.json();
-            return data.choices[0].message.content;
-        }
-        case 'deepseek': {
-            const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({
-                    model: model,
-                    messages: [{ role: 'user', content: prompt }]
-                }),
-                signal: controller.signal
-            });
-            if (!response.ok) {
-                throw new Error(`DeepSeek API error: ${response.status} ${response.statusText}`);
-            }
-            const data = await response.json();
-            return data.choices[0].message.content;
-        }
-        case 'grok': {
-            const response = await fetch('https://api.x.ai/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({
-                    model: model,
-                    messages: [{ role: 'user', content: prompt }]
-                }),
-                signal: controller.signal
-            });
-            if (!response.ok) {
-                throw new Error(`Grok API error: ${response.status} ${response.statusText}`);
-            }
-            const data = await response.json();
-            return data.choices[0].message.content;
-        }
-        case 'perplexity': {
-            const response = await fetch('https://api.perplexity.ai/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({
-                    model: model,
-                    messages: [{ role: 'user', content: prompt }]
-                }),
-                signal: controller.signal
-            });
-            if (!response.ok) {
-                throw new Error(`Perplexity API error: ${response.status} ${response.statusText}`);
-            }
-            const data = await response.json();
-            return data.choices[0].message.content;
-        }
-        case 'huggingface': {
-            const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({
-                    inputs: prompt,
-                    parameters: {
-                        max_new_tokens: 4096,
-                        temperature: 0.7
-                    }
-                }),
-                signal: controller.signal
-            });
-            if (!response.ok) {
-                throw new Error(`Hugging Face API error: ${response.status} ${response.statusText}`);
-            }
-            const data = await response.json();
-            return Array.isArray(data) ? data[0].generated_text : data.generated_text;
-        }
-        case 'custom': {
-            const customConfig = vscode.workspace.getConfiguration('gitmind').get('custom') as any;
-            const { callCustomAPI } = await import('./custom.js');
-            return await callCustomAPI(
-                customConfig.baseUrl,
-                customConfig.endpoint,
-                customConfig.authType,
-                apiKey,
-                customConfig.headerKey || '',
-                customConfig.requestFormat,
-                customConfig.responseFormat,
-                model,
-                prompt,
-                ''
-            );
-        }
-        default:
-            throw new Error(`Unsupported API provider: ${providerType}`);
-    }
-}
-
-async function callOllamaRawPromptAPI(url: string, model: string, prompt: string): Promise<string> {
-    const requestManager = RequestManager.getInstance();
-    const controller = requestManager.getController();
-
-    const response = await fetch(`${url}/api/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            model: model,
-            prompt: prompt,
-            stream: false
-        }),
-        signal: controller.signal
-    });
-    if (!response.ok) {
-        throw new Error(`Ollama API error: ${response.status} ${response.statusText}`);
-    }
-    const data = await response.json();
-    return data.response;
-}
-
-async function callCopilotRawPromptAPI(model: string, prompt: string): Promise<string> {
-    const requestManager = RequestManager.getInstance();
-    const controller = requestManager.getController();
-
-    const copilotApi = await vscode.lm.selectChatModels({ family: model });
-    if (!copilotApi || copilotApi.length === 0) {
-        throw new Error('GitHub Copilot not available');
-    }
-    const messages = [vscode.LanguageModelChatMessage.User(prompt)];
-    const cancellationToken = new vscode.CancellationTokenSource();
-    controller.signal.addEventListener('abort', () => cancellationToken.cancel());
-    const response = await copilotApi[0].sendRequest(messages, {}, cancellationToken.token);
-    let result = '';
-    for await (const chunk of response.text) {
-        result += chunk;
-    }
-    return result;
+    const provider = await getProviderInstance(config);
+    return provider.generateWithRawPrompt(prompt);
 }
 
 export async function generateCommitHistoryAnalysis(
@@ -1679,762 +1238,11 @@ async function generateAnalysisWithConfig(
     }
 
     // Check circuit breaker before making request
-    const provider = getProviderName(config.type);
-    if (!checkCircuitBreaker(provider)) {
-        throw new Error(`${provider} is temporarily unavailable due to recent failures. Please try again in a minute.`);
+    const providerName = getProviderName(config.type);
+    if (!checkCircuitBreaker(providerName)) {
+        throw new Error(`${providerName} is temporarily unavailable due to recent failures. Please try again in a minute.`);
     }
 
-    // Generate the analysis prompt
-    const analysisPrompt = generateCommitHistoryAnalysisPrompt(
-        commitHistory,
-        maxCommits,
-        includeAuthorInfo
-    );
-
-    // Validate prompt length for the specific provider
-    const validation = validatePromptLength(analysisPrompt, config.type.toLowerCase());
-    if (!validation.valid) {
-        debugLog(`[CommitHistory] Prompt validation failed: ${validation.recommendation}`);
-        throw new Error(`Prompt too long for ${config.type}: ${validation.recommendation}`);
-    }
-
-    // Log the complete prompt being sent to the AI provider
-    debugLog('[CommitHistory] ==================== COMPLETE AI PROMPT ====================');
-    debugLog(`[CommitHistory] Provider: ${config.type}, Max Commits: ${maxCommits}, Include Author: ${includeAuthorInfo}`);
-    debugLog(`[CommitHistory] Prompt length: ${analysisPrompt.length} characters (validated: ${validation.valid})`);
-    debugLog('[CommitHistory] Full prompt being sent to AI provider:');
-    debugLog(analysisPrompt);
-    debugLog('[CommitHistory] ================================================================');
-
-    // Handle special cases
-    if (config.type === "ollama") {
-        return await handleOllamaAnalysisProvider(config as OllamaApiConfig, analysisPrompt);
-    }
-
-    if (config.type === "copilot") {
-        const copilotConfig = config as CopilotApiConfig;
-        if (!copilotConfig.model) {
-            await vscode.window.showErrorMessage(
-                "Please select a GitHub Copilot model in the settings."
-            );
-            await vscode.commands.executeCommand("gitmind.openSettings");
-            return "";
-        }
-        return await callCopilotAnalysisAPI(copilotConfig.model, analysisPrompt);
-    }
-
-    // Handle standard providers
-    return await handleStandardAnalysisProvider(config, providerConfig, analysisPrompt);
-}
-
-async function handleOllamaAnalysisProvider(
-    config: OllamaApiConfig,
-    analysisPrompt: string
-): Promise<string> {
-    if (!config.url) {
-        await vscode.window.showErrorMessage(
-            "Ollama URL not configured. Please check the extension settings."
-        );
-        await vscode.commands.executeCommand("gitmind.openSettings");
-        return "";
-    }
-    if (!config.model) {
-        await vscode.window.showErrorMessage(
-            "Ollama model not specified. Please select a model in the extension settings."
-        );
-        await vscode.commands.executeCommand("gitmind.openSettings");
-        return "";
-    }
-
-    const isOllamaAvailable = await checkOllamaAvailability(config.url);
-    if (!isOllamaAvailable) {
-        const instructions = getOllamaInstallInstructions();
-        await vscode.window.showErrorMessage("Ollama Connection Error", {
-            modal: true,
-            detail: instructions,
-        });
-        return "";
-    }
-
-    return await callOllamaAnalysisAPI(config.url, config.model, analysisPrompt);
-}
-
-async function handleStandardAnalysisProvider(
-    config: ApiConfig,
-    providerConfig: ProviderConfig,
-    analysisPrompt: string
-): Promise<string> {
-    const typedConfig = config as any;
-
-    // Check for API key if required
-    if (providerConfig.requiresApiKey && !typedConfig.apiKey) {
-        const apiKey = await promptForApiKey(providerConfig);
-        if (!apiKey) {
-            return "";
-        }
-        typedConfig.apiKey = apiKey;
-    }
-
-    // Check for model
-    if (!typedConfig.model) {
-        await vscode.window.showErrorMessage(
-            `Please select a ${providerConfig.displayName} model in the settings.`
-        );
-        await vscode.commands.executeCommand("gitmind.openSettings");
-        return "";
-    }
-
-    return await callProviderAnalysisAPI(
-        config.type,
-        typedConfig.apiKey || "",
-        typedConfig.model,
-        analysisPrompt
-    );
-}
-
-async function callProviderAnalysisAPI(
-    providerType: string,
-    apiKey: string,
-    model: string,
-    analysisPrompt: string
-): Promise<string> {
-    switch (providerType) {
-        case 'gemini':
-            return await callGeminiAnalysisAPI(apiKey, model, analysisPrompt);
-        case 'openai':
-            return await callOpenAIAnalysisAPI(apiKey, model, analysisPrompt);
-        case 'anthropic':
-            return await callAnthropicAnalysisAPI(apiKey, model, analysisPrompt);
-        case 'cohere':
-            return await callCohereAnalysisAPI(apiKey, model, analysisPrompt);
-        case 'mistral':
-            return await callMistralAnalysisAPI(apiKey, model, analysisPrompt);
-        case 'together':
-            return await callTogetherAnalysisAPI(apiKey, model, analysisPrompt);
-        case 'openrouter':
-            return await callOpenRouterAnalysisAPI(apiKey, model, analysisPrompt);
-        case 'huggingface':
-            return await callHuggingFaceAnalysisAPI(apiKey, model, analysisPrompt);
-        case 'deepseek':
-            return await callDeepSeekAnalysisAPI(apiKey, model, analysisPrompt);
-        case 'grok':
-            return await callGrokAnalysisAPI(apiKey, model, analysisPrompt);
-        case 'perplexity':
-            return await callPerplexityAnalysisAPI(apiKey, model, analysisPrompt);
-        case 'custom':
-            const config = vscode.workspace.getConfiguration("gitmind").get("custom") as any;
-            return await callCustomAnalysisAPI(
-                config.baseUrl,
-                config.endpoint,
-                config.authType,
-                apiKey,
-                config.headerKey || '',
-                config.requestFormat,
-                config.responseFormat,
-                model,
-                analysisPrompt
-            );
-        default:
-            throw new Error(`Unsupported API provider: ${providerType}`);
-    }
-}
-
-// Individual analysis API functions
-async function callGeminiAnalysisAPI(apiKey: string, model: string, analysisPrompt: string): Promise<string> {
-    debugLog(`[CommitHistory] Calling Gemini API with model: ${model}`);
-    debugLog('[CommitHistory] Gemini Analysis Prompt:');
-    debugLog(analysisPrompt);
-
-    try {
-        // Import Gemini API utilities
-        const { GoogleGenerativeAI } = await import("@google/generative-ai");
-
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const generativeModel = genAI.getGenerativeModel({
-            model: model,
-            generationConfig: {
-                temperature: 0.3,
-                topK: 40,
-                topP: 0.9,
-                // No maxOutputTokens limit for full commit analysis reports
-            },
-        });
-
-        const result = await generativeModel.generateContent(analysisPrompt);
-        const responseText = result.response.text();
-
-        debugLog('[CommitHistory] ==================== GEMINI API RESPONSE ====================');
-        debugLog(`[CommitHistory] Response length: ${responseText.length} characters`);
-        debugLog('[CommitHistory] Response content:');
-        debugLog(responseText);
-        debugLog('[CommitHistory] ===============================================================');
-
-        return responseText;
-    } catch (error) {
-        debugLog('[CommitHistory] Error in callGeminiAnalysisAPI:', error);
-
-        // Provide more helpful error messages
-        const errorMessage = error instanceof Error ? error.message : String(error);
-
-        if (errorMessage.includes("404") || errorMessage.includes("not found")) {
-            throw new Error(`Model '${model}' is not found or not supported for this API version. Please check the model name in settings or try a different Gemini model like 'gemini-2.0-flash'.`);
-        } else if (errorMessage.includes("permission") || errorMessage.includes("access") || errorMessage.includes("403")) {
-            throw new Error(`Access denied to model '${model}'. Please verify your API key has access to this model.`);
-        } else if (errorMessage.includes("401") || errorMessage.includes("unauthorized") || errorMessage.includes("API key")) {
-            throw new Error(`Invalid or missing Gemini API key. Please check your API key in settings.`);
-        } else if (errorMessage.includes("429") || errorMessage.includes("rate limit")) {
-            throw new Error(`Gemini API rate limit exceeded. Please wait a few minutes and try again.`);
-        } else if (errorMessage.includes("500") || errorMessage.includes("502") || errorMessage.includes("503") || errorMessage.includes("504")) {
-            throw new Error(`Gemini API service error. The service may be temporarily unavailable. Please try again later.`);
-        } else {
-            throw new Error(`Failed to analyze commit history with Gemini: ${errorMessage}`);
-        }
-    }
-}
-
-async function callOpenAIAnalysisAPI(apiKey: string, model: string, analysisPrompt: string): Promise<string> {
-    debugLog(`[CommitHistory] Calling OpenAI API with model: ${model}`);
-    debugLog('[CommitHistory] OpenAI Analysis Prompt:');
-    debugLog(analysisPrompt);
-
-    // Determine timeout based on prompt size
-    const promptLength = analysisPrompt.length;
-    const timeout = promptLength > 50000 ? LARGE_COMMIT_HISTORY_TIMEOUT : COMMIT_HISTORY_ANALYSIS_TIMEOUT;
-    debugLog(`[CommitHistory] Using timeout: ${timeout}ms for prompt of length: ${promptLength}`);
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-        debugLog('[CommitHistory] Request timed out, aborting...');
-        controller.abort();
-    }, timeout);
-
-    try {
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
-                model: model,
-                messages: [
-                    {
-                        role: "user",
-                        content: analysisPrompt
-                    }
-                ],
-                temperature: 0.3,
-                // No max_tokens limit for full commit analysis reports
-            }),
-            signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-            throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        const responseText = data.choices[0]?.message?.content || "";
-
-        debugLog('[CommitHistory] ==================== OPENAI API RESPONSE ====================');
-        debugLog(`[CommitHistory] Response length: ${responseText.length} characters`);
-        debugLog('[CommitHistory] Response content:');
-        debugLog(responseText);
-        debugLog('[CommitHistory] ===============================================================');
-
-        return responseText;
-    } catch (error) {
-        clearTimeout(timeoutId);
-        if (error instanceof Error && error.name === 'AbortError') {
-            throw new Error('Commit history analysis request timed out. Please try with fewer commits or check your connection.');
-        }
-        throw error;
-    }
-}
-
-async function callAnthropicAnalysisAPI(apiKey: string, model: string, analysisPrompt: string): Promise<string> {
-    debugLog(`[CommitHistory] Calling Anthropic API with model: ${model}`);
-    debugLog('[CommitHistory] Anthropic Analysis Prompt:');
-    debugLog(analysisPrompt);
-
-    // Determine timeout based on prompt size
-    const promptLength = analysisPrompt.length;
-    const timeout = promptLength > 50000 ? LARGE_COMMIT_HISTORY_TIMEOUT : COMMIT_HISTORY_ANALYSIS_TIMEOUT;
-    debugLog(`[CommitHistory] Using timeout: ${timeout}ms for prompt of length: ${promptLength}`);
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-        debugLog('[CommitHistory] Request timed out, aborting...');
-        controller.abort();
-    }, timeout);
-
-    try {
-        const response = await fetch("https://api.anthropic.com/v1/messages", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "x-api-key": apiKey,
-                "anthropic-version": "2023-06-01",
-            },
-            body: JSON.stringify({
-                model: model,
-                temperature: 0.3,
-                messages: [
-                    {
-                        role: "user",
-                        content: analysisPrompt
-                    }
-                ],
-                // No max_tokens limit for full commit analysis reports
-            }),
-            signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-            throw new Error(`Anthropic API error: ${response.status} ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        const responseText = data.content[0]?.text || "";
-
-        debugLog('[CommitHistory] ==================== ANTHROPIC API RESPONSE ==================');
-        debugLog(`[CommitHistory] Response length: ${responseText.length} characters`);
-        debugLog('[CommitHistory] Response content:');
-        debugLog(responseText);
-        debugLog('[CommitHistory] ===============================================================');
-
-        return responseText;
-    } catch (error) {
-        clearTimeout(timeoutId);
-        if (error instanceof Error && error.name === 'AbortError') {
-            throw new Error('Commit history analysis request timed out. Please try with fewer commits or check your connection.');
-        }
-        throw error;
-    }
-}
-
-async function callCohereAnalysisAPI(apiKey: string, model: string, analysisPrompt: string): Promise<string> {
-    debugLog(`[CommitHistory] Calling Cohere API with model: ${model}`);
-    debugLog('[CommitHistory] Cohere Analysis Prompt:');
-    debugLog(analysisPrompt);
-
-    // Determine timeout based on prompt size
-    const promptLength = analysisPrompt.length;
-    const timeout = promptLength > 50000 ? LARGE_COMMIT_HISTORY_TIMEOUT : COMMIT_HISTORY_ANALYSIS_TIMEOUT;
-    debugLog(`[CommitHistory] Using timeout: ${timeout}ms for prompt of length: ${promptLength}`);
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-        debugLog('[CommitHistory] Request timed out, aborting...');
-        controller.abort();
-    }, timeout);
-
-    try {
-        const response = await fetch("https://api.cohere.ai/v2/chat", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${apiKey}`,
-                "Accept": "application/json",
-            },
-            body: JSON.stringify({
-                model: model,
-                messages: [
-                    {
-                        role: "user",
-                        content: analysisPrompt
-                    }
-                ],
-                temperature: 0.3,
-                // No max_tokens limit for full commit analysis reports
-            }),
-            signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-            const errorText = await response.text().catch(() => '');
-            debugLog(`[CommitHistory] Cohere API error details: ${errorText}`);
-
-            const baseMessage = `Cohere API error: ${response.status} ${response.statusText}`;
-            if (response.status === 404) {
-                throw new Error(
-                    `${baseMessage}. The requested model or endpoint may not exist. ` +
-                    `Check the model name in settings and ensure you have access to it. ` +
-                    `${errorText ? `Details: ${errorText}` : ''}`
-                );
-            }
-
-            throw new Error(`${baseMessage}${errorText ? ` - ${errorText}` : ''}`);
-        }
-
-        const data = await response.json();
-        const contentItems = data?.message?.content;
-        const responseText = Array.isArray(contentItems)
-            ? contentItems
-                .filter((item: any) => item?.type === 'text' && typeof item?.text === 'string')
-                .map((item: any) => item.text)
-                .join('')
-                .trim()
-            : "";
-
-        debugLog('[CommitHistory] ==================== COHERE API RESPONSE ====================');
-        debugLog(`[CommitHistory] Response length: ${responseText.length} characters`);
-        debugLog('[CommitHistory] Response content:');
-        debugLog(responseText);
-        debugLog('[CommitHistory] ===============================================================');
-
-        return responseText;
-    } catch (error) {
-        clearTimeout(timeoutId);
-        if (error instanceof Error && error.name === 'AbortError') {
-            throw new Error('Commit history analysis request timed out. Please try with fewer commits or check your connection.');
-        }
-        throw error;
-    }
-}
-
-// Placeholder functions for other providers (implement as needed)
-async function callMistralAnalysisAPI(apiKey: string, model: string, analysisPrompt: string): Promise<string> {
-    debugLog(`[CommitHistory] Calling Mistral API with model: ${model} (native implementation)`);
-    debugLog('[CommitHistory] Mistral Analysis Prompt:');
-    debugLog(analysisPrompt);
-
-    const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-            model: model,
-            messages: [
-                {
-                    role: "user",
-                    content: analysisPrompt
-                }
-            ],
-            temperature: 0.3,
-            // max_tokens: 2000,
-        }),
-    });
-
-    if (!response.ok) {
-        throw new Error(`Mistral API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const responseText = data.choices[0]?.message?.content || "";
-
-    debugLog('[CommitHistory] ==================== MISTRAL API RESPONSE ====================');
-    debugLog(`[CommitHistory] Response length: ${responseText.length} characters`);
-    debugLog('[CommitHistory] Response content:');
-    debugLog(responseText);
-    debugLog('[CommitHistory] ===============================================================');
-
-    return responseText;
-}
-
-async function callTogetherAnalysisAPI(apiKey: string, model: string, analysisPrompt: string): Promise<string> {
-    debugLog(`[CommitHistory] Calling Together API with model: ${model} (native implementation)`);
-    debugLog('[CommitHistory] Together Analysis Prompt:');
-    debugLog(analysisPrompt);
-
-    const response = await fetch("https://api.together.xyz/v1/chat/completions", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-            model: model,
-            messages: [
-                {
-                    role: "user",
-                    content: analysisPrompt
-                }
-            ],
-            temperature: 0.3,
-            // max_tokens: 2000,
-        }),
-    });
-
-    if (!response.ok) {
-        throw new Error(`Together API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const responseText = data.choices[0]?.message?.content || "";
-
-    debugLog('[CommitHistory] ==================== TOGETHER API RESPONSE ====================');
-    debugLog(`[CommitHistory] Response length: ${responseText.length} characters`);
-    debugLog('[CommitHistory] Response content:');
-    debugLog(responseText);
-    debugLog('[CommitHistory] ===============================================================');
-
-    return responseText;
-}
-
-async function callOpenRouterAnalysisAPI(apiKey: string, model: string, analysisPrompt: string): Promise<string> {
-    debugLog(`[CommitHistory] Calling OpenRouter API with model: ${model} (native implementation)`);
-    debugLog('[CommitHistory] OpenRouter Analysis Prompt:');
-    debugLog(analysisPrompt);
-
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`,
-            "HTTP-Referer": "https://github.com/shahabahreini/AI-Commit-Assistant",
-            "X-Title": "GitMind Commit History Analysis",
-        },
-        body: JSON.stringify({
-            model: model,
-            messages: [
-                {
-                    role: "user",
-                    content: analysisPrompt
-                }
-            ],
-            temperature: 0.3,
-            // max_tokens: 2000,
-        }),
-    });
-
-    if (!response.ok) {
-        throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const responseText = data.choices[0]?.message?.content || "";
-
-    debugLog('[CommitHistory] ==================== OPENROUTER API RESPONSE ==================');
-    debugLog(`[CommitHistory] Response length: ${responseText.length} characters`);
-    debugLog('[CommitHistory] Response content:');
-    debugLog(responseText);
-    debugLog('[CommitHistory] ===============================================================');
-
-    return responseText;
-}
-
-async function callHuggingFaceAnalysisAPI(apiKey: string, model: string, analysisPrompt: string): Promise<string> {
-    debugLog(`[CommitHistory] Calling HuggingFace API with model: ${model} (native implementation)`);
-    debugLog('[CommitHistory] HuggingFace Analysis Prompt:');
-    debugLog(analysisPrompt);
-
-    const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-            inputs: analysisPrompt,
-            parameters: {
-                temperature: 0.3,
-                // max_new_tokens: 2000,
-                return_full_text: false,
-            },
-        }),
-    });
-
-    if (!response.ok) {
-        throw new Error(`HuggingFace API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    let responseText = "";
-
-    // Handle different HuggingFace response formats
-    if (Array.isArray(data) && data.length > 0) {
-        responseText = data[0].generated_text || data[0].text || "";
-    } else if (data.generated_text) {
-        responseText = data.generated_text;
-    } else if (typeof data === 'string') {
-        responseText = data;
-    }
-
-    debugLog('[CommitHistory] ==================== HUGGINGFACE API RESPONSE ==============');
-    debugLog(`[CommitHistory] Response length: ${responseText.length} characters`);
-    debugLog('[CommitHistory] Response content:');
-    debugLog(responseText);
-    debugLog('[CommitHistory] ===============================================================');
-
-    return responseText;
-}
-
-async function callDeepSeekAnalysisAPI(apiKey: string, model: string, analysisPrompt: string): Promise<string> {
-    debugLog(`[CommitHistory] Calling DeepSeek API with model: ${model} (native implementation)`);
-    debugLog('[CommitHistory] DeepSeek Analysis Prompt:');
-    debugLog(analysisPrompt);
-
-    const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-            model: model,
-            messages: [
-                {
-                    role: "user",
-                    content: analysisPrompt
-                }
-            ],
-            temperature: 0.3,
-            // max_tokens: 2000,
-        }),
-    });
-
-    if (!response.ok) {
-        throw new Error(`DeepSeek API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const responseText = data.choices[0]?.message?.content || "";
-
-    debugLog('[CommitHistory] ==================== DEEPSEEK API RESPONSE ==================');
-    debugLog(`[CommitHistory] Response length: ${responseText.length} characters`);
-    debugLog('[CommitHistory] Response content:');
-    debugLog(responseText);
-    debugLog('[CommitHistory] ===============================================================');
-
-    return responseText;
-}
-
-async function callGrokAnalysisAPI(apiKey: string, model: string, analysisPrompt: string): Promise<string> {
-    debugLog(`[CommitHistory] Calling Grok API with model: ${model} (native implementation)`);
-    debugLog('[CommitHistory] Grok Analysis Prompt:');
-    debugLog(analysisPrompt);
-
-    const response = await fetch("https://api.x.ai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-            model: model,
-            messages: [
-                {
-                    role: "user",
-                    content: analysisPrompt
-                }
-            ],
-            temperature: 0.3,
-            // max_tokens: 2000,
-        }),
-    });
-
-    if (!response.ok) {
-        throw new Error(`Grok API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const responseText = data.choices[0]?.message?.content || "";
-
-    debugLog('[CommitHistory] ==================== GROK API RESPONSE =====================');
-    debugLog(`[CommitHistory] Response length: ${responseText.length} characters`);
-    debugLog('[CommitHistory] Response content:');
-    debugLog(responseText);
-    debugLog('[CommitHistory] ===============================================================');
-
-    return responseText;
-}
-
-async function callPerplexityAnalysisAPI(apiKey: string, model: string, analysisPrompt: string): Promise<string> {
-    debugLog(`[CommitHistory] Calling Perplexity API with model: ${model} (native implementation)`);
-    debugLog('[CommitHistory] Perplexity Analysis Prompt:');
-    debugLog(analysisPrompt);
-
-    const response = await fetch("https://api.perplexity.ai/chat/completions", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-            model: model,
-            messages: [
-                {
-                    role: "user",
-                    content: analysisPrompt
-                }
-            ],
-            temperature: 0.3,
-            // max_tokens: 2000,
-        }),
-    });
-
-    if (!response.ok) {
-        throw new Error(`Perplexity API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const responseText = data.choices[0]?.message?.content || "";
-
-    debugLog('[CommitHistory] ==================== PERPLEXITY API RESPONSE ===============');
-    debugLog(`[CommitHistory] Response length: ${responseText.length} characters`);
-    debugLog('[CommitHistory] Response content:');
-    debugLog(responseText);
-    debugLog('[CommitHistory] ===============================================================');
-
-    return responseText;
-}
-
-async function callCustomAnalysisAPI(
-    baseUrl: string,
-    endpoint: string,
-    authType: string,
-    authToken: string,
-    headerKey: string,
-    requestFormat: string,
-    responseFormat: string,
-    model: string,
-    analysisPrompt: string
-): Promise<string> {
-    debugLog(`[CommitHistory] Calling Custom API with model: ${model}`);
-    debugLog('[CommitHistory] Custom Analysis Prompt:');
-    debugLog(analysisPrompt);
-
-    const customApiCall = (await loadProviderModule('custom')) as any;
-    const result = await customApiCall(
-        baseUrl,
-        endpoint,
-        authType,
-        authToken,
-        headerKey,
-        requestFormat,
-        responseFormat,
-        model,
-        "",
-        analysisPrompt
-    );
-
-    debugLog('[CommitHistory] ==================== CUSTOM API RESPONSE ==================');
-    debugLog(`[CommitHistory] Response length: ${result.length} characters`);
-    debugLog('[CommitHistory] Response content:');
-    debugLog(result);
-    debugLog('[CommitHistory] ===============================================================');
-
-    return result;
-}
-
-// Additional analysis API functions that delegate to existing implementations
-async function callOllamaAnalysisAPI(url: string, model: string, analysisPrompt: string): Promise<string> {
-    debugLog(`[CommitHistory] Delegating to Ollama API with model: ${model}`);
-    const ollamaApiCall = await loadProviderModule('ollama');
-    return await ollamaApiCall(url, model, "", analysisPrompt);
-}
-
-async function callCopilotAnalysisAPI(model: string, analysisPrompt: string): Promise<string> {
-    debugLog(`[CommitHistory] Delegating to Copilot API with model: ${model}`);
-    const copilotApiCall = await loadProviderModule('copilot');
-    return await copilotApiCall("", model, "", analysisPrompt);
+    const provider = await getProviderInstance(config);
+    return provider.generateCommitHistoryAnalysis(commitHistory, maxCommits, includeAuthorInfo);
 }
