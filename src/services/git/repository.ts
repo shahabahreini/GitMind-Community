@@ -18,6 +18,7 @@ const stat = promisify(fs.stat);
  */
 async function findGitRepositoriesInSubdirectories(searchPath: string, maxDepth: number = 3): Promise<string[]> {
     const repositories: string[] = [];
+    const ignoredDirs = ["node_modules", "bower_components", "vendor"];
 
     async function searchRecursive(currentPath: string, depth: number): Promise<void> {
         if (depth > maxDepth) {
@@ -49,7 +50,7 @@ async function findGitRepositoriesInSubdirectories(searchPath: string, maxDepth:
             // Search subdirectories
             const entries = await readdir(currentPath);
             for (const entry of entries) {
-                if (entry.startsWith('.')) {
+                if (entry.startsWith('.') || ignoredDirs.includes(entry)) {
                     continue; // Skip hidden directories
                 }
 
