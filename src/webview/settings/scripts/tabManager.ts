@@ -23,11 +23,15 @@ export function getTabManagerScript(): string {
       // Add click event listeners to tab buttons
       tabButtons.forEach(button => {
         button.addEventListener('click', function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          const targetTab = this.getAttribute('data-tab');
-          console.log('Tab clicked:', targetTab);
-          switchToTab(targetTab);
+          // Only prevent default if this is actually a tab button click
+          // Don't interfere with other UI elements like language dropdowns
+          if (this.classList.contains('tab-button') && this.getAttribute('data-tab')) {
+            e.preventDefault();
+            e.stopPropagation();
+            const targetTab = this.getAttribute('data-tab');
+            console.log('Tab clicked:', targetTab);
+            switchToTab(targetTab);
+          }
         });
       });
 
@@ -94,6 +98,10 @@ export function getTabManagerScript(): string {
       console.log('Reinitializing tabs...');
       setTimeout(() => {
         initializeTabs();
+        // Also reinitialize language dropdown if available
+        if (window.reinitializeLanguageDropdown) {
+          window.reinitializeLanguageDropdown();
+        }
       }, 200);
     }
 

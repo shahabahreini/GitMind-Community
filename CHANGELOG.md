@@ -11,13 +11,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features (Pro)
 
 - Added **Target Commit Language** feature for multilingual commit messages.
-  - Introduced support for 30 languages: English, Spanish, French, German, Italian, Portuguese, Russian, Chinese, Japanese, Korean, Arabic, Hindi, Turkish, Dutch, Polish, Vietnamese, Thai, Swedish, Danish, Norwegian, Finnish, Greek, Hebrew, Persian, Ukrainian, Czech, Romanian, Hungarian, Indonesian, and Malay.
+  - Introduced support for **60 languages** across all major language families globally.
   - AI generates commit messages using professional developer terminology widely accepted in the selected language.
   - Maintains commit message format and structure in the target language for consistency.
   - Perfect for international development teams and localized projects.
-  - Added new configuration setting `gitmind.commit.targetLanguage` with language dropdown in Pro Features Settings UI.
+  - **Searchable Language Dropdown**: Click the language selector to reveal a search input. Type to filter languages instantly (e.g., "span" for Spanish, "русс" for Russian).
+  - Supported languages:
+    - **European**: English, Spanish, French, German, Italian, Portuguese, Russian, Polish, Dutch, Swedish, Danish, Norwegian, Finnish, Czech, Romanian, Hungarian, Bulgarian, Croatian, Slovak, Lithuanian, Latvian, Estonian, Greek, Albanian, Armenian
+    - **Asian**: Chinese, Japanese, Korean, Hindi, Bengali, Urdu, Marathi, Telugu, Tamil, Punjabi, Kannada, Gujarati, Bhojpuri, Vietnamese, Thai, Turkish, Persian, Javanese, Tagalog, Indonesian, Malay, Kazakh, Uzbek, Azerbaijani
+    - **African**: Arabic, Amharic, Hausa, Yoruba, Igbo, Oromo, Somali
+    - **Caucasus & Central Asia**: Georgian
+  - Added new configuration setting `gitmind.commit.targetLanguage` with searchable dropdown in Pro Features Settings UI.
   - Updated prompt generation to include language-specific instructions for accurate translation.
   - Added type definitions and configuration management for target language selection.
+  - Fixed persistence issue where language selection would reset on save (now properly saved to VS Code configuration).
+
+### Fixed
+
+- **Target Commit Language Persistence**: Fixed issue where the selected target language would revert to English after clicking Save. Now properly persists to workspace configuration across sessions.
 
 ## v4.7.0 - 2026-01-07
 

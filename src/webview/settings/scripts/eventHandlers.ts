@@ -136,7 +136,7 @@ export function getEventHandlersScript(): string {
       const currentFormValues = {
         commitVerbose: document.getElementById('commitVerbose')?.checked || false,
         commitCaptureAllChanges: document.getElementById('commitCaptureAllChanges')?.checked || false,
-        commitTargetLanguage: document.getElementById('commitTargetLanguage')?.value || 'english',
+        commitTargetLanguage: document.getElementById('commitTargetLanguage')?.value || document.getElementById('commitTargetLanguageValue')?.value || 'english',
         commitStyle: document.querySelector('input[name="gm-commit-style"]:checked')?.value || 'conventional',
         showDiagnostics: document.getElementById('showDiagnostics')?.checked || false,
         telemetryEnabled: document.getElementById('telemetryEnabled')?.checked || false,

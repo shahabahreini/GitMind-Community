@@ -237,6 +237,17 @@ export class ProFeatureRenderer extends BaseRenderer {
             { value: 'korean', label: 'Korean (한국어)' },
             { value: 'arabic', label: 'Arabic (العربية)' },
             { value: 'hindi', label: 'Hindi (हिन्दी)' },
+            { value: 'bengali', label: 'Bengali (বাংলা)' },
+            { value: 'urdu', label: 'Urdu (اردو)' },
+            { value: 'marathi', label: 'Marathi (मराठी)' },
+            { value: 'telugu', label: 'Telugu (తెలుగు)' },
+            { value: 'tamil', label: 'Tamil (தமிழ்)' },
+            { value: 'javanese', label: 'Javanese (Basa Jawa)' },
+            { value: 'tagalog', label: 'Tagalog (Filipino)' },
+            { value: 'punjabi', label: 'Punjabi (ਪੰਜਾਬੀ)' },
+            { value: 'kannada', label: 'Kannada (ಕನ್ನಡ)' },
+            { value: 'gujarati', label: 'Gujarati (ગુજરાતી)' },
+            { value: 'bhojpuri', label: 'Bhojpuri (भोजपुरी)' },
             { value: 'turkish', label: 'Turkish (Türkçe)' },
             { value: 'dutch', label: 'Dutch (Nederlands)' },
             { value: 'polish', label: 'Polish (Polski)' },
@@ -254,7 +265,25 @@ export class ProFeatureRenderer extends BaseRenderer {
             { value: 'romanian', label: 'Romanian (Română)' },
             { value: 'hungarian', label: 'Hungarian (Magyar)' },
             { value: 'indonesian', label: 'Indonesian (Bahasa Indonesia)' },
-            { value: 'malay', label: 'Malay (Bahasa Melayu)' }
+            { value: 'malay', label: 'Malay (Bahasa Melayu)' },
+            { value: 'hausa', label: 'Hausa' },
+            { value: 'amharic', label: 'Amharic (አማርኛ)' },
+            { value: 'yoruba', label: 'Yoruba' },
+            { value: 'igbo', label: 'Igbo' },
+            { value: 'oromo', label: 'Oromo' },
+            { value: 'somali', label: 'Somali' },
+            { value: 'bulgarian', label: 'Bulgarian (Български)' },
+            { value: 'croatian', label: 'Croatian (Hrvatski)' },
+            { value: 'slovak', label: 'Slovak (Slovenčina)' },
+            { value: 'lithuanian', label: 'Lithuanian (Lietuvių)' },
+            { value: 'latvian', label: 'Latvian (Latviešu)' },
+            { value: 'estonian', label: 'Estonian (Eesti)' },
+            { value: 'albanian', label: 'Albanian (Shqip)' },
+            { value: 'armenian', label: 'Armenian (Հայերեն)' },
+            { value: 'georgian', label: 'Georgian (ქართული)' },
+            { value: 'kazakh', label: 'Kazakh (Қазақ)' },
+            { value: 'uzbek', label: 'Uzbek (Ўзбек)' },
+            { value: 'azerbaijani', label: 'Azerbaijani (Azərbaycanca)' }
         ];
 
         return `
@@ -268,14 +297,29 @@ export class ProFeatureRenderer extends BaseRenderer {
                 <div class="compact-setting select-setting" style="grid-column: 1 / -1;">
                     <div class="setting-info">
                         <div class="setting-label">Target Commit Language</div>
-                        <div class="setting-desc">Select the language for AI-generated commit messages. Uses professional developer terminology.</div>
+                        <div class="setting-desc">Select the language for AI-generated commit messages. Uses professional developer terminology. Start typing to search languages.</div>
                     </div>
-                    <select id="commitTargetLanguage"
-                        class="input-field"
-                        ${disabledState ? 'disabled' : ''}
-                        data-setting="commit.targetLanguage">
-                        ${languageOptions.map(opt => `<option value="${opt.value}" ${targetLanguage === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
-                    </select>
+                    <div class="searchable-language-dropdown ${disabledState ? 'disabled' : ''}">
+                        <input type="text" 
+                               id="commitTargetLanguageSearch"
+                               class="searchable-input"
+                               placeholder="Type to search languages or select from dropdown..."
+                               value="${languageOptions.find(opt => opt.value === targetLanguage)?.label || 'English'}"
+                               ${disabledState ? 'disabled' : ''}
+                               autocomplete="off" />
+                        <select id="commitTargetLanguage"
+                                class="searchable-select"
+                                ${disabledState ? 'disabled' : ''}
+                                data-setting="commit.targetLanguage">
+                            ${languageOptions.map(opt => `<option value="${opt.value}" ${targetLanguage === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
+                        </select>
+                        <button type="button" class="dropdown-toggle" ${disabledState ? 'disabled' : ''}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M7 10l5 5 5-5z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <input type="hidden" id="commitTargetLanguageValue" value="${targetLanguage}" />
                 </div>
             </div>
 

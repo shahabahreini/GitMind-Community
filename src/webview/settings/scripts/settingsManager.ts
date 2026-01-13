@@ -7,6 +7,7 @@ import { getModelHandlingScript, getModelEventListenersScript } from "./modelHan
 import { getMessageHandlersScript } from "./messageHandlers";
 import { getEventHandlersScript } from "./eventHandlers";
 import { getTabManagerScript } from "./tabManager";
+import { getLanguageDropdownScript } from "./languageDropdown";
 
 function getCustomApiHandlerScript(): string {
   return `
@@ -243,6 +244,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     ${getUiManagerScript()}
     ${getApiManagerScript()}
     ${getTabManagerScript()}
+    ${getLanguageDropdownScript()}
     
     // Immediate tab initialization attempt
     setTimeout(() => {
@@ -257,6 +259,8 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
       try {
         const currentFormValues = {
           commitVerbose: document.getElementById('commitVerbose')?.checked ?? true,
+          commitCaptureAllChanges: document.getElementById('commitCaptureAllChanges')?.checked ?? false,
+          commitTargetLanguage: document.getElementById('commitTargetLanguage')?.value || document.getElementById('commitTargetLanguageValue')?.value || 'english',
           commitStyle: document.querySelector('input[name="gm-commit-style"]:checked')?.value || 'conventional',
           showDiagnostics: document.getElementById('showDiagnostics')?.checked ?? false,
           telemetryEnabled: document.getElementById('telemetryEnabled')?.checked ?? false,
