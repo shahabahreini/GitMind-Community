@@ -219,9 +219,72 @@ export class ProFeatureRenderer extends BaseRenderer {
         const commitBodyOptions = this.settings.pro?.commitBodyOptions || { enabled: false, maxLines: 5 };
         const commitLengthOptions = this.settings.pro?.commitLengthOptions || { enabled: false, maxLength: 72 };
         const learnFromCommitHistory = this.settings.pro?.learnFromCommitHistory || { enabled: true, maxCommits: 50, includeAuthorInfo: true };
+        const targetLanguage = this.settings.commit?.targetLanguage || 'english';
         const hasValidLicense = (this.settings.pro?.licenseKey || this.settings.pro?.orderId) && this.settings.pro?.validationStatus === 'valid';
         const disabledState = !hasValidLicense;
         const proRequiredMessage = !hasValidLicense ? '(Pro feature)' : '';
+
+        const languageOptions = [
+            { value: 'english', label: 'English' },
+            { value: 'spanish', label: 'Spanish (Español)' },
+            { value: 'french', label: 'French (Français)' },
+            { value: 'german', label: 'German (Deutsch)' },
+            { value: 'italian', label: 'Italian (Italiano)' },
+            { value: 'portuguese', label: 'Portuguese (Português)' },
+            { value: 'russian', label: 'Russian (Русский)' },
+            { value: 'chinese', label: 'Chinese (中文)' },
+            { value: 'japanese', label: 'Japanese (日本語)' },
+            { value: 'korean', label: 'Korean (한국어)' },
+            { value: 'arabic', label: 'Arabic (العربية)' },
+            { value: 'hindi', label: 'Hindi (हिन्दी)' },
+            { value: 'bengali', label: 'Bengali (বাংলা)' },
+            { value: 'urdu', label: 'Urdu (اردو)' },
+            { value: 'marathi', label: 'Marathi (मराठी)' },
+            { value: 'telugu', label: 'Telugu (తెలుగు)' },
+            { value: 'tamil', label: 'Tamil (தமிழ்)' },
+            { value: 'javanese', label: 'Javanese (Basa Jawa)' },
+            { value: 'tagalog', label: 'Tagalog (Filipino)' },
+            { value: 'punjabi', label: 'Punjabi (ਪੰਜਾਬੀ)' },
+            { value: 'kannada', label: 'Kannada (ಕನ್ನಡ)' },
+            { value: 'gujarati', label: 'Gujarati (ગુજરાતી)' },
+            { value: 'bhojpuri', label: 'Bhojpuri (भोजपुरी)' },
+            { value: 'turkish', label: 'Turkish (Türkçe)' },
+            { value: 'dutch', label: 'Dutch (Nederlands)' },
+            { value: 'polish', label: 'Polish (Polski)' },
+            { value: 'vietnamese', label: 'Vietnamese (Tiếng Việt)' },
+            { value: 'thai', label: 'Thai (ไทย)' },
+            { value: 'swedish', label: 'Swedish (Svenska)' },
+            { value: 'danish', label: 'Danish (Dansk)' },
+            { value: 'norwegian', label: 'Norwegian (Norsk)' },
+            { value: 'finnish', label: 'Finnish (Suomi)' },
+            { value: 'greek', label: 'Greek (Ελληνικά)' },
+            { value: 'hebrew', label: 'Hebrew (עברית)' },
+            { value: 'persian', label: 'Persian (فارسی)' },
+            { value: 'ukrainian', label: 'Ukrainian (Українська)' },
+            { value: 'czech', label: 'Czech (Čeština)' },
+            { value: 'romanian', label: 'Romanian (Română)' },
+            { value: 'hungarian', label: 'Hungarian (Magyar)' },
+            { value: 'indonesian', label: 'Indonesian (Bahasa Indonesia)' },
+            { value: 'malay', label: 'Malay (Bahasa Melayu)' },
+            { value: 'hausa', label: 'Hausa' },
+            { value: 'amharic', label: 'Amharic (አማርኛ)' },
+            { value: 'yoruba', label: 'Yoruba' },
+            { value: 'igbo', label: 'Igbo' },
+            { value: 'oromo', label: 'Oromo' },
+            { value: 'somali', label: 'Somali' },
+            { value: 'bulgarian', label: 'Bulgarian (Български)' },
+            { value: 'croatian', label: 'Croatian (Hrvatski)' },
+            { value: 'slovak', label: 'Slovak (Slovenčina)' },
+            { value: 'lithuanian', label: 'Lithuanian (Lietuvių)' },
+            { value: 'latvian', label: 'Latvian (Latviešu)' },
+            { value: 'estonian', label: 'Estonian (Eesti)' },
+            { value: 'albanian', label: 'Albanian (Shqip)' },
+            { value: 'armenian', label: 'Armenian (Հայերեն)' },
+            { value: 'georgian', label: 'Georgian (ქართული)' },
+            { value: 'kazakh', label: 'Kazakh (Қазақ)' },
+            { value: 'uzbek', label: 'Uzbek (Ўзбек)' },
+            { value: 'azerbaijani', label: 'Azerbaijani (Azərbaycanca)' }
+        ];
 
         return `
         <div class="modern-section">
@@ -229,7 +292,37 @@ export class ProFeatureRenderer extends BaseRenderer {
                 <h3 class="section-title">Commit Message Options ${proRequiredMessage}</h3>
                 <div class="section-description">Control commit message formatting for consistency</div>
             </div>
-            
+
+            <div class="commit-options-row">
+                <div class="compact-setting select-setting" style="grid-column: 1 / -1;">
+                    <div class="setting-info">
+                        <div class="setting-label">Target Commit Language</div>
+                        <div class="setting-desc">Select the language for AI-generated commit messages. Uses professional developer terminology. Start typing to search languages.</div>
+                    </div>
+                    <div class="searchable-language-dropdown ${disabledState ? 'disabled' : ''}">
+                        <input type="text" 
+                               id="commitTargetLanguageSearch"
+                               class="searchable-input"
+                               placeholder="Type to search languages or select from dropdown..."
+                               value="${languageOptions.find(opt => opt.value === targetLanguage)?.label || 'English'}"
+                               ${disabledState ? 'disabled' : ''}
+                               autocomplete="off" />
+                        <select id="commitTargetLanguage"
+                                class="searchable-select"
+                                ${disabledState ? 'disabled' : ''}
+                                data-setting="commit.targetLanguage">
+                            ${languageOptions.map(opt => `<option value="${opt.value}" ${targetLanguage === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
+                        </select>
+                        <button type="button" class="dropdown-toggle" ${disabledState ? 'disabled' : ''}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M7 10l5 5 5-5z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <input type="hidden" id="commitTargetLanguageValue" value="${targetLanguage}" />
+                </div>
+            </div>
+
             <div class="commit-options-row">
                 <div class="compact-setting toggle-setting">
                     <div class="setting-info">

@@ -75,6 +75,7 @@ export class SettingsManager {
             commit: {
                 verbose: config.get<boolean>("commit.verbose") ?? true,
                 captureAllChanges: config.get<boolean>("commit.captureAllChanges") ?? false,
+                targetLanguage: config.get<string>("commit.targetLanguage") ?? "english",
             },
             commitStyle: {
                 style: config.get<string>("commitStyle.style") || "conventional",
@@ -394,6 +395,7 @@ export class SettingsManager {
             config.update("promptCustomization.lastPrompt", settings.promptCustomization?.lastPrompt ?? "", target),
             config.update("commit.verbose", settings.commit?.verbose ?? true, target),
             config.update("commit.captureAllChanges", settings.commit?.captureAllChanges ?? false, target),
+            config.update("commit.targetLanguage", settings.commit?.targetLanguage ?? "english", target),
             config.update("commitStyle.style", settings.commitStyle?.style || "conventional", target),
             config.update("showDiagnostics", settings.showDiagnostics ?? false, target),
             config.update("telemetry.enabled", settings.telemetry?.enabled ?? false, target),

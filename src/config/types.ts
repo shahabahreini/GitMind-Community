@@ -16,6 +16,67 @@ export type CommitStyle =
     | 'linux'
     | 'jquery';
 
+export type TargetCommitLanguage =
+    | 'english'
+    | 'spanish'
+    | 'french'
+    | 'german'
+    | 'italian'
+    | 'portuguese'
+    | 'russian'
+    | 'chinese'
+    | 'japanese'
+    | 'korean'
+    | 'arabic'
+    | 'hindi'
+    | 'bengali'
+    | 'urdu'
+    | 'marathi'
+    | 'telugu'
+    | 'tamil'
+    | 'javanese'
+    | 'tagalog'
+    | 'punjabi'
+    | 'kannada'
+    | 'gujarati'
+    | 'bhojpuri'
+    | 'turkish'
+    | 'dutch'
+    | 'polish'
+    | 'vietnamese'
+    | 'thai'
+    | 'swedish'
+    | 'danish'
+    | 'norwegian'
+    | 'finnish'
+    | 'greek'
+    | 'hebrew'
+    | 'persian'
+    | 'ukrainian'
+    | 'czech'
+    | 'romanian'
+    | 'hungarian'
+    | 'indonesian'
+    | 'malay'
+    | 'hausa'
+    | 'amharic'
+    | 'yoruba'
+    | 'igbo'
+    | 'oromo'
+    | 'somali'
+    | 'bulgarian'
+    | 'croatian'
+    | 'slovak'
+    | 'lithuanian'
+    | 'latvian'
+    | 'estonian'
+    | 'albanian'
+    | 'armenian'
+    | 'georgian'
+    | 'kazakh'
+    | 'uzbek'
+    | 'azerbaijani';
+
 // Model types
 export type GeminiModel =
     | "gemini-2.5-pro" | "gemini-2.5-flash" | "gemini-2.5-flash-preview" | "gemini-2.5-flash-lite" | "gemini-2.5-flash-lite-preview"
@@ -71,6 +132,7 @@ export interface CommitConfig {
     addBulletPoints: boolean;
     verbose: boolean;
     captureAllChanges?: boolean;
+    targetLanguage?: TargetCommitLanguage;
     gitmoji?: GitmojiConfig;
 }
 

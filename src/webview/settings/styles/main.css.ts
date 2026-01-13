@@ -7,6 +7,7 @@ import { getStatusStyles } from "./status.css";
 import { getProFeatureStyles } from "./proFeature.css";
 import { proFeaturesModernCSS } from "./pro-features-modern";
 import { getCommitStyleStyles } from "./commitStyle.css";
+import { getSearchableDropdownStyles } from "./searchableDropdown.css";
 
 export function getMainStyles(): string {
   return `<style>
@@ -962,5 +963,6 @@ export function getMainStyles(): string {
     ${getProFeatureStyles()}
     ${proFeaturesModernCSS}
     ${getCommitStyleStyles()}
+    ${getSearchableDropdownStyles()}
   </style>`;
 }

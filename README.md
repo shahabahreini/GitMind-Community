@@ -166,6 +166,7 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 | **Prompt Customization**           | Yes                 | Yes + Save Last Prompt      |
 | **API Key Storage**                | Plain text          | Encrypted (SecretStorage)   |
 | **Large Diff Processing**          | Limited             | Token-aware chunking        |
+| **Target Commit Language**         | ✗                   | ✓ 60 languages with search  |
 | **Commit Body Lines**              | Fixed (5 lines)     | Configurable (3-15)         |
 | **Summary Length**                 | Fixed               | Configurable (50-100 chars) |
 | **Commit History Analysis**        | ✗                   | ✓                           |
@@ -201,6 +202,17 @@ Native VS Code SCM panel. Multi-repository workspace support with independent bu
 Token estimation, provider/model summary, request preview.
 
 ### Pro Features
+
+**Target Commit Language (60 Languages)**
+Generate commits in any language with professional developer terminology:
+
+- **European**: English, Spanish, French, German, Italian, Portuguese, Russian, Polish, Dutch, Swedish, Danish, Norwegian, Finnish, Czech, Romanian, Hungarian, Bulgarian, Croatian, Slovak, Lithuanian, Latvian, Estonian, Greek, Albanian, Armenian, Georgian
+- **Asian**: Chinese, Japanese, Korean, Hindi, Bengali, Urdu, Marathi, Telugu, Tamil, Punjabi, Kannada, Gujarati, Bhojpuri, Vietnamese, Thai, Turkish, Persian, Javanese, Tagalog, Indonesian, Malay, Kazakh, Uzbek, Azerbaijani
+- **African**: Arabic, Amharic, Hausa, Yoruba, Igbo, Oromo, Somali
+- **Searchable dropdown**: Click the language field and start typing to instantly filter (e.g., type "span" for Spanish, "bengali" for Bengali)
+- AI uses widely-accepted technical terminology in the selected language
+- Maintains commit message format and structure in the target language
+- Perfect for international development teams and localized projects
 
 **Professional Commit Styles**
 11 industry-standard formats:
@@ -271,6 +283,10 @@ Connect to private cloud AI models or custom LLM endpoints:
 
 **Advanced Customization**
 
+- **Target Commit Language**: Generate commit messages in 30+ languages (English, Spanish, French, German, Italian, Portuguese, Russian, Chinese, Japanese, Korean, Arabic, Hindi, Turkish, Dutch, Polish, Vietnamese, Thai, Swedish, Danish, Norwegian, Finnish, Greek, Hebrew, Persian, Ukrainian, Czech, Romanian, Hungarian, Indonesian, Malay)
+  - AI uses professional developer terminology widely accepted in each language
+  - Maintains commit format and structure in the target language
+  - Perfect for international teams and localized projects
 - Custom commit body line limits (3-15 lines)
 - Custom summary length limits (50-100 characters)
 - Save/reuse custom prompts

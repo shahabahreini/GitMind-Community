@@ -168,7 +168,12 @@ suite('Settings UI Tests', () => {
                         lastPrompt: ''
                     },
                     commit: {
-                        verbose: true
+                        verbose: true,
+                        captureAllChanges: false,
+                        targetLanguage: 'spanish'
+                    },
+                    commitStyle: {
+                        style: 'conventional'
                     },
                     showDiagnostics: false,
                     telemetry: {
@@ -188,6 +193,7 @@ suite('Settings UI Tests', () => {
                 assert.strictEqual(savedSettings['debug'], true);
                 assert.strictEqual(savedSettings['gemini.apiKey'], 'new-gemini-key');
                 assert.strictEqual(savedSettings['gemini.model'], 'gemini-2.5-pro');
+                assert.strictEqual(savedSettings['commit.targetLanguage'], 'spanish');
 
                 return true;
             })();

@@ -136,6 +136,7 @@ export function getEventHandlersScript(): string {
       const currentFormValues = {
         commitVerbose: document.getElementById('commitVerbose')?.checked || false,
         commitCaptureAllChanges: document.getElementById('commitCaptureAllChanges')?.checked || false,
+        commitTargetLanguage: document.getElementById('commitTargetLanguage')?.value || document.getElementById('commitTargetLanguageValue')?.value || 'english',
         commitStyle: document.querySelector('input[name="gm-commit-style"]:checked')?.value || 'conventional',
         showDiagnostics: document.getElementById('showDiagnostics')?.checked || false,
         telemetryEnabled: document.getElementById('telemetryEnabled')?.checked || false,
@@ -621,6 +622,7 @@ export function getEventHandlersScript(): string {
       
       const handlers = [
         ['commitVerbose', 'commit.verbose', (el) => el.checked],
+        ['commitTargetLanguage', 'commit.targetLanguage', (el) => el.value],
         ['showDiagnostics', 'showDiagnostics', (el) => el.checked],
         ['telemetryEnabled', 'telemetry.enabled', (el) => el.checked],
         ['promptCustomizationEnabled', 'promptCustomization.enabled', (el) => el.checked],
