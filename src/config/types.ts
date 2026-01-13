@@ -83,16 +83,15 @@ export type GeminiModel =
     | "gemini-2.0-flash" | "gemini-2.0-flash-lite";
 
 export type AnthropicModel =
-    | "claude-opus-4" | "claude-sonnet-4" | "claude-sonnet-3.7"
-    | "claude-3-5-sonnet-20241022" | "claude-3-5-sonnet-20240620" | "claude-3-5-haiku-20241022"
-    | "claude-3-opus-20240229" | "claude-3-sonnet-20240229" | "claude-3-haiku-20240307";
+    | "claude-opus-4" | "claude-sonnet-4"
+    | "claude-3-5-sonnet-20241022" | "claude-3-5-haiku-20241022";
 
 export type MiniMaxModel = "MiniMax-M2" | "MiniMax-M2-Stable";
 
 export type CopilotModel =
     | "auto"
     // OpenAI Models
-    | "gpt-3.5-turbo" | "gpt-4" | "gpt-4-turbo" | "gpt-4o" | "gpt-4o-mini"
+    | "gpt-4o" | "gpt-4o-mini"
     | "gpt-4.1" | "gpt-5" | "gpt-5-mini" | "gpt-5-codex" | "gpt-5.1" | "gpt-5.1-codex" | "gpt-5.1-codex-mini"
     // Anthropic Models
     | "claude-haiku-4.5" | "claude-opus-4.1" | "claude-sonnet-4" | "claude-sonnet-4.5"

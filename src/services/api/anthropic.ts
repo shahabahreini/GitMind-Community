@@ -24,42 +24,13 @@ const MODEL_CONFIGS: Record<AnthropicModel, GenerationConfig> = {
         top_p: 0.8
     },
 
-    // Claude 3.7 Series
-    "claude-sonnet-3.7": {
-        max_tokens: 350,
-        temperature: 0.3,
-        top_p: 0.8
-    },
-
     // Claude 3.5 Series
     "claude-3-5-sonnet-20241022": {
         max_tokens: 350,
         temperature: 0.3,
         top_p: 0.8
     },
-    "claude-3-5-sonnet-20240620": {
-        max_tokens: 350,
-        temperature: 0.3,
-        top_p: 0.8
-    },
     "claude-3-5-haiku-20241022": {
-        max_tokens: 350,
-        temperature: 0.3,
-        top_p: 0.8
-    },
-
-    // Claude 3 Series
-    "claude-3-opus-20240229": {
-        max_tokens: 350,
-        temperature: 0.3,
-        top_p: 0.8
-    },
-    "claude-3-sonnet-20240229": {
-        max_tokens: 350,
-        temperature: 0.3,
-        top_p: 0.8
-    },
-    "claude-3-haiku-20240307": {
         max_tokens: 350,
         temperature: 0.3,
         top_p: 0.8
@@ -84,13 +55,8 @@ export class AnthropicProvider extends BaseAIProvider {
         const validModels: AnthropicModel[] = [
             "claude-opus-4",
             "claude-sonnet-4",
-            "claude-sonnet-3.7",
             "claude-3-5-sonnet-20241022",
-            "claude-3-5-sonnet-20240620",
-            "claude-3-5-haiku-20241022",
-            "claude-3-opus-20240229",
-            "claude-3-sonnet-20240229",
-            "claude-3-haiku-20240307"
+            "claude-3-5-haiku-20241022"
         ];
 
         // Use type assertion to check if model is in validModels, but proceed even if not perfectly matching

@@ -18,18 +18,6 @@ const MODEL_CONFIGS: Record<CopilotModel, GenerationConfig> = {
         temperature: 0.3
     },
     // OpenAI Models (Legacy)
-    "gpt-3.5-turbo": {
-        maxTokens: 300,
-        temperature: 0.3
-    },
-    "gpt-4": {
-        maxTokens: 350,
-        temperature: 0.3
-    },
-    "gpt-4-turbo": {
-        maxTokens: 400,
-        temperature: 0.3
-    },
     "gpt-4o": {
         maxTokens: 350,
         temperature: 0.3
@@ -366,9 +354,6 @@ export async function fetchCopilotModels(): Promise<string[]> {
         // Define all models we support in our configuration
         const supportedModels = new Set([
             'auto',
-            'gpt-3.5-turbo',
-            'gpt-4',
-            'gpt-4-turbo',
             'gpt-4o',
             'gpt-4o-mini',
             'gpt-4.1',

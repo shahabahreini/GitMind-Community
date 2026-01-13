@@ -4,9 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-GitMind is a VS Code extension that provides AI-powered commit message generation. It supports 15 different AI providers (OpenAI, Anthropic, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot, Cursor Agent, Windsurf Agent*) with 50+ models and 11 professional commit message styles.
-
-*Note: Windsurf Agent is currently non-functional due to Windsurf IDE not exposing the VS Code Language Model API.
+GitMind is a VS Code extension that provides AI-powered commit message generation. It supports 14 different AI providers (OpenAI, Anthropic, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot, Cursor Agent) with 50+ models and 11 professional commit message styles.
 
 **Technology Stack:**
 - TypeScript
@@ -237,9 +235,8 @@ Handles repositories with massive diffs via adaptive chunking:
 #### 7. IDE-Specific AI Agent Integration (Pro)
 
 Built-in AI agent support for compatible IDEs:
-- **IDE Detection** (`src/utils/ideDetection.ts`) - Detects VS Code, Cursor, Windsurf, or unknown environments
+- **IDE Detection** (`src/utils/ideDetection.ts`) - Detects VS Code, Cursor, or unknown environments
 - **Cursor Agent** (`src/services/api/cursor-agent.ts`) - Uses VS Code Language Model API in Cursor IDE
-- **Windsurf Agent** (`src/services/api/windsurf-agent.ts`) - **NOT CURRENTLY FUNCTIONAL** (see limitation below)
 - **GitHub Copilot** (`src/services/api/copilot.ts`) - Works in VS Code with Copilot extension
 
 **How IDE Agents Work:**
@@ -256,27 +253,15 @@ Built-in AI agent support for compatible IDEs:
 - Streams response fragments for efficiency
 - Pro feature with subscription validation
 
-**Critical Limitation - Windsurf Agent:**
-Windsurf IDE **does not expose the VS Code Language Model API** (`vscode.lm`) that GitMind requires for AI integration. This is a fundamental limitation that cannot be fixed with code changes.
-
-- **What works**: VS Code with GitHub Copilot, Cursor IDE
-- **What doesn't work**: Windsurf IDE (despite having Codeium AI built-in)
-- **Why**: Windsurf uses a proprietary integration that doesn't implement the standard VS Code Language Model API
-- **User impact**: Windsurf users see clear error message directing them to use one of 13+ other AI providers
-- **Code location**: Error message in `src/services/api/windsurf-agent.ts:136-143`
-- **Future**: Requires Windsurf to implement `vscode.lm` API or alternative integration method
-
 **Detection Logic:**
 ```typescript
 // Checks multiple signals for each IDE type
 - Cursor: appName/uriAuthority/appRoot contains "cursor", CURSOR_IDE env var
-- Windsurf: contains "windsurf", "codeium", "cascade" (internal name), WINDSURF_IDE env var
 - VS Code: appName contains "visual studio code" or "vscode"
 ```
 
 **Commands:**
 - `gitmind.loadCursorAgentModels` - Fetch available Cursor models dynamically
-- `gitmind.loadWindsurfAgentModels` - (Non-functional due to API limitation)
 
 #### 8. Telemetry System
 
@@ -487,7 +472,6 @@ The extension uses aggressive tree-shaking and code splitting:
 - **`src/utils/errorHandler.ts`** - Centralized error processing and user feedback
 - **`src/utils/ideDetection.ts`** - IDE environment detection (VS Code, Cursor, Windsurf)
 - **`src/services/api/cursor-agent.ts`** - Cursor IDE agent integration via Language Model API
-- **`src/services/api/windsurf-agent.ts`** - Windsurf agent (non-functional - API limitation)
 - **`src/services/api/copilot.ts`** - GitHub Copilot integration via Language Model API
 - **`src/services/changelog/ChangelogService.ts`** - Changelog generation with version detection and conflict resolution
 - **`src/services/changelog/generateChangelog.ts`** - Changelog command handlers
