@@ -271,6 +271,10 @@ Connect to private cloud AI models or custom LLM endpoints:
 
 **Advanced Customization**
 
+- **Target Commit Language**: Generate commit messages in 30+ languages (English, Spanish, French, German, Italian, Portuguese, Russian, Chinese, Japanese, Korean, Arabic, Hindi, Turkish, Dutch, Polish, Vietnamese, Thai, Swedish, Danish, Norwegian, Finnish, Greek, Hebrew, Persian, Ukrainian, Czech, Romanian, Hungarian, Indonesian, Malay)
+  - AI uses professional developer terminology widely accepted in each language
+  - Maintains commit format and structure in the target language
+  - Perfect for international teams and localized projects
 - Custom commit body line limits (3-15 lines)
 - Custom summary length limits (50-100 characters)
 - Save/reuse custom prompts

@@ -77,6 +77,7 @@ export interface ExtensionSettings {
     commit?: {
         verbose: boolean;
         captureAllChanges?: boolean;
+        targetLanguage?: string;
     };
     commitStyle?: {
         style: string;  // 'basic' | 'conventional' | 'angular' | 'ember' | 'emojigit' | 'gitmoji' | 'semantic' | 'commitizen' | 'karma' | 'linux' | 'jquery'

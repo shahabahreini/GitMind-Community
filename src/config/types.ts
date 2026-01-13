@@ -16,6 +16,38 @@ export type CommitStyle =
     | 'linux'
     | 'jquery';
 
+export type TargetCommitLanguage =
+    | 'english'
+    | 'spanish'
+    | 'french'
+    | 'german'
+    | 'italian'
+    | 'portuguese'
+    | 'russian'
+    | 'chinese'
+    | 'japanese'
+    | 'korean'
+    | 'arabic'
+    | 'hindi'
+    | 'turkish'
+    | 'dutch'
+    | 'polish'
+    | 'vietnamese'
+    | 'thai'
+    | 'swedish'
+    | 'danish'
+    | 'norwegian'
+    | 'finnish'
+    | 'greek'
+    | 'hebrew'
+    | 'persian'
+    | 'ukrainian'
+    | 'czech'
+    | 'romanian'
+    | 'hungarian'
+    | 'indonesian'
+    | 'malay';
+
 // Model types
 export type GeminiModel =
     | "gemini-2.5-pro" | "gemini-2.5-flash" | "gemini-2.5-flash-preview" | "gemini-2.5-flash-lite" | "gemini-2.5-flash-lite-preview"
@@ -71,6 +103,7 @@ export interface CommitConfig {
     addBulletPoints: boolean;
     verbose: boolean;
     captureAllChanges?: boolean;
+    targetLanguage?: TargetCommitLanguage;
     gitmoji?: GitmojiConfig;
 }
 

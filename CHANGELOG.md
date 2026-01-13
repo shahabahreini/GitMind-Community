@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## v4.7.2 - 2026-01-13
+
+### New Features (Pro)
+
+- Added **Target Commit Language** feature for multilingual commit messages.
+  - Introduced support for 30 languages: English, Spanish, French, German, Italian, Portuguese, Russian, Chinese, Japanese, Korean, Arabic, Hindi, Turkish, Dutch, Polish, Vietnamese, Thai, Swedish, Danish, Norwegian, Finnish, Greek, Hebrew, Persian, Ukrainian, Czech, Romanian, Hungarian, Indonesian, and Malay.
+  - AI generates commit messages using professional developer terminology widely accepted in the selected language.
+  - Maintains commit message format and structure in the target language for consistency.
+  - Perfect for international development teams and localized projects.
+  - Added new configuration setting `gitmind.commit.targetLanguage` with language dropdown in Pro Features Settings UI.
+  - Updated prompt generation to include language-specific instructions for accurate translation.
+  - Added type definitions and configuration management for target language selection.
+
 ## v4.7.0 - 2026-01-07
 
 ### New Features

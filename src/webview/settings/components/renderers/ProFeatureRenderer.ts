@@ -219,9 +219,43 @@ export class ProFeatureRenderer extends BaseRenderer {
         const commitBodyOptions = this.settings.pro?.commitBodyOptions || { enabled: false, maxLines: 5 };
         const commitLengthOptions = this.settings.pro?.commitLengthOptions || { enabled: false, maxLength: 72 };
         const learnFromCommitHistory = this.settings.pro?.learnFromCommitHistory || { enabled: true, maxCommits: 50, includeAuthorInfo: true };
+        const targetLanguage = this.settings.commit?.targetLanguage || 'english';
         const hasValidLicense = (this.settings.pro?.licenseKey || this.settings.pro?.orderId) && this.settings.pro?.validationStatus === 'valid';
         const disabledState = !hasValidLicense;
         const proRequiredMessage = !hasValidLicense ? '(Pro feature)' : '';
+
+        const languageOptions = [
+            { value: 'english', label: 'English' },
+            { value: 'spanish', label: 'Spanish (Español)' },
+            { value: 'french', label: 'French (Français)' },
+            { value: 'german', label: 'German (Deutsch)' },
+            { value: 'italian', label: 'Italian (Italiano)' },
+            { value: 'portuguese', label: 'Portuguese (Português)' },
+            { value: 'russian', label: 'Russian (Русский)' },
+            { value: 'chinese', label: 'Chinese (中文)' },
+            { value: 'japanese', label: 'Japanese (日本語)' },
+            { value: 'korean', label: 'Korean (한국어)' },
+            { value: 'arabic', label: 'Arabic (العربية)' },
+            { value: 'hindi', label: 'Hindi (हिन्दी)' },
+            { value: 'turkish', label: 'Turkish (Türkçe)' },
+            { value: 'dutch', label: 'Dutch (Nederlands)' },
+            { value: 'polish', label: 'Polish (Polski)' },
+            { value: 'vietnamese', label: 'Vietnamese (Tiếng Việt)' },
+            { value: 'thai', label: 'Thai (ไทย)' },
+            { value: 'swedish', label: 'Swedish (Svenska)' },
+            { value: 'danish', label: 'Danish (Dansk)' },
+            { value: 'norwegian', label: 'Norwegian (Norsk)' },
+            { value: 'finnish', label: 'Finnish (Suomi)' },
+            { value: 'greek', label: 'Greek (Ελληνικά)' },
+            { value: 'hebrew', label: 'Hebrew (עברית)' },
+            { value: 'persian', label: 'Persian (فارسی)' },
+            { value: 'ukrainian', label: 'Ukrainian (Українська)' },
+            { value: 'czech', label: 'Czech (Čeština)' },
+            { value: 'romanian', label: 'Romanian (Română)' },
+            { value: 'hungarian', label: 'Hungarian (Magyar)' },
+            { value: 'indonesian', label: 'Indonesian (Bahasa Indonesia)' },
+            { value: 'malay', label: 'Malay (Bahasa Melayu)' }
+        ];
 
         return `
         <div class="modern-section">
@@ -229,7 +263,22 @@ export class ProFeatureRenderer extends BaseRenderer {
                 <h3 class="section-title">Commit Message Options ${proRequiredMessage}</h3>
                 <div class="section-description">Control commit message formatting for consistency</div>
             </div>
-            
+
+            <div class="commit-options-row">
+                <div class="compact-setting select-setting" style="grid-column: 1 / -1;">
+                    <div class="setting-info">
+                        <div class="setting-label">Target Commit Language</div>
+                        <div class="setting-desc">Select the language for AI-generated commit messages. Uses professional developer terminology.</div>
+                    </div>
+                    <select id="commitTargetLanguage"
+                        class="select-field"
+                        ${disabledState ? 'disabled' : ''}
+                        data-setting="commit.targetLanguage">
+                        ${languageOptions.map(opt => `<option value="${opt.value}" ${targetLanguage === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
+                    </select>
+                </div>
+            </div>
+
             <div class="commit-options-row">
                 <div class="compact-setting toggle-setting">
                     <div class="setting-info">

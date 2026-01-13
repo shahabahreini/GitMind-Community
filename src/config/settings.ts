@@ -69,6 +69,7 @@ export function getConfiguration(): ExtensionConfig {
             addBulletPoints: config.get("commit.addBulletPoints", true),
             verbose: config.get("commit.verbose", true),
             captureAllChanges: config.get("commit.captureAllChanges", false),
+            targetLanguage: config.get("commit.targetLanguage", "english"),
         },
         promptCustomization: {
             enabled: config.get("promptCustomization.enabled", false),

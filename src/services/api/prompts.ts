@@ -1,4 +1,4 @@
-import { CommitStyle } from "../../config/types";
+import { CommitStyle, TargetCommitLanguage } from "../../config/types";
 import * as vscode from 'vscode';
 import { debugLog } from "../debug/logger";
 
@@ -7,12 +7,14 @@ export interface PromptConfig {
   maxLength?: number;
   includeScope?: boolean;
   maxBodyLines?: number;
+  targetLanguage?: TargetCommitLanguage;
 }
 
 export const DEFAULT_PROMPT_CONFIG: PromptConfig = {
   maxLength: 72,
   includeScope: true,
-  maxBodyLines: 5
+  maxBodyLines: 5,
+  targetLanguage: 'english'
 };
 
 /**
@@ -44,6 +46,11 @@ export function getPromptConfig(): PromptConfig {
   promptConfig.style = commitStyle;
   debugLog(`[DEBUG] Retrieved commit style: ${commitStyle}`);
 
+  // Get target language (Pro feature)
+  const targetLanguage = config.get<TargetCommitLanguage>('commit.targetLanguage', 'english');
+  promptConfig.targetLanguage = targetLanguage;
+  debugLog(`[DEBUG] Retrieved target language: ${targetLanguage}`);
+
   // Apply Pro feature settings if enabled
   const bodyOptionsEnabled = config.get<boolean>('pro.commitBodyOptions.enabled') ?? false;
   const bodyMaxLines = config.get<number>('pro.commitBodyOptions.maxLines') ?? 5;
@@ -70,9 +77,63 @@ export function getPromptConfig(): PromptConfig {
 }
 
 /**
+ * Get language-specific instructions for commit message generation
+ */
+function getLanguageInstructions(language?: TargetCommitLanguage): string {
+  if (!language || language === 'english') {
+    return ''; // No special instructions needed for English (default)
+  }
+
+  const languageNames: Record<TargetCommitLanguage, string> = {
+    'english': 'English',
+    'spanish': 'Spanish (Español)',
+    'french': 'French (Français)',
+    'german': 'German (Deutsch)',
+    'italian': 'Italian (Italiano)',
+    'portuguese': 'Portuguese (Português)',
+    'russian': 'Russian (Русский)',
+    'chinese': 'Chinese (中文)',
+    'japanese': 'Japanese (日本語)',
+    'korean': 'Korean (한국어)',
+    'arabic': 'Arabic (العربية)',
+    'hindi': 'Hindi (हिन्दी)',
+    'turkish': 'Turkish (Türkçe)',
+    'dutch': 'Dutch (Nederlands)',
+    'polish': 'Polish (Polski)',
+    'vietnamese': 'Vietnamese (Tiếng Việt)',
+    'thai': 'Thai (ไทย)',
+    'swedish': 'Swedish (Svenska)',
+    'danish': 'Danish (Dansk)',
+    'norwegian': 'Norwegian (Norsk)',
+    'finnish': 'Finnish (Suomi)',
+    'greek': 'Greek (Ελληνικά)',
+    'hebrew': 'Hebrew (עברית)',
+    'persian': 'Persian (فارسی)',
+    'ukrainian': 'Ukrainian (Українська)',
+    'czech': 'Czech (Čeština)',
+    'romanian': 'Romanian (Română)',
+    'hungarian': 'Hungarian (Magyar)',
+    'indonesian': 'Indonesian (Bahasa Indonesia)',
+    'malay': 'Malay (Bahasa Melayu)'
+  };
+
+  const languageName = languageNames[language] || language;
+
+  return `
+
+TARGET LANGUAGE REQUIREMENT:
+- Write the ENTIRE commit message in ${languageName}
+- Use professional developer terminology that is widely accepted in the ${languageName} developer community
+- Use the most updated and commonly used technical terms in ${languageName}
+- Maintain the same commit message format and structure, but in ${languageName}
+- Ensure all text (subject line, body, descriptions) is in ${languageName}
+- Use natural ${languageName} phrasing that sounds native to ${languageName}-speaking developers`;
+}
+
+/**
  * Generate base instructions common to all styles
  */
-function getBaseInstructions(_config: PromptConfig, customContext: string = ""): string {
+function getBaseInstructions(config: PromptConfig, customContext: string = ""): string {
   let prompt = `You are an expert Git commit message generator. Analyze the provided diff carefully and create exactly ONE complete, professional commit message following the specified format precisely.
 
 CRITICAL INSTRUCTIONS:
@@ -80,7 +141,7 @@ CRITICAL INSTRUCTIONS:
 - Write the FULL subject line and body
 - Do not explain your reasoning or provide alternatives
 - Output only the final commit message
-- Follow the exact format specified for this style`;
+- Follow the exact format specified for this style${getLanguageInstructions(config.targetLanguage)}`;
 
   if (customContext.trim()) {
     prompt += `\n\nAdditional Context: ${customContext.trim()}`;
