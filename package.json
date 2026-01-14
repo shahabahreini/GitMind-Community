@@ -781,6 +781,72 @@
           "markdownDescription": "**Pro Feature**: Set the maximum number of characters for commit message summary lines. Standard Git recommendation is 72 characters, but you can customize this to fit your team's needs.",
           "order": 109
         },
+        "gitmind.pro.advancedModelConfig.mode": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "custom"
+          ],
+          "default": "auto",
+          "description": "Advanced model configuration mode (Pro feature)",
+          "markdownDescription": "**Pro Feature**: Choose whether GitMind should decide generation parameters automatically (auto) or use your custom overrides (custom)."
+        },
+        "gitmind.pro.advancedModelConfig.temperatureEnabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable custom temperature override (Pro feature)",
+          "markdownDescription": "**Pro Feature**: When enabled and mode is set to custom, GitMind will send your specified temperature to supported providers."
+        },
+        "gitmind.pro.advancedModelConfig.temperature": {
+          "type": "number",
+          "default": 0.2,
+          "minimum": 0,
+          "maximum": 2,
+          "description": "Temperature value (Pro feature)",
+          "markdownDescription": "**Pro Feature**: Sampling temperature. Higher values = more variation."
+        },
+        "gitmind.pro.advancedModelConfig.topPEnabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable custom top-p override (Pro feature)",
+          "markdownDescription": "**Pro Feature**: When enabled and mode is set to custom, GitMind will send your specified top-p to supported providers."
+        },
+        "gitmind.pro.advancedModelConfig.topP": {
+          "type": "number",
+          "default": 0.9,
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Top-p value (Pro feature)",
+          "markdownDescription": "**Pro Feature**: Nucleus sampling probability cutoff."
+        },
+        "gitmind.pro.advancedModelConfig.topKEnabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable custom top-k override (Pro feature)",
+          "markdownDescription": "**Pro Feature**: When enabled and mode is set to custom, GitMind will send your specified top-k to supported providers."
+        },
+        "gitmind.pro.advancedModelConfig.topK": {
+          "type": "number",
+          "default": 40,
+          "minimum": 0,
+          "maximum": 500,
+          "description": "Top-k value (Pro feature)",
+          "markdownDescription": "**Pro Feature**: Limits sampling to the top K tokens."
+        },
+        "gitmind.pro.advancedModelConfig.maxTokensEnabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable custom max output tokens override (Pro feature)",
+          "markdownDescription": "**Pro Feature**: When enabled and mode is set to custom, GitMind will send your specified max tokens / max output tokens to supported providers."
+        },
+        "gitmind.pro.advancedModelConfig.maxTokens": {
+          "type": "number",
+          "default": 350,
+          "minimum": 1,
+          "maximum": 65536,
+          "description": "Max output tokens (Pro feature)",
+          "markdownDescription": "**Pro Feature**: Maximum number of output tokens the model can generate."
+        },
         "gitmind.pro.learnFromCommitHistory.enabled": {
           "type": "boolean",
           "default": true,

@@ -112,6 +112,8 @@ export class GeminiProvider extends BaseAIProvider {
 
             const temperature = options?.temperature ?? config.temperature;
             const maxOutputTokens = options?.maxTokens ?? config.maxOutputTokens;
+            const topK = options?.topK ?? config.topK;
+            const topP = options?.topP ?? config.topP;
 
             // Initialize the API
             const genAI = new GoogleGenerativeAI(this.apiKey);
@@ -119,8 +121,8 @@ export class GeminiProvider extends BaseAIProvider {
                 model: selectedModel,
                 generationConfig: {
                     temperature: temperature,
-                    topK: config.topK,
-                    topP: config.topP,
+                    topK: topK,
+                    topP: topP,
                     maxOutputTokens: maxOutputTokens,
                 },
             });

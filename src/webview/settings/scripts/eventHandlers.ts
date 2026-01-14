@@ -231,6 +231,146 @@ export function getEventHandlersScript(): string {
       // This prevents the infinite loop issues with secure key management
     });
 
+    function markAdvancedModelConfigUnsaved() {
+      if (!currentSettings.pro) currentSettings.pro = {};
+      updateStatusBanner(currentSettings);
+      markAsUnsaved();
+    }
+
+    document.getElementById('advancedModelConfigMode')?.addEventListener('change', function() {
+      const value = this.value;
+      if (!currentSettings.pro) currentSettings.pro = {};
+      if (!currentSettings.pro.advancedModelConfig) currentSettings.pro.advancedModelConfig = { mode: value };
+      else currentSettings.pro.advancedModelConfig.mode = value;
+
+      const customEnabled = value === 'custom';
+      const fieldsToToggle = [
+        'advancedModelConfigTemperatureEnabled',
+        'advancedModelConfigTopPEnabled',
+        'advancedModelConfigTopKEnabled',
+        'advancedModelConfigMaxTokensEnabled',
+      ];
+      fieldsToToggle.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.disabled = !customEnabled;
+        }
+      });
+
+      const numberInputs = [
+        { toggleId: 'advancedModelConfigTemperatureEnabled', valueId: 'advancedModelConfigTemperature' },
+        { toggleId: 'advancedModelConfigTopPEnabled', valueId: 'advancedModelConfigTopP' },
+        { toggleId: 'advancedModelConfigTopKEnabled', valueId: 'advancedModelConfigTopK' },
+        { toggleId: 'advancedModelConfigMaxTokensEnabled', valueId: 'advancedModelConfigMaxTokens' }
+      ];
+
+      numberInputs.forEach(({ toggleId, valueId }) => {
+        const toggle = document.getElementById(toggleId);
+        const valueEl = document.getElementById(valueId);
+        if (valueEl) {
+          const toggleChecked = Boolean(toggle && toggle.checked);
+          valueEl.disabled = !(customEnabled && toggleChecked);
+        }
+      });
+
+      // Toggle the visual disabled state for switch containers
+      const switchInputIds = [
+        'advancedModelConfigTemperatureEnabled',
+        'advancedModelConfigTopPEnabled',
+        'advancedModelConfigTopKEnabled',
+        'advancedModelConfigMaxTokensEnabled'
+      ];
+      switchInputIds.forEach((id) => {
+        const input = document.getElementById(id);
+        const container = input?.closest?.('.switch-container');
+        if (container) {
+          container.classList.toggle('disabled', !customEnabled);
+        }
+      });
+
+      markAdvancedModelConfigUnsaved();
+    });
+
+    document.getElementById('advancedModelConfigTemperatureEnabled')?.addEventListener('change', function() {
+      const checked = this.checked;
+      if (!currentSettings.pro) currentSettings.pro = {};
+      if (!currentSettings.pro.advancedModelConfig) currentSettings.pro.advancedModelConfig = { temperatureEnabled: checked };
+      else currentSettings.pro.advancedModelConfig.temperatureEnabled = checked;
+
+      const mode = document.getElementById('advancedModelConfigMode')?.value || 'auto';
+      const valueEl = document.getElementById('advancedModelConfigTemperature');
+      if (valueEl) valueEl.disabled = !(mode === 'custom' && checked);
+      markAdvancedModelConfigUnsaved();
+    });
+
+    document.getElementById('advancedModelConfigTemperature')?.addEventListener('input', function() {
+      const value = parseFloat(this.value);
+      if (!currentSettings.pro) currentSettings.pro = {};
+      if (!currentSettings.pro.advancedModelConfig) currentSettings.pro.advancedModelConfig = { temperature: value };
+      else currentSettings.pro.advancedModelConfig.temperature = value;
+      markAdvancedModelConfigUnsaved();
+    });
+
+    document.getElementById('advancedModelConfigTopPEnabled')?.addEventListener('change', function() {
+      const checked = this.checked;
+      if (!currentSettings.pro) currentSettings.pro = {};
+      if (!currentSettings.pro.advancedModelConfig) currentSettings.pro.advancedModelConfig = { topPEnabled: checked };
+      else currentSettings.pro.advancedModelConfig.topPEnabled = checked;
+
+      const mode = document.getElementById('advancedModelConfigMode')?.value || 'auto';
+      const valueEl = document.getElementById('advancedModelConfigTopP');
+      if (valueEl) valueEl.disabled = !(mode === 'custom' && checked);
+      markAdvancedModelConfigUnsaved();
+    });
+
+    document.getElementById('advancedModelConfigTopP')?.addEventListener('input', function() {
+      const value = parseFloat(this.value);
+      if (!currentSettings.pro) currentSettings.pro = {};
+      if (!currentSettings.pro.advancedModelConfig) currentSettings.pro.advancedModelConfig = { topP: value };
+      else currentSettings.pro.advancedModelConfig.topP = value;
+      markAdvancedModelConfigUnsaved();
+    });
+
+    document.getElementById('advancedModelConfigTopKEnabled')?.addEventListener('change', function() {
+      const checked = this.checked;
+      if (!currentSettings.pro) currentSettings.pro = {};
+      if (!currentSettings.pro.advancedModelConfig) currentSettings.pro.advancedModelConfig = { topKEnabled: checked };
+      else currentSettings.pro.advancedModelConfig.topKEnabled = checked;
+
+      const mode = document.getElementById('advancedModelConfigMode')?.value || 'auto';
+      const valueEl = document.getElementById('advancedModelConfigTopK');
+      if (valueEl) valueEl.disabled = !(mode === 'custom' && checked);
+      markAdvancedModelConfigUnsaved();
+    });
+
+    document.getElementById('advancedModelConfigTopK')?.addEventListener('input', function() {
+      const value = parseInt(this.value);
+      if (!currentSettings.pro) currentSettings.pro = {};
+      if (!currentSettings.pro.advancedModelConfig) currentSettings.pro.advancedModelConfig = { topK: value };
+      else currentSettings.pro.advancedModelConfig.topK = value;
+      markAdvancedModelConfigUnsaved();
+    });
+
+    document.getElementById('advancedModelConfigMaxTokensEnabled')?.addEventListener('change', function() {
+      const checked = this.checked;
+      if (!currentSettings.pro) currentSettings.pro = {};
+      if (!currentSettings.pro.advancedModelConfig) currentSettings.pro.advancedModelConfig = { maxTokensEnabled: checked };
+      else currentSettings.pro.advancedModelConfig.maxTokensEnabled = checked;
+
+      const mode = document.getElementById('advancedModelConfigMode')?.value || 'auto';
+      const valueEl = document.getElementById('advancedModelConfigMaxTokens');
+      if (valueEl) valueEl.disabled = !(mode === 'custom' && checked);
+      markAdvancedModelConfigUnsaved();
+    });
+
+    document.getElementById('advancedModelConfigMaxTokens')?.addEventListener('input', function() {
+      const value = parseInt(this.value);
+      if (!currentSettings.pro) currentSettings.pro = {};
+      if (!currentSettings.pro.advancedModelConfig) currentSettings.pro.advancedModelConfig = { maxTokens: value };
+      else currentSettings.pro.advancedModelConfig.maxTokens = value;
+      markAdvancedModelConfigUnsaved();
+    });
+
     // Subscription email changes affect Pro status - NO AUTO-SAVE
     const debouncedEmailHandler = debounce(function() {
       const email = this.value;

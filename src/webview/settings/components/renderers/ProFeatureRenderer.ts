@@ -14,6 +14,8 @@ export class ProFeatureRenderer extends BaseRenderer {
                 <div class="card-content">
                     ${this.renderSecurityAndLargeDiffSection()}
                     <div class="section-divider"></div>
+                    ${this.renderAdvancedModelConfigurationSection()}
+                    <div class="section-divider"></div>
                     ${this.renderCommitMessageOptionsSection()}
                 </div>
             </div>
@@ -175,6 +177,132 @@ export class ProFeatureRenderer extends BaseRenderer {
             <div class="two-column-layout">
                 ${this.renderEncryptionSection()}
                 ${this.renderLargeDiffHandlingSection()}
+            </div>
+        `;
+    }
+
+    private renderAdvancedModelConfigurationSection(): string {
+        const advancedModelConfig = this.settings.pro?.advancedModelConfig ?? {
+            mode: 'auto',
+            temperatureEnabled: false,
+            temperature: 0.2,
+            topPEnabled: false,
+            topP: 0.9,
+            topKEnabled: false,
+            topK: 40,
+            maxTokensEnabled: false,
+            maxTokens: 350,
+        };
+
+        const hasValidLicense = (this.settings.pro?.licenseKey || this.settings.pro?.orderId) && this.settings.pro?.validationStatus === 'valid';
+        const disabledState = !hasValidLicense;
+        const disabledAttr = disabledState ? 'disabled' : '';
+        const customEnabled = !disabledState && advancedModelConfig.mode === 'custom';
+        const overrideDisabledAttr = customEnabled ? '' : 'disabled';
+        const overrideDisabledClass = customEnabled ? '' : 'disabled';
+        const temperatureValueDisabledAttr = customEnabled && advancedModelConfig.temperatureEnabled ? '' : 'disabled';
+        const topPValueDisabledAttr = customEnabled && advancedModelConfig.topPEnabled ? '' : 'disabled';
+        const topKValueDisabledAttr = customEnabled && advancedModelConfig.topKEnabled ? '' : 'disabled';
+        const maxTokensValueDisabledAttr = customEnabled && advancedModelConfig.maxTokensEnabled ? '' : 'disabled';
+
+        return `
+            <div class="modern-section">
+                <div class="section-header">
+                    <h3 class="section-title">Advanced Model Configuration</h3>
+                </div>
+
+                <div class="setting-row" data-tooltip="Control advanced generation parameters. Choose 'Let GitMind decide' to use safe provider defaults.">
+                    <div class="setting-info">
+                        <div class="setting-label">Mode</div>
+                        <div class="setting-desc">Let GitMind decide or use your custom overrides</div>
+                    </div>
+                    <div class="setting-control">
+                        <select id="advancedModelConfigMode" ${disabledAttr}>
+                            <option value="auto" ${advancedModelConfig.mode === 'auto' ? 'selected' : ''}>Let GitMind decide</option>
+                            <option value="custom" ${advancedModelConfig.mode === 'custom' ? 'selected' : ''}>Custom</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-row" data-tooltip="Enable a temperature override.">
+                    <div class="setting-info">
+                        <div class="setting-label">Temperature</div>
+                        <div class="setting-desc">Higher values = more variation</div>
+                    </div>
+                    <div class="setting-control">
+                        <div class="advanced-model-config-control">
+                            <div class="switch-container ${overrideDisabledClass}">
+                                <input class="switch-input" type="checkbox" id="advancedModelConfigTemperatureEnabled"
+                                    ${advancedModelConfig.temperatureEnabled ? 'checked' : ''}
+                                    ${overrideDisabledAttr} />
+                                <div class="switch-button">
+                                    <div class="switch-slider"></div>
+                                </div>
+                            </div>
+                            <input class="advanced-number" type="number" id="advancedModelConfigTemperature" min="0" max="2" step="0.05" value="${advancedModelConfig.temperature}" ${temperatureValueDisabledAttr} />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-row" data-tooltip="Enable a top-p override. Some providers/models disallow specifying both temperature and top-p.">
+                    <div class="setting-info">
+                        <div class="setting-label">Top P</div>
+                        <div class="setting-desc">Nucleus sampling probability cutoff</div>
+                    </div>
+                    <div class="setting-control">
+                        <div class="advanced-model-config-control">
+                            <div class="switch-container ${overrideDisabledClass}">
+                                <input class="switch-input" type="checkbox" id="advancedModelConfigTopPEnabled"
+                                    ${advancedModelConfig.topPEnabled ? 'checked' : ''}
+                                    ${overrideDisabledAttr} />
+                                <div class="switch-button">
+                                    <div class="switch-slider"></div>
+                                </div>
+                            </div>
+                            <input class="advanced-number" type="number" id="advancedModelConfigTopP" min="0" max="1" step="0.01" value="${advancedModelConfig.topP}" ${topPValueDisabledAttr} />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-row" data-tooltip="Enable a top-k override.">
+                    <div class="setting-info">
+                        <div class="setting-label">Top K</div>
+                        <div class="setting-desc">Limit sampling to the top K tokens</div>
+                    </div>
+                    <div class="setting-control">
+                        <div class="advanced-model-config-control">
+                            <div class="switch-container ${overrideDisabledClass}">
+                                <input class="switch-input" type="checkbox" id="advancedModelConfigTopKEnabled"
+                                    ${advancedModelConfig.topKEnabled ? 'checked' : ''}
+                                    ${overrideDisabledAttr} />
+                                <div class="switch-button">
+                                    <div class="switch-slider"></div>
+                                </div>
+                            </div>
+                            <input class="advanced-number" type="number" id="advancedModelConfigTopK" min="0" max="500" step="1" value="${advancedModelConfig.topK}" ${topKValueDisabledAttr} />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-row" data-tooltip="Enable a max output tokens override.">
+                    <div class="setting-info">
+                        <div class="setting-label">Max Output Tokens</div>
+                        <div class="setting-desc">Maximum tokens the model may generate</div>
+                    </div>
+                    <div class="setting-control">
+                        <div class="advanced-model-config-control">
+                            <div class="switch-container ${overrideDisabledClass}">
+                                <input class="switch-input" type="checkbox" id="advancedModelConfigMaxTokensEnabled"
+                                    ${advancedModelConfig.maxTokensEnabled ? 'checked' : ''}
+                                    ${overrideDisabledAttr} />
+                                <div class="switch-button">
+                                    <div class="switch-slider"></div>
+                                </div>
+                            </div>
+                            <input class="advanced-number" type="number" id="advancedModelConfigMaxTokens" min="1" max="65536" step="1" value="${advancedModelConfig.maxTokens}" ${maxTokensValueDisabledAttr} />
+                        </div>
+                    </div>
+                </div>
             </div>
         `;
     }

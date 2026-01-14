@@ -75,6 +75,8 @@ export class AnthropicProvider extends BaseAIProvider {
             const temperature = options?.temperature ?? config.temperature;
             // For commit messages we want strict max tokens, for analysis we might want more (handled by option or default)
             const maxTokens = options?.maxTokens ?? config.max_tokens;
+            const topP = options?.topP;
+            const topK = options?.topK;
 
             // Using the Messages API
             const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -88,6 +90,8 @@ export class AnthropicProvider extends BaseAIProvider {
                     model: this.model,
                     max_tokens: maxTokens,
                     temperature: temperature,
+                    ...(topP !== undefined ? { top_p: topP } : {}),
+                    ...(topK !== undefined ? { top_k: topK } : {}),
                     messages: [
                         {
                             role: "user",

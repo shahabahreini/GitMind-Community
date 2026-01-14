@@ -95,6 +95,17 @@ export interface ExtensionSettings {
         instanceId?: string;
         validationStatus?: 'valid' | 'invalid' | 'expired' | 'error';
         lastValidation?: string;
+        advancedModelConfig?: {
+            mode: 'auto' | 'custom';
+            temperatureEnabled: boolean;
+            temperature: number;
+            topPEnabled: boolean;
+            topP: number;
+            topKEnabled: boolean;
+            topK: number;
+            maxTokensEnabled: boolean;
+            maxTokens: number;
+        };
         largeDiffHandling?: {
             enabled: boolean;
             chunkSize: number;  // Size of each chunk in lines

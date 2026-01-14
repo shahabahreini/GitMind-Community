@@ -31,7 +31,7 @@ import { telemetryService } from "../telemetry/telemetryService";
 import { SubscriptionManager } from "../subscription/SubscriptionManager";
 import { DiffProcessor } from "../diffProcessor";
 import { generateCommitHistoryAnalysisPrompt, validatePromptLength, generateCommitPrompt, getPromptConfig } from './prompts';
-import { BaseAIProvider } from "./base";
+import { BaseAIProvider, GenerationOptions } from "./base";
 
 // Timeout configurations
 const STANDARD_REQUEST_TIMEOUT = 10000; // 10 seconds for regular API requests
@@ -560,6 +560,55 @@ async function getProviderInstance(config: ApiConfig): Promise<BaseAIProvider> {
     return new ProviderClass(typedConfig.apiKey || "", typedConfig.model);
 }
 
+async function applyAdvancedModelConfigDefaults(provider: BaseAIProvider): Promise<void> {
+    const settings = vscode.workspace.getConfiguration("gitmind");
+    const proSettings = (settings.get("pro") as any) || {};
+    const subscriptionSettings = (settings.get("subscription") as any) || {};
+    const isProUser = proSettings.validationStatus === 'valid' || subscriptionSettings.status === 'active';
+    if (!isProUser) {
+        provider.setDefaultGenerationOptions(undefined);
+        return;
+    }
+    const advanced = proSettings.advancedModelConfig;
+
+    if (!advanced || advanced.mode !== 'custom') {
+        provider.setDefaultGenerationOptions(undefined);
+        return;
+    }
+
+    const options: GenerationOptions = {};
+    if (advanced.maxTokensEnabled) {
+        const maxTokens = Number(advanced.maxTokens);
+        if (!Number.isNaN(maxTokens) && maxTokens > 0) {
+            options.maxTokens = maxTokens;
+        }
+    }
+
+    if (advanced.temperatureEnabled) {
+        const temperature = Number(advanced.temperature);
+        if (!Number.isNaN(temperature)) {
+            options.temperature = temperature;
+        }
+    }
+
+    // Mutual exclusion: prefer temperature over topP when both are enabled
+    if (advanced.topPEnabled && options.temperature === undefined) {
+        const topP = Number(advanced.topP);
+        if (!Number.isNaN(topP)) {
+            options.topP = topP;
+        }
+    }
+
+    if (advanced.topKEnabled) {
+        const topK = Number(advanced.topK);
+        if (!Number.isNaN(topK) && topK >= 0) {
+            options.topK = topK;
+        }
+    }
+
+    provider.setDefaultGenerationOptions(options);
+}
+
 async function generateMessageWithConfig(
     config: ApiConfig,
     diff: string,
@@ -658,6 +707,7 @@ async function generateMessageWithConfig(
     }
 
     const provider = await getProviderInstance(config);
+    await applyAdvancedModelConfigDefaults(provider);
     return provider.generateCommitMessage(diff, customContext);
 }
 

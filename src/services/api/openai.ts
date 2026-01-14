@@ -131,6 +131,7 @@ export class OpenAIProvider extends BaseAIProvider {
             const modelConfig = MODEL_CONFIGS[this.model] || MODEL_CONFIGS["gpt-4o"];
             const temperature = options?.temperature ?? modelConfig.temperature;
             const maxTokens = options?.maxTokens ?? modelConfig.maxTokens;
+            const topP = options?.topP;
 
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
@@ -146,6 +147,7 @@ export class OpenAIProvider extends BaseAIProvider {
                             content: prompt
                         }
                     ],
+                    ...(topP !== undefined && options?.temperature === undefined ? { top_p: topP } : {}),
                     temperature: temperature,
                     max_tokens: maxTokens
                 }),
@@ -230,21 +232,21 @@ export class OpenAIProvider extends BaseAIProvider {
                     const id = model.id.toLowerCase();
                     // Exclude non-chat models
                     return !id.includes('tts-') &&
-                           !id.includes('dall-e') &&
-                           !id.includes('whisper') &&
-                           !id.includes('embedding') &&
-                           !id.includes('davinci-002') &&
-                           !id.includes('babbage-002') &&
-                           !id.includes('moderation') &&
-                           !id.includes('instruct') &&
-                           !id.includes('audio') &&
-                           !id.includes('transcribe') &&
-                           !id.includes('sora') &&
-                           !id.includes('image') &&
-                           !id.includes('codex') &&
-                           !id.includes('search') &&
-                           // Include only GPT chat models and reasoning models (o-series)
-                           (id.startsWith('gpt-') || id.startsWith('o') || id.startsWith('chatgpt'));
+                        !id.includes('dall-e') &&
+                        !id.includes('whisper') &&
+                        !id.includes('embedding') &&
+                        !id.includes('davinci-002') &&
+                        !id.includes('babbage-002') &&
+                        !id.includes('moderation') &&
+                        !id.includes('instruct') &&
+                        !id.includes('audio') &&
+                        !id.includes('transcribe') &&
+                        !id.includes('sora') &&
+                        !id.includes('image') &&
+                        !id.includes('codex') &&
+                        !id.includes('search') &&
+                        // Include only GPT chat models and reasoning models (o-series)
+                        (id.startsWith('gpt-') || id.startsWith('o') || id.startsWith('chatgpt'));
                 })
                 .map((model: any) => model.id)
                 .sort((a: string, b: string) => {

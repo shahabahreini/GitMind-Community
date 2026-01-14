@@ -128,6 +128,18 @@ export const proFeaturesModernCSS: string = `
     margin-top: 2px;
 }
 
+/* Advanced Model Configuration - Align toggle + number input */
+.pro-feature-container .advanced-model-config-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pro-feature-container .advanced-model-config-control .advanced-number {
+    width: 120px;
+    min-width: 120px;
+}
+
 /* Enhanced Switch/Toggle Styling - Consistent sizing */
 .pro-feature-container .switch-container {
     position: relative;
