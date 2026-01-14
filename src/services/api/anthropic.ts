@@ -88,7 +88,6 @@ export class AnthropicProvider extends BaseAIProvider {
                     model: this.model,
                     max_tokens: maxTokens,
                     temperature: temperature,
-                    top_p: config.top_p,
                     messages: [
                         {
                             role: "user",
