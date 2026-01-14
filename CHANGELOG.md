@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v4.7.3 - 2026-01-13
+
+### Enhanced
+
+- **Performance Optimization**: Reduced AI temperature settings for more deterministic and consistent commit message outputs.
+- **Provider Architecture**: Refactored AI providers to use BaseAIProvider class for better code maintainability and consistency.
+
+### Fixed
+
+- **Hugging Face API**: Improved error messages with actionable guidance for better troubleshooting.
+- **Git Performance**: Excluded ignored directories from git repository search to improve performance.
+
+### Removed
+
+- **Code Cleanup**: Removed deprecated Windsurf agent and outdated AI models.
 
 ## v4.7.2 - 2026-01-13
 
@@ -35,17 +50,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 
 - Added manual commit limit option for changelog generation.
+
   - Introduced a new setting to manually cap the number of commits considered for changelog generation.
   - Added an "Unreleased" section showing changes since the last tagged version.
   - Implemented logic to respect the manual commit limit when enabled.
   - Updated UI to include a toggle for enabling/disabling the manual commit limit.
 
 - Added intelligent version conflict resolution during changelog regeneration.
+
   - Extracted all versions from the existing changelog with full content.
   - Detected duplicate versions and added an overwrite control setting (`gitmind.pro.changelog.overwriteExisting`).
   - Merged new and existing changelog content intelligently while preserving existing versions in safe mode (default).
 
 - Added capture all changes option in settings.
+
   - Introduced a new configuration option to capture staged, unstaged, and untracked changes.
   - Updated diff generation logic to include all changes when the option is enabled.
   - Added a UI toggle in settings for enabling/disabling the feature.
@@ -75,18 +93,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 
 - Added extension version and footer metadata to the settings UI.
+
   - Included a footer section displaying the extension version, author attribution, and a link for reporting issues/improvements.
   - Enhanced transparency by showing the current version in use.
   - Provided direct access to GitHub issues for user feedback.
   - Improved CSS styling for the footer with responsive layout and theming.
 
 - Added a new configuration option to capture staged, unstaged, and untracked changes.
+
   - Updated diff generation logic to include all changes when the option is enabled.
   - Added a UI toggle in settings for enabling/disabling the feature.
   - Updated settings synchronization to include the new option.
   - Maintained backward compatibility with existing behavior when disabled.
 
 - Added a new commit style option for Conventional Commits without scopes.
+
   - Provided a simplified version of the Conventional Commits standard for projects that don't require scopes.
   - Included updated configuration, prompts, and UI elements to support the new style.
 
