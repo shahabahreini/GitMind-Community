@@ -73,11 +73,17 @@ export class AnthropicProvider extends BaseAIProvider {
 
             // Get model-specific configuration
             const config = MODEL_CONFIGS[this.model as AnthropicModel] || MODEL_CONFIGS["claude-3-5-sonnet-20241022"];
-            const temperature = options?.temperature ?? config.temperature;
+            const temperatureOverride = options?.temperature;
             // For commit messages we want strict max tokens, for analysis we might want more (handled by option or default)
             const maxTokens = options?.maxTokens ?? config.max_tokens;
-            const topP = options?.topP;
+            const topP = temperatureOverride === undefined ? options?.topP : undefined;
             const topK = options?.topK;
+
+            // Anthropic constraint: don't send both temperature and top_p.
+            // If the caller explicitly sets temperature, prefer it and drop top_p.
+            // If top_p is provided (and temperature isn't explicitly overridden), omit temperature.
+            const shouldSendTemperature = topP === undefined;
+            const temperature = shouldSendTemperature ? (temperatureOverride ?? config.temperature) : undefined;
 
             // Using the Messages API
             const response = await loggedFetch('https://api.anthropic.com/v1/messages', {
@@ -90,7 +96,7 @@ export class AnthropicProvider extends BaseAIProvider {
                 body: JSON.stringify({
                     model: this.model,
                     max_tokens: maxTokens,
-                    temperature: temperature,
+                    ...(temperature !== undefined ? { temperature } : {}),
                     ...(topP !== undefined ? { top_p: topP } : {}),
                     ...(topK !== undefined ? { top_k: topK } : {}),
                     messages: [

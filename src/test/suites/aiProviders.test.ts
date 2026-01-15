@@ -6,13 +6,16 @@ import { getApiConfig } from '../../config/settings';
 
 suite('AI Providers Tests', () => {
     let originalGetConfiguration: typeof vscode.workspace.getConfiguration;
+    let originalFetch: typeof globalThis.fetch;
 
     setup(() => {
         originalGetConfiguration = vscode.workspace.getConfiguration;
+        originalFetch = globalThis.fetch;
     });
 
     teardown(() => {
         vscode.workspace.getConfiguration = originalGetConfiguration;
+        globalThis.fetch = originalFetch;
     });
 
     const createMockConfig = (provider: string, settings: any) => {
@@ -55,6 +58,195 @@ suite('AI Providers Tests', () => {
             // Expected in test environment
             console.log('Gemini config test completed with expected limitation');
         }
+    });
+
+    test('Anthropic payload should not include both temperature and top_p when topP override is applied', async () => {
+        const capturedBodies: any[] = [];
+
+        globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+            if (init?.body && typeof init.body === 'string') {
+                capturedBodies.push(JSON.parse(init.body));
+            }
+
+            return new Response(
+                JSON.stringify({
+                    content: [{ type: 'text', text: 'feat: test\n\nBody' }]
+                }),
+                {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' }
+                }
+            );
+        }) as typeof globalThis.fetch;
+
+        const mockConfig = {
+            get: (key: string, defaultValue?: any) => {
+                if (key === 'apiProvider') { return 'anthropic'; }
+                if (key === 'anthropic.apiKey') { return 'test-anthropic-key'; }
+                if (key === 'anthropic.model') { return 'claude-3-5-sonnet-20241022'; }
+
+                if (key === 'subscription') {
+                    return { status: 'active' };
+                }
+                if (key === 'pro') {
+                    return {
+                        validationStatus: 'valid',
+                        advancedModelConfig: {
+                            mode: 'custom',
+                            temperatureEnabled: false,
+                            temperature: 0.7,
+                            topPEnabled: true,
+                            topP: 0.5,
+                            topKEnabled: false,
+                            topK: 40,
+                            maxTokensEnabled: false,
+                            maxTokens: 350,
+                        },
+                    };
+                }
+
+                return defaultValue;
+            },
+            update: async () => Promise.resolve(),
+            inspect: () => ({ key: '', defaultValue: undefined }),
+            has: () => true
+        };
+
+        (vscode.workspace as any).getConfiguration = () => mockConfig;
+
+        const config = await getApiConfig();
+        await generateCommitMessage(config, 'diff');
+
+        assert.ok(capturedBodies.length >= 1, 'Should capture at least one Anthropic request');
+        const lastBody = capturedBodies[capturedBodies.length - 1];
+        assert.ok(!('temperature' in lastBody), 'temperature should be omitted when top_p is provided');
+        assert.ok('top_p' in lastBody, 'top_p should be present when enabled via advanced config');
+    });
+
+    test('Anthropic payload should prefer temperature over top_p when both are enabled (mutual exclusion)', async () => {
+        const capturedBodies: any[] = [];
+
+        globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+            if (init?.body && typeof init.body === 'string') {
+                capturedBodies.push(JSON.parse(init.body));
+            }
+
+            return new Response(
+                JSON.stringify({
+                    content: [{ type: 'text', text: 'feat: test\n\nBody' }]
+                }),
+                {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' }
+                }
+            );
+        }) as typeof globalThis.fetch;
+
+        const mockConfig = {
+            get: (key: string, defaultValue?: any) => {
+                if (key === 'apiProvider') { return 'anthropic'; }
+                if (key === 'anthropic.apiKey') { return 'test-anthropic-key'; }
+                if (key === 'anthropic.model') { return 'claude-3-5-sonnet-20241022'; }
+
+                if (key === 'subscription') {
+                    return { status: 'active' };
+                }
+                if (key === 'pro') {
+                    return {
+                        validationStatus: 'valid',
+                        advancedModelConfig: {
+                            mode: 'custom',
+                            temperatureEnabled: true,
+                            temperature: 0.9,
+                            topPEnabled: true,
+                            topP: 0.2,
+                            topKEnabled: false,
+                            topK: 40,
+                            maxTokensEnabled: false,
+                            maxTokens: 350,
+                        },
+                    };
+                }
+
+                return defaultValue;
+            },
+            update: async () => Promise.resolve(),
+            inspect: () => ({ key: '', defaultValue: undefined }),
+            has: () => true
+        };
+
+        (vscode.workspace as any).getConfiguration = () => mockConfig;
+
+        const config = await getApiConfig();
+        await generateCommitMessage(config, 'diff');
+
+        assert.ok(capturedBodies.length >= 1, 'Should capture at least one Anthropic request');
+        const lastBody = capturedBodies[capturedBodies.length - 1];
+        assert.ok('temperature' in lastBody, 'temperature should be present when enabled');
+        assert.strictEqual(lastBody.temperature, 0.9);
+        assert.ok(!('top_p' in lastBody), 'top_p should be omitted when temperature is used');
+    });
+
+    test('Anthropic payload should forward top_k when enabled via Advanced Model Config', async () => {
+        const capturedBodies: any[] = [];
+
+        globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+            if (init?.body && typeof init.body === 'string') {
+                capturedBodies.push(JSON.parse(init.body));
+            }
+
+            return new Response(
+                JSON.stringify({
+                    content: [{ type: 'text', text: 'feat: test\n\nBody' }]
+                }),
+                {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' }
+                }
+            );
+        }) as typeof globalThis.fetch;
+
+        const mockConfig = {
+            get: (key: string, defaultValue?: any) => {
+                if (key === 'apiProvider') { return 'anthropic'; }
+                if (key === 'anthropic.apiKey') { return 'test-anthropic-key'; }
+                if (key === 'anthropic.model') { return 'claude-3-5-sonnet-20241022'; }
+
+                if (key === 'subscription') {
+                    return { status: 'active' };
+                }
+                if (key === 'pro') {
+                    return {
+                        validationStatus: 'valid',
+                        advancedModelConfig: {
+                            mode: 'custom',
+                            temperatureEnabled: false,
+                            temperature: 0.2,
+                            topPEnabled: false,
+                            topP: 0.8,
+                            topKEnabled: true,
+                            topK: 64,
+                            maxTokensEnabled: false,
+                            maxTokens: 350,
+                        },
+                    };
+                }
+
+                return defaultValue;
+            },
+            update: async () => Promise.resolve(),
+            inspect: () => ({ key: '', defaultValue: undefined }),
+            has: () => true
+        };
+
+        (vscode.workspace as any).getConfiguration = () => mockConfig;
+
+        const config = await getApiConfig();
+        await generateCommitMessage(config, 'diff');
+
+        assert.ok(capturedBodies.length >= 1, 'Should capture at least one Anthropic request');
+        const lastBody = capturedBodies[capturedBodies.length - 1];
+        assert.strictEqual(lastBody.top_k, 64);
     });
 
     test('MiniMax provider configuration should be valid', async () => {
