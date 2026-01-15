@@ -205,6 +205,11 @@ export class ProFeatureRenderer extends BaseRenderer {
         const topKValueDisabledAttr = customEnabled && advancedModelConfig.topKEnabled ? '' : 'disabled';
         const maxTokensValueDisabledAttr = customEnabled && advancedModelConfig.maxTokensEnabled ? '' : 'disabled';
 
+        const temperatureDisplayValue = customEnabled && advancedModelConfig.temperatureEnabled ? String(advancedModelConfig.temperature) : '';
+        const topPDisplayValue = customEnabled && advancedModelConfig.topPEnabled ? String(advancedModelConfig.topP) : '';
+        const topKDisplayValue = customEnabled && advancedModelConfig.topKEnabled ? String(advancedModelConfig.topK) : '';
+        const maxTokensDisplayValue = customEnabled && advancedModelConfig.maxTokensEnabled ? String(advancedModelConfig.maxTokens) : '';
+
         return `
             <div class="modern-section">
                 <div class="section-header">
@@ -239,7 +244,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                                     <div class="switch-slider"></div>
                                 </div>
                             </div>
-                            <input class="advanced-number" type="number" id="advancedModelConfigTemperature" min="0" max="2" step="0.05" value="${advancedModelConfig.temperature}" ${temperatureValueDisabledAttr} />
+                            <input class="advanced-number" type="number" id="advancedModelConfigTemperature" min="0" max="2" step="0.05" value="${temperatureDisplayValue}" ${temperatureValueDisabledAttr} />
                         </div>
                     </div>
                 </div>
@@ -259,7 +264,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                                     <div class="switch-slider"></div>
                                 </div>
                             </div>
-                            <input class="advanced-number" type="number" id="advancedModelConfigTopP" min="0" max="1" step="0.01" value="${advancedModelConfig.topP}" ${topPValueDisabledAttr} />
+                            <input class="advanced-number" type="number" id="advancedModelConfigTopP" min="0" max="1" step="0.01" value="${topPDisplayValue}" ${topPValueDisabledAttr} />
                         </div>
                     </div>
                 </div>
@@ -279,7 +284,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                                     <div class="switch-slider"></div>
                                 </div>
                             </div>
-                            <input class="advanced-number" type="number" id="advancedModelConfigTopK" min="0" max="500" step="1" value="${advancedModelConfig.topK}" ${topKValueDisabledAttr} />
+                            <input class="advanced-number" type="number" id="advancedModelConfigTopK" min="0" max="500" step="1" value="${topKDisplayValue}" ${topKValueDisabledAttr} />
                         </div>
                     </div>
                 </div>
@@ -299,7 +304,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                                     <div class="switch-slider"></div>
                                 </div>
                             </div>
-                            <input class="advanced-number" type="number" id="advancedModelConfigMaxTokens" min="1" max="65536" step="1" value="${advancedModelConfig.maxTokens}" ${maxTokensValueDisabledAttr} />
+                            <input class="advanced-number" type="number" id="advancedModelConfigMaxTokens" min="1" max="65536" step="1" value="${maxTokensDisplayValue}" ${maxTokensValueDisabledAttr} />
                         </div>
                     </div>
                 </div>
@@ -442,8 +447,8 @@ export class ProFeatureRenderer extends BaseRenderer {
                             ${languageOptions.map(opt => `<option value="${opt.value}" ${targetLanguage === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
                         </select>
                         <button type="button" class="dropdown-toggle" ${disabledState ? 'disabled' : ''}>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M7 10l5 5 5-5z"/>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                <polyline points="6 9 12 15 18 9"></polyline>
                             </svg>
                         </button>
                     </div>

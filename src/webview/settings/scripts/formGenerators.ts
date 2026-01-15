@@ -66,7 +66,9 @@ export function generateFormInitialization(): string {
 
     `try {`,
     `  const advancedModelConfigTemperatureEl = document.getElementById('advancedModelConfigTemperature');`,
-    `  if (advancedModelConfigTemperatureEl) advancedModelConfigTemperatureEl.value = currentSettings.pro?.advancedModelConfig?.temperature ?? 0.2;`,
+    `  const advancedTempEnabledEl = document.getElementById('advancedModelConfigTemperatureEnabled');`,
+    `  const advancedTempEnabled = advancedTempEnabledEl?.checked ?? currentSettings.pro?.advancedModelConfig?.temperatureEnabled ?? false;`,
+    `  if (advancedModelConfigTemperatureEl) advancedModelConfigTemperatureEl.value = advancedTempEnabled ? String(currentSettings.pro?.advancedModelConfig?.temperature ?? '') : '';`,
     `} catch (e) { console.warn('Failed to set advancedModelConfigTemperature:', e); }`,
 
     `try {`,
@@ -76,7 +78,9 @@ export function generateFormInitialization(): string {
 
     `try {`,
     `  const advancedModelConfigTopPEl = document.getElementById('advancedModelConfigTopP');`,
-    `  if (advancedModelConfigTopPEl) advancedModelConfigTopPEl.value = currentSettings.pro?.advancedModelConfig?.topP ?? 0.9;`,
+    `  const advancedTopPEnabledEl = document.getElementById('advancedModelConfigTopPEnabled');`,
+    `  const advancedTopPEnabled = advancedTopPEnabledEl?.checked ?? currentSettings.pro?.advancedModelConfig?.topPEnabled ?? false;`,
+    `  if (advancedModelConfigTopPEl) advancedModelConfigTopPEl.value = advancedTopPEnabled ? String(currentSettings.pro?.advancedModelConfig?.topP ?? '') : '';`,
     `} catch (e) { console.warn('Failed to set advancedModelConfigTopP:', e); }`,
 
     `try {`,
@@ -86,7 +90,9 @@ export function generateFormInitialization(): string {
 
     `try {`,
     `  const advancedModelConfigTopKEl = document.getElementById('advancedModelConfigTopK');`,
-    `  if (advancedModelConfigTopKEl) advancedModelConfigTopKEl.value = currentSettings.pro?.advancedModelConfig?.topK ?? 40;`,
+    `  const advancedTopKEnabledEl = document.getElementById('advancedModelConfigTopKEnabled');`,
+    `  const advancedTopKEnabled = advancedTopKEnabledEl?.checked ?? currentSettings.pro?.advancedModelConfig?.topKEnabled ?? false;`,
+    `  if (advancedModelConfigTopKEl) advancedModelConfigTopKEl.value = advancedTopKEnabled ? String(currentSettings.pro?.advancedModelConfig?.topK ?? '') : '';`,
     `} catch (e) { console.warn('Failed to set advancedModelConfigTopK:', e); }`,
 
     `try {`,
@@ -96,7 +102,9 @@ export function generateFormInitialization(): string {
 
     `try {`,
     `  const advancedModelConfigMaxTokensEl = document.getElementById('advancedModelConfigMaxTokens');`,
-    `  if (advancedModelConfigMaxTokensEl) advancedModelConfigMaxTokensEl.value = currentSettings.pro?.advancedModelConfig?.maxTokens ?? 350;`,
+    `  const advancedMaxTokensEnabledEl = document.getElementById('advancedModelConfigMaxTokensEnabled');`,
+    `  const advancedMaxTokensEnabled = advancedMaxTokensEnabledEl?.checked ?? currentSettings.pro?.advancedModelConfig?.maxTokensEnabled ?? false;`,
+    `  if (advancedModelConfigMaxTokensEl) advancedModelConfigMaxTokensEl.value = advancedMaxTokensEnabled ? String(currentSettings.pro?.advancedModelConfig?.maxTokens ?? '') : '';`,
     `} catch (e) { console.warn('Failed to set advancedModelConfigMaxTokens:', e); }`,
 
     `try {`,
@@ -291,13 +299,21 @@ export function generateSettingsCollection(): string {
       advancedModelConfig: {
         mode: (document.getElementById('advancedModelConfigMode')?.value || currentSettings.pro?.advancedModelConfig?.mode || 'auto'),
         temperatureEnabled: (document.getElementById('advancedModelConfigTemperatureEnabled')?.checked ?? false),
-        temperature: parseFloat(document.getElementById('advancedModelConfigTemperature')?.value) || 0.2,
+        temperature: (document.getElementById('advancedModelConfigTemperatureEnabled')?.checked ?? false) && String(document.getElementById('advancedModelConfigTemperature')?.value || '').trim() !== ''
+          ? parseFloat(String(document.getElementById('advancedModelConfigTemperature')?.value))
+          : (currentSettings.pro?.advancedModelConfig?.temperature ?? undefined),
         topPEnabled: (document.getElementById('advancedModelConfigTopPEnabled')?.checked ?? false),
-        topP: parseFloat(document.getElementById('advancedModelConfigTopP')?.value) || 0.9,
+        topP: (document.getElementById('advancedModelConfigTopPEnabled')?.checked ?? false) && String(document.getElementById('advancedModelConfigTopP')?.value || '').trim() !== ''
+          ? parseFloat(String(document.getElementById('advancedModelConfigTopP')?.value))
+          : (currentSettings.pro?.advancedModelConfig?.topP ?? undefined),
         topKEnabled: (document.getElementById('advancedModelConfigTopKEnabled')?.checked ?? false),
-        topK: parseInt(document.getElementById('advancedModelConfigTopK')?.value) || 40,
+        topK: (document.getElementById('advancedModelConfigTopKEnabled')?.checked ?? false) && String(document.getElementById('advancedModelConfigTopK')?.value || '').trim() !== ''
+          ? parseInt(String(document.getElementById('advancedModelConfigTopK')?.value), 10)
+          : (currentSettings.pro?.advancedModelConfig?.topK ?? undefined),
         maxTokensEnabled: (document.getElementById('advancedModelConfigMaxTokensEnabled')?.checked ?? false),
-        maxTokens: parseInt(document.getElementById('advancedModelConfigMaxTokens')?.value) || 350,
+        maxTokens: (document.getElementById('advancedModelConfigMaxTokensEnabled')?.checked ?? false) && String(document.getElementById('advancedModelConfigMaxTokens')?.value || '').trim() !== ''
+          ? parseInt(String(document.getElementById('advancedModelConfigMaxTokens')?.value), 10)
+          : (currentSettings.pro?.advancedModelConfig?.maxTokens ?? undefined),
       },
       licenseKey: currentSettings.pro?.licenseKey || '',
       orderId: currentSettings.pro?.orderId || '',
@@ -355,13 +371,13 @@ export function generateProviderForm(_provider: string, _settings: any, _default
     `document.getElementById('encryptionEnabled').checked = currentSettings.pro?.encryptionEnabled ?? false;`,
     `if (document.getElementById('advancedModelConfigMode')) document.getElementById('advancedModelConfigMode').value = currentSettings.pro?.advancedModelConfig?.mode ?? 'auto';`,
     `if (document.getElementById('advancedModelConfigTemperatureEnabled')) document.getElementById('advancedModelConfigTemperatureEnabled').checked = currentSettings.pro?.advancedModelConfig?.temperatureEnabled ?? false;`,
-    `if (document.getElementById('advancedModelConfigTemperature')) document.getElementById('advancedModelConfigTemperature').value = currentSettings.pro?.advancedModelConfig?.temperature ?? 0.2;`,
+    `if (document.getElementById('advancedModelConfigTemperature')) document.getElementById('advancedModelConfigTemperature').value = (currentSettings.pro?.advancedModelConfig?.temperatureEnabled ?? false) ? String(currentSettings.pro?.advancedModelConfig?.temperature ?? '') : '';`,
     `if (document.getElementById('advancedModelConfigTopPEnabled')) document.getElementById('advancedModelConfigTopPEnabled').checked = currentSettings.pro?.advancedModelConfig?.topPEnabled ?? false;`,
-    `if (document.getElementById('advancedModelConfigTopP')) document.getElementById('advancedModelConfigTopP').value = currentSettings.pro?.advancedModelConfig?.topP ?? 0.9;`,
+    `if (document.getElementById('advancedModelConfigTopP')) document.getElementById('advancedModelConfigTopP').value = (currentSettings.pro?.advancedModelConfig?.topPEnabled ?? false) ? String(currentSettings.pro?.advancedModelConfig?.topP ?? '') : '';`,
     `if (document.getElementById('advancedModelConfigTopKEnabled')) document.getElementById('advancedModelConfigTopKEnabled').checked = currentSettings.pro?.advancedModelConfig?.topKEnabled ?? false;`,
-    `if (document.getElementById('advancedModelConfigTopK')) document.getElementById('advancedModelConfigTopK').value = currentSettings.pro?.advancedModelConfig?.topK ?? 40;`,
+    `if (document.getElementById('advancedModelConfigTopK')) document.getElementById('advancedModelConfigTopK').value = (currentSettings.pro?.advancedModelConfig?.topKEnabled ?? false) ? String(currentSettings.pro?.advancedModelConfig?.topK ?? '') : '';`,
     `if (document.getElementById('advancedModelConfigMaxTokensEnabled')) document.getElementById('advancedModelConfigMaxTokensEnabled').checked = currentSettings.pro?.advancedModelConfig?.maxTokensEnabled ?? false;`,
-    `if (document.getElementById('advancedModelConfigMaxTokens')) document.getElementById('advancedModelConfigMaxTokens').value = currentSettings.pro?.advancedModelConfig?.maxTokens ?? 350;`,
+    `if (document.getElementById('advancedModelConfigMaxTokens')) document.getElementById('advancedModelConfigMaxTokens').value = (currentSettings.pro?.advancedModelConfig?.maxTokensEnabled ?? false) ? String(currentSettings.pro?.advancedModelConfig?.maxTokens ?? '') : '';`,
     `// Update Pro feature UI state`,
     `updateProFeatureUI(currentSettings);`,
     `// Subscription fields`,
@@ -434,13 +450,13 @@ export function generateUpdateSettingsCode(): string {
     `document.getElementById('encryptionEnabled').checked = currentSettings.pro?.encryptionEnabled ?? false;`,
     `if (document.getElementById('advancedModelConfigMode')) document.getElementById('advancedModelConfigMode').value = currentSettings.pro?.advancedModelConfig?.mode ?? 'auto';`,
     `if (document.getElementById('advancedModelConfigTemperatureEnabled')) document.getElementById('advancedModelConfigTemperatureEnabled').checked = currentSettings.pro?.advancedModelConfig?.temperatureEnabled ?? false;`,
-    `if (document.getElementById('advancedModelConfigTemperature')) document.getElementById('advancedModelConfigTemperature').value = currentSettings.pro?.advancedModelConfig?.temperature ?? 0.2;`,
+    `if (document.getElementById('advancedModelConfigTemperature')) document.getElementById('advancedModelConfigTemperature').value = (currentSettings.pro?.advancedModelConfig?.temperatureEnabled ?? false) ? String(currentSettings.pro?.advancedModelConfig?.temperature ?? '') : '';`,
     `if (document.getElementById('advancedModelConfigTopPEnabled')) document.getElementById('advancedModelConfigTopPEnabled').checked = currentSettings.pro?.advancedModelConfig?.topPEnabled ?? false;`,
-    `if (document.getElementById('advancedModelConfigTopP')) document.getElementById('advancedModelConfigTopP').value = currentSettings.pro?.advancedModelConfig?.topP ?? 0.9;`,
+    `if (document.getElementById('advancedModelConfigTopP')) document.getElementById('advancedModelConfigTopP').value = (currentSettings.pro?.advancedModelConfig?.topPEnabled ?? false) ? String(currentSettings.pro?.advancedModelConfig?.topP ?? '') : '';`,
     `if (document.getElementById('advancedModelConfigTopKEnabled')) document.getElementById('advancedModelConfigTopKEnabled').checked = currentSettings.pro?.advancedModelConfig?.topKEnabled ?? false;`,
-    `if (document.getElementById('advancedModelConfigTopK')) document.getElementById('advancedModelConfigTopK').value = currentSettings.pro?.advancedModelConfig?.topK ?? 40;`,
+    `if (document.getElementById('advancedModelConfigTopK')) document.getElementById('advancedModelConfigTopK').value = (currentSettings.pro?.advancedModelConfig?.topKEnabled ?? false) ? String(currentSettings.pro?.advancedModelConfig?.topK ?? '') : '';`,
     `if (document.getElementById('advancedModelConfigMaxTokensEnabled')) document.getElementById('advancedModelConfigMaxTokensEnabled').checked = currentSettings.pro?.advancedModelConfig?.maxTokensEnabled ?? false;`,
-    `if (document.getElementById('advancedModelConfigMaxTokens')) document.getElementById('advancedModelConfigMaxTokens').value = currentSettings.pro?.advancedModelConfig?.maxTokens ?? 350;`,
+    `if (document.getElementById('advancedModelConfigMaxTokens')) document.getElementById('advancedModelConfigMaxTokens').value = (currentSettings.pro?.advancedModelConfig?.maxTokensEnabled ?? false) ? String(currentSettings.pro?.advancedModelConfig?.maxTokens ?? '') : '';`,
     `// Update Pro feature UI state`,
     `updateProFeatureUI(currentSettings);`,
     `// Subscription fields`,
@@ -507,13 +523,13 @@ export function generateUpdateSettingsCodePreserveDropdowns(): string {
     `document.getElementById('encryptionEnabled').checked = currentSettings.pro?.encryptionEnabled ?? false;`,
     `if (document.getElementById('advancedModelConfigMode')) document.getElementById('advancedModelConfigMode').value = currentSettings.pro?.advancedModelConfig?.mode ?? 'auto';`,
     `if (document.getElementById('advancedModelConfigTemperatureEnabled')) document.getElementById('advancedModelConfigTemperatureEnabled').checked = currentSettings.pro?.advancedModelConfig?.temperatureEnabled ?? false;`,
-    `if (document.getElementById('advancedModelConfigTemperature')) document.getElementById('advancedModelConfigTemperature').value = currentSettings.pro?.advancedModelConfig?.temperature ?? 0.2;`,
+    `if (document.getElementById('advancedModelConfigTemperature')) document.getElementById('advancedModelConfigTemperature').value = (currentSettings.pro?.advancedModelConfig?.temperatureEnabled ?? false) ? String(currentSettings.pro?.advancedModelConfig?.temperature ?? '') : '';`,
     `if (document.getElementById('advancedModelConfigTopPEnabled')) document.getElementById('advancedModelConfigTopPEnabled').checked = currentSettings.pro?.advancedModelConfig?.topPEnabled ?? false;`,
-    `if (document.getElementById('advancedModelConfigTopP')) document.getElementById('advancedModelConfigTopP').value = currentSettings.pro?.advancedModelConfig?.topP ?? 0.9;`,
+    `if (document.getElementById('advancedModelConfigTopP')) document.getElementById('advancedModelConfigTopP').value = (currentSettings.pro?.advancedModelConfig?.topPEnabled ?? false) ? String(currentSettings.pro?.advancedModelConfig?.topP ?? '') : '';`,
     `if (document.getElementById('advancedModelConfigTopKEnabled')) document.getElementById('advancedModelConfigTopKEnabled').checked = currentSettings.pro?.advancedModelConfig?.topKEnabled ?? false;`,
-    `if (document.getElementById('advancedModelConfigTopK')) document.getElementById('advancedModelConfigTopK').value = currentSettings.pro?.advancedModelConfig?.topK ?? 40;`,
+    `if (document.getElementById('advancedModelConfigTopK')) document.getElementById('advancedModelConfigTopK').value = (currentSettings.pro?.advancedModelConfig?.topKEnabled ?? false) ? String(currentSettings.pro?.advancedModelConfig?.topK ?? '') : '';`,
     `if (document.getElementById('advancedModelConfigMaxTokensEnabled')) document.getElementById('advancedModelConfigMaxTokensEnabled').checked = currentSettings.pro?.advancedModelConfig?.maxTokensEnabled ?? false;`,
-    `if (document.getElementById('advancedModelConfigMaxTokens')) document.getElementById('advancedModelConfigMaxTokens').value = currentSettings.pro?.advancedModelConfig?.maxTokens ?? 350;`,
+    `if (document.getElementById('advancedModelConfigMaxTokens')) document.getElementById('advancedModelConfigMaxTokens').value = (currentSettings.pro?.advancedModelConfig?.maxTokensEnabled ?? false) ? String(currentSettings.pro?.advancedModelConfig?.maxTokens ?? '') : '';`,
     `// Update Pro feature UI state`,
     `updateProFeatureUI(currentSettings);`,
     `// Subscription fields`,
