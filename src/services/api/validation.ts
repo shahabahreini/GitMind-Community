@@ -47,6 +47,109 @@ interface ValidatorConfig {
     };
 }
 
+async function validateOllamaSetup(
+    baseUrl: string,
+    configuredModel: string
+): Promise<{ success: boolean; error?: string; troubleshooting?: string; details?: string }> {
+    const trimmedUrl = baseUrl.trim();
+    const model = configuredModel.trim();
+
+    if (!trimmedUrl) {
+        return {
+            success: false,
+            error: "Ollama URL not configured",
+            troubleshooting: "Please set the Ollama URL in settings (e.g., http://localhost:11434).",
+        };
+    }
+    if (!model) {
+        return {
+            success: false,
+            error: "Ollama model not configured",
+            troubleshooting: "Please set an Ollama model name in settings (e.g., llama3.2).",
+        };
+    }
+
+    try {
+        const versionResponse = await loggedFetch(
+            `${trimmedUrl}/api/version`,
+            {
+                method: "GET",
+                signal: AbortSignal.timeout(2000),
+            },
+            { provider: "ollama", operation: "version" }
+        );
+
+        if (!versionResponse.ok) {
+            return {
+                success: false,
+                error: `Ollama version check failed: ${versionResponse.status} ${versionResponse.statusText}`,
+                troubleshooting: "Ensure Ollama is running and reachable at the configured URL.",
+            };
+        }
+
+        const versionJson = (await versionResponse.json()) as { version?: string };
+        const version = versionJson.version;
+
+        const tagsResponse = await loggedFetch(
+            `${trimmedUrl}/api/tags`,
+            {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                },
+                signal: AbortSignal.timeout(3000),
+            },
+            { provider: "ollama", operation: "tags" }
+        );
+
+        if (!tagsResponse.ok) {
+            const text = await tagsResponse.text();
+            return {
+                success: false,
+                error: `Ollama models check failed: ${tagsResponse.status} ${tagsResponse.statusText}`,
+                troubleshooting: `Ensure Ollama is running and reachable at the configured URL. Response: ${text}`,
+                details: version ? `Detected Ollama version: ${version}` : undefined,
+            };
+        }
+
+        const tagsJson = (await tagsResponse.json()) as { models?: Array<{ name?: string }> };
+        const modelNames = (tagsJson.models ?? [])
+            .map(m => m.name)
+            .filter((name): name is string => typeof name === "string" && name.trim().length > 0);
+
+        if (modelNames.length === 0) {
+            return {
+                success: false,
+                error: "No Ollama models are installed",
+                troubleshooting: `Install a model first, for example: ollama pull ${model}`,
+                details: version ? `Detected Ollama version: ${version}` : undefined,
+            };
+        }
+
+        const isConfiguredModelInstalled = modelNames.includes(model);
+        if (!isConfiguredModelInstalled) {
+            return {
+                success: false,
+                error: `Configured Ollama model is not installed: ${model}`,
+                troubleshooting: `Install it with: ollama pull ${model}`,
+                details: version ? `Detected Ollama version: ${version}` : undefined,
+            };
+        }
+
+        return {
+            success: true,
+            details: version ? `Detected Ollama version: ${version}` : undefined,
+        };
+    } catch (error) {
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+            troubleshooting: "Ensure Ollama is running and reachable at the configured URL.",
+        };
+    }
+}
+
 const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
     gemini: {
         requiresApiKey: true,
@@ -251,20 +354,41 @@ export async function checkApiSetup(): Promise<ApiCheckResult> {
             return result;
         }
 
+        if (config.type === "ollama") {
+            const setup = await validateOllamaSetup(
+                'url' in config ? (config.url || "") : "",
+                config.model || ""
+            );
+
+            result.success = setup.success;
+            if (setup.success) {
+                result.model = config.model;
+                result.responseTime = validatorConfig.responseTime;
+                result.details = setup.details ? `Connection test successful (${setup.details})` : "Connection test successful";
+            } else {
+                result.error = setup.error || "Connection test failed";
+                result.troubleshooting = setup.troubleshooting || "Please check your Ollama configuration";
+                result.details = setup.details;
+            }
+            return result;
+        }
+
         if (validatorConfig.requiresApiKey && !('apiKey' in config && config.apiKey)) {
             result.error = "API key not configured";
             result.troubleshooting = `Please enter your ${config.type} API key in the settings`;
             return result;
         }
 
-        const apiKeyOrUrl = validatorConfig.requiresApiKey
+        const apiKeyOrUrlRaw = validatorConfig.requiresApiKey
             ? ('apiKey' in config ? config.apiKey : '')
             : ('url' in config ? config.url : '');
 
+        const apiKeyOrUrl = typeof apiKeyOrUrlRaw === "string" ? apiKeyOrUrlRaw : "";
+
         const validation =
             config.type === "gemini"
-                ? await validateGeminiAPIKey(apiKeyOrUrl!, config.model)
-                : await validatorConfig.validator!(apiKeyOrUrl!);
+                ? await validateGeminiAPIKey(apiKeyOrUrl, config.model)
+                : await validatorConfig.validator!(apiKeyOrUrl);
 
         if (typeof validation === 'boolean') {
             result.success = validation;

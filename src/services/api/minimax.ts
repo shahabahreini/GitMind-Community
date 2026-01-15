@@ -187,17 +187,24 @@ export async function validateMiniMaxAPIKey(
             return false;
         }
 
-        const parseErrorMessage = (raw: string): string | undefined => {
+        const parseErrorResponse = (raw: string): { message?: string; requestId?: string } => {
             const trimmed = raw.trim();
             if (trimmed.length === 0) {
-                return undefined;
+                return {};
             }
 
             try {
                 const parsed: unknown = JSON.parse(trimmed);
+                if (typeof parsed !== "object" || parsed === null) {
+                    return { message: trimmed };
+                }
+
+                const requestIdRaw = (parsed as { request_id?: unknown }).request_id;
+                const requestId = typeof requestIdRaw === "string" && requestIdRaw.trim().length > 0
+                    ? requestIdRaw
+                    : undefined;
+
                 if (
-                    typeof parsed === "object" &&
-                    parsed !== null &&
                     "error" in parsed &&
                     typeof (parsed as { error?: unknown }).error === "object" &&
                     (parsed as { error?: unknown }).error !== null
@@ -205,22 +212,24 @@ export async function validateMiniMaxAPIKey(
                     const err = (parsed as { error: Record<string, unknown> }).error;
                     const msg = err["message"];
                     if (typeof msg === "string" && msg.trim().length > 0) {
-                        return msg;
+                        return { message: msg, requestId };
                     }
                 }
 
                 if (typeof (parsed as { message?: unknown }).message === "string") {
                     const msg = (parsed as { message: string }).message;
                     if (msg.trim().length > 0) {
-                        return msg;
+                        return { message: msg, requestId };
                     }
                 }
-            } catch {
-                // Not JSON; fall back to raw
-            }
 
-            return trimmed;
+                return { message: trimmed, requestId };
+            } catch {
+                return { message: trimmed };
+            }
         };
+
+        const cleanMiniMaxMessage = (message: string): string => message.replace(/\s*\(\d+\)\s*$/, "").trim();
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -247,7 +256,9 @@ export async function validateMiniMaxAPIKey(
 
         const status = response.status;
         const bodyText = await response.text().catch(() => "");
-        const parsedMessage = parseErrorMessage(bodyText);
+        const parsed = parseErrorResponse(bodyText);
+        const parsedMessage = typeof parsed.message === "string" ? cleanMiniMaxMessage(parsed.message) : undefined;
+        const requestId = parsed.requestId;
         debugLog("MiniMax API key validation failed", { status, bodyText, parsedMessage });
 
         if (status === 401 || status === 403) {
@@ -272,12 +283,14 @@ export async function validateMiniMaxAPIKey(
         }
 
         if (parsedMessage && /insufficient\s+balance/i.test(parsedMessage)) {
+            const requestIdLine = requestId ? `Request ID: ${requestId}\n` : "";
             return {
                 success: false,
                 error: "Insufficient balance",
                 troubleshooting:
-                    "Your MiniMax account balance is insufficient to run API requests. Please top up your balance and try again.\n\n" +
-                    "MiniMax Anthropic-compatible API docs: https://platform.minimax.io/docs/api-reference/text-anthropic-api",
+                    "Your MiniMax account balance is insufficient to run API requests. Please top up your balance and try again.\n" +
+                    requestIdLine +
+                    "\nMiniMax Anthropic-compatible API docs:\nhttps://platform.minimax.io/docs/api-reference/text-anthropic-api",
             };
         }
 

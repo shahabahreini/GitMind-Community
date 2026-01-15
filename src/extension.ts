@@ -147,9 +147,17 @@ async function sendApiCheckResult(result: any, provider: string): Promise<void> 
       message: result.success ? "Connection successful!" : (result.error || "Connection failed")
     });
   } else if (!SettingsWebview.isWebviewOpen()) {
+    const detailsSuffix = typeof result.details === 'string' && result.details.trim().length > 0
+      ? `\n${result.details}`
+      : '';
+
+    const troubleshootingSuffix = typeof result.troubleshooting === 'string' && result.troubleshooting.trim().length > 0
+      ? `\n\n${result.troubleshooting}`
+      : '';
+
     const messageText = result.success
-      ? `${provider} API connection successful!`
-      : `${provider} API connection failed: ${result.error}`;
+      ? `${provider} API connection successful!${detailsSuffix}`
+      : `${provider} API connection failed: ${result.error}${detailsSuffix}${troubleshootingSuffix}`;
 
     const showMethod = result.success ? vscode.window.showInformationMessage : vscode.window.showErrorMessage;
     showMethod(messageText);

@@ -5,6 +5,45 @@ import { CopilotModel } from "../../config/types";
 import { RequestManager } from "../../utils/requestManager";
 import { BaseAIProvider, GenerationOptions } from './base';
 
+function getPreferredCopilotModelIds(model: string): string[] {
+    switch (model) {
+        case 'raptor-mini':
+            return ['oswe-vscode-secondary', 'oswe-vscode-prime'];
+        case 'gpt-4o-mini':
+            return ['copilot-fast'];
+        default:
+            return [];
+    }
+}
+
+function resolveCopilotChatModel(
+    configuredModel: string,
+    available: readonly vscode.LanguageModelChat[]
+): vscode.LanguageModelChat {
+    if (available.length === 0) {
+        throw new Error('No Copilot models found');
+    }
+
+    if (configuredModel === 'auto') {
+        return available[0];
+    }
+
+    const preferredIds = getPreferredCopilotModelIds(configuredModel);
+    if (preferredIds.length > 0) {
+        const preferred = available.find(m => preferredIds.includes(m.id));
+        if (preferred) {
+            return preferred;
+        }
+    }
+
+    const exact = available.find(m => m.id === configuredModel);
+    if (exact) {
+        return exact;
+    }
+
+    return available[0];
+}
+
 // Configuration for different Copilot models
 interface GenerationConfig {
     maxTokens: number;
@@ -126,35 +165,16 @@ export class CopilotProvider extends BaseAIProvider {
                 throw new Error("GitHub Copilot is not available. Please ensure GitHub Copilot extension is installed and you have access to Copilot Chat.");
             }
 
-            // Select Copilot chat models based on model provider
-            let family: string;
-            if (this.model === 'auto') {
-                family = 'gpt-4'; // Auto defaults to GPT
-            } else if (this.model === 'raptor-mini') {
-                family = 'gpt-5-mini'; // Raptor models use gpt-5-mini family
-            } else if (this.model.startsWith('gpt-')) {
-                family = 'gpt-4'; // OpenAI models
-            } else if (this.model.startsWith('claude-')) {
-                family = 'claude'; // Anthropic models
-            } else if (this.model.startsWith('gemini-')) {
-                family = 'gemini'; // Google models
-            } else if (this.model.startsWith('grok-')) {
-                family = 'gpt-4'; // Grok models
-            } else {
-                family = 'gpt-4'; // Default fallback
-            }
-
             const models = await vscode.lm.selectChatModels({
                 vendor: 'copilot',
-                family: family
             });
 
             if (models.length === 0) {
-                throw new Error(`No Copilot models available for family: ${this.model}`);
+                throw new Error('No Copilot models found');
             }
 
-            const selectedModel = models[0];
-            debugLog(`Selected Copilot model: ${selectedModel.id}`);
+            const resolvedModel = resolveCopilotChatModel(this.model, models);
+            debugLog(`Selected Copilot model: ${resolvedModel.id}`);
 
             // Create chat messages
             const messages = [
@@ -168,7 +188,18 @@ export class CopilotProvider extends BaseAIProvider {
             });
 
             // Send request to Copilot
-            const response = await selectedModel.sendRequest(messages, {}, token.token);
+            let response: vscode.LanguageModelChatResponse;
+            try {
+                response = await resolvedModel.sendRequest(messages, {}, token.token);
+            } catch (requestError) {
+                const fallbackModel = models.find(m => m.id !== resolvedModel.id);
+                if (!fallbackModel) {
+                    throw requestError;
+                }
+
+                debugLog(`Primary Copilot model failed, retrying with: ${fallbackModel.id}`);
+                response = await fallbackModel.sendRequest(messages, {}, token.token);
+            }
 
             // Collect the response
             let fullText = "";
@@ -290,37 +321,42 @@ export async function validateCopilotAccess(): Promise<{ success: boolean, error
             return { success: false, error: "No Copilot models found" };
         }
 
-        // Try a simple test request
-        const testModel = models[0];
-        const messages = [
-            vscode.LanguageModelChatMessage.User("Test")
-        ];
-
         const token = new vscode.CancellationTokenSource();
         setTimeout(() => token.cancel(), 5000); // 5 second timeout
 
-        try {
-            const response = await testModel.sendRequest(messages, {}, token.token);
-            // Just check if we can start the request
-            for await (const fragment of response.text) {
-                // We only need to check if we can get the first fragment
-                break;
-            }
-            return { success: true };
-        } catch (testError) {
-            debugLog("Copilot test request failed:", testError);
-            if (testError instanceof vscode.LanguageModelError) {
-                const errorName = testError.constructor.name;
-                if (errorName === 'NoPermissions') {
-                    return { success: false, error: "No permission to use GitHub Copilot" };
-                } else if (errorName === 'NotFound') {
-                    return { success: false, error: "GitHub Copilot model not found" };
-                } else if (errorName === 'Blocked') {
-                    return { success: false, error: "Request blocked by GitHub Copilot" };
+        const messages = [vscode.LanguageModelChatMessage.User("Test")];
+
+        const orderedModels = [
+            ...models.filter(m => m.id === 'copilot-fast'),
+            ...models.filter(m => m.id === 'gpt-4o' || m.id === 'gpt-4o-mini'),
+            ...models.filter(m => m.id === 'oswe-vscode-secondary' || m.id === 'oswe-vscode-prime'),
+            ...models.filter(m => m.id !== 'copilot-fast' && m.id !== 'oswe-vscode-secondary' && m.id !== 'oswe-vscode-prime'),
+        ];
+
+        for (const model of orderedModels) {
+            try {
+                const response = await model.sendRequest(messages, {}, token.token);
+                for await (const fragment of response.text) {
+                    void fragment;
+                    break;
+                }
+                return { success: true };
+            } catch (testError) {
+                debugLog(`Copilot test request failed for model: ${model.id}`, testError);
+
+                if (testError instanceof vscode.LanguageModelError) {
+                    const errorName = testError.constructor.name;
+                    if (errorName === 'NoPermissions') {
+                        return { success: false, error: "No permission to use GitHub Copilot" };
+                    }
+                    if (errorName === 'Blocked') {
+                        return { success: false, error: "Request blocked by GitHub Copilot" };
+                    }
                 }
             }
-            return { success: false, error: "Failed to validate Copilot access" };
         }
+
+        return { success: false, error: "Failed to validate Copilot access" };
 
     } catch (error) {
         debugLog("Copilot validation failed:", error);

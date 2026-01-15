@@ -292,31 +292,50 @@ export function getMessageHandlersScript(): string {
     function handleApiCheckResult(message) {
       const isSuccess = message.success;
       let details = '';
+
+      function escapeHtml(text) {
+        return String(text)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function linkify(text) {
+        return text.replace(
+          /(https?:\/\/[^\s<]+)/g,
+          '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+        );
+      }
+
+      function formatMultilineText(text) {
+        const safe = escapeHtml(text);
+        const withLinks = linkify(safe);
+        return withLinks.replace(/\n/g, '<br>');
+      }
       
       if (isSuccess) {
-        details = \`
-          <h4>\${message.warning ? 'Connection Successful - Warning' : 'Connection Details'}</h4>
-          <ul>
-            <li><strong>Provider:</strong> \${getProviderDisplayName(message.provider)}</li>
-            <li><strong>Model:</strong> \${message.model || 'Default'}</li>
-            <li><strong>Response Time:</strong> \${message.responseTime || 'N/A'} ms</li>
-          </ul>
-          \${message.details ? '<p>' + message.details + '</p>' : ''}
-          \${message.warning ? '<h4>Warning</h4><p>' + message.warning + '</p>' : ''}
-          \${message.troubleshooting ? '<h4>Troubleshooting</h4><p>' + message.troubleshooting + '</p>' : ''}
-        \`;
-        
+        details =
+          '<h4>' + (message.warning ? 'Connection Successful - Warning' : 'Connection Details') + '</h4>' +
+          '<ul>' +
+          '<li><strong>Provider:</strong> ' + getProviderDisplayName(message.provider) + '</li>' +
+          '<li><strong>Model:</strong> ' + (message.model || 'Default') + '</li>' +
+          '<li><strong>Response Time:</strong> ' + (message.responseTime || 'N/A') + ' ms</li>' +
+          '</ul>' +
+          (message.details ? '<p>' + formatMultilineText(message.details) + '</p>' : '') +
+          (message.warning ? '<h4>Warning</h4><p>' + formatMultilineText(message.warning) + '</p>' : '') +
+          (message.troubleshooting ? '<h4>Troubleshooting</h4><p>' + formatMultilineText(message.troubleshooting) + '</p>' : '');
         const toastMessage = message.warning ? 
           'API connection successful with warning: ' + message.warning :
           'API connection successful';
         const toastType = message.warning ? 'warning' : 'success';
         showToast(toastMessage, toastType);
       } else {
-        details = \`
-          <h4>Error Details</h4>
-          <p>\${message.error || 'Unknown error occurred'}</p>
-          \${message.troubleshooting ? '<h4>Troubleshooting</h4><p>' + message.troubleshooting + '</p>' : ''}
-        \`;
+        details =
+          '<h4>Error Details</h4>' +
+          '<p>' + formatMultilineText(message.error || 'Unknown error occurred') + '</p>' +
+          (message.troubleshooting ? '<h4>Troubleshooting</h4><p>' + formatMultilineText(message.troubleshooting) + '</p>' : '');
         showToast('API connection failed: ' + (message.error || 'Unknown error'), 'error');
       }
       
