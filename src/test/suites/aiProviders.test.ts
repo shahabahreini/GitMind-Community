@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { checkApiSetup } from '../../services/api/validation';
 import { generateCommitMessage } from '../../services/api';
 import { getApiConfig } from '../../config/settings';
+import { getEffectiveGeminiModel } from '../../services/api/gemini';
 
 suite('AI Providers Tests', () => {
     let originalGetConfiguration: typeof vscode.workspace.getConfiguration;
@@ -58,6 +59,10 @@ suite('AI Providers Tests', () => {
             // Expected in test environment
             console.log('Gemini config test completed with expected limitation');
         }
+    });
+
+    test('Gemini model alias resolution should map gemini-flash-latest to a stable model ID', () => {
+        assert.strictEqual(getEffectiveGeminiModel('gemini-flash-latest'), 'gemini-2.5-flash');
     });
 
     test('Anthropic payload should not include both temperature and top_p when topP override is applied', async () => {

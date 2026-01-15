@@ -67,6 +67,26 @@ type GeminiValidationResult = {
     troubleshooting?: string;
 };
 
+export function getEffectiveGeminiModel(rawModel: string): string {
+    const trimmed = rawModel.trim();
+    const modelAliases: Record<string, GeminiModel> = {
+        "gemini-flash-latest": "gemini-2.5-flash",
+    };
+
+    const normalizedModel = modelAliases[trimmed] ?? trimmed;
+    const validModels = Object.keys(MODEL_CONFIGS) as GeminiModel[];
+
+    if (validModels.includes(normalizedModel as GeminiModel)) {
+        return normalizedModel;
+    }
+
+    if (normalizedModel.startsWith("gemini-")) {
+        return normalizedModel;
+    }
+
+    return "gemini-2.5-flash";
+}
+
 export class GeminiProvider extends BaseAIProvider {
     constructor(apiKey: string, model: string) {
         super(apiKey, model);
@@ -286,10 +306,8 @@ export class GeminiProvider extends BaseAIProvider {
 
             const genAI = new GoogleGenerativeAI(this.apiKey);
 
-            // Try with a stable model first
-            const model = genAI.getGenerativeModel({
-                model: "gemini-2.0-flash",
-            });
+            const effectiveModel = getEffectiveGeminiModel(this.model);
+            const model = genAI.getGenerativeModel({ model: effectiveModel });
 
             // Simple validation request
             const result = await model.generateContent("Test connection");
@@ -404,8 +422,8 @@ export async function callGeminiAPI(apiKey: string, model: string, diff: string,
     return provider.generateCommitMessage(diff, customContext);
 }
 
-export async function validateGeminiAPIKey(apiKey: string): Promise<boolean | GeminiValidationResult> {
-    const provider = new GeminiProvider(apiKey, "");
+export async function validateGeminiAPIKey(apiKey: string, model: string = ""): Promise<boolean | GeminiValidationResult> {
+    const provider = new GeminiProvider(apiKey, model);
     return provider.validateApiKey();
 }
 

@@ -260,7 +260,11 @@ export async function checkApiSetup(): Promise<ApiCheckResult> {
         const apiKeyOrUrl = validatorConfig.requiresApiKey
             ? ('apiKey' in config ? config.apiKey : '')
             : ('url' in config ? config.url : '');
-        const validation = await validatorConfig.validator!(apiKeyOrUrl!);
+
+        const validation =
+            config.type === "gemini"
+                ? await validateGeminiAPIKey(apiKeyOrUrl!, config.model)
+                : await validatorConfig.validator!(apiKeyOrUrl!);
 
         if (typeof validation === 'boolean') {
             result.success = validation;
