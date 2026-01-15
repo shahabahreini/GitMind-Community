@@ -3,6 +3,7 @@ import { RequestManager } from "../../utils/requestManager";
 import { generateCommitPrompt, getPromptConfig } from './prompts';
 import { PerplexityModel } from "../../config/types";
 import { BaseAIProvider, GenerationOptions } from "./base";
+import { loggedFetch } from "./loggedFetch";
 
 const PERPLEXITY_BASE_URL = "https://api.perplexity.ai";
 
@@ -105,12 +106,12 @@ export class PerplexityProvider extends BaseAIProvider {
                 temperature: options?.temperature ?? config.temperature,
             };
 
-            const response = await fetch(`${PERPLEXITY_BASE_URL}/chat/completions`, {
+            const response = await loggedFetch(`${PERPLEXITY_BASE_URL}/chat/completions`, {
                 method: "POST",
                 headers,
                 body: JSON.stringify(body),
                 signal: controller.signal,
-            });
+            }, { provider: "perplexity", operation: "chat.completions" });
 
             if (!response.ok) {
                 let errorText = "";
@@ -241,7 +242,7 @@ export async function validatePerplexityAPIKey(apiKey: string): Promise<{ succes
     const controller = requestManager.getController();
 
     try {
-        const response = await fetch(`${PERPLEXITY_BASE_URL}/chat/completions`, {
+        const response = await loggedFetch(`${PERPLEXITY_BASE_URL}/chat/completions`, {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${apiKey}`,
@@ -259,7 +260,7 @@ export async function validatePerplexityAPIKey(apiKey: string): Promise<{ succes
                 temperature: 0.2
             }),
             signal: controller.signal,
-        });
+        }, { provider: "perplexity", operation: "validate" });
 
         // 200 OK: Valid API key
         if (response.ok) {

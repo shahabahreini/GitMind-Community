@@ -1,6 +1,7 @@
 import { debugLog } from "../debug/logger";
 import { RequestManager } from "../../utils/requestManager";
 import { BaseAIProvider, GenerationOptions } from "./base";
+import { loggedFetch } from "./loggedFetch";
 
 export class CustomProvider extends BaseAIProvider {
     constructor(
@@ -43,12 +44,12 @@ export class CustomProvider extends BaseAIProvider {
             // Build request body using the template
             const requestBody = this.buildRequestBody(this.requestFormat, prompt, this.model);
 
-            const response = await fetch(`${this.baseUrl}${this.endpoint}`, {
+            const response = await loggedFetch(`${this.baseUrl}${this.endpoint}`, {
                 method: 'POST',
                 headers,
                 body: JSON.stringify(requestBody),
                 signal: controller.signal
-            });
+            }, { provider: "custom", operation: "request" });
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -336,21 +337,21 @@ export async function validateCustomAPI(
         // For now, duplicate buildRequestBody logic slightly or simplified
 
         const buildBody = (fmt: string, p: string, m: string) => {
-             // simplified logic from CustomProvider
-             try {
+            // simplified logic from CustomProvider
+            try {
                 if (!fmt || fmt.trim() === '' || fmt.toLowerCase() === 'openai') {
                     return { model: m, messages: [{ role: 'system', content: 'test' }, { role: 'user', content: p }] };
                 }
                 let formatted = fmt.replace(/\{\{MODEL\}\}/g, m).replace(/\{\{PROMPT\}\}/g, p)
-                                   .replace(/\{\{model\}\}/g, m).replace(/\{\{prompt\}\}/g, p);
+                    .replace(/\{\{model\}\}/g, m).replace(/\{\{prompt\}\}/g, p);
                 if (formatted.includes('{{MESSAGES}}') || formatted.includes('{{messages}}')) {
                     const msgs = [{ role: 'user', content: p }];
                     formatted = formatted.replace('{{MESSAGES}}', JSON.stringify(msgs)).replace('{{messages}}', JSON.stringify(msgs));
                 }
                 return JSON.parse(formatted);
-             } catch {
-                 return { model: m, messages: [{ role: 'user', content: p }] };
-             }
+            } catch {
+                return { model: m, messages: [{ role: 'user', content: p }] };
+            }
         };
 
         const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -372,12 +373,12 @@ export async function validateCustomAPI(
             setTimeout(() => reject(new Error("Connection test timed out after 10 seconds")), 10000)
         );
 
-        const fetchPromise = fetch(`${baseUrl}${endpoint}`, {
+        const fetchPromise = loggedFetch(`${baseUrl}${endpoint}`, {
             method: 'POST',
             headers,
             body: JSON.stringify(requestBody),
             signal: controller.signal
-        });
+        }, { provider: "custom", operation: "validate" });
 
         const response = await Promise.race([fetchPromise, timeoutPromise]);
 

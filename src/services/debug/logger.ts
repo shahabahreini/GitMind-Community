@@ -1,11 +1,17 @@
 // src/services/debug/logger.ts
 import * as vscode from "vscode";
+import * as fs from "fs";
+import * as path from "path";
 
 const EXTENSION_CONFIG_KEY = "gitmind";
+
+type LogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR";
 
 class Logger {
     private static instance: Logger;
     private debugChannel?: vscode.OutputChannel;
+    private fileStream: fs.WriteStream | null = null;
+    private logFilePath: string | null = null;
 
     private constructor() { }
 
@@ -16,27 +22,80 @@ class Logger {
         return Logger.instance;
     }
 
-    initialize(channel: vscode.OutputChannel): void {
+    async initialize(channel: vscode.OutputChannel, context: vscode.ExtensionContext): Promise<void> {
         this.debugChannel = channel;
-        this.log('Debug logger initialized');
+
+        const logDirUri = context.logUri ?? context.globalStorageUri;
+        const logDir = logDirUri.fsPath;
+        const date = new Date().toISOString().slice(0, 10);
+        const logFileName = `gitmind-debug-${date}.log`;
+        const logFilePath = path.join(logDir, logFileName);
+
+        try {
+            await fs.promises.mkdir(logDir, { recursive: true });
+            this.fileStream = fs.createWriteStream(logFilePath, { flags: "a" });
+            this.logFilePath = logFilePath;
+        } catch (error) {
+            this.fileStream = null;
+            this.logFilePath = null;
+            this.logInternal("WARN", "Failed to initialize debug log file", {
+                error: error instanceof Error ? error.message : String(error),
+                logDir,
+                logFilePath,
+            });
+        }
+
+        this.logInternal("INFO", "Debug logger initialized", { logFilePath: this.logFilePath });
     }
 
     log(message: string, data?: unknown): void {
-        const config = vscode.workspace.getConfiguration(EXTENSION_CONFIG_KEY);
-        const isDebugMode = config.get<boolean>("debug") ?? false;
+        this.logInternal("DEBUG", message, data);
+    }
 
-        if (!isDebugMode || !this.debugChannel) {
+    dispose(): void {
+        if (this.fileStream) {
+            try {
+                this.fileStream.end();
+            } catch {
+            }
+        }
+        this.fileStream = null;
+        this.logFilePath = null;
+    }
+
+    private isDebugEnabled(): boolean {
+        const config = vscode.workspace.getConfiguration(EXTENSION_CONFIG_KEY);
+        return config.get<boolean>("debug") ?? false;
+    }
+
+    private logInternal(level: LogLevel, message: string, data?: unknown): void {
+        if (!this.isDebugEnabled() || !this.debugChannel) {
             return;
         }
 
         const timestamp = new Date().toISOString();
-        this.debugChannel.appendLine(`[${timestamp}] ${message}`);
+        const entry = {
+            timestamp,
+            level,
+            message,
+            ...(data === undefined ? {} : { data }),
+        };
 
-        if (data !== undefined) {
-            this.logData(data);
+        this.debugChannel.appendLine(this.formatEntry(entry));
+
+        if (this.fileStream) {
+            try {
+                this.fileStream.write(`${this.formatEntry(entry)}\n`);
+            } catch {
+            }
         }
 
         this.debugChannel.show(true);
+    }
+
+    private formatEntry(entry: { timestamp: string; level: LogLevel; message: string; data?: unknown }): string {
+        const serialized = this.safeStringify(entry);
+        return serialized ?? `[${entry.timestamp}] [${entry.level}] ${entry.message}`;
     }
 
     private logData(data: unknown): void {
@@ -49,12 +108,44 @@ class Logger {
             return;
         }
 
-        try {
-            const serializedData = JSON.stringify(data, null, 2);
+        const serializedData = this.safeStringify(data);
+        if (serializedData !== null) {
             this.debugChannel.appendLine(serializedData);
+            return;
+        }
+
+        this.debugChannel.appendLine(`[Error serializing data]`);
+    }
+
+    private safeStringify(value: unknown): string | null {
+        try {
+            const redactedKeys = new Set([
+                "authorization",
+                "api_key",
+                "apikey",
+                "api-key",
+                "x-api-key",
+                "token",
+                "access_token",
+                "refresh_token",
+                "cookie",
+                "set-cookie",
+                "password",
+                "secret",
+            ]);
+
+            return JSON.stringify(
+                value,
+                (key: string, v: unknown) => {
+                    if (redactedKeys.has(key.toLowerCase())) {
+                        return "[REDACTED]";
+                    }
+                    return v;
+                },
+            );
         } catch (error) {
-            this.debugChannel.appendLine(
-                `[Error serializing data: ${error instanceof Error ? error.message : 'Unknown error'}]`
+            return JSON.stringify(
+                { error: error instanceof Error ? error.message : "Unknown error" },
             );
         }
     }
@@ -63,8 +154,12 @@ class Logger {
 // Export a singleton instance
 const logger = Logger.getInstance();
 
-export const initializeLogger = (channel: vscode.OutputChannel): void => {
-    logger.initialize(channel);
+export const initializeLogger = async (
+    channel: vscode.OutputChannel,
+    context: vscode.ExtensionContext,
+): Promise<vscode.Disposable> => {
+    await logger.initialize(channel, context);
+    return { dispose: () => logger.dispose() };
 };
 
 export const debugLog = (message: string, data?: unknown): void => {

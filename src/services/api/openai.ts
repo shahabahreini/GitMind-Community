@@ -1,6 +1,7 @@
 import { debugLog } from "../debug/logger";
 import { RequestManager } from "../../utils/requestManager";
 import { BaseAIProvider, GenerationOptions } from "./base";
+import { loggedFetch } from "./loggedFetch";
 
 /**
  * OpenAI API error types
@@ -133,7 +134,7 @@ export class OpenAIProvider extends BaseAIProvider {
             const maxTokens = options?.maxTokens ?? modelConfig.maxTokens;
             const topP = options?.topP;
 
-            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            const response = await loggedFetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${this.apiKey}`,
@@ -152,7 +153,7 @@ export class OpenAIProvider extends BaseAIProvider {
                     max_tokens: maxTokens
                 }),
                 signal: controller.signal
-            });
+            }, { provider: "openai", operation: "chat.completions" });
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -199,13 +200,13 @@ export class OpenAIProvider extends BaseAIProvider {
         try {
             debugLog('Fetching OpenAI models');
 
-            const response = await fetch("https://api.openai.com/v1/models", {
+            const response = await loggedFetch("https://api.openai.com/v1/models", {
                 method: "GET",
                 headers: {
                     "Authorization": `Bearer ${this.apiKey}`,
                     "Accept": "application/json"
                 }
-            });
+            }, { provider: "openai", operation: "models.list" });
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -310,10 +311,10 @@ export class OpenAIProvider extends BaseAIProvider {
         const controller = requestManager.getController();
 
         try {
-            const response = await fetch("https://api.openai.com/v1/models", {
+            const response = await loggedFetch("https://api.openai.com/v1/models", {
                 headers: { "Authorization": `Bearer ${this.apiKey}` },
                 signal: controller.signal
-            });
+            }, { provider: "openai", operation: "models.validate" });
             return response.ok;
         } catch (error) {
             if (error instanceof Error && error.name === 'AbortError') { return false; }

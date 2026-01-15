@@ -3,6 +3,7 @@ import { generateCommitPrompt, getPromptConfig } from "./prompts";
 import { RequestManager } from "../../utils/requestManager";
 import type { MiniMaxModel } from "../../config/types";
 import { BaseAIProvider, GenerationOptions } from "./base";
+import { loggedFetch } from "./loggedFetch";
 
 const MINIMAX_ANTHROPIC_BASE_URL = "https://api.minimax.io/anthropic";
 
@@ -73,7 +74,7 @@ export class MiniMaxProvider extends BaseAIProvider {
         try {
             debugLog(`Calling MiniMax (Anthropic-compatible) API with model: ${selectedModel}`);
 
-            const response = await fetch(`${MINIMAX_ANTHROPIC_BASE_URL}/v1/messages`, {
+            const response = await loggedFetch(`${MINIMAX_ANTHROPIC_BASE_URL}/v1/messages`, {
                 method: "POST",
                 headers: {
                     "x-api-key": this.apiKey,
@@ -93,7 +94,7 @@ export class MiniMaxProvider extends BaseAIProvider {
                     ],
                 }),
                 signal: controller.signal,
-            });
+            }, { provider: "minimax", operation: "messages.create" });
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -224,7 +225,7 @@ export async function validateMiniMaxAPIKey(
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-        const response = await fetch(`${MINIMAX_ANTHROPIC_BASE_URL}/v1/messages`, {
+        const response = await loggedFetch(`${MINIMAX_ANTHROPIC_BASE_URL}/v1/messages`, {
             method: "POST",
             headers: {
                 "x-api-key": apiKey,
@@ -237,7 +238,7 @@ export async function validateMiniMaxAPIKey(
                 messages: [{ role: "user", content: "Test" }],
             }),
             signal: controller.signal,
-        });
+        }, { provider: "minimax", operation: "validate" });
 
         clearTimeout(timeoutId);
         if (response.ok) {

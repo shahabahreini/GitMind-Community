@@ -2,6 +2,7 @@ import { debugLog } from "../debug/logger";
 import { MistralResponse, MistralRateLimit } from "../../config/types";
 import { RequestManager } from "../../utils/requestManager";
 import { BaseAIProvider, GenerationOptions } from "./base";
+import { loggedFetch } from "./loggedFetch";
 
 function extractRateLimits(headers: Headers): MistralRateLimit {
     return {
@@ -29,7 +30,7 @@ export class MistralProvider extends BaseAIProvider {
         debugLog("Calling Mistral API", { model: this.model });
 
         try {
-            const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
+            const response = await loggedFetch("https://api.mistral.ai/v1/chat/completions", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -44,7 +45,7 @@ export class MistralProvider extends BaseAIProvider {
                     temperature: options?.temperature
                 }),
                 signal: controller.signal
-            });
+            }, { provider: "mistral", operation: "chat.completions" });
 
             // Extract and log rate limits
             const rateLimits = extractRateLimits(response.headers);
@@ -119,13 +120,13 @@ export class MistralProvider extends BaseAIProvider {
 
     async getModels(): Promise<string[]> {
         try {
-            const response = await fetch("https://api.mistral.ai/v1/models", {
+            const response = await loggedFetch("https://api.mistral.ai/v1/models", {
                 method: "GET",
                 headers: {
                     "Authorization": `Bearer ${this.apiKey}`,
                     "Accept": "application/json"
                 }
-            });
+            }, { provider: "mistral", operation: "models.list" });
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch models: ${response.status} ${response.statusText}`);
@@ -147,20 +148,20 @@ export class MistralProvider extends BaseAIProvider {
     }
 
     async validateApiKey(): Promise<boolean> {
-         // Mistral specific rate limit check as used in validation.ts is complex.
-         // For now using simple model check similar to other providers.
-         try {
-            const response = await fetch("https://api.mistral.ai/v1/models", {
+        // Mistral specific rate limit check as used in validation.ts is complex.
+        // For now using simple model check similar to other providers.
+        try {
+            const response = await loggedFetch("https://api.mistral.ai/v1/models", {
                 method: "GET",
                 headers: {
                     "Authorization": `Bearer ${this.apiKey}`,
                     "Accept": "application/json"
                 }
-            });
+            }, { provider: "mistral", operation: "models.validate" });
             return response.ok;
-         } catch (error) {
-             return false;
-         }
+        } catch (error) {
+            return false;
+        }
     }
 
     private enforceCommitMessageFormat(message: string): string {

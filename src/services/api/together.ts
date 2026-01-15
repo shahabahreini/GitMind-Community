@@ -1,6 +1,7 @@
 import { debugLog } from "../debug/logger";
 import { RequestManager } from "../../utils/requestManager";
 import { BaseAIProvider, GenerationOptions } from "./base";
+import { loggedFetch } from "./loggedFetch";
 
 /**
  * Together AI API error interface
@@ -47,7 +48,7 @@ export class TogetherAIProvider extends BaseAIProvider {
                 debugLog(`Warning: Large prompt detected (${promptSize} characters). May exceed model limits.`);
             }
 
-            const response = await fetch('https://api.together.xyz/v1/chat/completions', {
+            const response = await loggedFetch('https://api.together.xyz/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${this.apiKey}`,
@@ -65,7 +66,7 @@ export class TogetherAIProvider extends BaseAIProvider {
                     temperature: options?.temperature
                 }),
                 signal: controller.signal
-            });
+            }, { provider: "together", operation: "chat.completions" });
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -148,13 +149,13 @@ export class TogetherAIProvider extends BaseAIProvider {
 
     async getModels(): Promise<string[]> {
         try {
-            const response = await fetch("https://api.together.xyz/v1/models", {
+            const response = await loggedFetch("https://api.together.xyz/v1/models", {
                 method: "GET",
                 headers: {
                     "Authorization": `Bearer ${this.apiKey}`,
                     "Accept": "application/json"
                 }
-            });
+            }, { provider: "together", operation: "models.list" });
 
             if (!response.ok) {
                 // Handle specific Together AI API errors
@@ -212,15 +213,15 @@ export class TogetherAIProvider extends BaseAIProvider {
 
     async validateApiKey(): Promise<boolean> {
         try {
-            const response = await fetch("https://api.together.xyz/v1/models", {
+            const response = await loggedFetch("https://api.together.xyz/v1/models", {
                 headers: {
                     "Authorization": `Bearer ${this.apiKey}`,
                     "Content-Type": "application/json"
                 }
-            });
+            }, { provider: "together", operation: "models.validate" });
             return response.ok;
         } catch (error) {
-            debugLog("Together API validation error:", error);
+            debugLog("Together AI API validation error:", error);
             return false;
         }
     }

@@ -2,6 +2,7 @@ import { debugLog } from "../debug/logger";
 import { AnthropicModel } from "../../config/types";
 import { RequestManager } from "../../utils/requestManager";
 import { BaseAIProvider, GenerationOptions } from "./base";
+import { loggedFetch } from "./loggedFetch";
 
 // Configuration for different Anthropic models
 interface GenerationConfig {
@@ -79,7 +80,7 @@ export class AnthropicProvider extends BaseAIProvider {
             const topK = options?.topK;
 
             // Using the Messages API
-            const response = await fetch('https://api.anthropic.com/v1/messages', {
+            const response = await loggedFetch('https://api.anthropic.com/v1/messages', {
                 method: 'POST',
                 headers: {
                     'x-api-key': this.apiKey,
@@ -100,7 +101,7 @@ export class AnthropicProvider extends BaseAIProvider {
                     ]
                 }),
                 signal: controller.signal
-            });
+            }, { provider: "anthropic", operation: "messages.create" });
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -228,14 +229,14 @@ export class AnthropicProvider extends BaseAIProvider {
         debugLog("Fetching Anthropic models...");
 
         try {
-            const response = await fetch(`https://api.anthropic.com/v1/models`, {
+            const response = await loggedFetch(`https://api.anthropic.com/v1/models`, {
                 method: 'GET',
                 headers: {
                     'x-api-key': this.apiKey,
                     'anthropic-version': '2023-06-01',
                     'Content-Type': 'application/json',
                 },
-            });
+            }, { provider: "anthropic", operation: "models.list" });
 
             if (!response.ok) {
                 let errorMessage = `API Error: ${response.status} ${response.statusText}`;
@@ -313,7 +314,7 @@ export class AnthropicProvider extends BaseAIProvider {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-            const response = await fetch('https://api.anthropic.com/v1/messages', {
+            const response = await loggedFetch('https://api.anthropic.com/v1/messages', {
                 method: 'POST',
                 headers: {
                     'x-api-key': this.apiKey,
@@ -331,7 +332,7 @@ export class AnthropicProvider extends BaseAIProvider {
                     ]
                 }),
                 signal: controller.signal
-            });
+            }, { provider: "anthropic", operation: "messages.validate" });
 
             clearTimeout(timeoutId);
             return response.ok;

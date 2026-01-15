@@ -3,6 +3,7 @@ import { HuggingFaceResponse } from '../../config/types';
 import { debugLog } from '../debug/logger';
 import { generateCommitPrompt, getPromptConfig } from './prompts';
 import { BaseAIProvider, GenerationOptions } from './base';
+import { loggedFetch } from "./loggedFetch";
 
 export interface HuggingFaceModel {
     id: string;
@@ -40,7 +41,7 @@ export class HuggingFaceProvider extends BaseAIProvider {
         }
 
         try {
-            const response = await fetch(
+            const response = await loggedFetch(
                 `https://api-inference.huggingface.co/models/${this.model}`,
                 {
                     headers: {
@@ -57,7 +58,8 @@ export class HuggingFaceProvider extends BaseAIProvider {
                             temperature: options?.temperature,
                         },
                     }),
-                }
+                },
+                { provider: "huggingface", operation: "inference" },
             );
 
             if (!response.ok) {
@@ -237,12 +239,12 @@ export class HuggingFaceProvider extends BaseAIProvider {
  */
 export async function checkHuggingFaceModel(apiKey: string, model: string): Promise<boolean> {
     try {
-        const response = await fetch(`https://huggingface.co/api/models/${model}`, {
+        const response = await loggedFetch(`https://huggingface.co/api/models/${model}`, {
             headers: {
                 'Authorization': `Bearer ${apiKey}`,
                 'Content-Type': 'application/json'
             }
-        });
+        }, { provider: "huggingface", operation: "models.check" });
 
         return response.ok;
     } catch (error) {

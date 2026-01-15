@@ -1531,7 +1531,7 @@ function registerCommands(context: vscode.ExtensionContext): vscode.Disposable[]
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   state.context = context;
-  initializeLogger(state.debugChannel);
+  context.subscriptions.push(await initializeLogger(state.debugChannel, context));
   debugLog("GitMind is now active");
 
   // Perform settings migration and cleanup first

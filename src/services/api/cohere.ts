@@ -3,6 +3,7 @@ import { debugLog } from "../debug/logger";
 import { generateCommitPrompt, getPromptConfig } from './prompts';
 import { RequestManager } from "../../utils/requestManager";
 import { BaseAIProvider, GenerationOptions } from "./base";
+import { loggedFetch } from "./loggedFetch";
 
 // Define Cohere model types
 export enum CohereModel {
@@ -142,7 +143,7 @@ export class CohereProvider extends BaseAIProvider {
             const maxOutputTokens = options?.maxTokens ?? config.maxOutputTokens;
 
             // Using the v2 chat API
-            const response = await fetch('https://api.cohere.ai/v2/chat', {
+            const response = await loggedFetch('https://api.cohere.ai/v2/chat', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${this.apiKey}`,
@@ -163,7 +164,7 @@ export class CohereProvider extends BaseAIProvider {
                     k: config.topK
                 }),
                 signal: controller.signal
-            });
+            }, { provider: "cohere", operation: "chat" });
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -264,13 +265,13 @@ export class CohereProvider extends BaseAIProvider {
 
     async getModels(): Promise<string[]> {
         try {
-            const response = await fetch("https://api.cohere.com/v1/models", {
+            const response = await loggedFetch("https://api.cohere.com/v1/models", {
                 method: "GET",
                 headers: {
                     "Authorization": `Bearer ${this.apiKey}`,
                     "Accept": "application/json"
                 }
-            });
+            }, { provider: "cohere", operation: "models.list" });
 
             if (!response.ok) {
                 // Handle specific Cohere API errors
@@ -380,7 +381,7 @@ export async function validateCohereAPIKey(
     apiKey: string
 ): Promise<{ success: boolean; error?: string; warning?: string; troubleshooting?: string }> {
     try {
-        const response = await fetch('https://api.cohere.ai/v2/chat', {
+        const response = await loggedFetch('https://api.cohere.ai/v2/chat', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${apiKey}`,
@@ -396,7 +397,7 @@ export async function validateCohereAPIKey(
                 ],
                 max_tokens: 10
             })
-        });
+        }, { provider: "cohere", operation: "validate" });
 
         if (!response.ok) {
             const errorText = await response.text();

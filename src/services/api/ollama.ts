@@ -3,6 +3,7 @@ import { OllamaResponse } from "../../config/types";
 import { debugLog } from "../debug/logger";
 import { generateCommitPrompt, getPromptConfig } from './prompts';
 import { BaseAIProvider, GenerationOptions } from "./base";
+import { loggedFetch } from "./loggedFetch";
 
 interface OllamaModel {
     name: string;
@@ -35,7 +36,7 @@ export class OllamaProvider extends BaseAIProvider {
         debugLog("Prompt:", prompt);
 
         try {
-            const response = await fetch(`${this.apiKey}/api/generate`, {
+            const response = await loggedFetch(`${this.apiKey}/api/generate`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -49,7 +50,7 @@ export class OllamaProvider extends BaseAIProvider {
                         temperature: options?.temperature,
                     },
                 }),
-            });
+            }, { provider: "ollama", operation: "generate" });
 
             if (!response.ok) {
                 const error = await response.text();
@@ -78,13 +79,13 @@ export class OllamaProvider extends BaseAIProvider {
             const url = `${this.apiKey}/api/tags`;
             debugLog("Making request to Ollama API", { url });
 
-            const response = await fetch(url, {
+            const response = await loggedFetch(url, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json",
                 },
-            });
+            }, { provider: "ollama", operation: "tags" });
 
             debugLog("Ollama API response status", {
                 status: response.status,
@@ -144,10 +145,10 @@ export class OllamaProvider extends BaseAIProvider {
 
     async validateApiKey(): Promise<boolean> {
         try {
-            const response = await fetch(`${this.apiKey}/api/version`, {
+            const response = await loggedFetch(`${this.apiKey}/api/version`, {
                 method: 'GET',
                 signal: AbortSignal.timeout(2000)
-            });
+            }, { provider: "ollama", operation: "version" });
             return response.ok;
         } catch (error) {
             debugLog("Ollama availability check error:", error);

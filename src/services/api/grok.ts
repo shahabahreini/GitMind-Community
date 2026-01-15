@@ -3,6 +3,7 @@ import { RequestManager } from "../../utils/requestManager";
 import { APIErrorHandler } from "../../utils/errorHandler";
 import { generateCommitPrompt, getPromptConfig } from "./prompts";
 import { BaseAIProvider, GenerationOptions } from "./base";
+import { loggedFetch } from "./loggedFetch";
 
 const GROK_BASE_URL = "https://api.x.ai/v1";
 
@@ -18,7 +19,7 @@ export class GrokProvider extends BaseAIProvider {
         debugLog(`Making API call to Grok with model: ${this.model}`);
 
         try {
-            const response = await fetch(`${GROK_BASE_URL}/chat/completions`, {
+            const response = await loggedFetch(`${GROK_BASE_URL}/chat/completions`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${this.apiKey}`,
@@ -37,7 +38,7 @@ export class GrokProvider extends BaseAIProvider {
                     stream: false,
                 }),
                 signal: controller.signal,
-            });
+            }, { provider: "grok", operation: "chat.completions" });
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -161,13 +162,13 @@ export class GrokProvider extends BaseAIProvider {
         try {
             debugLog("Fetching Grok models from API...");
 
-            const response = await fetch(`${GROK_BASE_URL}/language-models`, {
+            const response = await loggedFetch(`${GROK_BASE_URL}/language-models`, {
                 method: "GET",
                 headers: {
                     "Authorization": `Bearer ${this.apiKey}`,
                     "Accept": "application/json"
                 }
-            });
+            }, { provider: "grok", operation: "models.list" });
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -328,14 +329,13 @@ export async function validateGrokAPIKey(
 
     try {
         // Try the models endpoint first (lightweight approach)
-        let response = await fetch(`${GROK_BASE_URL}/models`, {
+        let response = await loggedFetch(`${GROK_BASE_URL}/models`, {
             method: "GET",
             headers: {
                 Authorization: `Bearer ${apiKey}`,
-                "Content-Type": "application/json",
+                "Accept": "application/json",
             },
-            signal: controller.signal,
-        });
+        }, { provider: "grok", operation: "validate.models" });
 
         if (response.ok) {
             return { success: true };
@@ -343,7 +343,7 @@ export async function validateGrokAPIKey(
 
         // If models endpoint doesn't work (404/405), try a minimal completion request
         if (response.status === 404 || response.status === 405) {
-            response = await fetch(`${GROK_BASE_URL}/chat/completions`, {
+            response = await loggedFetch(`${GROK_BASE_URL}/chat/completions`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${apiKey}`,

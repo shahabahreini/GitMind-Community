@@ -3,6 +3,7 @@ import { debugLog } from "../debug/logger";
 import { GeminiModel } from "../../config/types";
 import { RequestManager } from "../../utils/requestManager";
 import { BaseAIProvider, GenerationOptions } from "./base";
+import { loggedFetch } from "./loggedFetch";
 
 // Define generation configuration for different models
 interface GenerationConfig {
@@ -192,12 +193,12 @@ export class GeminiProvider extends BaseAIProvider {
         debugLog("Fetching Gemini models...");
 
         try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${this.apiKey}`, {
+            const response = await loggedFetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${this.apiKey}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-            });
+            }, { provider: "gemini", operation: "models.list" });
 
             if (!response.ok) {
                 let errorMessage = `API Error: ${response.status} ${response.statusText}`;

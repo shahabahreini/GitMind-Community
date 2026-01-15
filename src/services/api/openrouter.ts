@@ -1,6 +1,7 @@
 import { debugLog } from "../debug/logger";
 import { RequestManager } from "../../utils/requestManager";
 import { BaseAIProvider, GenerationOptions } from "./base";
+import { loggedFetch } from "./loggedFetch";
 
 export class OpenRouterProvider extends BaseAIProvider {
     constructor(apiKey: string, model: string) {
@@ -14,7 +15,7 @@ export class OpenRouterProvider extends BaseAIProvider {
         try {
             debugLog(`Calling OpenRouter API with model: ${this.model}`);
 
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            const response = await loggedFetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${this.apiKey}`,
@@ -34,7 +35,7 @@ export class OpenRouterProvider extends BaseAIProvider {
                     max_tokens: options?.maxTokens ?? 500
                 }),
                 signal: controller.signal
-            });
+            }, { provider: "openrouter", operation: "chat.completions" });
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -64,7 +65,7 @@ export class OpenRouterProvider extends BaseAIProvider {
 
     async getModels(): Promise<string[]> {
         try {
-            const response = await fetch("https://openrouter.ai/api/v1/models", {
+            const response = await loggedFetch("https://openrouter.ai/api/v1/models", {
                 method: "GET",
                 headers: {
                     "Authorization": `Bearer ${this.apiKey}`,
@@ -72,7 +73,7 @@ export class OpenRouterProvider extends BaseAIProvider {
                     "HTTP-Referer": "https://github.com/shahabahreini/AI-Commit-Assistant",
                     "X-Title": "GitMind"
                 }
-            });
+            }, { provider: "openrouter", operation: "models.list" });
 
             if (!response.ok) {
                 // Handle specific OpenRouter API errors
@@ -141,13 +142,13 @@ export class OpenRouterProvider extends BaseAIProvider {
 
     async validateApiKey(): Promise<boolean> {
         try {
-            const response = await fetch("https://openrouter.ai/api/v1/models", {
+            const response = await loggedFetch("https://openrouter.ai/api/v1/models", {
                 headers: {
                     "Authorization": `Bearer ${this.apiKey}`,
                     "HTTP-Referer": "https://github.com/shahabahreini/AI-Commit-Assistant",
                     "X-Title": "GitMind"
                 }
-            });
+            }, { provider: "openrouter", operation: "models.validate" });
             return response.ok;
         } catch (error) {
             debugLog("OpenRouter API validation error:", error);

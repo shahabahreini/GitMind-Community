@@ -2,6 +2,7 @@ import { debugLog } from "../debug/logger";
 import { DeepSeekModel } from "../../config/types";
 import { RequestManager } from "../../utils/requestManager";
 import { BaseAIProvider, GenerationOptions } from "./base";
+import { loggedFetch } from "./loggedFetch";
 
 // Configuration for different DeepSeek models
 interface GenerationConfig {
@@ -53,7 +54,7 @@ export class DeepSeekProvider extends BaseAIProvider {
             }
 
             // DeepSeek uses OpenAI-compatible API format
-            const response = await fetch('https://api.deepseek.com/chat/completions', {
+            const response = await loggedFetch('https://api.deepseek.com/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${this.apiKey}`,
@@ -72,7 +73,7 @@ export class DeepSeekProvider extends BaseAIProvider {
                     stream: false
                 }),
                 signal: controller.signal
-            });
+            }, { provider: "deepseek", operation: "chat.completions" });
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -179,14 +180,14 @@ export class DeepSeekProvider extends BaseAIProvider {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
-            const response = await fetch('https://api.deepseek.com/models', {
+            const response = await loggedFetch('https://api.deepseek.com/models', {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${this.apiKey}`,
                     'Content-Type': 'application/json'
                 },
                 signal: controller.signal
-            });
+            }, { provider: "deepseek", operation: "models.list" });
 
             clearTimeout(timeoutId);
 
@@ -238,7 +239,7 @@ export class DeepSeekProvider extends BaseAIProvider {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-            const response = await fetch('https://api.deepseek.com/chat/completions', {
+            const response = await loggedFetch('https://api.deepseek.com/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${this.apiKey}`,
@@ -256,7 +257,7 @@ export class DeepSeekProvider extends BaseAIProvider {
                     stream: false
                 }),
                 signal: controller.signal
-            });
+            }, { provider: "deepseek", operation: "validate" });
 
             clearTimeout(timeoutId);
 

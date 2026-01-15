@@ -10,6 +10,7 @@ import { ApiConfig, MistralRateLimit, ApiProvider, CustomApiConfig } from "../..
 import { RequestManager } from "../../utils/requestManager";
 import { isCopilotAvailable, validateCopilotAccess } from "./copilot";
 import { validateCustomAPI } from "./custom";
+import { loggedFetch } from "./loggedFetch";
 
 interface ApiCheckResult {
     success: boolean;
@@ -365,13 +366,13 @@ async function validateHuggingFaceApiKey(apiKey: string): Promise<boolean> {
     const controller = requestManager.getController();
 
     try {
-        const response = await fetch("https://huggingface.co/api/models?limit=1", {
+        const response = await loggedFetch("https://huggingface.co/api/models?limit=1", {
             headers: {
                 Authorization: `Bearer ${apiKey}`,
                 "Content-Type": "application/json"
             },
             signal: controller.signal
-        });
+        }, { provider: "huggingface", operation: "validate" });
         return response.ok;
     } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') { return false; }
@@ -385,10 +386,10 @@ async function validateOpenAIApiKey(apiKey: string): Promise<boolean> {
     const controller = requestManager.getController();
 
     try {
-        const response = await fetch("https://api.openai.com/v1/models", {
+        const response = await loggedFetch("https://api.openai.com/v1/models", {
             headers: { "Authorization": `Bearer ${apiKey}` },
             signal: controller.signal
-        });
+        }, { provider: "openai", operation: "validate" });
         return response.ok;
     } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') { return false; }
@@ -410,7 +411,7 @@ async function checkMistralRateLimits(apiKey: string): Promise<RateLimitComparis
     const controller = requestManager.getController();
 
     try {
-        const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
+        const response = await loggedFetch("https://api.mistral.ai/v1/chat/completions", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -422,7 +423,7 @@ async function checkMistralRateLimits(apiKey: string): Promise<RateLimitComparis
                 max_tokens: 1
             }),
             signal: controller.signal
-        });
+        }, { provider: "mistral", operation: "rate_limits" });
 
         const headers = response.headers;
         const currentRateLimit: MistralRateLimit = {
@@ -473,10 +474,10 @@ async function checkMistralRateLimits(apiKey: string): Promise<RateLimitComparis
 
 async function checkOllamaAvailability(url: string): Promise<boolean> {
     try {
-        const response = await fetch(`${url}/api/version`, {
+        const response = await loggedFetch(`${url}/api/version`, {
             method: 'GET',
             signal: AbortSignal.timeout(2000)
-        });
+        }, { provider: "ollama", operation: "version" });
         return response.ok;
     } catch (error) {
         debugLog("Ollama availability check error:", error);
@@ -486,14 +487,14 @@ async function checkOllamaAvailability(url: string): Promise<boolean> {
 
 async function validateCohereApiKey(apiKey: string): Promise<boolean> {
     try {
-        const response = await fetch("https://api.cohere.ai/v1/tokenize", {
+        const response = await loggedFetch("https://api.cohere.ai/v1/tokenize", {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${apiKey}`,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({ text: "test" })
-        });
+        }, { provider: "cohere", operation: "validate" });
         return response.ok;
     } catch (error) {
         debugLog("Cohere API validation error:", error);
@@ -503,12 +504,12 @@ async function validateCohereApiKey(apiKey: string): Promise<boolean> {
 
 async function validateTogetherApiKey(apiKey: string): Promise<boolean> {
     try {
-        const response = await fetch("https://api.together.xyz/v1/models", {
+        const response = await loggedFetch("https://api.together.xyz/v1/models", {
             headers: {
                 "Authorization": `Bearer ${apiKey}`,
                 "Content-Type": "application/json"
             }
-        });
+        }, { provider: "together", operation: "validate" });
         return response.ok;
     } catch (error) {
         debugLog("Together API validation error:", error);
@@ -518,13 +519,13 @@ async function validateTogetherApiKey(apiKey: string): Promise<boolean> {
 
 async function validateOpenRouterApiKey(apiKey: string): Promise<boolean> {
     try {
-        const response = await fetch("https://openrouter.ai/api/v1/models", {
+        const response = await loggedFetch("https://openrouter.ai/api/v1/models", {
             headers: {
                 "Authorization": `Bearer ${apiKey}`,
                 "HTTP-Referer": "https://github.com/shahabahreini/AI-Commit-Assistant",
                 "X-Title": "GitMind"
             }
-        });
+        }, { provider: "openrouter", operation: "validate" });
         return response.ok;
     } catch (error) {
         debugLog("OpenRouter API validation error:", error);
@@ -534,7 +535,7 @@ async function validateOpenRouterApiKey(apiKey: string): Promise<boolean> {
 
 async function validateAnthropicApiKey(apiKey: string): Promise<{ success: boolean; error?: string; troubleshooting?: string; warning?: string }> {
     try {
-        const response = await fetch("https://api.anthropic.com/v1/messages", {
+        const response = await loggedFetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
             headers: {
                 "x-api-key": apiKey,
@@ -547,7 +548,7 @@ async function validateAnthropicApiKey(apiKey: string): Promise<{ success: boole
                 max_tokens: 10,
                 messages: [{ role: "user", content: "Test" }]
             })
-        });
+        }, { provider: "anthropic", operation: "validate" });
 
         if (response.ok) { return { success: true }; }
 
