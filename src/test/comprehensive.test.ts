@@ -7,6 +7,7 @@ import './suites/aiProviders.test';
 import './suites/extensionCommands.test';
 import './suites/gitIntegration.test';
 import './suites/webviewComponents.test';
+import './suites/webviewScriptCompilation.test';
 import './suites/errorHandling.test';
 import './suites/configurationManagement.test';
 import './suites/coreServices.test';

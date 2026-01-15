@@ -303,8 +303,9 @@ export function getMessageHandlersScript(): string {
       }
 
       function linkify(text) {
+        const urlRegex = new RegExp('(https?:\\/\\/[^\\s<]+)', 'g');
         return text.replace(
-          /(https?:\/\/[^\s<]+)/g,
+          urlRegex,
           '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
         );
       }
@@ -312,7 +313,7 @@ export function getMessageHandlersScript(): string {
       function formatMultilineText(text) {
         const safe = escapeHtml(text);
         const withLinks = linkify(safe);
-        return withLinks.replace(/\n/g, '<br>');
+        return withLinks.split('\\n').join('<br>');
       }
       
       if (isSuccess) {

@@ -187,7 +187,36 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
         // DOM is already ready, show immediately
         showContent();
       }
+
+      // Make showContent available for fail-safe recovery
+      window.__gitmindShowContent = showContent;
+
+      // Fail-safe: never leave the UI hidden if a script errors during startup
+      setTimeout(function() {
+        try {
+          window.__gitmindShowContent?.();
+        } catch {
+          // ignore
+        }
+      }, 1500);
     })();
+
+    // Fail-safe global error handlers: ensure UI becomes visible even if an init script throws
+    window.addEventListener('error', function() {
+      try {
+        window.__gitmindShowContent?.();
+      } catch {
+        // ignore
+      }
+    });
+
+    window.addEventListener('unhandledrejection', function() {
+      try {
+        window.__gitmindShowContent?.();
+      } catch {
+        // ignore
+      }
+    });
 
     // Windows service worker fix - prevent service worker registration errors
     if (typeof navigator !== 'undefined' && navigator.serviceWorker) {

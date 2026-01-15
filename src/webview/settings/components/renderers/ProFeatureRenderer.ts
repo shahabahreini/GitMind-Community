@@ -149,10 +149,10 @@ export class ProFeatureRenderer extends BaseRenderer {
                                 });
                             } else {
                                 // API deactivation failed
-                                let errorMsg = 'Failed to deactivate GitMind Pro through the LemonSqueezy API.\n';
+                                let errorMsg = 'Failed to deactivate GitMind Pro through the LemonSqueezy API.\\n';
                                 
                                 if (response.error) {
-                                    errorMsg += '\nError: ' + response.error;
+                                    errorMsg += '\\nError: ' + response.error;
                                 }
                                 
                                 alert(errorMsg);

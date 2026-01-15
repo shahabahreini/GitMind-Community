@@ -285,8 +285,8 @@ export async function validateMiniMaxAPIKey(
         if (parsedMessage && /insufficient\s+balance/i.test(parsedMessage)) {
             const requestIdLine = requestId ? `Request ID: ${requestId}\n` : "";
             return {
-                success: false,
-                error: "Insufficient balance",
+                success: true,
+                warning: "Insufficient balance",
                 troubleshooting:
                     "Your MiniMax account balance is insufficient to run API requests. Please top up your balance and try again.\n" +
                     requestIdLine +
