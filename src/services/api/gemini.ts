@@ -85,17 +85,20 @@ export class GeminiProvider extends BaseAIProvider {
             }
 
             // Improved model validation and fallback logic
-            let selectedModel = this.model as GeminiModel;
+            const rawModel = this.model;
+            const modelAliases: Record<string, GeminiModel> = {
+                "gemini-flash-latest": "gemini-2.5-flash",
+            };
+
+            const normalizedModel = modelAliases[rawModel] ?? rawModel;
+
+            let selectedModel = normalizedModel as GeminiModel;
             const validModels = Object.keys(MODEL_CONFIGS) as GeminiModel[];
 
             if (!validModels.includes(selectedModel)) {
-                // Log the issue for debugging
-                debugLog("Warning: Unrecognized Gemini model, attempting to use as custom model ID", { model: this.model });
-
-                // Try to use the provided model string directly if it looks like a valid Gemini model ID
-                if (typeof this.model === 'string' && this.model.startsWith('gemini-')) {
-                    debugLog("Using provided model string directly", { model: this.model });
-                    selectedModel = this.model as GeminiModel;
+                if (typeof normalizedModel === 'string' && normalizedModel.startsWith('gemini-')) {
+                    debugLog("Gemini model not in known list; using as model ID", { model: normalizedModel });
+                    selectedModel = normalizedModel as GeminiModel;
                 } else {
                     // Fall back to a stable model as last resort
                     debugLog("Falling back to default model", { defaultModel: "gemini-2.5-flash" });

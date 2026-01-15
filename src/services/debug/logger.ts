@@ -7,6 +7,12 @@ const EXTENSION_CONFIG_KEY = "gitmind";
 
 type LogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR";
 
+const MAX_LOG_LINE_CHARS = 20_000;
+const MAX_STRING_VALUE_CHARS = 4_000;
+const MAX_OBJECT_KEYS = 80;
+const MAX_ARRAY_LENGTH = 80;
+const MAX_DEPTH = 8;
+
 class Logger {
     private static instance: Logger;
     private debugChannel?: vscode.OutputChannel;
@@ -74,11 +80,19 @@ class Logger {
         }
 
         const timestamp = new Date().toISOString();
+
+        const shouldInlinePrimitive =
+            (typeof data === "string" || typeof data === "number" || typeof data === "boolean") &&
+            (message.trimEnd().endsWith(":") || message.trimEnd().endsWith(","));
+
+        const finalMessage = shouldInlinePrimitive ? `${message} ${String(data)}` : message;
+        const finalData = shouldInlinePrimitive ? undefined : data;
+
         const entry = {
             timestamp,
             level,
-            message,
-            ...(data === undefined ? {} : { data }),
+            message: finalMessage,
+            ...(finalData === undefined ? {} : { data: finalData }),
         };
 
         this.debugChannel.appendLine(this.formatEntry(entry));
@@ -98,25 +112,6 @@ class Logger {
         return serialized ?? `[${entry.timestamp}] [${entry.level}] ${entry.message}`;
     }
 
-    private logData(data: unknown): void {
-        if (!this.debugChannel) {
-            return;
-        }
-
-        if (typeof data === 'string') {
-            this.debugChannel.appendLine(data);
-            return;
-        }
-
-        const serializedData = this.safeStringify(data);
-        if (serializedData !== null) {
-            this.debugChannel.appendLine(serializedData);
-            return;
-        }
-
-        this.debugChannel.appendLine(`[Error serializing data]`);
-    }
-
     private safeStringify(value: unknown): string | null {
         try {
             const redactedKeys = new Set([
@@ -125,6 +120,7 @@ class Logger {
                 "apikey",
                 "api-key",
                 "x-api-key",
+                "x-auth-token",
                 "token",
                 "access_token",
                 "refresh_token",
@@ -132,17 +128,91 @@ class Logger {
                 "set-cookie",
                 "password",
                 "secret",
+                "client_secret",
+                "private_key",
             ]);
 
-            return JSON.stringify(
-                value,
-                (key: string, v: unknown) => {
-                    if (redactedKeys.has(key.toLowerCase())) {
-                        return "[REDACTED]";
+            const seen = new WeakSet<object>();
+
+            const sanitize = (input: unknown, depth: number): unknown => {
+                if (depth > MAX_DEPTH) {
+                    return "[MaxDepth]";
+                }
+
+                if (input === null || input === undefined) {
+                    return input;
+                }
+
+                if (typeof input === "string") {
+                    if (input.length <= MAX_STRING_VALUE_CHARS) {
+                        return input;
                     }
-                    return v;
-                },
-            );
+                    return `${input.slice(0, MAX_STRING_VALUE_CHARS)}... (truncated, total ${input.length} chars)`;
+                }
+
+                if (typeof input === "number" || typeof input === "boolean") {
+                    return input;
+                }
+
+                if (input instanceof Error) {
+                    return {
+                        name: input.name,
+                        message: input.message,
+                        stack: input.stack,
+                    };
+                }
+
+                if (Array.isArray(input)) {
+                    const head = input.slice(0, MAX_ARRAY_LENGTH).map((item) => sanitize(item, depth + 1));
+                    if (input.length <= MAX_ARRAY_LENGTH) {
+                        return head;
+                    }
+                    return {
+                        items: head,
+                        truncated: true,
+                        totalLength: input.length,
+                    };
+                }
+
+                if (typeof input === "object") {
+                    const obj = input as Record<string, unknown>;
+                    if (seen.has(obj)) {
+                        return "[Circular]";
+                    }
+                    seen.add(obj);
+
+                    const entries = Object.entries(obj);
+                    const limitedEntries = entries.slice(0, MAX_OBJECT_KEYS);
+                    const out: Record<string, unknown> = {};
+
+                    for (const [k, v] of limitedEntries) {
+                        if (redactedKeys.has(k.toLowerCase())) {
+                            out[k] = "[REDACTED]";
+                            continue;
+                        }
+                        out[k] = sanitize(v, depth + 1);
+                    }
+
+                    if (entries.length > MAX_OBJECT_KEYS) {
+                        out["__truncated__"] = {
+                            keys: true,
+                            totalKeys: entries.length,
+                        };
+                    }
+
+                    return out;
+                }
+
+                return String(input);
+            };
+
+            const sanitizedValue = sanitize(value, 0);
+            const serialized = JSON.stringify(sanitizedValue);
+            if (serialized.length <= MAX_LOG_LINE_CHARS) {
+                return serialized;
+            }
+
+            return `${serialized.slice(0, MAX_LOG_LINE_CHARS)}... (truncated, total ${serialized.length} chars)`;
         } catch (error) {
             return JSON.stringify(
                 { error: error instanceof Error ? error.message : "Unknown error" },
