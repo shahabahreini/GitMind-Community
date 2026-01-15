@@ -1,5 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
+import { toggleDebugSetting } from '../../extension';
 
 suite('Extension Commands Tests', () => {
     let originalGetConfiguration: typeof vscode.workspace.getConfiguration;
@@ -151,26 +152,26 @@ suite('Extension Commands Tests', () => {
 
     test('Debug toggle should change debug state', async () => {
         let debugToggled = false;
+        let updatedTarget: vscode.ConfigurationTarget | undefined;
         const mockConfig = {
             get: (_key: string, _value?: any) => _value,
-            update: (key: string, _value: any) => {
+            update: (key: string, _value: any, target?: vscode.ConfigurationTarget) => {
                 if (key === 'debug') {
                     debugToggled = true;
+                    updatedTarget = target;
                 }
                 return Promise.resolve();
             },
-            inspect: () => ({ key: '', defaultValue: undefined }),
+            inspect: () => ({ key: '', defaultValue: undefined, workspaceValue: true }),
             has: () => true
         };
 
         (vscode.workspace as any).getConfiguration = () => mockConfig;
 
-        try {
-            await vscode.commands.executeCommand('ai-commit-assistant.toggleDebug');
-        } catch (error) {
-            // Expected in test environment
-            console.log('Debug toggle test completed');
-        }
+        await toggleDebugSetting();
+
+        assert.strictEqual(debugToggled, true, 'Debug setting should be updated');
+        assert.strictEqual(updatedTarget, vscode.ConfigurationTarget.Workspace, 'Debug toggle should update workspace scope when workspace value exists');
     });
 
     test('Extension context should be properly managed', () => {

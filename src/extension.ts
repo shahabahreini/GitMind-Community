@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { ExtensionState } from "./config/types";
+import { CommitStyle, ExtensionState } from "./config/types";
 import { getApiConfig } from "./config/settings";
 import { generateCommitMessage, cancelCurrentRequest, isRequestActive } from "./services/api";
 import { checkApiSetup, checkRateLimits } from "./services/api/validation";
@@ -679,31 +679,33 @@ async function handleChangeCommitStyle(): Promise<void> {
     const availableStyles = await styleManager.getAvailableStyles();
     const currentStyle = styleManager.getCurrentStyle();
 
-    const quickPickItems = availableStyles.map(style => ({
+    const quickPickItems = availableStyles.map((style) => ({
       label: style.name,
-      description: style.description,
-      detail: style.isPro ? '(Pro Feature)' : '',
+      description: style.isPro ? `${style.description} (Pro)` : style.description,
       picked: style.id === currentStyle,
-      style: style
+      style,
     }));
 
     const selected = await vscode.window.showQuickPick(quickPickItems, {
       title: 'Select Commit Message Style',
       placeHolder: 'Choose how your AI-generated commit messages should be formatted',
-      canPickMany: false
+      canPickMany: false,
     });
 
-    if (selected) {
-      const success = await styleManager.setCommitStyle(selected.style.id);
-      if (success) {
-        vscode.window.showInformationMessage(
-          `Commit style changed to ${selected.style.name}. New commit messages will use this style.`
-        );
-        debugLog(`Commit style changed to: ${selected.style.id}`);
-      } else {
-        vscode.window.showErrorMessage('Failed to change commit style. Please try again.');
-      }
+    if (!selected) {
+      return;
     }
+
+    const success = await styleManager.setCommitStyle(selected.style.id as CommitStyle);
+    if (success) {
+      vscode.window.showInformationMessage(
+        `Commit style changed to ${selected.style.name}. New commit messages will use this style.`
+      );
+      debugLog(`Commit style changed to: ${selected.style.id}`);
+      return;
+    }
+
+    vscode.window.showErrorMessage('Failed to change commit style. Please try again.');
   } catch (error) {
     debugLog('Change Commit Style Error:', error);
     vscode.window.showErrorMessage('Failed to change commit style.');
@@ -896,14 +898,26 @@ Thank you!`);
   }
 }
 
+export async function toggleDebugSetting(): Promise<{ enabled: boolean; target: vscode.ConfigurationTarget }> {
+  const config = vscode.workspace.getConfiguration("gitmind");
+  const inspect = config.inspect<boolean>("debug");
+  const currentDebug = config.get<boolean>("debug") ?? false;
+  const nextDebug = !currentDebug;
+
+  const target = inspect?.workspaceValue !== undefined
+    ? vscode.ConfigurationTarget.Workspace
+    : vscode.ConfigurationTarget.Global;
+
+  await config.update("debug", nextDebug, target);
+  return { enabled: nextDebug, target };
+}
+
 // Command Registration
 function registerCommands(context: vscode.ExtensionContext): vscode.Disposable[] {
   const commands = [
     vscode.commands.registerCommand("gitmind.toggleDebug", async () => {
-      const config = vscode.workspace.getConfiguration("gitmind");
-      const currentDebug = config.get<boolean>("debug") || false;
-      await config.update("debug", !currentDebug, true);
-      const status = !currentDebug ? "enabled" : "disabled";
+      const { enabled } = await toggleDebugSetting();
+      const status = enabled ? "enabled" : "disabled";
       debugLog(`Debug mode ${status}`);
       vscode.window.showInformationMessage(`Debug mode ${status}`);
     }),
