@@ -169,6 +169,7 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 | **Target Commit Language**         | ✗                   | ✓ 60 languages with search  |
 | **Commit Body Lines**              | Fixed (5 lines)     | Configurable (3-15)         |
 | **Summary Length**                 | Fixed               | Configurable (50-100 chars) |
+| **Advanced Model Parameters**      | ✗                   | ✓ Temperature, top-p, top-k, max tokens |
 | **Commit History Analysis**        | ✗                   | ✓                           |
 | **Changelog Generation**           | ✗                   | ✓                           |
 | **Gitmoji Support**                | ✗                   | ✓                           |
@@ -200,6 +201,9 @@ Native VS Code SCM panel. Multi-repository workspace support with independent bu
 
 **Diagnostics**
 Token estimation, provider/model summary, request preview.
+
+**Debug Logging**
+Optional debug logs for provider requests and responses with sensitive data redaction.
 
 ### Pro Features
 
@@ -283,7 +287,7 @@ Connect to private cloud AI models or custom LLM endpoints:
 
 **Advanced Customization**
 
-- **Target Commit Language**: Generate commit messages in 30+ languages (English, Spanish, French, German, Italian, Portuguese, Russian, Chinese, Japanese, Korean, Arabic, Hindi, Turkish, Dutch, Polish, Vietnamese, Thai, Swedish, Danish, Norwegian, Finnish, Greek, Hebrew, Persian, Ukrainian, Czech, Romanian, Hungarian, Indonesian, Malay)
+- **Target Commit Language**: Generate commit messages in 60 languages (English, Spanish, French, German, Italian, Portuguese, Russian, Chinese, Japanese, Korean, Arabic, Hindi, Turkish, Dutch, Polish, Vietnamese, Thai, Swedish, Danish, Norwegian, Finnish, Greek, Hebrew, Persian, Ukrainian, Czech, Romanian, Hungarian, Indonesian, Malay)
   - AI uses professional developer terminology widely accepted in each language
   - Maintains commit format and structure in the target language
   - Perfect for international teams and localized projects
@@ -319,6 +323,7 @@ Access via Command Palette: `GitMind: Open Settings`
 
 - Encrypted API key storage
 - Commit history analysis
+- Advanced model parameters (temperature, top-p, top-k, max tokens)
 - Custom body/summary limits
 - Gitmoji configuration
 - Changelog generation with version conflict resolution

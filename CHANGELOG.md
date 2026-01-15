@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v4.8.0 - 2026-01-14
+
+### New Features
+
+- Added type-safe commit style selection and a debug toggle.
+
+### Enhanced
+
+- Added advanced model configuration controls for AI generation (Pro): temperature, top-p, top-k, and max tokens.
+- Improved Gemini model handling with alias resolution and model-aware validation.
+- Improved settings UX for advanced model parameters so values reflect enablement toggles and disabled values are preserved.
+- Implemented comprehensive API request/response logging across providers with redaction of sensitive data.
+- Hardened logging with sanitization and serialization limits (circular references, depth limits, and truncation).
+
+### Fixed
+
+- Enforced Anthropic parameter constraints to avoid invalid combinations and better align with API requirements.
+
+## v4.7.4 - 2026-01-14
+
+### Enhanced
+
+- Updated project version for release and ensured version consistency across files.
+- Removed deprecated `top_p` parameter from Anthropic requests to align with the current API specification.
+
 ## v4.7.3 - 2026-01-13
 
 ### Enhanced
