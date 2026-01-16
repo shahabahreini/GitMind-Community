@@ -23,6 +23,7 @@ export function getMessageHandlersScript(): string {
         anthropicModelsLoaded: () => handleModelsLoaded('anthropic', message, ${JSON.stringify(DEFAULT_MODELS.anthropic)}),
         openaiModelsLoaded: () => handleModelsLoaded('openai', message, ${JSON.stringify(DEFAULT_MODELS.openai)}),
         copilotModelsLoaded: () => handleModelsLoaded('copilot', message, ${JSON.stringify(DEFAULT_MODELS.copilot)}),
+        zaiModelsLoaded: () => handleModelsLoaded('zai', message, ${JSON.stringify(DEFAULT_MODELS.zai)}),
         
         openrouterModelsLoaded: () => handleAdvancedModelsLoaded('openrouter', message, ${JSON.stringify(DEFAULT_MODELS.openrouter)}, 100),
         huggingfaceModelsLoaded: () => handleAdvancedModelsLoaded('huggingface', message, ${JSON.stringify(DEFAULT_MODELS.huggingface)}, 2000),
@@ -101,7 +102,8 @@ export function getMessageHandlersScript(): string {
         copilot: 'GitHub Copilot',
         deepseek: 'DeepSeek',
         grok: 'Grok',
-        perplexity: 'Perplexity'
+        perplexity: 'Perplexity',
+        zai: 'Z.ai'
       };
       return displayNames[provider] || provider;
     }

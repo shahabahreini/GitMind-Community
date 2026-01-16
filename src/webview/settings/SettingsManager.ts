@@ -35,12 +35,13 @@ export class SettingsManager {
         deepseek: { model: "deepseek-chat" },
         grok: { model: "grok-3" },
         perplexity: { model: "llama-3.1-sonar-large-128k-online" },
+        zai: { model: "glm-4.5-flash" },
         custom: { model: "" }
     };
 
     private static readonly API_KEY_PROVIDERS = [
         'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-        'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'perplexity'
+        'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'perplexity', 'zai'
     ];
 
     private static readonly NO_API_KEY_PROVIDERS = ['ollama', 'copilot', 'custom'];

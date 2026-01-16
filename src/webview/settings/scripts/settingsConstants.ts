@@ -20,12 +20,13 @@ export const PROVIDER_DEFAULTS: ProviderDefaults = {
   deepseek: { model: "deepseek-chat" },
   grok: { model: "grok-3" },
   perplexity: { model: "sonar-pro" },
+  zai: { model: "glm-4.5-flash" },
   custom: { model: "" }
 };
 
 export const API_KEY_PROVIDERS = [
   'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-  'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'perplexity'
+  'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'perplexity', 'zai'
 ];
 
 export const NO_API_KEY_PROVIDERS = ['ollama', 'copilot', 'custom'];
@@ -68,5 +69,19 @@ export const DEFAULT_MODELS = {
     'microsoft/DialoGPT-medium',
     'facebook/bart-large-cnn',
     'HuggingFaceH4/zephyr-7b-beta'
+  ],
+  zai: [
+    'glm-4.7',
+    'glm-4.6',
+    'glm-4.6v',
+    'glm-4.6v-flash',
+    'glm-4.6v-flashx',
+    'glm-4.5',
+    'glm-4.5v',
+    'glm-4.5-x',
+    'glm-4.5-flash',
+    'glm-4.5-air',
+    'glm-4.5-airx',
+    'glm-4-32b-0414-128k'
   ]
 };
