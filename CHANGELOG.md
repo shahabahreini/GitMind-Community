@@ -10,9 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 
 - **Z.ai (GLM) Provider Integration**: Added support for Z.ai (GLM) models.
-  - Integration with GLM-4.7 model.
-  - Comprehensive UI integration with dedicated settings panel.
-  - API key configuration and model selection.
+  - Full support for GLM-4.7, 4.6, 4.5, and efficient Flash/Air variants.
+  - Comprehensive UI integration with dedicated settings panel and offline model list.
+  - Robust error handling with detailed guidance for authentication, rate limits, and account status.
 
 ## v4.8.1 - 2026-01-14
 

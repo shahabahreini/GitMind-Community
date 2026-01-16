@@ -532,7 +532,18 @@ export class ProviderConfig {
                     loadButtonId: 'loadZaiModels',
                     loadCommand: 'gitmind.loadZaiModels',
                     options: [
-                        { value: 'glm-4.7', label: 'GLM-4.7' }
+                        { value: 'glm-4.7', label: 'GLM-4.7' },
+                        { value: 'glm-4.6', label: 'GLM-4.6' },
+                        { value: 'glm-4.6v', label: 'GLM-4.6V' },
+                        { value: 'glm-4.6v-flash', label: 'GLM-4.6V-Flash (Free)' },
+                        { value: 'glm-4.6v-flashx', label: 'GLM-4.6V-FlashX (Free)' },
+                        { value: 'glm-4.5', label: 'GLM-4.5' },
+                        { value: 'glm-4.5v', label: 'GLM-4.5V' },
+                        { value: 'glm-4.5-x', label: 'GLM-4.5-X' },
+                        { value: 'glm-4.5-flash', label: 'GLM-4.5-Flash (Free)' },
+                        { value: 'glm-4.5-air', label: 'GLM-4.5-Air' },
+                        { value: 'glm-4.5-airx', label: 'GLM-4.5-AirX' },
+                        { value: 'glm-4-32b-0414-128k', label: 'GLM-4-32B' }
                     ]
                 }
             ]

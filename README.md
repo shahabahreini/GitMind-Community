@@ -149,7 +149,7 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 | **Together AI**    | Llama-3.3-70B, Mixtral-8x7B        | 128k    | [Together Platform](https://api.together.ai/)                 |
 | **Hugging Face**   | Mistral-7B, Zephyr-7B, OpenHermes  | 32k     | [HF Token](https://huggingface.co/settings/tokens)            |
 | **Cohere**         | command-r, command-a-03-2025       | 128k    | [Cohere Dashboard](https://dashboard.cohere.ai/)              |
-| **Z.ai (GLM)**     | glm-4.7                            | 128k    | [Z.ai Console](https://z.ai/)                                 |
+| **Z.ai (GLM)**     | 4.7, 4.6, 4.6V-Flash, 4.5-Flash    | 128k    | [Z.ai Console](https://z.ai/)                                 |
 | **OpenRouter**     | Multiple providers & models        | Varies  | [OpenRouter Keys](https://openrouter.ai/keys)                 |
 
 ---

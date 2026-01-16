@@ -91,8 +91,11 @@ export class ZaiProvider extends BaseAIProvider {
     }
 
     async getModels(): Promise<string[]> {
-        // Return supported models hardcoded for now as per requirements
-        return ['glm-4.7'];
+        return [
+            'glm-4.7', 'glm-4.6', 'glm-4.6v', 'glm-4.6v-flash', 'glm-4.6v-flashx',
+            'glm-4.5', 'glm-4.5v', 'glm-4.5-x', 'glm-4.5-flash', 'glm-4.5-air', 'glm-4.5-airx',
+            'glm-4-32b-0414-128k'
+        ];
     }
 
     async validateApiKey(): Promise<boolean> {
@@ -105,7 +108,7 @@ export class ZaiProvider extends BaseAIProvider {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    model: "glm-4.7",
+                    model: "glm-4.5-flash",
                     messages: [
                         { role: "user", content: "Hi" }
                     ],
@@ -122,15 +125,57 @@ export class ZaiProvider extends BaseAIProvider {
 
     private getUserFriendlyErrorMessage(statusCode: number, parsedError: ZaiError | null): string {
         if (parsedError?.error) {
-            const { message } = parsedError.error;
-            return `Z.ai API error: ${message}`;
+            const { message, code } = parsedError.error;
+
+            // Handle specific Z.ai business error codes
+            // Auth errors: 1000-1004
+            if (['1000', '1001', '1002', '1003', '1004'].includes(code || '')) {
+                return "Z.ai authentication failed. Please check your API key.";
+            }
+
+            // Account errors: 1100-1121
+            if (['1110', '1111', '1112', '1121'].includes(code || '')) {
+                return "Your Z.ai account is inactive, locked, or invalid. Please contact Z.ai support.";
+            }
+            if (code === '1113') {
+                return "Your Z.ai account balance is insufficient. Please recharge your account.";
+            }
+
+            // API Call errors: 1200-1234
+            if (['1211', '1212', '1220', '1221', '1222'].includes(code || '')) {
+                return `The selected Z.ai model is not available or you don't have permission. Please check your model selection. (${message})`;
+            }
+
+            // Policy/Rate Limit errors: 1300-1309
+            if (code === '1301') {
+                return "Request blocked by Z.ai safety policy (sensitive content).";
+            }
+            if (['1302', '1303', '1305'].includes(code || '')) {
+                return "Z.ai rate limit exceeded. Please reduce request frequency.";
+            }
+            if (code === '1304' || code === '1308') {
+                return "Z.ai daily usage limit reached. Please check your quota.";
+            }
+            if (code === '1309') {
+                return "Your Z.ai GLM Coding Plan has expired. Please renew your subscription.";
+            }
+
+            return `Z.ai API error (${code}): ${message}`;
         }
 
         switch (statusCode) {
+            case 400:
+                return "Z.ai bad request. Please check your input or configuration.";
             case 401:
-                return "Z.ai API key is invalid or missing. Please check your settings.";
+                return "Z.ai authentication failed. Please check your API key.";
+            case 404:
+                return "Z.ai resource not found. Check if the model is available.";
             case 429:
-                return "Z.ai rate limit exceeded. Please try again later.";
+                return "Z.ai rate limit or quota exceeded. Please try again later.";
+            case 434:
+                return "No API permission for Z.ai. Please check your account status.";
+            case 435:
+                return "Request size too large for Z.ai.";
             case 500:
             case 502:
             case 503:

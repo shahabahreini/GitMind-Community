@@ -114,7 +114,12 @@ export type PerplexityModel =
     | "llama-3.1-sonar-small-128k-chat" | "llama-3.1-sonar-large-128k-chat" | "llama-3.1-sonar-huge-128k-online"
     | "llama-3.1-sonar-small-128k-online" | "llama-3.1-sonar-large-128k-online";
 
-export type ZaiModel = "glm-4.7";
+export type ZaiModel =
+    | "glm-4.7" | "glm-4.6"
+    | "glm-4.6v" | "glm-4.6v-flash" | "glm-4.6v-flashx"
+    | "glm-4.5" | "glm-4.5v" | "glm-4.5-x"
+    | "glm-4.5-flash" | "glm-4.5-air" | "glm-4.5-airx"
+    | "glm-4-32b-0414-128k";
 
 // Configuration interfaces
 export interface BaseProviderConfig {
