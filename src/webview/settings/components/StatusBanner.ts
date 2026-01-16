@@ -78,6 +78,11 @@ export class StatusBanner {
       defaultModel: "sonar-pro",
       getApiConfigured: (s) => !!s.perplexity?.apiKey
     },
+    zai: {
+      displayName: "Z.ai",
+      defaultModel: "glm-4.5-flash",
+      getApiConfigured: (s) => !!(s as any).zai?.apiKey
+    },
     custom: {
       displayName: "Custom API",
       defaultModel: "Custom",

@@ -37,6 +37,19 @@ File: [package.json](cci:7://file:///Users/shahabbahreinijangjoo/Documents/Progr
 
 ---
 
+# 2.5) Runtime config builder (getApiConfig/getConfiguration)
+File: [src/config/settings.ts](cci:7://file:///Users/shahabbahreinijangjoo/Documents/Programming%20Projects/GitMind-Pro/src/config/settings.ts:0:0-0:0)
+- **[Provider defaults]** Add `newprovider` to the local `PROVIDER_DEFAULTS` map.
+- **[ProviderConfig presence]** Verify `getConfiguration()` builds `(result as any)[newprovider]`.
+- **[ApiConfig mapping]** Verify `getApiConfig()` and `getApiConfigSync()` can resolve:
+  - `providerConfig = (config as any)[provider]`
+  - `baseConfig.type` and `baseConfig.model`
+  - `baseConfig.apiKey` for API-key providers
+
+**Common pitfall:** forgetting `src/config/settings.ts` causes `Unsupported provider: <provider>` at generation time even if Settings UI and `src/services/api/index.ts` were updated.
+
+---
+
 # 3) Extension-side persistence + secure key handling (authoritative)
 File: [src/webview/settings/SettingsManager.ts](cci:7://file:///Users/shahabbahreinijangjoo/Documents/Programming%20Projects/GitMind-Pro/src/webview/settings/SettingsManager.ts:0:0-0:0)
 - **[Provider defaults]** Add `newprovider` to `PROVIDER_DEFAULTS`
@@ -151,6 +164,28 @@ File: [src/webview/settings/scripts/uiManager.ts](cci:7://file:///Users/shahabba
     - API-key provider: `!!s.newprovider?.apiKey`
     - no-key provider: `() => true` or based on url/endpoint config
 - **[Status banner provider configs]** Add to the local `PROVIDER_CONFIGS` inside `StatusBanner` (this repo has two maps)
+
+---
+
+# 11.5) Provider logo/icon integration (Settings UI banners)
+Icons are rendered from a centralized path map and used by *two* banner implementations.
+
+File: [src/webview/settings/components/ProviderIcon.ts](cci:7://file:///Users/shahabbahreinijangjoo/Documents/Programming%20Projects/GitMind-Pro/src/webview/settings/components/ProviderIcon.ts:0:0-0:0)
+- **[Add icon path]** Add `newprovider: "<svg path d>"` to `ProviderIcon.icons`.
+- **[Key must match]** The key must match `settings.apiProvider` exactly (e.g. `zai`, not `Z.ai` or `z.ai`).
+
+File (legacy banner): [src/webview/settings/scripts/uiManager.ts](cci:7://file:///Users/shahabbahreinijangjoo/Documents/Programming%20Projects/GitMind-Pro/src/webview/settings/scripts/uiManager.ts:0:0-0:0)
+- **[Legacy icon injection]** `window.ProviderIcon.icons` is built from `ProviderIcon['icons']`.
+- **[Legacy render call]** The icon is rendered via `window.ProviderIcon.renderIcon(provider, size)`.
+
+File (compact banner): [src/webview/settings/components/StatusBanner.ts](cci:7://file:///Users/shahabbahreinijangjoo/Documents/Programming%20Projects/GitMind-Pro/src/webview/settings/components/StatusBanner.ts:0:0-0:0)
+- **[Compact banner config]** Add `newprovider` to `StatusBanner.PROVIDER_CONFIGS`.
+- **[Compact render call]** The icon is rendered via `ProviderIcon.renderIcon(provider, size)`.
+
+**Common pitfalls:**
+- **Provider key mismatch** between `apiProvider` value and `ProviderIcon.icons` key causes the gray placeholder.
+- **Only updating one banner path** (legacy vs compact) leads to inconsistent UI.
+- **Webview caching**: after icon changes, reload the window (`Developer: Reload Window`) to force the webview to rehydrate updated scripts.
 
 ---
 
