@@ -1,8 +1,8 @@
 {
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI-Powered Commit Messages",
-  "description": "Generate professional commit messages in seconds using 14 AI providers (OpenAI, Anthropic, MiniMax, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot) and 50+ models. Zero setup options available.",
-  "version": "4.8.1",
+  "description": "Generate professional commit messages in seconds using 15 AI providers (OpenAI, Anthropic, MiniMax, Google Gemini, DeepSeek, Grok, Perplexity, Z.ai, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot) and 50+ models. Zero setup options available.",
+  "version": "4.8.2",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -48,6 +48,7 @@
             "deepseek",
             "grok",
             "perplexity",
+            "zai",
             "custom"
           ],
           "enumDescriptions": [
@@ -65,6 +66,7 @@
             "Use DeepSeek AI for generating commit messages",
             "Use Grok AI for generating commit messages",
             "Use Perplexity AI for generating commit messages",
+            "Use Z.ai (GLM) for generating commit messages",
             "Use Custom API endpoint for generating commit messages (Pro feature)"
           ],
           "default": "gemini",
@@ -639,6 +641,22 @@
           "default": "sonar-pro",
           "description": "Perplexity model to use for generating commit messages"
         },
+        "gitmind.zai.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API key for Z.ai (GLM) [Learn more](https://z.ai/)"
+        },
+        "gitmind.zai.model": {
+          "type": "string",
+          "enum": [
+            "glm-4.7"
+          ],
+          "enumDescriptions": [
+            "GLM-4.7 - Latest GLM model"
+          ],
+          "default": "glm-4.7",
+          "description": "Z.ai model to use for generating commit messages"
+        },
         "gitmind.custom.enabled": {
           "type": "boolean",
           "default": false,
@@ -1028,6 +1046,11 @@
       {
         "command": "gitmind.loadHuggingFaceModels",
         "title": "Load Hugging Face Models",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.loadZaiModels",
+        "title": "Load Z.ai Models",
         "category": "GitMind"
       },
       {

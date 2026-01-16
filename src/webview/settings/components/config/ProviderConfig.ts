@@ -511,6 +511,33 @@ export class ProviderConfig {
             ]
         },
         {
+            id: 'zai',
+            name: 'Z.ai (GLM)',
+            fields: [
+                {
+                    id: 'zaiApiKey',
+                    key: 'apiKey',
+                    label: 'API Key',
+                    type: 'password',
+                    tooltip: 'Your Z.ai API key for accessing the API',
+                    link: { url: 'https://z.ai/', text: 'Get a Z.ai API key' }
+                },
+                {
+                    id: 'zaiModel',
+                    key: 'model',
+                    label: 'Model',
+                    type: 'model-with-load',
+                    tooltip: 'Select which Z.ai model to use',
+                    loadButtonText: 'Load Available Models',
+                    loadButtonId: 'loadZaiModels',
+                    loadCommand: 'gitmind.loadZaiModels',
+                    options: [
+                        { value: 'glm-4.7', label: 'GLM-4.7' }
+                    ]
+                }
+            ]
+        },
+        {
             id: 'custom',
             name: 'Custom API [Pro]',
             isPro: true,

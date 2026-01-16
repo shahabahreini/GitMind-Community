@@ -15,6 +15,7 @@ import {
     DeepSeekApiConfig,
     GrokApiConfig,
     PerplexityApiConfig,
+    ZaiApiConfig,
     CustomApiConfig,
 } from "../../config/types";
 // Lazy-loaded provider imports - loaded only when needed to reduce bundle size
@@ -50,7 +51,7 @@ const CIRCUIT_BREAKER_THRESHOLD = 3; // Max failures before opening circuit
 const CIRCUIT_BREAKER_RESET_TIME = 60000; // 1 minute cooldown
 
 
-type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter" | "Anthropic" | "MiniMax" | "GitHub Copilot" | "DeepSeek" | "Grok" | "Perplexity" | "Custom API";
+type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter" | "Anthropic" | "MiniMax" | "GitHub Copilot" | "DeepSeek" | "Grok" | "Perplexity" | "Z.ai" | "Custom API";
 
 // Type for lazy-loaded provider class
 type ProviderClass = new (...args: any[]) => BaseAIProvider;
@@ -141,6 +142,10 @@ async function loadProviderModule(provider: string): Promise<ProviderClass> {
             case 'perplexity':
                 const perplexityModule = await import('./perplexity.js');
                 providerClass = perplexityModule.PerplexityProvider;
+                break;
+            case 'zai':
+                const zaiModule = await import('./zai.js');
+                providerClass = zaiModule.ZaiProvider;
                 break;
             case 'custom':
                 const customModule = await import('./custom.js');
@@ -261,6 +266,15 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         docsUrl: "https://www.perplexity.ai/settings/api",
         requiresApiKey: true,
         getProviderClass: async () => loadProviderModule('perplexity'),
+    },
+    zai: {
+        name: "Z.ai",
+        displayName: "Z.ai (GLM)",
+        settingPath: "zai.apiKey",
+        docsUrl: "https://z.ai/",
+        requiresApiKey: true,
+        defaultModel: "glm-4.7",
+        getProviderClass: async () => loadProviderModule('zai'),
     },
     custom: {
         name: "Custom API",

@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 // Core types
-export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic" | "minimax" | "copilot" | "deepseek" | "grok" | "perplexity" | "custom";
+export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic" | "minimax" | "copilot" | "deepseek" | "grok" | "perplexity" | "zai" | "custom";
 export type CommitStyle =
     | 'basic'
     | 'conventional'
@@ -113,6 +113,8 @@ export type PerplexityModel =
     | "sonar-pro" | "sonar-reasoning" | "sonar"
     | "llama-3.1-sonar-small-128k-chat" | "llama-3.1-sonar-large-128k-chat" | "llama-3.1-sonar-huge-128k-online"
     | "llama-3.1-sonar-small-128k-online" | "llama-3.1-sonar-large-128k-online";
+
+export type ZaiModel = "glm-4.7";
 
 // Configuration interfaces
 export interface BaseProviderConfig {
@@ -230,6 +232,11 @@ export interface PerplexityApiConfig extends ApiKeyConfig {
     model: PerplexityModel;
 }
 
+export interface ZaiApiConfig extends ApiKeyConfig {
+    type: "zai";
+    model: ZaiModel;
+}
+
 export interface CustomApiConfig extends BaseApiConfig {
     type: "custom";
     baseUrl: string;  // IP:Port format
@@ -245,7 +252,7 @@ export type ApiConfig =
     | GeminiApiConfig | HuggingFaceApiConfig | OllamaApiConfig | MistralApiConfig
     | CohereApiConfig | OpenAIApiConfig | TogetherApiConfig | OpenRouterApiConfig
     | AnthropicApiConfig | MiniMaxApiConfig | CopilotApiConfig | DeepSeekApiConfig | GrokApiConfig
-    | PerplexityApiConfig | CustomApiConfig;
+    | PerplexityApiConfig | ZaiApiConfig | CustomApiConfig;
 
 // Response types
 export interface HuggingFaceResponse {
