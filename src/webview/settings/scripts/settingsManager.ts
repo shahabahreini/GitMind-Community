@@ -247,7 +247,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
       }
     });
     
-    const vscode = acquireVsCodeApi();
+    var vscode = acquireVsCodeApi();
     let currentSettings = ${safeSettings};
     
     // Make settings available globally for Pro feature components
