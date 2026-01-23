@@ -153,7 +153,8 @@ export function getEventHandlersScript(): string {
         changelogMaxCommits: parseInt(document.getElementById('changelogMaxCommits')?.value) || 100,
         changelogMaxVersions: parseInt(document.getElementById('changelogMaxVersions')?.value) || 10,
         changelogGroupByVersion: document.getElementById('changelogGroupByVersion')?.checked || true,
-        changelogVersionOrder: document.getElementById('changelogVersionOrder')?.value || 'newest-first'
+        changelogVersionOrder: document.getElementById('changelogVersionOrder')?.value || 'newest-first',
+        changelogOverwriteExisting: document.getElementById('changelogOverwriteExisting')?.checked || false
       };
 
       console.log('Form values collected - telemetryEnabled:', currentFormValues.telemetryEnabled);

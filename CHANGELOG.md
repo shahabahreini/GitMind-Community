@@ -13,8 +13,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Root cause: Version boundary logic referenced limited tag subset instead of full sorted tag list
   - Impact: Changelog generation with `maxVersions = 1` would include thousands of commits instead of just the commits for that specific version
   - Solution: Modified `getCommitsByVersion()` to reference the full `sortedTags` array for previous version boundary calculation, ensuring proper commit range filtering regardless of `maxVersions` setting
-  - Technical details: Changed loop from `tagsToProcess[i + 1]` to `sortedTags[i + 1]` for boundary reference (ChangelogService.ts:399)
-  - Verified: Type checking passes, no breaking changes to existing functionality
+
+### New Features
+
+- **Z.ai (GLM) Provider Integration**: Added support for Z.ai (GLM) models.
+
+### Implementation Details
+
+- Changed `vscode` API variable declaration from `const` to `var` in `settingsManager.ts` to ensure compatibility with older JavaScript environments.
+
+## v4.8.3 - 2026-01-23
+
+### Enhanced
+
+- **Grok API Integration**: Migrated API calls from the `/chat/completions` endpoint to the `/responses` endpoint to align with xAI recommendations.
+  - Updated request body parameters to match the new API specification, including `input` and `max_output_tokens`
+  - Introduced `store: false` to ensure requests are stateless and privacy-friendly
+  - Implemented new parsing logic to correctly extract text from the updated response structure
+- **Gemini Model Support**: Upgraded default models to the 2.5 series.
+  - Updated default model to `gemini-2.5-flash` and removed Gemini 2.0 Flash and Flash-Lite options
+  - Added model aliases to map legacy 2.0 selections to 2.5 versions for backward compatibility
+  - Increased token limits to 65,536 and improved model capabilities
 
 ## v4.8.2 - 2026-01-14
 

@@ -139,7 +139,9 @@ export async function generateChangelog() {
         // Get configuration
         const config = vscode.workspace.getConfiguration('gitmind');
         const maxCommits = config.get<number>('pro.changelog.maxCommits', 100);
+        const maxCommitsEnabled = config.get<boolean>('pro.changelog.maxCommitsEnabled', false);
         const groupByVersion = config.get<boolean>('pro.changelog.groupByVersion', true);
+        const maxVersions = config.get<number>('pro.changelog.maxVersions', 10);
 
         // Show progress indicator
         await vscode.window.withProgress(
@@ -154,6 +156,7 @@ export async function generateChangelog() {
 
                     const changelog = await changelogService.generateChangelog({
                         maxCommits,
+                        maxCommitsEnabled,
                         groupByVersion
                     });
 
@@ -248,9 +251,11 @@ export async function updateChangelog() {
 
                 const config = vscode.workspace.getConfiguration('gitmind');
                 const maxCommits = config.get<number>('pro.changelog.maxCommits', 100);
+                const maxCommitsEnabled = config.get<boolean>('pro.changelog.maxCommitsEnabled', false);
 
                 const changelog = await changelogService.generateChangelog({
                     maxCommits,
+                    maxCommitsEnabled,
                     groupByVersion: true
                 });
 

@@ -303,10 +303,12 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           commitLengthOptionsMaxLength: parseInt(document.getElementById('commitLengthOptionsMaxLength')?.value) || 72,
           learnFromCommitHistoryMaxCommits: parseInt(document.getElementById('learnFromCommitHistoryMaxCommits')?.value) || 50,
           learnFromCommitHistoryIncludeAuthorInfo: document.getElementById('learnFromCommitHistoryIncludeAuthorInfo')?.checked ?? true,
+          changelogMaxCommitsEnabled: document.getElementById('changelogMaxCommitsEnabled')?.checked ?? false,
           changelogMaxCommits: parseInt(document.getElementById('changelogMaxCommits')?.value) || 100,
           changelogMaxVersions: parseInt(document.getElementById('changelogMaxVersions')?.value) || 10,
           changelogGroupByVersion: document.getElementById('changelogGroupByVersion')?.checked ?? true,
-          changelogVersionOrder: document.getElementById('changelogVersionOrder')?.value || 'newest-first'
+          changelogVersionOrder: document.getElementById('changelogVersionOrder')?.value || 'newest-first',
+          changelogOverwriteExisting: document.getElementById('changelogOverwriteExisting')?.checked ?? false
         };
 
         // Make currentFormValues available in global scope for generateSettingsCollection

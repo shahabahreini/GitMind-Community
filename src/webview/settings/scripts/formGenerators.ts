@@ -338,7 +338,8 @@ export function generateSettingsCollection(): string {
         maxCommits: (window.currentFormValues || currentFormValues).changelogMaxCommits,
         maxVersions: (window.currentFormValues || currentFormValues).changelogMaxVersions,
         groupByVersion: (window.currentFormValues || currentFormValues).changelogGroupByVersion,
-        versionOrder: (window.currentFormValues || currentFormValues).changelogVersionOrder
+        versionOrder: (window.currentFormValues || currentFormValues).changelogVersionOrder,
+        overwriteExisting: (window.currentFormValues || currentFormValues).changelogOverwriteExisting
       }
     },`,
     `subscription: {
