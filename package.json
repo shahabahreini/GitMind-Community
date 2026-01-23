@@ -1,8 +1,8 @@
 {
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI-Powered Commit Messages",
-  "description": "Generate professional commit messages in seconds using 14 AI providers (OpenAI, Anthropic, MiniMax, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot) and 50+ models. Zero setup options available.",
-  "version": "4.8.1",
+  "description": "Generate professional commit messages in seconds using 15 AI providers (OpenAI, Anthropic, MiniMax, Google Gemini, DeepSeek, Grok, Perplexity, Z.ai, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot) and 50+ models. Zero setup options available.",
+  "version": "4.8.2",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -48,6 +48,7 @@
             "deepseek",
             "grok",
             "perplexity",
+            "zai",
             "custom"
           ],
           "enumDescriptions": [
@@ -65,6 +66,7 @@
             "Use DeepSeek AI for generating commit messages",
             "Use Grok AI for generating commit messages",
             "Use Perplexity AI for generating commit messages",
+            "Use Z.ai (GLM) for generating commit messages",
             "Use Custom API endpoint for generating commit messages (Pro feature)"
           ],
           "default": "gemini",
@@ -308,20 +310,16 @@
             "gemini-2.5-flash",
             "gemini-2.5-flash-preview",
             "gemini-2.5-flash-lite",
-            "gemini-2.5-flash-lite-preview",
-            "gemini-2.0-flash",
-            "gemini-2.0-flash-lite"
+            "gemini-2.5-flash-lite-preview"
           ],
-          "default": "gemini-2.0-flash",
+          "default": "gemini-2.5-flash",
           "description": "Select which Gemini model to use",
           "enumDescriptions": [
             "Gemini 2.5 Pro - Advanced model with 65,536 token output limit",
             "Gemini 2.5 Flash - Fast and efficient with 65,536 token output limit",
             "Gemini 2.5 Flash Preview - Preview version with 65,536 token output limit",
             "Gemini 2.5 Flash-Lite - Lightweight version with 65,536 token output limit",
-            "Gemini 2.5 Flash-Lite Preview - Preview lightweight version with 65,536 token output limit",
-            "Gemini 2.0 Flash - Multimodal model with 8,192 token output limit",
-            "Gemini 2.0 Flash-Lite - Lightweight version with 8,192 token output limit"
+            "Gemini 2.5 Flash-Lite Preview - Preview lightweight version with 65,536 token output limit"
           ]
         },
         "gitmind.cohere.apiKey": {
@@ -638,6 +636,44 @@
           ],
           "default": "sonar-pro",
           "description": "Perplexity model to use for generating commit messages"
+        },
+        "gitmind.zai.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API key for Z.ai (GLM) [Learn more](https://z.ai/)"
+        },
+        "gitmind.zai.model": {
+          "type": "string",
+          "enum": [
+            "glm-4.7",
+            "glm-4.6",
+            "glm-4.6v",
+            "glm-4.6v-flash",
+            "glm-4.6v-flashx",
+            "glm-4.5",
+            "glm-4.5v",
+            "glm-4.5-x",
+            "glm-4.5-flash",
+            "glm-4.5-air",
+            "glm-4.5-airx",
+            "glm-4-32b-0414-128k"
+          ],
+          "enumDescriptions": [
+            "GLM-4.7 - Latest high-performance model",
+            "GLM-4.6 - High-performance model",
+            "GLM-4.6V - Vision-capable model",
+            "GLM-4.6V-Flash - Fast vision-capable model (Free)",
+            "GLM-4.6V-FlashX - Ultra-fast vision-capable model (Free)",
+            "GLM-4.5 - Balanced model",
+            "GLM-4.5V - Balanced vision-capable model",
+            "GLM-4.5-X - Large context model",
+            "GLM-4.5-Flash - Fast model (Free)",
+            "GLM-4.5-Air - Lightweight model",
+            "GLM-4.5-AirX - Ultra-lightweight model",
+            "GLM-4-32B - 32B parameter model"
+          ],
+          "default": "glm-4.5-flash",
+          "description": "Z.ai model to use for generating commit messages"
         },
         "gitmind.custom.enabled": {
           "type": "boolean",
@@ -1028,6 +1064,11 @@
       {
         "command": "gitmind.loadHuggingFaceModels",
         "title": "Load Hugging Face Models",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.loadZaiModels",
+        "title": "Load Z.ai Models",
         "category": "GitMind"
       },
       {

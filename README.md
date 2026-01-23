@@ -99,6 +99,7 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 | **Grok**           | Real-time information, X.AI models      | No        | 2 min      |
 | **Perplexity**     | Web search capabilities, real-time data | No        | 2 min      |
 | **Mistral**        | European AI, multilingual support       | No        | 2 min      |
+| **Z.ai (GLM)**     | Latest GLM models, long context         | Trial     | 2 min      |
 | **Cohere**         | Enterprise-grade, multilingual          | Trial     | 2 min      |
 | **Together AI**    | Open-source models, cost-effective      | Trial     | 2 min      |
 | **OpenRouter**     | Multi-model access, unified API         | Trial     | 2 min      |
@@ -148,6 +149,7 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 | **Together AI**    | Llama-3.3-70B, Mixtral-8x7B        | 128k    | [Together Platform](https://api.together.ai/)                 |
 | **Hugging Face**   | Mistral-7B, Zephyr-7B, OpenHermes  | 32k     | [HF Token](https://huggingface.co/settings/tokens)            |
 | **Cohere**         | command-r, command-a-03-2025       | 128k    | [Cohere Dashboard](https://dashboard.cohere.ai/)              |
+| **Z.ai (GLM)**     | 4.7, 4.6, 4.6V-Flash, 4.5-Flash    | 128k    | [Z.ai Console](https://z.ai/)                                 |
 | **OpenRouter**     | Multiple providers & models        | Varies  | [OpenRouter Keys](https://openrouter.ai/keys)                 |
 
 ---
@@ -183,7 +185,7 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 ### Core (Free)
 
 **Multi-Provider AI**
-Access 14 providers with unified configuration: OpenAI, Anthropic, MiniMax, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot. Switch providers instantly.
+Access 15 providers with unified configuration: OpenAI, Anthropic, MiniMax, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot, Z.ai. Switch providers instantly.
 
 **Basic Commit Style**
 Simple, straightforward commit messages without prefixes or conventions.

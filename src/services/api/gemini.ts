@@ -45,19 +45,6 @@ const MODEL_CONFIGS: Record<GeminiModel, GenerationConfig> = {
         topP: 0.9,
         maxOutputTokens: 65536,
     },
-    // Gemini 2.0 Series - Max output: 8,192 tokens
-    "gemini-2.0-flash": {
-        temperature: 0.2,
-        topK: 40,
-        topP: 0.9,
-        maxOutputTokens: 8192,
-    },
-    "gemini-2.0-flash-lite": {
-        temperature: 0.2,
-        topK: 40,
-        topP: 0.9,
-        maxOutputTokens: 8192,
-    },
 };
 
 type GeminiValidationResult = {
@@ -71,6 +58,10 @@ export function getEffectiveGeminiModel(rawModel: string): string {
     const trimmed = rawModel.trim();
     const modelAliases: Record<string, GeminiModel> = {
         "gemini-flash-latest": "gemini-2.5-flash",
+        "gemini-2.0-flash": "gemini-2.5-flash",
+        "gemini-2.0-flash-001": "gemini-2.5-flash",
+        "gemini-2.0-flash-lite": "gemini-2.5-flash-lite",
+        "gemini-2.0-flash-lite-001": "gemini-2.5-flash-lite",
     };
 
     const normalizedModel = modelAliases[trimmed] ?? trimmed;
@@ -108,6 +99,10 @@ export class GeminiProvider extends BaseAIProvider {
             const rawModel = this.model;
             const modelAliases: Record<string, GeminiModel> = {
                 "gemini-flash-latest": "gemini-2.5-flash",
+                "gemini-2.0-flash": "gemini-2.5-flash",
+                "gemini-2.0-flash-001": "gemini-2.5-flash",
+                "gemini-2.0-flash-lite": "gemini-2.5-flash-lite",
+                "gemini-2.0-flash-lite-001": "gemini-2.5-flash-lite",
             };
 
             const normalizedModel = modelAliases[rawModel] ?? rawModel;

@@ -7,6 +7,64 @@ import { loggedFetch } from "./loggedFetch";
 
 const GROK_BASE_URL = "https://api.x.ai/v1";
 
+type GrokResponseOutputContent = {
+    type?: string;
+    text?: string;
+};
+
+type GrokResponseOutputItem = {
+    type?: string;
+    content?: GrokResponseOutputContent[];
+};
+
+type GrokResponsesApiResponse = {
+    output_text?: string;
+    output?: GrokResponseOutputItem[];
+};
+
+function extractGrokResponsesText(data: unknown): string | undefined {
+    if (typeof data !== "object" || data === null) {
+        return undefined;
+    }
+
+    const typed = data as GrokResponsesApiResponse;
+    if (typeof typed.output_text === "string" && typed.output_text.trim().length > 0) {
+        return typed.output_text;
+    }
+
+    if (!Array.isArray(typed.output)) {
+        return undefined;
+    }
+
+    const chunks: string[] = [];
+    for (const item of typed.output) {
+        if (typeof item !== "object" || item === null) {
+            continue;
+        }
+        const content = (item as GrokResponseOutputItem).content;
+        if (!Array.isArray(content)) {
+            continue;
+        }
+
+        for (const part of content) {
+            if (typeof part !== "object" || part === null) {
+                continue;
+            }
+            const partType = (part as GrokResponseOutputContent).type;
+            const text = (part as GrokResponseOutputContent).text;
+            if (partType === "output_text" && typeof text === "string" && text.trim().length > 0) {
+                chunks.push(text);
+            }
+        }
+    }
+
+    if (chunks.length === 0) {
+        return undefined;
+    }
+
+    return chunks.join("");
+}
+
 export class GrokProvider extends BaseAIProvider {
     constructor(apiKey: string, model: string) {
         super(apiKey, model);
@@ -19,7 +77,8 @@ export class GrokProvider extends BaseAIProvider {
         debugLog(`Making API call to Grok with model: ${this.model}`);
 
         try {
-            const response = await loggedFetch(`${GROK_BASE_URL}/chat/completions`, {
+            // Migrate from Chat Completions to Responses API (xAI recommended)
+            const response = await loggedFetch(`${GROK_BASE_URL}/responses`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${this.apiKey}`,
@@ -27,18 +86,19 @@ export class GrokProvider extends BaseAIProvider {
                 },
                 body: JSON.stringify({
                     model: this.model,
-                    messages: [
+                    input: [
                         {
                             role: "user",
                             content: prompt,
                         },
                     ],
-                    max_tokens: options?.maxTokens ?? 150,
+                    // Keep requests stateless / privacy-friendly (default store behavior is server-side)
+                    store: false,
+                    max_output_tokens: options?.maxTokens ?? 150,
                     temperature: options?.temperature ?? 0.2,
-                    stream: false,
                 }),
                 signal: controller.signal,
-            }, { provider: "grok", operation: "chat.completions" });
+            }, { provider: "grok", operation: "responses.create" });
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -138,12 +198,11 @@ export class GrokProvider extends BaseAIProvider {
                 throw new Error(`Grok API error: ${response.status} - ${errorText}. Check https://status.x.ai for service status.`);
             }
 
-            const data = await response.json();
-            const message =
-                data.choices?.[0]?.message?.content || data.message?.content;
-
+            const data: unknown = await response.json();
+            const message = extractGrokResponsesText(data);
             if (!message) {
-                throw new Error("No valid response from Grok API");
+                debugLog("Unexpected Grok Responses API response shape:", data);
+                throw new Error("No valid response from Grok Responses API");
             }
 
             debugLog(`Grok API response received successfully`);
@@ -341,9 +400,9 @@ export async function validateGrokAPIKey(
             return { success: true };
         }
 
-        // If models endpoint doesn't work (404/405), try a minimal completion request
+        // If models endpoint doesn't work (404/405), try a minimal Responses API request
         if (response.status === 404 || response.status === 405) {
-            response = await loggedFetch(`${GROK_BASE_URL}/chat/completions`, {
+            response = await loggedFetch(`${GROK_BASE_URL}/responses`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${apiKey}`,
@@ -351,15 +410,15 @@ export async function validateGrokAPIKey(
                 },
                 body: JSON.stringify({
                     model: "grok-3",
-                    messages: [
+                    input: [
                         {
                             role: "user",
                             content: "Test",
                         },
                     ],
-                    max_tokens: 1,
+                    store: false,
+                    max_output_tokens: 1,
                     temperature: 0.2,
-                    stream: false,
                 }),
                 signal: controller.signal,
             });

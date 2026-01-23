@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 // Core types
-export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic" | "minimax" | "copilot" | "deepseek" | "grok" | "perplexity" | "custom";
+export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic" | "minimax" | "copilot" | "deepseek" | "grok" | "perplexity" | "zai" | "custom";
 export type CommitStyle =
     | 'basic'
     | 'conventional'
@@ -79,8 +79,7 @@ export type TargetCommitLanguage =
 
 // Model types
 export type GeminiModel =
-    | "gemini-2.5-pro" | "gemini-2.5-flash" | "gemini-2.5-flash-preview" | "gemini-2.5-flash-lite" | "gemini-2.5-flash-lite-preview"
-    | "gemini-2.0-flash" | "gemini-2.0-flash-lite";
+    | "gemini-2.5-pro" | "gemini-2.5-flash" | "gemini-2.5-flash-preview" | "gemini-2.5-flash-lite" | "gemini-2.5-flash-lite-preview";
 
 export type AnthropicModel =
     | "claude-opus-4" | "claude-sonnet-4"
@@ -113,6 +112,13 @@ export type PerplexityModel =
     | "sonar-pro" | "sonar-reasoning" | "sonar"
     | "llama-3.1-sonar-small-128k-chat" | "llama-3.1-sonar-large-128k-chat" | "llama-3.1-sonar-huge-128k-online"
     | "llama-3.1-sonar-small-128k-online" | "llama-3.1-sonar-large-128k-online";
+
+export type ZaiModel =
+    | "glm-4.7" | "glm-4.6"
+    | "glm-4.6v" | "glm-4.6v-flash" | "glm-4.6v-flashx"
+    | "glm-4.5" | "glm-4.5v" | "glm-4.5-x"
+    | "glm-4.5-flash" | "glm-4.5-air" | "glm-4.5-airx"
+    | "glm-4-32b-0414-128k";
 
 // Configuration interfaces
 export interface BaseProviderConfig {
@@ -230,6 +236,11 @@ export interface PerplexityApiConfig extends ApiKeyConfig {
     model: PerplexityModel;
 }
 
+export interface ZaiApiConfig extends ApiKeyConfig {
+    type: "zai";
+    model: ZaiModel;
+}
+
 export interface CustomApiConfig extends BaseApiConfig {
     type: "custom";
     baseUrl: string;  // IP:Port format
@@ -245,7 +256,7 @@ export type ApiConfig =
     | GeminiApiConfig | HuggingFaceApiConfig | OllamaApiConfig | MistralApiConfig
     | CohereApiConfig | OpenAIApiConfig | TogetherApiConfig | OpenRouterApiConfig
     | AnthropicApiConfig | MiniMaxApiConfig | CopilotApiConfig | DeepSeekApiConfig | GrokApiConfig
-    | PerplexityApiConfig | CustomApiConfig;
+    | PerplexityApiConfig | ZaiApiConfig | CustomApiConfig;
 
 // Response types
 export interface HuggingFaceResponse {

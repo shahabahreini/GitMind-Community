@@ -32,10 +32,6 @@ export class GeminiSettings {
                             <option value="gemini-2.5-flash-lite" ${this._settings.gemini?.model === "gemini-2.5-flash-lite" ? "selected" : ""}>Gemini 2.5 Flash-Lite</option>
                             <option value="gemini-2.5-flash-lite-preview" ${this._settings.gemini?.model === "gemini-2.5-flash-lite-preview" ? "selected" : ""}>Gemini 2.5 Flash-Lite Preview</option>
                         </optgroup>
-                        <optgroup label="Gemini 2.0 Series">
-                            <option value="gemini-2.0-flash" ${this._settings.gemini?.model === "gemini-2.0-flash" ? "selected" : ""}>Gemini 2.0 Flash</option>
-                            <option value="gemini-2.0-flash-lite" ${this._settings.gemini?.model === "gemini-2.0-flash-lite" ? "selected" : ""}>Gemini 2.0 Flash-Lite</option>
-                        </optgroup>
                     </select>
                 </div>
             </div>`;

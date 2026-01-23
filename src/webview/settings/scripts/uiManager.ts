@@ -73,6 +73,11 @@ const PROVIDER_DISPLAY_CONFIG: Record<string, ProviderDisplayConfig> = {
     model: "sonar-pro",
     apiConfigured: (s) => !!s.perplexity?.apiKey
   },
+  zai: {
+    displayName: "Z.ai",
+    model: "glm-4.5-flash",
+    apiConfigured: (s) => !!s.zai?.apiKey
+  },
   custom: {
     displayName: "Custom API",
     model: "Not configured",
@@ -184,6 +189,7 @@ export function getUiManagerScript(): string {
         deepseek: { displayName: "DeepSeek", defaultModel: "deepseek-chat", getApiConfigured: (s) => !!s.deepseek?.apiKey },
         grok: { displayName: "Grok", defaultModel: "grok-3", getApiConfigured: (s) => !!s.grok?.apiKey },
         perplexity: { displayName: "Perplexity", defaultModel: "sonar-pro", getApiConfigured: (s) => !!s.perplexity?.apiKey },
+        zai: { displayName: "Z.ai", defaultModel: "glm-4.5-flash", getApiConfigured: (s) => !!s.zai?.apiKey },
         custom: { displayName: "Custom API", defaultModel: "Not configured", getApiConfigured: (s) => !!(s.custom?.baseUrl && s.custom?.endpoint) }
       };
       

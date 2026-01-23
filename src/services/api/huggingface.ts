@@ -279,7 +279,7 @@ function suggestCorrectProvider(model: string): { provider: string; model: strin
     } else if (lowerModel.includes('gemini') || lowerModel.includes('google')) {
         return {
             provider: "Gemini",
-            model: 'gemini-2.0-flash'
+            model: 'gemini-2.5-flash'
         };
     } else if (lowerModel.includes('mistral')) {
         return {

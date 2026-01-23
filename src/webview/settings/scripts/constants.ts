@@ -21,12 +21,13 @@ export const PROVIDER_DEFAULTS: ProviderDefaults = {
   deepseek: { model: "deepseek-chat" },
   grok: { model: "grok-3" },
   perplexity: { model: "llama-3.1-sonar-large-128k-online" },
+  zai: { model: "glm-4.5-flash" },
   custom: { model: "" }
 };
 
 export const API_KEY_PROVIDERS = [
   'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-  'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'perplexity'
+  'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'perplexity', 'zai'
 ];
 
 export const NO_API_KEY_PROVIDERS = ['ollama', 'copilot', 'custom'];
@@ -104,9 +105,7 @@ export const DEFAULT_MODELS = {
     'gemini-2.5-flash',
     'gemini-2.5-flash-preview',
     'gemini-2.5-flash-lite',
-    'gemini-2.5-flash-lite-preview',
-    'gemini-2.0-flash',
-    'gemini-2.0-flash-lite'
+    'gemini-2.5-flash-lite-preview'
   ],
   anthropic: [
     'claude-3-5-sonnet-20241022',
@@ -147,5 +146,19 @@ export const DEFAULT_MODELS = {
   deepseek: [
     'deepseek-chat',
     'deepseek-reasoner'
+  ],
+  zai: [
+    'glm-4.7',
+    'glm-4.6',
+    'glm-4.6v',
+    'glm-4.6v-flash',
+    'glm-4.6v-flashx',
+    'glm-4.5',
+    'glm-4.5v',
+    'glm-4.5-x',
+    'glm-4.5-flash',
+    'glm-4.5-air',
+    'glm-4.5-airx',
+    'glm-4-32b-0414-128k'
   ]
 };

@@ -26,6 +26,7 @@ import { fetchMiniMaxModels } from "./services/api/minimax";
 import { fetchOpenRouterModels } from "./services/api/openrouter";
 import { fetchCopilotModels } from "./services/api/copilot";
 import { fetchOpenAIModels } from "./services/api/openai";
+import { fetchZaiModels } from "./services/api/zai";
 import { PromptManager } from "./services/promptManager";
 import { telemetryService } from "./services/telemetry/telemetryService";
 import { SecureKeyManager } from "./services/encryption/SecureKeyManager";
@@ -43,12 +44,12 @@ const TIMEOUT_DURATION = 60000;
 const API_CHECK_TIMEOUT = 15000;
 const SUPPORTED_PROVIDERS = [
   "Gemini", "Hugging Face", "Ollama", "Mistral", "Cohere", "OpenAI",
-  "Together AI", "OpenRouter", "Anthropic", "MiniMax", "GitHub Copilot", "DeepSeek", "Grok", "Perplexity"
+  "Together AI", "OpenRouter", "Anthropic", "MiniMax", "GitHub Copilot", "DeepSeek", "Grok", "Perplexity", "Z.ai"
 ];
 
 const API_KEY_PROVIDERS = [
   'gemini', 'openai', 'mistral', 'cohere', 'huggingface', 'anthropic',
-  'minimax', 'together', 'openrouter', 'deepseek', 'grok', 'perplexity'
+  'minimax', 'together', 'openrouter', 'deepseek', 'grok', 'perplexity', 'zai'
 ];
 
 const state: ExtensionState = {
@@ -414,7 +415,7 @@ function clampCommitBodyDescription(description: string, maxBodyLines?: number):
 }
 
 async function handleLoadModels(
-  modelType: 'mistral' | 'huggingface' | 'cohere' | 'together' | 'openrouter' | 'grok' | 'deepseek' | 'gemini' | 'anthropic' | 'minimax' | 'openai',
+  modelType: 'mistral' | 'huggingface' | 'cohere' | 'together' | 'openrouter' | 'grok' | 'deepseek' | 'gemini' | 'anthropic' | 'minimax' | 'openai' | 'zai',
   fetchFunction: (apiKey: string) => Promise<any[]>
 ): Promise<void> {
   // Prevent duplicate concurrent calls for the same provider
@@ -470,6 +471,9 @@ async function handleLoadModels(
         case 'openai':
           commandSuffix = 'openaiModelsLoaded';
           break;
+        case 'zai':
+          commandSuffix = 'zaiModelsLoaded';
+          break;
         default:
           commandSuffix = `${modelType}ModelsLoaded`;
       }
@@ -523,6 +527,9 @@ async function handleLoadModels(
           case 'openai':
             commandSuffix = 'openaiModelsLoaded';
             break;
+          case 'zai':
+            commandSuffix = 'zaiModelsLoaded';
+            break;
           default:
             commandSuffix = `${modelType}ModelsLoaded`;
         }
@@ -567,6 +574,9 @@ async function handleLoadModels(
             break;
           case 'openai':
             commandSuffix = 'openaiModelsLoaded';
+            break;
+          case 'zai':
+            commandSuffix = 'zaiModelsLoaded';
             break;
           default:
             commandSuffix = `${modelType}ModelsLoaded`;
@@ -992,6 +1002,10 @@ function registerCommands(context: vscode.ExtensionContext): vscode.Disposable[]
 
     vscode.commands.registerCommand("gitmind.loadOpenAIModels", () =>
       handleLoadModels('openai', fetchOpenAIModels)
+    ),
+
+    vscode.commands.registerCommand("gitmind.loadZaiModels", () =>
+      handleLoadModels('zai', fetchZaiModels)
     ),
 
     vscode.commands.registerCommand("gitmind.loadCopilotModels", handleLoadCopilotModels),
