@@ -356,7 +356,6 @@ export class ChangelogService {
             // Get user configuration for max versions to process
             const vsConfig = vscode.workspace.getConfiguration('gitmind');
             const maxVersionsToProcess = vsConfig.get<number>('pro.changelog.maxVersions', 10);
-            const tagsToProcess = sortedTags.slice(0, maxVersionsToProcess);
 
             if (sortedTags.length > maxVersionsToProcess) {
                 debugLog(`Limiting to ${maxVersionsToProcess} most recent versions (out of ${sortedTags.length} total)`);
@@ -372,7 +371,7 @@ export class ChangelogService {
             debugLog('Version tags detected: Getting commit ranges from tag positions in history');
 
             // Add an "Unreleased" group (latest tag -> HEAD). This captures changes since the last release.
-            const latestTag = tagsToProcess[0]?.[0];
+            const latestTag = sortedTags[0]?.[0];
             if (latestTag) {
                 try {
                     const unreleasedCommits = await this.getGitLog(latestTag, undefined, undefined);
@@ -389,13 +388,20 @@ export class ChangelogService {
                 }
             }
 
-            for (let i = 0; i < tagsToProcess.length; i++) {
-                const [currentVersion, date] = tagsToProcess[i];
-                const previousVersion = i < tagsToProcess.length - 1 ? tagsToProcess[i + 1][0] : undefined;
+            // Process only the most recent N versions
+            // CRITICAL FIX: Reference the FULL sortedTags array for previousVersion boundary
+            // This ensures we get commits ONLY between adjacent tags, not from repository start
+            for (let i = 0; i < Math.min(maxVersionsToProcess, sortedTags.length); i++) {
+                const [currentVersion, date] = sortedTags[i];
+
+                // Get the ACTUAL previous tag from the full sorted list, not the limited subset
+                // This is crucial when maxVersions = 1: we still need the boundary tag for correct range
+                const previousVersion = i < sortedTags.length - 1 ? sortedTags[i + 1][0] : undefined;
 
                 try {
                     // Get ALL commits between tags - no limit
                     // This ensures we capture complete version history for each release
+                    // Using previousVersion from full list ensures proper boundaries
                     const commits = await this.getGitLog(previousVersion, currentVersion, undefined);
                     if (commits.length > 0) {
                         versions.push({ version: currentVersion, date, commits });

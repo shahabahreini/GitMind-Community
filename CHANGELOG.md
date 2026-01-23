@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v4.8.4 - 2026-01-23
+
+### Fixed
+
+- **Changelog Generation (Pro)**: Fixed critical bug where setting `maxVersions = 1` would incorrectly retrieve all commits from repository start instead of only commits between the latest tag and the previous tag.
+  - Root cause: Version boundary logic referenced limited tag subset instead of full sorted tag list
+  - Impact: Changelog generation with `maxVersions = 1` would include thousands of commits instead of just the commits for that specific version
+  - Solution: Modified `getCommitsByVersion()` to reference the full `sortedTags` array for previous version boundary calculation, ensuring proper commit range filtering regardless of `maxVersions` setting
+  - Technical details: Changed loop from `tagsToProcess[i + 1]` to `sortedTags[i + 1]` for boundary reference (ChangelogService.ts:399)
+  - Verified: Type checking passes, no breaking changes to existing functionality
+
 ## v4.8.2 - 2026-01-14
 
 ### New Features
