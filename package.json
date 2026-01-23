@@ -310,20 +310,16 @@
             "gemini-2.5-flash",
             "gemini-2.5-flash-preview",
             "gemini-2.5-flash-lite",
-            "gemini-2.5-flash-lite-preview",
-            "gemini-2.0-flash",
-            "gemini-2.0-flash-lite"
+            "gemini-2.5-flash-lite-preview"
           ],
-          "default": "gemini-2.0-flash",
+          "default": "gemini-2.5-flash",
           "description": "Select which Gemini model to use",
           "enumDescriptions": [
             "Gemini 2.5 Pro - Advanced model with 65,536 token output limit",
             "Gemini 2.5 Flash - Fast and efficient with 65,536 token output limit",
             "Gemini 2.5 Flash Preview - Preview version with 65,536 token output limit",
             "Gemini 2.5 Flash-Lite - Lightweight version with 65,536 token output limit",
-            "Gemini 2.5 Flash-Lite Preview - Preview lightweight version with 65,536 token output limit",
-            "Gemini 2.0 Flash - Multimodal model with 8,192 token output limit",
-            "Gemini 2.0 Flash-Lite - Lightweight version with 8,192 token output limit"
+            "Gemini 2.5 Flash-Lite Preview - Preview lightweight version with 65,536 token output limit"
           ]
         },
         "gitmind.cohere.apiKey": {

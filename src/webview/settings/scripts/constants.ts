@@ -105,9 +105,7 @@ export const DEFAULT_MODELS = {
     'gemini-2.5-flash',
     'gemini-2.5-flash-preview',
     'gemini-2.5-flash-lite',
-    'gemini-2.5-flash-lite-preview',
-    'gemini-2.0-flash',
-    'gemini-2.0-flash-lite'
+    'gemini-2.5-flash-lite-preview'
   ],
   anthropic: [
     'claude-3-5-sonnet-20241022',

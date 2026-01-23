@@ -54,9 +54,7 @@ export class ProviderConfig {
                         { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', group: 'Gemini 2.5 Series' },
                         { value: 'gemini-2.5-flash-preview', label: 'Gemini 2.5 Flash Preview', group: 'Gemini 2.5 Series' },
                         { value: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite', group: 'Gemini 2.5 Series' },
-                        { value: 'gemini-2.5-flash-lite-preview', label: 'Gemini 2.5 Flash-Lite Preview', group: 'Gemini 2.5 Series' },
-                        { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', group: 'Gemini 2.0 Series' },
-                        { value: 'gemini-2.0-flash-lite', label: 'Gemini 2.0 Flash-Lite', group: 'Gemini 2.0 Series' }
+                        { value: 'gemini-2.5-flash-lite-preview', label: 'Gemini 2.5 Flash-Lite Preview', group: 'Gemini 2.5 Series' }
                     ]
                 }
             ]

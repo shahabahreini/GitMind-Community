@@ -26,7 +26,7 @@ suite("Webview Script Compilation", () => {
             telemetry: { enabled: false },
             commit: { verbose: true, captureAllChanges: false },
             promptCustomization: { enabled: false },
-            gemini: { apiKey: "", model: "gemini-2.0-flash" },
+            gemini: { apiKey: "", model: "gemini-2.5-flash" },
             openai: { apiKey: "", model: "gpt-4o" },
             anthropic: { apiKey: "", model: "claude-3-5-sonnet-20241022" },
             minimax: { apiKey: "", model: "MiniMax-M2" },
