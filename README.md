@@ -4,8 +4,12 @@ Stop writing commit messages manually. GitMind analyzes your code changes and ge
 
 ## Why GitMind?
 
-**One Extension, 14 AI Providers**
+**One Extension, 15+ AI Providers**
 Choose from OpenAI, Anthropic, MiniMax, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, or GitHub Copilot. Switch anytime.
+
+<div align="center">
+<img src="images/all_providers_GitMind.jpg" alt="GitMind Support 15+ AI API Providers" width="40%"/>
+</div>
 
 **Zero Setup Options Available**
 
@@ -87,23 +91,23 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 
 ### 1. Pick Your AI Provider
 
-| Provider           | Best For                                | Free Tier | Setup Time |
-| ------------------ | --------------------------------------- | --------- | ---------- |
-| **GitHub Copilot** | Zero setup, existing subscribers        | No        | 0 min      |
-| **Google Gemini**  | Best free tier (15 RPM, 2M context)     | Yes       | 2 min      |
-| **Ollama**         | Complete privacy, offline usage         | Unlimited | 5 min      |
-| **DeepSeek**       | Advanced reasoning, cost-effective      | 50 RPM    | 2 min      |
-| **OpenAI**         | Industry standard, multimodal           | No        | 2 min      |
-| **Anthropic**      | Superior reasoning, long context        | No        | 2 min      |
-| **MiniMax**        | Fast text generation, Anthropic-style API | No      | 2 min      |
-| **Grok**           | Real-time information, X.AI models      | No        | 2 min      |
-| **Perplexity**     | Web search capabilities, real-time data | No        | 2 min      |
-| **Mistral**        | European AI, multilingual support       | No        | 2 min      |
-| **Z.ai (GLM)**     | Latest GLM models, long context         | Trial     | 2 min      |
-| **Cohere**         | Enterprise-grade, multilingual          | Trial     | 2 min      |
-| **Together AI**    | Open-source models, cost-effective      | Trial     | 2 min      |
-| **OpenRouter**     | Multi-model access, unified API         | Trial     | 2 min      |
-| **Hugging Face**   | Custom models, research access          | Trial     | 2 min      |
+| Provider           | Best For                                  | Free Tier | Setup Time |
+| ------------------ | ----------------------------------------- | --------- | ---------- |
+| **GitHub Copilot** | Zero setup, existing subscribers          | No        | 0 min      |
+| **Google Gemini**  | Best free tier (15 RPM, 2M context)       | Yes       | 2 min      |
+| **Ollama**         | Complete privacy, offline usage           | Unlimited | 5 min      |
+| **DeepSeek**       | Advanced reasoning, cost-effective        | 50 RPM    | 2 min      |
+| **OpenAI**         | Industry standard, multimodal             | No        | 2 min      |
+| **Anthropic**      | Superior reasoning, long context          | No        | 2 min      |
+| **MiniMax**        | Fast text generation, Anthropic-style API | No        | 2 min      |
+| **Grok**           | Real-time information, X.AI models        | No        | 2 min      |
+| **Perplexity**     | Web search capabilities, real-time data   | No        | 2 min      |
+| **Mistral**        | European AI, multilingual support         | No        | 2 min      |
+| **Z.ai (GLM)**     | Latest GLM models, long context           | Trial     | 2 min      |
+| **Cohere**         | Enterprise-grade, multilingual            | Trial     | 2 min      |
+| **Together AI**    | Open-source models, cost-effective        | Trial     | 2 min      |
+| **OpenRouter**     | Multi-model access, unified API           | Trial     | 2 min      |
+| **Hugging Face**   | Custom models, research access            | Trial     | 2 min      |
 
 ### 2. Configure
 
@@ -116,12 +120,14 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 ### 3. Generate
 
 **Option A: Traditional Workflow**
+
 1. Stage changes
 2. Click AI button in Source Control
 3. Review generated message
 4. Commit
 
 **Option B: Capture All Changes** (no staging needed)
+
 1. Enable "Capture All Changes" in settings
 2. Make changes (no need to stage)
 3. Click AI button in Source Control
@@ -156,27 +162,27 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 
 ## Free vs Pro
 
-| Feature                            | Free                | Pro                         |
-| ---------------------------------- | ------------------- | --------------------------- |
-| **AI Providers**                   | 14 providers        | 15 providers (includes Custom API) |
-| **Models**                         | 50+ models          | 50+ models                  |
-| **Commit Styles**                  | Basic, Conventional | 11 professional styles      |
-| **Git Integration**                | Yes                 | Yes                         |
-| **Multi-Repository Support**       | Yes                 | Yes                         |
-| **Diagnostics & Token Estimation** | Yes                 | Yes                         |
-| **Verbose/Concise Messages**       | Yes                 | Yes                         |
-| **Prompt Customization**           | Yes                 | Yes + Save Last Prompt      |
-| **API Key Storage**                | Plain text          | Encrypted (SecretStorage)   |
-| **Large Diff Processing**          | Limited             | Token-aware chunking        |
-| **Target Commit Language**         | ✗                   | ✓ 60 languages with search  |
-| **Commit Body Lines**              | Fixed (5 lines)     | Configurable (3-15)         |
-| **Summary Length**                 | Fixed               | Configurable (50-100 chars) |
+| Feature                            | Free                | Pro                                     |
+| ---------------------------------- | ------------------- | --------------------------------------- |
+| **AI Providers**                   | 14 providers        | 15 providers (includes Custom API)      |
+| **Models**                         | 50+ models          | 50+ models                              |
+| **Commit Styles**                  | Basic, Conventional | 11 professional styles                  |
+| **Git Integration**                | Yes                 | Yes                                     |
+| **Multi-Repository Support**       | Yes                 | Yes                                     |
+| **Diagnostics & Token Estimation** | Yes                 | Yes                                     |
+| **Verbose/Concise Messages**       | Yes                 | Yes                                     |
+| **Prompt Customization**           | Yes                 | Yes + Save Last Prompt                  |
+| **API Key Storage**                | Plain text          | Encrypted (SecretStorage)               |
+| **Large Diff Processing**          | Limited             | Token-aware chunking                    |
+| **Target Commit Language**         | ✗                   | ✓ 60 languages with search              |
+| **Commit Body Lines**              | Fixed (5 lines)     | Configurable (3-15)                     |
+| **Summary Length**                 | Fixed               | Configurable (50-100 chars)             |
 | **Advanced Model Parameters**      | ✗                   | ✓ Temperature, top-p, top-k, max tokens |
-| **Commit History Analysis**        | ✗                   | ✓                           |
-| **Changelog Generation**           | ✗                   | ✓                           |
-| **Gitmoji Support**                | ✗                   | ✓                           |
-| **Custom API Endpoints**           | ✗                   | ✓                           |
-| **Multi-Device License**           | Single device       | Multiple devices            |
+| **Commit History Analysis**        | ✗                   | ✓                                       |
+| **Changelog Generation**           | ✗                   | ✓                                       |
+| **Gitmoji Support**                | ✗                   | ✓                                       |
+| **Custom API Endpoints**           | ✗                   | ✓                                       |
+| **Multi-Device License**           | Single device       | Multiple devices                        |
 
 ---
 
@@ -195,6 +201,7 @@ Automatic staging detection, binary file handling, merge conflict awareness.
 
 **Flexible Change Capture**
 Choose between two workflows:
+
 - **Traditional** (default): Stage changes first, then generate commit message
 - **Capture All Changes**: Enable to analyze all changes (staged + unstaged + untracked) automatically without staging prompt
 
