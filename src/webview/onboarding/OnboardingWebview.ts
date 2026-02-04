@@ -11,6 +11,7 @@ export class OnboardingWebview {
     private readonly _extensionUri: vscode.Uri;
     private _disposables: vscode.Disposable[] = [];
     private _messageHandler: OnboardingMessageHandler;
+    private _webviewState: { dontShowAgain?: boolean } = {};
 
     public static close(): void {
         OnboardingWebview.currentPanel?.dispose();
@@ -73,11 +74,15 @@ export class OnboardingWebview {
         this._update();
 
         // Listen for when the panel is disposed
-        this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
+        this._panel.onDidDispose(() => this.handlePanelDispose(), null, this._disposables);
 
         // Handle messages from the webview
         this._panel.webview.onDidReceiveMessage(
             async (message) => {
+                // Store the webview state to check for checkbox state on close
+                if (message.command === "skipOnboarding" || message.dontShowAgain !== undefined) {
+                    this._webviewState.dontShowAgain = message.dontShowAgain === true;
+                }
                 await this._messageHandler.handleMessage(message);
             },
             null,
@@ -85,6 +90,28 @@ export class OnboardingWebview {
         );
 
         OnboardingWebview.currentPanel = this;
+    }
+
+    private async handlePanelDispose(): Promise<void> {
+        // Check if user closed the window without confirming preference
+        // This handles the case where they simply close the panel without clicking anything
+        // Default behavior: ask for confirmation with "Don't show again" as default
+        if (this._webviewState.dontShowAgain === undefined) {
+            // User closed without explicitly setting the checkbox
+            // Show confirmation dialog with "Don't show again" as the default action
+            const result = await vscode.window.showWarningMessage(
+                "Don't show the GitMind onboarding again?",
+                { modal: true, detail: "You can always access the welcome screen from the Command Palette." },
+                "Don't Show Again",
+                "Show Again"
+            );
+
+            if (result === "Don't Show Again") {
+                await vscode.commands.executeCommand("gitmind.skipOnboarding");
+            }
+        }
+
+        this.dispose();
     }
 
     private async _update() {

@@ -216,9 +216,12 @@ export class OnboardingTemplateGenerator {
                 </div>
 
                 <div class="additional-actions">
-                    <button class="btn btn-text" id="skipOnboardingBtn">
-                        Don't show this again
-                    </button>
+                    <div class="dont-show-again-checkbox">
+                        <input type="checkbox" id="dontShowAgainCheckbox" class="checkbox-input" />
+                        <label for="dontShowAgainCheckbox" class="checkbox-label">
+                            Don't show this onboarding again
+                        </label>
+                    </div>
                 </div>
             </div>`;
     }
@@ -229,7 +232,8 @@ export class OnboardingTemplateGenerator {
 
     // State management
     const state = {
-        selectedProvider: null
+        selectedProvider: null,
+        dontShowAgain: false
     };
 
     // Provider API key links
@@ -257,6 +261,8 @@ export class OnboardingTemplateGenerator {
     function init() {
         setupProviderSelection();
         setupButtonHandlers();
+        setupCheckboxHandlers();
+        setupWindowCloseHandler();
         restoreState();
     }
 
@@ -279,6 +285,26 @@ export class OnboardingTemplateGenerator {
         });
     }
 
+    function setupCheckboxHandlers() {
+        const checkbox = document.getElementById('dontShowAgainCheckbox');
+        if (checkbox) {
+            checkbox.addEventListener('change', (e) => {
+                state.dontShowAgain = e.target.checked;
+                saveState();
+            });
+        }
+    }
+
+    function setupWindowCloseHandler() {
+        // Handle window close/navigation
+        window.addEventListener('beforeunload', (e) => {
+            if (state.dontShowAgain) {
+                // If checkbox is checked, execute skip command
+                vscode.postMessage({ command: 'skipOnboarding', dontShowAgain: true });
+            }
+        });
+    }
+
     function setupButtonHandlers() {
         const handlers = {
             openSettingsBtn: () => {
@@ -292,11 +318,6 @@ export class OnboardingTemplateGenerator {
             viewDocsBtn: () => {
                 const docsUrl = 'https://github.com/shahabahreini/GitMind-Pro#readme';
                 vscode.postMessage({ command: 'openExternal', url: docsUrl });
-            },
-            skipOnboardingBtn: () => {
-                if (confirm('Are you sure? You can always access this welcome screen from the command palette.')) {
-                    sendCommand('skipOnboarding');
-                }
             }
         };
 
@@ -336,12 +357,21 @@ export class OnboardingTemplateGenerator {
 
     function restoreState() {
         const previousState = vscode.getState();
-        if (previousState && previousState.selectedProvider) {
-            state.selectedProvider = previousState.selectedProvider;
-            const card = document.querySelector(\`.provider-card[data-provider="\${state.selectedProvider}"]\`);
-            if (card) {
-                card.classList.add('selected');
-                updateSelectedProvider();
+        if (previousState) {
+            if (previousState.selectedProvider) {
+                state.selectedProvider = previousState.selectedProvider;
+                const card = document.querySelector(\`.provider-card[data-provider="\${state.selectedProvider}"]\`);
+                if (card) {
+                    card.classList.add('selected');
+                    updateSelectedProvider();
+                }
+            }
+            if (previousState.dontShowAgain) {
+                state.dontShowAgain = previousState.dontShowAgain;
+                const checkbox = document.getElementById('dontShowAgainCheckbox');
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
             }
         }
     }

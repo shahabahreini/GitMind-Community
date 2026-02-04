@@ -41,12 +41,29 @@ export class OnboardingMessageHandler {
                 telemetryService.trackDailyActiveUser();
                 try {
                     this._closeOnboarding();
-                    // Then execute the skip command
-                    await vscode.commands.executeCommand("gitmind.skipOnboarding");
+                    // Check if user has confirmed via checkbox
+                    const dontShowAgain = message.dontShowAgain === true;
+
+                    if (dontShowAgain) {
+                        // Directly skip without additional confirmation
+                        await vscode.commands.executeCommand("gitmind.skipOnboarding");
+                    } else {
+                        // Show confirmation dialog before skipping
+                        const result = await vscode.window.showWarningMessage(
+                            "Are you sure you don't want to see this onboarding again? You can always access it from the Command Palette.",
+                            { modal: true },
+                            "Don't Show Again",
+                            "Keep Showing"
+                        );
+
+                        if (result === "Don't Show Again") {
+                            await vscode.commands.executeCommand("gitmind.skipOnboarding");
+                        }
+                    }
                 } catch (error) {
                     console.error('Error in skipOnboarding handler:', error);
                     vscode.window.showErrorMessage(
-                        `Failed to disable onboarding: ${error instanceof Error ? error.message : 'Unknown error'}`
+                        `Failed to process onboarding preference: ${error instanceof Error ? error.message : 'Unknown error'}`
                     );
                 }
                 break;

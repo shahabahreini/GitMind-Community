@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v4.8.5 - 2026-02-04
+
+### Fixed
+
+- Fixed onboarding "Don't Show Again" feature: replaced non-interactive button with proper checkbox input
+- Added confirmation dialog when closing onboarding window without explicit action
+- Set "Don't Show Again" as the default option in the confirmation dialog
+- Improved onboarding UX with proper state persistence and theme-aware styling
+- Replaced unreliable JavaScript `confirm()` with VS Code native modal dialog
+
 ## v4.8.4 - 2026-01-23
 
 ### Fixed
@@ -121,20 +131,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 
 - Added manual commit limit option for changelog generation.
-
   - Introduced a new setting to manually cap the number of commits considered for changelog generation.
   - Added an "Unreleased" section showing changes since the last tagged version.
   - Implemented logic to respect the manual commit limit when enabled.
   - Updated UI to include a toggle for enabling/disabling the manual commit limit.
 
 - Added intelligent version conflict resolution during changelog regeneration.
-
   - Extracted all versions from the existing changelog with full content.
   - Detected duplicate versions and added an overwrite control setting (`gitmind.pro.changelog.overwriteExisting`).
   - Merged new and existing changelog content intelligently while preserving existing versions in safe mode (default).
 
 - Added capture all changes option in settings.
-
   - Introduced a new configuration option to capture staged, unstaged, and untracked changes.
   - Updated diff generation logic to include all changes when the option is enabled.
   - Added a UI toggle in settings for enabling/disabling the feature.
@@ -164,21 +171,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 
 - Added extension version and footer metadata to the settings UI.
-
   - Included a footer section displaying the extension version, author attribution, and a link for reporting issues/improvements.
   - Enhanced transparency by showing the current version in use.
   - Provided direct access to GitHub issues for user feedback.
   - Improved CSS styling for the footer with responsive layout and theming.
 
 - Added a new configuration option to capture staged, unstaged, and untracked changes.
-
   - Updated diff generation logic to include all changes when the option is enabled.
   - Added a UI toggle in settings for enabling/disabling the feature.
   - Updated settings synchronization to include the new option.
   - Maintained backward compatibility with existing behavior when disabled.
 
 - Added a new commit style option for Conventional Commits without scopes.
-
   - Provided a simplified version of the Conventional Commits standard for projects that don't require scopes.
   - Included updated configuration, prompts, and UI elements to support the new style.
 
@@ -429,7 +433,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Enhanced
 
 - **Commit History Analysis Optimization**: Streamlined commit analysis system for improved performance and reliability
-
   - **Prompt Optimization**: Reduced analysis prompt size by 75% while preserving key metrics and actionable guidance
   - **Focused Analysis**: Condensed from 200+ lines to ~70 lines with targeted sections for statistics, assessment, and recommendations
   - **Extended Timeouts**: Increased API timeouts for commit analysis (3 minutes standard, 8 minutes for large histories)
@@ -490,7 +493,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **VS Code Git API Integration**: Matches discovered repositories with VS Code's tracked repositories
   - **Subfolder Repository Support**: Works regardless of whether root folder or subfolder is opened
 - **Enhanced Request Diagnostics**: Repository-specific information display
-
   - **Repository Name Display**: Shows clean repository name instead of full path
   - **Context Awareness**: Diagnostics automatically detect and display the correct repository being processed
   - **Multi-Repository Transparency**: Clear indication of which repository is being used for commit generation
@@ -553,7 +555,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Enhanced
 
 - **Visual Documentation Improvements**: Added professional screenshot grid to README for VS Code marketplace presentation
-
   - **Feature Showcase Grid**: Implemented 3x3 responsive image grid displaying core extension capabilities
   - **Professional Layout**: Organized screenshots with descriptive captions highlighting key features:
     - AI-Powered Commit Generation workflow
@@ -577,14 +578,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Enhanced
 
 - **Redesigned Subscription Interface**: Completely restructured subscription and Pro features management for improved user experience
-
   - **New "Get Pro" Tab**: Created dedicated subscription tab with comprehensive subscription management, Pro activation, and upgrade workflow
   - **Streamlined Pro Features Tab**: Removed subscription and activation sections from Pro Features, focusing purely on feature configuration
   - **Centralized Navigation**: All upgrade buttons now properly navigate users to the new subscription tab for consistent user journey
   - **Enhanced UI Components**: New SubscriptionRenderer component with modern card-based layout and improved visual hierarchy
 
 - **Improved Settings Organization**: Better separation of concerns across settings tabs
-
   - **Model Settings**: Dedicated tab for AI provider and model configuration
   - **Free Features**: Core extension features available to all users
   - **Commit Styles**: Comprehensive commit message style selection and reference
@@ -600,14 +599,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Improved Error Handling for License Activation**: Enhanced error message formatting for failed Pro activation attempts
-
   - **Better HTTP Error Parsing**: Now properly extracts meaningful error messages from HTTP responses instead of showing raw JSON
   - **Clearer Error Messages**: Specific guidance for common issues like "license key not found" with actionable troubleshooting steps
   - **Consistent Error Formatting**: Unified error message format across license key and order ID activation methods
   - **User-Friendly Display**: Error messages are now truncated appropriately and provide clear next steps for resolution
 
 - **Windows Webview Compatibility**: Fixed "Error loading webview: Could not register service worker" issue on Windows systems
-
   - **Service Worker Prevention**: Added service worker registration interception to prevent Windows-specific InvalidStateError
   - **Enhanced CSP Configuration**: Updated Content Security Policy to properly support webview functionality across platforms
   - **Error Handling**: Added global error handlers to gracefully handle service worker-related errors without breaking the UI
@@ -744,7 +741,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Ollama Model Dropdown Feature**: Revolutionary searchable model selection interface for Ollama users
-
   - **Dynamic Model Loading**: Load available models directly from your running Ollama instance with one click
   - **Searchable Interface**: Real-time filtering and search through available models as you type
   - **Keyboard Navigation**: Full keyboard support with arrow keys, Enter to select, and Escape to close
@@ -752,7 +748,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Professional UI**: Loading indicators, error handling, and smooth animations integrated with VS Code themes
 
 - **Enhanced Ollama Integration**: Comprehensive improvements to Ollama provider experience
-
   - **Automatic Model Detection**: Uses Ollama API `/api/tags` endpoint to fetch installed models
   - **Error Handling**: Clear error messages for connection issues, missing models, or API problems
   - **Debug Logging**: Comprehensive logging for troubleshooting Ollama connectivity issues
@@ -760,13 +755,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Enhanced
 
 - **User Experience**: Significant improvements to Ollama configuration workflow
-
   - **One-Click Model Selection**: No more guessing model names - see exactly what's installed
   - **Visual Feedback**: Loading states and success/error indicators for all operations
   - **Accessibility**: Full keyboard navigation and screen reader support
 
 - **Developer Experience**: Enhanced debugging and troubleshooting capabilities
-
   - **Comprehensive Error Messages**: Detailed error reporting with actionable solutions
   - **Debug Mode Integration**: Full integration with extension debug logging system
   - **Test Coverage**: Added comprehensive test suite for the new dropdown functionality
@@ -792,7 +785,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **VS Code Engine Compatibility**: Resolved compatibility issues with older VS Code versions and alternative editors
-
   - **Reduced Engine Requirement**: Lowered VS Code engine requirement from `^1.100.0` to `^1.63.0` for broader compatibility
   - **Enhanced Editor Support**: Extension now works with Cursor and other VS Code-based editors that may not be on the latest version
   - **Improved Secrets API Handling**: Added graceful fallback for the Secrets API when not available in older VS Code versions
@@ -800,7 +792,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Type Definitions Update**: Updated `@types/vscode` from `^1.100.0` to `^1.63.0` to match engine requirements
 
 - **Telemetry Service Robustness**: Enhanced telemetry service to handle missing APIs gracefully
-
   - **Safe API Access**: Added try-catch blocks around Secrets API usage to prevent crashes on older VS Code versions
   - **Fallback Mechanism**: Implemented proper fallback to default instrumentation key when Secrets API is unavailable
   - **Error Prevention**: Eliminated potential runtime errors when extension runs on VS Code versions prior to 1.53.0
@@ -808,7 +799,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Enhanced
 
 - **Broader User Base Support**: Extension now accessible to users with:
-
   - **Older VS Code Installations**: Support for VS Code versions from 1.63.0 onwards
   - **Alternative Editors**: Compatibility with Cursor and other VS Code-based editors
   - **Enterprise Environments**: Support for environments that may not update to the latest VS Code versions immediately
@@ -832,7 +822,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Critical Onboarding System Fixes**: Resolved major onboarding workflow issues affecting user experience
-
   - **Fixed "Don't Show Again" Button**: The skip onboarding button now properly closes the webview and marks onboarding as permanently disabled
   - **Fixed "Finish Setup" Button**: The complete onboarding button now correctly closes the webview and marks onboarding as completed
   - **Fixed Persistent Onboarding Display**: Onboarding no longer appears every time VS Code starts for users who have already configured API keys
@@ -840,14 +829,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Smart Skip Logic**: Users with any valid API configuration are automatically marked as completed and skip onboarding
 
 - **Onboarding State Management**: Improved handling of onboarding state and user preferences
-
   - **Proper State Persistence**: Onboarding completion and skip states are now properly saved to VS Code global state
   - **Race Condition Fix**: Resolved timing issues between webview closure and command execution
   - **Better Provider Detection**: Enhanced support for providers that don't require API keys (Ollama, GitHub Copilot)
   - **Improved First-Time User Detection**: More accurate detection of truly new users vs. existing users with configurations
 
 - **Webview Message Handling**: Enhanced communication between onboarding webview and extension
-
   - **Correct Command Execution Order**: Fixed the sequence of webview closure and command execution to prevent errors
   - **Enhanced Error Handling**: Better error handling and debugging output throughout the onboarding flow
   - **Improved Button Responsiveness**: All onboarding buttons now provide immediate feedback and proper state changes
@@ -855,14 +842,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Enhanced
 
 - **Onboarding Logic Improvements**: Comprehensive enhancements to onboarding decision-making
-
   - **Multi-Provider API Detection**: New `hasAnyValidApiConfiguration()` function checks all providers for existing setup
   - **Case-Insensitive Provider Mapping**: Enhanced provider setting path resolution for better compatibility
   - **Comprehensive Debug Output**: Added detailed logging throughout onboarding flow for better troubleshooting
   - **Automatic Completion**: Users with existing API keys are automatically marked as onboarded without showing the wizard
 
 - **Developer Experience**: Improved debugging and testing capabilities
-
   - **Debug Commands**: Added commands for resetting onboarding state and re-enabling onboarding for testing
   - **Debug Script**: Included `debug-onboarding.js` for manual testing and validation of onboarding logic
   - **Comprehensive Documentation**: Added `ONBOARDING_FIXES.md` with detailed technical documentation of all fixes
@@ -870,7 +855,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Technical
 
 - **Code Quality Improvements**: Enhanced maintainability and reliability
-
   - **Enhanced OnboardingManager**: Improved core onboarding logic with better state management and API detection
   - **Improved Message Handlers**: Enhanced webview message handling with proper error handling and state management
   - **Better Configuration Management**: More robust handling of VS Code configuration and global state
@@ -881,62 +865,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Centralized Provider Configuration System**: Introduced standardized provider configuration with improved type safety
-
   - **PROVIDER_DEFAULTS Map**: Centralized configuration mapping for all AI providers with default settings and models
   - **Dynamic Configuration Building**: Enhanced `getConfiguration()` to dynamically build provider configurations from centralized defaults
   - **BaseProviderConfig & ApiKeyProviderConfig**: New type-safe interfaces for improved configuration handling
   - **getEffectiveModel() Utility**: New utility function for handling custom model configurations across providers
 
 - **Enhanced API Validation System**: Comprehensive validator configuration for improved error handling
-
   - **ValidatorConfig Interface**: Standardized provider settings interface for consistent validation
   - **VALIDATOR_CONFIGS Record**: Centralized provider configurations with default models, response times, and rate limits
   - **Dynamic Validation Logic**: Provider-agnostic validation system based on centralized configurations
   - **Enhanced Error Handling**: Improved troubleshooting messages and error resolution suggestions
 
 - **Ollama Installation Management**: Restructured platform-specific installation instructions
-
   - **Structured Platform Instructions**: Platform-specific installation steps organized in maintainable map structure
   - **formatInstructions Function**: Consistent formatting for installation and startup processes
   - **Enhanced Platform Support**: Detailed notes for each platform's installation and startup procedures
 
 - **Advanced Error Handling System**: Comprehensive error pattern recognition and handling
-
   - **Structured Error Patterns**: Defined patterns for token limits, rate limits, authentication, quotas, network issues, and configuration errors
   - **Provider-Specific Error Resolution**: Tailored error suggestions based on provider characteristics
   - **Intelligent Retry Logic**: Enhanced retry logic for transient errors with fatal error identification
   - **Error Severity Determination**: Status code-based error severity classification
 
 - **Enhanced Commit Message Processing**: Multi-stage response analysis and cleaning
-
   - **Response Analysis Metrics**: Detailed analysis including length, code blocks, bullet points, and line structure
   - **Multi-Stage Response Cleaning**: Advanced cleaning for code blocks, markdown, and formatting
   - **Conventional Commit Support**: Enhanced summary processing with commit type handling and truncation
   - **Improved Description Processing**: Better handling of bullet points and empty lines
 
 - **Dynamic Provider Settings System**: Flexible provider configuration with model loading
-
   - **Provider-Specific Defaults**: Dynamic default models and API key requirements per provider
   - **Dynamic Form Initialization**: Responsive form initialization based on provider configurations
   - **Model Loading Handlers**: Specialized handlers for Mistral and Hugging Face model loading
   - **Enhanced Message Handling**: Improved model updates and settings synchronization
 
 - **Comprehensive Test Suite**: Complete testing framework for quality assurance
-
   - **Full Test Coverage**: Test suites covering settings UI, AI providers, and git integration
   - **VS Code API Mocking**: Isolated testing environment with proper API mocking
   - **Test Documentation**: Detailed quality assurance documentation and validation scripts
   - **Development Testing Tools**: Scripts for test status monitoring and validation
 
 - **Enhanced Onboarding Control**: Improved user control over onboarding experience
-
   - **Onboarding Settings Control**: New `aiCommitAssistant.showOnboarding` setting for user control
   - **Onboarding Reset Commands**: Commands for debugging and manual onboarding access
   - **Smart Onboarding Logic**: Prevents unnecessary onboarding when API configurations exist
   - **Permanent Onboarding Disable**: Option to permanently disable onboarding wizard
 
 - **Improved Token Estimation**: More accurate token counting algorithm
-
   - **Length-Based Tokenization**: Word-length-based token counting for improved accuracy
   - **Special Character Handling**: Proper handling of punctuation and special characters
   - **Character-Based Fallback**: Fallback mechanism for edge cases and high special character density
@@ -945,28 +920,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Enhanced
 
 - **Code Organization and Maintainability**: Significant refactoring for better code structure
-
   - **Simplified API Configuration**: Streamlined `getApiConfig()` with type-based configuration retrieval
   - **Reduced Code Duplication**: Eliminated redundant provider-specific logic across modules
   - **Improved Type Safety**: Enhanced type definitions throughout the codebase
   - **Modular Processing**: Extracted interfaces and modularized processing steps
 
 - **Webview Component Architecture**: Restructured diagnostics and UI components
-
   - **DiagnosticInfo Interface**: Type-safe diagnostic information handling in DiagnosticsWebview
   - **Provider Configuration Mapping**: Replaced switch statements with configuration-based logic
   - **Centralized Provider Logic**: Consolidated provider-specific settings into shared configurations
   - **UI Manager Simplification**: Streamlined UI management with shared display configurations
 
 - **Extension Activation System**: Streamlined extension lifecycle management
-
   - **Separated Command Registration**: Moved command registration to dedicated functions for better organization
   - **Helper Function Architecture**: Introduced helper functions for error handling, progress notifications, and API checks
   - **Improved Error Reporting**: Enhanced telemetry tracking for better event logging and error reporting
   - **Constants Organization**: Added timeout durations and supported provider constants
 
 - **Settings and Configuration Management**: Improved settings handling and UI responsiveness
-
   - **Centralized Settings Functions**: Unified settings collection and update logic
   - **Enhanced Loading States**: Improved UI responsiveness with loading indicators and error handling
   - **Optimized Form Processing**: Enhanced form initialization and settings collection processes
@@ -975,13 +946,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Configuration Management**: Resolved configuration handling issues
-
   - **Backward Compatibility**: Maintained compatibility with legacy ProviderConfig type
   - **Type Safety Issues**: Fixed type-related issues in configuration handling
   - **Provider-Specific Logic**: Eliminated redundant provider interfaces in types.ts
 
 - **Response Processing**: Improved response handling and formatting
-
   - **Response Cleaning**: Enhanced response cleaning functions with better error handling
   - **Commit Message Formatting**: Standardized commit message generation across AI models
   - **Logging Improvements**: Better debug logging for each processing stage
@@ -989,20 +958,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Technical
 
 - **Architecture Improvements**: Significant codebase restructuring for maintainability
-
   - **Provider Configuration Abstraction**: Centralized provider handling logic
   - **Dynamic Configuration System**: Provider-agnostic configuration management
   - **Enhanced Type System**: Improved type safety throughout the extension
   - **Modular Component Design**: Better separation of concerns and code organization
 
 - **Testing Infrastructure**: Comprehensive testing framework implementation
-
   - **Isolated Testing Environment**: VS Code API mocking for reliable testing
   - **Quality Assurance Tools**: Scripts and documentation for test validation
   - **Development Workflow**: Enhanced development and testing procedures
 
 - **Performance Optimizations**: Improved extension performance and responsiveness
-
   - **Efficient Configuration Loading**: Optimized configuration retrieval and caching
   - **Responsive UI Updates**: Enhanced webview performance and user experience
   - **Memory Management**: Better resource management and cleanup
@@ -1018,7 +984,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Revolutionary Interactive Onboarding System**: Complete replacement of modal-based onboarding with modern webview experience
-
   - **4-Step Interactive Flow**: Professional guided onboarding with Welcome → Provider Selection → Configuration → First Commit walkthrough
   - **Visual Provider Selection**: Beautiful provider cards with badges (Free, Premium, Local, Integrated) for all 13 AI providers
   - **Real-time API Status**: Interactive configuration setup with live API key validation and connection testing
@@ -1027,7 +992,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Seamless Settings Integration**: Direct transition from onboarding to settings configuration with selected provider pre-configured
 
 - **Enhanced Onboarding Architecture**: Complete webview-based system with comprehensive functionality
-
   - **OnboardingWebview**: Main controller with proper lifecycle management and telemetry integration
   - **OnboardingMessageHandler**: Command handling with comprehensive telemetry tracking for user actions
   - **OnboardingTemplateGenerator**: Rich HTML/CSS/JavaScript template with interactive elements and animations
@@ -1035,7 +999,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Command Integration**: Full command palette support with manual onboarding access via "AI Commit: Open Onboarding"
 
 - **Microsoft Application Insights Integration**: Comprehensive telemetry and analytics system for extension improvement
-
   - **Anonymous Usage Analytics**: Track command usage, success rates, and performance metrics to improve extension reliability
   - **Provider Usage Statistics**: Monitor AI provider popularity and success rates (without exposing API keys or responses)
   - **Onboarding Analytics**: Track completion rates, step navigation, and provider selection preferences
@@ -1049,14 +1012,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Critical Settings Bug Resolution**: Fixed settings webview refresh issue where status items disappeared after saving
-
   - **Settings Webview Refresh**: Added proper webview refresh after saveSettings commands with optimized timing
   - **Message Handler Enhancement**: Implemented confirmation messaging system between settings webview and extension
   - **Status Item Persistence**: Resolved "Prompt Customization" and "Anonymous Analytics" status items disappearing issue
   - **Real-time UI Updates**: Enhanced settings UI responsiveness with immediate visual feedback
 
 - **TypeScript Compilation Issues**: Resolved all compilation errors in extension.ts and onboarding system
-
   - **Import Resolution**: Fixed module import issues for onboarding components
   - **Command Registration**: Corrected command registration and subscription management
   - **Type Safety**: Enhanced type definitions and error handling throughout the onboarding system
@@ -1065,20 +1026,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Enhanced
 
 - **First-Time User Experience**: Transformed from basic modal dialogs to professional interactive experience
-
   - **Engagement Rate**: Modern interface designed to significantly improve onboarding completion rates
   - **Provider Discovery**: Visual presentation helps users discover and understand all 13 AI providers
   - **Reduced Support Burden**: Clear setup instructions and real-time validation reduce user confusion
   - **Professional Branding**: Consistent GitMind branding throughout the onboarding experience
 
 - **Developer Experience**: Comprehensive testing and development workflow improvements
-
   - **Testing Framework**: Added multiple testing methods (automatic, manual, state reset) for thorough validation
   - **Development Mode**: Enhanced extension development workflow with proper testing capabilities
   - **Documentation**: Complete testing guide and implementation documentation for future maintenance
 
 - **User Interface Improvements**: Modern design language throughout the extension
-
   - **Visual Consistency**: Onboarding design matches existing settings webview for cohesive experience
   - **Accessibility**: Proper keyboard navigation, screen reader support, and high-contrast theme compatibility
   - **Performance**: Optimized webview loading and rendering for smooth user experience
@@ -1113,7 +1071,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Show Diagnostics Toggle**: Resolved issue where the "Show Diagnostics" setting toggle in Settings UI was not responding to user interaction
-
   - **Event Listener Registration**: Added missing event listeners for `showDiagnostics` toggle in settings script
   - **Message Handling**: Enhanced message processing to properly handle `showDiagnostics` setting updates
   - **Immediate Setting Updates**: Fixed toggle state updates to reflect changes immediately in the UI
@@ -1121,7 +1078,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **User Feedback**: Added confirmation messages when settings are successfully updated
 
 - **Settings UI Responsiveness**: Improved overall responsiveness of toggle switches in Settings panel
-
   - **Toggle State Synchronization**: Fixed issue where toggle visual state wasn't updating immediately after changes
   - **Event Handler Consistency**: Standardized event handling across all toggle switches for reliable operation
   - **Settings Persistence**: Enhanced settings persistence mechanism to ensure all toggle changes are properly saved
@@ -1144,9 +1100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Enhanced
 
 - **Improved API Error Handling**: Enhanced error handling for Cohere and Grok providers with comprehensive status code coverage
-
   - **Cohere API Error Handling**: Updated error handling to match official Cohere API documentation
-
     - **400 Bad Request**: Clear messaging for invalid request body and missing required fields
     - **401 Unauthorized**: Specific invalid API key detection and troubleshooting
     - **402 Payment Required**: Billing limit detection with direct dashboard links for payment method updates
@@ -1157,7 +1111,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - **Enhanced Error Propagation**: Preserves detailed API error messages throughout the call stack
 
   - **Cohere API Key Validation**: Updated validation function to use structured warning system
-
     - **Insufficient Balance Warning**: Returns success with warning for billing limit (402) since API key is valid
     - **Rate Limit Warning**: Returns success with warning for rate limits since API key is valid
     - **Structured Response**: Now returns detailed object with success, error, warning, and troubleshooting properties
@@ -1186,7 +1139,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Perplexity AI Provider Integration**: Full support for Perplexity's AI models with comprehensive feature set
-
   - **8 Perplexity Models**: Complete model lineup including Sonar Series (sonar-pro, sonar-reasoning, sonar), Llama 3.1 Sonar Online Series (llama-3.1-sonar-small-128k-online, llama-3.1-sonar-large-128k-online, llama-3.1-sonar-huge-128k-online), and Llama 3.1 Sonar Chat Series (llama-3.1-sonar-small-128k-chat, llama-3.1-sonar-large-128k-chat)
   - **Perplexity API Integration**: Native integration with Perplexity API endpoint (https://api.perplexity.ai/chat/completions) using Bearer token authentication
   - **Real-time Web Search**: Access to Perplexity's web-aware models with real-time data processing capabilities
@@ -1218,7 +1170,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Save Last Custom Prompt Feature**: Comprehensive prompt management system for enhanced workflow efficiency
-
   - **Automatic Prompt Saving**: When enabled, automatically saves custom prompts entered during commit generation for future reuse
   - **Smart Default Handling**: Saved prompts appear as default values in future commit generations with intelligent placeholder text
   - **Clipboard Integration**: Built-in option to copy saved prompts to clipboard before editing for external modification
@@ -1230,7 +1181,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Enhanced User Experience**: Intuitive workflow with clear notifications and user-friendly confirmation dialogs
 
 - **Complete Feature Integration**: Seamless integration across all extension components
-
   - **Settings Schema**: Complete configuration options in package.json with proper type definitions
   - **UI Components**: Dynamic toggle visibility with descriptive tooltips explaining functionality
   - **Core Logic**: Robust PromptManager implementation with save/load/clear/copy operations
@@ -1258,7 +1208,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Grok (X.ai) Provider Integration**: Full support for X.ai's Grok AI models with comprehensive feature set
-
   - **13 Grok Models**: Complete model lineup including Grok 3 Series (grok-3, grok-3-fast, grok-3-mini), Grok 2 Series (grok-2-vision-1212, grok-2-1212, grok-2), and Beta Models (grok-vision-beta, grok-beta)
   - **X.ai API Integration**: Native integration with X.ai API endpoint (https://api.x.ai/v1) using Bearer token authentication
   - **Real-time Capabilities**: Access to Grok's real-time data processing and fast inference capabilities
@@ -1266,7 +1215,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Complete UI Integration**: Dedicated Grok settings panel with organized model groups and intuitive configuration interface
 
 - **Enhanced Provider Ecosystem**: Expanded from 11 to 12 AI providers
-
   - Updated extension description and documentation to reflect 12 provider support
   - Added Grok to onboarding flow with X.ai console integration
   - Enhanced provider comparison table with Grok specifications and capabilities
@@ -1288,14 +1236,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **DeepSeek API Integration Completeness**: Resolved missing integration pieces for DeepSeek provider
-
   - Added missing DeepSeek case to `showDiagnosticsInfo` function for proper diagnostics display
   - Added DeepSeek documentation URL to `validateAndUpdateConfig` function provider documentation mapping
   - Ensured consistent DeepSeek provider support across all API service functions
   - Fixed missing provider documentation links for seamless API key setup workflow
 
 - **API Key Validation Improvements**: Enhanced "Check API Setup" functionality for DeepSeek and Grok providers
-
   - **DeepSeek Validation**: Fixed false "Invalid API key" errors by implementing robust error handling
     - Now correctly identifies valid API keys even when account has insufficient balance (402), rate limits (429), or request format issues (400/422)
     - Added structured error response parsing to distinguish authentication errors from operational issues
@@ -1314,7 +1260,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Comprehensive debug logging for troubleshooting validation issues
 
 - **Enhanced Grok API Error Handling**: Improved error messaging and user experience for Grok API interactions
-
   - **Structured Error Response Parsing**: Now properly handles X.ai's JSON error format with `code` and `error` fields
   - **Credit Management**: Specific error messages for insufficient credits with direct link to purchase credits
   - **Contextual Error Messages**: Clear, actionable error messages for different failure scenarios:
@@ -1344,21 +1289,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Enhanced
 
 - **Comprehensive Model Directory**: Expanded documentation with 50+ supported models across all 11 AI providers
-
   - Added detailed model specifications including context windows, capabilities, and use cases
   - Comprehensive model comparison table with performance characteristics and pricing tiers
   - Provider-specific model listings with technical details and recommended configurations
   - Enhanced model selection guidance with performance benchmarks and optimization tips
 
 - **Enhanced Documentation Structure**: Complete documentation overhaul for better developer experience
-
   - Added API setup links and comprehensive configuration guides for each provider
   - Expanded provider setup instructions with step-by-step authentication flows
   - Enhanced feature descriptions with specific model references and capabilities
   - Improved technical architecture section with model-specific implementation details
 
 - **Advanced Configuration Guidance**: Detailed setup and optimization recommendations
-
   - Added quick selection guide with updated model recommendations for different use cases
   - Enhanced repository analysis section highlighting model-specific capabilities
   - Improved prompt engineering documentation covering all 50+ supported models
@@ -1410,7 +1352,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **DeepSeek AI Provider Integration**: Advanced reasoning capabilities with competitive free tier
-
   - Complete DeepSeek API implementation with support for both chat and reasoning models
   - Added deepseek-chat model for general purpose code generation and conversation
   - Added deepseek-reasoner model for advanced reasoning and complex problem solving
@@ -1448,7 +1389,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **GitHub Copilot Integration**: Seamless VS Code authentication and model access
-
   - Implemented GitHub Copilot integration via VS Code Language Model API
   - Support for 14 models across OpenAI, Anthropic, and Google providers (GPT-4o, GPT-4o-mini, GPT-4-turbo, GPT-4, GPT-3.5-turbo)
   - Zero-configuration setup using VS Code authentication, eliminating the need for API keys
@@ -1468,13 +1408,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Enhanced
 
 - **Modern Settings Interface**: Replaced checkboxes with toggle switches
-
   - Updated GeneralSettings component to use new toggle-setting component structure
   - Added new CSS styles for toggle switches with hover, focus, and disabled states
   - Improved visual appearance and usability of the settings panel
 
 - **Compact Settings Layout**: Improved form design and responsiveness
-
   - Replaced standard form layout with compact design using flexbox
   - Enhanced tooltip functionality using custom CSS and JavaScript
   - Added hover delay to tooltips for better user experience
@@ -1482,7 +1420,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated JavaScript to initialize tooltips on DOMContentLoaded
 
 - **Enhanced UI Experience**: Improved branding and visual consistency
-
   - Enhanced info banner styling with animations and gradient backgrounds
   - Improved compatibility with VS Code light/dark themes
   - Updated provider name mapping to include "GitHub Copilot" for display purposes
@@ -1533,7 +1470,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Enhanced
 
 - **Build Configuration**: Improved package management and dependency updates
-
   - Replace Yarn with npm for package management consistency
   - Add package-lock=true to ensure package-lock.json is maintained
   - Disable npm fund and audit warnings for cleaner output
@@ -1541,7 +1477,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Add node engine requirement >=16.0.0 to package.json
 
 - **Dependency Updates**: Comprehensive upgrade to latest versions
-
   - Upgrade @types/node to ^22.15.24
   - Upgrade @types/sanitize-html to ^2.16.0
   - Upgrade @types/vscode to ^1.100.0
@@ -1559,14 +1494,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Upgrade sanitize-html to ^2.17.0
 
 - **Development Tools**: Enhanced development workflow
-
   - Add yarn-upgrade-all for dependency management
   - Remove volta configuration from package.json
   - Add version script to echo updated version number
   - Improves build consistency and dependency management across environments
 
 - **Documentation**: Improved changelog formatting
-
   - Added consistent blank lines between list items in multiple sections
   - Improved readability of added features and enhancements
   - Ensured uniform spacing for better visual organization
@@ -1582,7 +1515,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Request Cancellation Support**: Added ability to cancel ongoing API requests
-
   - New cancel button appears in SCM panel during generation with dedicated close icon
   - Cancel option in status bar during generation process with visual indicators
   - Proper cleanup of resources when requests are cancelled
@@ -1651,7 +1583,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Latest AI Models**: Updated Gemini and OpenAI model configurations with latest versions and descriptions
 
 - **Enhanced Cohere Provider Support**: Comprehensive model selection with 6 new models
-
   - Added models: command-a-03-2025, command-r-08-2024, command-r-plus-08-2024, aya-expanse-8b, aya-expanse-32b, command-r7b-arabic
   - Organized models into intuitive categories (Latest, Specialized, Legacy)
   - Implemented model-specific generation configurations for optimal performance

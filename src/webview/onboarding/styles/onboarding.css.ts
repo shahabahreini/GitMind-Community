@@ -1,6 +1,6 @@
 // src/webview/onboarding/styles/onboarding.css.ts
 export function getOnboardingStyles(): string {
-    return `
+  return `
     <style>
     :root {
       --primary-color: #007acc;
@@ -350,6 +350,39 @@ export function getOnboardingStyles(): string {
 
     .additional-actions {
       margin-top: 24px;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Checkbox Styles */
+    .dont-show-again-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      justify-content: center;
+      padding: 12px;
+    }
+
+    .checkbox-input {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: var(--primary-color);
+      flex-shrink: 0;
+    }
+
+    .checkbox-label {
+      cursor: pointer;
+      color: var(--vscode-descriptionForeground);
+      font-size: 0.95rem;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .checkbox-label:hover {
+      color: var(--vscode-foreground);
     }
 
     /* Button Styles */
