@@ -1,7 +1,6 @@
 // src/services/api/cohere.ts
 import { debugLog } from "../debug/logger";
 import { generateCommitPrompt, getPromptConfig } from './prompts';
-import { RequestManager } from "../../utils/requestManager";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
 
@@ -113,8 +112,7 @@ export class CohereProvider extends BaseAIProvider {
     }
 
     protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
-        const requestManager = RequestManager.getInstance();
-        const controller = requestManager.getController();
+        const controller = this.getAbortController();
 
         if (!this.apiKey || this.apiKey.trim() === '') {
             debugLog("Error: Cohere API key is missing or empty");
@@ -344,37 +342,6 @@ export class CohereProvider extends BaseAIProvider {
         return validateCohereAPIKey(this.apiKey);
     }
 
-    private enforceCommitMessageFormat(message: string): string {
-        // Split the message into lines
-        const lines = message.split('\n');
-
-        if (lines.length === 0) {
-            return message;
-        }
-
-        // Get the first line (subject line)
-        let subjectLine = lines[0].trim();
-
-        // Truncate the subject line if it exceeds 72 characters
-        if (subjectLine.length > 72) {
-            subjectLine = subjectLine.substring(0, 72);
-            // Ensure we don't cut in the middle of a word
-            if (subjectLine.lastIndexOf(' ') > 0) {
-                subjectLine = subjectLine.substring(0, subjectLine.lastIndexOf(' '));
-            }
-        }
-
-        // Reconstruct the message with the truncated subject line
-        return [subjectLine, ...lines.slice(1)].join('\n');
-    }
-}
-
-/**
- * Backward compatibility functions
- */
-export async function callCohereAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
-    const provider = new CohereProvider(apiKey, model);
-    return provider.generateCommitMessage(diff, customContext);
 }
 
 export async function validateCohereAPIKey(

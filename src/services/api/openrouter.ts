@@ -1,5 +1,4 @@
 import { debugLog } from "../debug/logger";
-import { RequestManager } from "../../utils/requestManager";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
 
@@ -9,8 +8,7 @@ export class OpenRouterProvider extends BaseAIProvider {
     }
 
     protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
-        const requestManager = RequestManager.getInstance();
-        const controller = requestManager.getController();
+        const controller = this.getAbortController();
 
         try {
             debugLog(`Calling OpenRouter API with model: ${this.model}`);
@@ -168,14 +166,6 @@ export class OpenRouterProvider extends BaseAIProvider {
 
         return formattedMessage;
     }
-}
-
-/**
- * Backward compatibility functions
- */
-export async function callOpenRouterAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
-    const provider = new OpenRouterProvider(apiKey, model);
-    return provider.generateCommitMessage(diff, customContext);
 }
 
 export async function fetchOpenRouterModels(apiKey: string): Promise<string[]> {

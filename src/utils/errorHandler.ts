@@ -58,7 +58,7 @@ export class APIErrorHandler {
     private static readonly PROVIDER_SUGGESTIONS: Record<string, string> = {
         'Together AI': 'Try meta-llama/Llama-3.3-70B-Instruct-Turbo (128k)',
         'Mistral': 'Try mistral-large-latest for larger context',
-        'Anthropic': 'Try claude-3-5-sonnet-20241022 for larger context',
+        'Anthropic': 'Try claude-sonnet-4 for larger context',
         'OpenAI': 'Try gpt-4o for larger context',
         'Gemini': 'Try gemini-2.5-pro for larger context',
         default: 'Check available models with larger limits'

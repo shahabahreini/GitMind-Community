@@ -15,7 +15,7 @@ export const PROVIDER_DEFAULTS: ProviderDefaults = {
   openai: { model: "gpt-3.5-turbo" },
   together: { model: "meta-llama/Llama-3.3-70B-Instruct-Turbo" },
   openrouter: { model: "google/gemma-3-27b-it:free" },
-  anthropic: { model: "claude-3-5-sonnet-20241022" },
+  anthropic: { model: "claude-sonnet-4" },
   copilot: { model: "gpt-4o" },
   deepseek: { model: "deepseek-chat" },
   grok: { model: "grok-3" },

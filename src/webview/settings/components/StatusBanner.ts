@@ -55,7 +55,7 @@ export class StatusBanner {
     },
     anthropic: {
       displayName: "Anthropic",
-      defaultModel: "claude-3-5-sonnet-20241022",
+      defaultModel: "claude-sonnet-4",
       getApiConfigured: (s) => !!s.anthropic?.apiKey
     },
     copilot: {

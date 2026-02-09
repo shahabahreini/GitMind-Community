@@ -57,8 +57,7 @@ export class PerplexityProvider extends BaseAIProvider {
     }
 
     protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
-        const requestManager = RequestManager.getInstance();
-        const controller = requestManager.getController();
+        const controller = this.getAbortController();
 
         debugLog(`Making API call to Perplexity with model: ${this.model}`);
 
@@ -392,10 +391,3 @@ export async function validatePerplexityAPIKey(apiKey: string): Promise<{ succes
     }
 }
 
-/**
- * Backward compatibility functions
- */
-export async function callPerplexityAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
-    const provider = new PerplexityProvider(apiKey, model);
-    return provider.generateCommitMessage(diff, customContext);
-}

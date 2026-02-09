@@ -1,6 +1,5 @@
 import { debugLog } from "../debug/logger";
 import { DeepSeekModel } from "../../config/types";
-import { RequestManager } from "../../utils/requestManager";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
 
@@ -27,8 +26,7 @@ export class DeepSeekProvider extends BaseAIProvider {
     }
 
     protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
-        const requestManager = RequestManager.getInstance();
-        const controller = requestManager.getController();
+        const controller = this.getAbortController();
 
         if (!this.apiKey || this.apiKey.trim() === '') {
             debugLog("Error: DeepSeek API key is missing or empty");
@@ -315,7 +313,7 @@ export class DeepSeekProvider extends BaseAIProvider {
         }
     }
 
-    private enforceCommitMessageFormat(message: string): string {
+    protected override enforceCommitMessageFormat(message: string): string {
         // Remove any markdown formatting
         let cleanMessage = message.replace(/```[^`]*```/g, '');
         cleanMessage = cleanMessage.replace(/`([^`]+)`/g, '$1');
@@ -370,14 +368,6 @@ export class DeepSeekProvider extends BaseAIProvider {
 
         return commitMessage;
     }
-}
-
-/**
- * Backward compatibility functions
- */
-export async function callDeepSeekAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
-    const provider = new DeepSeekProvider(apiKey, model);
-    return provider.generateCommitMessage(diff, customContext);
 }
 
 export async function fetchDeepSeekModels(apiKey: string): Promise<string[]> {

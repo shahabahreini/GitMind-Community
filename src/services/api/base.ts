@@ -1,6 +1,7 @@
 import { AIProvider } from "./provider";
 import { generateCommitPrompt, getPromptConfig, generateCommitHistoryAnalysisPrompt } from "./prompts";
 import { debugLog } from "../debug/logger";
+import { RequestManager } from "../../utils/requestManager";
 
 export interface GenerationOptions {
     temperature?: number;
@@ -13,6 +14,10 @@ export abstract class BaseAIProvider implements AIProvider {
     private _defaultGenerationOptions?: GenerationOptions;
 
     protected constructor(protected apiKey: string, protected model: string) { }
+
+    protected getAbortController(): AbortController {
+        return RequestManager.getInstance().getController();
+    }
 
     setDefaultGenerationOptions(options?: GenerationOptions): void {
         this._defaultGenerationOptions = options;
@@ -45,6 +50,25 @@ export abstract class BaseAIProvider implements AIProvider {
         const prompt = generateCommitHistoryAnalysisPrompt(commitHistory, maxCommits, includeAuthorInfo);
         // Analysis typically uses slightly higher temperature
         return this.generateResponse(prompt, this.getMergedGenerationOptions({ temperature: 0.2 }));
+    }
+
+    protected enforceCommitMessageFormat(message: string): string {
+        const lines = message.split('\n');
+
+        if (lines.length === 0) {
+            return message;
+        }
+
+        let subjectLine = lines[0].trim();
+
+        if (subjectLine.length > 72) {
+            subjectLine = subjectLine.substring(0, 72);
+            if (subjectLine.lastIndexOf(' ') > 0) {
+                subjectLine = subjectLine.substring(0, subjectLine.lastIndexOf(' '));
+            }
+        }
+
+        return [subjectLine, ...lines.slice(1)].join('\n');
     }
 
     protected abstract generateResponse(prompt: string, options?: GenerationOptions): Promise<string>;

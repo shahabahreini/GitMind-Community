@@ -1,5 +1,4 @@
 import { debugLog } from "../debug/logger";
-import { RequestManager } from "../../utils/requestManager";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
 
@@ -20,8 +19,7 @@ export class ZaiProvider extends BaseAIProvider {
     }
 
     protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
-        const requestManager = RequestManager.getInstance();
-        const controller = requestManager.getController();
+        const controller = this.getAbortController();
 
         try {
             debugLog(`Calling Z.ai API with model: ${this.model}`);

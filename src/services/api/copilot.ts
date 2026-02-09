@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { debugLog } from "../debug/logger";
 import { generateCommitPrompt, getPromptConfig } from './prompts';
 import { CopilotModel } from "../../config/types";
-import { RequestManager } from "../../utils/requestManager";
 import { BaseAIProvider, GenerationOptions } from './base';
 
 function getPreferredCopilotModelIds(model: string): string[] {
@@ -138,8 +137,7 @@ export class CopilotProvider extends BaseAIProvider {
     }
 
     protected async generateResponse(prompt: string, _options?: GenerationOptions): Promise<string> {
-        const requestManager = RequestManager.getInstance();
-        const controller = requestManager.getController();
+        const controller = this.getAbortController();
 
         // Validate model - use Object.keys to get all valid models from MODEL_CONFIGS
         const validModels = Object.keys(MODEL_CONFIGS) as CopilotModel[];
@@ -260,29 +258,6 @@ export class CopilotProvider extends BaseAIProvider {
         return validateCopilotAccess();
     }
 
-    private enforceCommitMessageFormat(message: string): string {
-        // Split the message into lines
-        const lines = message.split('\n');
-
-        if (lines.length === 0) {
-            return message;
-        }
-
-        // Get the first line (subject line)
-        let subjectLine = lines[0].trim();
-
-        // Truncate the subject line if it exceeds 72 characters
-        if (subjectLine.length > 72) {
-            subjectLine = subjectLine.substring(0, 72);
-            // Ensure we don't cut in the middle of a word
-            if (subjectLine.lastIndexOf(' ') > 0) {
-                subjectLine = subjectLine.substring(0, subjectLine.lastIndexOf(' '));
-            }
-        }
-
-        // Reconstruct the message with the truncated subject line
-        return [subjectLine, ...lines.slice(1)].join('\n');
-    }
 }
 
 /**
@@ -452,10 +427,3 @@ export async function fetchCopilotModels(): Promise<string[]> {
     }
 }
 
-/**
- * Backward compatibility functions
- */
-export async function callCopilotAPI(_apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
-    const provider = new CopilotProvider("", model);
-    return provider.generateCommitMessage(diff, customContext);
-}

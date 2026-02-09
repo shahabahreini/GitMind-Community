@@ -1,6 +1,5 @@
 import { debugLog } from "../debug/logger";
 import { MistralResponse, MistralRateLimit } from "../../config/types";
-import { RequestManager } from "../../utils/requestManager";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
 
@@ -24,8 +23,7 @@ export class MistralProvider extends BaseAIProvider {
     }
 
     protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
-        const requestManager = RequestManager.getInstance();
-        const controller = requestManager.getController();
+        const controller = this.getAbortController();
 
         debugLog("Calling Mistral API", { model: this.model });
 
@@ -164,30 +162,6 @@ export class MistralProvider extends BaseAIProvider {
         }
     }
 
-    private enforceCommitMessageFormat(message: string): string {
-        // Split the message into lines
-        const lines = message.split('\n');
-
-        if (lines.length === 0) {
-            return message;
-        }
-
-        // Get the first line (subject line)
-        let subjectLine = lines[0].trim();
-
-        // Truncate the subject line if it exceeds 72 characters
-        if (subjectLine.length > 72) {
-            subjectLine = subjectLine.substring(0, 72);
-            // Ensure we don't cut in the middle of a word
-            if (subjectLine.lastIndexOf(' ') > 0) {
-                subjectLine = subjectLine.substring(0, subjectLine.lastIndexOf(' '));
-            }
-        }
-
-        // Reconstruct the message with the truncated subject line
-        return [subjectLine, ...lines.slice(1)].join('\n');
-    }
-
     /**
      * Converts Mistral API errors to user-friendly messages
      */
@@ -224,14 +198,6 @@ export class MistralProvider extends BaseAIProvider {
                 return `Mistral API error (${statusCode}): ${errorData?.message || 'Unknown error'}`;
         }
     }
-}
-
-/**
- * Backward compatibility functions
- */
-export async function callMistralAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
-    const provider = new MistralProvider(apiKey, model);
-    return provider.generateCommitMessage(diff, customContext);
 }
 
 export async function fetchMistralModels(apiKey: string): Promise<string[]> {

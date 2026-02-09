@@ -15,7 +15,7 @@ export const PROVIDER_DEFAULTS: ProviderDefaults = {
   openai: { model: "gpt-4o-mini" },
   together: { model: "meta-llama/Llama-3.3-70B-Instruct-Turbo" },
   openrouter: { model: "google/gemma-3-27b-it:free" },
-  anthropic: { model: "claude-3-5-sonnet-20241022" },
+  anthropic: { model: "claude-sonnet-4" },
   minimax: { model: "MiniMax-M2" },
   copilot: { model: "auto" },
   deepseek: { model: "deepseek-chat" },

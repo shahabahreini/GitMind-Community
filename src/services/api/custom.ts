@@ -18,8 +18,7 @@ export class CustomProvider extends BaseAIProvider {
     }
 
     protected async generateResponse(prompt: string, _options?: GenerationOptions): Promise<string> {
-        const requestManager = RequestManager.getInstance();
-        const controller = requestManager.getController();
+        const controller = this.getAbortController();
 
         try {
             debugLog(`Calling Custom API at ${this.baseUrl}${this.endpoint}`);
@@ -429,21 +428,3 @@ export async function validateCustomAPI(
     }
 }
 
-/**
- * Backward compatibility functions
- */
-export async function callCustomAPI(
-    baseUrl: string,
-    endpoint: string,
-    authType: string,
-    authToken: string,
-    headerKey: string,
-    requestFormat: string,
-    responseFormat: string,
-    model: string,
-    diff: string,
-    customContext: string = ""
-): Promise<string> {
-    const provider = new CustomProvider(baseUrl, endpoint, authType, authToken, headerKey, requestFormat, responseFormat, model);
-    return provider.generateCommitMessage(diff, customContext);
-}

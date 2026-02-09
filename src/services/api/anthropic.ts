@@ -1,6 +1,5 @@
 import { debugLog } from "../debug/logger";
 import { AnthropicModel } from "../../config/types";
-import { RequestManager } from "../../utils/requestManager";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
 
@@ -44,8 +43,7 @@ export class AnthropicProvider extends BaseAIProvider {
     }
 
     protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
-        const requestManager = RequestManager.getInstance();
-        const controller = requestManager.getController();
+        const controller = this.getAbortController();
 
         if (!this.apiKey || this.apiKey.trim() === '') {
             debugLog("Error: Anthropic API key is missing or empty");
@@ -72,7 +70,7 @@ export class AnthropicProvider extends BaseAIProvider {
             debugLog("Prompt:", prompt);
 
             // Get model-specific configuration
-            const config = MODEL_CONFIGS[this.model as AnthropicModel] || MODEL_CONFIGS["claude-3-5-sonnet-20241022"];
+            const config = MODEL_CONFIGS[this.model as AnthropicModel] || MODEL_CONFIGS["claude-sonnet-4"];
             const temperatureOverride = options?.temperature;
             // For commit messages we want strict max tokens, for analysis we might want more (handled by option or default)
             const maxTokens = options?.maxTokens ?? config.max_tokens;
@@ -348,29 +346,6 @@ export class AnthropicProvider extends BaseAIProvider {
         }
     }
 
-    private enforceCommitMessageFormat(message: string): string {
-        // Split the message into lines
-        const lines = message.split('\n');
-
-        if (lines.length === 0) {
-            return message;
-        }
-
-        // Get the first line (subject line)
-        let subjectLine = lines[0].trim();
-
-        // Truncate the subject line if it exceeds 72 characters
-        if (subjectLine.length > 72) {
-            subjectLine = subjectLine.substring(0, 72);
-            // Ensure we don't cut in the middle of a word
-            if (subjectLine.lastIndexOf(' ') > 0) {
-                subjectLine = subjectLine.substring(0, subjectLine.lastIndexOf(' '));
-            }
-        }
-
-        // Reconstruct the message with the truncated subject line
-        return [subjectLine, ...lines.slice(1)].join('\n');
-    }
 }
 
 export interface AnthropicModelInfo {
@@ -385,19 +360,6 @@ export interface AnthropicModelResponse {
     first_id?: string;
     has_more: boolean;
     last_id?: string;
-}
-
-/**
- * Backward compatibility functions
- */
-export async function callAnthropicAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
-    const provider = new AnthropicProvider(apiKey, model);
-    return provider.generateCommitMessage(diff, customContext);
-}
-
-export async function validateAnthropicAPIKey(apiKey: string): Promise<boolean> {
-    const provider = new AnthropicProvider(apiKey, "");
-    return provider.validateApiKey() as Promise<boolean>;
 }
 
 export async function fetchAnthropicModels(apiKey: string): Promise<string[]> {

@@ -21,8 +21,21 @@ export class SecureKeyManager {
     // Add cache mechanism to prevent excessive API key retrieval calls
     private apiKeyCache: Map<string, { key: string | undefined; timestamp: number }> = new Map();
     private readonly API_KEY_CACHE_DURATION = 2000; // 2 seconds
+    private readonly API_KEY_CACHE_MAX_SIZE = 50; // Maximum entries before forced cleanup
 
     private constructor() { }
+
+    /**
+     * Evicts expired entries from the API key cache to prevent unbounded growth
+     */
+    private evictExpiredCacheEntries(): void {
+        const now = Date.now();
+        for (const [key, entry] of this.apiKeyCache) {
+            if (now - entry.timestamp >= this.API_KEY_CACHE_DURATION) {
+                this.apiKeyCache.delete(key);
+            }
+        }
+    }
 
     /**
      * Gets the singleton instance of SecureKeyManager
@@ -295,6 +308,11 @@ export class SecureKeyManager {
      * - When encryption is enabled, returns a placeholder for UI display
      */
     public async getApiKey(provider: string, forDisplay: boolean = true): Promise<string | undefined> {
+        // Evict expired entries periodically to prevent unbounded cache growth
+        if (this.apiKeyCache.size > this.API_KEY_CACHE_MAX_SIZE) {
+            this.evictExpiredCacheEntries();
+        }
+
         // Check cache first to prevent excessive calls
         const cacheKey = `${provider}_${forDisplay}`;
         const cached = this.apiKeyCache.get(cacheKey);

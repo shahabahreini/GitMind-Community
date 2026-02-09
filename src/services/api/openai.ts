@@ -1,5 +1,4 @@
 import { debugLog } from "../debug/logger";
-import { RequestManager } from "../../utils/requestManager";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
 
@@ -122,8 +121,7 @@ export class OpenAIProvider extends BaseAIProvider {
     }
 
     protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
-        const requestManager = RequestManager.getInstance();
-        const controller = requestManager.getController();
+        const controller = this.getAbortController();
 
         try {
             debugLog(`Calling OpenAI API with model: ${this.model}`);
@@ -307,8 +305,7 @@ export class OpenAIProvider extends BaseAIProvider {
     }
 
     async validateApiKey(): Promise<boolean> {
-        const requestManager = RequestManager.getInstance();
-        const controller = requestManager.getController();
+        const controller = this.getAbortController();
 
         try {
             const response = await loggedFetch("https://api.openai.com/v1/models", {
@@ -394,14 +391,6 @@ export class OpenAIProvider extends BaseAIProvider {
 
         return formattedMessage;
     }
-}
-
-/**
- * Backward compatibility functions
- */
-export async function callOpenAIAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
-    const provider = new OpenAIProvider(apiKey, model);
-    return provider.generateCommitMessage(diff, customContext);
 }
 
 export async function fetchOpenAIModels(apiKey: string): Promise<string[]> {

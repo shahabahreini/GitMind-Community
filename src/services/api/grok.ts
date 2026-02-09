@@ -71,8 +71,7 @@ export class GrokProvider extends BaseAIProvider {
     }
 
     protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
-        const requestManager = RequestManager.getInstance();
-        const controller = requestManager.getController();
+        const controller = this.getAbortController();
 
         debugLog(`Making API call to Grok with model: ${this.model}`);
 
@@ -603,14 +602,6 @@ export async function validateGrokAPIKey(
             troubleshooting: "Unable to connect to Grok API. Please check your internet connection and try again"
         };
     }
-}
-
-/**
- * Backward compatibility functions
- */
-export async function callGrokAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
-    const provider = new GrokProvider(apiKey, model);
-    return provider.generateCommitMessage(diff, customContext);
 }
 
 export async function fetchGrokModels(apiKey: string): Promise<string[]> {

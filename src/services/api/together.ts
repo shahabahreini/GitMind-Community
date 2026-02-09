@@ -1,5 +1,4 @@
 import { debugLog } from "../debug/logger";
-import { RequestManager } from "../../utils/requestManager";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
 
@@ -33,8 +32,7 @@ export class TogetherAIProvider extends BaseAIProvider {
     }
 
     protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
-        const requestManager = RequestManager.getInstance();
-        const controller = requestManager.getController();
+        const controller = this.getAbortController();
 
         try {
             debugLog(`Calling Together AI API with model: ${this.model}`);
@@ -367,14 +365,6 @@ export class TogetherAIProvider extends BaseAIProvider {
         // Trim and clean up whitespace
         return cleanedText.trim();
     }
-}
-
-/**
- * Backward compatibility functions
- */
-export async function callTogetherAPI(apiKey: string, model: string, diff: string, customContext: string = ""): Promise<string> {
-    const provider = new TogetherAIProvider(apiKey, model);
-    return provider.generateCommitMessage(diff, customContext);
 }
 
 export async function fetchTogetherModels(apiKey: string): Promise<string[]> {

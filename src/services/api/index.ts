@@ -231,7 +231,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         settingPath: "anthropic.apiKey",
         docsUrl: "https://console.anthropic.com/",
         requiresApiKey: true,
-        defaultModel: "claude-3-5-sonnet-20241022",
+        defaultModel: "claude-sonnet-4",
         getProviderClass: async () => loadProviderModule('anthropic'),
     },
     minimax: {

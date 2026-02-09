@@ -1,6 +1,5 @@
 import { debugLog } from "../debug/logger";
 import { generateCommitPrompt, getPromptConfig } from "./prompts";
-import { RequestManager } from "../../utils/requestManager";
 import type { MiniMaxModel } from "../../config/types";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
@@ -54,8 +53,7 @@ export class MiniMaxProvider extends BaseAIProvider {
     }
 
     protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
-        const requestManager = RequestManager.getInstance();
-        const controller = requestManager.getController();
+        const controller = this.getAbortController();
 
         if (!this.apiKey || this.apiKey.trim() === "") {
             debugLog("Error: MiniMax API key is missing or empty");
@@ -313,19 +311,6 @@ export async function validateMiniMaxAPIKey(
                 : "An unexpected error occurred during the MiniMax API key check. Please try again.",
         };
     }
-}
-
-/**
- * Backward compatibility functions
- */
-export async function callMiniMaxAPI(
-    apiKey: string,
-    model: string,
-    diff: string,
-    customContext: string = ""
-): Promise<string> {
-    const provider = new MiniMaxProvider(apiKey, model);
-    return provider.generateCommitMessage(diff, customContext);
 }
 
 export async function fetchMiniMaxModels(_apiKey: string): Promise<string[]> {

@@ -30,6 +30,44 @@ interface ChangelogConfig {
     groupByVersion?: boolean;
 }
 
+// Pre-compiled regex patterns for version tag detection (avoid re-creation per tag)
+const VERSION_TAG_PATTERNS: RegExp[] = [
+    /^v?\d+\.\d+\.\d+/,                  // Semantic: v1.2.3, 1.2.3
+    /^v?\d+\.\d+$/,                       // Two-part: v1.2, 1.2
+    /^[vr]\d+$/i,                         // Single: v1, r2
+    /^(release|rel)[-/]v?\d+\.\d+(\.\d+)?/i,
+    /^\d{4}[.-]?\d{2}[.-]?\d{2}/,        // Date-based: 2024.01.15
+    /^\d{2,4}\.\d{1,2}$/,                // Year.Month: 2024.01
+    /^(build|b)[-.]?\d+$/i,
+    /^(sprint|iteration|s|i)[-]?\d+$/i,
+    /^(prod|production|staging|stage|dev|development)[-/]v?\d+\.\d+(\.\d+)?/i,
+    /^(db|database|migration|schema)[-/]v?\d+/i,
+    /^api[-/]?v?\d+(\.\d+)?$/i,
+    /^(v?\d+\.\d+\.\d+|latest)[-](alpine|slim|debian|ubuntu|node|python)/i,
+    /^(hotfix|hf|patch|fix)[-/]v?\d+\.\d+(\.\d+)?/i,
+    /^(feature|feat)[-/]v?\d+\.\d+/i,
+    /^v?\d+\.\d+\.\d+-(stable|canary|nightly|edge|beta|alpha|rc)/i,
+    /^(model|m)[-]?v?\d+(\.\d+)?$/i,
+    /^(pkg|package)[-/]v?\d+\.\d+(\.\d+)?/i,
+];
+
+// Pre-compiled regex patterns for version detection in commit messages
+const VERSION_COMMIT_PATTERNS: RegExp[] = [
+    /(?:bump|update|release|version|chore|build|deploy|publish|tag).*?(?:to\s+)?v?(\d+\.\d+\.\d+(?:[.-]\w+)?)/i,
+    /(?:package\.json|manifest|pom\.xml|setup\.py|cargo\.toml|composer\.json).*?v?(\d+\.\d+\.\d+)/i,
+    /(?:deploy|release|version).*?(\d{4}[.-]\d{2}[.-]\d{2})/i,
+    /(?:bump|update|release|version).*?(?:to\s+)?v?(\d+\.\d+)(?:\s|$|[^\d])/i,
+    /(?:build|b)[-\s](\d+)/i,
+    /(?:sprint|iteration)[-\s](\d+)/i,
+    /(?:prod|production|staging|stage|dev|development)[-\s]v?(\d+\.\d+(?:\.\d+)?)/i,
+    /(?:migration|schema|db|database)[-\s]v?(\d+(?:\.\d+)?)/i,
+    /api[-\s/]?v?(\d+(?:\.\d+)?)/i,
+    /(?:hotfix|hf|patch|fix)[-\s]v?(\d+\.\d+(?:\.\d+)?)/i,
+    /(?:model|m)[-\s]v?(\d+(?:\.\d+)?)/i,
+    /v?(\d+\.\d+\.\d+)[-](stable|canary|nightly|edge|beta|alpha|rc)/i,
+    /(?:^|\s)v?(\d+\.\d+\.\d+)(?:\s|$)/i,
+];
+
 export class ChangelogService {
     private static instance: ChangelogService;
     private workspaceRoot: string | undefined;
@@ -139,58 +177,8 @@ export class ChangelogService {
             for (const line of lines) {
                 const [tag, date] = line.split('|');
 
-                // Comprehensive version pattern matching for various development domains
-                const isVersion =
-                    // Semantic Versioning: v1.2.3, 1.2.3, v1.2.3-alpha.1, 1.0.0-rc.1+build.123
-                    /^v?\d+\.\d+\.\d+/.test(tag) ||
-
-                    // Two-part versions: v1.2, 1.2, v2.0
-                    /^v?\d+\.\d+$/.test(tag) ||
-
-                    // Single version numbers: v1, v2, r1, r2 (common in data science/ML models)
-                    /^[vr]\d+$/i.test(tag) ||
-
-                    // Release tags: release-1.2.3, release/1.2.3, rel-1.2.3
-                    /^(release|rel)[-/]v?\d+\.\d+(\.\d+)?/i.test(tag) ||
-
-                    // Date-based versions: 2024.01.15, 2024-01-15, 20240115 (DevOps/deployment)
-                    /^\d{4}[.-]?\d{2}[.-]?\d{2}/.test(tag) ||
-
-                    // Year.Month versions: 2024.01, 24.01 (common in enterprise software)
-                    /^\d{2,4}\.\d{1,2}$/.test(tag) ||
-
-                    // Build numbers: build-123, build.456, b123
-                    /^(build|b)[-.]?\d+$/i.test(tag) ||
-
-                    // Sprint/iteration tags: sprint-12, iteration-5, s12, i5
-                    /^(sprint|iteration|s|i)[-]?\d+$/i.test(tag) ||
-
-                    // Stage tags with versions: prod-1.2.3, staging-2.0.0, dev-1.0.0
-                    /^(prod|production|staging|stage|dev|development)[-/]v?\d+\.\d+(\.\d+)?/i.test(tag) ||
-
-                    // Database migration versions: db-1.2.3, migration-001, schema-v2
-                    /^(db|database|migration|schema)[-/]v?\d+/i.test(tag) ||
-
-                    // API versions: api-v1, api/v2, apiv1.2
-                    /^api[-/]?v?\d+(\.\d+)?$/i.test(tag) ||
-
-                    // Docker/container tags: v1.2.3-alpine, 1.2.3-slim, latest-1.2.3
-                    /^(v?\d+\.\d+\.\d+|latest)[-](alpine|slim|debian|ubuntu|node|python)/i.test(tag) ||
-
-                    // Hotfix tags: hotfix-1.2.3, hf-1.2.3, patch-1.2.3
-                    /^(hotfix|hf|patch|fix)[-/]v?\d+\.\d+(\.\d+)?/i.test(tag) ||
-
-                    // Feature release tags: feature-v1.2, feat-1.0
-                    /^(feature|feat)[-/]v?\d+\.\d+/i.test(tag) ||
-
-                    // Version with channel: 1.2.3-stable, 1.2.3-canary, 1.2.3-nightly
-                    /^v?\d+\.\d+\.\d+-(stable|canary|nightly|edge|beta|alpha|rc)/i.test(tag) ||
-
-                    // Model versions (ML/AI): model-v1, model-1.2, m1.0
-                    /^(model|m)[-]?v?\d+(\.\d+)?$/i.test(tag) ||
-
-                    // Package versions: pkg-1.2.3, package-v1.0
-                    /^(pkg|package)[-/]v?\d+\.\d+(\.\d+)?/i.test(tag);
+                // Use pre-compiled patterns for version tag detection
+                const isVersion = VERSION_TAG_PATTERNS.some(pattern => pattern.test(tag));
 
                 if (isVersion) {
                     versionMap.set(tag, date);
@@ -222,49 +210,8 @@ export class ChangelogService {
 
             let detectedVersion: string | null = null;
 
-            // Try multiple patterns in order of specificity
-            const patterns = [
-                // Semantic versioning with keywords: "bump to 1.2.3", "release v1.2.3", "version 1.2.3"
-                /(?:bump|update|release|version|chore|build|deploy|publish|tag).*?(?:to\s+)?v?(\d+\.\d+\.\d+(?:[.-]\w+)?)/i,
-
-                // Package.json or manifest updates: "package.json: 1.2.3", "version: 1.2.3"
-                /(?:package\.json|manifest|pom\.xml|setup\.py|cargo\.toml|composer\.json).*?v?(\d+\.\d+\.\d+)/i,
-
-                // Date-based versions in commits: "deploy 2024.01.15", "release 2024-01-15"
-                /(?:deploy|release|version).*?(\d{4}[.-]\d{2}[.-]\d{2})/i,
-
-                // Two-part versions: "v1.2", "version 2.0"
-                /(?:bump|update|release|version).*?(?:to\s+)?v?(\d+\.\d+)(?:\s|$|[^\d])/i,
-
-                // Build numbers: "build 123", "build-456"
-                /(?:build|b)[-\s](\d+)/i,
-
-                // Sprint/iteration: "sprint 12", "iteration 5"
-                /(?:sprint|iteration)[-\s](\d+)/i,
-
-                // Stage deployments: "prod-1.2.3", "staging 2.0.0"
-                /(?:prod|production|staging|stage|dev|development)[-\s]v?(\d+\.\d+(?:\.\d+)?)/i,
-
-                // Database migrations: "migration 001", "schema v2", "db-1.2.3"
-                /(?:migration|schema|db|database)[-\s]v?(\d+(?:\.\d+)?)/i,
-
-                // API versions: "api v1", "api/v2", "api version 1.2"
-                /api[-\s/]?v?(\d+(?:\.\d+)?)/i,
-
-                // Hotfix releases: "hotfix 1.2.3", "patch-1.2.3"
-                /(?:hotfix|hf|patch|fix)[-\s]v?(\d+\.\d+(?:\.\d+)?)/i,
-
-                // Model versions (ML/AI): "model v1", "model-1.2"
-                /(?:model|m)[-\s]v?(\d+(?:\.\d+)?)/i,
-
-                // Release channels: "1.2.3-stable", "1.2.3-canary"
-                /v?(\d+\.\d+\.\d+)[-](stable|canary|nightly|edge|beta|alpha|rc)/i,
-
-                // Standalone version numbers with context
-                /(?:^|\s)v?(\d+\.\d+\.\d+)(?:\s|$)/i
-            ];
-
-            for (const pattern of patterns) {
+            // Use pre-compiled patterns for version detection in commit messages
+            for (const pattern of VERSION_COMMIT_PATTERNS) {
                 const match = combinedText.match(pattern);
                 if (match && match[1]) {
                     detectedVersion = match[1];
@@ -366,15 +313,26 @@ export class ChangelogService {
                 );
             }
 
-            // When tags are detected, get ALL commits between tags (ignore maxCommits)
-            // maxCommits only applies to fallback scenarios without tags
+            // Calculate per-version commit budget when maxCommitsEnabled to limit at fetch time
+            const clampedMaxCommits = (maxCommitsEnabled && typeof maxCommits === 'number' && !isNaN(maxCommits))
+                ? Math.min(Math.max(maxCommits, 10), 2500)
+                : undefined;
+            const effectiveVersionCount = Math.min(maxVersionsToProcess, sortedTags.length) + 1; // +1 for Unreleased
+            const perVersionBudget = clampedMaxCommits
+                ? Math.max(10, Math.ceil(clampedMaxCommits / effectiveVersionCount))
+                : undefined;
+
+            if (perVersionBudget) {
+                debugLog(`Max commits enabled: per-version budget = ${perVersionBudget} (total cap: ${clampedMaxCommits}, versions: ${effectiveVersionCount})`);
+            }
+
             debugLog('Version tags detected: Getting commit ranges from tag positions in history');
 
             // Add an "Unreleased" group (latest tag -> HEAD). This captures changes since the last release.
             const latestTag = sortedTags[0]?.[0];
             if (latestTag) {
                 try {
-                    const unreleasedCommits = await this.getGitLog(latestTag, undefined, undefined);
+                    const unreleasedCommits = await this.getGitLog(latestTag, undefined, perVersionBudget);
                     if (unreleasedCommits.length > 0) {
                         versions.push({
                             version: 'Unreleased',
@@ -388,32 +346,37 @@ export class ChangelogService {
                 }
             }
 
-            // Process only the most recent N versions
-            // CRITICAL FIX: Reference the FULL sortedTags array for previousVersion boundary
+            // Fetch commits for all versions in parallel
+            // CRITICAL: Reference the FULL sortedTags array for previousVersion boundary
             // This ensures we get commits ONLY between adjacent tags, not from repository start
-            for (let i = 0; i < Math.min(maxVersionsToProcess, sortedTags.length); i++) {
+            const versionCount = Math.min(maxVersionsToProcess, sortedTags.length);
+            const versionPromises = [];
+            for (let i = 0; i < versionCount; i++) {
                 const [currentVersion, date] = sortedTags[i];
-
                 // Get the ACTUAL previous tag from the full sorted list, not the limited subset
                 // This is crucial when maxVersions = 1: we still need the boundary tag for correct range
                 const previousVersion = i < sortedTags.length - 1 ? sortedTags[i + 1][0] : undefined;
 
-                try {
-                    // Get ALL commits between tags - no limit
-                    // This ensures we capture complete version history for each release
-                    // Using previousVersion from full list ensures proper boundaries
-                    const commits = await this.getGitLog(previousVersion, currentVersion, undefined);
-                    if (commits.length > 0) {
-                        versions.push({ version: currentVersion, date, commits });
-                        debugLog(`Version ${currentVersion}: ${commits.length} commits (from ${previousVersion || 'start'} to ${currentVersion})`);
-                    }
-                } catch (error) {
-                    debugLog(`Failed to get commits for version ${currentVersion}:`, error);
+                versionPromises.push(
+                    this.getGitLog(previousVersion, currentVersion, perVersionBudget)
+                        .then(commits => ({ version: currentVersion, date, commits }))
+                        .catch(error => {
+                            debugLog(`Failed to get commits for version ${currentVersion}:`, error);
+                            return { version: currentVersion, date, commits: [] as GitCommit[] };
+                        })
+                );
+            }
+
+            const versionResults = await Promise.all(versionPromises);
+            for (const result of versionResults) {
+                if (result.commits.length > 0) {
+                    versions.push(result);
+                    debugLog(`Version ${result.version}: ${result.commits.length} commits`);
                 }
             }
 
-            if (maxCommitsEnabled && typeof maxCommits === 'number' && !isNaN(maxCommits)) {
-                const clampedMaxCommits = Math.min(Math.max(maxCommits, 10), 2500);
+            // Apply global commit limit as safety net when maxCommitsEnabled
+            if (clampedMaxCommits) {
                 const limited = this.applyGlobalCommitLimit(versions, clampedMaxCommits);
                 const limitedTotal = limited.reduce((sum, v) => sum + v.commits.length, 0);
                 debugLog(`Max commits enabled. Limited total commits to ${limitedTotal} (cap=${clampedMaxCommits})`);
@@ -482,20 +445,46 @@ export class ChangelogService {
      * Enhance commits with package.json version information
      */
     private async enhanceCommitsWithPackageVersions(commits: GitCommit[]): Promise<GitCommit[]> {
+        if (!this.workspaceRoot || commits.length === 0) {
+            return commits;
+        }
+
+        // Batch: find which commits actually touched package.json in a single git command
+        // This avoids running N individual `git show` commands for every commit
+        let packageJsonHashes: Set<string>;
+        try {
+            const { stdout } = await execAsync(
+                'git log --format="%H" -- package.json',
+                { cwd: this.workspaceRoot, maxBuffer: 5 * 1024 * 1024 }
+            );
+            packageJsonHashes = new Set(
+                stdout.trim().split('\n').filter(h => h.trim()).map(h => h.trim())
+            );
+        } catch {
+            debugLog('Could not find commits touching package.json');
+            return commits;
+        }
+
+        if (packageJsonHashes.size === 0) {
+            return commits;
+        }
+
+        debugLog(`Found ${packageJsonHashes.size} commits touching package.json (out of ${commits.length} total)`);
+
+        // Only fetch package.json content for commits that actually changed it
         const enhanced: GitCommit[] = [];
-
         for (const commit of commits) {
-            const packageVersion = await this.getVersionFromPackageJson(commit.hash);
-
-            // If we found a version in package.json, add it to the commit body for detection
-            if (packageVersion && !commit.body.includes(packageVersion)) {
-                enhanced.push({
-                    ...commit,
-                    body: commit.body + `\nVersion: ${packageVersion}`
-                });
-            } else {
-                enhanced.push(commit);
+            if (packageJsonHashes.has(commit.hash)) {
+                const packageVersion = await this.getVersionFromPackageJson(commit.hash);
+                if (packageVersion && !commit.body.includes(packageVersion)) {
+                    enhanced.push({
+                        ...commit,
+                        body: commit.body + `\nVersion: ${packageVersion}`
+                    });
+                    continue;
+                }
             }
+            enhanced.push(commit);
         }
 
         return enhanced;
@@ -813,7 +802,7 @@ export class ChangelogService {
         versionGroups: VersionInfo[],
         existingChangelog: string | null,
         policyInstructions: string
-    ): Promise<{ adjustedGroups: VersionInfo[]; warnings: string[] }> {
+    ): Promise<{ adjustedGroups: VersionInfo[]; warnings: string[]; finalEstimation: ReturnType<ChangelogService['estimateChangelogTokens']> }> {
         const warnings: string[] = [];
 
         // Prepare initial summary
@@ -824,7 +813,7 @@ export class ChangelogService {
 
         // If within limits, return as-is
         if (estimation.isWithinLimit) {
-            return { adjustedGroups: versionGroups, warnings };
+            return { adjustedGroups: versionGroups, warnings, finalEstimation: estimation };
         }
 
         // Over limit - try to reduce
@@ -855,10 +844,10 @@ export class ChangelogService {
             estimation = this.estimateChangelogTokens(commitSummary, existingChangelog, policyInstructions);
             debugLog('Adjusted token estimation:', estimation);
 
-            return { adjustedGroups, warnings };
+            return { adjustedGroups, warnings, finalEstimation: estimation };
         }
 
-        return { adjustedGroups: versionGroups, warnings };
+        return { adjustedGroups: versionGroups, warnings, finalEstimation: estimation };
     }
 
     /**
@@ -922,7 +911,7 @@ export class ChangelogService {
         const policyInstructions = this.buildPolicyInstructions(changelogPolicy);
 
         // Validate token limits and adjust if needed
-        const { adjustedGroups, warnings } = await this.validateTokenLimits(
+        const { adjustedGroups, warnings, finalEstimation } = await this.validateTokenLimits(
             versionGroups,
             existingChangelog,
             policyInstructions
@@ -967,8 +956,6 @@ export class ChangelogService {
         const apiConfig = await getApiConfig();
         const prompt = this.buildChangelogPrompt(commitSummary, existingChangelog, changelogPolicy, versionOrder);
 
-        // Final token estimation for logging
-        const finalEstimation = this.estimateChangelogTokens(commitSummary, existingChangelog, policyInstructions);
         debugLog('Final token estimation before API call:', finalEstimation);
         debugLog('Calling AI API for changelog generation...');
 

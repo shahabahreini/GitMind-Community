@@ -50,7 +50,7 @@ const PROVIDER_DISPLAY_CONFIG: Record<string, ProviderDisplayConfig> = {
   },
   anthropic: {
     displayName: "Anthropic",
-    model: "claude-3-5-sonnet-20241022",
+    model: "claude-sonnet-4",
     apiConfigured: (s) => !!s.anthropic?.apiKey
   },
   copilot: {
@@ -184,7 +184,7 @@ export function getUiManagerScript(): string {
         openai: { displayName: "OpenAI", defaultModel: "gpt-3.5-turbo", getApiConfigured: (s) => !!s.openai?.apiKey },
         together: { displayName: "Together AI", defaultModel: "meta-llama/Llama-3.3-70B-Instruct-Turbo", getApiConfigured: (s) => !!s.together?.apiKey },
         openrouter: { displayName: "OpenRouter", defaultModel: "google/gemma-3-27b-it:free", getApiConfigured: (s) => !!s.openrouter?.apiKey },
-        anthropic: { displayName: "Anthropic", defaultModel: "claude-3-5-sonnet-20241022", getApiConfigured: (s) => !!s.anthropic?.apiKey },
+        anthropic: { displayName: "Anthropic", defaultModel: "claude-sonnet-4", getApiConfigured: (s) => !!s.anthropic?.apiKey },
         copilot: { displayName: "GitHub Copilot", defaultModel: "gpt-4o", getApiConfigured: () => true },
         deepseek: { displayName: "DeepSeek", defaultModel: "deepseek-chat", getApiConfigured: (s) => !!s.deepseek?.apiKey },
         grok: { displayName: "Grok", defaultModel: "grok-3", getApiConfigured: (s) => !!s.grok?.apiKey },

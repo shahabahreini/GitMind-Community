@@ -157,19 +157,6 @@ export class OllamaProvider extends BaseAIProvider {
     }
 }
 
-/**
- * Backward compatibility functions
- */
-export async function callOllamaAPI(
-    baseUrl: string,
-    model: string,
-    diff: string,
-    customContext: string = ""
-): Promise<string> {
-    const provider = new OllamaProvider(baseUrl, model);
-    return provider.generateCommitMessage(diff, customContext);
-}
-
 export async function getOllamaModels(baseUrl: string): Promise<string[]> {
     const provider = new OllamaProvider(baseUrl, "");
     return provider.getModels();

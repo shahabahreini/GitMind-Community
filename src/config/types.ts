@@ -319,4 +319,5 @@ export interface ProviderConfig extends BaseProviderConfig {
     customModel?: string;
     temperature?: number;
     url?: string;
+    [key: string]: string | number | boolean | undefined;
 }

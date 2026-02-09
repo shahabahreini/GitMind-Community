@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import {
     ApiConfig,
     ExtensionConfig,
+    ProviderConfig,
     GeminiModel,
     AnthropicModel,
     CopilotModel,
@@ -15,8 +16,22 @@ import { debugLog } from "../services/debug/logger";
 interface ProviderDefaults {
     model: string;
     enabled: boolean;
-    extras?: Record<string, any>;
+    extras?: Record<string, string | number | boolean>;
 }
+
+// Configuration cache with invalidation
+let configCache: { config: ExtensionConfig; timestamp: number } | null = null;
+const CONFIG_CACHE_TTL = 1000; // 1 second TTL
+
+// Register configuration change listener to invalidate cache
+const configChangeDisposable = vscode.workspace.onDidChangeConfiguration((e) => {
+    if (e.affectsConfiguration('gitmind')) {
+        configCache = null;
+    }
+});
+
+// Export disposable so extension.ts can clean it up on deactivation
+export { configChangeDisposable };
 
 const PROVIDER_DEFAULTS: Record<string, ProviderDefaults> = {
     gemini: { model: "gemini-2.5-flash", enabled: false },
@@ -35,7 +50,7 @@ const PROVIDER_DEFAULTS: Record<string, ProviderDefaults> = {
     openai: { model: "gpt-4o", enabled: false },
     together: { model: "meta-llama/Llama-3.3-70B-Instruct-Turbo", enabled: false },
     openrouter: { model: "google/gemma-3-27b-it:free", enabled: false },
-    anthropic: { model: "claude-3-5-sonnet-20241022", enabled: false },
+    anthropic: { model: "claude-sonnet-4", enabled: false },
     minimax: { model: "MiniMax-M2", enabled: false },
     copilot: { model: "auto", enabled: false },
     deepseek: { model: "deepseek-chat", enabled: false },
@@ -58,6 +73,12 @@ const PROVIDER_DEFAULTS: Record<string, ProviderDefaults> = {
 };
 
 export function getConfiguration(): ExtensionConfig {
+    // Return cached config if still valid
+    const now = Date.now();
+    if (configCache && (now - configCache.timestamp) < CONFIG_CACHE_TTL) {
+        return configCache.config;
+    }
+
     const config = vscode.workspace.getConfiguration("gitmind");
 
     const result: ExtensionConfig = {
@@ -81,7 +102,7 @@ export function getConfiguration(): ExtensionConfig {
 
     // Build provider configurations dynamically
     Object.entries(PROVIDER_DEFAULTS).forEach(([provider, defaults]) => {
-        const providerConfig: any = {
+        const providerConfig: ProviderConfig = {
             enabled: config.get(`${provider}.enabled`, defaults.enabled),
             model: config.get(`${provider}.model`, defaults.model),
         };
@@ -94,7 +115,7 @@ export function getConfiguration(): ExtensionConfig {
         // Add provider-specific extras
         if (defaults.extras) {
             Object.entries(defaults.extras).forEach(([key, value]) => {
-                providerConfig[key] = config.get(`${provider}.${key}`, value);
+                (providerConfig as Record<string, unknown>)[key] = config.get(`${provider}.${key}`, value);
             });
         }
 
@@ -103,8 +124,11 @@ export function getConfiguration(): ExtensionConfig {
             providerConfig.customModel = config.get(`${provider}.customModel`, "");
         }
 
-        (result as any)[provider] = providerConfig;
+        result[provider] = providerConfig;
     });
+
+    // Cache the result
+    configCache = { config: result, timestamp: Date.now() };
 
     return result;
 }
@@ -112,22 +136,20 @@ export function getConfiguration(): ExtensionConfig {
 export async function getApiConfig(): Promise<ApiConfig> {
     const config = getConfiguration();
     const provider = config.provider;
-    const providerConfig = (config as any)[provider];
+    const providerConfig = config[provider] as ProviderConfig | undefined;
 
     if (!providerConfig) {
         throw new Error(`Unsupported provider: ${provider}`);
     }
 
-    const baseConfig: any = {
+    const baseConfig: Record<string, unknown> = {
         type: provider,
         model: getEffectiveModel(provider, providerConfig)
     };
 
     // Add API key for providers that need it
     if (provider !== 'ollama' && provider !== 'copilot' && provider !== 'custom') {
-        // Use SecureKeyManager to get the appropriate API key based on encryption settings
         const secureKeyManager = SecureKeyManager.getInstance();
-        // Always get the actual API key for API calls, not the display placeholder
         const secureApiKey = await secureKeyManager.getApiKey(provider, false);
         baseConfig.apiKey = secureApiKey || "";
     }
@@ -135,16 +157,15 @@ export async function getApiConfig(): Promise<ApiConfig> {
     // Handle custom API authToken separately
     if (provider === 'custom') {
         const secureKeyManager = SecureKeyManager.getInstance();
+        const customConfig = providerConfig as Record<string, unknown>;
 
         debugLog(`[Custom API] Starting token retrieval for provider: ${provider}`);
-        debugLog(`[Custom API] Config authToken from settings: ${providerConfig.authToken ? `[${providerConfig.authToken.length} chars]` : 'empty/undefined'}`);
+        debugLog(`[Custom API] Config authToken from settings: ${customConfig.authToken ? `[${String(customConfig.authToken).length} chars]` : 'empty/undefined'}`);
 
-        // Get the actual auth token for API calls, not the display placeholder
         const secureAuthToken = await secureKeyManager.getApiKey('custom', false);
         debugLog(`[Custom API] Secure token from SecureKeyManager: ${secureAuthToken ? `[${secureAuthToken.length} chars]` : 'empty/undefined'}`);
 
-        // Use secure token if available, otherwise fall back to config
-        const authToken = secureAuthToken || providerConfig.authToken || "";
+        const authToken = secureAuthToken || String(customConfig.authToken || "") || "";
         baseConfig.authToken = authToken;
 
         debugLog(`[Custom API] Final token to be used: ${authToken ? `[${authToken.length} chars]` : 'EMPTY - THIS WILL CAUSE 401 ERROR'}`);
@@ -155,38 +176,38 @@ export async function getApiConfig(): Promise<ApiConfig> {
     }
 
     // Add provider-specific properties
+    const extras = providerConfig as Record<string, unknown>;
     switch (provider) {
         case 'ollama':
-            baseConfig.url = providerConfig.url || "";
+            baseConfig.url = extras.url || "";
             break;
         case 'huggingface':
-            baseConfig.temperature = providerConfig.temperature;
+            baseConfig.temperature = extras.temperature;
             break;
         case 'custom':
-            baseConfig.baseUrl = providerConfig.baseUrl || "";
-            baseConfig.endpoint = providerConfig.endpoint || "";
-            baseConfig.authType = providerConfig.authType || "bearer";
-            // authToken is already set above using SecureKeyManager
-            baseConfig.headerKey = providerConfig.headerKey || "";
-            baseConfig.requestFormat = providerConfig.requestFormat || "";
-            baseConfig.responseFormat = providerConfig.responseFormat || "";
+            baseConfig.baseUrl = extras.baseUrl || "";
+            baseConfig.endpoint = extras.endpoint || "";
+            baseConfig.authType = extras.authType || "bearer";
+            baseConfig.headerKey = extras.headerKey || "";
+            baseConfig.requestFormat = extras.requestFormat || "";
+            baseConfig.responseFormat = extras.responseFormat || "";
             break;
     }
 
-    return baseConfig as ApiConfig;
+    return baseConfig as unknown as ApiConfig;
 }
 
 // Legacy synchronous version - falls back to plain text settings only
 export function getApiConfigSync(): ApiConfig {
     const config = getConfiguration();
     const provider = config.provider;
-    const providerConfig = (config as any)[provider];
+    const providerConfig = config[provider] as ProviderConfig | undefined;
 
     if (!providerConfig) {
         throw new Error(`Unsupported provider: ${provider}`);
     }
 
-    const baseConfig: any = {
+    const baseConfig: Record<string, unknown> = {
         type: provider,
         model: getEffectiveModel(provider, providerConfig)
     };
@@ -197,19 +218,20 @@ export function getApiConfigSync(): ApiConfig {
     }
 
     // Add provider-specific properties
+    const extras = providerConfig as Record<string, unknown>;
     switch (provider) {
         case 'ollama':
-            baseConfig.url = providerConfig.url || "";
+            baseConfig.url = extras.url || "";
             break;
         case 'huggingface':
-            baseConfig.temperature = providerConfig.temperature;
+            baseConfig.temperature = extras.temperature;
             break;
     }
 
-    return baseConfig as ApiConfig;
+    return baseConfig as unknown as ApiConfig;
 }
 
-function getEffectiveModel(provider: string, providerConfig: any): string {
+function getEffectiveModel(provider: string, providerConfig: ProviderConfig): string {
     if ((provider === 'huggingface' || provider === 'ollama') &&
         providerConfig.model === "custom" &&
         providerConfig.customModel) {

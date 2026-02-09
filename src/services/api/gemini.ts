@@ -1,7 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { debugLog } from "../debug/logger";
 import { GeminiModel } from "../../config/types";
-import { RequestManager } from "../../utils/requestManager";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
 
@@ -84,8 +83,7 @@ export class GeminiProvider extends BaseAIProvider {
     }
 
     protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
-        const requestManager = RequestManager.getInstance();
-        const controller = requestManager.getController();
+        const controller = this.getAbortController();
 
         try {
             debugLog(`Calling Gemini API with model: ${this.model}`);
@@ -407,14 +405,6 @@ export interface GeminiModelInfo {
 
 export interface GeminiModelResponse {
     models: GeminiModelInfo[];
-}
-
-/**
- * Backward compatibility functions
- */
-export async function callGeminiAPI(apiKey: string, model: string, diff: string, customContext?: string): Promise<string> {
-    const provider = new GeminiProvider(apiKey, model);
-    return provider.generateCommitMessage(diff, customContext);
 }
 
 export async function validateGeminiAPIKey(apiKey: string, model: string = ""): Promise<boolean | GeminiValidationResult> {

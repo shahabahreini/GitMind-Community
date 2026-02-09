@@ -239,7 +239,7 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
     anthropic: {
         requiresApiKey: true,
         validator: validateAnthropicApiKey,
-        defaultModel: "claude-3-5-sonnet-20241022",
+        defaultModel: "claude-sonnet-4",
         responseTime: 800,
         rateLimits: {
             limit: 1000,

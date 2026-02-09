@@ -299,19 +299,6 @@ function suggestCorrectProvider(model: string): { provider: string; model: strin
     };
 }
 
-/**
- * Backward compatibility functions
- */
-export async function callHuggingFaceAPI(
-    apiKey: string,
-    model: string,
-    diff: string,
-    customContext: string = ""
-): Promise<string> {
-    const provider = new HuggingFaceProvider(apiKey, model);
-    return provider.generateCommitMessage(diff, customContext);
-}
-
 export async function fetchHuggingFaceModels(apiKey: string): Promise<string[]> {
     const provider = new HuggingFaceProvider(apiKey, "");
     return provider.getModels();
