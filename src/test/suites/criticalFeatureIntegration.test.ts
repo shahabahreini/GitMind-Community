@@ -18,7 +18,7 @@ import { SettingsWebview } from '../../webview/settings/SettingsWebview';
 import { SettingsManager } from '../../webview/settings/SettingsManager';
 import { MessageHandler } from '../../webview/settings/MessageHandler';
 import { checkApiSetup, checkRateLimits } from '../../services/api/validation';
-import { getApiConfig } from '../../config/settings';
+import { getApiConfig, invalidateConfigCache } from '../../config/settings';
 import { debugLog } from '../../services/debug/logger';
 
 suite('🔥 Critical Feature Integration Tests', () => {
@@ -164,6 +164,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
 
             const originalGetConfig = vscode.workspace.getConfiguration;
             (vscode.workspace as any).getConfiguration = () => mockConfig;
+                invalidateConfigCache();
 
             try {
                 const testSettings = {
@@ -231,6 +232,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                 console.log('   ✓ Data persistence confirmed');
             } finally {
                 vscode.workspace.getConfiguration = originalGetConfig;
+                    invalidateConfigCache();
             }
         }).timeout(20000);
 
@@ -249,6 +251,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
 
             const originalGetConfig = vscode.workspace.getConfiguration;
             (vscode.workspace as any).getConfiguration = () => mockConfig;
+                invalidateConfigCache();
 
             try {
                 const settingsManager = new SettingsManager();
@@ -299,6 +302,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                 console.log('   ✓ MessageHandler save command validated');
             } finally {
                 vscode.workspace.getConfiguration = originalGetConfig;
+                    invalidateConfigCache();
             }
         }).timeout(20000);
 
@@ -318,6 +322,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
 
             const originalGetConfig = vscode.workspace.getConfiguration;
             (vscode.workspace as any).getConfiguration = () => mockConfig;
+                invalidateConfigCache();
 
             try {
                 // Test provider switching
@@ -332,6 +337,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                 console.log(`   ✓ Provider switching validated (${providers.length} providers tested)`);
             } finally {
                 vscode.workspace.getConfiguration = originalGetConfig;
+                    invalidateConfigCache();
             }
         });
     });
@@ -360,6 +366,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
 
                 const originalGetConfig = vscode.workspace.getConfiguration;
                 (vscode.workspace as any).getConfiguration = () => mockConfig;
+                invalidateConfigCache();
 
                 try {
                     const config = await getApiConfig();
@@ -369,6 +376,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                     debugLog(`Provider ${provider} config test completed`, error);
                 } finally {
                     vscode.workspace.getConfiguration = originalGetConfig;
+                    invalidateConfigCache();
                 }
             }
 
@@ -390,6 +398,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
 
             const originalGetConfig = vscode.workspace.getConfiguration;
             (vscode.workspace as any).getConfiguration = () => mockConfig;
+                invalidateConfigCache();
 
             try {
                 const result = await checkApiSetup();
@@ -405,6 +414,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                 debugLog('API validation test completed', error);
             } finally {
                 vscode.workspace.getConfiguration = originalGetConfig;
+                    invalidateConfigCache();
             }
         });
 
@@ -457,6 +467,8 @@ suite('🔥 Critical Feature Integration Tests', () => {
 
                 const originalGetConfig = vscode.workspace.getConfiguration;
                 (vscode.workspace as any).getConfiguration = () => mockConfig;
+                invalidateConfigCache();
+                invalidateConfigCache();
 
                 try {
                     const config = await getApiConfig();
@@ -469,6 +481,8 @@ suite('🔥 Critical Feature Integration Tests', () => {
                     console.log(`   ✓ ${test.provider} configuration validated`);
                 } finally {
                     vscode.workspace.getConfiguration = originalGetConfig;
+                    invalidateConfigCache();
+                    invalidateConfigCache();
                 }
             }
 
@@ -505,6 +519,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
 
                 const originalGetConfig = vscode.workspace.getConfiguration;
                 (vscode.workspace as any).getConfiguration = () => mockConfig;
+                invalidateConfigCache();
 
                 try {
                     const result = await checkApiSetup();
@@ -525,6 +540,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                     debugLog(`Error scenario ${scenario.name} completed`, error);
                 } finally {
                     vscode.workspace.getConfiguration = originalGetConfig;
+                    invalidateConfigCache();
                 }
             }
 
@@ -548,6 +564,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
 
             const originalGetConfig = vscode.workspace.getConfiguration;
             (vscode.workspace as any).getConfiguration = () => mockConfig;
+                invalidateConfigCache();
 
             try {
                 // Step 1: User opens settings (simulated)
@@ -608,6 +625,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                 console.log('   ✓ 6 workflow steps executed successfully');
             } finally {
                 vscode.workspace.getConfiguration = originalGetConfig;
+                    invalidateConfigCache();
             }
         }).timeout(20000);
 
@@ -672,6 +690,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
 
             const originalGetConfig = vscode.workspace.getConfiguration;
             (vscode.workspace as any).getConfiguration = () => mockConfig;
+                invalidateConfigCache();
 
             try {
                 const settingsManager = new SettingsManager();
@@ -684,6 +703,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                 console.log('   ✓ Corrupted settings recovery validated');
             } finally {
                 vscode.workspace.getConfiguration = originalGetConfig;
+                    invalidateConfigCache();
             }
         });
 
@@ -701,6 +721,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
 
             const originalGetConfig = vscode.workspace.getConfiguration;
             (vscode.workspace as any).getConfiguration = () => mockConfig;
+                invalidateConfigCache();
 
             try {
                 // Simulate concurrent updates
@@ -717,6 +738,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                 console.log('   ✓ Concurrent updates handled correctly');
             } finally {
                 vscode.workspace.getConfiguration = originalGetConfig;
+                    invalidateConfigCache();
             }
         });
 
@@ -741,6 +763,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
 
                 const originalGetConfig = vscode.workspace.getConfiguration;
                 (vscode.workspace as any).getConfiguration = () => mockConfig;
+                invalidateConfigCache();
 
                 try {
                     const result = await checkApiSetup();
@@ -753,6 +776,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                     debugLog(`Invalid key test for ${test.provider} completed`, error);
                 } finally {
                     vscode.workspace.getConfiguration = originalGetConfig;
+                    invalidateConfigCache();
                 }
             }
 

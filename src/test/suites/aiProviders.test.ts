@@ -2,7 +2,7 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { checkApiSetup } from '../../services/api/validation';
 import { generateCommitMessage } from '../../services/api';
-import { getApiConfig } from '../../config/settings';
+import { getApiConfig, invalidateConfigCache } from '../../config/settings';
 import { getEffectiveGeminiModel } from '../../services/api/gemini';
 
 suite('AI Providers Tests', () => {
@@ -12,11 +12,13 @@ suite('AI Providers Tests', () => {
     setup(() => {
         originalGetConfiguration = vscode.workspace.getConfiguration;
         originalFetch = globalThis.fetch;
+        invalidateConfigCache();
     });
 
     teardown(() => {
         vscode.workspace.getConfiguration = originalGetConfiguration;
         globalThis.fetch = originalFetch;
+        invalidateConfigCache();
     });
 
     const createMockConfig = (provider: string, settings: any) => {

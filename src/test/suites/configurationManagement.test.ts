@@ -1,16 +1,18 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { getApiConfig, getConfiguration } from '../../config/settings';
+import { getApiConfig, getConfiguration, invalidateConfigCache } from '../../config/settings';
 
 suite('Configuration Management Tests', () => {
     let originalGetConfiguration: typeof vscode.workspace.getConfiguration;
 
     setup(() => {
         originalGetConfiguration = vscode.workspace.getConfiguration;
+        invalidateConfigCache();
     });
 
     teardown(() => {
         vscode.workspace.getConfiguration = originalGetConfiguration;
+        invalidateConfigCache();
     });
 
     test('Configuration should load with defaults', () => {

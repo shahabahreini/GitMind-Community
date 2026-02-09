@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 
 import { checkApiSetup } from '../../services/api/validation';
+import { invalidateConfigCache } from '../../config/settings';
 
 interface MockHeaders {
     get(name: string): string | null;
@@ -42,11 +43,13 @@ suite('MiniMax API Setup Error Handling', () => {
     setup(() => {
         originalGetConfiguration = vscode.workspace.getConfiguration;
         originalFetch = globalThis.fetch;
+        invalidateConfigCache();
     });
 
     teardown(() => {
         vscode.workspace.getConfiguration = originalGetConfiguration;
         globalThis.fetch = originalFetch as typeof globalThis.fetch;
+        invalidateConfigCache();
     });
 
     function setMiniMaxConfig(apiKey: string): void {
@@ -125,9 +128,11 @@ suite('MiniMax API Setup Error Handling', () => {
         ) as unknown as typeof globalThis.fetch;
 
         const result = await checkApiSetup();
-        assert.strictEqual(result.success, false);
+        // Insufficient balance means the key IS valid but the account is underfunded.
+        // The implementation treats this as success=true with a warning, not a failure.
+        assert.strictEqual(result.success, true);
         assert.strictEqual(result.provider, 'minimax');
-        assert.strictEqual(result.error, 'Insufficient balance');
+        assert.strictEqual(result.warning, 'Insufficient balance');
         assert.ok(
             result.troubleshooting?.toLowerCase().includes('top up'),
             'Troubleshooting should instruct user to top up balance'

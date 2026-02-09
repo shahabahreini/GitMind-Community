@@ -33,6 +33,15 @@ const configChangeDisposable = vscode.workspace.onDidChangeConfiguration((e) => 
 // Export disposable so extension.ts can clean it up on deactivation
 export { configChangeDisposable };
 
+/**
+ * Manually invalidate the configuration cache.
+ * Used by tests that mock vscode.workspace.getConfiguration
+ * (since mocks don't fire onDidChangeConfiguration events).
+ */
+export function invalidateConfigCache(): void {
+    configCache = null;
+}
+
 const PROVIDER_DEFAULTS: Record<string, ProviderDefaults> = {
     gemini: { model: "gemini-2.5-flash", enabled: false },
     huggingface: {

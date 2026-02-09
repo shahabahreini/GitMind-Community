@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { SettingsWebview } from '../../webview/settings/SettingsWebview';
 import { SettingsManager } from '../../webview/settings/SettingsManager';
 import { MessageHandler } from '../../webview/settings/MessageHandler';
+import { invalidateConfigCache } from '../../config/settings';
 
 suite('Settings UI Tests', () => {
     let mockContext: vscode.ExtensionContext;
@@ -90,6 +91,7 @@ suite('Settings UI Tests', () => {
 
         const originalGetConfiguration = vscode.workspace.getConfiguration;
         (vscode.workspace as any).getConfiguration = () => mockConfig;
+        invalidateConfigCache();
 
         try {
             const settingsManager = new SettingsManager();
@@ -101,6 +103,7 @@ suite('Settings UI Tests', () => {
             assert.strictEqual(settings.openai.model, 'gpt-4o');
         } finally {
             vscode.workspace.getConfiguration = originalGetConfiguration;
+            invalidateConfigCache();
         }
     });
 
@@ -118,6 +121,7 @@ suite('Settings UI Tests', () => {
 
         const originalGetConfiguration = vscode.workspace.getConfiguration;
         (vscode.workspace as any).getConfiguration = () => mockConfig;
+        invalidateConfigCache();
 
         try {
             // Add timeout protection for the entire test operation
@@ -205,6 +209,7 @@ suite('Settings UI Tests', () => {
             // Test passes even if timeout occurs in test environment
         } finally {
             vscode.workspace.getConfiguration = originalGetConfiguration;
+            invalidateConfigCache();
         }
     }).timeout(22000);
 
@@ -239,6 +244,7 @@ suite('Settings UI Tests', () => {
 
         const originalGetConfiguration = vscode.workspace.getConfiguration;
         (vscode.workspace as any).getConfiguration = () => mockConfig;
+        invalidateConfigCache();
 
         try {
             const mockSettingsManager = {
@@ -262,6 +268,7 @@ suite('Settings UI Tests', () => {
             assert.strictEqual(updatedValue, 'gemini', 'API provider should be updated to gemini');
         } finally {
             vscode.workspace.getConfiguration = originalGetConfiguration;
+            invalidateConfigCache();
         }
     });
 
@@ -283,6 +290,7 @@ suite('Settings UI Tests', () => {
 
         const originalGetConfiguration = vscode.workspace.getConfiguration;
         (vscode.workspace as any).getConfiguration = () => mockConfig;
+        invalidateConfigCache();
 
         try {
             // Add timeout protection for the entire test operation
@@ -369,6 +377,7 @@ suite('Settings UI Tests', () => {
             // Test passes even if timeout occurs in test environment
         } finally {
             vscode.workspace.getConfiguration = originalGetConfiguration;
+            invalidateConfigCache();
         }
     }).timeout(18000);
 
@@ -382,6 +391,7 @@ suite('Settings UI Tests', () => {
 
         const originalGetConfiguration = vscode.workspace.getConfiguration;
         (vscode.workspace as any).getConfiguration = () => mockConfig;
+        invalidateConfigCache();
 
         try {
             const settingsManager = new SettingsManager();
@@ -395,6 +405,7 @@ suite('Settings UI Tests', () => {
             assert.strictEqual(settings.openai.model, 'gpt-4o');
         } finally {
             vscode.workspace.getConfiguration = originalGetConfiguration;
+            invalidateConfigCache();
         }
     });
 

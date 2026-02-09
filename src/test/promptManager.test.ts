@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as assert from 'assert';
 import { PromptManager } from '../services/promptManager';
+import { invalidateConfigCache } from '../config/settings';
 
 suite('PromptManager Tests', () => {
     let originalGetConfiguration: typeof vscode.workspace.getConfiguration;
@@ -30,11 +31,13 @@ suite('PromptManager Tests', () => {
         };
 
         (vscode.workspace as any).getConfiguration = () => mockConfig;
+        invalidateConfigCache();
     });
 
     teardown(() => {
         // Restore original configuration
         vscode.workspace.getConfiguration = originalGetConfiguration;
+        invalidateConfigCache();
     });
 
     test('should return saved prompt as default when saveLastPrompt is enabled', async () => {

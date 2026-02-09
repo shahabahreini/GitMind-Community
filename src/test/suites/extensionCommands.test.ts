@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { toggleDebugSetting } from '../../extension';
+import { invalidateConfigCache } from '../../config/settings';
 
 suite('Extension Commands Tests', () => {
     let originalGetConfiguration: typeof vscode.workspace.getConfiguration;
@@ -13,6 +14,7 @@ suite('Extension Commands Tests', () => {
         originalExecuteCommand = vscode.commands.executeCommand;
         originalShowInformationMessage = vscode.window.showInformationMessage;
         originalShowErrorMessage = vscode.window.showErrorMessage;
+        invalidateConfigCache();
     });
 
     teardown(() => {
@@ -20,6 +22,7 @@ suite('Extension Commands Tests', () => {
         vscode.commands.executeCommand = originalExecuteCommand;
         vscode.window.showInformationMessage = originalShowInformationMessage;
         vscode.window.showErrorMessage = originalShowErrorMessage;
+        invalidateConfigCache();
     });
 
     test('Generate commit message command should be registered', async () => {
