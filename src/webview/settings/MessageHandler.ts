@@ -857,6 +857,27 @@ export class MessageHandler {
 
             case 'deactivatePro':
                 try {
+                    // Show confirmation dialog using VS Code native API
+                    // (window.confirm() is not supported in VS Code webviews)
+                    const confirmChoice = await vscode.window.showWarningMessage(
+                        'Are you sure you want to deactivate GitMind Pro? This will revert to the free version and release your license for use on another device.',
+                        { modal: true },
+                        'Yes, Deactivate'
+                    );
+
+                    if (confirmChoice !== 'Yes, Deactivate') {
+                        // User cancelled -- reset button state
+                        if (SettingsWebview.isWebviewOpen()) {
+                            SettingsWebview.postMessageToWebview({
+                                command: 'proDeactivationResult',
+                                success: false,
+                                message: 'Deactivation cancelled by user',
+                                cancelled: true
+                            });
+                        }
+                        break;
+                    }
+
                     const { ProActivationService } = await import('../../services/subscription/ProActivationService.js');
                     const proService = ProActivationService.getInstance();
 

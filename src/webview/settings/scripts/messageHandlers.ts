@@ -603,6 +603,12 @@ export function getMessageHandlersScript(): string {
     }
 
     function handleProDeactivationResult(message) {
+      // If the user cancelled the confirmation dialog, just reset the button
+      if (message.cancelled) {
+        updateButton('deactivateProBtn', true, 'Deactivate Pro');
+        return;
+      }
+
       handleProLifecycleResult(
         message, 
         false, 

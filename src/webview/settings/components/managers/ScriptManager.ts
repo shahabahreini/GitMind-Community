@@ -243,12 +243,6 @@ export class ScriptManager {
                 
                 // Pro deactivation handler
                 attachButtonHandler('deactivateProBtn', () => {
-                    const confirmed = confirm('Are you sure you want to deactivate GitMind Pro? This will revert to the free version and release your license for use on another device.');
-                    
-                    if (!confirmed) {
-                        return;
-                    }
-                    
                     setButtonLoadingState('deactivateProBtn', true, 'Deactivating...', 'Deactivate Pro');
                     
                     if (typeof vscode !== 'undefined') {
