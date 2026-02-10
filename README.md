@@ -30,7 +30,7 @@ Adaptive chunking processes massive diffs without hitting token limits. Tested w
 <div align="center">
   <table>
     <tr>
-      <td align="center" width="50%">
+      <td align="center" width="80%">
         <img src="images/s-14.png" alt="GitMind AI Commit Generation" width="250"/>
         <br/>
         <em>Advanced Settings Panel (Pro Users)</em>
