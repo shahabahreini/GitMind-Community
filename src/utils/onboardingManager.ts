@@ -176,7 +176,13 @@ export class OnboardingManager {
             'grok': 'grok.apiKey',
             'Grok': 'grok.apiKey',
             'perplexity': 'perplexity.apiKey',
-            'Perplexity': 'perplexity.apiKey'
+            'Perplexity': 'perplexity.apiKey',
+            'minimax': 'minimax.apiKey',
+            'MiniMax': 'minimax.apiKey',
+            'zai': 'zai.apiKey',
+            'Z.ai': 'zai.apiKey',
+            'custom': 'custom.authToken',
+            'Custom API': 'custom.authToken'
         };
         const result = paths[provider];
         if (!result) {
@@ -359,7 +365,7 @@ export class OnboardingManager {
         const config = vscode.workspace.getConfiguration('gitmind');
 
         // List of all providers that could be configured
-        const providers = ['gemini', 'huggingface', 'ollama', 'mistral', 'cohere', 'openai', 'together', 'openrouter', 'anthropic', 'copilot', 'deepseek', 'grok', 'perplexity', 'custom'];
+        const providers = ['gemini', 'huggingface', 'ollama', 'mistral', 'cohere', 'openai', 'together', 'openrouter', 'anthropic', 'minimax', 'copilot', 'deepseek', 'grok', 'perplexity', 'zai', 'custom'];
 
         debugLog('Checking API configuration for all providers...');
 

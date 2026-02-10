@@ -271,7 +271,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         name: "Z.ai",
         displayName: "Z.ai (GLM)",
         settingPath: "zai.apiKey",
-        docsUrl: "https://z.ai/",
+        docsUrl: "https://api.z.ai/",
         requiresApiKey: true,
         defaultModel: "glm-4.5-flash",
         getProviderClass: async () => loadProviderModule('zai'),

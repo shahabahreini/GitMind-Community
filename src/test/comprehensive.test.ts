@@ -285,8 +285,8 @@ suite('GitMind Extension Integration Tests', () => {
     test('Comprehensive AI Provider Configuration and API Setup', async () => {
         const supportedProviders = [
             'gemini', 'huggingface', 'ollama', 'mistral', 'cohere',
-            'openai', 'together', 'openrouter', 'anthropic', 'copilot',
-            'deepseek', 'grok', 'perplexity'
+            'openai', 'together', 'openrouter', 'anthropic', 'minimax', 'copilot',
+            'deepseek', 'grok', 'perplexity', 'zai', 'custom'
         ];
 
         // Test provider configuration structure

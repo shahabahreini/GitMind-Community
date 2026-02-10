@@ -58,6 +58,11 @@ export class StatusBanner {
       defaultModel: "claude-sonnet-4",
       getApiConfigured: (s) => !!s.anthropic?.apiKey
     },
+    minimax: {
+      displayName: "MiniMax",
+      defaultModel: "MiniMax-M2",
+      getApiConfigured: (s) => !!(s as any).minimax?.apiKey
+    },
     copilot: {
       displayName: "GitHub Copilot",
       defaultModel: "gpt-4o",

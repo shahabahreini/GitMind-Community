@@ -22,7 +22,8 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   deepseek: { apiKey: true, model: false, displayName: 'DeepSeek' },
   grok: { apiKey: true, model: false, displayName: 'Grok' },
   perplexity: { apiKey: true, model: false, displayName: 'Perplexity' },
-  zai: { apiKey: true, model: true, displayName: 'Z.ai' }
+  zai: { apiKey: true, model: true, displayName: 'Z.ai' },
+  custom: { model: true, displayName: 'Custom API' }
 };
 
 export function getApiManagerScript(): string {

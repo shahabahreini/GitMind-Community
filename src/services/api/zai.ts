@@ -194,3 +194,62 @@ export async function fetchZaiModels(apiKey: string): Promise<string[]> {
     const provider = new ZaiProvider(apiKey, "");
     return provider.getModels();
 }
+
+export async function validateZaiAPIKey(apiKey: string): Promise<{ success: boolean; error?: string; warning?: string; troubleshooting?: string }> {
+    try {
+        const response = await loggedFetch('https://api.z.ai/api/paas/v4/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: "glm-4.5-flash",
+                messages: [
+                    { role: "user", content: "Hi" }
+                ],
+                max_tokens: 1
+            })
+        }, { provider: "zai", operation: "validate" });
+
+        if (response.ok) {
+            return { success: true };
+        }
+
+        const errorText = await response.text();
+        debugLog(`Z.ai API validation error: ${response.status} ${errorText}`);
+
+        let errorMessage = `Z.ai API error: ${response.status}`;
+        let troubleshooting = "Please check your Z.ai API key configuration";
+
+        try {
+            const errorData = JSON.parse(errorText);
+            if (errorData.error?.message) {
+                errorMessage = errorData.error.message;
+            }
+        } catch {
+            // Use default error message
+        }
+
+        if (response.status === 401) {
+            troubleshooting = "Please check that your Z.ai API key is correct and active";
+        } else if (response.status === 429) {
+            return {
+                success: true,
+                warning: "Z.ai rate limit exceeded",
+                troubleshooting: "Your API key is valid but rate limited. Please try again later."
+            };
+        } else if (response.status === 403) {
+            troubleshooting = "Your API key may not have the required permissions. Please check your Z.ai account.";
+        }
+
+        return { success: false, error: errorMessage, troubleshooting };
+    } catch (error) {
+        debugLog("Z.ai API validation error:", error);
+        return {
+            success: false,
+            error: "Network error while validating Z.ai API key",
+            troubleshooting: "Please check your internet connection and try again"
+        };
+    }
+}

@@ -16,6 +16,7 @@ export const PROVIDER_DEFAULTS: ProviderDefaults = {
   together: { model: "meta-llama/Llama-3.3-70B-Instruct-Turbo" },
   openrouter: { model: "google/gemma-3-27b-it:free" },
   anthropic: { model: "claude-sonnet-4" },
+  minimax: { model: "MiniMax-M2" },
   copilot: { model: "gpt-4o" },
   deepseek: { model: "deepseek-chat" },
   grok: { model: "grok-3" },
@@ -26,7 +27,7 @@ export const PROVIDER_DEFAULTS: ProviderDefaults = {
 
 export const API_KEY_PROVIDERS = [
   'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-  'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'perplexity', 'zai'
+  'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'perplexity', 'zai'
 ];
 
 export const NO_API_KEY_PROVIDERS = ['ollama', 'copilot', 'custom'];

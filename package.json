@@ -640,7 +640,7 @@
         "gitmind.zai.apiKey": {
           "type": "string",
           "default": "",
-          "markdownDescription": "API key for Z.ai (GLM) [Learn more](https://z.ai/)"
+          "markdownDescription": "API key for Z.ai (GLM) [Learn more](https://api.z.ai/)"
         },
         "gitmind.zai.model": {
           "type": "string",

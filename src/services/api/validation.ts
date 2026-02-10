@@ -4,6 +4,7 @@ import { validateGeminiAPIKey } from "./gemini";
 import { validateDeepSeekAPIKey } from "./deepseek";
 import { validateGrokAPIKey } from "./grok";
 import { validatePerplexityAPIKey } from "./perplexity";
+import { validateZaiAPIKey } from "./zai";
 import { validateMiniMaxAPIKey } from "./minimax";
 import { getApiConfig } from "../../config/settings";
 import { ApiConfig, MistralRateLimit, ApiProvider, CustomApiConfig } from "../../config/types";
@@ -299,6 +300,17 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
             limit: 20,
             remaining: 18,
             notes: "Perplexity has 20 requests per minute for free tier users. Pro users have higher limits."
+        }
+    },
+    zai: {
+        requiresApiKey: true,
+        validator: validateZaiAPIKey,
+        defaultModel: "glm-4.5-flash",
+        responseTime: 600,
+        rateLimits: {
+            limit: 0,
+            remaining: 0,
+            notes: "Z.ai rate limits depend on your account tier and model usage. Check your Z.ai dashboard for details."
         }
     },
     custom: {

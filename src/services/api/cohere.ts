@@ -141,7 +141,7 @@ export class CohereProvider extends BaseAIProvider {
             const maxOutputTokens = options?.maxTokens ?? config.maxOutputTokens;
 
             // Using the v2 chat API
-            const response = await loggedFetch('https://api.cohere.ai/v2/chat', {
+            const response = await loggedFetch('https://api.cohere.com/v2/chat', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${this.apiKey}`,
@@ -348,7 +348,7 @@ export async function validateCohereAPIKey(
     apiKey: string
 ): Promise<{ success: boolean; error?: string; warning?: string; troubleshooting?: string }> {
     try {
-        const response = await loggedFetch('https://api.cohere.ai/v2/chat', {
+        const response = await loggedFetch('https://api.cohere.com/v2/chat', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${apiKey}`,

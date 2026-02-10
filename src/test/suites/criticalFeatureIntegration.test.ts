@@ -105,7 +105,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
             const requiredProviders = [
                 'gemini', 'openai', 'anthropic', 'minimax', 'huggingface',
                 'ollama', 'mistral', 'cohere', 'together', 'openrouter',
-                'copilot', 'deepseek', 'grok', 'perplexity', 'custom'
+                'copilot', 'deepseek', 'grok', 'perplexity', 'zai', 'custom'
             ];
 
             const settingsManager = new SettingsManager();
@@ -164,7 +164,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
 
             const originalGetConfig = vscode.workspace.getConfiguration;
             (vscode.workspace as any).getConfiguration = () => mockConfig;
-                invalidateConfigCache();
+            invalidateConfigCache();
 
             try {
                 const testSettings = {
@@ -232,7 +232,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                 console.log('   ✓ Data persistence confirmed');
             } finally {
                 vscode.workspace.getConfiguration = originalGetConfig;
-                    invalidateConfigCache();
+                invalidateConfigCache();
             }
         }).timeout(20000);
 
@@ -251,7 +251,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
 
             const originalGetConfig = vscode.workspace.getConfiguration;
             (vscode.workspace as any).getConfiguration = () => mockConfig;
-                invalidateConfigCache();
+            invalidateConfigCache();
 
             try {
                 const settingsManager = new SettingsManager();
@@ -302,7 +302,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                 console.log('   ✓ MessageHandler save command validated');
             } finally {
                 vscode.workspace.getConfiguration = originalGetConfig;
-                    invalidateConfigCache();
+                invalidateConfigCache();
             }
         }).timeout(20000);
 
@@ -322,7 +322,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
 
             const originalGetConfig = vscode.workspace.getConfiguration;
             (vscode.workspace as any).getConfiguration = () => mockConfig;
-                invalidateConfigCache();
+            invalidateConfigCache();
 
             try {
                 // Test provider switching
@@ -337,17 +337,17 @@ suite('🔥 Critical Feature Integration Tests', () => {
                 console.log(`   ✓ Provider switching validated (${providers.length} providers tested)`);
             } finally {
                 vscode.workspace.getConfiguration = originalGetConfig;
-                    invalidateConfigCache();
+                invalidateConfigCache();
             }
         });
     });
 
     suite('3️⃣ API Provider Integration Checkpoints', () => {
-        test('✅ All 15 Providers Are Configured', async () => {
+        test('All 16 Providers Are Configured', async () => {
             const allProviders = [
                 'gemini', 'openai', 'anthropic', 'minimax', 'huggingface',
                 'ollama', 'mistral', 'cohere', 'together', 'openrouter',
-                'copilot', 'deepseek', 'grok', 'perplexity', 'custom'
+                'copilot', 'deepseek', 'grok', 'perplexity', 'zai', 'custom'
             ];
 
             for (const provider of allProviders) {
@@ -398,7 +398,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
 
             const originalGetConfig = vscode.workspace.getConfiguration;
             (vscode.workspace as any).getConfiguration = () => mockConfig;
-                invalidateConfigCache();
+            invalidateConfigCache();
 
             try {
                 const result = await checkApiSetup();
@@ -414,7 +414,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                 debugLog('API validation test completed', error);
             } finally {
                 vscode.workspace.getConfiguration = originalGetConfig;
-                    invalidateConfigCache();
+                invalidateConfigCache();
             }
         });
 
@@ -564,7 +564,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
 
             const originalGetConfig = vscode.workspace.getConfiguration;
             (vscode.workspace as any).getConfiguration = () => mockConfig;
-                invalidateConfigCache();
+            invalidateConfigCache();
 
             try {
                 // Step 1: User opens settings (simulated)
@@ -625,7 +625,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                 console.log('   ✓ 6 workflow steps executed successfully');
             } finally {
                 vscode.workspace.getConfiguration = originalGetConfig;
-                    invalidateConfigCache();
+                invalidateConfigCache();
             }
         }).timeout(20000);
 
@@ -690,7 +690,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
 
             const originalGetConfig = vscode.workspace.getConfiguration;
             (vscode.workspace as any).getConfiguration = () => mockConfig;
-                invalidateConfigCache();
+            invalidateConfigCache();
 
             try {
                 const settingsManager = new SettingsManager();
@@ -703,7 +703,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                 console.log('   ✓ Corrupted settings recovery validated');
             } finally {
                 vscode.workspace.getConfiguration = originalGetConfig;
-                    invalidateConfigCache();
+                invalidateConfigCache();
             }
         });
 
@@ -721,7 +721,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
 
             const originalGetConfig = vscode.workspace.getConfiguration;
             (vscode.workspace as any).getConfiguration = () => mockConfig;
-                invalidateConfigCache();
+            invalidateConfigCache();
 
             try {
                 // Simulate concurrent updates
@@ -738,7 +738,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                 console.log('   ✓ Concurrent updates handled correctly');
             } finally {
                 vscode.workspace.getConfiguration = originalGetConfig;
-                    invalidateConfigCache();
+                invalidateConfigCache();
             }
         });
 

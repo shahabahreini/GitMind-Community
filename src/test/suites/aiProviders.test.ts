@@ -509,8 +509,8 @@ suite('AI Providers Tests', () => {
     test('API setup validation should identify provider correctly', async () => {
         const providers = [
             'gemini', 'openai', 'anthropic', 'huggingface', 'ollama',
-            'mistral', 'cohere', 'together', 'openrouter', 'copilot',
-            'deepseek', 'grok', 'perplexity'
+            'mistral', 'cohere', 'together', 'openrouter', 'minimax', 'copilot',
+            'deepseek', 'grok', 'perplexity', 'zai', 'custom'
         ];
 
         for (const provider of providers) {

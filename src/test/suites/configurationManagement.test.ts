@@ -38,7 +38,7 @@ suite('Configuration Management Tests', () => {
         const providers = [
             'gemini', 'openai', 'anthropic', 'huggingface', 'ollama',
             'mistral', 'cohere', 'together', 'openrouter', 'copilot', 'minimax',
-            'deepseek', 'grok', 'perplexity'
+            'deepseek', 'grok', 'perplexity', 'zai', 'custom'
         ];
 
         for (const provider of providers) {
@@ -252,8 +252,8 @@ suite('Configuration Management Tests', () => {
     test('Configuration should validate enum values', () => {
         const validProviders = [
             'gemini', 'huggingface', 'ollama', 'mistral', 'cohere',
-            'openai', 'together', 'openrouter', 'anthropic', 'copilot',
-            'deepseek', 'grok', 'perplexity'
+            'openai', 'together', 'openrouter', 'anthropic', 'minimax', 'copilot',
+            'deepseek', 'grok', 'perplexity', 'zai', 'custom'
         ];
 
         const invalidProviders = ['unknown', 'invalid', ''];

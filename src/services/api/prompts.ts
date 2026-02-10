@@ -1544,6 +1544,7 @@ export function validatePromptLength(prompt: string, provider: string): { valid:
     'grok': 512000,          // Grok: 128k tokens
     'perplexity': 128000,    // Perplexity: 32k tokens
     'zai': 250000,           // Z.ai (GLM-4): 65k-128k output limit, input larger. Using ~64k tokens conservative.
+    'minimax': 800000,       // MiniMax M2: 200k tokens (~800k characters)
     'together': 128000,      // Together AI: varies by model, ~32k typical
     'openrouter': 512000,    // OpenRouter: varies by model, using conservative estimate
     'huggingface': 16000,    // HuggingFace: varies widely, conservative estimate

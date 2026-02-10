@@ -99,11 +99,13 @@ export function getMessageHandlersScript(): string {
         together: 'Together AI',
         openrouter: 'OpenRouter',
         anthropic: 'Anthropic',
+        minimax: 'MiniMax',
         copilot: 'GitHub Copilot',
         deepseek: 'DeepSeek',
         grok: 'Grok',
         perplexity: 'Perplexity',
-        zai: 'Z.ai'
+        zai: 'Z.ai',
+        custom: 'Custom API'
       };
       return displayNames[provider] || provider;
     }
