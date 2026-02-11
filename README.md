@@ -8,7 +8,7 @@ Stop writing commit messages manually. GitMind analyzes your code changes and ge
 Choose from OpenAI, Anthropic, MiniMax, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, or GitHub Copilot. Switch anytime.
 
 <div align="center">
-<img src="images/all_providers_GitMind.jpg" alt="GitMind Support 15+ AI API Providers" width="40%"/>
+<img src="images/all_providers_GitMind.jpg" alt="GitMind Support 15+ AI API Providers" width="80%"/>
 </div>
 
 **Zero Setup Options Available**
@@ -30,7 +30,7 @@ Adaptive chunking processes massive diffs without hitting token limits. Tested w
 <div align="center">
   <table>
     <tr>
-      <td align="center" width="80%">
+      <td align="center" width="50%">
         <img src="images/s-14.png" alt="GitMind AI Commit Generation" width="250"/>
         <br/>
         <em>Advanced Settings Panel (Pro Users)</em>
