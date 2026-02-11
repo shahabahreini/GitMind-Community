@@ -1082,6 +1082,11 @@ function registerCommands(context: vscode.ExtensionContext): vscode.Disposable[]
       vscode.window.showInformationMessage("Onboarding state has been reset. Restart VS Code to see the onboarding again.");
     }),
 
+    vscode.commands.registerCommand("gitmind.resetOnboardingState", async () => {
+      await OnboardingManager.resetOnboardingState(context);
+      vscode.window.showInformationMessage("Onboarding state has been reset. Restart VS Code to see the onboarding again.");
+    }),
+
     vscode.commands.registerCommand("gitmind.reEnableOnboarding", async () => {
       const config = vscode.workspace.getConfiguration('gitmind');
       await config.update('showOnboarding', true, vscode.ConfigurationTarget.Global);

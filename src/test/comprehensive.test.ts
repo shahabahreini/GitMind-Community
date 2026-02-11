@@ -16,6 +16,7 @@ import './suites/diffProcessor.test';
 import './suites/tokenCounter.test';
 import './suites/minimaxIntegrationChecklist.test';
 import './suites/minimaxApiSetupErrors.test';
+import './suites/integrationIntegrity.test';
 
 // Import core services for testing
 import { getApiConfig } from '../config/settings';
