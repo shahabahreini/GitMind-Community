@@ -530,8 +530,15 @@ export class ProviderConfig {
                     loadButtonId: 'loadZaiModels',
                     loadCommand: 'gitmind.loadZaiModels',
                     options: [
+                        { value: 'glm-5', label: 'GLM-5 (Flagship)' },
                         { value: 'glm-4.7', label: 'GLM-4.7 (Complex Tasks)' },
-                        { value: 'glm-4.5-air', label: 'GLM-4.5-Air (Fast)' }
+                        { value: 'glm-4.6', label: 'GLM-4.6 (128K Output)' },
+                        { value: 'glm-4.5', label: 'GLM-4.5 (Balanced)' },
+                        { value: 'glm-4.5-air', label: 'GLM-4.5-Air (Fast)' },
+                        { value: 'glm-4.5-x', label: 'GLM-4.5-X (Large Context)' },
+                        { value: 'glm-4.5-airx', label: 'GLM-4.5-AirX (Ultra-Light)' },
+                        { value: 'glm-4.5-flash', label: 'GLM-4.5-Flash' },
+                        { value: 'glm-4-32b-0414-128k', label: 'GLM-4-32B' }
                     ]
                 }
             ]

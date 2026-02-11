@@ -89,7 +89,11 @@ export class ZaiProvider extends BaseAIProvider {
     }
 
     async getModels(): Promise<string[]> {
-        return ['glm-4.7', 'glm-4.5-air'];
+        return [
+            'glm-5', 'glm-4.7', 'glm-4.6',
+            'glm-4.5', 'glm-4.5-air', 'glm-4.5-x', 'glm-4.5-airx', 'glm-4.5-flash',
+            'glm-4-32b-0414-128k'
+        ];
     }
 
     async validateApiKey(): Promise<boolean> {
