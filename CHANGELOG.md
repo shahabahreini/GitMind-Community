@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Enhanced
+
+- Added configurable API endpoint selection for Z.ai provider.
+  - Users can now choose between "Regular" (general chat) and "Code Plan" (code-optimized) endpoints.
+  - Default endpoint changed to "Code Plan" for better code generation performance.
+  - Settings UI updated with endpoint dropdown for seamless configuration.
+
+## v4.10.0 - 2026-02-11
+
+### New Features
+
+- Added new Z.ai model variants including GLM-5, GLM-4.6, GLM-4.5-X, and GLM-4.5-Flash.
+  - Updated model descriptions and defaults to reflect expanded capabilities and use cases.
+  - Modified type definitions and API responses to support the new model options.
+
+- Added new command "gitmind.resetOnboardingState" to reset onboarding state.
+  - Displays confirmation message after resetting state.
+  - Requires restarting VS Code to see onboarding again.
+
+### Enhanced
+
+- Changed default Z.ai model from glm-4.5-flash to glm-4.5-air across configurations.
+  - Removed deprecated model options and descriptions from the enum and UI.
+  - Updated API endpoint to use the new coding-specific path for glm-4.5-air.
+
 ## v4.9.2 - 2026-02-11
 
 ### New Features

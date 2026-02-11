@@ -414,7 +414,9 @@ export async function checkApiSetup(): Promise<ApiCheckResult> {
         const validation =
             config.type === "gemini"
                 ? await validateGeminiAPIKey(apiKeyOrUrl, config.model)
-                : await validatorConfig.validator!(apiKeyOrUrl);
+                : config.type === "zai"
+                    ? await validateZaiAPIKey(apiKeyOrUrl, (config as any).endpoint || 'coding')
+                    : await validatorConfig.validator!(apiKeyOrUrl);
 
         if (typeof validation === 'boolean') {
             result.success = validation;

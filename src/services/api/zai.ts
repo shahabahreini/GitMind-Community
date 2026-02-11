@@ -14,21 +14,27 @@ interface ZaiError {
 }
 
 export class ZaiProvider extends BaseAIProvider {
-    constructor(apiKey: string, model: string) {
+    private endpoint: string;
+
+    constructor(apiKey: string, model: string, endpointType: 'regular' | 'coding' = 'coding') {
         super(apiKey, model);
+        this.endpoint = endpointType === 'regular'
+            ? 'https://api.z.ai/api/paas/v4/chat/completions'
+            : 'https://api.z.ai/api/coding/paas/v4/chat/completions';
+        debugLog(`Z.ai Provider initialized with endpoint: ${this.endpoint}`);
     }
 
     protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
         const controller = this.getAbortController();
 
         try {
-            debugLog(`Calling Z.ai API with model: ${this.model}`);
+            debugLog(`Calling Z.ai API with model: ${this.model} at endpoint: ${this.endpoint}`);
 
             const temperature = options?.temperature ?? 0.2;
             const maxTokens = options?.maxTokens; // Let API use default if not specified
             const topP = options?.topP;
 
-            const response = await loggedFetch('https://api.z.ai/api/coding/paas/v4/chat/completions', {
+            const response = await loggedFetch(this.endpoint, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${this.apiKey}`,
@@ -191,13 +197,19 @@ export class ZaiProvider extends BaseAIProvider {
 }
 
 export async function fetchZaiModels(apiKey: string): Promise<string[]> {
-    const provider = new ZaiProvider(apiKey, "");
+    const provider = new ZaiProvider(apiKey, "", 'coding');
     return provider.getModels();
 }
 
-export async function validateZaiAPIKey(apiKey: string): Promise<{ success: boolean; error?: string; warning?: string; troubleshooting?: string }> {
+export async function validateZaiAPIKey(apiKey: string, endpointType: 'regular' | 'coding' = 'coding'): Promise<{ success: boolean; error?: string; warning?: string; troubleshooting?: string }> {
     try {
-        const response = await loggedFetch('https://api.z.ai/api/coding/paas/v4/chat/completions', {
+        const endpoint = endpointType === 'regular'
+            ? 'https://api.z.ai/api/paas/v4/chat/completions'
+            : 'https://api.z.ai/api/coding/paas/v4/chat/completions';
+
+        debugLog(`Validating Z.ai API key with endpoint: ${endpoint}`);
+
+        const response = await loggedFetch(endpoint, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${apiKey}`,

@@ -65,7 +65,11 @@ const PROVIDER_DEFAULTS: Record<string, ProviderDefaults> = {
     deepseek: { model: "deepseek-chat", enabled: false },
     grok: { model: "grok-3", enabled: false },
     perplexity: { model: "sonar-pro", enabled: false },
-    zai: { model: "glm-4.5-air", enabled: false },
+    zai: {
+        model: "glm-4.5-air",
+        enabled: false,
+        extras: { endpoint: "coding" }
+    },
     custom: {
         model: "",
         enabled: false,
@@ -193,6 +197,9 @@ export async function getApiConfig(): Promise<ApiConfig> {
         case 'huggingface':
             baseConfig.temperature = extras.temperature;
             break;
+        case 'zai':
+            baseConfig.endpoint = extras.endpoint || 'coding';
+            break;
         case 'custom':
             baseConfig.baseUrl = extras.baseUrl || "";
             baseConfig.endpoint = extras.endpoint || "";
@@ -234,6 +241,9 @@ export function getApiConfigSync(): ApiConfig {
             break;
         case 'huggingface':
             baseConfig.temperature = extras.temperature;
+            break;
+        case 'zai':
+            baseConfig.endpoint = extras.endpoint || 'coding';
             break;
     }
 

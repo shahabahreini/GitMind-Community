@@ -521,6 +521,17 @@ export class ProviderConfig {
                     link: { url: 'https://z.ai/', text: 'Get a Z.ai API key' }
                 },
                 {
+                    id: 'zaiEndpoint',
+                    key: 'endpoint',
+                    label: 'API Endpoint',
+                    type: 'select',
+                    tooltip: 'Choose between regular chat or code-optimized endpoint',
+                    options: [
+                        { value: 'regular', label: 'Regular (General Chat)' },
+                        { value: 'coding', label: 'Code Plan (Code Optimized)' }
+                    ]
+                },
+                {
                     id: 'zaiModel',
                     key: 'model',
                     label: 'Model',

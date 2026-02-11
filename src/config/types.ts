@@ -237,6 +237,7 @@ export interface PerplexityApiConfig extends ApiKeyConfig {
 export interface ZaiApiConfig extends ApiKeyConfig {
     type: "zai";
     model: ZaiModel;
+    endpoint?: 'regular' | 'coding';
 }
 
 export interface CustomApiConfig extends BaseApiConfig {

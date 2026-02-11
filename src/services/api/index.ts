@@ -571,6 +571,16 @@ async function getProviderInstance(config: ApiConfig): Promise<BaseAIProvider> {
         throw new Error(`${providerConfig.displayName} API key is required.`);
     }
 
+    // Special handling for Z.ai provider with endpoint configuration
+    if (config.type === 'zai') {
+        const zaiConfig = config as any;
+        return new ProviderClass(
+            zaiConfig.apiKey || "",
+            zaiConfig.model,
+            zaiConfig.endpoint || 'coding'
+        );
+    }
+
     return new ProviderClass(typedConfig.apiKey || "", typedConfig.model);
 }
 

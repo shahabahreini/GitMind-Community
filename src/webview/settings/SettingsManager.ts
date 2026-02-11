@@ -9,6 +9,7 @@ interface ProviderConfig {
     apiKey?: string;
     model: string;
     url?: string;
+    endpoint?: string;
 }
 
 interface ProviderDefaults {
@@ -35,7 +36,7 @@ export class SettingsManager {
         deepseek: { model: "deepseek-chat" },
         grok: { model: "grok-3" },
         perplexity: { model: "llama-3.1-sonar-large-128k-online" },
-        zai: { model: "glm-4.5-flash" },
+        zai: { model: "glm-4.5-air", endpoint: "coding" },
         custom: { model: "" }
     };
 
@@ -160,6 +161,11 @@ export class SettingsManager {
 
             if (provider === 'ollama') {
                 providerConfig.url = config.get<string>(`${provider}.url`) || "";
+            }
+
+            // Read z.ai specific configuration
+            if (provider === 'zai') {
+                (providerConfig as any).endpoint = config.get<string>('zai.endpoint') || 'coding';
             }
 
             // Read custom provider extras and enabled flag
@@ -456,6 +462,10 @@ export class SettingsManager {
 
             if (provider === "ollama" && providerSettings.url !== undefined) {
                 providerUpdates.push(config.update(`${provider}.url`, providerSettings.url, target));
+            }
+
+            if (provider === "zai" && providerSettings.endpoint !== undefined) {
+                providerUpdates.push(config.update("zai.endpoint", providerSettings.endpoint, target));
             }
 
             if (provider === "custom") {

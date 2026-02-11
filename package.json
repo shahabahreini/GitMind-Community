@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI-Powered Commit Messages",
   "description": "Generate professional commit messages in seconds using 15 AI providers (OpenAI, Anthropic, MiniMax, Google Gemini, DeepSeek, Grok, Perplexity, Z.ai, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot) and 50+ models. Zero setup options available.",
-  "version": "4.9.2",
+  "version": "4.10.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -668,6 +668,19 @@
           ],
           "default": "glm-4.5-air",
           "description": "Z.ai model to use for generating commit messages"
+        },
+        "gitmind.zai.endpoint": {
+          "type": "string",
+          "enum": [
+            "regular",
+            "coding"
+          ],
+          "enumDescriptions": [
+            "Regular endpoint - General purpose chat completions",
+            "Code Plan endpoint - Optimized for code generation and analysis"
+          ],
+          "default": "coding",
+          "description": "Z.ai API endpoint type to use"
         },
         "gitmind.custom.enabled": {
           "type": "boolean",
