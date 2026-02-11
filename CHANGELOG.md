@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## v4.9.1 - 2026-02-11
+
+### Enhanced
+
+- Improved README visual presentation by adjusting image widths for better layout and readability.
+  - Increased main AI provider image width for prominence.
+  - Decreased advanced settings panel image width within tables.
+  - Enhanced associated captions for improved clarity.
+
+## v4.9.0 - 2026-02-10
+
+### New Features
+
+- Added native confirmation dialog for Pro deactivation in settings.
+  - Replaced browser confirm dialog with VS Code native warning message.
+  - Handles user cancellation by resetting button state and notifying webview.
+- Added Z.ai provider support with API key validation and model support.
+  - Included Custom API provider option for flexible API integration.
+  - Updated MiniMax provider configuration with proper model defaults.
+
+### Enhanced
+
+- Implemented configuration caching with a 1-second TTL to improve extension responsiveness.
+- Optimized changelog generation by pre-compiling regex patterns and batching 'package.json' checks.
+- Refactored API providers by centralizing common logic and removing legacy functions.
+- Updated default Anthropic model to 'claude-sonnet-4'.
+
+### Technical
+
+- Added cache invalidation for config mocks in tests to ensure consistent test results.
+  - Introduced `invalidateConfigCache()` to clear the internal configuration cache.
+
 ## v4.8.5 - 2026-02-04
 
 ### Fixed
