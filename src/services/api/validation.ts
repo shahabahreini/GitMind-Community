@@ -305,7 +305,7 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
     zai: {
         requiresApiKey: true,
         validator: validateZaiAPIKey,
-        defaultModel: "glm-4.5-flash",
+        defaultModel: "glm-4.5-air",
         responseTime: 600,
         rateLimits: {
             limit: 0,

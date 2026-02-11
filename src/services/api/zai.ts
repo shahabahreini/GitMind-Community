@@ -28,7 +28,7 @@ export class ZaiProvider extends BaseAIProvider {
             const maxTokens = options?.maxTokens; // Let API use default if not specified
             const topP = options?.topP;
 
-            const response = await loggedFetch('https://api.z.ai/api/paas/v4/chat/completions', {
+            const response = await loggedFetch('https://api.z.ai/api/coding/paas/v4/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${this.apiKey}`,
@@ -89,24 +89,20 @@ export class ZaiProvider extends BaseAIProvider {
     }
 
     async getModels(): Promise<string[]> {
-        return [
-            'glm-4.7', 'glm-4.6', 'glm-4.6v', 'glm-4.6v-flash', 'glm-4.6v-flashx',
-            'glm-4.5', 'glm-4.5v', 'glm-4.5-x', 'glm-4.5-flash', 'glm-4.5-air', 'glm-4.5-airx',
-            'glm-4-32b-0414-128k'
-        ];
+        return ['glm-4.7', 'glm-4.5-air'];
     }
 
     async validateApiKey(): Promise<boolean> {
         try {
             // Try a minimal generation request to validate key since model list endpoint might not be available
-            const response = await loggedFetch('https://api.z.ai/api/paas/v4/chat/completions', {
+            const response = await loggedFetch('https://api.z.ai/api/coding/paas/v4/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${this.apiKey}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    model: "glm-4.5-flash",
+                    model: "glm-4.5-air",
                     messages: [
                         { role: "user", content: "Hi" }
                     ],
@@ -197,14 +193,14 @@ export async function fetchZaiModels(apiKey: string): Promise<string[]> {
 
 export async function validateZaiAPIKey(apiKey: string): Promise<{ success: boolean; error?: string; warning?: string; troubleshooting?: string }> {
     try {
-        const response = await loggedFetch('https://api.z.ai/api/paas/v4/chat/completions', {
+        const response = await loggedFetch('https://api.z.ai/api/coding/paas/v4/chat/completions', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${apiKey}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: "glm-4.5-flash",
+                model: "glm-4.5-air",
                 messages: [
                     { role: "user", content: "Hi" }
                 ],

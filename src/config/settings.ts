@@ -65,7 +65,7 @@ const PROVIDER_DEFAULTS: Record<string, ProviderDefaults> = {
     deepseek: { model: "deepseek-chat", enabled: false },
     grok: { model: "grok-3", enabled: false },
     perplexity: { model: "sonar-pro", enabled: false },
-    zai: { model: "glm-4.5-flash", enabled: false },
+    zai: { model: "glm-4.5-air", enabled: false },
     custom: {
         model: "",
         enabled: false,
