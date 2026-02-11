@@ -332,6 +332,34 @@ export function getSubscriptionStyles(): string {
         flex-wrap: wrap;
     }
     
+    .device-management-info {
+        margin-top: 1rem;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--vscode-editorInfo-foreground, rgba(75, 156, 211, 0.4));
+        border-radius: 6px;
+        background: var(--vscode-textBlockQuote-background, rgba(75, 156, 211, 0.08));
+        font-size: 0.8rem;
+        line-height: 1.5;
+        color: var(--vscode-foreground);
+    }
+    
+    .device-management-info p {
+        margin: 0 0 0.4rem 0;
+    }
+    
+    .device-management-info p:last-child {
+        margin-bottom: 0;
+    }
+    
+    .device-management-info a {
+        color: var(--vscode-textLink-foreground);
+        text-decoration: underline;
+    }
+    
+    .device-management-info a:hover {
+        color: var(--vscode-textLink-activeForeground);
+    }
+
     /* Status Badges */
     .status-badge {
         display: inline-flex;

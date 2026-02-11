@@ -348,6 +348,10 @@ export class SubscriptionRenderer extends BaseRenderer {
                     ${FormUtils.createButton('validateLicenseBtn', 'Validate License', 'btn btn-success', false, 'Validate your current license status')}
                     ${FormUtils.createButton('deactivateProBtn', 'Deactivate Pro', 'btn btn-danger', false, 'Deactivate GitMind Pro from this device')}
                 </div>
+                <div class="device-management-info">
+                    <p><strong>Device Management:</strong> Each device can only be deactivated from the device itself. You cannot retrieve or remove all registered devices at once.</p>
+                    <p>If a device is no longer available and you need to free up a license spot, please <a href="https://github.com/shahabahreini/Gitmind-Pro/issues" title="Raise a support ticket">raise a support ticket</a> and it will be addressed.</p>
+                </div>
             </div>
         `;
     }

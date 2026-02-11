@@ -842,7 +842,12 @@ Activation Details:
 • Activations Remaining: ${activationsRemaining}
 • ${expiryInfo}
 
-You can now enjoy all Pro features including advanced AI models, unlimited commits, and priority support.`;
+You can now enjoy all Pro features including advanced AI models, unlimited commits, and priority support.
+
+Device Management:
+• Each device can only be deactivated from the device itself.
+• You cannot retrieve or remove all registered devices at once.
+• If a device is no longer available and you need to free up a license spot, please raise a support ticket at https://github.com/shahabahreini/Gitmind-Pro/issues and it will be addressed.`;
     }
 
     /**
@@ -880,7 +885,7 @@ You can now enjoy all Pro features including advanced AI models, unlimited commi
             'license key not found': 'The license key you entered was not found in our system. Please double-check that you entered the correct license key from your purchase confirmation email.',
             'license_key not found': 'The license key you entered was not found in our system. Please double-check that you entered the correct license key from your purchase confirmation email.',
             'license key expired': 'Your license key has expired. Please contact support or purchase a new license.',
-            'activation limit exceeded': 'Activation limit exceeded. You have reached the maximum number of activations for this license.',
+            'activation limit exceeded': 'Activation limit exceeded. You have reached the maximum number of activations for this license. Each device can only be deactivated from the device itself. If a device is no longer available, please raise a support ticket at https://github.com/shahabahreini/Gitmind-Pro/issues to free up a license spot.',
             'license key disabled': 'This license key has been disabled. Please contact support for assistance.',
             'invalid license key': 'Invalid license key format. Please check that you entered the license key correctly.',
             'not found (404)': 'The license key could not be found in our system. Please verify you entered the correct license key.',
@@ -1049,6 +1054,10 @@ Troubleshooting Steps:
         }
 
         message += '\nYou can reactivate your license on any device using your original license key.';
+        message += '\n\nDevice Management:';
+        message += '\n• Each device can only be deactivated from the device itself.';
+        message += '\n• You cannot retrieve or remove all registered devices at once.';
+        message += '\n• If a device is no longer available and you need to free up a license spot, please raise a support ticket at https://github.com/shahabahreini/Gitmind-Pro/issues and it will be addressed.';
 
         return message;
     }
