@@ -7,7 +7,7 @@
  * Coverage:
  * 1. UI Settings Structure & Rendering
  * 2. Save Button Functionality & Data Persistence
- * 3. API Provider Integration Checkpoints (All 15 providers)
+ * 3. API Provider Integration Checkpoints (All 16 providers)
  * 4. End-to-End User Workflows
  * 5. Error Recovery & Edge Cases
  */
@@ -183,6 +183,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                     copilot: { model: '' },
                     deepseek: { apiKey: '', model: '' },
                     grok: { apiKey: '', model: '' },
+                    groq: { apiKey: '', model: '' },
                     perplexity: { apiKey: '', model: '' },
                     custom: {
                         baseUrl: '',
@@ -276,6 +277,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                         copilot: { model: '' },
                         deepseek: { apiKey: '', model: '' },
                         grok: { apiKey: '', model: '' },
+                        groq: { apiKey: '', model: '' },
                         perplexity: { apiKey: '', model: '' },
                         custom: {
                             baseUrl: '', endpoint: '', authType: "bearer" as const,
@@ -598,6 +600,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                     copilot: { model: '' },
                     deepseek: { apiKey: '', model: '' },
                     grok: { apiKey: '', model: '' },
+                    groq: { apiKey: '', model: '' },
                     perplexity: { apiKey: '', model: '' },
                     custom: {
                         baseUrl: '', endpoint: '', authType: "bearer" as const,
@@ -792,7 +795,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
         console.log('');
         console.log('✅ UI Settings Structure:        VALIDATED');
         console.log('✅ Save Button Functionality:    VALIDATED');
-        console.log('✅ API Provider Integration:     VALIDATED (15 providers)');
+        console.log('✅ API Provider Integration:     VALIDATED (16 providers)');
         console.log('✅ End-to-End Workflows:         VALIDATED');
         console.log('✅ Error Recovery:               VALIDATED');
         console.log('');

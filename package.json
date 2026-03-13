@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI-Powered Commit Messages",
   "description": "Generate professional commit messages in seconds using 15 AI providers (OpenAI, Anthropic, MiniMax, Google Gemini, DeepSeek, Grok, Perplexity, Z.ai, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot) and 50+ models. Zero setup options available.",
-  "version": "4.10.0",
+  "version": "4.11.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -47,6 +47,7 @@
             "copilot",
             "deepseek",
             "grok",
+            "groq",
             "perplexity",
             "zai",
             "custom"
@@ -65,6 +66,7 @@
             "Use GitHub Copilot for generating commit messages (no API key required)",
             "Use DeepSeek AI for generating commit messages",
             "Use Grok AI for generating commit messages",
+            "Use Groq for ultra-fast AI inference with free models",
             "Use Perplexity AI for generating commit messages",
             "Use Z.ai (GLM) for generating commit messages",
             "Use Custom API endpoint for generating commit messages (Pro feature)"
@@ -573,6 +575,30 @@
           "default": "grok-4",
           "description": "Grok model to use for generating commit messages"
         },
+        "gitmind.groq.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API key for Groq [Learn more](https://console.groq.com/keys)"
+        },
+        "gitmind.groq.model": {
+          "type": "string",
+          "enum": [
+            "llama-3.3-70b-versatile",
+            "llama-3.1-8b-instant",
+            "meta-llama/llama-4-scout-17b-16e-instruct",
+            "openai/gpt-oss-120b",
+            "openai/gpt-oss-20b"
+          ],
+          "enumDescriptions": [
+            "Llama 3.3 70B Versatile - Powerful versatile model (30 RPM, 12K TPM)",
+            "Llama 3.1 8B Instant - Fast lightweight model (30 RPM, 6K TPM)",
+            "Llama 4 Scout 17B 16E - Meta's efficient instruction model (30 RPM)",
+            "GPT-OSS 120B - Large open-source model (30 RPM, 8K TPM)",
+            "GPT-OSS 20B - Compact open-source model (30 RPM, 8K TPM)"
+          ],
+          "default": "llama-3.3-70b-versatile",
+          "description": "Groq model to use for generating commit messages"
+        },
         "gitmind.perplexity.apiKey": {
           "type": "string",
           "default": "",
@@ -1017,6 +1043,11 @@
         "category": "GitMind"
       },
       {
+        "command": "gitmind.checkApiConfig",
+        "title": "Internal: Check API Config",
+        "category": "GitMind"
+      },
+      {
         "command": "gitmind.checkRateLimits",
         "title": "Check Rate Limits",
         "category": "GitMind"
@@ -1034,6 +1065,11 @@
       {
         "command": "gitmind.loadZaiModels",
         "title": "Load Z.ai Models",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.loadGroqModels",
+        "title": "Load Groq Models",
         "category": "GitMind"
       },
       {
@@ -1258,10 +1294,10 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "^25.3.3",
     "@types/sanitize-html": "^2.16.0",
-    "@types/vscode": "^1.109.0",
+    "@types/vscode": "^1.63.0",
     "@typescript-eslint/eslint-plugin": "^8.56.1",
     "@typescript-eslint/parser": "^8.56.1",
-    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-cli": "^0.0.11",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.7.1",
     "esbuild": "^0.27.3",

@@ -11,6 +11,18 @@ Use this as a **complete** checklist for adding a new provider so it behaves con
 
 I’ll assume the provider id is `newprovider` (lowercase key used everywhere).
 
+### Recent Real-World Example: Groq Provider Issue (March 2026)
+The Groq provider was added to most registries but **missed in `src/webview/settings/scripts/apiManager.ts`**. This caused:
+- ❌ API keys entered in UI settings were not saved
+- ❌ Settings reload showed empty API key field
+- ❌ API connection tests failed silently
+
+**Root cause:** The `PROVIDER_CONFIGS` object in `apiManager.ts` is used by `getProviderSettings()` to read form input values. Without it, the code couldn’t read the `groqApiKey` input element from the DOM.
+
+**Fix:** Added one line: `groq: { apiKey: true, model: false, displayName: ‘Groq’ }`
+
+**Lesson:** Every provider must be registered in **all** the files listed in the “Complete File Update Reference” section. Use that checklist as a master list to ensure nothing is missed.
+
 ---
 
 # 1) Canonical identifiers
@@ -134,15 +146,22 @@ These files must be consistent or the UI will “work” but not save reliably.
 ---
 
 # 9) Settings UI: API setup checks + required fields validation
+⚠️ **CRITICAL:** This step is essential for API key persistence and validation.
+
 File: [src/webview/settings/scripts/apiManager.ts](cci:7://file:///Users/shahabbahreinijangjoo/Documents/Programming%20Projects/GitMind-Pro/src/webview/settings/scripts/apiManager.ts:0:0-0:0)
-- **[Provider configs]** Add to `PROVIDER_CONFIGS`:
-  - `apiKey: true/false`
-  - `model: true/false`
-  - `url: true/false` if needed
-  - `displayName`
+- **[Provider configs]** Add to `PROVIDER_CONFIGS` object:
+  - `newprovider: { apiKey: true/false, model: true/false, url: true/false (if needed), displayName: “Display Name” }`
+
+This object is used by `getProviderSettings()` to read form input values from the DOM. Without it:
+- API keys entered in the UI **will NOT be saved**
+- API checks **will fail** because the key cannot be retrieved
+- Form validation will not work
+
 This drives:
-- “Missing required fields …”
-- connection / rate limit checks
+- “Missing required fields …” validation
+- Connection / rate limit checks
+
+**Example of the bug:** Groq provider was added to all other registries but missing from `PROVIDER_CONFIGS`, causing API keys to not be saved despite appearing to work in the UI.
 
 ---
 
@@ -241,5 +260,54 @@ If API key is required, verify:
 
 ---
 
+## Complete File Update Reference
+
+When adding a new provider `newprovider`, update these files in this order:
+
+### 1. Configuration Schema & Defaults
+- [ ] **package.json** — Add to `gitmind.apiProvider.enum`, settings keys, defaults
+- [ ] **src/config/settings.ts** — Add `PROVIDER_DEFAULTS` entry, verify `getApiConfig()` and `getApiConfigSync()`
+- [ ] **src/config/types.ts** — Add to `ApiProvider` union type (if needed)
+
+### 2. Runtime Provider Implementation
+- [ ] **src/services/api/newprovider.ts** — Implement provider class + `fetchNewProviderModels()`
+- [ ] **src/extension.ts** — Import and register `gitmind.loadNewProviderModels` command + `fetchNewProviderModels`
+- [ ] **src/services/api/validation.ts** — Add validator to `VALIDATOR_CONFIGS`
+
+### 3. Settings Persistence & Encryption
+- [ ] **src/webview/settings/SettingsManager.ts** — Add to `PROVIDER_DEFAULTS` + `API_KEY_PROVIDERS` or `NO_API_KEY_PROVIDERS`
+- [ ] **src/services/encryption/SecureKeyManager.ts** — Verify provider is listed in allowed providers array (if needed)
+
+### 4. Settings UI: Form Definition
+- [ ] **src/webview/settings/components/config/ProviderConfig.ts** — Add provider section with fields
+- [ ] **src/webview/settings/components/ProviderIcon.ts** — Add SVG icon to `ProviderIcon.icons`
+
+### 5. Settings UI: Constants & Scripts
+- [ ] **src/webview/settings/scripts/constants.ts** — Add to `PROVIDER_DEFAULTS`, `API_KEY_PROVIDERS`/`NO_API_KEY_PROVIDERS`, `DEFAULT_MODELS`
+- [ ] **src/webview/settings/scripts/settingsConstants.ts** — Same as above (duplicate registries in this repo)
+- [ ] **src/webview/settings/scripts/apiManager.ts** — ⚠️ **CRITICAL** Add to `PROVIDER_CONFIGS` (required for API key persistence!)
+- [ ] **src/webview/settings/scripts/messageHandlers.ts** — Add models loaded handler + display name mapping
+- [ ] **src/webview/settings/scripts/uiManager.ts** — Add to `PROVIDER_DISPLAY_CONFIG` + `StatusBanner` provider configs
+
+### 6. Verification Checklist
+- [ ] Run `npm run check-types` — no errors
+- [ ] Run `npm run lint` — no errors
+- [ ] Test settings persistence — enter key/model, save, reload UI, verify values persist
+- [ ] Test model loading — click "Load Models" button, verify dropdown updates
+- [ ] Test API check — click "Check Connection", verify appropriate success/error message
+- [ ] Test commit generation — generate commit with new provider, verify it works
+
+### Common Pitfalls Tracker
+| Issue | File | Impact | How to Spot |
+|-------|------|--------|-----------|
+| Missing from `apiManager.ts` `PROVIDER_CONFIGS` | `src/webview/settings/scripts/apiManager.ts` | **API keys don't save** | UI accepts key but it doesn't persist after reload |
+| Missing from `PROVIDER_DEFAULTS` | Multiple files | Settings don't initialize | Dropdown shows no option or throws error |
+| Missing from `API_KEY_PROVIDERS` / `NO_API_KEY_PROVIDERS` | `SettingsManager.ts`, constants files | Settings don't save or encrypt | API key appears but gets lost on reload |
+| Icon path mismatch | `ProviderIcon.ts` | Gray placeholder instead of logo | Compare `apiProvider` value with icon key exactly |
+| Missing validation entry | `src/services/api/validation.ts` | API check doesn't work | "Connection test failed" with no helpful error |
+| Model fetch not registered | `src/extension.ts` | Model loading fails silently | "Load Available Models" button does nothing |
+
+---
+
 ## Status
-Checklist provided for future reference; it covers both API-key and no-key providers, including full AI model integration and all repo-specific registries.
+Checklist updated to include comprehensive file list, Groq fix documentation, and common pitfalls tracker. Use the **Complete File Update Reference** section as a master checklist for adding a new provider.

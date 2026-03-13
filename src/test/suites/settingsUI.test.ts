@@ -154,6 +154,7 @@ suite('Settings UI Tests', () => {
                     copilot: { model: '' },
                     deepseek: { apiKey: '', model: '' },
                     grok: { apiKey: '', model: '' },
+                    groq: { apiKey: '', model: '' },
                     perplexity: { apiKey: '', model: '' },
                     custom: {
                         baseUrl: '',
@@ -319,6 +320,7 @@ suite('Settings UI Tests', () => {
                     copilot: { model: '' },
                     deepseek: { apiKey: '', model: '' },
                     grok: { apiKey: '', model: '' },
+                    groq: { apiKey: '', model: '' },
                     perplexity: { apiKey: '', model: '' },
                     custom: {
                         baseUrl: '',

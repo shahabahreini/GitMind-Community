@@ -22,6 +22,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   copilot: { model: true, displayName: 'GitHub Copilot' },
   deepseek: { apiKey: true, model: false, displayName: 'DeepSeek' },
   grok: { apiKey: true, model: false, displayName: 'Grok' },
+  groq: { apiKey: true, model: false, displayName: 'Groq' },
   perplexity: { apiKey: true, model: false, displayName: 'Perplexity' },
   zai: { apiKey: true, model: true, endpoint: true, displayName: 'Z.ai' },
   custom: { model: true, displayName: 'Custom API' }

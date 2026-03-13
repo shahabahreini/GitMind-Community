@@ -3,6 +3,7 @@ import { debugLog } from "../debug/logger";
 import { validateGeminiAPIKey } from "./gemini";
 import { validateDeepSeekAPIKey } from "./deepseek";
 import { validateGrokAPIKey } from "./grok";
+import { validateGroqAPIKey } from "./groq";
 import { validatePerplexityAPIKey } from "./perplexity";
 import { validateZaiAPIKey } from "./zai";
 import { validateMiniMaxAPIKey } from "./minimax";
@@ -289,6 +290,17 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
             limit: 5000,
             remaining: 4800,
             notes: "Grok rate limits depend on your account tier and model usage"
+        }
+    },
+    groq: {
+        requiresApiKey: true,
+        validator: validateGroqAPIKey,
+        defaultModel: "llama-3.3-70b-versatile",
+        responseTime: 300,
+        rateLimits: {
+            limit: 30,
+            remaining: 30,
+            notes: "Groq free-tier: 30 RPM, rate limits vary by model"
         }
     },
     perplexity: {

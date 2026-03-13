@@ -19,6 +19,7 @@ import { fetchHuggingFaceModels } from "./services/api/huggingface";
 import { fetchCohereModels } from "./services/api/cohere";
 import { fetchTogetherModels } from "./services/api/together";
 import { fetchGrokModels } from "./services/api/grok";
+import { fetchGroqModels } from "./services/api/groq";
 import { fetchDeepSeekModels } from "./services/api/deepseek";
 import { fetchGeminiModels } from "./services/api/gemini";
 import { fetchAnthropicModels } from "./services/api/anthropic";
@@ -44,12 +45,12 @@ const TIMEOUT_DURATION = 60000;
 const API_CHECK_TIMEOUT = 15000;
 const SUPPORTED_PROVIDERS = [
   "Gemini", "Hugging Face", "Ollama", "Mistral", "Cohere", "OpenAI",
-  "Together AI", "OpenRouter", "Anthropic", "MiniMax", "GitHub Copilot", "DeepSeek", "Grok", "Perplexity", "Z.ai", "Custom API"
+  "Together AI", "OpenRouter", "Anthropic", "MiniMax", "GitHub Copilot", "DeepSeek", "Grok", "Groq", "Perplexity", "Z.ai", "Custom API"
 ];
 
 const API_KEY_PROVIDERS = [
   'gemini', 'openai', 'mistral', 'cohere', 'huggingface', 'anthropic',
-  'minimax', 'together', 'openrouter', 'deepseek', 'grok', 'perplexity', 'zai'
+  'minimax', 'together', 'openrouter', 'deepseek', 'grok', 'groq', 'perplexity', 'zai'
 ];
 
 const state: ExtensionState = {
@@ -415,7 +416,7 @@ function clampCommitBodyDescription(description: string, maxBodyLines?: number):
 }
 
 async function handleLoadModels(
-  modelType: 'mistral' | 'huggingface' | 'cohere' | 'together' | 'openrouter' | 'grok' | 'deepseek' | 'gemini' | 'anthropic' | 'minimax' | 'openai' | 'zai',
+  modelType: 'mistral' | 'huggingface' | 'cohere' | 'together' | 'openrouter' | 'grok' | 'groq' | 'deepseek' | 'gemini' | 'anthropic' | 'minimax' | 'openai' | 'zai',
   fetchFunction: (apiKey: string) => Promise<any[]>
 ): Promise<void> {
   // Prevent duplicate concurrent calls for the same provider
@@ -458,6 +459,9 @@ async function handleLoadModels(
           break;
         case 'grok':
           commandSuffix = 'grokModelsLoaded';
+          break;
+        case 'groq':
+          commandSuffix = 'groqModelsLoaded';
           break;
         case 'deepseek':
           commandSuffix = 'deepseekModelsLoaded';
@@ -515,6 +519,9 @@ async function handleLoadModels(
           case 'grok':
             commandSuffix = 'grokModelsLoaded';
             break;
+          case 'groq':
+            commandSuffix = 'groqModelsLoaded';
+            break;
           case 'deepseek':
             commandSuffix = 'deepseekModelsLoaded';
             break;
@@ -562,6 +569,9 @@ async function handleLoadModels(
             break;
           case 'grok':
             commandSuffix = 'grokModelsLoaded';
+            break;
+          case 'groq':
+            commandSuffix = 'groqModelsLoaded';
             break;
           case 'deepseek':
             commandSuffix = 'deepseekModelsLoaded';
@@ -982,6 +992,10 @@ function registerCommands(context: vscode.ExtensionContext): vscode.Disposable[]
 
     vscode.commands.registerCommand("gitmind.loadGrokModels", () =>
       handleLoadModels('grok', fetchGrokModels)
+    ),
+
+    vscode.commands.registerCommand("gitmind.loadGroqModels", () =>
+      handleLoadModels('groq', fetchGroqModels)
     ),
 
     vscode.commands.registerCommand("gitmind.loadDeepSeekModels", () =>

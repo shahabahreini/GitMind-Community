@@ -4,8 +4,8 @@ Stop writing commit messages manually. GitMind analyzes your code changes and ge
 
 ## Why GitMind?
 
-**One Extension, 15+ AI Providers**
-Choose from OpenAI, Anthropic, MiniMax, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, or GitHub Copilot. Switch anytime.
+**One Extension, 16+ AI Providers**
+Choose from OpenAI, Anthropic, MiniMax, Google Gemini, DeepSeek, Grok, Groq, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, or GitHub Copilot. Switch anytime.
 
 <div align="center">
 <img src="images/all_providers_GitMind.jpg" alt="GitMind Support 15+ AI API Providers" width="80%"/>
@@ -101,6 +101,7 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 | **Anthropic**      | Superior reasoning, long context          | No        | 2 min      |
 | **MiniMax**        | Fast text generation, Anthropic-style API | No        | 2 min      |
 | **Grok**           | Real-time information, X.AI models        | No        | 2 min      |
+| **Groq**           | Ultra-fast inference, Llama 3 models      | No        | 2 min      |
 | **Perplexity**     | Web search capabilities, real-time data   | No        | 2 min      |
 | **Mistral**        | European AI, multilingual support         | No        | 2 min      |
 | **Z.ai (GLM)**     | Latest GLM models, long context           | Trial     | 2 min      |
@@ -144,8 +145,9 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 | ------------------ | ---------------------------------- | ------- | ------------------------------------------------------------- |
 | **GitHub Copilot** | gpt-4o, claude-3.5-sonnet, o3      | 128k    | [VS Code Copilot](https://copilot.github.com/)                |
 | **Google Gemini**  | 2.5-flash, 2.5-pro, 2.0-flash      | 2M      | [AI Studio](https://ai.google.dev/gemini-api/docs/api-key)    |
-| **Grok (X.ai)**    | grok-3, grok-3-fast, grok-3-mini   | 128k    | [X.ai Console](https://console.x.ai/)                         |
-| **DeepSeek**       | reasoner, chat                     | 128k    | [DeepSeek Platform](https://platform.deepseek.com/)           |
+| **Grok (X.ai)**    | grok-3, grok-3-fast, grok-3-mini               | 128k    | [X.ai Console](https://console.x.ai/)                         |
+| **Groq**           | llama-3.3-70b, llama-3.1-8b, deepseek-r1  | 128k    | [Groq Cloud](https://console.groq.com/)                       |
+| **DeepSeek**       | reasoner, chat                                 | 128k    | [DeepSeek Platform](https://platform.deepseek.com/)           |
 | **Perplexity**     | sonar-pro, sonar-reasoning, sonar  | 127k    | [Perplexity Settings](https://www.perplexity.ai/settings/api) |
 | **Mistral AI**     | large-latest, medium, small        | 128k    | [Mistral Console](https://console.mistral.ai/)                |
 | **Ollama**         | deepseek-r1, llama3.3, phi4, qwen3 | 128k    | [Ollama Download](https://ollama.com/download)                |
@@ -164,8 +166,8 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 
 | Feature                            | Free                | Pro                                     |
 | ---------------------------------- | ------------------- | --------------------------------------- |
-| **AI Providers**                   | 14 providers        | 15 providers (includes Custom API)      |
-| **Models**                         | 50+ models          | 50+ models                              |
+| **AI Providers**                   | 15 providers        | 16 providers (includes Custom API)      |
+| **Models**                         | 60+ models          | 60+ models                              |
 | **Commit Styles**                  | Basic, Conventional | 11 professional styles                  |
 | **Git Integration**                | Yes                 | Yes                                     |
 | **Multi-Repository Support**       | Yes                 | Yes                                     |
@@ -191,7 +193,7 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 ### Core (Free)
 
 **Multi-Provider AI**
-Access 15 providers with unified configuration: OpenAI, Anthropic, MiniMax, Google Gemini, DeepSeek, Grok, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot, Z.ai. Switch providers instantly.
+Access 16 providers with unified configuration: OpenAI, Anthropic, MiniMax, Google Gemini, DeepSeek, Grok, Groq, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot, Z.ai. Switch providers instantly.
 
 **Basic Commit Style**
 Simple, straightforward commit messages without prefixes or conventions.

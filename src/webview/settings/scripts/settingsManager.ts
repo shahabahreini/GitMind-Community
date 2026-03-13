@@ -439,7 +439,7 @@ function generatePasswordFieldManager(): string {
       const isEncrypted = currentSettings.pro.encryptionEnabled === true;
       const apiKeyFields = [
         'geminiApiKey', 'openaiApiKey', 'anthropicApiKey', 'deepseekApiKey',
-        'grokApiKey', 'perplexityApiKey', 'cohereApiKey', 'openrouterApiKey',
+        'grokApiKey', 'groqApiKey', 'perplexityApiKey', 'cohereApiKey', 'openrouterApiKey',
         'togetherApiKey', 'mistralApiKey', 'huggingfaceApiKey'
       ];
       

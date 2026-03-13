@@ -18,6 +18,7 @@ export function getMessageHandlersScript(): string {
         cohereModelsLoaded: () => handleModelsLoaded('cohere', message, ${JSON.stringify(DEFAULT_MODELS.cohere)}),
         togetherModelsLoaded: () => handleModelsLoaded('together', message, ${JSON.stringify(DEFAULT_MODELS.together)}),
         grokModelsLoaded: () => handleModelsLoaded('grok', message, ${JSON.stringify(DEFAULT_MODELS.grok)}),
+        groqModelsLoaded: () => handleModelsLoaded('groq', message, ${JSON.stringify(DEFAULT_MODELS.groq)}),
         deepseekModelsLoaded: () => handleModelsLoaded('deepseek', message, ${JSON.stringify(DEFAULT_MODELS.deepseek)}),
         geminiModelsLoaded: () => handleModelsLoaded('gemini', message, ${JSON.stringify(DEFAULT_MODELS.gemini)}),
         anthropicModelsLoaded: () => handleModelsLoaded('anthropic', message, ${JSON.stringify(DEFAULT_MODELS.anthropic)}),
@@ -103,6 +104,7 @@ export function getMessageHandlersScript(): string {
         copilot: 'GitHub Copilot',
         deepseek: 'DeepSeek',
         grok: 'Grok',
+        groq: 'Groq',
         perplexity: 'Perplexity',
         zai: 'Z.ai',
         custom: 'Custom API'

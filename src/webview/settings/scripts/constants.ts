@@ -16,7 +16,7 @@ export const PROVIDER_DEFAULTS: ProviderDefaults = {
   together: { model: "meta-llama/Llama-3.3-70B-Instruct-Turbo" },
   openrouter: { model: "google/gemma-3-27b-it:free" },
   anthropic: { model: "claude-sonnet-4" },
-  minimax: { model: "MiniMax-M2" },
+  minimax: { model: "MiniMax-M2.5" },
   copilot: { model: "auto" },
   deepseek: { model: "deepseek-chat" },
   grok: { model: "grok-3" },
@@ -117,8 +117,11 @@ export const DEFAULT_MODELS = {
     'claude-instant-1.2'
   ],
   minimax: [
+    'MiniMax-M1',
     'MiniMax-M2',
-    'MiniMax-M2-Stable'
+    'MiniMax-M2.1',
+    'MiniMax-M2.5',
+    'MiniMax-Text-01'
   ],
   copilot: [
     'auto',
@@ -160,5 +163,12 @@ export const DEFAULT_MODELS = {
     'glm-4.5-air',
     'glm-4.5-airx',
     'glm-4-32b-0414-128k'
+  ],
+  groq: [
+    'llama-3.3-70b-versatile',
+    'llama-3.1-8b-instant',
+    'meta-llama/llama-4-scout-17b-16e-instruct',
+    'openai/gpt-oss-120b',
+    'openai/gpt-oss-20b'
   ]
 };

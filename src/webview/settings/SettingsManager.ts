@@ -31,7 +31,7 @@ export class SettingsManager {
         together: { model: "meta-llama/Llama-3.3-70B-Instruct-Turbo" },
         openrouter: { model: "google/gemma-3-27b-it:free" },
         anthropic: { model: "claude-sonnet-4" },
-        minimax: { model: "MiniMax-M2" },
+        minimax: { model: "MiniMax-M2.5" },
         copilot: { model: "auto" },
         deepseek: { model: "deepseek-chat" },
         grok: { model: "grok-3" },

@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 // Core types
-export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic" | "minimax" | "copilot" | "deepseek" | "grok" | "perplexity" | "zai" | "custom";
+export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic" | "minimax" | "copilot" | "deepseek" | "grok" | "groq" | "perplexity" | "zai" | "custom";
 export type CommitStyle =
     | 'basic'
     | 'conventional'
@@ -102,6 +102,11 @@ export type GrokModel =
     | "grok-4" | "grok-4-fast-reasoning" | "grok-4-fast-non-reasoning" | "grok-code-fast-1"
     | "grok-3" | "grok-3-mini"
     | "grok-2-1212" | "grok-2-vision-1212";
+
+export type GroqModel =
+    | "llama-3.1-8b-instant" | "llama-3.3-70b-versatile"
+    | "meta-llama/llama-4-scout-17b-16e-instruct"
+    | "openai/gpt-oss-120b" | "openai/gpt-oss-20b";
 
 export type PerplexityModel =
     | "sonar" | "sonar-pro" | "sonar-reasoning" | "sonar-reasoning-pro" | "sonar-deep-research";
@@ -222,6 +227,11 @@ export interface GrokApiConfig extends ApiKeyConfig {
     model: GrokModel;
 }
 
+export interface GroqApiConfig extends ApiKeyConfig {
+    type: "groq";
+    model: GroqModel;
+}
+
 export interface PerplexityApiConfig extends ApiKeyConfig {
     type: "perplexity";
     model: PerplexityModel;
@@ -248,7 +258,7 @@ export type ApiConfig =
     | GeminiApiConfig | HuggingFaceApiConfig | OllamaApiConfig | MistralApiConfig
     | CohereApiConfig | OpenAIApiConfig | TogetherApiConfig | OpenRouterApiConfig
     | AnthropicApiConfig | MiniMaxApiConfig | CopilotApiConfig | DeepSeekApiConfig | GrokApiConfig
-    | PerplexityApiConfig | ZaiApiConfig | CustomApiConfig;
+    | GroqApiConfig | PerplexityApiConfig | ZaiApiConfig | CustomApiConfig;
 
 // Response types
 export interface HuggingFaceResponse {

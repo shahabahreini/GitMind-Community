@@ -51,7 +51,7 @@ const CIRCUIT_BREAKER_THRESHOLD = 3; // Max failures before opening circuit
 const CIRCUIT_BREAKER_RESET_TIME = 60000; // 1 minute cooldown
 
 
-type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter" | "Anthropic" | "MiniMax" | "GitHub Copilot" | "DeepSeek" | "Grok" | "Perplexity" | "Z.ai" | "Custom API";
+type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter" | "Anthropic" | "MiniMax" | "GitHub Copilot" | "DeepSeek" | "Grok" | "Groq" | "Perplexity" | "Z.ai" | "Custom API";
 
 // Type for lazy-loaded provider class
 type ProviderClass = new (...args: any[]) => BaseAIProvider;
@@ -138,6 +138,10 @@ async function loadProviderModule(provider: string): Promise<ProviderClass> {
             case 'grok':
                 const grokModule = await import('./grok.js');
                 providerClass = grokModule.GrokProvider;
+                break;
+            case 'groq':
+                const groqModule = await import('./groq.js');
+                providerClass = groqModule.GroqProvider;
                 break;
             case 'perplexity':
                 const perplexityModule = await import('./perplexity.js');
@@ -258,6 +262,15 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         docsUrl: "https://console.x.ai/",
         requiresApiKey: true,
         getProviderClass: async () => loadProviderModule('grok'),
+    },
+    groq: {
+        name: "Groq",
+        displayName: "Groq",
+        settingPath: "groq.apiKey",
+        docsUrl: "https://console.groq.com/keys",
+        requiresApiKey: true,
+        defaultModel: "llama-3.3-70b-versatile",
+        getProviderClass: async () => loadProviderModule('groq'),
     },
     perplexity: {
         name: "Perplexity",

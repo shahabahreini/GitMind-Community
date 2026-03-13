@@ -8,6 +8,7 @@ import {
     CopilotModel,
     DeepSeekModel,
     GrokModel,
+    GroqModel,
     PerplexityModel,
 } from "./types";
 import { SecureKeyManager } from "../services/encryption/SecureKeyManager";
@@ -60,10 +61,11 @@ const PROVIDER_DEFAULTS: Record<string, ProviderDefaults> = {
     together: { model: "meta-llama/Llama-3.3-70B-Instruct-Turbo", enabled: false },
     openrouter: { model: "google/gemma-3-27b-it:free", enabled: false },
     anthropic: { model: "claude-sonnet-4", enabled: false },
-    minimax: { model: "MiniMax-M2", enabled: false },
+    minimax: { model: "MiniMax-M2.5", enabled: false },
     copilot: { model: "auto", enabled: false },
     deepseek: { model: "deepseek-chat", enabled: false },
     grok: { model: "grok-3", enabled: false },
+    groq: { model: "llama-3.3-70b-versatile", enabled: false },
     perplexity: { model: "sonar-pro", enabled: false },
     zai: {
         model: "glm-4.5-air",

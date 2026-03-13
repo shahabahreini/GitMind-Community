@@ -164,8 +164,11 @@ export class ProviderConfig {
                     loadButtonDisabled: true,
                     loadButtonDisabledTooltip: "MiniMax won't support model fetch yet!",
                     options: [
+                        { value: 'MiniMax-M1', label: 'MiniMax M1' },
                         { value: 'MiniMax-M2', label: 'MiniMax M2' },
-                        { value: 'MiniMax-M2-Stable', label: 'MiniMax M2 Stable' }
+                        { value: 'MiniMax-M2.1', label: 'MiniMax M2.1' },
+                        { value: 'MiniMax-M2.5', label: 'MiniMax M2.5' },
+                        { value: 'MiniMax-Text-01', label: 'MiniMax Text-01' }
                     ]
                 }
             ]
@@ -477,6 +480,37 @@ export class ProviderConfig {
                         { value: 'grok-2', label: 'Grok-2' },
                         { value: 'grok-1.5v', label: 'Grok-1.5V (Vision)' },
                         { value: 'grok-1.5', label: 'Grok-1.5' }
+                    ]
+                }
+            ]
+        },
+        {
+            id: 'groq',
+            name: 'Groq',
+            fields: [
+                {
+                    id: 'groqApiKey',
+                    key: 'apiKey',
+                    label: 'API Key',
+                    type: 'password',
+                    tooltip: 'Your Groq API key for accessing ultra-fast AI inference',
+                    link: { url: 'https://console.groq.com/keys', text: 'Get a Groq API key' }
+                },
+                {
+                    id: 'groqModel',
+                    key: 'model',
+                    label: 'Model',
+                    type: 'model-with-load',
+                    tooltip: 'Select which Groq model to use',
+                    loadButtonText: 'Load Available Models',
+                    loadButtonId: 'loadGroqModels',
+                    loadCommand: 'gitmind.loadGroqModels',
+                    options: [
+                        { value: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B Versatile' },
+                        { value: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B Instant' },
+                        { value: 'meta-llama/llama-4-scout-17b-16e-instruct', label: 'Llama 4 Scout 17B 16E' },
+                        { value: 'openai/gpt-oss-120b', label: 'GPT-OSS 120B' },
+                        { value: 'openai/gpt-oss-20b', label: 'GPT-OSS 20B' }
                     ]
                 }
             ]

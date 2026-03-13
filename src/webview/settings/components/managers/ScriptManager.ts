@@ -422,6 +422,12 @@ export class ScriptManager {
                         loadingFlag: 'grokModelsLoading'
                     },
                     {
+                        buttonId: 'loadGroqModels',
+                        commandId: 'gitmind.loadGroqModels',
+                        name: 'Groq',
+                        loadingFlag: 'groqModelsLoading'
+                    },
+                    {
                         buttonId: 'loadDeepSeekModels',
                         commandId: 'gitmind.loadDeepSeekModels',
                         name: 'DeepSeek',

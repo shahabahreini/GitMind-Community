@@ -73,6 +73,11 @@ const PROVIDER_DISPLAY_CONFIG: Record<string, ProviderDisplayConfig> = {
     model: "grok-3",
     apiConfigured: (s) => !!s.grok?.apiKey
   },
+  groq: {
+    displayName: "Groq",
+    model: "llama-3.3-70b-versatile",
+    apiConfigured: (s) => !!s.groq?.apiKey
+  },
   perplexity: {
     displayName: "Perplexity",
     model: "sonar-pro",
@@ -194,6 +199,7 @@ export function getUiManagerScript(): string {
         copilot: { displayName: "GitHub Copilot", defaultModel: "gpt-4o", getApiConfigured: () => true },
         deepseek: { displayName: "DeepSeek", defaultModel: "deepseek-chat", getApiConfigured: (s) => !!s.deepseek?.apiKey },
         grok: { displayName: "Grok", defaultModel: "grok-3", getApiConfigured: (s) => !!s.grok?.apiKey },
+        groq: { displayName: "Groq", defaultModel: "llama-3.3-70b-versatile", getApiConfigured: (s) => !!s.groq?.apiKey },
         perplexity: { displayName: "Perplexity", defaultModel: "sonar-pro", getApiConfigured: (s) => !!s.perplexity?.apiKey },
         zai: { displayName: "Z.ai", defaultModel: "glm-4.5-flash", getApiConfigured: (s) => !!s.zai?.apiKey },
         custom: { displayName: "Custom API", defaultModel: "Not configured", getApiConfigured: (s) => !!(s.custom?.baseUrl && s.custom?.endpoint) }
@@ -367,6 +373,7 @@ export function getUiManagerScript(): string {
     setupApiKeyAutoLoading('together', 'gitmind.loadTogetherModels');
     setupApiKeyAutoLoading('openrouter', 'gitmind.loadOpenRouterModels');
     setupApiKeyAutoLoading('grok', 'gitmind.loadGrokModels');
+    setupApiKeyAutoLoading('groq', 'gitmind.loadGroqModels');
     setupApiKeyAutoLoading('gemini', 'gitmind.loadGeminiModels');
     setupApiKeyAutoLoading('anthropic', 'gitmind.loadAnthropicModels');
     setupApiKeyAutoLoading('huggingface', 'gitmind.loadHuggingFaceModels');

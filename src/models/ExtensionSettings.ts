@@ -54,6 +54,10 @@ export interface ExtensionSettings {
         apiKey: string;
         model: string;
     };
+    groq: {
+        apiKey: string;
+        model: string;
+    };
     perplexity: {
         apiKey: string;
         model: string;
