@@ -136,11 +136,17 @@
           "type": "string",
           "default": "mistral-large-latest",
           "description": "Model name for Mistral AI",
-          "examples": [
-            "mistral-tiny",
-            "mistral-small",
-            "mistral-medium",
-            "mistral-large-latest"
+          "enum": [
+            "mistral-large-latest",
+            "pixtral-large-latest",
+            "mistral-small-latest",
+            "open-mistral-nemo"
+          ],
+          "enumDescriptions": [
+            "Mistral Large - Top-tier reasoning model",
+            "Pixtral Large - Frontier multimodal model",
+            "Mistral Small - High performance cost-effective model",
+            "Open Mistral NeMo - Free tier accessible 12B model"
           ],
           "order": 9
         },
@@ -308,18 +314,16 @@
           "enum": [
             "gemini-2.5-pro",
             "gemini-2.5-flash",
-            "gemini-2.5-flash-preview",
             "gemini-2.5-flash-lite",
-            "gemini-2.5-flash-lite-preview"
+            "gemini-2.0-flash"
           ],
           "default": "gemini-2.5-flash",
           "description": "Select which Gemini model to use",
           "enumDescriptions": [
             "Gemini 2.5 Pro - Advanced model with 65,536 token output limit",
             "Gemini 2.5 Flash - Fast and efficient with 65,536 token output limit",
-            "Gemini 2.5 Flash Preview - Preview version with 65,536 token output limit",
             "Gemini 2.5 Flash-Lite - Lightweight version with 65,536 token output limit",
-            "Gemini 2.5 Flash-Lite Preview - Preview lightweight version with 65,536 token output limit"
+            "Gemini 2.0 Flash - Standard Flash model"
           ]
         },
         "gitmind.cohere.apiKey": {
@@ -330,32 +334,20 @@
         "gitmind.cohere.model": {
           "type": "string",
           "enum": [
-            "command-a-03-2025",
-            "command-r-08-2024",
             "command-r-plus-08-2024",
-            "aya-expanse-8b",
-            "aya-expanse-32b",
+            "command-r-08-2024",
             "command-r7b-arabic",
-            "command-r",
-            "command-r-plus",
-            "command",
-            "command-light",
-            "command-nightly"
+            "aya-expanse-32b",
+            "aya-expanse-8b"
           ],
           "enumDescriptions": [
-            "Command A (Latest - High Performance)",
-            "Command R (08-2024)",
             "Command R+ (08-2024)",
-            "Aya Expanse 8B (Multilingual)",
-            "Aya Expanse 32B (Multilingual)",
+            "Command R (08-2024)",
             "Command R7B Arabic",
-            "Command R (Legacy)",
-            "Command R+ (Legacy)",
-            "Command (Legacy)",
-            "Command Light (Legacy)",
-            "Command Nightly (Legacy)"
+            "Aya Expanse 32B (Multilingual)",
+            "Aya Expanse 8B (Multilingual)"
           ],
-          "default": "command-a-03-2025",
+          "default": "command-r-plus-08-2024",
           "description": "Cohere model to use for generating commit messages"
         },
         "gitmind.openai.apiKey": {
@@ -367,25 +359,21 @@
         "gitmind.openai.model": {
           "type": "string",
           "enum": [
-            "gpt-4.1",
-            "gpt-4.1-mini",
-            "gpt-4.1-nano",
-            "o3",
-            "o4-mini",
+            "o1",
+            "o1-mini",
             "o3-mini",
+            "gpt-4.5-preview",
             "gpt-4o",
             "gpt-4o-mini"
           ],
           "default": "gpt-4o",
           "description": "OpenAI model to use for generating commit messages",
           "enumDescriptions": [
-            "GPT-4.1 - Latest model with enhanced capabilities",
-            "GPT-4.1 Mini - Efficient version of GPT-4.1",
-            "GPT-4.1 Nano - Ultra-efficient GPT-4.1 variant",
-            "o3 - Advanced reasoning model",
-            "o4-mini - Fast reasoning model",
-            "o3-mini - Efficient reasoning model",
-            "GPT-4o - Multimodal model with vision capabilities",
+            "o1 - Advanced reasoning model",
+            "o1-mini - Fast reasoning model",
+            "o3-mini - Latest efficient reasoning model",
+            "GPT-4.5 Preview - Next-gen capable model",
+            "GPT-4o - Free-tier accessible, multimodal model",
             "GPT-4o Mini - Efficient multimodal model"
           ],
           "order": 13
@@ -472,18 +460,16 @@
         "gitmind.anthropic.model": {
           "type": "string",
           "enum": [
-            "claude-opus-4",
-            "claude-sonnet-4",
-            "claude-3-5-sonnet-20241022",
-            "claude-3-5-haiku-20241022"
+            "claude-opus-4.6",
+            "claude-sonnet-4.6",
+            "claude-haiku-4.5"
           ],
           "enumDescriptions": [
-            "Claude Opus 4 - Latest and most capable Claude model",
-            "Claude Sonnet 4 - High-performance Claude 4 model",
-            "Claude 3.5 Sonnet - Most capable model with enhanced reasoning",
-            "Claude 3.5 Haiku - Fast and efficient for quick responses"
+            "Claude Opus 4.6 - Most capable reasoning model",
+            "Claude Sonnet 4.6 - High-performance next-gen model",
+            "Claude Haiku 4.5 - Breakthrough speed and cost"
           ],
-          "default": "claude-3-5-sonnet-20241022",
+          "default": "claude-sonnet-4.6",
           "description": "Anthropic Claude model to use for generating commit messages"
         },
         "gitmind.minimax.apiKey": {
@@ -494,14 +480,20 @@
         "gitmind.minimax.model": {
           "type": "string",
           "enum": [
+            "MiniMax-M1",
             "MiniMax-M2",
-            "MiniMax-M2-Stable"
+            "MiniMax-M2.1",
+            "MiniMax-M2.5",
+            "MiniMax-Text-01"
           ],
           "enumDescriptions": [
-            "MiniMax M2 - Text generation model",
-            "MiniMax M2 Stable - Text generation model (stable)"
+            "MiniMax M1 - Hybrid MoE reasoning model",
+            "MiniMax M2 - Compact efficient coding model",
+            "MiniMax M2.1 - Lightweight LLM optimized for coding",
+            "MiniMax M2.5 - Performance and comprehensive capabilities",
+            "MiniMax Text-01 - Base text generation model"
           ],
-          "default": "MiniMax-M2",
+          "default": "MiniMax-M2.5",
           "description": "MiniMax model to use for generating commit messages"
         },
         "gitmind.copilot.model": {
@@ -510,41 +502,25 @@
             "auto",
             "gpt-4o",
             "gpt-4o-mini",
-            "gpt-4.1",
-            "gpt-5",
-            "gpt-5-mini",
-            "gpt-5-codex",
-            "gpt-5.1",
-            "gpt-5.1-codex",
-            "gpt-5.1-codex-mini",
-            "claude-haiku-4.5",
-            "claude-opus-4.1",
+            "o3-mini",
+            "o4-mini",
+            "claude-3.5-sonnet",
+            "claude-3.7-sonnet",
             "claude-sonnet-4",
-            "claude-sonnet-4.5",
             "gemini-2.5-pro",
-            "gemini-3-pro",
-            "grok-code-fast-1",
-            "raptor-mini"
+            "gemini-2.0-flash"
           ],
           "enumDescriptions": [
             "Auto - Let GitHub Copilot automatically choose the best model",
-            "GPT-4o - Legacy OpenAI model",
-            "GPT-4o mini - Legacy OpenAI compact model",
-            "GPT-4.1 - OpenAI's latest general purpose model",
-            "GPT-5 - OpenAI's advanced model",
-            "GPT-5 mini - OpenAI's efficient model",
-            "GPT-5-Codex - OpenAI's code-specialized model",
-            "GPT-5.1 - OpenAI's newest advanced model",
-            "GPT-5.1-Codex - OpenAI's newest code-specialized model",
-            "GPT-5.1-Codex-Mini - OpenAI's efficient code-specialized model",
-            "Claude Haiku 4.5 - Anthropic's fastest model",
-            "Claude Opus 4.1 - Anthropic's most capable model",
-            "Claude Sonnet 4 - Anthropic's balanced model",
-            "Claude Sonnet 4.5 - Anthropic's most advanced coding model",
-            "Gemini 2.5 Pro - Google's advanced model",
-            "Gemini 3 Pro - Google's newest model",
-            "Grok Code Fast 1 - xAI's fast coding model",
-            "Raptor mini - Fine-tuned GPT-5 mini model"
+            "GPT-4o - OpenAI multimodal model",
+            "GPT-4o mini - OpenAI compact model",
+            "o3-mini - OpenAI efficient reasoning model",
+            "o4-mini - Faster lightweight model",
+            "Claude 3.5 Sonnet - Anthropic balanced model",
+            "Claude 3.7 Sonnet - Anthropic reasoning model",
+            "Claude Sonnet 4 - Anthropic next-gen model",
+            "Gemini 2.5 Pro - Google advanced model",
+            "Gemini 2.0 Flash - Google multimodal model"
           ],
           "default": "auto",
           "description": "GitHub Copilot model to use for generating commit messages"
@@ -575,36 +551,26 @@
         "gitmind.grok.model": {
           "type": "string",
           "enum": [
+            "grok-4",
+            "grok-4-fast-reasoning",
+            "grok-4-fast-non-reasoning",
+            "grok-code-fast-1",
             "grok-3",
-            "grok-3-fast",
             "grok-3-mini",
-            "grok-2",
-            "grok-2-vision",
-            "grok-2-mini",
-            "grok-2-turbo",
-            "grok-2-vision-turbo",
-            "grok-2-fast",
-            "grok-beta",
-            "grok-vision-beta",
-            "grok-image-beta",
-            "grok-image-mini"
+            "grok-2-1212",
+            "grok-2-vision-1212"
           ],
           "enumDescriptions": [
-            "Grok 3 - Latest and most capable Grok model",
-            "Grok 3 Fast - High-performance variant of Grok 3",
-            "Grok 3 Mini - Efficient and cost-effective Grok 3",
-            "Grok 2 - Advanced general purpose model",
-            "Grok 2 Vision - Multimodal model with image understanding",
-            "Grok 2 Mini - Compact version of Grok 2",
-            "Grok 2 Turbo - High-speed variant of Grok 2",
-            "Grok 2 Vision Turbo - Fast multimodal model",
-            "Grok 2 Fast - Optimized for speed",
-            "Grok Beta - Latest experimental features",
-            "Grok Vision Beta - Experimental vision capabilities",
-            "Grok Image Beta - Experimental image generation",
-            "Grok Image Mini - Compact image generation model"
+            "Grok 4 - Flagship model with advanced reasoning",
+            "Grok 4 Fast Reasoning - High performance agentic model",
+            "Grok 4 Fast Non-Reasoning - Fast capabilities without explicit reasoning",
+            "Grok Code Fast 1 - Optimized for coding tasks",
+            "Grok 3 - Highly capable general purpose model",
+            "Grok 3 Mini - Efficient and cost-effective",
+            "Grok 2 1212 - Advanced general purpose model",
+            "Grok 2 Vision 1212 - Multimodal image understanding"
           ],
-          "default": "grok-3",
+          "default": "grok-4",
           "description": "Grok model to use for generating commit messages"
         },
         "gitmind.perplexity.apiKey": {
@@ -615,24 +581,18 @@
         "gitmind.perplexity.model": {
           "type": "string",
           "enum": [
+            "sonar",
             "sonar-pro",
             "sonar-reasoning",
-            "sonar",
-            "llama-3.1-sonar-small-128k-chat",
-            "llama-3.1-sonar-large-128k-chat",
-            "llama-3.1-sonar-huge-128k-online",
-            "llama-3.1-sonar-small-128k-online",
-            "llama-3.1-sonar-large-128k-online"
+            "sonar-reasoning-pro",
+            "sonar-deep-research"
           ],
           "enumDescriptions": [
-            "Sonar Pro - Latest and most capable Perplexity model with advanced reasoning",
-            "Sonar Reasoning - Advanced reasoning capabilities with real-time information",
-            "Sonar - General purpose model with web search capabilities",
-            "Llama 3.1 Sonar Small Chat - Efficient chat model (128k context)",
-            "Llama 3.1 Sonar Large Chat - Large chat model (128k context)",
-            "Llama 3.1 Sonar Huge Online - Largest model with real-time web access",
-            "Llama 3.1 Sonar Small Online - Efficient model with real-time web access",
-            "Llama 3.1 Sonar Large Online - Large model with real-time web access"
+            "Sonar - Fast, lightweight search model",
+            "Sonar Pro - Advanced search offering",
+            "Sonar Reasoning - Real-time reasoning",
+            "Sonar Reasoning Pro - Precise reasoning with CoT",
+            "Sonar Deep Research - Comprehensive reporting model"
           ],
           "default": "sonar-pro",
           "description": "Perplexity model to use for generating commit messages"
@@ -645,26 +605,24 @@
         "gitmind.zai.model": {
           "type": "string",
           "enum": [
-            "glm-5",
-            "glm-4.7",
-            "glm-4.6",
+            "glm-4-plus",
+            "glm-4-air",
+            "glm-4-flash",
             "glm-4.5",
             "glm-4.5-air",
-            "glm-4.5-x",
-            "glm-4.5-airx",
-            "glm-4.5-flash",
-            "glm-4-32b-0414-128k"
+            "glm-4.6",
+            "glm-4.7",
+            "glm-5"
           ],
           "enumDescriptions": [
-            "GLM-5 - Flagship model with highest capability",
-            "GLM-4.7 - High-performance coding model for complex tasks",
-            "GLM-4.6 - High-performance model (128K output)",
-            "GLM-4.5 - Balanced model (96K output)",
-            "GLM-4.5-Air - Fast lightweight model",
-            "GLM-4.5-X - Large context model",
-            "GLM-4.5-AirX - Ultra-lightweight model",
-            "GLM-4.5-Flash - Fast model",
-            "GLM-4-32B - 32B parameter model"
+            "GLM-4 Plus - High quality model",
+            "GLM-4 Air - Fast inference model",
+            "GLM-4 Flash - Ultra-fast cost-effective model",
+            "GLM-4.5 - Flagship model",
+            "GLM-4.5 Air - Compact efficient model",
+            "GLM-4.6 - Advanced generation model",
+            "GLM-4.7 - High-performance complex task model",
+            "GLM-5 - Latest flagship model"
           ],
           "default": "glm-4.5-air",
           "description": "Z.ai model to use for generating commit messages"

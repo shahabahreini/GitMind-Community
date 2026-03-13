@@ -65,48 +65,24 @@ const MODEL_CONFIGS: Record<CopilotModel, GenerationConfig> = {
         temperature: 0.2
     },
     // OpenAI Models (Current)
-    "gpt-4.1": {
-        maxTokens: 400,
-        temperature: 0.2
-    },
-    "gpt-5": {
+    "o3-mini": {
         maxTokens: 500,
         temperature: 0.2
     },
-    "gpt-5-mini": {
-        maxTokens: 400,
-        temperature: 0.2
-    },
-    "gpt-5-codex": {
-        maxTokens: 500,
-        temperature: 0.2
-    },
-    "gpt-5.1": {
-        maxTokens: 500,
-        temperature: 0.2
-    },
-    "gpt-5.1-codex": {
-        maxTokens: 500,
-        temperature: 0.2
-    },
-    "gpt-5.1-codex-mini": {
+    "o4-mini": {
         maxTokens: 400,
         temperature: 0.2
     },
     // Anthropic Models
-    "claude-haiku-4.5": {
-        maxTokens: 350,
-        temperature: 0.2
-    },
-    "claude-opus-4.1": {
-        maxTokens: 450,
-        temperature: 0.2
-    },
-    "claude-sonnet-4": {
+    "claude-3.5-sonnet": {
         maxTokens: 400,
         temperature: 0.2
     },
-    "claude-sonnet-4.5": {
+    "claude-3.7-sonnet": {
+        maxTokens: 400,
+        temperature: 0.2
+    },
+    "claude-sonnet-4": {
         maxTokens: 400,
         temperature: 0.2
     },
@@ -115,17 +91,8 @@ const MODEL_CONFIGS: Record<CopilotModel, GenerationConfig> = {
         maxTokens: 400,
         temperature: 0.2
     },
-    "gemini-3-pro": {
-        maxTokens: 500,
-        temperature: 0.2
-    },
-    // Other Models
-    "grok-code-fast-1": {
-        maxTokens: 350,
-        temperature: 0.2
-    },
-    "raptor-mini": {
-        maxTokens: 350,
+    "gemini-2.0-flash": {
+        maxTokens: 400,
         temperature: 0.2
     }
 };
@@ -367,21 +334,13 @@ export async function fetchCopilotModels(): Promise<string[]> {
             'auto',
             'gpt-4o',
             'gpt-4o-mini',
-            'gpt-4.1',
-            'gpt-5',
-            'gpt-5-mini',
-            'gpt-5-codex',
-            'gpt-5.1',
-            'gpt-5.1-codex',
-            'gpt-5.1-codex-mini',
-            'claude-haiku-4.5',
-            'claude-opus-4.1',
+            'o3-mini',
+            'o4-mini',
+            'claude-3.5-sonnet',
+            'claude-3.7-sonnet',
             'claude-sonnet-4',
-            'claude-sonnet-4.5',
             'gemini-2.5-pro',
-            'gemini-3-pro',
-            'grok-code-fast-1',
-            'raptor-mini'
+            'gemini-2.0-flash'
         ]);
 
         for (const model of models) {

@@ -18,7 +18,22 @@ const MODEL_CONFIGS: Record<MiniMaxModel, GenerationConfig> = {
         temperature: 0.2,
         top_p: 0.8,
     },
-    "MiniMax-M2-Stable": {
+    "MiniMax-M2.1": {
+        max_tokens: 350,
+        temperature: 0.2,
+        top_p: 0.8,
+    },
+    "MiniMax-M2.5": {
+        max_tokens: 350,
+        temperature: 0.2,
+        top_p: 0.8,
+    },
+    "MiniMax-M1": {
+        max_tokens: 350,
+        temperature: 0.2,
+        top_p: 0.8,
+    },
+    "MiniMax-Text-01": {
         max_tokens: 350,
         temperature: 0.2,
         top_p: 0.8,
@@ -61,7 +76,7 @@ export class MiniMaxProvider extends BaseAIProvider {
         }
 
         const selectedModel = this.model as MiniMaxModel;
-        const validModels: MiniMaxModel[] = ["MiniMax-M2", "MiniMax-M2-Stable"];
+        const validModels: MiniMaxModel[] = ["MiniMax-M2", "MiniMax-M2.1", "MiniMax-M2.5", "MiniMax-M1", "MiniMax-Text-01"];
         if (!validModels.includes(selectedModel)) {
             debugLog("Error: Invalid MiniMax model specified", { model: this.model });
             throw new Error(`Invalid MiniMax model specified: ${this.model}`);
@@ -164,7 +179,7 @@ export class MiniMaxProvider extends BaseAIProvider {
     async getModels(): Promise<string[]> {
         // MiniMax docs list supported Anthropic-compatible text models explicitly.
         // There is no public models endpoint documented for the Anthropic-compatible gateway.
-        return ["MiniMax-M2", "MiniMax-M2-Stable"];
+        return ["MiniMax-M2", "MiniMax-M2.1", "MiniMax-M2.5", "MiniMax-M1", "MiniMax-Text-01"];
     }
 
     async validateApiKey(): Promise<boolean | { success: boolean; error?: string; warning?: string; troubleshooting?: string }> {
@@ -314,5 +329,5 @@ export async function validateMiniMaxAPIKey(
 }
 
 export async function fetchMiniMaxModels(_apiKey: string): Promise<string[]> {
-    return ["MiniMax-M2", "MiniMax-M2-Stable"];
+    return ["MiniMax-M2", "MiniMax-M2.1", "MiniMax-M2.5", "MiniMax-M1", "MiniMax-Text-01"];
 }

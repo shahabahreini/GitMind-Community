@@ -79,44 +79,37 @@ export type TargetCommitLanguage =
 
 // Model types
 export type GeminiModel =
-    | "gemini-2.5-pro" | "gemini-2.5-flash" | "gemini-2.5-flash-preview" | "gemini-2.5-flash-lite" | "gemini-2.5-flash-lite-preview";
+    | "gemini-2.5-pro" | "gemini-2.5-flash" | "gemini-2.5-flash-lite" | "gemini-2.0-flash";
 
 export type AnthropicModel =
-    | "claude-opus-4" | "claude-sonnet-4"
-    | "claude-3-5-sonnet-20241022" | "claude-3-5-haiku-20241022";
+    | "claude-opus-4.6" | "claude-sonnet-4.6" | "claude-haiku-4.5";
 
-export type MiniMaxModel = "MiniMax-M2" | "MiniMax-M2-Stable";
+export type MiniMaxModel = "MiniMax-M1" | "MiniMax-M2" | "MiniMax-M2.1" | "MiniMax-M2.5" | "MiniMax-Text-01";
 
 export type CopilotModel =
     | "auto"
     // OpenAI Models
     | "gpt-4o" | "gpt-4o-mini"
-    | "gpt-4.1" | "gpt-5" | "gpt-5-mini" | "gpt-5-codex" | "gpt-5.1" | "gpt-5.1-codex" | "gpt-5.1-codex-mini"
+    | "o3-mini" | "o4-mini"
     // Anthropic Models
-    | "claude-haiku-4.5" | "claude-opus-4.1" | "claude-sonnet-4" | "claude-sonnet-4.5"
+    | "claude-3.5-sonnet" | "claude-3.7-sonnet" | "claude-sonnet-4"
     // Google Models
-    | "gemini-2.5-pro" | "gemini-3-pro"
-    // Other Models
-    | "grok-code-fast-1" | "raptor-mini";
+    | "gemini-2.5-pro" | "gemini-2.0-flash";
 
 export type DeepSeekModel = "deepseek-chat" | "deepseek-reasoner";
 
 export type GrokModel =
-    | "grok-3" | "grok-3-latest" | "grok-3-fast" | "grok-3-fast-latest"
-    | "grok-3-mini" | "grok-3-mini-latest" | "grok-3-mini-fast" | "grok-3-mini-fast-latest"
-    | "grok-2-vision-1212" | "grok-2-vision" | "grok-2-vision-latest"
-    | "grok-2-image-1212" | "grok-2-image" | "grok-2-image-latest"
-    | "grok-2-1212" | "grok-2" | "grok-2-latest";
+    | "grok-4" | "grok-4-fast-reasoning" | "grok-4-fast-non-reasoning" | "grok-code-fast-1"
+    | "grok-3" | "grok-3-mini"
+    | "grok-2-1212" | "grok-2-vision-1212";
 
 export type PerplexityModel =
-    | "sonar-pro" | "sonar-reasoning" | "sonar"
-    | "llama-3.1-sonar-small-128k-chat" | "llama-3.1-sonar-large-128k-chat" | "llama-3.1-sonar-huge-128k-online"
-    | "llama-3.1-sonar-small-128k-online" | "llama-3.1-sonar-large-128k-online";
+    | "sonar" | "sonar-pro" | "sonar-reasoning" | "sonar-reasoning-pro" | "sonar-deep-research";
 
 export type ZaiModel =
-    | "glm-5" | "glm-4.7" | "glm-4.6"
-    | "glm-4.5" | "glm-4.5-air" | "glm-4.5-x" | "glm-4.5-airx" | "glm-4.5-flash"
-    | "glm-4-32b-0414-128k";
+    | "glm-4-plus" | "glm-4-air" | "glm-4-flash"
+    | "glm-4.5" | "glm-4.5-air"
+    | "glm-4.6" | "glm-4.7" | "glm-5";
 
 // Configuration interfaces
 export interface BaseProviderConfig {

@@ -27,26 +27,12 @@ const MODEL_CONFIGS: Record<PerplexityModel, GenerationConfig> = {
         max_tokens: 350,
         temperature: 0.2
     },
-    // Chat Models
-    "llama-3.1-sonar-small-128k-chat": {
-        max_tokens: 350,
+    "sonar-reasoning-pro": {
+        max_tokens: 400,
         temperature: 0.2
     },
-    "llama-3.1-sonar-large-128k-chat": {
-        max_tokens: 350,
-        temperature: 0.2
-    },
-    "llama-3.1-sonar-huge-128k-online": {
-        max_tokens: 350,
-        temperature: 0.2
-    },
-    // Online Models with Real-time Information
-    "llama-3.1-sonar-small-128k-online": {
-        max_tokens: 350,
-        temperature: 0.2
-    },
-    "llama-3.1-sonar-large-128k-online": {
-        max_tokens: 350,
+    "sonar-deep-research": {
+        max_tokens: 500,
         temperature: 0.2
     }
 };
