@@ -94,6 +94,11 @@ const MODEL_CONFIGS: Record<CopilotModel, GenerationConfig> = {
     "gemini-2.0-flash": {
         maxTokens: 400,
         temperature: 0.2
+    },
+    // Other Models
+    "raptor-mini": {
+        maxTokens: 300,
+        temperature: 0.2
     }
 };
 

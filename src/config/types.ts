@@ -91,6 +91,8 @@ export type CopilotModel =
     // OpenAI Models
     | "gpt-4o" | "gpt-4o-mini"
     | "o3-mini" | "o4-mini"
+    // Other Models
+    | "raptor-mini"
     // Anthropic Models
     | "claude-3.5-sonnet" | "claude-3.7-sonnet" | "claude-sonnet-4"
     // Google Models
