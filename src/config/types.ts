@@ -86,7 +86,7 @@ export type AnthropicModel =
 
 export type MiniMaxModel = "MiniMax-M1" | "MiniMax-M2" | "MiniMax-M2.1" | "MiniMax-M2.5" | "MiniMax-Text-01";
 
-export type CopilotModel =
+export type KnownCopilotModel =
     | "auto"
     // OpenAI Models
     | "gpt-4o" | "gpt-4o-mini"
@@ -97,6 +97,8 @@ export type CopilotModel =
     | "claude-3.5-sonnet" | "claude-3.7-sonnet" | "claude-sonnet-4"
     // Google Models
     | "gemini-2.5-pro" | "gemini-2.0-flash";
+
+export type CopilotModel = KnownCopilotModel | string;
 
 export type DeepSeekModel = "deepseek-chat" | "deepseek-reasoner";
 

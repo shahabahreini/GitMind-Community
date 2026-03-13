@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { debugLog } from "../debug/logger";
 import { generateCommitPrompt, getPromptConfig } from './prompts';
-import { CopilotModel } from "../../config/types";
+import { CopilotModel, KnownCopilotModel } from "../../config/types";
 import { BaseAIProvider, GenerationOptions } from './base';
 
 function getPreferredCopilotModelIds(model: string): string[] {
@@ -49,17 +49,16 @@ interface GenerationConfig {
     temperature: number;
 }
 
-const MODEL_CONFIGS: Record<CopilotModel, GenerationConfig> = {
+const DEFAULT_MODEL_CONFIG: GenerationConfig = {
+    maxTokens: 350,
+    temperature: 0.2
+};
+
+const MODEL_CONFIGS: Record<KnownCopilotModel, GenerationConfig> = {
     // Auto
-    "auto": {
-        maxTokens: 350,
-        temperature: 0.2
-    },
+    "auto": DEFAULT_MODEL_CONFIG,
     // OpenAI Models (Legacy)
-    "gpt-4o": {
-        maxTokens: 350,
-        temperature: 0.2
-    },
+    "gpt-4o": DEFAULT_MODEL_CONFIG,
     "gpt-4o-mini": {
         maxTokens: 300,
         temperature: 0.2
@@ -111,23 +110,12 @@ export class CopilotProvider extends BaseAIProvider {
     protected async generateResponse(prompt: string, _options?: GenerationOptions): Promise<string> {
         const controller = this.getAbortController();
 
-        // Validate model - use Object.keys to get all valid models from MODEL_CONFIGS
-        const validModels = Object.keys(MODEL_CONFIGS) as CopilotModel[];
-        if (!validModels.includes(this.model as CopilotModel)) {
-            debugLog("Error: Invalid Copilot model specified", { model: this.model });
-            throw new Error(`Invalid Copilot model specified: ${this.model}`);
-        }
 
         try {
             debugLog(`Calling GitHub Copilot API with model: ${this.model}`);
             debugLog("Sending prompt to Copilot API");
             debugLog("Prompt:", prompt);
 
-            // Get model-specific configuration
-            const config = MODEL_CONFIGS[this.model as CopilotModel];
-            if (!config) {
-                throw new Error(`Configuration not found for model: ${this.model}`);
-            }
 
             // Check if Copilot is available
             const isAvailable = await isCopilotAvailable();
@@ -334,20 +322,6 @@ export async function fetchCopilotModels(): Promise<string[]> {
 
         const detectedModels = new Set<string>();
 
-        // Define all models we support in our configuration
-        const supportedModels = new Set([
-            'auto',
-            'gpt-4o',
-            'gpt-4o-mini',
-            'o3-mini',
-            'o4-mini',
-            'claude-3.5-sonnet',
-            'claude-3.7-sonnet',
-            'claude-sonnet-4',
-            'gemini-2.5-pro',
-            'gemini-2.0-flash'
-        ]);
-
         for (const model of models) {
             // Log full model details for debugging
             debugLog("Detected Copilot model:", {
@@ -359,30 +333,30 @@ export async function fetchCopilotModels(): Promise<string[]> {
             });
 
             const modelId = model.id;
+            detectedModels.add(modelId);
 
-            // Handle special cases where VS Code uses different IDs
+            // Also add friendly mappings so users can select the user-facing names
             if (modelId === 'oswe-vscode-secondary' || modelId === 'oswe-vscode-prime') {
                 // Both oswe-vscode-secondary and oswe-vscode-prime map to raptor-mini
                 detectedModels.add('raptor-mini');
-            } else if (modelId === 'copilot-fast') {
+            }
+            if (modelId === 'copilot-fast') {
                 detectedModels.add('gpt-4o-mini');
-            } else if (modelId === 'gpt-4-0125-preview') {
+            }
+            if (modelId === 'gpt-4-0125-preview') {
                 detectedModels.add('gpt-4-turbo');
-            } else if (modelId === 'gemini-3-pro-preview') {
+            }
+            if (modelId === 'gemini-3-pro-preview') {
                 detectedModels.add('gemini-3-pro');
-            } else if (supportedModels.has(modelId)) {
-                // If the model ID directly matches our supported models, add it
-                detectedModels.add(modelId);
-            } else {
-                // For unknown models, log them but don't add (could be future models)
-                debugLog(`Unknown model ID detected: ${modelId} (${model.name})`);
             }
         }
 
-        // Always include 'auto' at the beginning
-        const result = ['auto', ...Array.from(detectedModels).filter(id => id !== 'auto')];
+        // Always include 'auto' at the beginning, then sort remaining models for stable UI
+        const modelsList = Array.from(detectedModels).filter(id => id !== 'auto');
+        modelsList.sort((a, b) => a.localeCompare(b));
+        const result = ['auto', ...modelsList];
 
-        debugLog(`Detected ${detectedModels.size} unique Copilot models:`, Array.from(detectedModels));
+        debugLog(`Detected ${detectedModels.size} unique Copilot models:`, result);
 
         return result;
     } catch (error) {
