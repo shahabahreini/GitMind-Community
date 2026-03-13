@@ -20,6 +20,7 @@ export const PROVIDER_DEFAULTS: ProviderDefaults = {
   copilot: { model: "auto" },
   deepseek: { model: "deepseek-chat" },
   grok: { model: "grok-3" },
+  groq: { model: "llama-3.3-70b-versatile" },
   perplexity: { model: "llama-3.1-sonar-large-128k-online" },
   zai: { model: "glm-4.5-flash" },
   custom: { model: "" }
@@ -27,7 +28,7 @@ export const PROVIDER_DEFAULTS: ProviderDefaults = {
 
 export const API_KEY_PROVIDERS = [
   'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-  'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'perplexity', 'zai'
+  'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'groq', 'perplexity', 'zai'
 ];
 
 export const NO_API_KEY_PROVIDERS = ['ollama', 'copilot', 'custom'];

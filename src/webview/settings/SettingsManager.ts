@@ -35,6 +35,7 @@ export class SettingsManager {
         copilot: { model: "auto" },
         deepseek: { model: "deepseek-chat" },
         grok: { model: "grok-3" },
+        groq: { model: "llama-3.3-70b-versatile" },
         perplexity: { model: "llama-3.1-sonar-large-128k-online" },
         zai: { model: "glm-4.5-air", endpoint: "coding" },
         custom: { model: "" }
@@ -42,7 +43,7 @@ export class SettingsManager {
 
     private static readonly API_KEY_PROVIDERS = [
         'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-        'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'perplexity', 'zai'
+        'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'groq', 'perplexity', 'zai'
     ];
 
     private static readonly NO_API_KEY_PROVIDERS = ['ollama', 'copilot', 'custom'];
