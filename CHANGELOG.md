@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## v4.11.0 - 2026-03-13
+
+### New Features
+
+- Added Groq AI as a new provider for commit message generation.
+  - Included "llama-3.3-70b-versatile" as the default Groq model.
+  - Updated API key providers to include Groq for authentication.
+
+### Enhanced
+
+- Updated supported AI model lists in `package.json` and `src/config/types.ts`.
+  - Included latest models from Gemini, Anthropic, MiniMax, Copilot, Grok, Perplexity, and Z.ai.
+- Updated documentation with a provider integration checklist.
+
+### Fixed
+
+- Resolved npm audit vulnerabilities by adding package overrides.
+  - Addressed DoS vulnerability in `jsdiff` (GHSA-73rr-hh4g-fpgx).
+  - Addressed RCE vulnerability in `serialize-javascript` (GHSA-5c6j-r48x-rmvq).
+- Fixed a critical bug preventing new provider API keys from persisting in settings.
+- Improved Gemini API error handling for authentication failures.
+  - Provided a more precise error message for 401 status codes and API key validation errors.
+
+### Technical
+
+- Updated various development and production dependencies to their latest versions.
+  - Regenerated `pnpm-lock.yaml` to reflect dependency changes.
+
 ## v4.10.0 - 2026-02-11
 
 ### New Features
