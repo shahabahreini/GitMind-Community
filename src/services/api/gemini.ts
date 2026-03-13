@@ -183,7 +183,9 @@ export class GeminiProvider extends BaseAIProvider {
                 );
             }
 
-            if (status === 401) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+
+            if (status === 401 || errorMessage.includes("API key not valid")) {
                 throw new Error("Authentication failed. Please verify your Gemini API key in settings.");
             }
 
@@ -193,8 +195,6 @@ export class GeminiProvider extends BaseAIProvider {
                 );
             }
 
-            // Provide more helpful error message
-            const errorMessage = error instanceof Error ? error.message : String(error);
             if (errorMessage.includes("not found") || errorMessage.includes("invalid model")) {
                 throw new Error(`Model '${this.model}' not available or not supported. Please check if you have access to this model or try a different model.`);
             } else if (errorMessage.includes("permission") || errorMessage.includes("access")) {
