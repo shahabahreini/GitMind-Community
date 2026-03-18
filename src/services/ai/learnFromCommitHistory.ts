@@ -8,6 +8,24 @@ import { debugLog } from '../debug/logger';
  * This will analyze commit messages to provide insights and suggestions
  */
 export async function learnFromCommitHistory() {
+    let resultSent = false;
+    const sendResult = async (success: boolean, error?: string) => {
+        if (resultSent) { return; }
+        resultSent = true;
+        try {
+            const { SettingsWebview } = await import('../../webview/settings/SettingsWebview.js');
+            if (SettingsWebview.isWebviewOpen()) {
+                SettingsWebview.postMessageToWebview({
+                    command: 'commitHistoryAnalysisResult',
+                    success,
+                    error
+                });
+            }
+        } catch (e) {
+            debugLog('Failed to send commitHistoryAnalysisResult:', e);
+        }
+    };
+
     try {
         // Check if user is pro
         if (!isProUser()) {
@@ -23,6 +41,7 @@ export async function learnFromCommitHistory() {
                 vscode.env.openExternal(vscode.Uri.parse('https://gitmind.com/pro'));
             }
 
+            await sendResult(false, 'Not a Pro user');
             return;
         }
 
@@ -33,7 +52,12 @@ export async function learnFromCommitHistory() {
                 title: 'Analyzing commit messages...',
                 cancellable: true
             },
-            async (progress, _token) => {
+            async (progress, token) => {
+                token.onCancellationRequested(async () => {
+                    debugLog('Learn from commit history cancelled by user');
+                    await sendResult(false, 'Cancelled by user');
+                });
+
                 try {
                     progress.report({ message: 'Fetching commit history...' });
 
@@ -51,10 +75,14 @@ export async function learnFromCommitHistory() {
                     const maxCommits = config.get<number>('pro.learnFromCommitHistory.maxCommits', 50);
                     const includeAuthorInfo = config.get<boolean>('pro.learnFromCommitHistory.includeAuthorInfo', true);
 
+                    if (token.isCancellationRequested) { return; }
+
                     progress.report({ message: 'Analyzing commit messages with AI...' });
 
                     // Use the new analyzeCommitMessages method that leverages existing API infrastructure
                     const insights = await commitService.analyzeCommitMessages(maxCommits, includeAuthorInfo);
+
+                    if (token.isCancellationRequested) { return; }
 
                     // Show results in a new editor
                     const document = await vscode.workspace.openTextDocument({
@@ -68,16 +96,7 @@ export async function learnFromCommitHistory() {
                     vscode.window.showInformationMessage('Commit message analysis complete!');
 
                     // Send success message back to webview if open
-                    const { SettingsWebview } = await import('../../webview/settings/SettingsWebview.js');
-                    if (SettingsWebview.isWebviewOpen()) {
-                        debugLog('Sending commitHistoryAnalysisResult success message to webview');
-                        SettingsWebview.postMessageToWebview({
-                            command: 'commitHistoryAnalysisResult',
-                            success: true
-                        });
-                    } else {
-                        debugLog('Settings webview is not open, cannot send success message');
-                    }
+                    await sendResult(true);
 
                 } catch (error) {
                     debugLog('Learn from commit history error:', error);
@@ -89,22 +108,6 @@ export async function learnFromCommitHistory() {
         debugLog('Learn from commit history error:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         vscode.window.showErrorMessage(`Failed to analyze commit messages: ${errorMessage}`);
-
-        // Send error message back to webview if open
-        try {
-            const { SettingsWebview } = await import('../../webview/settings/SettingsWebview.js');
-            if (SettingsWebview.isWebviewOpen()) {
-                debugLog('Sending commitHistoryAnalysisResult error message to webview');
-                SettingsWebview.postMessageToWebview({
-                    command: 'commitHistoryAnalysisResult',
-                    success: false,
-                    error: errorMessage
-                });
-            } else {
-                debugLog('Settings webview is not open, cannot send error message');
-            }
-        } catch (importError) {
-            debugLog('Failed to import SettingsWebview for error reporting:', importError);
-        }
+        await sendResult(false, errorMessage);
     }
 }

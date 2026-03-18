@@ -3,11 +3,33 @@ import { ChangelogService } from './ChangelogService';
 import { isProUser } from '../../utils/proHelpers';
 import { debugLog } from '../debug/logger';
 
+async function sendChangelogResult(success: boolean, error?: string) {
+    try {
+        const { SettingsWebview } = await import('../../webview/settings/SettingsWebview.js');
+        if (SettingsWebview.isWebviewOpen()) {
+            SettingsWebview.postMessageToWebview({
+                command: 'changelogGenerationResult',
+                success,
+                error
+            });
+        }
+    } catch (e) {
+        debugLog('Failed to send changelog result to webview:', e);
+    }
+}
+
 /**
  * Command handler for generating changelog from git history
  * This is a Pro feature that analyzes commits and creates/updates CHANGELOG.md
  */
 export async function generateChangelog() {
+    let resultSent = false;
+    const safeSendResult = async (success: boolean, error?: string) => {
+        if (resultSent) { return; }
+        resultSent = true;
+        await sendChangelogResult(success, error);
+    };
+
     try {
         // Check if user is pro
         if (!isProUser()) {
@@ -23,6 +45,7 @@ export async function generateChangelog() {
                 vscode.env.openExternal(vscode.Uri.parse('https://gitmind.com/pro'));
             }
 
+            await safeSendResult(false, 'Not a Pro user');
             return;
         }
 
@@ -44,6 +67,7 @@ export async function generateChangelog() {
             );
 
             if (!selectedFolder) {
+                await safeSendResult(false, 'Cancelled');
                 return; // User cancelled
             }
 
@@ -102,8 +126,10 @@ export async function generateChangelog() {
                     'For more information about changelog generation, check the GitMind documentation or create git tags for your versions.'
                 );
             }
+            await safeSendResult(false, 'Cancelled');
             return;
         } else if (!showTips) {
+            await safeSendResult(false, 'Cancelled');
             return; // User cancelled
         }
 
@@ -133,6 +159,7 @@ export async function generateChangelog() {
         });
 
         if (!options) {
+            await safeSendResult(false, 'Cancelled');
             return; // User cancelled
         }
 
@@ -213,6 +240,8 @@ export async function generateChangelog() {
                         });
                     }
 
+                    await safeSendResult(true);
+
                 } catch (error) {
                     debugLog('Changelog generation error:', error);
                     throw error;
@@ -224,6 +253,7 @@ export async function generateChangelog() {
         debugLog('Changelog generation error:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         vscode.window.showErrorMessage(`Failed to generate changelog: ${errorMessage}`);
+        await safeSendResult(false, errorMessage);
     }
 }
 
@@ -232,9 +262,17 @@ export async function generateChangelog() {
  * This is a shortcut for the most common use case
  */
 export async function updateChangelog() {
+    let resultSent = false;
+    const safeSendResult = async (success: boolean, error?: string) => {
+        if (resultSent) { return; }
+        resultSent = true;
+        await sendChangelogResult(success, error);
+    };
+
     try {
         if (!isProUser()) {
             vscode.commands.executeCommand('gitmind.generateChangelog');
+            await safeSendResult(false, 'Delegate to generateChangelog');
             return;
         }
 
@@ -263,6 +301,7 @@ export async function updateChangelog() {
                 await changelogService.saveChangelog(changelog, 'prepend');
 
                 vscode.window.showInformationMessage('Changelog updated successfully!');
+                await safeSendResult(true);
             }
         );
 
@@ -270,5 +309,6 @@ export async function updateChangelog() {
         debugLog('Changelog update error:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         vscode.window.showErrorMessage(`Failed to update changelog: ${errorMessage}`);
+        await safeSendResult(false, errorMessage);
     }
 }
