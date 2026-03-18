@@ -1,19 +1,4 @@
 import { debugLog } from "../debug/logger";
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import * as http from "http";
-import * as https from "https";
-
-// Create persistent agents for connection pooling
-const httpAgent = new http.Agent({ keepAlive: true });
-const httpsAgent = new https.Agent({ keepAlive: true });
-
-// Shared axios instance with keep-alive pooling
-const pooledAxios = axios.create({
-    httpAgent,
-    httpsAgent,
-    validateStatus: () => true, // Fetch doesn't throw on 4xx/5xx by default
-    responseType: "arraybuffer", // Handle both text and json safely
-});
 
 type LoggableHeaders = Record<string, string>;
 
@@ -152,75 +137,20 @@ export async function loggedFetch(
     });
 
     try {
-        const config: AxiosRequestConfig = {
-            url,
-            method,
-            headers: rawHeaders,
-            data: init?.body,
-            signal: init?.signal ? (init.signal as import("axios").GenericAbortSignal) : undefined // Support AbortController signals
-        };
-
-        const axiosResponse = await pooledAxios.request(config);
+        const response = await globalThis.fetch(input, init);
         const durationMs = Date.now() - start;
-
-        // Extract response body text payload from arraybuffer
-        const textDecoder = new TextDecoder();
-        const text = textDecoder.decode(axiosResponse.data);
-
-        let responseBodyPreview: string | undefined;
-        try {
-            const trimmed = text.trim();
-            const looksJson = trimmed.startsWith("{") || trimmed.startsWith("[");
-            if (looksJson) {
-                try {
-                    const parsed = JSON.parse(text) as unknown;
-                    const redacted = redactJson(parsed);
-                    responseBodyPreview = truncateString(JSON.stringify(redacted, null, 2), MAX_LOG_BODY_CHARS);
-                } catch {
-                    responseBodyPreview = truncateString(text, MAX_LOG_BODY_CHARS);
-                }
-            } else {
-                responseBodyPreview = truncateString(text, MAX_LOG_BODY_CHARS);
-            }
-        } catch {
-            responseBodyPreview = "[unavailable]";
-        }
-
-        const isOk = axiosResponse.status >= 200 && axiosResponse.status < 300;
 
         debugLog("[API] Response", {
             provider: meta?.provider,
             operation: meta?.operation,
             method,
             url,
-            status: axiosResponse.status,
-            ok: isOk,
+            status: response.status,
+            ok: response.ok,
             durationMs,
-            body: responseBodyPreview,
         });
 
-        // Create a custom Response-like object that fits standard fetch properties
-        const responseHeaders = new Headers();
-        if (axiosResponse.headers) {
-            Object.entries(axiosResponse.headers).forEach(([key, value]) => {
-                if (value) {
-                    responseHeaders.append(key, value.toString());
-                }
-            });
-        }
-
-        const customResponse = {
-            ok: isOk,
-            status: axiosResponse.status,
-            statusText: axiosResponse.statusText,
-            headers: responseHeaders,
-            url: axiosResponse.config.url || url,
-            text: async () => text,
-            json: async () => JSON.parse(text),
-            clone: () => ({ ...customResponse })
-        } as unknown as Response;
-
-        return customResponse;
+        return response;
     } catch (error) {
         const durationMs = Date.now() - start;
         debugLog("[API] Request failed", {
