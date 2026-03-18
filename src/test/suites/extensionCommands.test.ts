@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { toggleDebugSetting } from '../../extension';
+import { toggleDebugSetting } from '../../commands/index';
 import { invalidateConfigCache } from '../../config/settings';
 
 suite('Extension Commands Tests', () => {

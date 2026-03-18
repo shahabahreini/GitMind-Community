@@ -45,7 +45,7 @@ import { state } from "../extension";
 // Constants
 const TIMEOUT_DURATION = 60000;
 const API_CHECK_TIMEOUT = 15000;
-const SUPPORTED_PROVIDERS = [
+export const SUPPORTED_PROVIDERS = [
   "Gemini", "Hugging Face", "Ollama", "Mistral", "Cohere", "OpenAI",
   "Together AI", "OpenRouter", "Anthropic", "MiniMax", "GitHub Copilot", "DeepSeek", "Grok", "Groq", "Perplexity", "Z.ai", "Custom API"
 ];

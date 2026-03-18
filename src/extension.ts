@@ -34,6 +34,7 @@ import { SecureKeyManager } from "./services/encryption/SecureKeyManager";
 import { SubscriptionManager } from "./services/subscription/SubscriptionManager";
 import { ProActivationService } from "./services/subscription/ProActivationService";
 import { LemonSqueezyService } from "./services/subscription/LemonSqueezyService";
+import { ProNotificationService } from "./services/subscription/ProNotificationService";
 import { SettingsMigrationService } from "./services/migration/SettingsMigrationService";
 import { learnFromCommitHistory } from "./services/ai/learnFromCommitHistory";
 import { CommitStyleManager } from "./services/commitStyleManager";
@@ -49,7 +50,7 @@ const state: ExtensionState = {
 
 export { state };
 
-import { registerCommands } from "./commands/index";
+import { registerCommands, SUPPORTED_PROVIDERS } from "./commands/index";
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   state.context = context;
@@ -69,6 +70,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const subscriptionManager = SubscriptionManager.getInstance();
   subscriptionManager.initialize(context);
   debugLog("SubscriptionManager initialized");
+
+  // Initialize ProNotificationService
+  const proNotificationService = ProNotificationService.getInstance();
+  proNotificationService.initialize(context);
+  debugLog("ProNotificationService initialized");
 
   // Initialize ProActivationService
   const proActivationService = ProActivationService.getInstance();
