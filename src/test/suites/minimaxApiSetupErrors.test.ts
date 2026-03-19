@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 
 import { checkApiSetup } from '../../services/api/validation';
 import { invalidateConfigCache } from '../../config/settings';
+import { SecureKeyManager } from '../../services/encryption/SecureKeyManager';
 
 interface MockHeaders {
     get(name: string): string | null;
@@ -44,12 +45,15 @@ suite('MiniMax API Setup Error Handling', () => {
         originalGetConfiguration = vscode.workspace.getConfiguration;
         originalFetch = globalThis.fetch;
         invalidateConfigCache();
+        // Clear SecureKeyManager API key cache so mock values are read from plain config
+        SecureKeyManager.getInstance().clearApiKeyCache();
     });
 
     teardown(() => {
         vscode.workspace.getConfiguration = originalGetConfiguration;
         globalThis.fetch = originalFetch as typeof globalThis.fetch;
         invalidateConfigCache();
+        SecureKeyManager.getInstance().clearApiKeyCache();
     });
 
     function setMiniMaxConfig(apiKey: string): void {

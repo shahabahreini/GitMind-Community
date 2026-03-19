@@ -121,7 +121,8 @@ export async function loggedFetch(
         typeof input === "string" || input instanceof URL ? "GET" : input.method;
     const method = init?.method ?? fallbackMethod;
 
-    const headers = sanitizeHeaders(normalizeHeaders(init?.headers));
+    const rawHeaders = normalizeHeaders(init?.headers);
+    const headers = sanitizeHeaders(rawHeaders);
     const requestBody = safeBodyPreview(init?.body ?? null);
 
     const start = Date.now();
@@ -136,29 +137,8 @@ export async function loggedFetch(
     });
 
     try {
-        const response = await fetch(input, init);
+        const response = await globalThis.fetch(input, init);
         const durationMs = Date.now() - start;
-
-        let responseBodyPreview: string | undefined;
-        try {
-            const clone = response.clone();
-            const text = await clone.text();
-            const trimmed = text.trim();
-            const looksJson = trimmed.startsWith("{") || trimmed.startsWith("[");
-            if (looksJson) {
-                try {
-                    const parsed = JSON.parse(text) as unknown;
-                    const redacted = redactJson(parsed);
-                    responseBodyPreview = truncateString(JSON.stringify(redacted, null, 2), MAX_LOG_BODY_CHARS);
-                } catch {
-                    responseBodyPreview = truncateString(text, MAX_LOG_BODY_CHARS);
-                }
-            } else {
-                responseBodyPreview = truncateString(text, MAX_LOG_BODY_CHARS);
-            }
-        } catch {
-            responseBodyPreview = "[unavailable]";
-        }
 
         debugLog("[API] Response", {
             provider: meta?.provider,
@@ -168,7 +148,6 @@ export async function loggedFetch(
             status: response.status,
             ok: response.ok,
             durationMs,
-            body: responseBodyPreview,
         });
 
         return response;

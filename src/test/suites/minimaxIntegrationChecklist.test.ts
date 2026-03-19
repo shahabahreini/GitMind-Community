@@ -43,9 +43,10 @@ suite('MiniMax Integration Checklist', () => {
     });
 
     test('Command wiring for model loading exists', () => {
-        const extensionTs = readRepoFile('src/extension.ts');
+        // Commands are registered in commands/index.ts via registerCommands(), not extension.ts directly
+        const commandsTs = readRepoFile('src/commands/index.ts');
         assert.ok(
-            extensionTs.includes('gitmind.loadMiniMaxModels'),
+            commandsTs.includes('gitmind.loadMiniMaxModels'),
             'Extension should register gitmind.loadMiniMaxModels'
         );
     });

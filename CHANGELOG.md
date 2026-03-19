@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+
+## v4.12.0 - 2026-03-18
+
+### New Features
+
+- Added Pro subscription notification service in `ProNotificationService` to inform non-Pro users about benefits and promotional discounts.
+- Updated `SubscriptionManager` to allow checking Pro status without requiring an email prompt.
+
+### Enhanced
+
+- Refactored API request handling in `src/loggedFetch.ts` to use `globalThis.fetch` and configured keep-alive agents for more stable API communication.
+- Standardized background task result reporting to the Settings webview by introducing helper functions `sendResult` and `safeSendResult` and ensuring only a single outcome is posted per task.
+- Migrated VS Code command registration and handlers into `src/commands/index.ts` for improved separation of concerns.
+
+### Technical
+
+- Implemented cancellation request handling in `learnFromCommitHistory` to stop processing and report cancellation to the webview.
+
 ## v4.11.0 - 2026-03-13
 
 ### New Features

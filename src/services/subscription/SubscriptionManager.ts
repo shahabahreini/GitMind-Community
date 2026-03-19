@@ -41,7 +41,7 @@ export class SubscriptionManager {
     /**
      * Check if user has an active subscription
      */
-    public async isProUser(email?: string): Promise<boolean> {
+    public async isProUser(email?: string, preventPrompt: boolean = false): Promise<boolean> {
         // First check if user has a valid license key - this takes priority
         const config = vscode.workspace.getConfiguration('gitmind');
         const validationStatus = config.get<string>('pro.validationStatus');
@@ -56,7 +56,7 @@ export class SubscriptionManager {
 
         // Fall back to subscription check only if license validation failed/missing
         if (!email) {
-            email = await this.getUserEmail();
+            email = await this.getUserEmail(preventPrompt);
         }
 
         if (!email) {
@@ -174,7 +174,7 @@ export class SubscriptionManager {
     /**
      * Get user's email from various sources
      */
-    public async getUserEmail(): Promise<string | undefined> {
+    public async getUserEmail(preventPrompt: boolean = false): Promise<string | undefined> {
         // Check if email is stored in settings
         const config = vscode.workspace.getConfiguration('gitmind');
         let email = config.get<string>('subscription.email');
@@ -201,8 +201,11 @@ export class SubscriptionManager {
             debugLog('Failed to get email from Git config:', error);
         }
 
-        // Prompt user for email
-        return await this.promptForEmail();
+        // Prompt user for email if not prevented
+        if (!preventPrompt) {
+            return await this.promptForEmail();
+        }
+        return undefined;
     }
 
     /**

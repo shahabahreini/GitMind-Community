@@ -567,8 +567,13 @@ suite('Integration Integrity - Commit Style Registration', () => {
 
 suite('Integration Integrity - Command Registration', () => {
 
+    let commandsSource: string;
+
     suiteSetup(() => {
         extensionSource = readSource('src/extension.ts');
+        // All commands are registered in commands/index.ts via registerCommands().
+        // The extension.ts simply calls registerCommands(context).
+        commandsSource = readSource('src/commands/index.ts');
         packageJson = readJSON('package.json');
     });
 
@@ -578,15 +583,16 @@ suite('Integration Integrity - Command Registration', () => {
         const missingInExtension: string[] = [];
 
         for (const cmd of pkgCommands) {
-            // Check that extension.ts registers this command
-            // Commands can be registered as string literals in registerCommand calls
-            if (!extensionSource.includes(`"${cmd}"`) && !extensionSource.includes(`'${cmd}'`)) {
+            // Check that either extension.ts or commands/index.ts registers this command
+            const inExtension = extensionSource.includes(`"${cmd}"`) || extensionSource.includes(`'${cmd}'`);
+            const inCommands = commandsSource.includes(`"${cmd}"`) || commandsSource.includes(`'${cmd}'`);
+            if (!inExtension && !inCommands) {
                 missingInExtension.push(cmd);
             }
         }
 
         assert.deepStrictEqual(missingInExtension, [],
-            `Commands declared in package.json but NOT registered in extension.ts:\n${missingInExtension.join('\n')}`);
+            `Commands declared in package.json but NOT registered in extension.ts or commands/index.ts:\n${missingInExtension.join('\n')}`);
     });
 
     test('Load model commands in ProviderConfig UI should be handled somewhere', () => {
@@ -602,12 +608,12 @@ suite('Integration Integrity - Command Registration', () => {
         }
 
         // Load commands can be handled either:
-        // 1. As VS Code commands registered in extension.ts
+        // 1. As VS Code commands registered in extension.ts or commands/index.ts
         // 2. As webview messages handled in MessageHandler.ts
-        // The loadCommand string often starts with "gitmind." prefix
         const unhandled: string[] = [];
         for (const cmd of uiLoadCommands) {
             const inExtension = extensionSource.includes(`"${cmd}"`) || extensionSource.includes(`'${cmd}'`);
+            const inCommands = commandsSource.includes(`"${cmd}"`) || commandsSource.includes(`'${cmd}'`);
             // For MessageHandler, check with and without prefix
             const shortCmd = cmd.replace('gitmind.', '');
             const inMessageHandler = messageHandlerSource.includes(`'${shortCmd}'`) ||
@@ -615,13 +621,13 @@ suite('Integration Integrity - Command Registration', () => {
                 messageHandlerSource.includes(`'${cmd}'`) ||
                 messageHandlerSource.includes(`"${cmd}"`);
 
-            if (!inExtension && !inMessageHandler) {
+            if (!inExtension && !inCommands && !inMessageHandler) {
                 unhandled.push(cmd);
             }
         }
 
         assert.deepStrictEqual(unhandled, [],
-            `Load commands in ProviderConfig UI not handled in extension.ts OR MessageHandler.ts:\n` +
+            `Load commands in ProviderConfig UI not handled in extension.ts, commands/index.ts, OR MessageHandler.ts:\n` +
             unhandled.join('\n'));
     });
 });
