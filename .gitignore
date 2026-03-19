@@ -170,3 +170,4 @@ storybook-static/
 # compiled extensions
 .vscode/
 *.vsix
+.gitnexus
