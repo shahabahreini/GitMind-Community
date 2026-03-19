@@ -1311,6 +1311,7 @@
     "applicationinsights": "^3.14.0",
     "axios": "^1.13.6",
     "dotenv": "^17.3.1",
+    "pi-gitnexus": "^0.4.0",
     "sanitize-html": "^2.17.2"
   },
   "repository": {
