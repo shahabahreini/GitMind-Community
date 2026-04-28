@@ -928,12 +928,18 @@ export class ScriptManager {
                     errorIndicator.style.display = 'none';
                     emptyIndicator.style.display = 'none';
                     isOpen = true;
+                    if (typeof window.setDropdownState === 'function') {
+                        window.setDropdownState(true);
+                    }
                 }
 
                 function hideDropdown() {
                     dropdown.style.display = 'none';
                     isOpen = false;
                     selectedIndex = -1;
+                    if (typeof window.setDropdownState === 'function') {
+                        window.setDropdownState(false);
+                    }
                 }
 
                 function showError(message) {

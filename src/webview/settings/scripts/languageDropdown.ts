@@ -125,6 +125,10 @@ export function getLanguageDropdownScript(): string {
         dropdownList.classList.add('show');
         isDropdownOpen = true;
         
+        if (typeof window.setDropdownState === 'function') {
+          window.setDropdownState(true);
+        }
+        
         // Prevent any parent event handlers from interfering
         document.addEventListener('click', handleOutsideClick, { capture: true });
       }
@@ -145,6 +149,10 @@ export function getLanguageDropdownScript(): string {
 
         isDropdownOpen = false;
         highlightedIndex = -1;
+        
+        if (typeof window.setDropdownState === 'function') {
+          window.setDropdownState(false);
+        }
         
         document.removeEventListener('click', handleOutsideClick, { capture: true });
       }

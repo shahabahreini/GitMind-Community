@@ -62,31 +62,45 @@ export function getMessageHandlersScript(): string {
     };
 
     // Track HTML select dropdown state
-    document.addEventListener('mousedown', function(e) {
-      const target = e.target;
-      if (target.tagName === 'SELECT') {
-        console.log('Select dropdown likely opened:', target.id);
-        window.setDropdownState?.(true);
-        
-        const handleSelectClose = () => {
-          console.log('Select dropdown closed:', target.id);
+    (function() {
+      let activeSelect = null;
+
+      const handleSelectClose = (e) => {
+        if (activeSelect) {
+          console.log('Select dropdown closed:', activeSelect.id);
           window.setDropdownState?.(false);
-          target.removeEventListener('blur', handleSelectClose);
-          target.removeEventListener('change', handleSelectClose);
-          document.removeEventListener('mousedown', handleClickOutside);
-        };
-        
-        const handleClickOutside = (clickEvent) => {
-          if (clickEvent.target !== target) {
+          activeSelect.removeEventListener('blur', handleSelectClose);
+          activeSelect.removeEventListener('change', handleSelectClose);
+          activeSelect = null;
+        }
+      };
+
+      document.addEventListener('mousedown', function(e) {
+        const target = e.target;
+        if (target.tagName === 'SELECT') {
+          // If we click the same select that is already "active", it might be closing
+          if (activeSelect === target) {
+            // Browsers behave differently here, but blur/change usually handle it
+            return;
+          }
+
+          // If another select was active, close it first
+          if (activeSelect && activeSelect !== target) {
             handleSelectClose();
           }
-        };
-        
-        target.addEventListener('blur', handleSelectClose);
-        target.addEventListener('change', handleSelectClose);
-        document.addEventListener('mousedown', handleClickOutside);
-      }
-    });
+
+          console.log('Select dropdown likely opened:', target.id);
+          activeSelect = target;
+          window.setDropdownState?.(true);
+          
+          target.addEventListener('blur', handleSelectClose);
+          target.addEventListener('change', handleSelectClose);
+        } else if (activeSelect) {
+          // Clicked something else, the select will blur
+          // handleSelectClose will be called by the blur listener
+        }
+      });
+    })();
 
     // Utility functions
     function getProviderDisplayName(provider) {

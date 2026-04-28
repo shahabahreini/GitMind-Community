@@ -66,12 +66,6 @@ export function getEventHandlersScript(): string {
           return;
         }
 
-        // Skip handling if a dropdown is currently open
-        if (window.isDropdownOpen) {
-          console.log('Skipping setting handler - dropdown is open');
-          return;
-        }
-
         const value = getValue(target);
         const keys = key.split('.');
         let targetObj = currentSettings;
