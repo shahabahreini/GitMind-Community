@@ -196,16 +196,7 @@ export function getMainStyles(): string {
       to { opacity: 1; }
     }
 
-    /* Compact styling for general settings */
-    .general-settings-compact {
-      margin-bottom: 16px;
-      padding-bottom: 0;
-      border-bottom: none;
-    }
 
-    .general-settings-compact + .settings-section {
-      margin-top: 16px;
-    }
 
     .description {
       font-size: 11px;

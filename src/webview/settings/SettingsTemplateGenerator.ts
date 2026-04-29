@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 import { ExtensionSettings } from "../../models/ExtensionSettings";
 import { getMainStyles } from "./styles/main.css";
 import { StatusBanner } from "./components/StatusBanner";
-import { GeneralSettings } from "./components/GeneralSettings";
+
 import { ButtonGroup } from "./components/ButtonGroup";
 import { getSettingsScript } from "./scripts/settingsManager";
 import { ProFeaturesSettings } from "./components/ProFeaturesSettings";
@@ -28,7 +28,6 @@ export class SettingsTemplateGenerator {
 
   public generateHtml(): string {
     const statusBanner = new StatusBanner(this._settings);
-    const generalSettings = new GeneralSettings(this._settings);
     const buttonGroup = new ButtonGroup();
     const proFeaturesSettings = new ProFeaturesSettings(this._settings);
 
@@ -104,7 +103,7 @@ export class SettingsTemplateGenerator {
         </div>
         <h2>GitMind Settings</h2>
         ${proFeaturesSettings.render()}
-        ${generalSettings.render()}
+
         ${buttonGroup.render()}
         <footer class="settings-footer" aria-label="Settings footer">
           <div class="settings-footer-row">
