@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { SettingsWebview } from '../../webview/settings/SettingsWebview';
 import { SettingsManager } from '../../webview/settings/SettingsManager';
 import { MessageHandler } from '../../webview/settings/MessageHandler';
+import { FormUtils } from '../../webview/settings/components/utils/FormUtils';
 import { invalidateConfigCache } from '../../config/settings';
 
 suite('Settings UI Tests', () => {
@@ -437,6 +438,18 @@ suite('Settings UI Tests', () => {
             const errorMessage = error instanceof Error ? error.message : String(error);
             console.log('OllamaSettings test failed (expected in test environment):', errorMessage);
         }
+    });
+
+    test('Searchable select should render a visible icon toggle', () => {
+        const html = FormUtils.createSearchableSelect('testModel', [
+            { value: 'alpha', label: 'Alpha', selected: true },
+            { value: 'beta', label: 'Beta' }
+        ], 'Search models...');
+
+        assert.ok(html.includes('class="dropdown-toggle"'), 'Should render dropdown toggle button');
+        assert.ok(html.includes('aria-label="Open options"'), 'Toggle should have an accessible label');
+        assert.ok(html.includes('class="dropdown-chevron"'), 'Toggle should render a classed chevron icon');
+        assert.ok(html.includes('stroke="currentColor"'), 'Chevron should inherit theme-safe icon color');
     });
 
     test('Ollama model loading should handle API responses correctly', async () => {

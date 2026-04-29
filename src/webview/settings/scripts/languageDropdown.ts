@@ -123,6 +123,7 @@ export function getLanguageDropdownScript(): string {
         renderOptions();
         
         dropdownList.classList.add('show');
+        container.classList.add('open');
         isDropdownOpen = true;
         
         if (typeof window.setDropdownState === 'function') {
@@ -148,6 +149,7 @@ export function getLanguageDropdownScript(): string {
         }
 
         isDropdownOpen = false;
+        container.classList.remove('open');
         highlightedIndex = -1;
         
         if (typeof window.setDropdownState === 'function') {

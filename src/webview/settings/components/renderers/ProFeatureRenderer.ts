@@ -442,13 +442,14 @@ export class ProFeatureRenderer extends BaseRenderer {
                                autocomplete="off" />
                         <select id="commitTargetLanguage"
                                 class="searchable-select"
+                                style="display: none;"
                                 ${disabledState ? 'disabled' : ''}
                                 data-setting="commit.targetLanguage">
                             ${languageOptions.map(opt => `<option value="${opt.value}" ${targetLanguage === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
                         </select>
-                        <button type="button" class="dropdown-toggle" ${disabledState ? 'disabled' : ''}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                                <polyline points="6 9 12 15 18 9"></polyline>
+                        <button type="button" class="dropdown-toggle" aria-label="Open language options" title="Open language options" ${disabledState ? 'disabled' : ''}>
+                            <svg class="dropdown-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </button>
                     </div>

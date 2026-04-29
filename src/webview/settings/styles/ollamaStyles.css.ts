@@ -5,55 +5,98 @@ export function getOllamaStyles(): string {
         .model-input-container {
             position: relative;
             width: 100%;
+            margin-bottom: 8px;
         }
 
         .searchable-dropdown {
             position: relative;
             display: flex;
             align-items: center;
+            --gm-model-dropdown-border: var(--vscode-input-border, rgba(99, 99, 99, 0.22));
+            --gm-model-dropdown-border-hover: var(--vscode-focusBorder, rgba(0, 95, 163, 0.55));
+            --gm-model-dropdown-background: var(--vscode-input-background, var(--vscode-editor-background, #ffffff));
+            --gm-model-dropdown-foreground: var(--vscode-input-foreground, var(--vscode-foreground, #1f2328));
+            --gm-model-dropdown-icon: var(--vscode-icon-foreground, var(--vscode-input-foreground, var(--vscode-foreground, #3f454b)));
+            --gm-model-dropdown-hover: var(--vscode-toolbar-hoverBackground, rgba(90, 93, 94, 0.12));
+            background: var(--gm-model-dropdown-background);
+            border: 1px solid var(--gm-model-dropdown-border);
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            height: 32px;
+            box-sizing: border-box;
+        }
+        
+        .searchable-dropdown:hover {
+            border-color: var(--gm-model-dropdown-border-hover);
+        }
+        
+        .searchable-dropdown:focus-within {
+            outline: none;
+            border-color: var(--vscode-focusBorder);
+            box-shadow: 0 0 0 1px var(--vscode-focusBorder);
         }
 
         .searchable-dropdown input {
             flex: 1;
             padding-right: 45px;
+            background: transparent !important;
+            border: none !important;
+            outline: none !important;
+            height: 30px !important;
+            padding-left: 10px !important;
+            color: var(--gm-model-dropdown-foreground);
+            font-size: 13px;
         }
 
         .load-models-btn {
             position: absolute;
-            right: 8px;
+            right: 4px;
             top: 50%;
-            margin-top: -14px;
-            background: transparent;
-            border: none;
+            transform: translateY(-50%);
+            min-width: 24px;
+            min-height: 24px;
+            background: transparent !important;
+            border: 0;
             cursor: pointer;
-            padding: 6px 8px;
-            border-radius: 6px;
-            color: var(--vscode-foreground);
-            transition: background-color 0.2s ease, color 0.2s ease;
+            padding: 4px;
+            border-radius: 4px;
+            color: var(--gm-model-dropdown-icon);
+            transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
             z-index: 2;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 28px;
-            height: 28px;
-            white-space: nowrap;
-            font-size: 12px;
+            width: 24px;
+            height: 24px;
+            box-shadow: none !important;
+            overflow: visible;
         }
 
-        .load-models-btn:hover {
-            background: rgba(128, 128, 128, 0.1);
-            color: var(--vscode-button-foreground);
+        .load-models-btn:hover:not(:disabled),
+        .load-models-btn:focus-visible {
+            transform: translateY(-50%) !important;
+            background: var(--gm-model-dropdown-hover) !important;
+            color: var(--vscode-focusBorder, var(--gm-model-dropdown-icon));
+            box-shadow: none !important;
+        }
+
+        .load-models-btn:active:not(:disabled) {
+            transform: translateY(-50%) !important;
+            box-shadow: none !important;
         }
 
         .load-models-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            background: transparent !important;
+            color: var(--vscode-disabledForeground, rgba(127, 127, 127, 0.65)) !important;
+            border-color: transparent !important;
         }
 
         .load-models-btn svg {
             display: block;
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             pointer-events: none;
         }
 
@@ -71,13 +114,15 @@ export function getOllamaStyles(): string {
             top: calc(100% + 4px);
             left: 0;
             right: 0;
-            background: var(--vscode-dropdown-background);
-            border: none;
+            background: var(--vscode-dropdown-background, var(--vscode-editor-background, #ffffff));
+            border: 1px solid var(--vscode-dropdown-border, var(--gm-model-dropdown-border));
             border-radius: 8px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-            max-height: 200px;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.16);
+            max-height: 240px;
             overflow-y: auto;
             z-index: 5000;
+            padding: 4px;
+            animation: dropdownFadeIn 0.15s ease-out;
         }
 
         .dropdown-loading,
@@ -86,40 +131,44 @@ export function getOllamaStyles(): string {
             padding: 16px;
             text-align: center;
             color: var(--vscode-descriptionForeground);
-            font-size: 0.9em;
+            font-size: 12px;
+            font-style: italic;
         }
 
         .dropdown-error {
-            color: rgba(239, 68, 68, 1);
+            color: var(--vscode-errorForeground, #f14c4c);
         }
 
         .model-list {
             list-style: none;
             margin: 0;
-            padding: 4px;
+            padding: 0;
         }
 
         .model-list li {
-            padding: 10px 12px;
+            padding: 8px 12px;
             cursor: pointer;
             border-bottom: none;
-            transition: background-color 0.2s ease;
+            transition: background-color 0.15s ease;
             border-radius: 6px;
             margin-bottom: 2px;
+            display: flex;
+            flex-direction: column;
         }
 
         .model-list li:last-child {
-            border-bottom: none;
             margin-bottom: 0;
         }
 
         .model-list li:hover {
-            background: rgba(128, 128, 128, 0.1);
+            background: var(--vscode-list-hoverBackground);
+            color: var(--vscode-list-hoverForeground);
         }
 
         .model-list li.selected {
             background: rgba(0, 122, 204, 0.15);
             color: var(--vscode-foreground);
+            font-weight: 600;
         }
 
         .model-list li.filtered-out {
@@ -127,14 +176,15 @@ export function getOllamaStyles(): string {
         }
 
         .model-name {
-            font-weight: 500;
+            font-size: 13px;
         }
 
         .model-info {
-            font-size: 0.8em;
+            font-size: 11px;
             color: var(--vscode-descriptionForeground);
-            margin-top: 2px;
+            margin-top: 1px;
             opacity: 0.8;
+            font-weight: normal;
         }
     `;
 }

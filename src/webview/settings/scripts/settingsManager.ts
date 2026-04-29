@@ -8,6 +8,7 @@ import { getMessageHandlersScript } from "./messageHandlers";
 import { getEventHandlersScript } from "./eventHandlers";
 import { getTabManagerScript } from "./tabManager";
 import { getLanguageDropdownScript } from "./languageDropdown";
+import { getSearchableSelectScript } from "./searchableSelect";
 
 function getCustomApiHandlerScript(): string {
   return `
@@ -274,6 +275,7 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
     ${getApiManagerScript()}
     ${getTabManagerScript()}
     ${getLanguageDropdownScript()}
+    ${getSearchableSelectScript()}
     
     // Immediate tab initialization attempt
     setTimeout(() => {

@@ -63,11 +63,11 @@ export function getFormStyles(): string {
         padding: 8px 10px;
         background-color: var(--vscode-input-background);
         color: var(--vscode-input-foreground);
-        border: 1px solid rgba(128, 128, 128, 0.12);
+        border: 1px solid var(--vscode-input-border, rgba(128, 128, 128, 0.2));
         border-radius: 6px;
         font-size: 13px;
         font-family: var(--vscode-font-family);
-        transition: all 0.2s ease;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         box-sizing: border-box;
         height: 32px;
         line-height: 16px;
@@ -75,19 +75,19 @@ export function getFormStyles(): string {
 
       input:hover:not(:disabled),
       select:hover:not(:disabled) {
-        border-color: rgba(0, 122, 204, 0.4);
+        border-color: var(--vscode-focusBorder, rgba(0, 122, 204, 0.4));
       }
   
       /* Enhanced Select Dropdown */
       select {
         height: 32px;
         appearance: none;
-        padding-right: 32px;
-        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23007ACC%22%20d%3D%22M7.41%208.59L12%2013.17l4.59-4.58L18%2010l-6%206-6-6z%22%2F%3E%3C%2Fsvg%3E");
+        padding-right: 24px;
+        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23666666%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E");
         background-repeat: no-repeat;
-        background-position: right 10px center;
-        background-size: 14px;
-        border: 1px solid rgba(128, 128, 128, 0.12);
+        background-position: right 4px center;
+        background-size: 16px;
+        border: 1px solid var(--vscode-input-border, rgba(128, 128, 128, 0.2));
         box-shadow: none;
         cursor: pointer;
       }
@@ -95,10 +95,9 @@ export function getFormStyles(): string {
       /* Focus States - Enhanced visibility */
       select:focus,
       input:focus {
-        outline: 2px solid rgba(0, 122, 204, 0.5);
-        outline-offset: 0;
-        border-color: rgba(0, 122, 204, 0.5);
-        box-shadow: 0 0 0 3px rgba(0, 122, 204, 0.1);
+        outline: none;
+        border-color: var(--vscode-focusBorder);
+        box-shadow: 0 0 0 1px var(--vscode-focusBorder);
       }
   
       /* Select Options - Better styling */
@@ -270,7 +269,6 @@ export function getFormStyles(): string {
       .switch-container:hover:not(.disabled) {
         border-color: var(--vscode-button-background);
         box-shadow: 0 0 0 1px var(--vscode-button-background);
-      }
       }
 
       .toggle-switch input:focus + .toggle-slider {

@@ -389,7 +389,7 @@ export const proFeaturesModernCSS: string = `
 
 /* Enhanced Input Fields - Consistent sizing */
 .pro-feature-container .input-field {
-    background: var(--vscode-editor-background);
+    background-color: var(--vscode-editor-background);
     border: 2px solid var(--vscode-focusBorder);
     border-radius: 4px;
     padding: 6px 8px;
@@ -404,6 +404,12 @@ export const proFeaturesModernCSS: string = `
     box-sizing: border-box;
     transition: all 0.2s ease;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+/* Number inputs still need auto appearance for spinners in some browsers */
+.pro-feature-container input[type="number"].input-field {
     appearance: auto;
     -webkit-appearance: auto;
     -moz-appearance: textfield;
@@ -413,8 +419,25 @@ export const proFeaturesModernCSS: string = `
 .pro-feature-container select.input-field {
     height: 34px;
     padding: 7px 8px;
+    padding-right: 24px;
     text-align: left;
     line-height: 1.4;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23666666%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 4px center;
+    background-size: 14px;
+}
+
+/* High Contrast Theme Support */
+[data-vscode-theme-kind="vscode-high-contrast"] .pro-feature-container select.input-field,
+[data-vscode-theme-kind="vscode-high-contrast-light"] .pro-feature-container select.input-field {
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22white%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E") !important;
+}
+
+[data-vscode-theme-kind="vscode-high-contrast-light"] .pro-feature-container select.input-field {
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22black%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E") !important;
 }
 
 /* Ensure spinner buttons are visible */

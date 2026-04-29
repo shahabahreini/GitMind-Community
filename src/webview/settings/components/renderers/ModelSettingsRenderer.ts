@@ -36,12 +36,12 @@ export class ModelSettingsRenderer extends BaseRenderer {
         return FormUtils.createFormGroup(
             'API Provider',
             'Select the AI provider for generating commit messages',
-            FormUtils.createSelect('apiProvider', providers.map(provider => ({
+            FormUtils.createSearchableSelect('apiProvider', providers.map(provider => ({
                 value: provider.id,
                 label: provider.name,
                 selected: currentProvider === provider.id,
                 className: provider.isPro ? 'pro-provider' : ''
-            })))
+            })), 'Search providers...')
         );
     }
 
@@ -157,23 +157,30 @@ export class ModelSettingsRenderer extends BaseRenderer {
                     ? field.loadButtonDisabledTooltip
                     : '';
 
+            const selectOptions: any[] = [];
             // Add current model if not in default options
             if (value && !options.some((opt: any) => opt.value === value)) {
-                optionsHtml += `<option value="${value}" selected>${value}</option>`;
+                selectOptions.push({
+                    value: value,
+                    label: value,
+                    selected: true
+                });
             }
 
             // Add default options
             options.forEach((option: any) => {
-                optionsHtml += `<option value="${option.value}" ${option.value === value ? 'selected' : ''}>${option.label}</option>`;
+                selectOptions.push({
+                    value: option.value,
+                    label: option.label,
+                    selected: option.value === value
+                });
             });
 
             return FormUtils.createFormGroup(
                 field.label,
                 field.tooltip,
                 `<div class="model-select-container">
-                    <select id="${field.id}">
-                        ${optionsHtml}
-                    </select>
+                    ${FormUtils.createSearchableSelect(field.id, selectOptions, `Search ${field.label.toLowerCase()}...`, isLoadDisabled, loadDisabledTooltip)}
                     <button id="${field.loadButtonId}" class="button small" style="margin-top: 8px;" ${isLoadDisabled ? 'disabled title="' + loadDisabledTooltip.replace(/"/g, '&quot;') + '"' : ''}>
                         ${field.loadButtonText}
                     </button>

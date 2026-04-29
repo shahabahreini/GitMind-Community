@@ -106,6 +106,40 @@ export class FormUtils {
         return selectHtml;
     }
 
+    public static createSearchableSelect(id: string, options: SelectOption[], placeholder: string = 'Search...', disabled: boolean = false, tooltip: string = ''): string {
+        const optionsHtml = options.map(option => {
+            const selected = option.selected ? 'selected' : '';
+            const className = option.className ? ` class="${option.className}"` : '';
+            return `<option value="${option.value}" ${selected}${className}>${option.label}</option>`;
+        }).join('');
+
+        const selectedOption = options.find(o => o.selected) || options[0];
+        const initialValue = selectedOption ? selectedOption.label : '';
+
+        return `
+            <div class="searchable-select-container ${disabled ? 'disabled' : ''}" id="container-${id}" data-tooltip="${tooltip}">
+                <div class="searchable-input-wrapper">
+                    <input type="text" 
+                           class="searchable-input" 
+                           id="search-${id}" 
+                           placeholder="${placeholder}" 
+                           value="${initialValue}"
+                           autocomplete="off" 
+                           ${disabled ? 'disabled' : ''} />
+                    <button type="button" class="dropdown-toggle" tabindex="-1" aria-label="Open options" title="Open options" ${disabled ? 'disabled' : ''}>
+                        <svg class="dropdown-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+                <select id="${id}" style="display: none;">
+                    ${optionsHtml}
+                </select>
+                <div class="searchable-dropdown-list" id="list-${id}"></div>
+            </div>
+        `;
+    }
+
     public static createToggle(id: string, label: string, tooltip: string, checked: boolean, setting?: string): string {
         const checkedAttr = checked ? 'checked' : '';
         const settingAttr = setting ? `data-setting="${setting}"` : '';
