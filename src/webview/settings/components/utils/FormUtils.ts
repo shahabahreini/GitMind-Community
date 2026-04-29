@@ -20,9 +20,10 @@ interface Link {
 
 export class FormUtils {
     public static createFormGroup(label: string, tooltip: string, content: string): string {
+        const tooltipAttr = tooltip ? `data-tooltip="${tooltip}"` : '';
         return `
             <div class="form-group">
-                <label data-tooltip="${tooltip}">${label}</label>
+                <label ${tooltipAttr}>${label}</label>
                 ${content}
             </div>
         `;
@@ -106,7 +107,7 @@ export class FormUtils {
         return selectHtml;
     }
 
-    public static createSearchableSelect(id: string, options: SelectOption[], placeholder: string = 'Search...', disabled: boolean = false, tooltip: string = ''): string {
+    public static createSearchableSelect(id: string, options: SelectOption[], placeholder: string = 'Search...', disabled: boolean = false): string {
         const optionsHtml = options.map(option => {
             const selected = option.selected ? 'selected' : '';
             const className = option.className ? ` class="${option.className}"` : '';

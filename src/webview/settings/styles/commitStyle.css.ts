@@ -3,16 +3,19 @@ export function getCommitStyleStyles(): string {
     return `
         /* Theme-adaptive CSS variables for better dark/light mode support */
         .gm-commit-style-section {
-            --gm-hover-bg: var(--vscode-list-hoverBackground, rgba(255, 255, 255, 0.1));
-            --gm-border-color: var(--vscode-panel-border, var(--vscode-widget-border));
-            --gm-accent-color: var(--vscode-textLink-foreground, #0066cc);
-            --gm-accent-hover: var(--vscode-textLink-activeForeground, #004499);
-            --gm-text-primary: var(--vscode-editor-foreground, var(--vscode-foreground));
+            --gm-hover-bg: var(--vscode-list-hoverBackground, rgba(128, 128, 128, 0.08));
+            --gm-border-color: var(--vscode-panel-border, rgba(128, 128, 128, 0.15));
+            --gm-accent-color: var(--vscode-button-background, #007acc);
+            --gm-accent-hover: var(--vscode-button-hoverBackground, #0062a3);
+            --gm-text-primary: var(--vscode-foreground);
             --gm-text-secondary: var(--vscode-descriptionForeground);
-            --gm-selected-bg: var(--vscode-list-activeSelectionBackground, rgba(14, 99, 156, 0.1));
-            --gm-selected-border: var(--vscode-list-activeSelectionForeground, var(--vscode-focusBorder));
-            --gm-selected-text: var(--vscode-list-activeSelectionForeground, var(--vscode-foreground));
-            --gm-selected-shadow: var(--vscode-widget-shadow, rgba(0, 0, 0, 0.16));
+            --gm-card-bg: var(--vscode-editor-background);
+            --gm-selected-bg: var(--vscode-list-activeSelectionBackground, rgba(0, 122, 204, 0.1));
+            --gm-selected-border: var(--vscode-focusBorder, #007acc);
+            --gm-pro-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --gm-success-color: #10b981;
+            --gm-warning-color: #f59e0b;
+            --gm-error-color: #ef4444;
         }
 
         /* Commit Style Section Styles */
@@ -120,59 +123,71 @@ export function getCommitStyleStyles(): string {
 
         .gm-style-grid {
             display: grid;
-            gap: 8px;
-            margin-bottom: 16px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
         }
 
         .gm-style-option {
-            border: 1px solid rgba(128, 128, 128, 0.12);
-            border-radius: 6px;
-            padding: 12px 16px;
+            border: 1px solid var(--gm-border-color);
+            border-radius: 12px;
+            padding: 16px 20px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
-            background: var(--vscode-editor-background);
-            box-shadow: none;
+            background: var(--gm-card-bg);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
 
         .gm-style-option:hover:not(.gm-style-disabled) {
-            border-color: var(--vscode-button-background);
-            background: var(--vscode-list-hoverBackground);
-            box-shadow: none;
+            border-color: var(--gm-accent-color);
+            background: var(--gm-hover-bg);
+            transform: translateY(-2px) scale(1.01);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            z-index: 2;
         }
 
         .gm-style-option-selected {
-            border-color: var(--vscode-button-background) !important;
-            background: var(--vscode-list-activeSelectionBackground) !important;
-            box-shadow: none !important;
-            position: relative;
+            border-color: var(--gm-accent-color) !important;
+            background: var(--gm-selected-bg) !important;
+            box-shadow: 0 0 0 1px var(--gm-accent-color) inset, 0 4px 12px rgba(0, 0, 0, 0.1) !important;
         }
 
         .gm-style-option-selected .gm-style-name {
-            color: var(--gm-selected-text) !important;
-            font-weight: 600 !important;
+            color: var(--gm-accent-color) !important;
         }
 
         .gm-style-option-selected .gm-style-description {
-            color: var(--gm-selected-text) !important;
-            opacity: 0.9 !important;
+            opacity: 1 !important;
         }
 
-        .gm-style-option-selected::before {
+        .gm-style-option-selected::after {
             content: "✓";
             position: absolute;
-            top: 12px;
-            right: 12px;
-            width: 18px;
-            height: 18px;
+            top: 14px;
+            right: 14px;
+            width: 20px;
+            height: 20px;
             background: var(--gm-accent-color);
-            color: var(--vscode-button-foreground, white);
+            color: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: gm-pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes gm-pop-in {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         .gm-style-disabled {
@@ -221,15 +236,28 @@ export function getCommitStyleStyles(): string {
         }
 
         .gm-pro-badge {
-            background: linear-gradient(135deg, #FF6B6B, #4ECDC4);
+            background: var(--gm-pro-gradient);
+            color: white;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
+        }
+
+        .gm-pro-badge-small {
+            background: var(--gm-pro-gradient);
             color: white;
             font-size: 8px;
             font-weight: 700;
-            padding: 2px 6px;
-            border-radius: 8px;
+            padding: 1px 5px;
+            border-radius: 4px;
             text-transform: uppercase;
-            letter-spacing: 0.6px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            margin-left: 6px;
+            display: inline-flex;
+            align-items: center;
         }
 
         .gm-style-description {
@@ -335,17 +363,23 @@ export function getCommitStyleStyles(): string {
         }
 
         .gm-style-card {
-            background: var(--vscode-editor-background);
-            border: 1px solid var(--vscode-widget-border);
-            border-radius: 8px;
-            margin-bottom: 20px;
+            background: var(--gm-card-bg);
+            border: 1px solid var(--gm-border-color);
+            border-radius: 12px;
+            margin-bottom: 24px;
             overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .gm-style-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
         }
 
         .gm-style-card-header {
             background: var(--vscode-textCodeBlock-background);
-            padding: 16px;
-            border-bottom: 1px solid var(--vscode-widget-border);
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--gm-border-color);
         }
 
         .gm-style-card-title {
@@ -402,15 +436,31 @@ export function getCommitStyleStyles(): string {
 
         .gm-code-block {
             background: var(--vscode-textCodeBlock-background);
-            border: 1px solid var(--vscode-widget-border);
-            border-radius: 4px;
-            padding: 12px;
-            margin: 8px 0;
+            border: 1px solid var(--gm-border-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 12px 0;
             font-family: var(--vscode-editor-font-family);
             font-size: 12px;
             color: var(--vscode-editor-foreground);
             white-space: pre-wrap;
             overflow-x: auto;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .gm-code-block::after {
+            content: "EXAMPLE";
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 4px 8px;
+            background: var(--gm-border-color);
+            color: var(--gm-text-secondary);
+            border-radius: 0 7px 0 8px;
+            opacity: 0.6;
         }
 
         .gm-comparison-table {
@@ -439,68 +489,89 @@ export function getCommitStyleStyles(): string {
 
         .gm-status-badge {
             display: inline-block;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-size: 10px;
-            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 9px;
+            font-weight: 700;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         }
 
         .gm-status-formal { 
-            background: #4ecdc4; 
+            background: #10b981; 
             color: white; 
         }
         
         .gm-status-informal { 
-            background: #95a5a6; 
+            background: #64748b; 
             color: white; 
         }
         
         .gm-status-community { 
-            background: #f39c12; 
+            background: #f59e0b; 
             color: white; 
         }
 
         .gm-pro-upgrade-section {
-            background: linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(78, 205, 196, 0.1));
-            border: 1px solid var(--vscode-widget-border);
-            border-radius: 8px;
-            padding: 20px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05));
+            border: 1px dashed var(--gm-accent-color);
+            border-radius: 12px;
+            padding: 32px 24px;
             text-align: center;
+            margin-top: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gm-pro-upgrade-section::before {
+            content: "✨";
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gm-card-bg);
+            padding: 0 12px;
+            font-size: 20px;
         }
 
         .gm-upgrade-title {
-            font-weight: 600;
-            margin: 0 0 8px 0;
-            color: var(--vscode-foreground);
-            font-size: 16px;
+            font-weight: 700;
+            margin: 0 0 12px 0;
+            color: var(--gm-text-primary);
+            font-size: 18px;
+            letter-spacing: -0.02em;
         }
 
         .gm-upgrade-description {
-            color: var(--vscode-descriptionForeground);
-            margin: 0 0 16px 0;
-            line-height: 1.4;
-        }
-
-        .gm-upgrade-button {
-            background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.2s ease;
+            color: var(--gm-text-secondary);
+            margin: 0 0 24px 0;
+            line-height: 1.6;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
             font-size: 14px;
         }
 
-        .gm-upgrade-button:hover {
-            opacity: 0.9;
+        .gm-upgrade-button {
+            background: var(--gm-pro-gradient);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .gm-upgrade-button:focus {
-            outline: 2px solid var(--vscode-focusBorder);
-            outline-offset: 2px;
+        .gm-upgrade-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+            opacity: 0.95;
         }
 
         /* Inline Examples Styles */
@@ -723,7 +794,8 @@ export function getCommitStyleStyles(): string {
             color: var(--gm-accent-color);
             opacity: 1;
             text-decoration: none;
-            padding-left: 12px;
+            padding-left: 14px;
+            transform: translateX(2px);
         }
 
         .gm-toc-link:focus {
@@ -739,6 +811,178 @@ export function getCommitStyleStyles(): string {
         /* Style reference section */
         .gm-styles-reference {
             margin-top: 24px;
+        }
+
+        /* Gitmoji and Emoji Reference Styles */
+        .gm-emoji-enhancement-container {
+            padding: 4px;
+        }
+
+        .gm-emoji-header {
+            margin-bottom: 24px;
+        }
+
+        .gm-emoji-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+            color: var(--gm-text-primary);
+        }
+
+        .gm-emoji-description {
+            font-size: 14px;
+            color: var(--gm-text-secondary);
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .gm-emoji-controls {
+            margin-top: 24px;
+        }
+
+        .gm-emoji-toggle-section {
+            margin-bottom: 20px;
+            padding: 16px;
+            background: var(--gm-hover-bg);
+            border-radius: 8px;
+            border: 1px solid var(--gm-border-color);
+        }
+
+        .gm-emoji-toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .gm-emoji-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .gm-emoji-options {
+            display: none;
+            margin-top: 24px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .gm-emoji-options-visible {
+            display: block;
+        }
+
+        .gm-placement-section {
+            margin-bottom: 24px;
+        }
+
+        .gm-placement-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin: 0 0 12px 0;
+            color: var(--gm-text-primary);
+        }
+
+        .gm-placement-options {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .gm-placement-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px 16px;
+            background: var(--gm-card-bg);
+            border: 1px solid var(--gm-border-color);
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .gm-placement-item:hover {
+            border-color: var(--gm-accent-color);
+            background: var(--gm-hover-bg);
+        }
+
+        .gm-placement-item input[type="radio"]:checked + .gm-placement-text {
+            color: var(--gm-accent-color);
+            font-weight: 600;
+        }
+
+        .gm-emoji-reference {
+            margin-top: 32px;
+            padding: 24px;
+            background: var(--gm-card-bg);
+            border: 1px solid var(--gm-border-color);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .gm-reference-table-container {
+            margin-top: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--gm-border-color);
+            overflow: hidden;
+        }
+
+        .gm-reference-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .gm-reference-table th {
+            background: var(--vscode-textCodeBlock-background);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 1px solid var(--gm-border-color);
+        }
+
+        .gm-emoji-row {
+            border-bottom: 1px solid var(--gm-border-color);
+            transition: background 0.2s ease;
+        }
+
+        .gm-emoji-row:hover {
+            background: var(--gm-hover-bg);
+        }
+
+        .gm-emoji-cell {
+            padding: 12px;
+            font-size: 18px;
+            text-align: center;
+            width: 60px;
+        }
+
+        .gm-type-cell {
+            padding: 12px;
+            font-family: var(--vscode-editor-font-family);
+        }
+
+        .gm-type-cell code {
+            background: var(--gm-hover-bg);
+            color: var(--gm-accent-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .gm-description-cell {
+            padding: 12px;
+            color: var(--gm-text-secondary);
+        }
+
+        .gm-reference-note {
+            margin-top: 20px;
+            padding: 12px 16px;
+            background: rgba(100, 150, 255, 0.05);
+            border-left: 4px solid var(--gm-accent-color);
+            border-radius: 0 8px 8px 0;
+            font-size: 13px;
         }
     `;
 }

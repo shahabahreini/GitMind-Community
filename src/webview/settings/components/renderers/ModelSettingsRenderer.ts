@@ -35,7 +35,7 @@ export class ModelSettingsRenderer extends BaseRenderer {
 
         return FormUtils.createFormGroup(
             'API Provider',
-            'Select the AI provider for generating commit messages',
+            '',
             FormUtils.createSearchableSelect('apiProvider', providers.map(provider => ({
                 value: provider.id,
                 label: provider.name,
@@ -190,7 +190,7 @@ export class ModelSettingsRenderer extends BaseRenderer {
                 field.label,
                 field.tooltip,
                 `<div class="model-select-container">
-                    ${FormUtils.createSearchableSelect(field.id, selectOptions, `Search ${field.label.toLowerCase()}...`, isLoadDisabled, loadDisabledTooltip)}
+                    ${FormUtils.createSearchableSelect(field.id, selectOptions, `Search ${field.label.toLowerCase()}...`, isLoadDisabled)}
                     <button id="${field.loadButtonId}" class="button small load-models-inline" ${isLoadDisabled ? 'disabled title="' + loadDisabledTooltip.replace(/"/g, '&quot;') + '"' : ''}>
                         ${field.loadButtonText}
                     </button>
