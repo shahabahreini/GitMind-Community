@@ -4,6 +4,7 @@ import { SettingsWebview } from '../../webview/settings/SettingsWebview';
 import { SettingsManager } from '../../webview/settings/SettingsManager';
 import { MessageHandler } from '../../webview/settings/MessageHandler';
 import { FormUtils } from '../../webview/settings/components/utils/FormUtils';
+import { StyleManager } from '../../webview/settings/components/managers/StyleManager';
 import { invalidateConfigCache } from '../../config/settings';
 
 suite('Settings UI Tests', () => {
@@ -450,6 +451,14 @@ suite('Settings UI Tests', () => {
         assert.ok(html.includes('aria-label="Open options"'), 'Toggle should have an accessible label');
         assert.ok(html.includes('class="dropdown-chevron"'), 'Toggle should render a classed chevron icon');
         assert.ok(html.includes('stroke="currentColor"'), 'Chevron should inherit theme-safe icon color');
+    });
+
+    test('Pro feature settings styles should include searchable dropdown layout', () => {
+        const css = new StyleManager().renderStyles();
+
+        assert.ok(css.includes('.searchable-dropdown-list'), 'Should include searchable dropdown list styles');
+        assert.ok(css.includes('.searchable-option'), 'Should include searchable option styles');
+        assert.ok(css.includes('display: block'), 'Should include dropdown show layout override');
     });
 
     test('Ollama model loading should handle API responses correctly', async () => {

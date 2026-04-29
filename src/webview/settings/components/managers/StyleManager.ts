@@ -14,6 +14,7 @@ import { getTooltipStyles } from '../../styles/tooltip.css';
 import { getOllamaStyles } from '../../styles/ollamaStyles.css';
 import { getCustomApiStyles } from '../../styles/customApi.css';
 import { getLargeDiffStyles } from '../../../settings/styles/largeDiffStyles.css';
+import { getSearchableDropdownStyles } from '../../styles/searchableDropdown.css';
 
 export class StyleManager {
     public renderStyles(): string {
@@ -33,6 +34,7 @@ export class StyleManager {
                 ${getOllamaStyles()}
                 ${getCustomApiStyles()}
                 ${getLargeDiffStyles()}
+                ${getSearchableDropdownStyles()}
             </style>
         `;
     }
