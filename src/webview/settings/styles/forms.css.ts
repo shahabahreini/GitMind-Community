@@ -69,8 +69,8 @@ export function getFormStyles(): string {
         font-family: var(--vscode-font-family);
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         box-sizing: border-box;
-        height: 32px;
-        line-height: 16px;
+        height: 34px;
+        line-height: 18px;
       }
 
       input:hover:not(:disabled),
@@ -80,16 +80,23 @@ export function getFormStyles(): string {
   
       /* Enhanced Select Dropdown */
       select {
-        height: 32px;
+        height: 34px;
         appearance: none;
-        padding-right: 24px;
-        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23666666%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E");
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        padding: 6px 32px 6px 10px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='m6 9 6 6 6-6' stroke='%23888888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
         background-repeat: no-repeat;
-        background-position: right 4px center;
+        background-position: right 8px center;
         background-size: 16px;
         border: 1px solid var(--vscode-input-border, rgba(128, 128, 128, 0.2));
-        box-shadow: none;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
         cursor: pointer;
+        color: var(--vscode-dropdown-foreground, var(--vscode-input-foreground));
+        background-color: var(--vscode-dropdown-background, var(--vscode-input-background));
+        font-weight: 500;
+        position: relative;
+        z-index: 1;
       }
   
       /* Focus States - Enhanced visibility */
@@ -99,6 +106,11 @@ export function getFormStyles(): string {
         border-color: var(--vscode-focusBorder);
         box-shadow: 0 0 0 1px var(--vscode-focusBorder);
       }
+
+      /* Select hover chevron enhancement */
+      select:hover:not(:disabled) {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='m6 9 6 6 6-6' stroke='%230078d4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      }
   
       /* Select Options - Better styling */
       select option {
@@ -106,24 +118,49 @@ export function getFormStyles(): string {
         color: var(--vscode-dropdown-foreground);
         padding: 8px 12px;
         font-weight: 400;
+        line-height: 1.5;
       }
-      
-      /* Enhanced Dropdown Visibility */
-      select {
-        color: var(--vscode-dropdown-foreground, var(--vscode-input-foreground));
-        background-color: var(--vscode-dropdown-background, var(--vscode-input-background));
-        position: relative;
-        z-index: 1;
-        font-weight: 500;
+
+      /* Optgroup labels — muted, uppercase, smaller */
+      select optgroup {
+        font-style: normal;
+        font-weight: 600;
+        font-size: 11px;
+        color: var(--vscode-descriptionForeground, rgba(128, 128, 128, 0.85));
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        padding: 4px 0;
+      }
+
+      /* Optgroup children — normal weight, slightly indented */
+      select optgroup option {
+        font-weight: 400;
+        font-size: 13px;
+        text-transform: none;
+        letter-spacing: normal;
+        padding-left: 8px;
+      }
+
+      /* High contrast theme support for select chevrons */
+      @media (forced-colors: active) {
+        select {
+          border: 1px solid ButtonText;
+        }
       }
       
       /* Disabled States */
       input:disabled,
       select:disabled {
-        opacity: 0.6;
+        opacity: 0.55;
         cursor: not-allowed;
         background-color: var(--vscode-input-background);
         border-color: var(--vscode-input-border);
+        box-shadow: none;
+      }
+
+      /* Load Models Button — placed below select dropdowns */
+      .button.load-models-inline {
+        margin-top: 8px;
       }
 
       /* Number Input Enhancements */

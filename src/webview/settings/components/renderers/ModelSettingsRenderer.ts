@@ -181,7 +181,7 @@ export class ModelSettingsRenderer extends BaseRenderer {
                 field.tooltip,
                 `<div class="model-select-container">
                     ${FormUtils.createSearchableSelect(field.id, selectOptions, `Search ${field.label.toLowerCase()}...`, isLoadDisabled, loadDisabledTooltip)}
-                    <button id="${field.loadButtonId}" class="button small" style="margin-top: 8px;" ${isLoadDisabled ? 'disabled title="' + loadDisabledTooltip.replace(/"/g, '&quot;') + '"' : ''}>
+                    <button id="${field.loadButtonId}" class="button small load-models-inline" ${isLoadDisabled ? 'disabled title="' + loadDisabledTooltip.replace(/"/g, '&quot;') + '"' : ''}>
                         ${field.loadButtonText}
                     </button>
                     <div class="description">

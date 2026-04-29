@@ -1,12 +1,22 @@
 // src/webview/settings/styles/main.css.ts
 import { getFormStyles } from "./forms.css";
 import { getButtonStyles } from "./buttons.css";
+import { getTabStyles } from "./tabs.css";
+import { getCardStyles } from "./cards.css";
+import { getToggleStyles } from "./toggle.css";
 import { getStatusBannerStyles } from "./statusBanner.css";
 import { getOllamaStyles } from "./ollamaStyles.css";
 import { getStatusStyles } from "./status.css";
+import { getActivationStyles } from "./activation.css";
+import { getSubscriptionStyles } from "./subscription.css";
+import { getDevModeStyles } from "./devMode.css";
 import { getProFeatureStyles } from "./proFeature.css";
+import { getTooltipStyles } from "./tooltip.css";
+import { getCustomApiStyles } from "./customApi.css";
+import { getLargeDiffStyles } from "./largeDiffStyles.css";
 import { proFeaturesModernCSS } from "./pro-features-modern";
 import { getCommitStyleStyles } from "./commitStyle.css";
+import { getEmojiEnhancementStyles } from "./emojiEnhancement.css";
 import { getSearchableDropdownStyles } from "./searchableDropdown.css";
 
 export function getMainStyles(): string {
@@ -84,16 +94,33 @@ export function getMainStyles(): string {
       color: var(--vscode-input-foreground);
       font-size: 13px;
       font-family: var(--vscode-font-family);
-      transition: all 0.2s ease;
-      height: 32px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      height: 34px;
       box-sizing: border-box;
+    }
+
+    .form-group select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      padding: 6px 32px 6px 10px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='m6 9 6 6 6-6' stroke='%23888888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      background-size: 16px;
+      cursor: pointer;
     }
 
     .form-group input:focus,
     .form-group select:focus {
-      outline: 2px solid rgba(0, 122, 204, 0.5);
-      outline-offset: 0;
-      border-color: rgba(0, 122, 204, 0.5);
+      outline: none;
+      border-color: var(--vscode-focusBorder);
+      box-shadow: 0 0 0 1px var(--vscode-focusBorder);
+    }
+
+    .form-group select:hover:not(:disabled) {
+      border-color: var(--vscode-focusBorder, rgba(0, 122, 204, 0.4));
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='m6 9 6 6 6-6' stroke='%230078d4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     }
 
     /* Hidden API Settings */
@@ -304,8 +331,12 @@ export function getMainStyles(): string {
       
       .form-group input, 
       .form-group select {
-        height: 36px;
+        height: 38px;
         padding: 10px 12px;
+      }
+
+      .form-group select {
+        padding: 10px 32px 10px 12px;
       }
     }
 
@@ -957,12 +988,22 @@ export function getMainStyles(): string {
 
     ${getFormStyles()}
     ${getButtonStyles()}
+    ${getTabStyles()}
+    ${getCardStyles()}
+    ${getToggleStyles()}
     ${getStatusBannerStyles()}
     ${getOllamaStyles()}
     ${getStatusStyles()}
+    ${getActivationStyles()}
+    ${getSubscriptionStyles()}
+    ${getDevModeStyles()}
     ${getProFeatureStyles()}
+    ${getTooltipStyles()}
+    ${getCustomApiStyles()}
+    ${getLargeDiffStyles()}
     ${proFeaturesModernCSS}
     ${getCommitStyleStyles()}
+    ${getEmojiEnhancementStyles()}
     ${getSearchableDropdownStyles()}
   </style>`;
 }

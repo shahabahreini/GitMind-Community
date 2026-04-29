@@ -6,7 +6,6 @@ import { ProFeatureRenderer } from "./renderers/ProFeatureRenderer";
 import { SubscriptionRenderer } from "./renderers/SubscriptionRenderer";
 import { CommitStyleRenderer } from "./renderers/CommitStyleRenderer";
 import { TabManager } from "./managers/TabManager";
-import { StyleManager } from "./managers/StyleManager";
 import { ScriptManager } from "./managers/ScriptManager";
 
 export class ProFeaturesSettings {
@@ -17,7 +16,6 @@ export class ProFeaturesSettings {
     private subscriptionRenderer: SubscriptionRenderer;
     private commitStyleRenderer: CommitStyleRenderer;
     private tabManager: TabManager;
-    private styleManager: StyleManager;
     private scriptManager: ScriptManager;
 
     constructor(settings: ExtensionSettings) {
@@ -28,7 +26,6 @@ export class ProFeaturesSettings {
         this.subscriptionRenderer = new SubscriptionRenderer(settings);
         this.commitStyleRenderer = new CommitStyleRenderer(settings);
         this.tabManager = new TabManager();
-        this.styleManager = new StyleManager();
         this.scriptManager = new ScriptManager();
     }
 
@@ -47,8 +44,6 @@ export class ProFeaturesSettings {
                 
                 ${devModeEnabled ? this.renderDevModeNotice() : ''}
             </div>
-            
-            ${this.styleManager.renderStyles()}
             ${this.scriptManager.renderScript()}
         `;
     }

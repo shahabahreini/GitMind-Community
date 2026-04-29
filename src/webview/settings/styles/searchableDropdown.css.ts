@@ -24,7 +24,7 @@ export function getSearchableDropdownStyles(): string {
         border: 1px solid var(--gm-dropdown-control-border);
         border-radius: 6px;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        height: 32px;
+        height: 34px;
         box-sizing: border-box;
     }
 
@@ -269,8 +269,8 @@ export function getSearchableDropdownStyles(): string {
         background: var(--vscode-input-background);
         border: 1px solid var(--vscode-input-border);
         border-radius: 6px;
-        transition: all 0.2s ease;
-        height: 32px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 34px;
     }
 
     .searchable-language-dropdown:hover {
@@ -285,18 +285,19 @@ export function getSearchableDropdownStyles(): string {
 
     .language-dropdown-list {
         position: absolute;
-        top: calc(100% + 4px);
+        top: calc(100% + 6px);
         left: 0;
         right: 0;
-        background: var(--vscode-dropdown-background);
-        border: 1px solid var(--vscode-dropdown-border);
+        background: var(--vscode-dropdown-background, var(--vscode-editor-background, #ffffff));
+        border: 1px solid var(--vscode-dropdown-border, var(--gm-dropdown-control-border));
         border-radius: 8px;
-        max-height: 240px;
+        max-height: 280px;
         overflow-y: auto;
-        z-index: 1000;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        z-index: 10000;
+        box-shadow: var(--gm-dropdown-list-shadow, 0 8px 22px rgba(0, 0, 0, 0.16));
         display: none;
-        padding: 4px;
+        padding: 6px;
+        animation: dropdownFadeIn 0.2s cubic-bezier(0, 0, 0.2, 1);
     }
 
     .language-dropdown-list.show {
@@ -304,7 +305,7 @@ export function getSearchableDropdownStyles(): string {
     }
 
     .language-option {
-        padding: 8px 12px;
+        padding: 10px 12px;
         cursor: pointer;
         color: var(--vscode-dropdown-foreground);
         font-size: 13px;
@@ -313,12 +314,58 @@ export function getSearchableDropdownStyles(): string {
         background: transparent;
         width: 100%;
         text-align: left;
-        display: block;
-        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-radius: 6px;
+        margin-bottom: 2px;
+        transition: all 0.15s ease;
+    }
+
+    .language-option:last-child {
+        margin-bottom: 0;
     }
 
     .language-option:hover {
         background: var(--vscode-list-hoverBackground);
+        color: var(--vscode-list-hoverForeground);
+    }
+
+    .language-option.selected {
+        background: var(--vscode-list-inactiveSelectionBackground, rgba(0, 122, 204, 0.1));
+        color: var(--vscode-foreground);
+        font-weight: 600;
+    }
+
+    .language-option.selected::after {
+        content: '✓';
+        font-weight: 700;
+        margin-left: 8px;
+        color: var(--vscode-focusBorder);
+    }
+
+    .language-option.highlighted {
+        background: var(--vscode-list-activeSelectionBackground);
+        color: var(--vscode-list-activeSelectionForeground);
+    }
+
+    /* Scrollbar Styles for Language Dropdown */
+    .language-dropdown-list::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .language-dropdown-list::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .language-dropdown-list::-webkit-scrollbar-thumb {
+        background: var(--vscode-scrollbarSlider-background, rgba(128, 128, 128, 0.4));
+        border-radius: 10px;
+        border: 2px solid var(--vscode-dropdown-background);
+    }
+
+    .language-dropdown-list::-webkit-scrollbar-thumb:hover {
+        background: var(--vscode-scrollbarSlider-hoverBackground, rgba(128, 128, 128, 0.6));
     }
     `;
 }

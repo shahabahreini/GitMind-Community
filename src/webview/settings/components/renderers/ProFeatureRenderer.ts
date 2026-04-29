@@ -1,14 +1,10 @@
 // src/webview/settings/components/renderers/ProFeatureRenderer.ts
 import { BaseRenderer } from "./BaseRenderer";
 import { FormUtils } from "../utils/FormUtils";
-import { proFeaturesModernCSS } from "../../styles/pro-features-modern";
 
 export class ProFeatureRenderer extends BaseRenderer {
     public render(): string {
         return `
-        <style>
-            ${proFeaturesModernCSS}
-        </style>
         <div class="pro-feature-container">
             <div class="minimalist-card">
                 <div class="card-content">

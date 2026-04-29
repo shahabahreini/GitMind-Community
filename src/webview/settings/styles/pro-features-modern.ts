@@ -415,29 +415,31 @@ export const proFeaturesModernCSS: string = `
     -moz-appearance: textfield;
 }
 
-/* Select dropdowns need more height to prevent text cutoff */
+/* Select dropdowns need consistent height and styling */
 .pro-feature-container select.input-field {
     height: 34px;
-    padding: 7px 8px;
-    padding-right: 24px;
+    padding: 6px 32px 6px 8px;
     text-align: left;
     line-height: 1.4;
     appearance: none;
     -webkit-appearance: none;
-    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23666666%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E");
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='m6 9 6 6 6-6' stroke='%23888888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right 4px center;
+    background-position: right 8px center;
     background-size: 14px;
+    cursor: pointer;
+}
+
+.pro-feature-container select.input-field:hover:not(:disabled) {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='m6 9 6 6 6-6' stroke='%230078d4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
 /* High Contrast Theme Support */
-[data-vscode-theme-kind="vscode-high-contrast"] .pro-feature-container select.input-field,
-[data-vscode-theme-kind="vscode-high-contrast-light"] .pro-feature-container select.input-field {
-    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22white%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E") !important;
-}
-
-[data-vscode-theme-kind="vscode-high-contrast-light"] .pro-feature-container select.input-field {
-    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22black%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E") !important;
+@media (forced-colors: active) {
+    .pro-feature-container select.input-field {
+        border: 1px solid ButtonText;
+    }
 }
 
 /* Ensure spinner buttons are visible */

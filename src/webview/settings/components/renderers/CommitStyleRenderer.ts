@@ -1,7 +1,6 @@
 // src/webview/settings/components/renderers/CommitStyleRenderer.ts
 import { ExtensionSettings } from "../../../../models/ExtensionSettings";
 import { BaseRenderer } from "./BaseRenderer";
-import { getEmojiEnhancementStyles } from '../../styles/emojiEnhancement.css';
 
 export class CommitStyleRenderer extends BaseRenderer {
     constructor(settings: ExtensionSettings) {
@@ -67,11 +66,6 @@ export class CommitStyleRenderer extends BaseRenderer {
 
             ${this.renderScript(hasProAccess, currentStyle)}
         `;
-    }
-
-    private renderStyles(): string {
-        // Styles now loaded from separate CSS file via main.css.ts
-        return '';
     }
 
     private renderScript(hasProAccess: boolean, currentStyle: string): string {
@@ -525,7 +519,6 @@ export class CommitStyleRenderer extends BaseRenderer {
                     </div>
                 </div>
                 
-                ${this.renderEmojiTabStyles()}
             </div>
         `;
     }
@@ -581,10 +574,6 @@ export class CommitStyleRenderer extends BaseRenderer {
 
         const styleExamples = examples[styleId as keyof typeof examples] || examples['basic'];
         return styleExamples[type];
-    }
-
-    private renderEmojiTabStyles(): string {
-        return `<style>${getEmojiEnhancementStyles()}</style>`;
     }
 
     private renderGitmojiSection(currentStyle: string): string {

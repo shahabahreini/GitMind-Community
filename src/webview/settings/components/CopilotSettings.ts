@@ -60,7 +60,7 @@ export class CopilotSettings {
                             <option value="raptor-mini" ${this._settings.copilot?.model === "raptor-mini" ? "selected" : ""}>Raptor mini</option>
                         </optgroup>
                     </select>
-                    <button id="loadCopilotModels" class="button small" style="margin-top: 8px;">Detect Available Models</button>
+                    <button id="loadCopilotModels" class="button small load-models-inline">Detect Available Models</button>
                     <div class="description">
                         Models listed above are from <a href="https://docs.github.com/en/copilot/reference/ai-models/supported-models" target="_blank" style="color: var(--vscode-textLink-foreground);">GitHub Copilot Auto documentation</a>. Click "Detect Available Models" to check which model families are available in your VS Code. Note: Actual model availability depends on your Copilot subscription tier.
                     </div>

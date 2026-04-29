@@ -22,7 +22,7 @@ export function getOllamaStyles(): string {
             border: 1px solid var(--gm-model-dropdown-border);
             border-radius: 6px;
             transition: all 0.2s ease;
-            height: 32px;
+            height: 34px;
             box-sizing: border-box;
         }
         

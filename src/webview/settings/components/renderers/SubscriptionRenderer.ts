@@ -1,14 +1,10 @@
 // src/webview/settings/components/renderers/SubscriptionRenderer.ts
 import { BaseRenderer } from "./BaseRenderer";
 import { FormUtils } from "../utils/FormUtils";
-import { getSubscriptionStyles } from "../../styles/subscription.css";
 
 export class SubscriptionRenderer extends BaseRenderer {
     public render(): string {
         return `
-        <style>
-            ${getSubscriptionStyles()}
-        </style>
         <div class="subscription-container">
             <div class="minimalist-card">
                 <div class="card-content">
