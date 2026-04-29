@@ -199,15 +199,13 @@ export function getSearchableDropdownStyles(): string {
     .searchable-option:hover {
         background: var(--vscode-list-hoverBackground, rgba(128, 128, 128, 0.15)) !important;
         color: var(--vscode-list-hoverForeground, var(--vscode-foreground)) !important;
-        padding-left: 16px !important;
-        box-shadow: inset 3px 0 0 0 var(--vscode-focusBorder) !important;
+        transform: translateX(4px);
     }
 
     .searchable-option.highlighted {
         background: var(--vscode-list-activeSelectionBackground, rgba(0, 122, 204, 0.2)) !important;
         color: var(--vscode-list-activeSelectionForeground, var(--vscode-foreground)) !important;
-        padding-left: 16px !important;
-        box-shadow: inset 3px 0 0 0 var(--vscode-focusBorder) !important;
+        transform: translateX(4px);
     }
 
     .searchable-option.selected {
