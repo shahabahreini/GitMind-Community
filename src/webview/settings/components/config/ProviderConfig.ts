@@ -50,6 +50,8 @@ export class ProviderConfig {
                     loadButtonId: 'loadGeminiModels',
                     loadCommand: 'gitmind.loadGeminiModels',
                     options: [
+                        { value: 'gemini-3-pro', label: 'Gemini 3 Pro', group: 'Gemini 3 Series' },
+                        { value: 'gemini-3-flash', label: 'Gemini 3 Flash', group: 'Gemini 3 Series' },
                         { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', group: 'Gemini 2.5 Series' },
                         { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', group: 'Gemini 2.5 Series' },
                         { value: 'gemini-2.5-flash-preview', label: 'Gemini 2.5 Flash Preview', group: 'Gemini 2.5 Series' },
@@ -590,7 +592,7 @@ export class ProviderConfig {
         },
         {
             id: 'custom',
-            name: 'Custom API [Pro]',
+            name: 'Custom API',
             isPro: true,
             fields: [
                 {

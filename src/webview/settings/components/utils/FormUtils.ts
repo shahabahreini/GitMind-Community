@@ -117,7 +117,7 @@ export class FormUtils {
         const initialValue = selectedOption ? selectedOption.label : '';
 
         return `
-            <div class="searchable-select-container ${disabled ? 'disabled' : ''}" id="container-${id}" data-tooltip="${tooltip}">
+            <div class="searchable-select-container ${disabled ? 'disabled' : ''}" id="container-${id}">
                 <div class="searchable-input-wrapper">
                     <input type="text" 
                            class="searchable-input" 
@@ -126,7 +126,7 @@ export class FormUtils {
                            value="${initialValue}"
                            autocomplete="off" 
                            ${disabled ? 'disabled' : ''} />
-                    <button type="button" class="dropdown-toggle" tabindex="-1" aria-label="Open options" title="Open options" ${disabled ? 'disabled' : ''}>
+                    <button type="button" class="dropdown-toggle" tabindex="-1" aria-label="Open options" ${disabled ? 'disabled' : ''}>
                         <svg class="dropdown-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>

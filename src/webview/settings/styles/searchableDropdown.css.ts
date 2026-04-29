@@ -2,7 +2,8 @@
 export function getSearchableDropdownStyles(): string {
     return `
     /* General Searchable Dropdown Styles */
-    .searchable-select-container {
+    .searchable-select-container,
+    .searchable-dropdown-wrapper {
         position: relative;
         display: block;
         width: 100%;
@@ -28,11 +29,13 @@ export function getSearchableDropdownStyles(): string {
         box-sizing: border-box;
     }
 
-    .searchable-select-container:hover .searchable-input-wrapper {
+    .searchable-select-container:hover .searchable-input-wrapper,
+    .searchable-dropdown-wrapper:hover .searchable-input-wrapper {
         border-color: var(--gm-dropdown-control-border-hover);
     }
 
-    .searchable-select-container:focus-within .searchable-input-wrapper {
+    .searchable-select-container:focus-within .searchable-input-wrapper,
+    .searchable-dropdown-wrapper:focus-within .searchable-input-wrapper {
         outline: none;
         border-color: var(--vscode-focusBorder);
         box-shadow: 0 0 0 1px var(--vscode-focusBorder);
@@ -89,7 +92,7 @@ export function getSearchableDropdownStyles(): string {
     .dropdown-toggle:hover:not([disabled]),
     .dropdown-toggle:focus-visible {
         opacity: 1;
-        color: var(--vscode-focusBorder, var(--gm-dropdown-icon-foreground, var(--vscode-icon-foreground, var(--vscode-input-foreground, var(--vscode-foreground, #3f454b))));
+        color: var(--vscode-focusBorder, var(--gm-dropdown-icon-foreground, var(--vscode-icon-foreground, var(--vscode-input-foreground, var(--vscode-foreground, #3f454b)))));
         background: var(--gm-dropdown-subtle-hover, var(--vscode-toolbar-hoverBackground, rgba(90, 93, 94, 0.12))) !important;
         box-shadow: none !important;
         transform: none !important;
@@ -170,11 +173,11 @@ export function getSearchableDropdownStyles(): string {
         color: var(--vscode-dropdown-foreground);
         font-size: 13px;
         line-height: 1.4;
-        border: none;
-        background: transparent;
-        width: 100%;
+        border: none !important;
+        background: transparent !important;
+        width: 100% !important;
         text-align: left;
-        display: flex;
+        display: flex !important;
         align-items: center;
         justify-content: space-between;
         white-space: nowrap;
@@ -183,6 +186,10 @@ export function getSearchableDropdownStyles(): string {
         border-radius: 6px;
         margin-bottom: 2px;
         transition: all 0.15s ease;
+        box-shadow: none !important;
+        transform: none !important;
+        min-height: auto !important;
+        height: auto !important;
     }
 
     .searchable-option:last-child {
@@ -190,13 +197,17 @@ export function getSearchableDropdownStyles(): string {
     }
 
     .searchable-option:hover {
-        background: var(--vscode-list-hoverBackground);
-        color: var(--vscode-list-hoverForeground);
+        background: var(--vscode-list-hoverBackground, rgba(128, 128, 128, 0.15)) !important;
+        color: var(--vscode-list-hoverForeground, var(--vscode-foreground)) !important;
+        padding-left: 16px !important;
+        box-shadow: inset 3px 0 0 0 var(--vscode-focusBorder) !important;
     }
 
     .searchable-option.highlighted {
-        background: var(--vscode-list-activeSelectionBackground);
-        color: var(--vscode-list-activeSelectionForeground);
+        background: var(--vscode-list-activeSelectionBackground, rgba(0, 122, 204, 0.2)) !important;
+        color: var(--vscode-list-activeSelectionForeground, var(--vscode-foreground)) !important;
+        padding-left: 16px !important;
+        box-shadow: inset 3px 0 0 0 var(--vscode-focusBorder) !important;
     }
 
     .searchable-option.selected {

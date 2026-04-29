@@ -74,12 +74,12 @@ export class ModelSettingsRenderer extends BaseRenderer {
                 return FormUtils.createFormGroup(
                     field.label,
                     field.tooltip,
-                    FormUtils.createSelect(field.id, field.options.map((option: any) => ({
+                    FormUtils.createSearchableSelect(field.id, field.options.map((option: any) => ({
                         value: option.value,
                         label: option.label,
                         selected: value === option.value,
                         group: option.group
-                    })))
+                    })), `Search ${field.label.toLowerCase()}...`)
                 );
             case 'model-with-load':
                 return this.renderModelWithLoadField(field, value);
@@ -96,7 +96,7 @@ export class ModelSettingsRenderer extends BaseRenderer {
         const isOllama = field.id.includes('ollama');
 
         if (isHuggingFace || isOpenRouter || isOllama) {
-            // For Hugging Face, OpenRouter, and Ollama, render as searchable dropdown
+            // For Hugging Face, OpenRouter, and Ollama, render as searchable dropdown with direct input capability
             const defaultOptions = field.defaultOptions || [];
             const currentModel = value || defaultOptions[0] || '';
             let providerName, dropdownId, placeholder;
@@ -119,30 +119,40 @@ export class ModelSettingsRenderer extends BaseRenderer {
                 field.label,
                 field.tooltip,
                 `<div class="model-input-container">
-                    <div class="searchable-dropdown">
-                        <input type="text" 
-                               id="${field.id}" 
-                               placeholder="${placeholder}" 
-                               value="${currentModel}"
-                               autocomplete="off" />
-                        <button type="button" 
-                                id="${field.loadButtonId}" 
-                                class="load-models-btn" 
-                                data-tooltip="Load available models from ${providerName}">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                                <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-                                <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
-                            </svg>
-                        </button>
-                        <div id="${dropdownId}" class="dropdown-content" style="display: none;">
-                            <div class="dropdown-loading" style="display: none;">Loading models...</div>
-                            <div class="dropdown-error" style="display: none;"></div>
-                            <div class="dropdown-empty" style="display: none;">No models found</div>
-                            <ul class="model-list"></ul>
+                    <div class="searchable-dropdown-wrapper">
+                        <div class="searchable-input-wrapper">
+                            <input type="text" 
+                                   id="${field.id}" 
+                                   class="searchable-input"
+                                   placeholder="${placeholder}" 
+                                   value="${currentModel}"
+                                   autocomplete="off" />
+                            <button type="button" 
+                                    id="${field.id}-toggle"
+                                    class="dropdown-toggle">
+                                <svg class="dropdown-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                    <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                            <button type="button" 
+                                    id="${field.loadButtonId}" 
+                                    class="dropdown-toggle load-models-btn" 
+                                    title="Load available models from ${providerName}">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+                                    <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="${dropdownId}" class="searchable-dropdown-list" style="display: none;">
+                            <div class="dropdown-loading" style="display: none; padding: 12px; text-align: center; font-style: italic; opacity: 0.7;">Loading models...</div>
+                            <div class="dropdown-error" style="display: none; padding: 12px; text-align: center; color: var(--vscode-errorForeground);"></div>
+                            <div class="dropdown-empty" style="display: none; padding: 12px; text-align: center; opacity: 0.7;">No models found</div>
+                            <div class="model-list-container"></div>
                         </div>
                     </div>
                     <div class="description">
-                        Default popular models shown. Click the refresh button to load all available models from ${providerName} with search functionality.
+                        Default popular models shown. Click the refresh button to load all available models from ${providerName}.
                     </div>
                 </div>`
             );
