@@ -598,10 +598,22 @@ export function getCommitStyleStyles(): string {
         }
 
         .gm-examples-toggle:hover {
-            background: var(--gm-hover-bg);
+            background: var(--gm-accent-color);
+            color: var(--vscode-button-foreground, white);
             border-color: var(--gm-accent-color);
             opacity: 1;
-            color: var(--gm-accent-hover);
+        }
+
+        .gm-examples-toggle.gm-examples-toggle-active {
+            background: var(--gm-accent-color);
+            color: var(--vscode-button-foreground, white);
+            border-color: var(--gm-accent-color);
+            opacity: 1;
+        }
+
+        .gm-examples-toggle.gm-examples-toggle-active:hover {
+            background: var(--gm-accent-hover);
+            border-color: var(--gm-accent-hover);
         }
 
         .gm-examples-toggle:focus {
@@ -612,7 +624,7 @@ export function getCommitStyleStyles(): string {
         .gm-toggle-icon {
             font-size: 8px;
             transition: transform 0.2s ease;
-            color: var(--gm-accent-color);
+            color: currentColor;
         }
 
         .gm-inline-examples {

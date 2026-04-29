@@ -170,10 +170,12 @@ export class CommitStyleRenderer extends BaseRenderer {
                                 
                                 if (examplesContainer.classList.contains('gm-examples-expanded')) {
                                     examplesContainer.classList.remove('gm-examples-expanded');
+                                    this.classList.remove('gm-examples-toggle-active');
                                     toggleIcon.textContent = '▼';
                                     toggleText.textContent = 'View Examples';
                                 } else {
                                     examplesContainer.classList.add('gm-examples-expanded');
+                                    this.classList.add('gm-examples-toggle-active');
                                     toggleIcon.textContent = '▲';
                                     toggleText.textContent = 'Hide Examples';
                                 }
