@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## v4.14.0 - 2026-05-13
+
+### New Features
+
+- Implemented dynamic model fetching for Perplexity via the `/v1/models` API.
+- Added dynamic model fetching support for MiniMax.
+- Added new Command A, Command R, and Aya model variants for Cohere.
+
+### Enhanced
+
+- Updated Zai model options.
+- Centralized model loading logic and state management within `ScriptManager`.
+- Standardized UI components with consistent loading states and tooltips.
+- Standardized generation configuration using `DEFAULT_CONFIG` for all Cohere models.
+- Updated UI dropdown options and default model selections to the latest versions.
+
+### Breaking Changes
+
+- Replaced outdated OpenAI model configurations with current versions, including GPT-5.5, GPT-5.4 series, and o3 reasoning models.
+- Updated all provider configurations, including Gemini, Anthropic, Mistral, and Cohere, to reflect current model versions and naming conventions.
+- Standardized model selection across UI components, type definitions, and API services.
+
 ## v4.13.1 - 2026-05-12
 
 ### New Features
