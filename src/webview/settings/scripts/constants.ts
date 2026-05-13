@@ -11,7 +11,7 @@ export const PROVIDER_DEFAULTS: ProviderDefaults = {
   huggingface: { model: "" },
   ollama: { model: "", url: "" },
   mistral: { model: "mistral-small-4" },
-  cohere: { model: "command-a" },
+  cohere: { model: "command-a-03-2025" },
   openai: { model: "gpt-5.5" },
   together: { model: "meta-llama/Llama-3.3-70B-Instruct-Turbo" },
   openrouter: { model: "google/gemma-3-27b-it:free" },
@@ -51,10 +51,16 @@ export const DEFAULT_MODELS = {
     'mistral-nemo-12b'
   ],
   cohere: [
-    'command-a',
-    'command-a-reasoning',
+    'command-a-03-2025',
+    'command-a-reasoning-08-2025',
+    'command-a-translate-08-2025',
+    'command-a-vision-07-2025',
+    'command-r7b-12-2024',
     'command-r-plus-08-2024',
-    'command-r-08-2024'
+    'command-r-08-2024',
+    'c4ai-aya-expanse-32b',
+    'c4ai-aya-vision-32b',
+    'c4ai-aya-expanse-8b'
   ],
   openai: [
     'gpt-5.5',

@@ -339,10 +339,16 @@ export class ProviderConfig {
                     loadButtonId: 'loadCohereModels',
                     loadCommand: 'gitmind.loadCohereModels',
                     options: [
-                        { value: 'command-a', label: 'Command A' },
-                        { value: 'command-a-reasoning', label: 'Command A Reasoning' },
+                        { value: 'command-a-03-2025', label: 'Command A (03-2025)' },
+                        { value: 'command-a-reasoning-08-2025', label: 'Command A Reasoning (08-2025)' },
+                        { value: 'command-a-translate-08-2025', label: 'Command A Translate (08-2025)' },
+                        { value: 'command-a-vision-07-2025', label: 'Command A Vision (07-2025)' },
+                        { value: 'command-r7b-12-2024', label: 'Command R7B (12-2024)' },
                         { value: 'command-r-plus-08-2024', label: 'Command R+ (08-2024)' },
-                        { value: 'command-r-08-2024', label: 'Command R (08-2024)' }
+                        { value: 'command-r-08-2024', label: 'Command R (08-2024)' },
+                        { value: 'c4ai-aya-expanse-32b', label: 'Aya Expanse 32B' },
+                        { value: 'c4ai-aya-vision-32b', label: 'Aya Vision 32B' },
+                        { value: 'c4ai-aya-expanse-8b', label: 'Aya Expanse 8B' }
                     ]
                 }
             ]

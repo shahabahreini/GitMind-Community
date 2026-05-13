@@ -6,15 +6,21 @@ import { loggedFetch } from "./loggedFetch";
 
 // Define Cohere model types
 export enum CohereModel {
-    // Latest Models
+    // Command A Models
     COMMAND_A_03_2025 = "command-a-03-2025",
+    COMMAND_A_REASONING_08_2025 = "command-a-reasoning-08-2025",
+    COMMAND_A_TRANSLATE_08_2025 = "command-a-translate-08-2025",
+    COMMAND_A_VISION_07_2025 = "command-a-vision-07-2025",
     
-    COMMAND_R_PLUS_08_2024 = "command-a",
-
-    // Specialized Models
+    // Command R Models
+    COMMAND_R7B_12_2024 = "command-r7b-12-2024",
+    COMMAND_R_PLUS_08_2024 = "command-r-plus-08-2024",
+    COMMAND_R_08_2024 = "command-r-08-2024",
     
-    
-    COMMAND_R7B_ARABIC = "command-r7b-arabic",
+    // Aya Models
+    C4AI_AYA_EXPANSE_32B = "c4ai-aya-expanse-32b",
+    C4AI_AYA_VISION_32B = "c4ai-aya-vision-32b",
+    C4AI_AYA_EXPANSE_8B = "c4ai-aya-expanse-8b",
 
     // Legacy Models
     COMMAND_R = "command-r",
@@ -32,63 +38,36 @@ interface GenerationConfig {
     topK: number;
 }
 
-const MODEL_CONFIGS: Record<string, GenerationConfig> = {
-    // Latest Models
-    [CohereModel.COMMAND_A_03_2025]: {
-        temperature: 0.2,
-        maxOutputTokens: 350,
-        topP: 0.8,
-        topK: 40
-    },
-    
-    [CohereModel.COMMAND_R_PLUS_08_2024]: {
-        temperature: 0.2,
-        maxOutputTokens: 350,
-        topP: 0.8,
-        topK: 40
-    },
+const DEFAULT_CONFIG: GenerationConfig = {
+    temperature: 0.2,
+    maxOutputTokens: 350,
+    topP: 0.8,
+    topK: 40
+};
 
-    // Specialized Models
+const MODEL_CONFIGS: Record<string, GenerationConfig> = {
+    // Command A Models
+    [CohereModel.COMMAND_A_03_2025]: DEFAULT_CONFIG,
+    [CohereModel.COMMAND_A_REASONING_08_2025]: DEFAULT_CONFIG,
+    [CohereModel.COMMAND_A_TRANSLATE_08_2025]: DEFAULT_CONFIG,
+    [CohereModel.COMMAND_A_VISION_07_2025]: DEFAULT_CONFIG,
     
+    // Command R Models
+    [CohereModel.COMMAND_R7B_12_2024]: DEFAULT_CONFIG,
+    [CohereModel.COMMAND_R_PLUS_08_2024]: DEFAULT_CONFIG,
+    [CohereModel.COMMAND_R_08_2024]: DEFAULT_CONFIG,
     
-    [CohereModel.COMMAND_R7B_ARABIC]: {
-        temperature: 0.2,
-        maxOutputTokens: 350,
-        topP: 0.8,
-        topK: 40
-    },
+    // Aya Models
+    [CohereModel.C4AI_AYA_EXPANSE_32B]: DEFAULT_CONFIG,
+    [CohereModel.C4AI_AYA_VISION_32B]: DEFAULT_CONFIG,
+    [CohereModel.C4AI_AYA_EXPANSE_8B]: DEFAULT_CONFIG,
 
     // Legacy Models
-    [CohereModel.COMMAND_R]: {
-        temperature: 0.2,
-        maxOutputTokens: 350,
-        topP: 0.8,
-        topK: 40
-    },
-    [CohereModel.COMMAND_R_PLUS]: {
-        temperature: 0.2,
-        maxOutputTokens: 350,
-        topP: 0.8,
-        topK: 40
-    },
-    [CohereModel.COMMAND]: {
-        temperature: 0.2,
-        maxOutputTokens: 350,
-        topP: 0.8,
-        topK: 40
-    },
-    [CohereModel.COMMAND_LIGHT]: {
-        temperature: 0.2,
-        maxOutputTokens: 350,
-        topP: 0.8,
-        topK: 40
-    },
-    [CohereModel.COMMAND_NIGHTLY]: {
-        temperature: 0.2,
-        maxOutputTokens: 350,
-        topP: 0.8,
-        topK: 40
-    }
+    [CohereModel.COMMAND_R]: DEFAULT_CONFIG,
+    [CohereModel.COMMAND_R_PLUS]: DEFAULT_CONFIG,
+    [CohereModel.COMMAND]: DEFAULT_CONFIG,
+    [CohereModel.COMMAND_LIGHT]: DEFAULT_CONFIG,
+    [CohereModel.COMMAND_NIGHTLY]: DEFAULT_CONFIG
 };
 
 export class CohereProvider extends BaseAIProvider {
