@@ -5,7 +5,72 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v4.13.1 - 2026-05-12
 
+### New Features
+
+- Added new flagship AI model options, including `glm-5.1` and `mistral-small-4`.
+
+### Enhanced
+
+- Updated default AI models across all providers to their latest versions, including `gpt-5.5-instant` and `gemini-3.1-flash`.
+- Updated provider configurations and validation logic to support new AI model versions.
+
+### Breaking Changes
+
+- Removed deprecated AI models from available options.
+
+### Technical
+
+- Updated the `@types/vscode` development dependency.
+
+## v4.13.0 - 2026-04-30
+
+### New Features
+
+- Implemented a searchable select component for model and provider configuration.
+
+### Enhanced
+
+- Modernized commit style UI with improved grid layouts and aesthetic CSS enhancements.
+- Streamlined form group rendering in the commit style UI.
+- Overhauled searchable dropdown UI and styles for consistent provider configuration components.
+- Unified settings styles into a central manager.
+- Enhanced the searchable dropdown UI component.
+- Replaced the border-left indicator with horizontal translation for searchable options.
+- Added active state styling to the commit examples toggle.
+- Updated icon color behavior for the commit examples toggle.
+
+### Fixed
+
+- Improved dropdown state tracking by centralizing state via `window.setDropdownState` across all dropdown types.
+- Refactored select dropdown tracking to use a single `activeSelect` reference.
+- Removed premature skipping of setting handler when a dropdown was open.
+- Added `setDropdownState` calls to `ScriptManager` and language dropdown open/close flows.
+
+### Removed
+
+- Removed the unused `GeneralSettings` component and associated styles.
+- Removed project documentation, trunk configuration, and Claude skill files.
+
+### Technical
+
+- Downgraded `@vscode/vsce` from v3 to v2, reducing the overall dependency footprint.
+
+## v4.12.1 - 2026-04-28
+
+### Technical
+
+- Bumped production and development dependencies to their latest versions, including `axios`, `dotenv`, `sanitize-html`, `@typescript-eslint` packages, `eslint`, `esbuild`, `@vscode/vsce`, and `@types/node`.
+- Regenerated `pnpm-lock.yaml` to reflect all dependency version changes.
+
+### Other
+
+- Added generated GitNexus skill documentation files under `.claude/skills/generated`.
+- Updated `AGENTS.md` and `CLAUDE.md` to include new skill links and updated index statistics.
+- Added CLI and skill guides for GitNexus under `.claude/skills/gitnexus/`.
+- Extended `AGENTS.md` and `CLAUDE.md` with GitNexus usage policies, tool references, and index freshness guidance.
+- Updated `.gitignore` to exclude the `.gitnexus` index directory.
 
 ## v4.12.0 - 2026-03-18
 
