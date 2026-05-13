@@ -101,11 +101,11 @@ const MODEL_CONFIGS: Record<string, ModelConfig> = {
         supportsReasoning: true,
     },
     // GPT-4o Series
-    "gpt-4o": {
+    "gpt-5.5": {
         maxTokens: 1500,
         temperature: 0.2,
     },
-    "gpt-4o-mini": {
+    "gpt-5.5-instant": {
         maxTokens: 1000,
         temperature: 0.2,
     },
@@ -127,7 +127,7 @@ export class OpenAIProvider extends BaseAIProvider {
             debugLog(`Calling OpenAI API with model: ${this.model}`);
 
             // Get model-specific configuration or use provided options
-            const modelConfig = MODEL_CONFIGS[this.model] || MODEL_CONFIGS["gpt-4o"];
+            const modelConfig = MODEL_CONFIGS[this.model] || MODEL_CONFIGS["gpt-5.5-instant"];
             const temperature = options?.temperature ?? modelConfig.temperature;
             const maxTokens = options?.maxTokens ?? modelConfig.maxTokens;
             const topP = options?.topP;
@@ -266,7 +266,7 @@ export class OpenAIProvider extends BaseAIProvider {
                         if (id.startsWith('o1')) {
                             return 4;
                         }
-                        if (id.startsWith('gpt-4o')) {
+                        if (id.startsWith("gpt-5.5-instant")) {
                             return 5;
                         }
                         if (id.startsWith('gpt-4-turbo')) {

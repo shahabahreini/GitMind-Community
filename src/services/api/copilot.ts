@@ -8,7 +8,7 @@ function getPreferredCopilotModelIds(model: string): string[] {
     switch (model) {
         case 'raptor-mini':
             return ['oswe-vscode-secondary', 'oswe-vscode-prime'];
-        case 'gpt-4o-mini':
+        case "gpt-5.5-instant":
             return ['copilot-fast'];
         default:
             return [];
@@ -58,8 +58,8 @@ const MODEL_CONFIGS: Record<KnownCopilotModel, GenerationConfig> = {
     // Auto
     "auto": DEFAULT_MODEL_CONFIG,
     // OpenAI Models (Legacy)
-    "gpt-4o": DEFAULT_MODEL_CONFIG,
-    "gpt-4o-mini": {
+    "gpt-5.5": DEFAULT_MODEL_CONFIG,
+    "gpt-5.5-instant": {
         maxTokens: 300,
         temperature: 0.2
     },
@@ -68,29 +68,20 @@ const MODEL_CONFIGS: Record<KnownCopilotModel, GenerationConfig> = {
         maxTokens: 500,
         temperature: 0.2
     },
-    "o4-mini": {
+    "claude-opus-4.7": {
         maxTokens: 400,
         temperature: 0.2
     },
-    // Anthropic Models
-    "claude-3.5-sonnet": {
-        maxTokens: 400,
-        temperature: 0.2
-    },
-    "claude-3.7-sonnet": {
-        maxTokens: 400,
-        temperature: 0.2
-    },
-    "claude-sonnet-4": {
+    "claude-sonnet-4.6": {
         maxTokens: 400,
         temperature: 0.2
     },
     // Google Models
-    "gemini-2.5-pro": {
+    "gemini-3.1-pro": {
         maxTokens: 400,
         temperature: 0.2
     },
-    "gemini-2.0-flash": {
+    "gemini-3.1-flash": {
         maxTokens: 400,
         temperature: 0.2
     },
@@ -263,7 +254,7 @@ export async function validateCopilotAccess(): Promise<{ success: boolean, error
 
         const orderedModels = [
             ...models.filter(m => m.id === 'copilot-fast'),
-            ...models.filter(m => m.id === 'gpt-4o' || m.id === 'gpt-4o-mini'),
+            ...models.filter(m => m.id === "gpt-5.5" || m.id === "gpt-5.5-instant"),
             ...models.filter(m => m.id === 'oswe-vscode-secondary' || m.id === 'oswe-vscode-prime'),
             ...models.filter(m => m.id !== 'copilot-fast' && m.id !== 'oswe-vscode-secondary' && m.id !== 'oswe-vscode-prime'),
         ];
@@ -341,7 +332,7 @@ export async function fetchCopilotModels(): Promise<string[]> {
                 detectedModels.add('raptor-mini');
             }
             if (modelId === 'copilot-fast') {
-                detectedModels.add('gpt-4o-mini');
+                detectedModels.add("gpt-5.5-instant");
             }
             if (modelId === 'gpt-4-0125-preview') {
                 detectedModels.add('gpt-4-turbo');

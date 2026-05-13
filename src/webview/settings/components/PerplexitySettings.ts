@@ -25,9 +25,9 @@ export class PerplexitySettings {
         <label for="perplexityModel">Model</label>
         <select id="perplexityModel">
           <optgroup label="Latest Models (Recommended)">
-            <option value="sonar-pro" ${this._settings.perplexity?.model === "sonar-pro" ? "selected" : ""}>Sonar Pro (Most Capable)</option>
-            <option value="sonar-reasoning" ${this._settings.perplexity?.model === "sonar-reasoning" ? "selected" : ""}>Sonar Reasoning (Advanced Reasoning)</option>
-            <option value="sonar" ${this._settings.perplexity?.model === "sonar" ? "selected" : ""}>Sonar (General Purpose)</option>
+            <option value="gpt-5.5-computer" ${this._settings.perplexity?.model === "gpt-5.5-computer" ? "selected" : ""}>Sonar Pro (Most Capable)</option>
+            <option value="gpt-5.4-thinking" ${this._settings.perplexity?.model === "gpt-5.4-thinking" ? "selected" : ""}>Sonar Reasoning (Advanced Reasoning)</option>
+            <option value="gpt-5.5-computer" ${this._settings.perplexity?.model === "gpt-5.5-computer" ? "selected" : ""}>Sonar (General Purpose)</option>
           </optgroup>
           <optgroup label="Chat Models">
             <option value="llama-3.1-sonar-small-128k-chat" ${this._settings.perplexity?.model === "llama-3.1-sonar-small-128k-chat" ? "selected" : ""}>Llama 3.1 Sonar Small Chat (Efficient)</option>

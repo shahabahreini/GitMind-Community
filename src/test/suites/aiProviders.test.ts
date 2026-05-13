@@ -47,7 +47,7 @@ suite('AI Providers Tests', () => {
     test('Gemini provider configuration should be valid', async () => {
         const mockConfig = createMockConfig('gemini', {
             apiKey: 'test-gemini-key',
-            model: 'gemini-2.5-flash'
+            model: "gemini-3.1-flash"
         });
 
         (vscode.workspace as any).getConfiguration = () => mockConfig;
@@ -56,7 +56,7 @@ suite('AI Providers Tests', () => {
             const config = await getApiConfig();
             assert.strictEqual(config.type, 'gemini');
             assert.strictEqual(config.apiKey, 'test-gemini-key');
-            assert.strictEqual(config.model, 'gemini-2.5-flash');
+            assert.strictEqual(config.model, "gemini-3.1-flash");
         } catch (error) {
             // Expected in test environment
             console.log('Gemini config test completed with expected limitation');
@@ -64,7 +64,7 @@ suite('AI Providers Tests', () => {
     });
 
     test('Gemini model alias resolution should map gemini-flash-latest to a stable model ID', () => {
-        assert.strictEqual(getEffectiveGeminiModel('gemini-flash-latest'), 'gemini-2.5-flash');
+        assert.strictEqual(getEffectiveGeminiModel('gemini-flash-latest'), "gemini-3.1-flash");
     });
 
     test('Anthropic payload should not include both temperature and top_p when topP override is applied', async () => {
@@ -277,7 +277,7 @@ suite('AI Providers Tests', () => {
     test('OpenAI provider configuration should be valid', async () => {
         const mockConfig = createMockConfig('openai', {
             apiKey: 'test-openai-key',
-            model: 'gpt-4o'
+            model: "gpt-5.5-instant"
         });
 
         (vscode.workspace as any).getConfiguration = () => mockConfig;
@@ -286,7 +286,7 @@ suite('AI Providers Tests', () => {
             const config = await getApiConfig();
             assert.strictEqual(config.type, 'openai');
             assert.strictEqual(config.apiKey, 'test-openai-key');
-            assert.strictEqual(config.model, 'gpt-4o');
+            assert.strictEqual(config.model, "gpt-5.5-instant");
         } catch (error) {
             console.log('OpenAI config test completed with expected limitation');
         }
@@ -349,7 +349,7 @@ suite('AI Providers Tests', () => {
     test('Mistral provider configuration should be valid', async () => {
         const mockConfig = createMockConfig('mistral', {
             apiKey: 'test-mistral-key',
-            model: 'mistral-large-latest'
+            model: "mistral-small-4"
         });
 
         (vscode.workspace as any).getConfiguration = () => mockConfig;
@@ -358,7 +358,7 @@ suite('AI Providers Tests', () => {
             const config = await getApiConfig();
             assert.strictEqual(config.type, 'mistral');
             assert.strictEqual(config.apiKey, 'test-mistral-key');
-            assert.strictEqual(config.model, 'mistral-large-latest');
+            assert.strictEqual(config.model, "mistral-small-4");
         } catch (error) {
             console.log('Mistral config test completed with expected limitation');
         }
@@ -420,7 +420,7 @@ suite('AI Providers Tests', () => {
 
     test('GitHub Copilot provider configuration should be valid', async () => {
         const mockConfig = createMockConfig('copilot', {
-            model: 'gpt-4o'
+            model: "gpt-5.5-instant"
         });
 
         (vscode.workspace as any).getConfiguration = () => mockConfig;
@@ -428,7 +428,7 @@ suite('AI Providers Tests', () => {
         try {
             const config = await getApiConfig();
             assert.strictEqual(config.type, 'copilot');
-            assert.strictEqual(config.model, 'gpt-4o');
+            assert.strictEqual(config.model, "gpt-5.5-instant");
         } catch (error) {
             console.log('Copilot config test completed with expected limitation');
         }
@@ -437,7 +437,7 @@ suite('AI Providers Tests', () => {
     test('DeepSeek provider configuration should be valid', async () => {
         const mockConfig = createMockConfig('deepseek', {
             apiKey: 'test-deepseek-key',
-            model: 'deepseek-chat'
+            model: "deepseek-v4-flash"
         });
 
         (vscode.workspace as any).getConfiguration = () => mockConfig;
@@ -446,7 +446,7 @@ suite('AI Providers Tests', () => {
             const config = await getApiConfig();
             assert.strictEqual(config.type, 'deepseek');
             assert.strictEqual(config.apiKey, 'test-deepseek-key');
-            assert.strictEqual(config.model, 'deepseek-chat');
+            assert.strictEqual(config.model, "deepseek-v4-flash");
         } catch (error) {
             console.log('DeepSeek config test completed with expected limitation');
         }
@@ -455,7 +455,7 @@ suite('AI Providers Tests', () => {
     test('Grok provider configuration should be valid', async () => {
         const mockConfig = createMockConfig('grok', {
             apiKey: 'test-grok-key',
-            model: 'grok-3'
+            model: "grok-4.4"
         });
 
         (vscode.workspace as any).getConfiguration = () => mockConfig;
@@ -464,7 +464,7 @@ suite('AI Providers Tests', () => {
             const config = await getApiConfig();
             assert.strictEqual(config.type, 'grok');
             assert.strictEqual(config.apiKey, 'test-grok-key');
-            assert.strictEqual(config.model, 'grok-3');
+            assert.strictEqual(config.model, "grok-4.4");
         } catch (error) {
             console.log('Grok config test completed with expected limitation');
         }
@@ -473,7 +473,7 @@ suite('AI Providers Tests', () => {
     test('Perplexity provider configuration should be valid', async () => {
         const mockConfig = createMockConfig('perplexity', {
             apiKey: 'test-perplexity-key',
-            model: 'sonar-pro'
+            model: "gpt-5.5-computer"
         });
 
         (vscode.workspace as any).getConfiguration = () => mockConfig;
@@ -482,7 +482,7 @@ suite('AI Providers Tests', () => {
             const config = await getApiConfig();
             assert.strictEqual(config.type, 'perplexity');
             assert.strictEqual(config.apiKey, 'test-perplexity-key');
-            assert.strictEqual(config.model, 'sonar-pro');
+            assert.strictEqual(config.model, "gpt-5.5-computer");
         } catch (error) {
             console.log('Perplexity config test completed with expected limitation');
         }
@@ -491,7 +491,7 @@ suite('AI Providers Tests', () => {
     test('API setup validation should handle missing API keys', async () => {
         const mockConfig = createMockConfig('openai', {
             apiKey: '', // Empty API key
-            model: 'gpt-4o'
+            model: "gpt-5.5-instant"
         });
 
         (vscode.workspace as any).getConfiguration = () => mockConfig;
@@ -612,20 +612,20 @@ index 123..456 789
     test('All provider models should be accessible', () => {
         const providerModels = {
             gemini: [
-                'gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.5-flash-preview',
-                'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite-preview'
+                "gemini-3.1-pro", "gemini-3.1-flash", 'gemini-2.5-flash-preview',
+                "gemini-3.1-flash-lite", 'gemini-2.5-flash-lite-preview'
             ],
             openai: [
-                'gpt-4.1', 'gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo',
+                'gpt-4.1', "gpt-5.5-instant", "gpt-5.5-instant", 'gpt-4-turbo',
                 'gpt-3.5-turbo', 'o3', 'o3-mini'
             ],
             anthropic: [
-                'claude-opus-4', 'claude-sonnet-4', 'claude-3-5-sonnet-20241022',
+                'claude-opus-4', "claude-sonnet-4.6", 'claude-3-5-sonnet-20241022',
                 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229'
             ],
-            deepseek: ['deepseek-chat', 'deepseek-reasoner'],
-            grok: ['grok-3', 'grok-3-fast', 'grok-3-mini', 'grok-2'],
-            perplexity: ['sonar-pro', 'sonar-reasoning', 'sonar']
+            deepseek: ["deepseek-v4-flash", "deepseek-v4-pro"],
+            grok: ["grok-4.4", 'grok-3-fast', "grok-4.4", 'grok-2'],
+            perplexity: ["gpt-5.5-computer", "gpt-5.4-thinking", "gpt-5.5-computer"]
         };
 
         for (const [provider, models] of Object.entries(providerModels)) {

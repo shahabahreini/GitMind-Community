@@ -408,7 +408,7 @@ export async function validateGrokAPIKey(
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    model: "grok-3",
+                    model: "grok-4.4",
                     input: [
                         {
                             role: "user",

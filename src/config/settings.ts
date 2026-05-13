@@ -44,7 +44,7 @@ export function invalidateConfigCache(): void {
 }
 
 const PROVIDER_DEFAULTS: Record<string, ProviderDefaults> = {
-    gemini: { model: "gemini-2.5-flash", enabled: false },
+    gemini: { model: "gemini-3.1-flash", enabled: false },
     huggingface: {
         model: "mistralai/Mistral-7B-Instruct-v0.3",
         enabled: true,
@@ -55,20 +55,20 @@ const PROVIDER_DEFAULTS: Record<string, ProviderDefaults> = {
         enabled: false,
         extras: { url: "http://localhost:11434" }
     },
-    mistral: { model: "mistral-large-latest", enabled: false },
+    mistral: { model: "mistral-small-4", enabled: false },
     cohere: { model: "command-a-03-2025", enabled: false },
-    openai: { model: "gpt-4o", enabled: false },
+    openai: { model: "gpt-5.5-instant", enabled: false },
     together: { model: "meta-llama/Llama-3.3-70B-Instruct-Turbo", enabled: false },
     openrouter: { model: "google/gemma-3-27b-it:free", enabled: false },
-    anthropic: { model: "claude-sonnet-4", enabled: false },
-    minimax: { model: "MiniMax-M2.5", enabled: false },
+    anthropic: { model: "claude-sonnet-4.6", enabled: false },
+    minimax: { model: "MiniMax-M2.7", enabled: false },
     copilot: { model: "auto", enabled: false },
-    deepseek: { model: "deepseek-chat", enabled: false },
-    grok: { model: "grok-3", enabled: false },
-    groq: { model: "llama-3.3-70b-versatile", enabled: false },
-    perplexity: { model: "sonar-pro", enabled: false },
+    deepseek: { model: "deepseek-v4-flash", enabled: false },
+    grok: { model: "grok-4.4", enabled: false },
+    groq: { model: "meta-llama/llama-4-scout-17b-16e-instruct", enabled: false },
+    perplexity: { model: "gpt-5.5-computer", enabled: false },
     zai: {
-        model: "glm-4.5-air",
+        model: "glm-5.1",
         enabled: false,
         extras: { endpoint: "coding" }
     },

@@ -170,7 +170,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                 const testSettings = {
                     apiProvider: 'anthropic',
                     debug: true,
-                    anthropic: { apiKey: 'test-key-12345', model: 'claude-sonnet-4' },
+                    anthropic: { apiKey: 'test-key-12345', model: "claude-sonnet-4.6" },
                     gemini: { apiKey: '', model: '' },
                     openai: { apiKey: '', model: '' },
                     huggingface: { apiKey: '', model: '' },
@@ -263,7 +263,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                     settings: {
                         apiProvider: 'openai',
                         debug: false,
-                        openai: { apiKey: 'sk-test123', model: 'gpt-4o' },
+                        openai: { apiKey: 'sk-test123', model: "gpt-5.5-instant" },
                         // Include all other required providers
                         gemini: { apiKey: '', model: '' },
                         anthropic: { apiKey: '', model: '' },
@@ -390,7 +390,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                 get: (key: string, defaultValue?: any) => {
                     if (key === 'apiProvider') { return 'openai'; }
                     if (key === 'openai.apiKey') { return ''; } // Empty key
-                    if (key === 'openai.model') { return 'gpt-4o'; }
+                    if (key === 'openai.model') { return "gpt-5.5-instant"; }
                     return defaultValue;
                 },
                 update: async () => { },
@@ -429,17 +429,17 @@ suite('🔥 Critical Feature Integration Tests', () => {
                 },
                 {
                     provider: 'copilot',
-                    config: { model: 'gpt-4o' },
+                    config: { model: "gpt-5.5-instant" },
                     requiresKey: false
                 },
                 {
                     provider: 'openai',
-                    config: { apiKey: 'sk-test', model: 'gpt-4o' },
+                    config: { apiKey: 'sk-test', model: "gpt-5.5-instant" },
                     requiresKey: true
                 },
                 {
                     provider: 'anthropic',
-                    config: { apiKey: 'sk-ant-test', model: 'claude-sonnet-4' },
+                    config: { apiKey: 'sk-ant-test', model: "claude-sonnet-4.6" },
                     requiresKey: true
                 }
             ];
@@ -581,13 +581,13 @@ suite('🔥 Critical Feature Integration Tests', () => {
                 await mockConfig.update('anthropic.apiKey', 'sk-ant-test123');
 
                 // Step 4: User selects model
-                await mockConfig.update('anthropic.model', 'claude-sonnet-4');
+                await mockConfig.update('anthropic.model', "claude-sonnet-4.6");
 
                 // Step 5: User saves settings
                 const finalSettings = {
                     apiProvider: 'anthropic',
                     debug: false,
-                    anthropic: { apiKey: 'sk-ant-test123', model: 'claude-sonnet-4' },
+                    anthropic: { apiKey: 'sk-ant-test123', model: "claude-sonnet-4.6" },
                     gemini: { apiKey: '', model: '' },
                     openai: { apiKey: '', model: '' },
                     huggingface: { apiKey: '', model: '' },
@@ -622,7 +622,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                 const reloadedSettings = await settingsManager.getSettings();
                 assert.strictEqual(reloadedSettings.apiProvider, 'anthropic');
                 assert.strictEqual(reloadedSettings.anthropic.apiKey, 'sk-ant-test123');
-                assert.strictEqual(reloadedSettings.anthropic.model, 'claude-sonnet-4');
+                assert.strictEqual(reloadedSettings.anthropic.model, "claude-sonnet-4.6");
 
                 console.log('   ✓ Complete configuration workflow validated');
                 console.log('   ✓ 6 workflow steps executed successfully');
@@ -638,10 +638,10 @@ suite('🔥 Critical Feature Integration Tests', () => {
             const workspace2Config = new Map<string, any>();
 
             workspace1Config.set('apiProvider', 'openai');
-            workspace1Config.set('openai.model', 'gpt-4o');
+            workspace1Config.set('openai.model', "gpt-5.5-instant");
 
             workspace2Config.set('apiProvider', 'anthropic');
-            workspace2Config.set('anthropic.model', 'claude-sonnet-4');
+            workspace2Config.set('anthropic.model', "claude-sonnet-4.6");
 
             // Verify independent configurations
             assert.strictEqual(workspace1Config.get('apiProvider'), 'openai');
@@ -666,7 +666,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
                 command: 'updateSettings',
                 settings: {
                     apiProvider: 'gemini',
-                    gemini: { model: 'gemini-2.5-pro' }
+                    gemini: { model: "gemini-3.1-pro" }
                 }
             };
 

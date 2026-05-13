@@ -33,8 +33,8 @@ export class CopilotSettings {
                             <option value="gpt-3.5-turbo" ${this._settings.copilot?.model === "gpt-3.5-turbo" ? "selected" : ""}>GPT-3.5 Turbo</option>
                             <option value="gpt-4" ${this._settings.copilot?.model === "gpt-4" ? "selected" : ""}>GPT-4</option>
                             <option value="gpt-4-turbo" ${this._settings.copilot?.model === "gpt-4-turbo" ? "selected" : ""}>GPT-4 Turbo</option>
-                            <option value="gpt-4o" ${this._settings.copilot?.model === "gpt-4o" ? "selected" : ""}>GPT-4o</option>
-                            <option value="gpt-4o-mini" ${this._settings.copilot?.model === "gpt-4o-mini" ? "selected" : ""}>GPT-4o mini</option>
+                            <option value="gpt-5.5-instant" ${this._settings.copilot?.model === "gpt-5.5-instant" ? "selected" : ""}>GPT-4o</option>
+                            <option value="gpt-5.5-instant" ${this._settings.copilot?.model === "gpt-5.5-instant" ? "selected" : ""}>GPT-4o mini</option>
                         </optgroup>
                         <optgroup label="OpenAI Models">
                             <option value="gpt-4.1" ${this._settings.copilot?.model === "gpt-4.1" ? "selected" : ""}>GPT-4.1</option>
@@ -48,15 +48,15 @@ export class CopilotSettings {
                         <optgroup label="Anthropic Models">
                             <option value="claude-haiku-4.5" ${this._settings.copilot?.model === "claude-haiku-4.5" ? "selected" : ""}>Claude Haiku 4.5</option>
                             <option value="claude-opus-4.1" ${this._settings.copilot?.model === "claude-opus-4.1" ? "selected" : ""}>Claude Opus 4.1</option>
-                            <option value="claude-sonnet-4" ${this._settings.copilot?.model === "claude-sonnet-4" ? "selected" : ""}>Claude Sonnet 4</option>
+                            <option value="claude-sonnet-4.6" ${this._settings.copilot?.model === "claude-sonnet-4.6" ? "selected" : ""}>Claude Sonnet 4</option>
                             <option value="claude-sonnet-4.5" ${this._settings.copilot?.model === "claude-sonnet-4.5" ? "selected" : ""}>Claude Sonnet 4.5</option>
                         </optgroup>
                         <optgroup label="Google Models">
-                            <option value="gemini-2.5-pro" ${this._settings.copilot?.model === "gemini-2.5-pro" ? "selected" : ""}>Gemini 2.5 Pro</option>
+                            <option value="gemini-3.1-pro" ${this._settings.copilot?.model === "gemini-3.1-pro" ? "selected" : ""}>Gemini 2.5 Pro</option>
                             <option value="gemini-3-pro" ${this._settings.copilot?.model === "gemini-3-pro" ? "selected" : ""}>Gemini 3 Pro</option>
                         </optgroup>
                         <optgroup label="Other Models">
-                            <option value="grok-code-fast-1" ${this._settings.copilot?.model === "grok-code-fast-1" ? "selected" : ""}>Grok Code Fast 1</option>
+                            <option value="grok-4.3" ${this._settings.copilot?.model === "grok-4.3" ? "selected" : ""}>Grok Code Fast 1</option>
                             <option value="raptor-mini" ${this._settings.copilot?.model === "raptor-mini" ? "selected" : ""}>Raptor mini</option>
                         </optgroup>
                     </select>

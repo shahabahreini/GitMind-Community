@@ -79,46 +79,41 @@ export type TargetCommitLanguage =
 
 // Model types
 export type GeminiModel =
-    | "gemini-2.5-pro" | "gemini-2.5-flash" | "gemini-2.5-flash-lite" | "gemini-2.0-flash";
+    | "gemini-3.1-pro" | "gemini-3.1-flash" | "gemini-3.1-flash-lite";
 
 export type AnthropicModel =
-    | "claude-opus-4.6" | "claude-sonnet-4.6" | "claude-haiku-4.5";
+    | "claude-opus-4.7" | "claude-sonnet-4.6" | "claude-haiku-4.5";
 
-export type MiniMaxModel = "MiniMax-M1" | "MiniMax-M2" | "MiniMax-M2.1" | "MiniMax-M2.5" | "MiniMax-Text-01";
+export type MiniMaxModel = "MiniMax-M2.7" | "MiniMax-M2.5" | "MiniMax-M2" | "MiniMax-Text-01";
 
 export type KnownCopilotModel =
     | "auto"
     // OpenAI Models
-    | "gpt-4o" | "gpt-4o-mini"
-    | "o3-mini" | "o4-mini"
+    | "gpt-5.5" | "gpt-5.5-instant"
+    | "o3-mini"
     // Other Models
     | "raptor-mini"
     // Anthropic Models
-    | "claude-3.5-sonnet" | "claude-3.7-sonnet" | "claude-sonnet-4"
+    | "claude-opus-4.7" | "claude-sonnet-4.6"
     // Google Models
-    | "gemini-2.5-pro" | "gemini-2.0-flash";
+    | "gemini-3.1-pro" | "gemini-3.1-flash";
 
 export type CopilotModel = KnownCopilotModel | string;
 
-export type DeepSeekModel = "deepseek-chat" | "deepseek-reasoner";
+export type DeepSeekModel = "deepseek-v4-pro" | "deepseek-v4-flash";
 
 export type GrokModel =
-    | "grok-4" | "grok-4-fast-reasoning" | "grok-4-fast-non-reasoning" | "grok-code-fast-1"
-    | "grok-3" | "grok-3-mini"
-    | "grok-2-1212" | "grok-2-vision-1212";
+    | "grok-4.3" | "grok-4.4" | "grok-4.5";
 
 export type GroqModel =
     | "llama-3.1-8b-instant" | "llama-3.3-70b-versatile"
-    | "meta-llama/llama-4-scout-17b-16e-instruct"
-    | "openai/gpt-oss-120b" | "openai/gpt-oss-20b";
+    | "meta-llama/llama-4-scout-17b-16e-instruct";
 
 export type PerplexityModel =
-    | "sonar" | "sonar-pro" | "sonar-reasoning" | "sonar-reasoning-pro" | "sonar-deep-research";
+    | "gpt-5.5-computer" | "gpt-5.4-thinking" | "sonar-pro" | "sonar-reasoning-pro";
 
 export type ZaiModel =
-    | "glm-4-plus" | "glm-4-air" | "glm-4-flash"
-    | "glm-4.5" | "glm-4.5-air"
-    | "glm-4.6" | "glm-4.7" | "glm-5";
+    | "glm-5.1" | "glm-5v-turbo" | "glm-5" | "glm-5-turbo";
 
 // Configuration interfaces
 export interface BaseProviderConfig {

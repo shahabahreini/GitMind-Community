@@ -22,22 +22,22 @@ export class SettingsManager {
     private static _saveTimeout: NodeJS.Timeout | undefined;
 
     private static readonly PROVIDER_DEFAULTS: ProviderDefaults = {
-        gemini: { model: "gemini-2.5-flash" },
+        gemini: { model: "gemini-3.1-flash" },
         huggingface: { model: "" },
         ollama: { model: "", url: "" },
-        mistral: { model: "mistral-large-latest" },
+        mistral: { model: "mistral-small-4" },
         cohere: { model: "command-r-plus" },
-        openai: { model: "gpt-4o" },
+        openai: { model: "gpt-5.5-instant" },
         together: { model: "meta-llama/Llama-3.3-70B-Instruct-Turbo" },
         openrouter: { model: "google/gemma-3-27b-it:free" },
-        anthropic: { model: "claude-sonnet-4" },
-        minimax: { model: "MiniMax-M2.5" },
+        anthropic: { model: "claude-sonnet-4.6" },
+        minimax: { model: "MiniMax-M2.7" },
         copilot: { model: "auto" },
-        deepseek: { model: "deepseek-chat" },
-        grok: { model: "grok-3" },
-        groq: { model: "llama-3.3-70b-versatile" },
+        deepseek: { model: "deepseek-v4-flash" },
+        grok: { model: "grok-4.4" },
+        groq: { model: "meta-llama/llama-4-scout-17b-16e-instruct" },
         perplexity: { model: "llama-3.1-sonar-large-128k-online" },
-        zai: { model: "glm-4.5-air", endpoint: "coding" },
+        zai: { model: "glm-5.1", endpoint: "coding" },
         custom: { model: "" }
     };
 

@@ -264,7 +264,7 @@ function suggestCorrectProvider(model: string): { provider: string; model: strin
     if (lowerModel.includes('deepseek')) {
         return {
             provider: "DeepSeek",
-            model: lowerModel.includes('chat') ? 'deepseek-chat' : 'deepseek-reasoner'
+            model: lowerModel.includes('chat') ? "deepseek-v4-flash" : "deepseek-v4-pro"
         };
     } else if (lowerModel.includes('claude') || lowerModel.includes('anthropic')) {
         return {
@@ -274,17 +274,17 @@ function suggestCorrectProvider(model: string): { provider: string; model: strin
     } else if (lowerModel.includes('gpt-') || lowerModel.includes('openai')) {
         return {
             provider: "OpenAI",
-            model: 'gpt-4o'
+            model: "gpt-5.5-instant"
         };
     } else if (lowerModel.includes('gemini') || lowerModel.includes('google')) {
         return {
             provider: "Gemini",
-            model: 'gemini-2.5-flash'
+            model: "gemini-3.1-flash"
         };
     } else if (lowerModel.includes('mistral')) {
         return {
             provider: "Mistral",
-            model: 'mistral-large-latest'
+            model: "mistral-small-4"
         };
     } else if (lowerModel.includes('grok')) {
         return {

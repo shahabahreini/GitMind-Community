@@ -50,8 +50,8 @@ export class OpenAISettings {
                             <option value="o1" ${this._settings.openai?.model === "o1" ? "selected" : ""}>o1 (Reasoning)</option>
                         </optgroup>
                         <optgroup label="GPT-4o Series">
-                            <option value="gpt-4o" ${this._settings.openai?.model === "gpt-4o" ? "selected" : ""}>GPT-4o (Multimodal)</option>
-                            <option value="gpt-4o-mini" ${this._settings.openai?.model === "gpt-4o-mini" ? "selected" : ""}>GPT-4o Mini</option>
+                            <option value="gpt-5.5-instant" ${this._settings.openai?.model === "gpt-5.5-instant" ? "selected" : ""}>GPT-4o (Multimodal)</option>
+                            <option value="gpt-5.5-instant" ${this._settings.openai?.model === "gpt-5.5-instant" ? "selected" : ""}>GPT-4o Mini</option>
                             <option value="gpt-4o-mini-tts" ${this._settings.openai?.model === "gpt-4o-mini-tts" ? "selected" : ""}>GPT-4o Mini TTS</option>
                         </optgroup>
                         <optgroup label="Legacy Models">

@@ -30,7 +30,7 @@ export class StatusBanner {
     },
     mistral: {
       displayName: "Mistral",
-      defaultModel: "mistral-large-latest",
+      defaultModel: "mistral-small-4",
       getApiConfigured: (s) => !!s.mistral?.apiKey
     },
     cohere: {
@@ -55,7 +55,7 @@ export class StatusBanner {
     },
     anthropic: {
       displayName: "Anthropic",
-      defaultModel: "claude-sonnet-4",
+      defaultModel: "claude-sonnet-4.6",
       getApiConfigured: (s) => !!s.anthropic?.apiKey
     },
     minimax: {
@@ -65,22 +65,22 @@ export class StatusBanner {
     },
     copilot: {
       displayName: "GitHub Copilot",
-      defaultModel: "gpt-4o",
+      defaultModel: "gpt-5.5-instant",
       getApiConfigured: () => true
     },
     deepseek: {
       displayName: "DeepSeek",
-      defaultModel: "deepseek-chat",
+      defaultModel: "deepseek-v4-flash",
       getApiConfigured: (s) => !!s.deepseek?.apiKey
     },
     grok: {
       displayName: "Grok",
-      defaultModel: "grok-3",
+      defaultModel: "grok-4.4",
       getApiConfigured: (s) => !!s.grok?.apiKey
     },
     perplexity: {
       displayName: "Perplexity",
-      defaultModel: "sonar-pro",
+      defaultModel: "gpt-5.5-computer",
       getApiConfigured: (s) => !!s.perplexity?.apiKey
     },
     zai: {

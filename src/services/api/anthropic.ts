@@ -13,7 +13,7 @@ interface GenerationConfig {
 
 const MODEL_CONFIGS: Record<AnthropicModel, GenerationConfig> = {
     // Claude 4 Series (Latest)
-    "claude-opus-4.6": {
+    "claude-opus-4.7": {
         max_tokens: 350,
         temperature: 0.2,
         top_p: 0.8
@@ -46,7 +46,7 @@ export class AnthropicProvider extends BaseAIProvider {
 
         // Validate model
         const validModels: AnthropicModel[] = [
-            "claude-opus-4.6",
+            "claude-opus-4.7",
             "claude-sonnet-4.6",
             "claude-haiku-4.5"
         ];

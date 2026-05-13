@@ -25,9 +25,9 @@ export class GrokSettings {
         <label for="grokModel">Model</label>
         <select id="grokModel">
           <optgroup label="Grok 3 Series (Latest)">
-            <option value="grok-3" ${this._settings.grok?.model === "grok-3" ? "selected" : ""}>Grok 3 (Most Capable)</option>
+            <option value="grok-4.4" ${this._settings.grok?.model === "grok-4.4" ? "selected" : ""}>Grok 3 (Most Capable)</option>
             <option value="grok-3-fast" ${this._settings.grok?.model === "grok-3-fast" ? "selected" : ""}>Grok 3 Fast (High Performance)</option>
-            <option value="grok-3-mini" ${this._settings.grok?.model === "grok-3-mini" ? "selected" : ""}>Grok 3 Mini (Cost Effective)</option>
+            <option value="grok-4.4" ${this._settings.grok?.model === "grok-4.4" ? "selected" : ""}>Grok 3 Mini (Cost Effective)</option>
           </optgroup>
           <optgroup label="Grok 2 Series">
             <option value="grok-2" ${this._settings.grok?.model === "grok-2" ? "selected" : ""}>Grok 2 (General Purpose)</option>

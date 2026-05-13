@@ -15,24 +15,20 @@ interface GenerationConfig {
 
 const MODEL_CONFIGS: Record<PerplexityModel, GenerationConfig> = {
     // Latest Sonar Models (Recommended)
-    "sonar-pro": {
+    "gpt-5.5-computer": {
         max_tokens: 350,
         temperature: 0.2
     },
-    "sonar-reasoning": {
+    "gpt-5.4-thinking": {
         max_tokens: 400,
         temperature: 0.2
     },
-    "sonar": {
+    "sonar-pro": {
         max_tokens: 350,
         temperature: 0.2
     },
     "sonar-reasoning-pro": {
         max_tokens: 400,
-        temperature: 0.2
-    },
-    "sonar-deep-research": {
-        max_tokens: 500,
         temperature: 0.2
     }
 };
@@ -234,7 +230,7 @@ export async function validatePerplexityAPIKey(apiKey: string): Promise<{ succes
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                model: "sonar",
+                model: "gpt-5.5-computer",
                 messages: [
                     {
                         role: "user",

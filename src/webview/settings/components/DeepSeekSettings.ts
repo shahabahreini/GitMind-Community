@@ -25,8 +25,8 @@ export class DeepSeekSettings {
         <label for="deepseekModel">Model</label>
         <select id="deepseekModel">
           <optgroup label="Default Models">
-            <option value="deepseek-chat" ${this._settings.deepseek?.model === "deepseek-chat" ? "selected" : ""}>deepseek-chat</option>
-            <option value="deepseek-reasoner" ${this._settings.deepseek?.model === "deepseek-reasoner" ? "selected" : ""}>deepseek-reasoner</option>
+            <option value="deepseek-v4-flash" ${this._settings.deepseek?.model === "deepseek-v4-flash" ? "selected" : ""}>deepseek-chat</option>
+            <option value="deepseek-v4-pro" ${this._settings.deepseek?.model === "deepseek-v4-pro" ? "selected" : ""}>deepseek-reasoner</option>
           </optgroup>
         </select>
         <button id="loadDeepSeekModels" class="button small load-models-inline">Load Available Models</button>

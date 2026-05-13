@@ -26,7 +26,7 @@ export class AnthropicSettings {
         <select id="anthropicModel">
           <optgroup label="Claude 4 Series (Latest)">
             <option value="claude-opus-4" ${this._settings.anthropic?.model === "claude-opus-4" ? "selected" : ""}>Claude Opus 4</option>
-            <option value="claude-sonnet-4" ${this._settings.anthropic?.model === "claude-sonnet-4" ? "selected" : ""}>Claude Sonnet 4</option>
+            <option value="claude-sonnet-4.6" ${this._settings.anthropic?.model === "claude-sonnet-4.6" ? "selected" : ""}>Claude Sonnet 4</option>
           </optgroup>
           <optgroup label="Claude 3.7 Series">
             <option value="claude-sonnet-3.7" ${this._settings.anthropic?.model === "claude-sonnet-3.7" ? "selected" : ""}>Claude Sonnet 3.7</option>

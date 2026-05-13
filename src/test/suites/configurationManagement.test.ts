@@ -114,23 +114,23 @@ suite('Configuration Management Tests', () => {
         // Test configuration update
         await mockConfig.update('apiProvider', 'anthropic');
         await mockConfig.update('anthropic.apiKey', 'new-key');
-        await mockConfig.update('anthropic.model', 'claude-3-5-sonnet');
+        await mockConfig.update('anthropic.model', "claude-sonnet-4.6");
 
         // Verify persistence
         assert.strictEqual(persistentStorage['apiProvider'], 'anthropic');
         assert.strictEqual(persistentStorage['anthropic.apiKey'], 'new-key');
-        assert.strictEqual(persistentStorage['anthropic.model'], 'claude-3-5-sonnet');
+        assert.strictEqual(persistentStorage['anthropic.model'], "claude-sonnet-4.6");
     });
 
     test('Configuration should validate provider settings', () => {
         const providerConfigs = {
             gemini: {
                 apiKey: 'AIza...',
-                model: 'gemini-2.5-flash'
+                model: "gemini-3.1-flash"
             },
             openai: {
                 apiKey: 'sk-...',
-                model: 'gpt-4o'
+                model: "gpt-5.5-instant"
             },
             anthropic: {
                 apiKey: 'sk-ant-...',
@@ -206,7 +206,7 @@ suite('Configuration Management Tests', () => {
             {
                 apiProvider: 'openai',
                 debug: false,
-                'openai.model': 'gpt-4o'
+                'openai.model': "gpt-5.5-instant"
             },
             {
                 apiProvider: 'anthropic',
@@ -241,12 +241,12 @@ suite('Configuration Management Tests', () => {
         const migratedConfig = {
             apiProvider: oldConfig.provider === 'gpt' ? 'openai' : oldConfig.provider,
             'openai.apiKey': oldConfig.apiKey,
-            'openai.model': oldConfig.model === 'old-model' ? 'gpt-4o' : oldConfig.model
+            'openai.model': oldConfig.model === 'old-model' ? "gpt-5.5-instant" : oldConfig.model
         };
 
         assert.strictEqual(migratedConfig.apiProvider, 'openai', 'Should migrate provider name');
         assert.strictEqual(migratedConfig['openai.apiKey'], 'old-key', 'Should migrate API key');
-        assert.strictEqual(migratedConfig['openai.model'], 'gpt-4o', 'Should migrate model');
+        assert.strictEqual(migratedConfig['openai.model'], "gpt-5.5-instant", 'Should migrate model');
     });
 
     test('Configuration should validate enum values', () => {

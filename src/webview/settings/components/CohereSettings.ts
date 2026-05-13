@@ -14,10 +14,10 @@ export class CohereSettings {
         // Define default Cohere models to show initially
         const defaultModels = [
             'command-a-03-2025',
-            'command-r-08-2024',
-            'command-r-plus-08-2024',
-            'aya-expanse-8b',
-            'aya-expanse-32b',
+            "command-a-reasoning",
+            "command-a",
+            "command-a",
+            "command-a",
             'command-r',
             'command-r-plus',
             'command',

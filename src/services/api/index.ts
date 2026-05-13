@@ -178,7 +178,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         settingPath: "gemini.apiKey",
         docsUrl: "https://aistudio.google.com/app/apikey",
         requiresApiKey: true,
-        defaultModel: "gemini-2.5-flash",
+        defaultModel: "gemini-3.1-flash",
         getProviderClass: async () => loadProviderModule('gemini'),
     },
     huggingface: {
@@ -235,7 +235,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         settingPath: "anthropic.apiKey",
         docsUrl: "https://console.anthropic.com/",
         requiresApiKey: true,
-        defaultModel: "claude-sonnet-4",
+        defaultModel: "claude-sonnet-4.6",
         getProviderClass: async () => loadProviderModule('anthropic'),
     },
     minimax: {
@@ -269,7 +269,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         settingPath: "groq.apiKey",
         docsUrl: "https://console.groq.com/keys",
         requiresApiKey: true,
-        defaultModel: "llama-3.3-70b-versatile",
+        defaultModel: "meta-llama/llama-4-scout-17b-16e-instruct",
         getProviderClass: async () => loadProviderModule('groq'),
     },
     perplexity: {
@@ -286,7 +286,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         settingPath: "zai.apiKey",
         docsUrl: "https://api.z.ai/",
         requiresApiKey: true,
-        defaultModel: "glm-4.5-air",
+        defaultModel: "glm-5.1",
         getProviderClass: async () => loadProviderModule('zai'),
     },
     custom: {
@@ -311,7 +311,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         settingPath: "",
         docsUrl: "",
         requiresApiKey: false,
-        defaultModel: "gpt-4o",
+        defaultModel: "gpt-5.5-instant",
         getProviderClass: async () => loadProviderModule('copilot'),
     },
 };

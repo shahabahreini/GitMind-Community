@@ -80,9 +80,7 @@ export class ProNotificationService {
             );
 
             if (selection === buyAction) {
-                vscode.env.openExternal(vscode.Uri.parse('https://gitmind.app/pricing'));
-                // Trigger the subscription manager start if applicable, or just let them buy on site
-                subscriptionManager.startSubscription().catch(e => debugLog('Failed to start sub', e));
+                vscode.env.openExternal(vscode.Uri.parse('https://gitmind.lemonsqueezy.com/checkout/buy/cd58d4e5-92cf-4f59-a6fe-ae6e57010706'));
             } else if (selection === snoozeAction) {
                 await this.context.globalState.update(this.MUTED_UNTIL_KEY, now + this.SNOOZE_DURATION_MS);
                 debugLog('Pro notification snoozed for 3 weeks.');

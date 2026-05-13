@@ -52,10 +52,10 @@ export class ProviderConfig {
                     options: [
                         { value: 'gemini-3-pro', label: 'Gemini 3 Pro', group: 'Gemini 3 Series' },
                         { value: 'gemini-3-flash', label: 'Gemini 3 Flash', group: 'Gemini 3 Series' },
-                        { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', group: 'Gemini 2.5 Series' },
-                        { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', group: 'Gemini 2.5 Series' },
+                        { value: "gemini-3.1-pro", label: 'Gemini 2.5 Pro', group: 'Gemini 2.5 Series' },
+                        { value: "gemini-3.1-flash", label: 'Gemini 2.5 Flash', group: 'Gemini 2.5 Series' },
                         { value: 'gemini-2.5-flash-preview', label: 'Gemini 2.5 Flash Preview', group: 'Gemini 2.5 Series' },
-                        { value: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite', group: 'Gemini 2.5 Series' },
+                        { value: "gemini-3.1-flash-lite", label: 'Gemini 2.5 Flash-Lite', group: 'Gemini 2.5 Series' },
                         { value: 'gemini-2.5-flash-lite-preview', label: 'Gemini 2.5 Flash-Lite Preview', group: 'Gemini 2.5 Series' }
                     ]
                 }
@@ -100,8 +100,8 @@ export class ProviderConfig {
                         { value: 'o3', label: 'o3 (Advanced Reasoning)', group: 'Reasoning Models' },
                         { value: 'o3-mini', label: 'o3-mini (Efficient Reasoning)', group: 'Reasoning Models' },
                         { value: 'o1', label: 'o1 (Reasoning)', group: 'Reasoning Models' },
-                        { value: 'gpt-4o', label: 'GPT-4o (Multimodal)', group: 'GPT-4o Series' },
-                        { value: 'gpt-4o-mini', label: 'GPT-4o Mini', group: 'GPT-4o Series' },
+                        { value: "gpt-5.5-instant", label: 'GPT-4o (Multimodal)', group: 'GPT-4o Series' },
+                        { value: "gpt-5.5-instant", label: 'GPT-4o Mini', group: 'GPT-4o Series' },
                         { value: 'gpt-4o-mini-tts', label: 'GPT-4o Mini TTS', group: 'GPT-4o Series' },
                         { value: 'gpt-4-turbo', label: 'GPT-4 Turbo', group: 'Legacy Models' },
                         { value: 'gpt-4', label: 'GPT-4', group: 'Legacy Models' },
@@ -166,10 +166,10 @@ export class ProviderConfig {
                     loadButtonDisabled: true,
                     loadButtonDisabledTooltip: "MiniMax won't support model fetch yet!",
                     options: [
-                        { value: 'MiniMax-M1', label: 'MiniMax M1' },
+                        { value: "MiniMax-M2.7", label: 'MiniMax M1' },
                         { value: 'MiniMax-M2', label: 'MiniMax M2' },
-                        { value: 'MiniMax-M2.1', label: 'MiniMax M2.1' },
-                        { value: 'MiniMax-M2.5', label: 'MiniMax M2.5' },
+                        { value: "MiniMax-M2.5", label: 'MiniMax M2.1' },
+                        { value: "MiniMax-M2.7", label: 'MiniMax M2.5' },
                         { value: 'MiniMax-Text-01', label: 'MiniMax Text-01' }
                     ]
                 }
@@ -205,8 +205,8 @@ export class ProviderConfig {
                         { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', group: 'OpenAI Models (Legacy)' },
                         { value: 'gpt-4', label: 'GPT-4', group: 'OpenAI Models (Legacy)' },
                         { value: 'gpt-4-turbo', label: 'GPT-4 Turbo', group: 'OpenAI Models (Legacy)' },
-                        { value: 'gpt-4o', label: 'GPT-4o', group: 'OpenAI Models (Legacy)' },
-                        { value: 'gpt-4o-mini', label: 'GPT-4o mini', group: 'OpenAI Models (Legacy)' },
+                        { value: "gpt-5.5-instant", label: 'GPT-4o', group: 'OpenAI Models (Legacy)' },
+                        { value: "gpt-5.5-instant", label: 'GPT-4o mini', group: 'OpenAI Models (Legacy)' },
                         { value: 'gpt-4.1', label: 'GPT-4.1', group: 'OpenAI Models' },
                         { value: 'gpt-5', label: 'GPT-5', group: 'OpenAI Models' },
                         { value: 'gpt-5-mini', label: 'GPT-5 mini', group: 'OpenAI Models' },
@@ -216,11 +216,11 @@ export class ProviderConfig {
                         { value: 'gpt-5.1-codex-mini', label: 'GPT-5.1-Codex-Mini', group: 'OpenAI Models' },
                         { value: 'claude-haiku-4.5', label: 'Claude Haiku 4.5', group: 'Anthropic Models' },
                         { value: 'claude-opus-4.1', label: 'Claude Opus 4.1', group: 'Anthropic Models' },
-                        { value: 'claude-sonnet-4', label: 'Claude Sonnet 4', group: 'Anthropic Models' },
+                        { value: "claude-sonnet-4.6", label: 'Claude Sonnet 4', group: 'Anthropic Models' },
                         { value: 'claude-sonnet-4.5', label: 'Claude Sonnet 4.5', group: 'Anthropic Models' },
-                        { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', group: 'Google Models' },
+                        { value: "gemini-3.1-pro", label: 'Gemini 2.5 Pro', group: 'Google Models' },
                         { value: 'gemini-3-pro', label: 'Gemini 3 Pro', group: 'Google Models' },
-                        { value: 'grok-code-fast-1', label: 'Grok Code Fast 1', group: 'Other Models' },
+                        { value: "grok-4.3", label: 'Grok Code Fast 1', group: 'Other Models' },
                         { value: 'raptor-mini', label: 'Raptor mini', group: 'Other Models' }
                     ]
                 }
@@ -315,9 +315,9 @@ export class ProviderConfig {
                     loadButtonId: 'loadMistralModels',
                     loadCommand: 'gitmind.loadMistralModels',
                     options: [
-                        { value: 'mistral-large-latest', label: 'Mistral Large (Latest)' },
+                        { value: "mistral-small-4", label: 'Mistral Large (Latest)' },
                         { value: 'mistral-medium-latest', label: 'Mistral Medium (Latest)' },
-                        { value: 'mistral-small-latest', label: 'Mistral Small (Latest)' },
+                        { value: "mistral-small-4", label: 'Mistral Small (Latest)' },
                         { value: 'open-mistral-7b', label: 'Open Mistral 7B' },
                         { value: 'open-mixtral-8x7b', label: 'Open Mixtral 8x7B' },
                         { value: 'open-mixtral-8x22b', label: 'Open Mixtral 8x22B' }
@@ -348,10 +348,10 @@ export class ProviderConfig {
                     loadCommand: 'gitmind.loadCohereModels',
                     options: [
                         { value: 'command-a-03-2025', label: 'Command A (Latest)' },
-                        { value: 'command-r-08-2024', label: 'Command R (08-2024)' },
-                        { value: 'command-r-plus-08-2024', label: 'Command R+ (08-2024)' },
-                        { value: 'aya-expanse-8b', label: 'Aya Expanse 8B' },
-                        { value: 'aya-expanse-32b', label: 'Aya Expanse 32B' },
+                        { value: "command-a-reasoning", label: 'Command R (08-2024)' },
+                        { value: "command-a", label: 'Command R+ (08-2024)' },
+                        { value: "command-a", label: 'Aya Expanse 8B' },
+                        { value: "command-a", label: 'Aya Expanse 32B' },
                         { value: 'command-r-plus', label: 'Command R+' },
                         { value: 'command-r', label: 'Command R' },
                         { value: 'command', label: 'Command' },
@@ -450,8 +450,8 @@ export class ProviderConfig {
                     loadButtonId: 'loadDeepSeekModels',
                     loadCommand: 'gitmind.loadDeepSeekModels',
                     options: [
-                        { value: 'deepseek-chat', label: 'DeepSeek Chat' },
-                        { value: 'deepseek-reasoner', label: 'DeepSeek Reasoner' }
+                        { value: "deepseek-v4-flash", label: 'DeepSeek Chat' },
+                        { value: "deepseek-v4-pro", label: 'DeepSeek Reasoner' }
                     ]
                 }
             ]
@@ -478,7 +478,7 @@ export class ProviderConfig {
                     loadButtonId: 'loadGrokModels',
                     loadCommand: 'gitmind.loadGrokModels',
                     options: [
-                        { value: 'grok-3', label: 'Grok-3 (Latest)' },
+                        { value: "grok-4.4", label: 'Grok-3 (Latest)' },
                         { value: 'grok-2', label: 'Grok-2' },
                         { value: 'grok-1.5v', label: 'Grok-1.5V (Vision)' },
                         { value: 'grok-1.5', label: 'Grok-1.5' }
@@ -508,11 +508,11 @@ export class ProviderConfig {
                     loadButtonId: 'loadGroqModels',
                     loadCommand: 'gitmind.loadGroqModels',
                     options: [
-                        { value: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B Versatile' },
+                        { value: "meta-llama/llama-4-scout-17b-16e-instruct", label: 'Llama 3.3 70B Versatile' },
                         { value: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B Instant' },
                         { value: 'meta-llama/llama-4-scout-17b-16e-instruct', label: 'Llama 4 Scout 17B 16E' },
-                        { value: 'openai/gpt-oss-120b', label: 'GPT-OSS 120B' },
-                        { value: 'openai/gpt-oss-20b', label: 'GPT-OSS 20B' }
+                        { value: "meta-llama/llama-4-scout-17b-16e-instruct", label: 'GPT-OSS 120B' },
+                        { value: "meta-llama/llama-4-scout-17b-16e-instruct", label: 'GPT-OSS 20B' }
                     ]
                 }
             ]
@@ -578,10 +578,10 @@ export class ProviderConfig {
                     loadCommand: 'gitmind.loadZaiModels',
                     options: [
                         { value: 'glm-5', label: 'GLM-5 (Flagship)' },
-                        { value: 'glm-4.7', label: 'GLM-4.7 (Complex Tasks)' },
-                        { value: 'glm-4.6', label: 'GLM-4.6 (128K Output)' },
-                        { value: 'glm-4.5', label: 'GLM-4.5 (Balanced)' },
-                        { value: 'glm-4.5-air', label: 'GLM-4.5-Air (Fast)' },
+                        { value: "glm-5", label: 'GLM-4.7 (Complex Tasks)' },
+                        { value: "glm-5", label: 'GLM-4.6 (128K Output)' },
+                        { value: "glm-5", label: 'GLM-4.5 (Balanced)' },
+                        { value: "glm-5.1", label: 'GLM-4.5-Air (Fast)' },
                         { value: 'glm-4.5-x', label: 'GLM-4.5-X (Large Context)' },
                         { value: 'glm-4.5-airx', label: 'GLM-4.5-AirX (Ultra-Light)' },
                         { value: 'glm-4.5-flash', label: 'GLM-4.5-Flash' },

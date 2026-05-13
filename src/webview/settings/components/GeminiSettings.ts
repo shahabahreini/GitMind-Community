@@ -26,10 +26,10 @@ export class GeminiSettings {
                     <label for="geminiModel">Model</label>
                     <select id="geminiModel">
                         <optgroup label="Gemini 2.5 Series">
-                            <option value="gemini-2.5-pro" ${this._settings.gemini?.model === "gemini-2.5-pro" ? "selected" : ""}>Gemini 2.5 Pro</option>
-                            <option value="gemini-2.5-flash" ${this._settings.gemini?.model === "gemini-2.5-flash" ? "selected" : ""}>Gemini 2.5 Flash</option>
+                            <option value="gemini-3.1-pro" ${this._settings.gemini?.model === "gemini-3.1-pro" ? "selected" : ""}>Gemini 2.5 Pro</option>
+                            <option value="gemini-3.1-flash" ${this._settings.gemini?.model === "gemini-3.1-flash" ? "selected" : ""}>Gemini 2.5 Flash</option>
                             <option value="gemini-2.5-flash-preview" ${this._settings.gemini?.model === "gemini-2.5-flash-preview" ? "selected" : ""}>Gemini 2.5 Flash Preview</option>
-                            <option value="gemini-2.5-flash-lite" ${this._settings.gemini?.model === "gemini-2.5-flash-lite" ? "selected" : ""}>Gemini 2.5 Flash-Lite</option>
+                            <option value="gemini-3.1-flash-lite" ${this._settings.gemini?.model === "gemini-3.1-flash-lite" ? "selected" : ""}>Gemini 2.5 Flash-Lite</option>
                             <option value="gemini-2.5-flash-lite-preview" ${this._settings.gemini?.model === "gemini-2.5-flash-lite-preview" ? "selected" : ""}>Gemini 2.5 Flash-Lite Preview</option>
                         </optgroup>
                     </select>

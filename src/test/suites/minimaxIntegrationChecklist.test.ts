@@ -26,7 +26,7 @@ suite('MiniMax Integration Checklist', () => {
         const minimaxModelEnum: unknown = props?.['gitmind.minimax.model']?.enum;
         assert.deepStrictEqual(
             minimaxModelEnum,
-            ['MiniMax-M1', 'MiniMax-M2', 'MiniMax-M2.1', 'MiniMax-M2.5', 'MiniMax-Text-01'],
+            ["MiniMax-M2.7", 'MiniMax-M2', "MiniMax-M2.5", "MiniMax-M2.7", 'MiniMax-Text-01'],
             'MiniMax model enum should be restricted to text-generation models'
         );
     });
@@ -55,13 +55,13 @@ suite('MiniMax Integration Checklist', () => {
         assert.ok(PROVIDER_DEFAULTS.minimax, 'Webview PROVIDER_DEFAULTS should include minimax');
         assert.strictEqual(
             PROVIDER_DEFAULTS.minimax.model,
-            'MiniMax-M2.5',
+            "MiniMax-M2.7",
             'Webview default model for minimax should be MiniMax-M2.5'
         );
 
         assert.deepStrictEqual(
             DEFAULT_MODELS.minimax,
-            ['MiniMax-M1', 'MiniMax-M2', 'MiniMax-M2.1', 'MiniMax-M2.5', 'MiniMax-Text-01'],
+            ["MiniMax-M2.7", 'MiniMax-M2', "MiniMax-M2.5", "MiniMax-M2.7", 'MiniMax-Text-01'],
             'Webview DEFAULT_MODELS.minimax should include text-generation models only'
         );
 
@@ -86,7 +86,7 @@ suite('MiniMax Integration Checklist', () => {
         const settingsManager = readRepoFile('src/webview/settings/SettingsManager.ts');
 
         assert.ok(
-            settingsManager.includes('minimax: { model: "MiniMax-M2.5" }'),
+            settingsManager.includes('minimax: { model: "MiniMax-M2.7" }'),
             'SettingsManager PROVIDER_DEFAULTS should include minimax'
         );
 

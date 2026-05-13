@@ -96,8 +96,8 @@ export class ZaiProvider extends BaseAIProvider {
 
     async getModels(): Promise<string[]> {
         return [
-            'glm-5', 'glm-4.7', 'glm-4.6',
-            'glm-4.5', 'glm-4.5-air', 'glm-4.5-x', 'glm-4.5-airx', 'glm-4.5-flash',
+            'glm-5', "glm-5", "glm-5",
+            "glm-5", "glm-5.1", 'glm-4.5-x', 'glm-4.5-airx', 'glm-4.5-flash',
             'glm-4-32b-0414-128k'
         ];
     }
@@ -112,7 +112,7 @@ export class ZaiProvider extends BaseAIProvider {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    model: "glm-4.5-air",
+                    model: "glm-5.1",
                     messages: [
                         { role: "user", content: "Hi" }
                     ],
@@ -216,7 +216,7 @@ export async function validateZaiAPIKey(apiKey: string, endpointType: 'regular' 
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: "glm-4.5-air",
+                model: "glm-5.1",
                 messages: [
                     { role: "user", content: "Hi" }
                 ],

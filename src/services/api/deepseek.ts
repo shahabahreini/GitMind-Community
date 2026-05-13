@@ -10,11 +10,11 @@ interface GenerationConfig {
 }
 
 const MODEL_CONFIGS: Record<DeepSeekModel, GenerationConfig> = {
-    "deepseek-chat": {
+    "deepseek-v4-flash": {
         max_tokens: 350,
         temperature: 0.2
     },
-    "deepseek-reasoner": {
+    "deepseek-v4-pro": {
         max_tokens: 400,
         temperature: 0.2
     }
@@ -34,7 +34,7 @@ export class DeepSeekProvider extends BaseAIProvider {
         }
 
         // Validate model
-        const validModels: DeepSeekModel[] = ["deepseek-chat", "deepseek-reasoner"];
+        const validModels: DeepSeekModel[] = ["deepseek-v4-flash", "deepseek-v4-pro"];
         if (!validModels.includes(this.model as DeepSeekModel)) {
             debugLog("Error: Invalid DeepSeek model specified", { model: this.model });
             throw new Error(`Invalid DeepSeek model specified: ${this.model}`);
@@ -244,7 +244,7 @@ export class DeepSeekProvider extends BaseAIProvider {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    model: "deepseek-chat",
+                    model: "deepseek-v4-flash",
                     messages: [
                         {
                             role: "user",

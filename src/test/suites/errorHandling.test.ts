@@ -200,7 +200,7 @@ suite('Error Handling Tests', () => {
         const contextualError = new Error('Generation failed');
         const context = {
             provider: 'OpenAI',
-            model: 'gpt-4o',
+            model: "gpt-5.5-instant",
             operation: 'generateCommitMessage',
             diffSize: 1500,
             filesChanged: 3

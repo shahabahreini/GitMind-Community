@@ -7,20 +7,20 @@ export interface ProviderDefaults {
 }
 
 export const PROVIDER_DEFAULTS: ProviderDefaults = {
-  gemini: { model: "gemini-2.5-flash" },
+  gemini: { model: "gemini-3.1-flash" },
   huggingface: { model: "" },
   ollama: { model: "", url: "" },
-  mistral: { model: "mistral-large-latest" },
+  mistral: { model: "mistral-small-4" },
   cohere: { model: "command-r-plus" },
-  openai: { model: "gpt-4o-mini" },
+  openai: { model: "gpt-5.5-instant" },
   together: { model: "meta-llama/Llama-3.3-70B-Instruct-Turbo" },
   openrouter: { model: "google/gemma-3-27b-it:free" },
-  anthropic: { model: "claude-sonnet-4" },
-  minimax: { model: "MiniMax-M2.5" },
+  anthropic: { model: "claude-sonnet-4.6" },
+  minimax: { model: "MiniMax-M2.7" },
   copilot: { model: "auto" },
-  deepseek: { model: "deepseek-chat" },
-  grok: { model: "grok-3" },
-  groq: { model: "llama-3.3-70b-versatile" },
+  deepseek: { model: "deepseek-v4-flash" },
+  grok: { model: "grok-4.4" },
+  groq: { model: "meta-llama/llama-4-scout-17b-16e-instruct" },
   perplexity: { model: "llama-3.1-sonar-large-128k-online" },
   zai: { model: "glm-4.5-flash" },
   custom: { model: "" }
@@ -34,13 +34,13 @@ export const API_KEY_PROVIDERS = [
 export const NO_API_KEY_PROVIDERS = ['ollama', 'copilot', 'custom'];
 
 export const DEFAULT_MODELS = {
-  mistral: ['mistral-tiny', 'mistral-small', 'mistral-medium', 'mistral-large-latest'],
+  mistral: ['mistral-tiny', 'mistral-small', 'mistral-medium', "mistral-small-4"],
   cohere: [
     'command-a-03-2025',
-    'command-r-08-2024',
-    'command-r-plus-08-2024',
-    'aya-expanse-8b',
-    'aya-expanse-32b',
+    "command-a-reasoning",
+    "command-a",
+    "command-a",
+    "command-a",
     'command-r',
     'command-r-plus',
     'command',
@@ -63,8 +63,8 @@ export const DEFAULT_MODELS = {
     'o3',
     'o3-mini',
     'o1',
-    'gpt-4o',
-    'gpt-4o-mini',
+    "gpt-5.5-instant",
+    "gpt-5.5-instant",
     'gpt-4-turbo',
     'gpt-4',
     'gpt-3.5-turbo'
@@ -96,16 +96,16 @@ export const DEFAULT_MODELS = {
     'HuggingFaceH4/zephyr-7b-beta'
   ],
   grok: [
-    'grok-3',
+    "grok-4.4",
     'grok-2',
     'grok-1.5v',
     'grok-1.5'
   ],
   gemini: [
-    'gemini-2.5-pro',
-    'gemini-2.5-flash',
+    "gemini-3.1-pro",
+    "gemini-3.1-flash",
     'gemini-2.5-flash-preview',
-    'gemini-2.5-flash-lite',
+    "gemini-3.1-flash-lite",
     'gemini-2.5-flash-lite-preview'
   ],
   anthropic: [
@@ -118,10 +118,10 @@ export const DEFAULT_MODELS = {
     'claude-instant-1.2'
   ],
   minimax: [
-    'MiniMax-M1',
+    "MiniMax-M2.7",
     'MiniMax-M2',
-    'MiniMax-M2.1',
-    'MiniMax-M2.5',
+    "MiniMax-M2.5",
+    "MiniMax-M2.7",
     'MiniMax-Text-01'
   ],
   copilot: [
@@ -129,8 +129,8 @@ export const DEFAULT_MODELS = {
     'gpt-3.5-turbo',
     'gpt-4',
     'gpt-4-turbo',
-    'gpt-4o',
-    'gpt-4o-mini',
+    "gpt-5.5-instant",
+    "gpt-5.5-instant",
     'gpt-4.1',
     'gpt-5',
     'gpt-5-mini',
@@ -140,36 +140,36 @@ export const DEFAULT_MODELS = {
     'gpt-5.1-codex-mini',
     'claude-haiku-4.5',
     'claude-opus-4.1',
-    'claude-sonnet-4',
+    "claude-sonnet-4.6",
     'claude-sonnet-4.5',
-    'gemini-2.5-pro',
+    "gemini-3.1-pro",
     'gemini-3-pro',
-    'grok-code-fast-1',
+    "grok-4.3",
     'raptor-mini'
   ],
   deepseek: [
-    'deepseek-chat',
-    'deepseek-reasoner'
+    "deepseek-v4-flash",
+    "deepseek-v4-pro"
   ],
   zai: [
-    'glm-4.7',
-    'glm-4.6',
+    "glm-5",
+    "glm-5",
     'glm-4.6v',
     'glm-4.6v-flash',
     'glm-4.6v-flashx',
-    'glm-4.5',
+    "glm-5",
     'glm-4.5v',
     'glm-4.5-x',
     'glm-4.5-flash',
-    'glm-4.5-air',
+    "glm-5.1",
     'glm-4.5-airx',
     'glm-4-32b-0414-128k'
   ],
   groq: [
-    'llama-3.3-70b-versatile',
+    "meta-llama/llama-4-scout-17b-16e-instruct",
     'llama-3.1-8b-instant',
     'meta-llama/llama-4-scout-17b-16e-instruct',
-    'openai/gpt-oss-120b',
-    'openai/gpt-oss-20b'
+    "meta-llama/llama-4-scout-17b-16e-instruct",
+    "meta-llama/llama-4-scout-17b-16e-instruct"
   ]
 };

@@ -191,7 +191,7 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
     mistral: {
         requiresApiKey: true,
         validator: async (apiKey: string) => !!(await checkMistralRateLimits(apiKey)),
-        defaultModel: "mistral-large-latest",
+        defaultModel: "mistral-small-4",
         responseTime: 500
     },
     cohere: {
@@ -208,7 +208,7 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
     openai: {
         requiresApiKey: true,
         validator: validateOpenAIApiKey,
-        defaultModel: "gpt-4o",
+        defaultModel: "gpt-5.5-instant",
         responseTime: 550,
         rateLimits: {
             limit: 200,
@@ -241,7 +241,7 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
     anthropic: {
         requiresApiKey: true,
         validator: validateAnthropicApiKey,
-        defaultModel: "claude-sonnet-4",
+        defaultModel: "claude-sonnet-4.6",
         responseTime: 800,
         rateLimits: {
             limit: 1000,
@@ -266,14 +266,14 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
             const available = await isCopilotAvailable();
             return available ? await validateCopilotAccess() : { success: false, error: "GitHub Copilot not available" };
         },
-        defaultModel: "gpt-4o",
+        defaultModel: "gpt-5.5-instant",
         responseTime: 400,
         rateLimits: { limit: 0, remaining: 0, notes: "GitHub Copilot uses VS Code's built-in rate limiting" }
     },
     deepseek: {
         requiresApiKey: true,
         validator: validateDeepSeekAPIKey,
-        defaultModel: "deepseek-chat",
+        defaultModel: "deepseek-v4-flash",
         responseTime: 600,
         rateLimits: {
             limit: 10000,
@@ -284,7 +284,7 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
     grok: {
         requiresApiKey: true,
         validator: validateGrokAPIKey,
-        defaultModel: "grok-3",
+        defaultModel: "grok-4.4",
         responseTime: 550,
         rateLimits: {
             limit: 5000,
@@ -295,7 +295,7 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
     groq: {
         requiresApiKey: true,
         validator: validateGroqAPIKey,
-        defaultModel: "llama-3.3-70b-versatile",
+        defaultModel: "meta-llama/llama-4-scout-17b-16e-instruct",
         responseTime: 300,
         rateLimits: {
             limit: 30,
@@ -306,7 +306,7 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
     perplexity: {
         requiresApiKey: true,
         validator: validatePerplexityAPIKey,
-        defaultModel: "sonar-pro",
+        defaultModel: "gpt-5.5-computer",
         responseTime: 400,
         rateLimits: {
             limit: 20,
@@ -317,7 +317,7 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
     zai: {
         requiresApiKey: true,
         validator: validateZaiAPIKey,
-        defaultModel: "glm-4.5-air",
+        defaultModel: "glm-5.1",
         responseTime: 600,
         rateLimits: {
             limit: 0,
@@ -586,7 +586,7 @@ async function checkMistralRateLimits(apiKey: string): Promise<RateLimitComparis
                 "Authorization": `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                model: "mistral-small-latest",
+                model: "mistral-small-4",
                 messages: [{ role: "user", content: "Hi" }],
                 max_tokens: 1
             }),

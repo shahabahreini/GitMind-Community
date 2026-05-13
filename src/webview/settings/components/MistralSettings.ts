@@ -18,17 +18,17 @@ export class MistralSettings {
       'mistral-tiny',
       'mistral-small',
       'mistral-medium',
-      'mistral-large-latest',
+      "mistral-small-4",
       'open-mixtral-8x7b',
       'open-mistral-7b',
-      'mistral-small-latest'
+      "mistral-small-4"
     ];
 
     // Build the options HTML
     let optionsHtml = '';
 
     // Add the current saved model if it's not in the default list
-    const currentModel = this._settings.mistral?.model || 'mistral-large-latest';
+    const currentModel = this._settings.mistral?.model || "mistral-small-4";
     if (!defaultModels.includes(currentModel)) {
       optionsHtml += `<option value="${currentModel}" selected>${currentModel}</option>`;
     }

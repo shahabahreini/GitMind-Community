@@ -215,7 +215,7 @@ suite('Webview Components Tests', () => {
             debug: false,
             openai: {
                 apiKey: unsafeInput,
-                model: 'gpt-4o'
+                model: "gpt-5.5-instant"
             }
         };
 
@@ -275,7 +275,7 @@ suite('Webview Components Tests', () => {
         const testState = {
             selectedProvider: 'anthropic',
             apiKey: 'test-key',
-            model: 'claude-3-5-sonnet'
+            model: "claude-sonnet-4.6"
         };
 
         mockWebview.setState(testState);

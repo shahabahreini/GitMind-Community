@@ -81,7 +81,7 @@ suite('Settings UI Tests', () => {
                     case 'openai.apiKey':
                         return 'test-api-key';
                     case 'openai.model':
-                        return 'gpt-4o';
+                        return "gpt-5.5-instant";
                     default:
                         return defaultValue;
                 }
@@ -102,7 +102,7 @@ suite('Settings UI Tests', () => {
             assert.strictEqual(settings.apiProvider, 'openai');
             assert.strictEqual(settings.debug, false);
             assert.strictEqual(settings.openai.apiKey, 'test-api-key');
-            assert.strictEqual(settings.openai.model, 'gpt-4o');
+            assert.strictEqual(settings.openai.model, "gpt-5.5-instant");
         } finally {
             vscode.workspace.getConfiguration = originalGetConfiguration;
             invalidateConfigCache();
@@ -138,11 +138,11 @@ suite('Settings UI Tests', () => {
                     debug: true,
                     gemini: {
                         apiKey: 'new-gemini-key',
-                        model: 'gemini-2.5-pro'
+                        model: "gemini-3.1-pro"
                     },
                     openai: {
                         apiKey: '',
-                        model: 'gpt-4o'
+                        model: "gpt-5.5-instant"
                     },
                     // Include all required provider settings
                     huggingface: { apiKey: '', model: '' },
@@ -199,7 +199,7 @@ suite('Settings UI Tests', () => {
                 assert.strictEqual(savedSettings['apiProvider'], 'gemini');
                 assert.strictEqual(savedSettings['debug'], true);
                 assert.strictEqual(savedSettings['gemini.apiKey'], 'new-gemini-key');
-                assert.strictEqual(savedSettings['gemini.model'], 'gemini-2.5-pro');
+                assert.strictEqual(savedSettings['gemini.model'], "gemini-3.1-pro");
                 assert.strictEqual(savedSettings['commit.targetLanguage'], 'spanish');
 
                 return true;
@@ -254,7 +254,7 @@ suite('Settings UI Tests', () => {
                 getSettings: async () => ({
                     apiProvider: 'openai',
                     debug: false,
-                    openai: { apiKey: 'test', model: 'gpt-4o' }
+                    openai: { apiKey: 'test', model: "gpt-5.5-instant" }
                 })
             };
 
@@ -405,8 +405,8 @@ suite('Settings UI Tests', () => {
             // Check what the actual default is from package.json
             assert.strictEqual(settings.apiProvider, 'gemini'); // Default provider from package.json
             assert.strictEqual(settings.debug, false);
-            assert.strictEqual(settings.gemini.model, 'gemini-2.5-flash'); // Default from SettingsManager
-            assert.strictEqual(settings.openai.model, 'gpt-4o');
+            assert.strictEqual(settings.gemini.model, "gemini-3.1-flash"); // Default from SettingsManager
+            assert.strictEqual(settings.openai.model, "gpt-5.5-instant");
         } finally {
             vscode.workspace.getConfiguration = originalGetConfiguration;
             invalidateConfigCache();

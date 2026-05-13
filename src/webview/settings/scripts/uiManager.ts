@@ -25,7 +25,7 @@ const PROVIDER_DISPLAY_CONFIG: Record<string, ProviderDisplayConfig> = {
   },
   mistral: {
     displayName: "Mistral",
-    model: "mistral-large-latest",
+    model: "mistral-small-4",
     apiConfigured: (s) => !!s.mistral?.apiKey
   },
   cohere: {
@@ -50,7 +50,7 @@ const PROVIDER_DISPLAY_CONFIG: Record<string, ProviderDisplayConfig> = {
   },
   anthropic: {
     displayName: "Anthropic",
-    model: "claude-sonnet-4",
+    model: "claude-sonnet-4.6",
     apiConfigured: (s) => !!s.anthropic?.apiKey
   },
   minimax: {
@@ -60,27 +60,27 @@ const PROVIDER_DISPLAY_CONFIG: Record<string, ProviderDisplayConfig> = {
   },
   copilot: {
     displayName: "GitHub Copilot",
-    model: "gpt-4o",
+    model: "gpt-5.5-instant",
     apiConfigured: () => true
   },
   deepseek: {
     displayName: "DeepSeek",
-    model: "deepseek-chat",
+    model: "deepseek-v4-flash",
     apiConfigured: (s) => !!s.deepseek?.apiKey
   },
   grok: {
     displayName: "Grok",
-    model: "grok-3",
+    model: "grok-4.4",
     apiConfigured: (s) => !!s.grok?.apiKey
   },
   groq: {
     displayName: "Groq",
-    model: "llama-3.3-70b-versatile",
+    model: "meta-llama/llama-4-scout-17b-16e-instruct",
     apiConfigured: (s) => !!s.groq?.apiKey
   },
   perplexity: {
     displayName: "Perplexity",
-    model: "sonar-pro",
+    model: "gpt-5.5-computer",
     apiConfigured: (s) => !!s.perplexity?.apiKey
   },
   zai: {
@@ -189,18 +189,18 @@ export function getUiManagerScript(): string {
         gemini: { displayName: "Gemini", defaultModel: "gemini-2.5-flash-preview-04-17", getApiConfigured: (s) => !!s.gemini?.apiKey },
         huggingface: { displayName: "Hugging Face", defaultModel: "Not configured", getApiConfigured: (s) => !!s.huggingface?.apiKey },
         ollama: { displayName: "Ollama", defaultModel: "Not configured", getApiConfigured: (s) => !!s.ollama?.url },
-        mistral: { displayName: "Mistral", defaultModel: "mistral-large-latest", getApiConfigured: (s) => !!s.mistral?.apiKey },
+        mistral: { displayName: "Mistral", defaultModel: "mistral-small-4", getApiConfigured: (s) => !!s.mistral?.apiKey },
         cohere: { displayName: "Cohere", defaultModel: "command-a-03-2025", getApiConfigured: (s) => !!s.cohere?.apiKey },
         openai: { displayName: "OpenAI", defaultModel: "gpt-3.5-turbo", getApiConfigured: (s) => !!s.openai?.apiKey },
         together: { displayName: "Together AI", defaultModel: "meta-llama/Llama-3.3-70B-Instruct-Turbo", getApiConfigured: (s) => !!s.together?.apiKey },
         openrouter: { displayName: "OpenRouter", defaultModel: "google/gemma-3-27b-it:free", getApiConfigured: (s) => !!s.openrouter?.apiKey },
-        anthropic: { displayName: "Anthropic", defaultModel: "claude-sonnet-4", getApiConfigured: (s) => !!s.anthropic?.apiKey },
+        anthropic: { displayName: "Anthropic", defaultModel: "claude-sonnet-4.6", getApiConfigured: (s) => !!s.anthropic?.apiKey },
         minimax: { displayName: "MiniMax", defaultModel: "MiniMax-M2", getApiConfigured: (s) => !!s.minimax?.apiKey },
-        copilot: { displayName: "GitHub Copilot", defaultModel: "gpt-4o", getApiConfigured: () => true },
-        deepseek: { displayName: "DeepSeek", defaultModel: "deepseek-chat", getApiConfigured: (s) => !!s.deepseek?.apiKey },
-        grok: { displayName: "Grok", defaultModel: "grok-3", getApiConfigured: (s) => !!s.grok?.apiKey },
-        groq: { displayName: "Groq", defaultModel: "llama-3.3-70b-versatile", getApiConfigured: (s) => !!s.groq?.apiKey },
-        perplexity: { displayName: "Perplexity", defaultModel: "sonar-pro", getApiConfigured: (s) => !!s.perplexity?.apiKey },
+        copilot: { displayName: "GitHub Copilot", defaultModel: "gpt-5.5-instant", getApiConfigured: () => true },
+        deepseek: { displayName: "DeepSeek", defaultModel: "deepseek-v4-flash", getApiConfigured: (s) => !!s.deepseek?.apiKey },
+        grok: { displayName: "Grok", defaultModel: "grok-4.4", getApiConfigured: (s) => !!s.grok?.apiKey },
+        groq: { displayName: "Groq", defaultModel: "meta-llama/llama-4-scout-17b-16e-instruct", getApiConfigured: (s) => !!s.groq?.apiKey },
+        perplexity: { displayName: "Perplexity", defaultModel: "gpt-5.5-computer", getApiConfigured: (s) => !!s.perplexity?.apiKey },
         zai: { displayName: "Z.ai", defaultModel: "glm-4.5-flash", getApiConfigured: (s) => !!s.zai?.apiKey },
         custom: { displayName: "Custom API", defaultModel: "Not configured", getApiConfigured: (s) => !!(s.custom?.baseUrl && s.custom?.endpoint) }
       };
