@@ -762,6 +762,26 @@ export class ScriptManager {
                 const errorIndicator = dropdown.querySelector('.dropdown-error');
                 const emptyIndicator = dropdown.querySelector('.dropdown-empty');
 
+                // Wire the chevron toggle button rendered by ModelSettingsRenderer
+                const toggleButton = document.getElementById(config.inputId + '-toggle');
+                if (toggleButton) {
+                    toggleButton.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (isOpen) {
+                            hideDropdown();
+                        } else if (allModels.length > 0) {
+                            const query = modelInput.value.toLowerCase().trim();
+                            filteredModels = query
+                                ? allModels.filter(m => m.toLowerCase().includes(query))
+                                : allModels.slice(0, 50);
+                            renderFilteredModels();
+                            showDropdown();
+                        }
+                        modelInput.focus();
+                    });
+                }
+
                 let allModels = [];
                 let filteredModels = [];
                 let selectedIndex = -1;

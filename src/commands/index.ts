@@ -471,6 +471,9 @@ async function handleLoadModels(
         case 'openai':
           commandSuffix = 'openaiModelsLoaded';
           break;
+        case 'minimax':
+          commandSuffix = 'minimaxModelsLoaded';
+          break;
         case 'zai':
           commandSuffix = 'zaiModelsLoaded';
           break;
@@ -530,6 +533,9 @@ async function handleLoadModels(
           case 'openai':
             commandSuffix = 'openaiModelsLoaded';
             break;
+          case 'minimax':
+            commandSuffix = 'minimaxModelsLoaded';
+            break;
           case 'zai':
             commandSuffix = 'zaiModelsLoaded';
             break;
@@ -580,6 +586,9 @@ async function handleLoadModels(
             break;
           case 'openai':
             commandSuffix = 'openaiModelsLoaded';
+            break;
+          case 'minimax':
+            commandSuffix = 'minimaxModelsLoaded';
             break;
           case 'zai':
             commandSuffix = 'zaiModelsLoaded';

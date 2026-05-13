@@ -148,7 +148,7 @@ export class ModelSettingsRenderer extends BaseRenderer {
                             <div class="dropdown-loading" style="display: none; padding: 12px; text-align: center; font-style: italic; opacity: 0.7;">Loading models...</div>
                             <div class="dropdown-error" style="display: none; padding: 12px; text-align: center; color: var(--vscode-errorForeground);"></div>
                             <div class="dropdown-empty" style="display: none; padding: 12px; text-align: center; opacity: 0.7;">No models found</div>
-                            <div class="model-list-container"></div>
+                            <ul class="model-list"></ul>
                         </div>
                     </div>
                     <div class="description">

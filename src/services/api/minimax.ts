@@ -13,7 +13,12 @@ interface GenerationConfig {
 }
 
 const MODEL_CONFIGS: Record<MiniMaxModel, GenerationConfig> = {
-    "MiniMax-M2": {
+    "MiniMax-M2.7": {
+        max_tokens: 350,
+        temperature: 0.2,
+        top_p: 0.8,
+    },
+    "MiniMax-M2.7-highspeed": {
         max_tokens: 350,
         temperature: 0.2,
         top_p: 0.8,
@@ -23,12 +28,22 @@ const MODEL_CONFIGS: Record<MiniMaxModel, GenerationConfig> = {
         temperature: 0.2,
         top_p: 0.8,
     },
-    "MiniMax-M2.7": {
+    "MiniMax-M2.5-highspeed": {
         max_tokens: 350,
         temperature: 0.2,
         top_p: 0.8,
     },
-    "MiniMax-Text-01": {
+    "MiniMax-M2.1": {
+        max_tokens: 350,
+        temperature: 0.2,
+        top_p: 0.8,
+    },
+    "MiniMax-M2.1-highspeed": {
+        max_tokens: 350,
+        temperature: 0.2,
+        top_p: 0.8,
+    },
+    "MiniMax-M2": {
         max_tokens: 350,
         temperature: 0.2,
         top_p: 0.8,
@@ -71,7 +86,7 @@ export class MiniMaxProvider extends BaseAIProvider {
         }
 
         const selectedModel = this.model as MiniMaxModel;
-        const validModels: MiniMaxModel[] = ["MiniMax-M2", "MiniMax-M2.5", "MiniMax-M2.7", "MiniMax-Text-01"];
+        const validModels: MiniMaxModel[] = ["MiniMax-M2", "MiniMax-M2.1", "MiniMax-M2.1-highspeed", "MiniMax-M2.5", "MiniMax-M2.5-highspeed", "MiniMax-M2.7", "MiniMax-M2.7-highspeed"];
         if (!validModels.includes(selectedModel)) {
             debugLog("Error: Invalid MiniMax model specified", { model: this.model });
             throw new Error(`Invalid MiniMax model specified: ${this.model}`);
@@ -172,9 +187,52 @@ export class MiniMaxProvider extends BaseAIProvider {
     }
 
     async getModels(): Promise<string[]> {
-        // MiniMax docs list supported Anthropic-compatible text models explicitly.
-        // There is no public models endpoint documented for the Anthropic-compatible gateway.
-        return ["MiniMax-M2", "MiniMax-M2.5", "MiniMax-M2.7", "MiniMax-Text-01"];
+        const MINIMAX_OPENAI_BASE_URL = "https://api.minimax.io/v1";
+        const fallback = ["MiniMax-M2.7", "MiniMax-M2.7-highspeed", "MiniMax-M2.5", "MiniMax-M2.5-highspeed", "MiniMax-M2.1", "MiniMax-M2.1-highspeed", "MiniMax-M2"];
+
+        try {
+            debugLog("Fetching MiniMax models from API...");
+
+            const response = await loggedFetch(`${MINIMAX_OPENAI_BASE_URL}/models`, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${this.apiKey}`,
+                    "Accept": "application/json",
+                }
+            }, { provider: "minimax", operation: "models.list" });
+
+            if (!response.ok) {
+                debugLog(`MiniMax models API returned ${response.status}, using fallback list`);
+                return fallback;
+            }
+
+            const data = await response.json();
+
+            if (!data || !Array.isArray(data.data) || data.data.length === 0) {
+                debugLog("MiniMax models API returned empty or invalid response, using fallback list");
+                return fallback;
+            }
+
+            const modelIds: string[] = data.data
+                .map((m: unknown) => {
+                    if (typeof m === "object" && m !== null && typeof (m as { id?: unknown }).id === "string") {
+                        return (m as { id: string }).id;
+                    }
+                    return null;
+                })
+                .filter((id: string | null): id is string => id !== null && id.trim().length > 0);
+
+            if (modelIds.length === 0) {
+                debugLog("No valid model IDs parsed from MiniMax response, using fallback list");
+                return fallback;
+            }
+
+            debugLog(`Successfully fetched ${modelIds.length} MiniMax models:`, modelIds);
+            return modelIds;
+        } catch (error) {
+            debugLog("Error fetching MiniMax models, using fallback list:", error);
+            return fallback;
+        }
     }
 
     async validateApiKey(): Promise<boolean | { success: boolean; error?: string; warning?: string; troubleshooting?: string }> {
@@ -323,6 +381,7 @@ export async function validateMiniMaxAPIKey(
     }
 }
 
-export async function fetchMiniMaxModels(_apiKey: string): Promise<string[]> {
-    return ["MiniMax-M2", "MiniMax-M2.5", "MiniMax-M2.7", "MiniMax-M2.7", "MiniMax-Text-01"];
+export async function fetchMiniMaxModels(apiKey: string): Promise<string[]> {
+    const provider = new MiniMaxProvider(apiKey, "MiniMax-M2");
+    return provider.getModels();
 }

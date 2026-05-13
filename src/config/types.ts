@@ -85,7 +85,7 @@ export type GeminiModel =
 export type AnthropicModel =
     | "claude-opus-4.7" | "claude-sonnet-4.6" | "claude-haiku-4.5";
 
-export type MiniMaxModel = "MiniMax-M2.7" | "MiniMax-M2.5" | "MiniMax-M2" | "MiniMax-Text-01";
+export type MiniMaxModel = "MiniMax-M2.7" | "MiniMax-M2.7-highspeed" | "MiniMax-M2.5" | "MiniMax-M2.5-highspeed" | "MiniMax-M2.1" | "MiniMax-M2.1-highspeed" | "MiniMax-M2";
 
 export type KnownCopilotModel =
     | "auto"
@@ -113,7 +113,10 @@ export type PerplexityModel =
     | "gpt-5.5-computer" | "gpt-5.4-thinking" | "sonar-pro" | "sonar-reasoning-pro";
 
 export type ZaiModel =
-    | "glm-5.1" | "glm-5v-turbo" | "glm-5" | "glm-5-turbo";
+    | "glm-5.1" | "glm-5" | "glm-5-turbo"
+    | "glm-4.7" | "glm-4.7-flashx" | "glm-4.6" | "glm-4.5"
+    | "glm-4.5-x" | "glm-4.5-air" | "glm-4.5-airx"
+    | "glm-4-32b-0414-128k" | "glm-4.7-flash" | "glm-4.5-flash";
 
 // Configuration interfaces
 export interface BaseProviderConfig {

@@ -161,13 +161,15 @@ export class ProviderConfig {
                     tooltip: '',
                     loadButtonText: 'Load Available Models',
                     loadButtonId: 'loadMiniMaxModels',
-                    loadButtonDisabled: true,
-                    loadButtonDisabledTooltip: "MiniMax won't support model fetch yet!",
+                    loadCommand: 'gitmind.loadMiniMaxModels',
                     options: [
                         { value: 'MiniMax-M2.7', label: 'MiniMax M2.7' },
+                        { value: 'MiniMax-M2.7-highspeed', label: 'MiniMax M2.7 Highspeed' },
                         { value: 'MiniMax-M2.5', label: 'MiniMax M2.5' },
-                        { value: 'MiniMax-M2', label: 'MiniMax M2' },
-                        { value: 'MiniMax-Text-01', label: 'MiniMax Text-01' }
+                        { value: 'MiniMax-M2.5-highspeed', label: 'MiniMax M2.5 Highspeed' },
+                        { value: 'MiniMax-M2.1', label: 'MiniMax M2.1' },
+                        { value: 'MiniMax-M2.1-highspeed', label: 'MiniMax M2.1 Highspeed' },
+                        { value: 'MiniMax-M2', label: 'MiniMax M2' }
                     ]
                 }
             ]
@@ -563,9 +565,18 @@ export class ProviderConfig {
                     loadCommand: 'gitmind.loadZaiModels',
                     options: [
                         { value: 'glm-5.1', label: 'GLM 5.1' },
-                        { value: 'glm-5v-turbo', label: 'GLM 5V Turbo' },
                         { value: 'glm-5', label: 'GLM 5' },
-                        { value: 'glm-5-turbo', label: 'GLM 5 Turbo' }
+                        { value: 'glm-5-turbo', label: 'GLM 5 Turbo' },
+                        { value: 'glm-4.7', label: 'GLM 4.7' },
+                        { value: 'glm-4.7-flashx', label: 'GLM 4.7 FlashX' },
+                        { value: 'glm-4.6', label: 'GLM 4.6' },
+                        { value: 'glm-4.5', label: 'GLM 4.5' },
+                        { value: 'glm-4.5-x', label: 'GLM 4.5 X' },
+                        { value: 'glm-4.5-air', label: 'GLM 4.5 Air' },
+                        { value: 'glm-4.5-airx', label: 'GLM 4.5 AirX' },
+                        { value: 'glm-4-32b-0414-128k', label: 'GLM 4 32B (0414-128K)' },
+                        { value: 'glm-4.7-flash', label: 'GLM 4.7 Flash' },
+                        { value: 'glm-4.5-flash', label: 'GLM 4.5 Flash' }
                     ]
                 }
             ]

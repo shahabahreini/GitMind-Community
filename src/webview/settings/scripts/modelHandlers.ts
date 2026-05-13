@@ -265,6 +265,14 @@ export function getModelEventListenersScript(): string {
       handleModelLoad('anthropic', ${JSON.stringify(DEFAULT_MODELS.anthropic)}, 'gitmind.loadAnthropicModels');
     });
 
+    document.getElementById('loadMiniMaxModels')?.addEventListener('click', () => {
+      if (!isProUser()) {
+        showProUpgradeMessage('Load Available Models');
+        return;
+      }
+      handleModelLoad('minimax', ${JSON.stringify(DEFAULT_MODELS.minimax)}, 'gitmind.loadMiniMaxModels');
+    });
+
     document.getElementById('loadOpenAIModels')?.addEventListener('click', () => {
       if (!isProUser()) {
         showProUpgradeMessage('Load Available Models');
