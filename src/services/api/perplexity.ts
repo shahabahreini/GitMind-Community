@@ -203,9 +203,47 @@ export class PerplexityProvider extends BaseAIProvider {
     }
 
     async getModels(): Promise<string[]> {
-        // Perplexity doesn't have a public models endpoint that lists available models dynamically
-        // Return hardcoded list of known models
-        return Object.keys(MODEL_CONFIGS);
+        try {
+            debugLog("Fetching Perplexity models from API (GET /v1/models)...");
+
+            const response = await loggedFetch(`${PERPLEXITY_BASE_URL}/v1/models`, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${this.apiKey}`,
+                    "Accept": "application/json"
+                }
+            }, { provider: "perplexity", operation: "models.list" });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                debugLog(`Perplexity models API error: ${response.status} - ${errorText}`);
+                throw new Error(`Failed to fetch Perplexity models (${response.status})`);
+            }
+
+            const data = await response.json();
+            debugLog("Perplexity models API response:", data);
+
+            // Response follows OpenAI list format: { object: 'list', data: [{ id, ... }] }
+            if (!data.data || !Array.isArray(data.data)) {
+                debugLog("Invalid Perplexity models response structure");
+                throw new Error("Invalid response format from Perplexity models API");
+            }
+
+            const modelIds: string[] = data.data
+                .map((model: any) => model?.id)
+                .filter((id: any) => id && typeof id === "string");
+
+            if (modelIds.length === 0) {
+                throw new Error("No models returned from Perplexity models API");
+            }
+
+            debugLog(`Successfully fetched ${modelIds.length} Perplexity models:`, modelIds);
+            return modelIds;
+        } catch (error) {
+            debugLog("Error fetching Perplexity models, falling back to defaults:", error);
+            // Graceful fallback to known good models
+            return Object.keys(MODEL_CONFIGS);
+        }
     }
 
     async validateApiKey(): Promise<boolean | { success: boolean; error?: string; warning?: string; troubleshooting?: string }> {
@@ -373,3 +411,7 @@ export async function validatePerplexityAPIKey(apiKey: string): Promise<{ succes
     }
 }
 
+export async function fetchPerplexityModels(apiKey: string): Promise<string[]> {
+    const provider = new PerplexityProvider(apiKey, "");
+    return provider.getModels();
+}

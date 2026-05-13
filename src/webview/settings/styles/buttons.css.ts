@@ -572,5 +572,63 @@ export function getButtonStyles(): string {
           animation: none;
         }
       }
+      /* Model Loading Specific Styles */
+      .model-select-container {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 4px;
+      }
+
+      .model-select-container .searchable-select-container {
+        flex: 1;
+      }
+
+      .load-models-inline {
+        flex-shrink: 0;
+        white-space: nowrap;
+        background-color: var(--vscode-button-secondaryBackground, rgba(128, 128, 128, 0.1));
+        color: var(--vscode-foreground);
+        border: 1px solid rgba(128, 128, 128, 0.15);
+      }
+
+      .load-models-inline:hover:not([disabled]) {
+        background-color: var(--vscode-button-secondaryHoverBackground, rgba(128, 128, 128, 0.2));
+        border-color: var(--vscode-focusBorder, rgba(0, 122, 204, 0.4));
+      }
+
+      /* Load Models Button in Searchable Dropdown */
+      .load-models-btn {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: transparent !important;
+        border: none !important;
+        border-radius: 4px !important;
+        cursor: pointer !important;
+        padding: 4px !important;
+        color: var(--vscode-icon-foreground) !important;
+        transition: all 0.2s ease !important;
+        width: 28px !important;
+        height: 28px !important;
+        opacity: 0.8 !important;
+        box-shadow: none !important;
+      }
+
+      .load-models-btn:hover:not(:disabled) {
+        background: rgba(128, 128, 128, 0.15) !important;
+        opacity: 1 !important;
+        color: var(--vscode-focusBorder) !important;
+      }
+
+      .load-models-btn.loading svg {
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
     `;
 }

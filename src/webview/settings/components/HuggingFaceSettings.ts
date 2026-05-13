@@ -80,8 +80,7 @@ export class HuggingFaceSettings {
           </div>
         </div>
         <div class="description">
-          Popular models: microsoft/DialoGPT-medium, facebook/blenderbot-400M-distill<br>
-          <small>Click the refresh button to load available models from Hugging Face</small>
+          Popular models: microsoft/DialoGPT-medium, facebook/blenderbot-400M-distill
         </div>
       </div>
     </div>`;

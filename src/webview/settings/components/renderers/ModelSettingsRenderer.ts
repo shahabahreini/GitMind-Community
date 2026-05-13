@@ -137,7 +137,7 @@ export class ModelSettingsRenderer extends BaseRenderer {
                             <button type="button" 
                                     id="${field.loadButtonId}" 
                                     class="dropdown-toggle load-models-btn" 
-                                    title="Load available models from ${providerName}">
+                                    data-tooltip="Default popular models shown. Click the refresh button to load all available models from ${providerName}.">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
                                     <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
@@ -150,9 +150,6 @@ export class ModelSettingsRenderer extends BaseRenderer {
                             <div class="dropdown-empty" style="display: none; padding: 12px; text-align: center; opacity: 0.7;">No models found</div>
                             <ul class="model-list"></ul>
                         </div>
-                    </div>
-                    <div class="description">
-                        Default popular models shown. Click the refresh button to load all available models from ${providerName}.
                     </div>
                 </div>`
             );
@@ -191,14 +188,12 @@ export class ModelSettingsRenderer extends BaseRenderer {
                 field.tooltip,
                 `<div class="model-select-container">
                     ${FormUtils.createSearchableSelect(field.id, selectOptions, `Search ${field.label.toLowerCase()}...`, isLoadDisabled)}
-                    <button id="${field.loadButtonId}" class="button small load-models-inline" ${isLoadDisabled ? 'disabled title="' + loadDisabledTooltip.replace(/"/g, '&quot;') + '"' : ''}>
+                    <button id="${field.loadButtonId}" 
+                            class="button small load-models-inline" 
+                            ${isLoadDisabled ? 'disabled' : ''} 
+                            data-tooltip="${isLoadDisabled ? loadDisabledTooltip : `Default models shown. Click &quot;${field.loadButtonText}&quot; to fetch all models that support chat completion.`}">
                         ${field.loadButtonText}
                     </button>
-                    <div class="description">
-                        ${isLoadDisabled
-                    ? loadDisabledTooltip
-                    : `Default models shown. Click "${field.loadButtonText}" to fetch all models that support chat completion.`}
-                    </div>
                 </div>`
             );
         }

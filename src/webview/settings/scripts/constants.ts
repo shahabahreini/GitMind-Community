@@ -173,9 +173,10 @@ export const DEFAULT_MODELS = {
     'meta-llama/llama-4-scout-17b-16e-instruct'
   ],
   perplexity: [
-    'gpt-5.5-computer',
-    'gpt-5.4-thinking',
     'sonar-pro',
-    'sonar-reasoning-pro'
+    'sonar-reasoning-pro',
+    'sonar',
+    'sonar-reasoning',
+    'r1-1776'
   ]
 };

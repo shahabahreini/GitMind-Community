@@ -25,13 +25,18 @@ export function getTooltipStyles(): string {
         content: attr(data-tooltip);
         background-color: var(--vscode-editor-background);
         color: var(--vscode-foreground);
-        padding: 6px 10px;
-        border-radius: 4px;
-        white-space: nowrap;
-        font-size: 12px;
-        margin-bottom: 5px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        padding: 8px 12px;
+        border-radius: 6px;
+        white-space: normal;
+        max-width: 250px;
+        width: max-content;
+        min-width: 150px;
+        font-size: 11px;
+        line-height: 1.4;
+        margin-bottom: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
         border: 1px solid var(--vscode-panel-border);
+        text-align: center;
     }
     
     /* Tooltip arrow */

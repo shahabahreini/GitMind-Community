@@ -28,6 +28,7 @@ import { fetchOpenRouterModels } from "../services/api/openrouter";
 import { fetchCopilotModels } from "../services/api/copilot";
 import { fetchOpenAIModels } from "../services/api/openai";
 import { fetchZaiModels } from "../services/api/zai";
+import { fetchPerplexityModels } from "../services/api/perplexity";
 import { PromptManager } from "../services/promptManager";
 import { telemetryService } from "../services/telemetry/telemetryService";
 import { SecureKeyManager } from "../services/encryption/SecureKeyManager";
@@ -412,7 +413,7 @@ function clampCommitBodyDescription(description: string, maxBodyLines?: number):
 }
 
 async function handleLoadModels(
-  modelType: 'mistral' | 'huggingface' | 'cohere' | 'together' | 'openrouter' | 'grok' | 'groq' | 'deepseek' | 'gemini' | 'anthropic' | 'minimax' | 'openai' | 'zai',
+  modelType: 'mistral' | 'huggingface' | 'cohere' | 'together' | 'openrouter' | 'grok' | 'groq' | 'deepseek' | 'gemini' | 'anthropic' | 'minimax' | 'openai' | 'zai' | 'perplexity',
   fetchFunction: (apiKey: string) => Promise<any[]>
 ): Promise<void> {
   // Prevent duplicate concurrent calls for the same provider
@@ -1025,6 +1026,10 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
 
     vscode.commands.registerCommand("gitmind.loadZaiModels", () =>
       handleLoadModels('zai', fetchZaiModels)
+    ),
+
+    vscode.commands.registerCommand("gitmind.loadPerplexityModels", () =>
+      handleLoadModels('perplexity', fetchPerplexityModels)
     ),
 
     vscode.commands.registerCommand("gitmind.loadCopilotModels", handleLoadCopilotModels),

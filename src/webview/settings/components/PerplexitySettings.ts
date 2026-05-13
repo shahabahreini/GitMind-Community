@@ -10,6 +10,19 @@ export class PerplexitySettings {
 
   public render(): string {
     const apiKeyValue = this._settings.perplexity?.apiKey || "";
+    const currentModel = this._settings.perplexity?.model || "sonar-pro";
+
+    const defaultModels = [
+      { value: "sonar-pro", label: "Sonar Pro" },
+      { value: "sonar-reasoning-pro", label: "Sonar Reasoning Pro" },
+      { value: "sonar", label: "Sonar" },
+      { value: "sonar-reasoning", label: "Sonar Reasoning" },
+      { value: "r1-1776", label: "R1-1776" }
+    ];
+
+    const optionsHtml = defaultModels
+      .map(m => `<option value="${m.value}" ${m.value === currentModel ? "selected" : ""}>${m.label}</option>`)
+      .join("");
 
     return `
     <div id="perplexitySettings" class="api-settings ${this._settings.apiProvider === "perplexity" ? "" : "hidden"}">
@@ -23,24 +36,15 @@ export class PerplexitySettings {
     )}
       <div class="form-group">
         <label for="perplexityModel">Model</label>
-        <select id="perplexityModel">
-          <optgroup label="Latest Models (Recommended)">
-            <option value="gpt-5.5-computer" ${this._settings.perplexity?.model === "gpt-5.5-computer" ? "selected" : ""}>Sonar Pro (Most Capable)</option>
-            <option value="gpt-5.4-thinking" ${this._settings.perplexity?.model === "gpt-5.4-thinking" ? "selected" : ""}>Sonar Reasoning (Advanced Reasoning)</option>
-            <option value="gpt-5.5-computer" ${this._settings.perplexity?.model === "gpt-5.5-computer" ? "selected" : ""}>Sonar (General Purpose)</option>
-          </optgroup>
-          <optgroup label="Chat Models">
-            <option value="llama-3.1-sonar-small-128k-chat" ${this._settings.perplexity?.model === "llama-3.1-sonar-small-128k-chat" ? "selected" : ""}>Llama 3.1 Sonar Small Chat (Efficient)</option>
-            <option value="llama-3.1-sonar-large-128k-chat" ${this._settings.perplexity?.model === "llama-3.1-sonar-large-128k-chat" ? "selected" : ""}>Llama 3.1 Sonar Large Chat (Large Model)</option>
-          </optgroup>
-          <optgroup label="Online Models">
-            <option value="llama-3.1-sonar-huge-128k-online" ${this._settings.perplexity?.model === "llama-3.1-sonar-huge-128k-online" ? "selected" : ""}>Llama 3.1 Sonar Huge Online (Largest with Web Access)</option>
-            <option value="llama-3.1-sonar-small-128k-online" ${this._settings.perplexity?.model === "llama-3.1-sonar-small-128k-online" ? "selected" : ""}>Llama 3.1 Sonar Small Online (Efficient with Web)</option>
-            <option value="llama-3.1-sonar-large-128k-online" ${this._settings.perplexity?.model === "llama-3.1-sonar-large-128k-online" ? "selected" : ""}>Llama 3.1 Sonar Large Online (Large with Web)</option>
-          </optgroup>
-        </select>
-        <div class="description">
-          Choose the Perplexity model that fits your needs. Latest models offer advanced reasoning and web search capabilities, while online models provide real-time web access for current information.
+        <div class="model-select-container">
+          <select id="perplexityModel">
+            ${optionsHtml}
+          </select>
+          <button id="loadPerplexityModels"
+                  class="button small load-models-inline"
+                  data-tooltip="Default models shown. Click &quot;Load Available Models&quot; to fetch all models available on the Perplexity Agent API.">
+            Load Available Models
+          </button>
         </div>
       </div>
     </div>`;

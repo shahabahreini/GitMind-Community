@@ -29,10 +29,7 @@ export class DeepSeekSettings {
             <option value="deepseek-v4-pro" ${this._settings.deepseek?.model === "deepseek-v4-pro" ? "selected" : ""}>deepseek-reasoner</option>
           </optgroup>
         </select>
-        <button id="loadDeepSeekModels" class="button small load-models-inline">Load Available Models</button>
-        <div class="description">
-          Default models shown. Click "Load Available Models" to fetch all available models from DeepSeek API.
-        </div>
+        <button id="loadDeepSeekModels" class="button small load-models-inline" data-tooltip="Default models shown. Click &quot;Load Available Models&quot; to fetch all available models from DeepSeek API.">Load Available Models</button>
       </div>
     </div>`;
   }

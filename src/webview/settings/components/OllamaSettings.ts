@@ -46,8 +46,7 @@ export class OllamaSettings {
           </div>
         </div>
         <div class="description">
-          Examples: mistral, llama2, codellama, phi4, qwen2.5-coder<br>
-          <small>Click the refresh button to load available models from your Ollama instance</small>
+          Examples: mistral, llama2, codellama, phi4, qwen2.5-coder
         </div>
       </div>
     </div>`;

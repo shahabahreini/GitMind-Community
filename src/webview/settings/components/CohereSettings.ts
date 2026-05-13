@@ -53,10 +53,7 @@ export class CohereSettings {
                     <select id="cohereModel">
                         ${optionsHtml}
                     </select>
-                    <button id="loadCohereModels" class="button small load-models-inline">Load Available Models</button>
-                    <div class="description">
-                        Default models shown. Click "Load Available Models" to fetch all current chat-enabled models from Cohere.
-                    </div>
+                    <button id="loadCohereModels" class="button small load-models-inline" data-tooltip="Default models shown. Click &quot;Load Available Models&quot; to fetch all current chat-enabled models from Cohere.">Load Available Models</button>
                 </div>
             </div>`;
     }

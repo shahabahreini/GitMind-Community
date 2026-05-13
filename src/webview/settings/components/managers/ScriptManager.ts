@@ -47,11 +47,16 @@ export class ScriptManager {
                 const btn = document.getElementById(buttonId);
                 if (btn) {
                     btn.disabled = isLoading;
-                    btn.textContent = isLoading ? loadingText : defaultText;
                     if (isLoading) {
                         btn.classList.add('loading');
+                        if (!btn.classList.contains('load-models-btn')) {
+                            btn.textContent = loadingText;
+                        }
                     } else {
                         btn.classList.remove('loading');
+                        if (!btn.classList.contains('load-models-btn')) {
+                            btn.textContent = defaultText;
+                        }
                     }
                 }
             }
@@ -404,6 +409,42 @@ export class ScriptManager {
                 // Simple button-based model loading (non-dropdown providers)
                 const modelConfigs = [
                     {
+                        buttonId: 'loadGeminiModels',
+                        commandId: 'gitmind.loadGeminiModels',
+                        name: 'Gemini',
+                        loadingFlag: 'geminiModelsLoading'
+                    },
+                    {
+                        buttonId: 'loadOpenAIModels',
+                        commandId: 'gitmind.loadOpenAIModels',
+                        name: 'OpenAI',
+                        loadingFlag: 'openaiModelsLoading'
+                    },
+                    {
+                        buttonId: 'loadAnthropicModels',
+                        commandId: 'gitmind.loadAnthropicModels',
+                        name: 'Anthropic',
+                        loadingFlag: 'anthropicModelsLoading'
+                    },
+                    {
+                        buttonId: 'loadMiniMaxModels',
+                        commandId: 'gitmind.loadMiniMaxModels',
+                        name: 'MiniMax',
+                        loadingFlag: 'minimaxModelsLoading'
+                    },
+                    {
+                        buttonId: 'loadCopilotModels',
+                        commandId: 'gitmind.loadCopilotModels',
+                        name: 'Copilot',
+                        loadingFlag: 'copilotModelsLoading'
+                    },
+                    {
+                        buttonId: 'loadZaiModels',
+                        commandId: 'gitmind.loadZaiModels',
+                        name: 'Zai',
+                        loadingFlag: 'zaiModelsLoading'
+                    },
+                    {
                         buttonId: 'loadMistralModels',
                         commandId: 'gitmind.loadMistralModels',
                         name: 'Mistral',
@@ -432,6 +473,12 @@ export class ScriptManager {
                         commandId: 'gitmind.loadDeepSeekModels',
                         name: 'DeepSeek',
                         loadingFlag: 'deepseekModelsLoading'
+                    },
+                    {
+                        buttonId: 'loadPerplexityModels',
+                        commandId: 'gitmind.loadPerplexityModels',
+                        name: 'Perplexity',
+                        loadingFlag: 'perplexityModelsLoading'
                     },
                     {
                         buttonId: 'loadHuggingFaceModels',

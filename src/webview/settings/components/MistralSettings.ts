@@ -53,10 +53,7 @@ export class MistralSettings {
         <select id="mistralModel">
           ${optionsHtml}
         </select>
-        <button id="loadMistralModels" class="button small load-models-inline">Load Available Models</button>
-        <div class="description">
-          Default models shown. Click "Load Available Models" to fetch all models that support chat completion.
-        </div>
+        <button id="loadMistralModels" class="button small load-models-inline" data-tooltip="Default models shown. Click &quot;Load Available Models&quot; to fetch all models that support chat completion.">Load Available Models</button>
       </div>
     </div>`;
   }

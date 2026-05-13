@@ -48,58 +48,6 @@ export function getOllamaStyles(): string {
             font-size: 13px;
         }
 
-        .load-models-btn {
-            position: absolute;
-            right: 4px;
-            top: 50%;
-            transform: translateY(-50%);
-            min-width: 24px;
-            min-height: 24px;
-            background: transparent !important;
-            border: 0;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 4px;
-            color: var(--gm-model-dropdown-icon);
-            transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
-            z-index: 2;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 24px;
-            height: 24px;
-            box-shadow: none !important;
-            overflow: visible;
-        }
-
-        .load-models-btn:hover:not(:disabled),
-        .load-models-btn:focus-visible {
-            transform: translateY(-50%) !important;
-            background: var(--gm-model-dropdown-hover) !important;
-            color: var(--vscode-focusBorder, var(--gm-model-dropdown-icon));
-            box-shadow: none !important;
-        }
-
-        .load-models-btn:active:not(:disabled) {
-            transform: translateY(-50%) !important;
-            box-shadow: none !important;
-        }
-
-        .load-models-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            background: transparent !important;
-            color: var(--vscode-disabledForeground, rgba(127, 127, 127, 0.65)) !important;
-            border-color: transparent !important;
-        }
-
-        .load-models-btn svg {
-            display: block;
-            width: 14px;
-            height: 14px;
-            pointer-events: none;
-        }
-
         .load-models-btn.loading svg {
             animation: spin 1s linear infinite;
         }

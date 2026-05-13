@@ -520,13 +520,17 @@ export class ProviderConfig {
                     id: 'perplexityModel',
                     key: 'model',
                     label: 'Model',
-                    type: 'select',
+                    type: 'model-with-load',
                     tooltip: '',
+                    loadButtonText: 'Load Available Models',
+                    loadButtonId: 'loadPerplexityModels',
+                    loadCommand: 'gitmind.loadPerplexityModels',
                     options: [
-                        { value: 'gpt-5.5-computer', label: 'GPT-5.5 Computer' },
-                        { value: 'gpt-5.4-thinking', label: 'GPT-5.4 Thinking' },
                         { value: 'sonar-pro', label: 'Sonar Pro' },
-                        { value: 'sonar-reasoning-pro', label: 'Sonar Reasoning Pro' }
+                        { value: 'sonar-reasoning-pro', label: 'Sonar Reasoning Pro' },
+                        { value: 'sonar', label: 'Sonar' },
+                        { value: 'sonar-reasoning', label: 'Sonar Reasoning' },
+                        { value: 'r1-1776', label: 'R1-1776' }
                     ]
                 }
             ]
