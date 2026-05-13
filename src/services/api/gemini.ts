@@ -20,7 +20,7 @@ const MODEL_CONFIGS: Record<GeminiModel, GenerationConfig> = {
         topP: 0.9,
         maxOutputTokens: 65536,
     },
-    "gemini-3.1-flash": {
+    "gemini-3-flash": {
         temperature: 0.2,
         topK: 40,
         topP: 0.9,
@@ -32,7 +32,24 @@ const MODEL_CONFIGS: Record<GeminiModel, GenerationConfig> = {
         topP: 0.9,
         maxOutputTokens: 65536,
     },
-
+    "gemini-2.5-pro": {
+        temperature: 0.2,
+        topK: 40,
+        topP: 0.9,
+        maxOutputTokens: 8192,
+    },
+    "gemini-2.5-flash": {
+        temperature: 0.2,
+        topK: 40,
+        topP: 0.9,
+        maxOutputTokens: 8192,
+    },
+    "gemini-2.5-flash-lite": {
+        temperature: 0.2,
+        topK: 40,
+        topP: 0.9,
+        maxOutputTokens: 8192,
+    },
 };
 
 type GeminiValidationResult = {
@@ -45,12 +62,12 @@ type GeminiValidationResult = {
 export function getEffectiveGeminiModel(rawModel: string): string {
     const trimmed = rawModel.trim();
     const modelAliases: Record<string, GeminiModel> = {
-        "gemini-flash-latest": "gemini-3.1-flash",
-        "gemini-2.5-flash-preview": "gemini-3.1-flash",
-        "gemini-2.5-flash-lite-preview": "gemini-3.1-flash-lite",
-        "gemini-2.0-flash-001": "gemini-3.1-flash",
-        "gemini-2.0-flash-lite": "gemini-3.1-flash-lite",
-        "gemini-2.0-flash-lite-001": "gemini-3.1-flash-lite",
+        "gemini-flash-latest": "gemini-3-flash",
+        "gemini-2.5-flash-preview": "gemini-2.5-flash",
+        "gemini-2.5-flash-lite-preview": "gemini-2.5-flash-lite",
+        "gemini-2.0-flash-001": "gemini-2.5-flash",
+        "gemini-2.0-flash-lite": "gemini-2.5-flash-lite",
+        "gemini-2.0-flash-lite-001": "gemini-2.5-flash-lite",
     };
 
     const normalizedModel = modelAliases[trimmed] ?? trimmed;
@@ -64,7 +81,7 @@ export function getEffectiveGeminiModel(rawModel: string): string {
         return normalizedModel;
     }
 
-    return "gemini-3.1-flash";
+    return "gemini-3-flash";
 }
 
 export class GeminiProvider extends BaseAIProvider {
@@ -86,12 +103,12 @@ export class GeminiProvider extends BaseAIProvider {
             // Improved model validation and fallback logic
             const rawModel = this.model;
             const modelAliases: Record<string, GeminiModel> = {
-                "gemini-flash-latest": "gemini-3.1-flash",
-                "gemini-2.5-flash-preview": "gemini-3.1-flash",
-                "gemini-2.5-flash-lite-preview": "gemini-3.1-flash-lite",
-                "gemini-2.0-flash-001": "gemini-3.1-flash",
-                "gemini-2.0-flash-lite": "gemini-3.1-flash-lite",
-                "gemini-2.0-flash-lite-001": "gemini-3.1-flash-lite",
+                "gemini-flash-latest": "gemini-3-flash",
+                "gemini-2.5-flash-preview": "gemini-2.5-flash",
+                "gemini-2.5-flash-lite-preview": "gemini-2.5-flash-lite",
+                "gemini-2.0-flash-001": "gemini-2.5-flash",
+                "gemini-2.0-flash-lite": "gemini-2.5-flash-lite",
+                "gemini-2.0-flash-lite-001": "gemini-2.5-flash-lite",
             };
 
             const normalizedModel = modelAliases[rawModel] ?? rawModel;
@@ -105,8 +122,8 @@ export class GeminiProvider extends BaseAIProvider {
                     selectedModel = normalizedModel as GeminiModel;
                 } else {
                     // Fall back to a stable model as last resort
-                    debugLog("Falling back to default model", { defaultModel: "gemini-3.1-flash" });
-                    selectedModel = "gemini-3.1-flash";
+                    debugLog("Falling back to default model", { defaultModel: "gemini-3-flash" });
+                    selectedModel = "gemini-3-flash";
                 }
             }
 

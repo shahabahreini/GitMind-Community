@@ -59,12 +59,12 @@ const MODEL_CONFIGS: Record<KnownCopilotModel, GenerationConfig> = {
     "auto": DEFAULT_MODEL_CONFIG,
     // OpenAI Models (Legacy)
     "gpt-5.5": DEFAULT_MODEL_CONFIG,
-    "gpt-5.5-instant": {
+    "gpt-5.4": {
         maxTokens: 300,
         temperature: 0.2
     },
     // OpenAI Models (Current)
-    "o3-mini": {
+    "o3-pro": {
         maxTokens: 500,
         temperature: 0.2
     },
@@ -81,7 +81,7 @@ const MODEL_CONFIGS: Record<KnownCopilotModel, GenerationConfig> = {
         maxTokens: 400,
         temperature: 0.2
     },
-    "gemini-3.1-flash": {
+    "gemini-3-flash": {
         maxTokens: 400,
         temperature: 0.2
     },

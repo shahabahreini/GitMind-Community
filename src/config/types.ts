@@ -79,7 +79,8 @@ export type TargetCommitLanguage =
 
 // Model types
 export type GeminiModel =
-    | "gemini-3.1-pro" | "gemini-3.1-flash" | "gemini-3.1-flash-lite";
+    | "gemini-3.1-pro" | "gemini-3-flash" | "gemini-3.1-flash-lite"
+    | "gemini-2.5-pro" | "gemini-2.5-flash" | "gemini-2.5-flash-lite";
 
 export type AnthropicModel =
     | "claude-opus-4.7" | "claude-sonnet-4.6" | "claude-haiku-4.5";
@@ -89,21 +90,20 @@ export type MiniMaxModel = "MiniMax-M2.7" | "MiniMax-M2.5" | "MiniMax-M2" | "Min
 export type KnownCopilotModel =
     | "auto"
     // OpenAI Models
-    | "gpt-5.5" | "gpt-5.5-instant"
-    | "o3-mini"
+    | "gpt-5.5" | "gpt-5.4" | "o3-pro"
     // Other Models
     | "raptor-mini"
     // Anthropic Models
     | "claude-opus-4.7" | "claude-sonnet-4.6"
     // Google Models
-    | "gemini-3.1-pro" | "gemini-3.1-flash";
+    | "gemini-3.1-pro" | "gemini-3-flash";
 
 export type CopilotModel = KnownCopilotModel | string;
 
 export type DeepSeekModel = "deepseek-v4-pro" | "deepseek-v4-flash";
 
 export type GrokModel =
-    | "grok-4.3" | "grok-4.4" | "grok-4.5";
+    | "grok-4.3" | "grok-4.20-0309-reasoning" | "grok-4.20-0309-non-reasoning" | "grok-4.20-multi-agent-0309";
 
 export type GroqModel =
     | "llama-3.1-8b-instant" | "llama-3.3-70b-versatile"

@@ -50,13 +50,12 @@ export class ProviderConfig {
                     loadButtonId: 'loadGeminiModels',
                     loadCommand: 'gitmind.loadGeminiModels',
                     options: [
-                        { value: 'gemini-3-pro', label: 'Gemini 3 Pro', group: 'Gemini 3 Series' },
-                        { value: 'gemini-3-flash', label: 'Gemini 3 Flash', group: 'Gemini 3 Series' },
-                        { value: "gemini-3.1-pro", label: 'Gemini 2.5 Pro', group: 'Gemini 2.5 Series' },
-                        { value: "gemini-3.1-flash", label: 'Gemini 2.5 Flash', group: 'Gemini 2.5 Series' },
-                        { value: 'gemini-2.5-flash-preview', label: 'Gemini 2.5 Flash Preview', group: 'Gemini 2.5 Series' },
-                        { value: "gemini-3.1-flash-lite", label: 'Gemini 2.5 Flash-Lite', group: 'Gemini 2.5 Series' },
-                        { value: 'gemini-2.5-flash-lite-preview', label: 'Gemini 2.5 Flash-Lite Preview', group: 'Gemini 2.5 Series' }
+                        { value: 'gemini-3.1-pro', label: 'Gemini 3.1 Pro' },
+                        { value: 'gemini-3-flash', label: 'Gemini 3 Flash' },
+                        { value: 'gemini-3.1-flash-lite', label: 'Gemini 3.1 Flash-Lite' },
+                        { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
+                        { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+                        { value: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite' }
                     ]
                 }
             ]
@@ -83,29 +82,32 @@ export class ProviderConfig {
                     loadButtonId: 'loadOpenAIModels',
                     loadCommand: 'gitmind.loadOpenAIModels',
                     options: [
-                        { value: 'gpt-5.1', label: 'GPT-5.1 (Latest)', group: 'GPT-5.1 Series' },
-                        { value: 'gpt-5.1-chat-latest', label: 'GPT-5.1 Chat (Latest)', group: 'GPT-5.1 Series' },
-                        { value: 'gpt-5.1-codex', label: 'GPT-5.1 Codex', group: 'GPT-5.1 Series' },
-                        { value: 'gpt-5.1-codex-mini', label: 'GPT-5.1 Codex Mini', group: 'GPT-5.1 Series' },
-                        { value: 'gpt-5', label: 'GPT-5', group: 'GPT-5 Series' },
-                        { value: 'gpt-5-chat-latest', label: 'GPT-5 Chat (Latest)', group: 'GPT-5 Series' },
-                        { value: 'gpt-5-mini', label: 'GPT-5 Mini', group: 'GPT-5 Series' },
-                        { value: 'gpt-5-nano', label: 'GPT-5 Nano', group: 'GPT-5 Series' },
-                        { value: 'gpt-5-pro', label: 'GPT-5 Pro', group: 'GPT-5 Series' },
-                        { value: 'gpt-5-codex', label: 'GPT-5 Codex', group: 'GPT-5 Series' },
-                        { value: 'gpt-4.1', label: 'GPT-4.1', group: 'GPT-4.1 Series' },
-                        { value: 'gpt-4.1-mini', label: 'GPT-4.1 Mini', group: 'GPT-4.1 Series' },
-                        { value: 'gpt-4.1-nano', label: 'GPT-4.1 Nano', group: 'GPT-4.1 Series' },
-                        { value: 'o4-mini', label: 'o4-mini (Advanced Reasoning)', group: 'Reasoning Models' },
-                        { value: 'o3', label: 'o3 (Advanced Reasoning)', group: 'Reasoning Models' },
-                        { value: 'o3-mini', label: 'o3-mini (Efficient Reasoning)', group: 'Reasoning Models' },
-                        { value: 'o1', label: 'o1 (Reasoning)', group: 'Reasoning Models' },
-                        { value: "gpt-5.5-instant", label: 'GPT-4o (Multimodal)', group: 'GPT-4o Series' },
-                        { value: "gpt-5.5-instant", label: 'GPT-4o Mini', group: 'GPT-4o Series' },
-                        { value: 'gpt-4o-mini-tts', label: 'GPT-4o Mini TTS', group: 'GPT-4o Series' },
-                        { value: 'gpt-4-turbo', label: 'GPT-4 Turbo', group: 'Legacy Models' },
-                        { value: 'gpt-4', label: 'GPT-4', group: 'Legacy Models' },
-                        { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', group: 'Legacy Models' }
+                        { value: 'gpt-5.5', label: 'GPT-5.5' },
+                        { value: 'gpt-5.5-pro', label: 'GPT-5.5 Pro' },
+                        { value: 'gpt-5.4', label: 'GPT-5.4' },
+                        { value: 'gpt-5.4-pro', label: 'GPT-5.4 Pro' },
+                        { value: 'gpt-5.4-mini', label: 'GPT-5.4 Mini' },
+                        { value: 'gpt-5.4-nano', label: 'GPT-5.4 Nano' },
+                        { value: 'gpt-5-mini', label: 'GPT-5 Mini' },
+                        { value: 'gpt-5-nano', label: 'GPT-5 Nano' },
+                        { value: 'gpt-5', label: 'GPT-5' },
+                        { value: 'gpt-4.1', label: 'GPT-4.1' },
+                        { value: 'gpt-4.1-mini', label: 'GPT-4.1 Mini' },
+                        { value: 'gpt-5.3-codex', label: 'GPT-5.3 Codex' },
+                        { value: 'gpt-oss-120b', label: 'GPT-OSS 120B' },
+                        { value: 'gpt-oss-20b', label: 'GPT-OSS 20B' },
+                        { value: 'gpt-5.2', label: 'GPT-5.2' },
+                        { value: 'gpt-5.1', label: 'GPT-5.1' },
+                        { value: 'gpt-5.2-pro', label: 'GPT-5.2 Pro' },
+                        { value: 'gpt-5-pro', label: 'GPT-5 Pro' },
+                        { value: 'o3-pro', label: 'o3 Pro' },
+                        { value: 'o3', label: 'o3' },
+                        { value: 'gpt-4o', label: 'GPT-4o' },
+                        { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
+                        { value: 'gpt-4', label: 'GPT-4' },
+                        { value: 'gpt-5.3-chat-latest', label: 'GPT-5.3 Chat Latest' },
+                        { value: 'gpt-5.2-chat-latest', label: 'GPT-5.2 Chat Latest' },
+                        { value: 'chat-latest', label: 'Chat Latest' }
                     ]
                 }
             ]
@@ -132,13 +134,9 @@ export class ProviderConfig {
                     loadButtonId: 'loadAnthropicModels',
                     loadCommand: 'gitmind.loadAnthropicModels',
                     options: [
-                        { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
-                        { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus' },
-                        { value: 'claude-3-sonnet-20240229', label: 'Claude 3 Sonnet' },
-                        { value: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku' },
-                        { value: 'claude-2.1', label: 'Claude 2.1' },
-                        { value: 'claude-2.0', label: 'Claude 2.0' },
-                        { value: 'claude-instant-1.2', label: 'Claude Instant 1.2' }
+                        { value: 'claude-opus-4.7', label: 'Claude Opus 4.7' },
+                        { value: 'claude-sonnet-4.6', label: 'Claude Sonnet 4.6' },
+                        { value: 'claude-haiku-4.5', label: 'Claude Haiku 4.5' }
                     ]
                 }
             ]
@@ -166,10 +164,9 @@ export class ProviderConfig {
                     loadButtonDisabled: true,
                     loadButtonDisabledTooltip: "MiniMax won't support model fetch yet!",
                     options: [
-                        { value: "MiniMax-M2.7", label: 'MiniMax M1' },
+                        { value: 'MiniMax-M2.7', label: 'MiniMax M2.7' },
+                        { value: 'MiniMax-M2.5', label: 'MiniMax M2.5' },
                         { value: 'MiniMax-M2', label: 'MiniMax M2' },
-                        { value: "MiniMax-M2.5", label: 'MiniMax M2.1' },
-                        { value: "MiniMax-M2.7", label: 'MiniMax M2.5' },
                         { value: 'MiniMax-Text-01', label: 'MiniMax Text-01' }
                     ]
                 }
@@ -201,27 +198,14 @@ export class ProviderConfig {
                     loadButtonId: 'loadCopilotModels',
                     loadCommand: 'gitmind.loadCopilotModels',
                     options: [
-                        { value: 'auto', label: 'Auto (Let Copilot choose)', group: 'Recommended' },
-                        { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', group: 'OpenAI Models (Legacy)' },
-                        { value: 'gpt-4', label: 'GPT-4', group: 'OpenAI Models (Legacy)' },
-                        { value: 'gpt-4-turbo', label: 'GPT-4 Turbo', group: 'OpenAI Models (Legacy)' },
-                        { value: "gpt-5.5-instant", label: 'GPT-4o', group: 'OpenAI Models (Legacy)' },
-                        { value: "gpt-5.5-instant", label: 'GPT-4o mini', group: 'OpenAI Models (Legacy)' },
-                        { value: 'gpt-4.1', label: 'GPT-4.1', group: 'OpenAI Models' },
-                        { value: 'gpt-5', label: 'GPT-5', group: 'OpenAI Models' },
-                        { value: 'gpt-5-mini', label: 'GPT-5 mini', group: 'OpenAI Models' },
-                        { value: 'gpt-5-codex', label: 'GPT-5-Codex', group: 'OpenAI Models' },
-                        { value: 'gpt-5.1', label: 'GPT-5.1', group: 'OpenAI Models' },
-                        { value: 'gpt-5.1-codex', label: 'GPT-5.1-Codex', group: 'OpenAI Models' },
-                        { value: 'gpt-5.1-codex-mini', label: 'GPT-5.1-Codex-Mini', group: 'OpenAI Models' },
-                        { value: 'claude-haiku-4.5', label: 'Claude Haiku 4.5', group: 'Anthropic Models' },
-                        { value: 'claude-opus-4.1', label: 'Claude Opus 4.1', group: 'Anthropic Models' },
-                        { value: "claude-sonnet-4.6", label: 'Claude Sonnet 4', group: 'Anthropic Models' },
-                        { value: 'claude-sonnet-4.5', label: 'Claude Sonnet 4.5', group: 'Anthropic Models' },
-                        { value: "gemini-3.1-pro", label: 'Gemini 2.5 Pro', group: 'Google Models' },
-                        { value: 'gemini-3-pro', label: 'Gemini 3 Pro', group: 'Google Models' },
-                        { value: "grok-4.3", label: 'Grok Code Fast 1', group: 'Other Models' },
-                        { value: 'raptor-mini', label: 'Raptor mini', group: 'Other Models' }
+                        { value: 'auto', label: 'Auto (Let Copilot choose)' },
+                        { value: 'gpt-5.5', label: 'GPT-5.5' },
+                        { value: 'gpt-5.4', label: 'GPT-5.4' },
+                        { value: 'o3-pro', label: 'o3 Pro' },
+                        { value: 'claude-opus-4.7', label: 'Claude Opus 4.7' },
+                        { value: 'claude-sonnet-4.6', label: 'Claude Sonnet 4.6' },
+                        { value: 'gemini-3.1-pro', label: 'Gemini 3.1 Pro' },
+                        { value: 'gemini-3.1-flash', label: 'Gemini 3.1 Flash' }
                     ]
                 }
             ]
@@ -315,12 +299,20 @@ export class ProviderConfig {
                     loadButtonId: 'loadMistralModels',
                     loadCommand: 'gitmind.loadMistralModels',
                     options: [
-                        { value: "mistral-small-4", label: 'Mistral Large (Latest)' },
-                        { value: 'mistral-medium-latest', label: 'Mistral Medium (Latest)' },
-                        { value: "mistral-small-4", label: 'Mistral Small (Latest)' },
-                        { value: 'open-mistral-7b', label: 'Open Mistral 7B' },
-                        { value: 'open-mixtral-8x7b', label: 'Open Mixtral 8x7B' },
-                        { value: 'open-mixtral-8x22b', label: 'Open Mixtral 8x22B' }
+                        { value: 'mistral-large-3', label: 'Mistral Large 3' },
+                        { value: 'mistral-medium-3.5', label: 'Mistral Medium 3.5' },
+                        { value: 'mistral-small-4', label: 'Mistral Small 4' },
+                        { value: 'mistral-medium-3.1', label: 'Mistral Medium 3.1' },
+                        { value: 'ministral-3-14b', label: 'Ministral 3 14B' },
+                        { value: 'ministral-3-8b', label: 'Ministral 3 8B' },
+                        { value: 'ministral-3-3b', label: 'Ministral 3 3B' },
+                        { value: 'magistral-medium-1.2', label: 'Magistral Medium 1.2' },
+                        { value: 'leanstral', label: 'Leanstral' },
+                        { value: 'codestral', label: 'Codestral' },
+                        { value: 'devstral-2', label: 'Devstral 2' },
+                        { value: 'mistral-moderation-2', label: 'Mistral Moderation 2' },
+                        { value: 'mistral-medium-3', label: 'Mistral Medium 3' },
+                        { value: 'mistral-nemo-12b', label: 'Mistral Nemo 12B' }
                     ]
                 }
             ]
@@ -347,15 +339,10 @@ export class ProviderConfig {
                     loadButtonId: 'loadCohereModels',
                     loadCommand: 'gitmind.loadCohereModels',
                     options: [
-                        { value: 'command-a-03-2025', label: 'Command A (Latest)' },
-                        { value: "command-a-reasoning", label: 'Command R (08-2024)' },
-                        { value: "command-a", label: 'Command R+ (08-2024)' },
-                        { value: "command-a", label: 'Aya Expanse 8B' },
-                        { value: "command-a", label: 'Aya Expanse 32B' },
-                        { value: 'command-r-plus', label: 'Command R+' },
-                        { value: 'command-r', label: 'Command R' },
-                        { value: 'command', label: 'Command' },
-                        { value: 'command-light', label: 'Command Light' }
+                        { value: 'command-a', label: 'Command A' },
+                        { value: 'command-a-reasoning', label: 'Command A Reasoning' },
+                        { value: 'command-r-plus-08-2024', label: 'Command R+ (08-2024)' },
+                        { value: 'command-r-08-2024', label: 'Command R (08-2024)' }
                     ]
                 }
             ]
@@ -385,11 +372,8 @@ export class ProviderConfig {
                         { value: 'meta-llama/Llama-3.3-70B-Instruct-Turbo', label: 'Llama 3.3 70B Instruct Turbo' },
                         { value: 'meta-llama/Llama-3.1-8B-Instruct-Turbo', label: 'Llama 3.1 8B Instruct Turbo' },
                         { value: 'meta-llama/Llama-3.1-70B-Instruct-Turbo', label: 'Llama 3.1 70B Instruct Turbo' },
-                        { value: 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free', label: 'DeepSeek R1 Distill 70B (Free)' },
-                        { value: 'Qwen/Qwen2.5-72B-Instruct-Turbo', label: 'Qwen 2.5 72B Instruct Turbo' },
-                        { value: 'microsoft/WizardLM-2-8x22B', label: 'WizardLM 2 8x22B' },
-                        { value: 'mistralai/Mixtral-8x7B-Instruct-v0.1', label: 'Mixtral 8x7B Instruct' },
-                        { value: 'NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO', label: 'Nous Hermes 2 Mixtral 8x7B DPO' }
+                        { value: 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free', label: 'DeepSeek R1 Distill 70B' },
+                        { value: 'Qwen/Qwen2.5-72B-Instruct-Turbo', label: 'Qwen 2.5 72B Instruct Turbo' }
                     ]
                 }
             ]
@@ -417,13 +401,10 @@ export class ProviderConfig {
                     loadCommand: 'gitmind.loadOpenRouterModels',
                     defaultOptions: [
                         'google/gemma-3-27b-it:free',
-                        'openai/gpt-4o-mini',
-                        'openai/gpt-4-turbo',
-                        'anthropic/claude-3-haiku',
-                        'meta-llama/llama-3.1-8b-instruct:free',
-                        'meta-llama/llama-3.1-70b-instruct',
-                        'mistralai/mistral-7b-instruct:free',
-                        'qwen/qwen-2-7b-instruct:free'
+                        'openai/gpt-5.5-instant',
+                        'openai/o3-mini',
+                        'anthropic/claude-sonnet-4.6',
+                        'meta-llama/llama-3.3-70b-instruct'
                     ]
                 }
             ]
@@ -450,8 +431,8 @@ export class ProviderConfig {
                     loadButtonId: 'loadDeepSeekModels',
                     loadCommand: 'gitmind.loadDeepSeekModels',
                     options: [
-                        { value: "deepseek-v4-flash", label: 'DeepSeek Chat' },
-                        { value: "deepseek-v4-pro", label: 'DeepSeek Reasoner' }
+                        { value: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash' },
+                        { value: 'deepseek-v4-pro', label: 'DeepSeek V4 Pro' }
                     ]
                 }
             ]
@@ -478,10 +459,10 @@ export class ProviderConfig {
                     loadButtonId: 'loadGrokModels',
                     loadCommand: 'gitmind.loadGrokModels',
                     options: [
-                        { value: "grok-4.4", label: 'Grok-3 (Latest)' },
-                        { value: 'grok-2', label: 'Grok-2' },
-                        { value: 'grok-1.5v', label: 'Grok-1.5V (Vision)' },
-                        { value: 'grok-1.5', label: 'Grok-1.5' }
+                        { value: 'grok-4.3', label: 'Grok 4.3' },
+                        { value: 'grok-4.20-0309-reasoning', label: 'Grok 4.20 Reasoning (0309)' },
+                        { value: 'grok-4.20-0309-non-reasoning', label: 'Grok 4.20 Non-Reasoning (0309)' },
+                        { value: 'grok-4.20-multi-agent-0309', label: 'Grok 4.20 Multi-Agent (0309)' }
                     ]
                 }
             ]
@@ -508,11 +489,9 @@ export class ProviderConfig {
                     loadButtonId: 'loadGroqModels',
                     loadCommand: 'gitmind.loadGroqModels',
                     options: [
-                        { value: "meta-llama/llama-4-scout-17b-16e-instruct", label: 'Llama 3.3 70B Versatile' },
+                        { value: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B Versatile' },
                         { value: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B Instant' },
-                        { value: 'meta-llama/llama-4-scout-17b-16e-instruct', label: 'Llama 4 Scout 17B 16E' },
-                        { value: "meta-llama/llama-4-scout-17b-16e-instruct", label: 'GPT-OSS 120B' },
-                        { value: "meta-llama/llama-4-scout-17b-16e-instruct", label: 'GPT-OSS 20B' }
+                        { value: 'meta-llama/llama-4-scout-17b-16e-instruct', label: 'Llama 4 Scout 17B 16E' }
                     ]
                 }
             ]
@@ -536,10 +515,10 @@ export class ProviderConfig {
                     type: 'select',
                     tooltip: '',
                     options: [
-                        { value: 'llama-3.1-sonar-large-128k-online', label: 'Sonar Large (Online)' },
-                        { value: 'llama-3.1-sonar-small-128k-online', label: 'Sonar Small (Online)' },
-                        { value: 'llama-3.1-sonar-large-128k-chat', label: 'Sonar Large (Chat)' },
-                        { value: 'llama-3.1-sonar-small-128k-chat', label: 'Sonar Small (Chat)' }
+                        { value: 'gpt-5.5-computer', label: 'GPT-5.5 Computer' },
+                        { value: 'gpt-5.4-thinking', label: 'GPT-5.4 Thinking' },
+                        { value: 'sonar-pro', label: 'Sonar Pro' },
+                        { value: 'sonar-reasoning-pro', label: 'Sonar Reasoning Pro' }
                     ]
                 }
             ]
@@ -577,15 +556,10 @@ export class ProviderConfig {
                     loadButtonId: 'loadZaiModels',
                     loadCommand: 'gitmind.loadZaiModels',
                     options: [
-                        { value: 'glm-5', label: 'GLM-5 (Flagship)' },
-                        { value: "glm-5", label: 'GLM-4.7 (Complex Tasks)' },
-                        { value: "glm-5", label: 'GLM-4.6 (128K Output)' },
-                        { value: "glm-5", label: 'GLM-4.5 (Balanced)' },
-                        { value: "glm-5.1", label: 'GLM-4.5-Air (Fast)' },
-                        { value: 'glm-4.5-x', label: 'GLM-4.5-X (Large Context)' },
-                        { value: 'glm-4.5-airx', label: 'GLM-4.5-AirX (Ultra-Light)' },
-                        { value: 'glm-4.5-flash', label: 'GLM-4.5-Flash' },
-                        { value: 'glm-4-32b-0414-128k', label: 'GLM-4-32B' }
+                        { value: 'glm-5.1', label: 'GLM 5.1' },
+                        { value: 'glm-5v-turbo', label: 'GLM 5V Turbo' },
+                        { value: 'glm-5', label: 'GLM 5' },
+                        { value: 'glm-5-turbo', label: 'GLM 5 Turbo' }
                     ]
                 }
             ]

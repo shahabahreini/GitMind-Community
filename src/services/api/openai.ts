@@ -24,95 +24,32 @@ interface ModelConfig {
 }
 
 const MODEL_CONFIGS: Record<string, ModelConfig> = {
-    // GPT-5.1 Series
-    "gpt-5.1": {
-        maxTokens: 2500,
-        temperature: 0.2,
-    },
-    "gpt-5.1-chat-latest": {
-        maxTokens: 2500,
-        temperature: 0.2,
-    },
-    "gpt-5.1-codex": {
-        maxTokens: 2500,
-        temperature: 0.2,
-    },
-    "gpt-5.1-codex-mini": {
-        maxTokens: 2000,
-        temperature: 0.2,
-    },
-    // GPT-5 Series
-    "gpt-5": {
-        maxTokens: 2500,
-        temperature: 0.2,
-    },
-    "gpt-5-chat-latest": {
-        maxTokens: 2500,
-        temperature: 0.2,
-    },
-    "gpt-5-mini": {
-        maxTokens: 2000,
-        temperature: 0.2,
-    },
-    "gpt-5-nano": {
-        maxTokens: 1500,
-        temperature: 0.2,
-    },
-    "gpt-5-pro": {
-        maxTokens: 3000,
-        temperature: 0.2,
-    },
-    "gpt-5-codex": {
-        maxTokens: 2500,
-        temperature: 0.2,
-    },
-    // GPT-4.1 Series
-    "gpt-4.1": {
-        maxTokens: 2000,
-        temperature: 0.2,
-    },
-    "gpt-4.1-mini": {
-        maxTokens: 1500,
-        temperature: 0.2,
-    },
-    "gpt-4.1-nano": {
-        maxTokens: 1000,
-        temperature: 0.2,
-    },
-    // Reasoning Models
-    "o4-mini": {
-        maxTokens: 2000,
-        temperature: 0.1,
-        supportsReasoning: true,
-    },
-    "o3": {
-        maxTokens: 2000,
-        temperature: 0.1,
-        supportsReasoning: true,
-    },
-    "o3-mini": {
-        maxTokens: 1000,
-        temperature: 0.1,
-        supportsReasoning: true,
-    },
-    "o1": {
-        maxTokens: 2000,
-        temperature: 0.1,
-        supportsReasoning: true,
-    },
-    // GPT-4o Series
-    "gpt-5.5": {
-        maxTokens: 1500,
-        temperature: 0.2,
-    },
-    "gpt-5.5-instant": {
-        maxTokens: 1000,
-        temperature: 0.2,
-    },
-    "gpt-4o-mini-tts": {
-        maxTokens: 1000,
-        temperature: 0.2,
-    },
+    "gpt-5.5": { maxTokens: 4000, temperature: 0.2 },
+    "gpt-5.5-pro": { maxTokens: 4000, temperature: 0.2 },
+    "gpt-5.4": { maxTokens: 4000, temperature: 0.2 },
+    "gpt-5.4-pro": { maxTokens: 4000, temperature: 0.2 },
+    "gpt-5.4-mini": { maxTokens: 2000, temperature: 0.2 },
+    "gpt-5.4-nano": { maxTokens: 1000, temperature: 0.2 },
+    "gpt-5-mini": { maxTokens: 2000, temperature: 0.2 },
+    "gpt-5-nano": { maxTokens: 1000, temperature: 0.2 },
+    "gpt-5": { maxTokens: 4000, temperature: 0.2 },
+    "gpt-5-pro": { maxTokens: 4000, temperature: 0.2 },
+    "gpt-5.1": { maxTokens: 4000, temperature: 0.2 },
+    "gpt-5.2": { maxTokens: 4000, temperature: 0.2 },
+    "gpt-5.2-pro": { maxTokens: 4000, temperature: 0.2 },
+    "gpt-4.1": { maxTokens: 2000, temperature: 0.2 },
+    "gpt-4.1-mini": { maxTokens: 1500, temperature: 0.2 },
+    "gpt-5.3-codex": { maxTokens: 4000, temperature: 0.2 },
+    "gpt-oss-120b": { maxTokens: 2000, temperature: 0.2 },
+    "gpt-oss-20b": { maxTokens: 2000, temperature: 0.2 },
+    "o3-pro": { maxTokens: 4000, temperature: 0.1, supportsReasoning: true },
+    "o3": { maxTokens: 2000, temperature: 0.1, supportsReasoning: true },
+    "gpt-4o": { maxTokens: 2000, temperature: 0.2 },
+    "gpt-4o-mini": { maxTokens: 1500, temperature: 0.2 },
+    "gpt-4": { maxTokens: 2000, temperature: 0.2 },
+    "gpt-5.3-chat-latest": { maxTokens: 4000, temperature: 0.2 },
+    "gpt-5.2-chat-latest": { maxTokens: 4000, temperature: 0.2 },
+    "chat-latest": { maxTokens: 2000, temperature: 0.2 }
 };
 
 export class OpenAIProvider extends BaseAIProvider {
@@ -127,7 +64,7 @@ export class OpenAIProvider extends BaseAIProvider {
             debugLog(`Calling OpenAI API with model: ${this.model}`);
 
             // Get model-specific configuration or use provided options
-            const modelConfig = MODEL_CONFIGS[this.model] || MODEL_CONFIGS["gpt-5.5-instant"];
+            const modelConfig = MODEL_CONFIGS[this.model] || MODEL_CONFIGS["gpt-5.5"];
             const temperature = options?.temperature ?? modelConfig.temperature;
             const maxTokens = options?.maxTokens ?? modelConfig.maxTokens;
             const topP = options?.topP;

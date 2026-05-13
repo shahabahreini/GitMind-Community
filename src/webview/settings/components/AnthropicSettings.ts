@@ -25,21 +25,9 @@ export class AnthropicSettings {
         <label for="anthropicModel">Model</label>
         <select id="anthropicModel">
           <optgroup label="Claude 4 Series (Latest)">
-            <option value="claude-opus-4" ${this._settings.anthropic?.model === "claude-opus-4" ? "selected" : ""}>Claude Opus 4</option>
-            <option value="claude-sonnet-4.6" ${this._settings.anthropic?.model === "claude-sonnet-4.6" ? "selected" : ""}>Claude Sonnet 4</option>
-          </optgroup>
-          <optgroup label="Claude 3.7 Series">
-            <option value="claude-sonnet-3.7" ${this._settings.anthropic?.model === "claude-sonnet-3.7" ? "selected" : ""}>Claude Sonnet 3.7</option>
-          </optgroup>
-          <optgroup label="Claude 3.5 Series">
-            <option value="claude-3-5-sonnet-20241022" ${this._settings.anthropic?.model === "claude-3-5-sonnet-20241022" ? "selected" : ""}>Claude 3.5 Sonnet (Latest)</option>
-            <option value="claude-3-5-sonnet-20240620" ${this._settings.anthropic?.model === "claude-3-5-sonnet-20240620" ? "selected" : ""}>Claude 3.5 Sonnet (June)</option>
-            <option value="claude-3-5-haiku-20241022" ${this._settings.anthropic?.model === "claude-3-5-haiku-20241022" ? "selected" : ""}>Claude 3.5 Haiku</option>
-          </optgroup>
-          <optgroup label="Claude 3 Series">
-            <option value="claude-3-opus-20240229" ${this._settings.anthropic?.model === "claude-3-opus-20240229" ? "selected" : ""}>Claude 3 Opus</option>
-            <option value="claude-3-sonnet-20240229" ${this._settings.anthropic?.model === "claude-3-sonnet-20240229" ? "selected" : ""}>Claude 3 Sonnet</option>
-            <option value="claude-3-haiku-20240307" ${this._settings.anthropic?.model === "claude-3-haiku-20240307" ? "selected" : ""}>Claude 3 Haiku</option>
+            <option value="claude-opus-4.7" ${this._settings.anthropic?.model === "claude-opus-4.7" ? "selected" : ""}>Claude Opus 4.7</option>
+            <option value="claude-sonnet-4.6" ${this._settings.anthropic?.model === "claude-sonnet-4.6" ? "selected" : ""}>Claude Sonnet 4.6</option>
+            <option value="claude-haiku-4.5" ${this._settings.anthropic?.model === "claude-haiku-4.5" ? "selected" : ""}>Claude Haiku 4.5</option>
           </optgroup>
         </select>
         <div class="description">

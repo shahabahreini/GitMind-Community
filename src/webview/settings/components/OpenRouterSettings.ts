@@ -14,13 +14,10 @@ export class OpenRouterSettings {
     // Define default OpenRouter models to show initially
     const defaultModels = [
       'google/gemma-3-27b-it:free',
-      'openai/gpt-4o-mini',
-      'openai/gpt-4-turbo',
-      'anthropic/claude-3-haiku',
-      'meta-llama/llama-3.1-8b-instruct:free',
-      'meta-llama/llama-3.1-70b-instruct',
-      'mistralai/mistral-7b-instruct:free',
-      'qwen/qwen-2-7b-instruct:free'
+      'openai/gpt-5.5-instant',
+      'openai/o3-mini',
+      'anthropic/claude-sonnet-4.6',
+      'meta-llama/llama-3.3-70b-instruct'
     ];
 
     // Build the options HTML
@@ -79,7 +76,7 @@ export class OpenRouterSettings {
           </div>
         </div>
         <div class="description">
-          Popular models: google/gemma-3-27b-it:free, openai/gpt-4o-mini, meta-llama/llama-3.1-8b-instruct:free<br>
+          Popular models: google/gemma-3-27b-it:free, openai/gpt-5.5-instant, meta-llama/llama-3.3-70b-instruct<br>
           <small>Click the refresh button to load all available models from OpenRouter</small>
         </div>
       </div>
