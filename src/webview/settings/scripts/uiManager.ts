@@ -112,7 +112,7 @@ export function getUiManagerScript(): string {
           return \`<div class="provider-icon-placeholder" style="width: \${size}px; height: \${size}px;"></div>\`;
         }
         return \`
-          <svg class="provider-icon" width="\${size}" height="\${size}" viewBox="0 0 24 24" 
+          <svg class="provider-icon \${provider}" width="\${size}" height="\${size}" viewBox="\${provider === 'nvidia' ? '0 0 163.3 108' : '0 0 24 24'}"
                fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path d="\${iconPath}" />
           </svg>

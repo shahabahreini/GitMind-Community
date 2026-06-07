@@ -295,7 +295,7 @@ export class ScriptManager {
                 });
 
                 // Locked setting rows and compact settings click handlers
-                document.querySelectorAll('.setting-row.locked, .compact-setting.locked').forEach(el => {
+                document.querySelectorAll('.setting-row.locked, .compact-setting.locked, .automatic-recovery-card.locked').forEach(el => {
                     el.addEventListener('click', (e) => {
                         e.preventDefault();
                         e.stopPropagation();

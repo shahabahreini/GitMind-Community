@@ -28,36 +28,191 @@ export class ModelSettingsRenderer extends BaseRenderer {
         const fallbackModel = this.settings.pro?.modelFallback?.models?.[this.settings.apiProvider] ?? '';
         const disabled = isPro ? '' : 'disabled';
         const locked = isPro ? '' : 'locked';
+        const fallbackOptions = this.getFallbackModelOptions(fallbackModel);
+        const providerModelOptions = this.getProviderModelOptions();
+        const providerPrimaryModels = this.getProviderPrimaryModels();
+        const fallbackSelect = FormUtils.createSearchableSelect(
+            'fallbackModelForProvider',
+            fallbackOptions,
+            `Search ${this.settings.apiProvider} fallback models...`,
+            !isPro
+        );
 
         return `
-            <div class="section-divider"></div>
-            <div class="modern-section">
-                <div class="section-header"><h3 class="section-title">Automatic Recovery ${isPro ? '' : '<span class="pro-lock-badge">Pro Locked</span>'}</h3></div>
-                <div class="setting-row ${locked}">
-                    <div class="setting-info"><div class="setting-label">Automatic Retry</div><div class="setting-desc">Retry once for timeouts and eligible Gemini service failures</div></div>
-                    <div class="switch-container ${disabled ? 'disabled' : ''}"><input class="switch-input" type="checkbox" data-setting="pro.automaticRetry.enabled" ${retryEnabled ? 'checked' : ''} ${disabled}/><div class="switch-button"><div class="switch-slider"></div></div></div>
+            <section class="automatic-recovery-card ${locked}">
+                <div class="automatic-recovery-header">
+                    <div>
+                        <h3>Automatic Recovery</h3>
+                        <p>Recover from temporary generation failures.</p>
+                    </div>
+                    ${isPro ? '<span class="automatic-recovery-badge">Pro</span>' : '<span class="automatic-recovery-badge locked">Pro Locked</span>'}
                 </div>
-                <div class="setting-row ${locked}">
-                    <div class="setting-info"><div class="setting-label">Automatic Model Fallback</div><div class="setting-desc">Try this model once when the selected model explicitly reaches its limit</div></div>
-                    <div class="setting-control">
-                        <div class="switch-container ${disabled ? 'disabled' : ''}"><input class="switch-input" type="checkbox" data-setting="pro.modelFallback.enabled" ${fallbackEnabled ? 'checked' : ''} ${disabled}/><div class="switch-button"><div class="switch-slider"></div></div></div>
-                        <input class="input-field" id="fallbackModelForProvider" value="${fallbackModel}" placeholder="Fallback model for ${this.settings.apiProvider}" ${disabled}/>
+
+                <div class="automatic-recovery-option">
+                    <div class="automatic-recovery-copy">
+                        <span>Retry once</span>
+                        <small>Timeouts and temporary Gemini service errors</small>
+                    </div>
+                    <div class="switch-container ${disabled ? 'disabled' : ''}">
+                        <input class="switch-input" type="checkbox" data-setting="pro.automaticRetry.enabled" ${retryEnabled ? 'checked' : ''} ${disabled}/>
+                        <div class="switch-button"><div class="switch-slider"></div></div>
                     </div>
                 </div>
-            </div>
+
+                <div class="automatic-recovery-option fallback">
+                    <div class="automatic-recovery-option-top">
+                        <div class="automatic-recovery-copy">
+                            <span>Fallback model</span>
+                            <small>Used once when the selected model reaches its limit</small>
+                        </div>
+                        <div class="switch-container ${disabled ? 'disabled' : ''}">
+                            <input class="switch-input" type="checkbox" data-setting="pro.modelFallback.enabled" ${fallbackEnabled ? 'checked' : ''} ${disabled}/>
+                            <div class="switch-button"><div class="switch-slider"></div></div>
+                        </div>
+                    </div>
+                    <div class="automatic-recovery-fallback-select">
+                        ${fallbackSelect}
+                    </div>
+                </div>
+            </section>
             <script>
                 (function () {
-                    const input = document.getElementById('fallbackModelForProvider');
-                    if (!input || input.disabled) return;
-                    input.addEventListener('change', function () {
+                    const providerModels = ${JSON.stringify(providerModelOptions)};
+                    const primaryModels = ${JSON.stringify(providerPrimaryModels)};
+                    const select = document.getElementById('fallbackModelForProvider');
+                    if (!select || !${isPro}) return;
+
+                    function getSelectedProvider() {
+                        return document.getElementById('apiProvider')?.value || '${this.settings.apiProvider}';
+                    }
+
+                    function getPrimaryModel(provider) {
+                        return document.getElementById(provider + 'Model')?.value || primaryModels[provider] || '';
+                    }
+
+                    function saveFallbackModel() {
+                        const provider = getSelectedProvider();
                         const models = Object.assign({}, window.gitmindSettings?.pro?.modelFallback?.models || {});
-                        models['${this.settings.apiProvider}'] = input.value.trim();
+                        models[provider] = select.value.trim();
+                        if (!window.gitmindSettings.pro) window.gitmindSettings.pro = {};
+                        if (!window.gitmindSettings.pro.modelFallback) {
+                            window.gitmindSettings.pro.modelFallback = { enabled: false, models: {} };
+                        }
                         window.gitmindSettings.pro.modelFallback.models = models;
                         vscode.postMessage({ command: 'updateSetting', key: 'pro.modelFallback.models', value: models });
+                    }
+
+                    function replaceOptions(provider, models) {
+                        if (!Array.isArray(models)) return;
+                        const primaryModel = getPrimaryModel(provider);
+                        const savedModels = window.gitmindSettings?.pro?.modelFallback?.models || {};
+                        const savedValue = savedModels[provider] || '';
+                        const currentValue = savedValue === primaryModel ? '' : savedValue;
+                        const uniqueModels = Array.from(new Set(models))
+                            .filter(model => typeof model === 'string' && model.trim() && model !== primaryModel)
+                            .sort((a, b) => a.localeCompare(b));
+
+                        if (currentValue && currentValue !== primaryModel && !uniqueModels.includes(currentValue)) {
+                            uniqueModels.unshift(currentValue);
+                        }
+
+                        select.innerHTML = '';
+                        const emptyOption = document.createElement('option');
+                        emptyOption.value = '';
+                        emptyOption.textContent = 'Select a fallback model';
+                        emptyOption.selected = !currentValue;
+                        select.appendChild(emptyOption);
+
+                        uniqueModels.forEach(model => {
+                            const option = document.createElement('option');
+                            option.value = model;
+                            option.textContent = model;
+                            option.selected = model === currentValue;
+                            select.appendChild(option);
+                        });
+                    }
+
+                    select.addEventListener('change', saveFallbackModel);
+                    document.getElementById('apiProvider')?.addEventListener('change', function () {
+                        const provider = getSelectedProvider();
+                        replaceOptions(provider, providerModels[provider] || []);
+                        const searchInput = document.getElementById('search-fallbackModelForProvider');
+                        if (searchInput) {
+                            searchInput.placeholder = 'Search ' + provider + ' fallback models...';
+                        }
+                    });
+
+                    Object.keys(providerModels).forEach(provider => {
+                        document.getElementById(provider + 'Model')?.addEventListener('change', function () {
+                            primaryModels[provider] = this.value;
+                            if (provider === getSelectedProvider()) {
+                                replaceOptions(provider, providerModels[provider] || []);
+                            }
+                        });
+                    });
+
+                    window.addEventListener('message', function (event) {
+                        const message = event.data;
+                        if (typeof message.command !== 'string' || !message.command.endsWith('ModelsLoaded') || !message.success) {
+                            return;
+                        }
+                        const provider = message.command.slice(0, -'ModelsLoaded'.length);
+                        if (!providerModels[provider]) return;
+                        providerModels[provider] = message.models || [];
+                        if (provider === getSelectedProvider()) {
+                            replaceOptions(provider, providerModels[provider]);
+                        }
                     });
                 })();
             </script>
         `;
+    }
+
+    private getPrimaryModel(providerId: string = this.settings.apiProvider): string {
+        const providerSettings = this.settings[providerId as keyof ExtensionSettings] as any;
+        return providerSettings?.model || '';
+    }
+
+    private getFallbackModelOptions(fallbackModel: string): Array<{ value: string; label: string; selected: boolean }> {
+        const primaryModel = this.getPrimaryModel();
+        const models = [...new Set([fallbackModel, ...this.getConfiguredModels(this.settings.apiProvider)])]
+            .filter(model => Boolean(model) && model !== primaryModel);
+
+        return [
+            { value: '', label: 'Select a fallback model', selected: !fallbackModel },
+            ...models.map(model => ({
+                value: model,
+                label: model,
+                selected: model === fallbackModel,
+            })),
+        ];
+    }
+
+    private getConfiguredModels(providerId: string): string[] {
+        const provider = ProviderConfig.getProvider(providerId);
+        const modelField = provider?.fields.find(field => field.key === 'model');
+        return [
+            ...(modelField?.options?.map(option => option.value) ?? []),
+            ...(modelField?.defaultOptions ?? []),
+        ];
+    }
+
+    private getProviderModelOptions(): Record<string, string[]> {
+        return Object.fromEntries(
+            ProviderConfig.getAllProviders().map(provider => [
+                provider.id,
+                this.getConfiguredModels(provider.id),
+            ])
+        );
+    }
+
+    private getProviderPrimaryModels(): Record<string, string> {
+        return Object.fromEntries(
+            ProviderConfig.getAllProviders().map(provider => [
+                provider.id,
+                this.getPrimaryModel(provider.id),
+            ])
+        );
     }
 
     private renderProviderSelector(): string {
