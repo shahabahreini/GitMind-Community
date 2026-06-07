@@ -31,6 +31,9 @@ export class ProFeaturesSettings {
 
     public render(): string {
         const devModeEnabled = this.isDevModeEnabled();
+        const isPro = this._settings.pro?.validationStatus === 'valid' ||
+            (this._settings.subscription?.email && this._settings.subscription.status === 'active') ||
+            devModeEnabled;
 
         return `
             <div id="proFeaturesSettings" class="settings-section pro-features-section">
@@ -38,8 +41,8 @@ export class ProFeaturesSettings {
             { id: 'model-tab', label: 'Model Settings', content: this.modelRenderer.render() },
             { id: 'free-tab', label: 'Free Features', content: this.freeRenderer.render() },
             { id: 'commit-style-tab', label: 'Commit Styles', content: this.commitStyleRenderer.render() },
-            { id: 'pro-tab', label: 'Pro Features', content: this.proRenderer.render() },
-            { id: 'subscription-tab', label: 'Pro & License', content: this.subscriptionRenderer.render() }
+            { id: 'pro-tab', label: 'Pro Features', content: this.proRenderer.render(), className: isPro ? '' : 'locked' },
+            { id: 'subscription-tab', label: 'Pro Activation', content: this.subscriptionRenderer.render() }
         ])}
                 
                 ${devModeEnabled ? this.renderDevModeNotice() : ''}

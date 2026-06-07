@@ -263,6 +263,18 @@ export function getSearchableDropdownStyles(): string {
         flex-shrink: 0;
     }
     
+    .pro-provider-badge.locked {
+        background: rgba(255, 82, 82, 0.1);
+        color: #ff5252;
+        border: 1px solid rgba(255, 82, 82, 0.35);
+        box-shadow: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 1px 6px;
+        font-size: 8.5px;
+    }
+    
     /* Searchable Language Dropdown Styles (Backward Compatibility) */
     .searchable-language-dropdown {
         position: relative;

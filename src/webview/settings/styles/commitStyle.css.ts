@@ -191,16 +191,24 @@ export function getCommitStyleStyles(): string {
         }
 
         .gm-style-disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none !important;
+            opacity: 0.65;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
         }
 
         .gm-style-disabled:hover {
-            border-color: var(--vscode-widget-border) !important;
-            background: var(--vscode-editor-background) !important;
-            transform: none !important;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+            border-color: #ff5252 !important;
+            background: rgba(255, 82, 82, 0.03) !important;
+            transform: translateY(-2px) scale(1.01) !important;
+            box-shadow: 0 8px 24px rgba(255, 82, 82, 0.1) !important;
+        }
+
+        .gm-style-disabled:hover .gm-pro-badge.locked {
+            transform: scale(1.08);
+            background: rgba(255, 82, 82, 0.2);
+            border-color: rgba(255, 82, 82, 0.6);
+            box-shadow: 0 0 8px rgba(255, 82, 82, 0.2);
         }
 
         .gm-style-header {
@@ -245,6 +253,19 @@ export function getCommitStyleStyles(): string {
             text-transform: uppercase;
             letter-spacing: 0.8px;
             box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .gm-pro-badge.locked {
+            background: rgba(255, 82, 82, 0.1);
+            color: #ff5252;
+            border: 1px solid rgba(255, 82, 82, 0.35);
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            box-shadow: none;
+            padding: 1px 6px;
+            font-size: 8.5px;
         }
 
         .gm-pro-badge-small {

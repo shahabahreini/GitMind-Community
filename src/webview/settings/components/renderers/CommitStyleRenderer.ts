@@ -126,7 +126,17 @@ export class CommitStyleRenderer extends BaseRenderer {
                                     if (e.target.closest('.gm-examples-toggle')) return;
                                     
                                     const radioInput = option.querySelector('.gm-radio-input');
-                                    if (!radioInput || radioInput.disabled) return;
+                                    if (!radioInput) return;
+                                    
+                                    if (radioInput.disabled) {
+                                        if (typeof showToast === 'function') {
+                                            showToast('This commit style requires GitMind Pro. Redirecting to activation...', 'info');
+                                        }
+                                        if (typeof navigateToSubscriptionTab === 'function') {
+                                            navigateToSubscriptionTab();
+                                        }
+                                        return;
+                                    }
                                     
                                     const styleId = radioInput.value;
                                     const isProStyle = radioInput.getAttribute('data-gm-is-pro') === 'true';
@@ -436,7 +446,14 @@ export class CommitStyleRenderer extends BaseRenderer {
                            ${isDisabled ? 'disabled' : ''} />
                     <div class="gm-style-header">
                         <span class="gm-style-name">${name}</span>
-                        ${isPro ? '<span class="gm-pro-badge">Pro</span>' : ''}
+                        ${isPro ? (hasLicense ? '<span class="gm-pro-badge">Pro</span>' : `
+                            <span class="gm-pro-badge locked" title="Locked (Requires GitMind Pro)">
+                                <svg class="gm-lock-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: middle; display: inline-block;">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>Pro
+                            </span>
+                        `) : ''}
                     </div>
                     <p class="gm-style-description">${description}</p>
                     <button class="gm-examples-toggle" type="button" aria-label="Toggle examples">

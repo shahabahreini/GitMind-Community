@@ -53,6 +53,37 @@ export function getTabStyles(): string {
         font-weight: 600;
     }
 
+    /* Locked Tab Styling */
+    .tab-button.locked {
+        position: relative;
+        cursor: pointer;
+        opacity: 0.8;
+    }
+
+    .tab-button.locked::before {
+        content: "";
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ff5252' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='11' width='18' height='11' rx='2' ry='2'></rect><path d='M7 11V7a5 5 0 0 1 10 0v4'></path></svg>");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+        margin-right: 6px;
+        transition: all 0.25s ease;
+    }
+
+    .tab-button.locked:hover {
+        border-color: rgba(255, 82, 82, 0.4) !important;
+        background: rgba(255, 82, 82, 0.05) !important;
+        color: #ff5252 !important;
+        opacity: 1;
+    }
+
+    .tab-button.locked:hover::before {
+        transform: scale(1.15);
+    }
+
     /* Focus visible for accessibility */
     .tab-button:focus-visible {
         outline: 2px solid var(--vscode-focusBorder);

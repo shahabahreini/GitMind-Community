@@ -67,8 +67,14 @@ export function getSearchableSelectScript(): string {
                 labelContainer.appendChild(labelSpan);
                 
                 const badge = document.createElement('span');
-                badge.className = 'pro-provider-badge';
-                badge.textContent = 'Pro';
+                const isProUserVal = typeof isProUser === 'function' ? isProUser() : false;
+                if (isProUserVal) {
+                    badge.className = 'pro-provider-badge';
+                    badge.textContent = 'Pro';
+                } else {
+                    badge.className = 'pro-provider-badge locked';
+                    badge.innerHTML = '<svg class="gm-lock-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 3px; vertical-align: middle; display: inline-block;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>Pro';
+                }
                 labelContainer.appendChild(badge);
             } else {
                 labelContainer.textContent = option.label;

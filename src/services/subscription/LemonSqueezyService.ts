@@ -11,17 +11,6 @@ export interface SubscriptionStatus {
     endsAt?: Date;
 }
 
-export interface LemonSqueezyProduct {
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-    currency: string;
-    checkoutUrl: string;
-    priceFormatted: string;
-    status: string;
-    testMode: boolean;
-}
 
 export interface LemonSqueezySubscription {
     id: string;
@@ -104,30 +93,30 @@ export class LemonSqueezyService {
     }
 
     /**
-     * Get available subscription products from Lemon Squeezy API
+     * Stable, public checkout link for the GitMind Pro one-time product.
+     * Opening this directly avoids an authenticated products API round-trip
+     * (which can fail even when the API key is valid, e.g. transient network
+     * or an expired key) — the checkout page itself needs no API key.
      */
-    public async getProducts(): Promise<LemonSqueezyProduct[]> {
-        if (!this.apiKey) {
-            throw new Error('Lemon Squeezy API key is required for product retrieval. Please check your environment configuration.');
+    public static readonly CHECKOUT_URL =
+        'https://gitmind.lemonsqueezy.com/checkout/buy/cd58d4e5-92cf-4f59-a6fe-ae6e57010706';
+
+    /**
+     * Build the GitMind Pro checkout URL, prefilling the email when known.
+     */
+    public buildCheckoutUrl(email?: string): string {
+        if (!email) {
+            return LemonSqueezyService.CHECKOUT_URL;
         }
-
         try {
-            debugLog(`Fetching products for store ID: ${this.storeId}`);
-            const response = await this.makeRequest(`/products?filter[store_id]=${this.storeId}&sort=name`);
-
-            if (!response.data || !Array.isArray(response.data)) {
-                debugLog('Invalid products API response format:', response);
-                throw new Error('Invalid response format from products API');
-            }
-
-            const products = this.parseProducts(response.data);
-            debugLog(`Successfully fetched ${products.length} products`);
-            return products;
-        } catch (error) {
-            debugLog('Failed to fetch products from API:', error);
-            throw new Error(`Failed to fetch subscription products: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            const url = new URL(LemonSqueezyService.CHECKOUT_URL);
+            url.searchParams.set('checkout[email]', email);
+            return url.toString();
+        } catch {
+            return LemonSqueezyService.CHECKOUT_URL;
         }
     }
+
 
     /**
      * Validate subscription by customer email
@@ -466,94 +455,6 @@ export class LemonSqueezyService {
         }
     }
 
-    /**
-     * Generate checkout URL for a product
-     */
-    public async generateCheckoutUrl(productId: string, customerEmail?: string): Promise<string> {
-        debugLog(`Generating checkout URL for product ${productId} and email ${customerEmail || 'none'}`);
-
-        if (!this.apiKey) {
-            throw new Error('API key is required for checkout URL generation');
-        }
-
-        try {
-            // First, try to get the product and use its built-in buy_now_url
-            const endpoint = `/products/${productId}`;
-            debugLog(`Fetching product ${productId}: ${this.baseUrl}${endpoint}`);
-
-            const response = await this.makeRequestWithRetry(endpoint, 'GET');
-
-            if (response && response.data && response.data.attributes) {
-                const buyNowUrl = response.data.attributes.buy_now_url;
-                if (buyNowUrl) {
-                    debugLog(`Using product's built-in buy_now_url: ${buyNowUrl}`);
-
-                    // If we have a customer email, try to append it as a query parameter
-                    if (customerEmail) {
-                        const url = new URL(buyNowUrl);
-                        url.searchParams.set('checkout[email]', customerEmail);
-                        return url.toString();
-                    }
-
-                    return buyNowUrl;
-                }
-            }
-
-            // Fallback: Try to create a custom checkout
-            debugLog('No buy_now_url found, trying to create custom checkout');
-
-            // First, get the variants for this product
-            const variantId = await this.getFirstVariantForProduct(productId);
-            if (!variantId) {
-                throw new Error(`No variants found for product ${productId}`);
-            }
-
-            debugLog(`Using variant ID ${variantId} for product ${productId}`);
-
-            const checkoutData = {
-                data: {
-                    type: 'checkouts',
-                    attributes: {
-                        checkout_options: {
-                            embed: false,
-                            media: true,
-                            button_color: '#4F46E5'
-                        },
-                        checkout_data: customerEmail ? {
-                            email: customerEmail
-                        } : {},
-                        product_options: {
-                            enabled_variants: [variantId],
-                            redirect_url: 'https://gitmind.app/subscription-success',
-                            receipt_link_url: 'https://gitmind.app/subscription-receipt'
-                        }
-                    },
-                    relationships: {
-                        store: {
-                            data: {
-                                type: 'stores',
-                                id: this.storeId
-                            }
-                        },
-                        variant: {
-                            data: {
-                                type: 'variants',
-                                id: variantId
-                            }
-                        }
-                    }
-                }
-            };
-
-            debugLog('Creating checkout with data:', JSON.stringify(checkoutData, null, 2));
-            const response2 = await this.makeRequestWithRetry('/checkouts', 'POST', checkoutData);
-            return response2.data.attributes.url;
-
-        } catch (error) {
-            debugLog('Failed to generate checkout URL:', error);
-            throw error;
-        }
-    }
 
     /**
      * Get customer portal URL for managing subscription
@@ -603,21 +504,6 @@ export class LemonSqueezyService {
         }
     }
 
-    /**
-     * Get first variant ID for a product
-     */
-    private async getFirstVariantForProduct(productId: string): Promise<string | null> {
-        try {
-            const response = await this.makeRequestWithRetry(`/variants?filter[product_id]=${productId}`);
-            if (response.data && response.data.length > 0) {
-                return response.data[0].id;
-            }
-            return null;
-        } catch (error) {
-            debugLog('Failed to get variants for product:', error);
-            return null;
-        }
-    }
 
     /**
      * Get all instances for a license key
@@ -860,50 +746,8 @@ export class LemonSqueezyService {
         throw lastError || new Error(`Failed after ${retries} attempts`);
     }
 
-    private parseProducts(productsData: any[]): LemonSqueezyProduct[] {
-        return productsData.map(product => {
-            const attributes = product.attributes;
-            return {
-                id: product.id,
-                name: attributes.name,
-                description: this.stripHtml(attributes.description || ''),
-                price: attributes.price || 0,
-                currency: this.extractCurrencyFromFormatted(attributes.price_formatted || ''),
-                checkoutUrl: attributes.buy_now_url || '',
-                priceFormatted: attributes.price_formatted || '',
-                status: attributes.status,
-                testMode: attributes.test_mode || false
-            };
-        });
-    }
+    
 
-    /**
-     * Extract currency code from formatted price string (e.g., "CA$12.99" -> "CAD")
-     */
-    private extractCurrencyFromFormatted(priceFormatted: string): string {
-        // Handle common currency formats
-        const currencyMap: { [key: string]: string } = {
-            'CA$': 'CAD',
-            '$': 'USD',
-            '€': 'EUR',
-            '£': 'GBP'
-        };
-
-        for (const [symbol, code] of Object.entries(currencyMap)) {
-            if (priceFormatted.includes(symbol)) {
-                return code;
-            }
-        }
-
-        return 'USD'; // Default fallback
-    }
-
-    /**
-     * Strip HTML tags from description
-     */
-    private stripHtml(html: string): string {
-        return html.replace(/<[^>]*>/g, '').trim();
-    }
 
     /**
      * Get environment variable with fallback support for compiled extension

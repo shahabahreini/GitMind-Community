@@ -190,8 +190,8 @@ export class ProFeatureRenderer extends BaseRenderer {
             maxTokens: 350,
         };
 
-        const hasValidLicense = (this.settings.pro?.licenseKey || this.settings.pro?.orderId) && this.settings.pro?.validationStatus === 'valid';
-        const disabledState = !hasValidLicense;
+        const isPro = this.isProUser() || this.isDevModeEnabled();
+        const disabledState = !isPro;
         const disabledAttr = disabledState ? 'disabled' : '';
         const customEnabled = !disabledState && advancedModelConfig.mode === 'custom';
         const overrideDisabledAttr = customEnabled ? '' : 'disabled';
@@ -206,13 +206,15 @@ export class ProFeatureRenderer extends BaseRenderer {
         const topKDisplayValue = customEnabled && advancedModelConfig.topKEnabled ? String(advancedModelConfig.topK) : '';
         const maxTokensDisplayValue = customEnabled && advancedModelConfig.maxTokensEnabled ? String(advancedModelConfig.maxTokens) : '';
 
+        const lockBadge = this.renderLockBadge(disabledState);
+
         return `
             <div class="modern-section">
                 <div class="section-header">
-                    <h3 class="section-title">Advanced Model Configuration</h3>
+                    <h3 class="section-title">Advanced Model Configuration ${lockBadge}</h3>
                 </div>
 
-                <div class="setting-row" data-tooltip="Control advanced generation parameters. Choose 'Let GitMind decide' to use safe provider defaults.">
+                <div class="setting-row ${disabledState ? 'locked' : ''}" data-tooltip="Control advanced generation parameters. Choose 'Let GitMind decide' to use safe provider defaults.">
                     <div class="setting-info">
                         <div class="setting-label">Mode</div>
                         <div class="setting-desc">Let GitMind decide or use your custom overrides</div>
@@ -225,7 +227,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                     </div>
                 </div>
 
-                <div class="setting-row" data-tooltip="Enable a temperature override.">
+                <div class="setting-row ${disabledState ? 'locked' : ''}" data-tooltip="Enable a temperature override.">
                     <div class="setting-info">
                         <div class="setting-label">Temperature</div>
                         <div class="setting-desc">Higher values = more variation</div>
@@ -240,12 +242,12 @@ export class ProFeatureRenderer extends BaseRenderer {
                                     <div class="switch-slider"></div>
                                 </div>
                             </div>
-                            <input class="advanced-number" type="number" id="advancedModelConfigTemperature" min="0" max="2" step="0.05" value="${temperatureDisplayValue}" ${temperatureValueDisabledAttr} />
+                            <input class="advanced-number input-field ${disabledState ? 'locked' : ''}" type="number" id="advancedModelConfigTemperature" min="0" max="2" step="0.05" value="${temperatureDisplayValue}" ${temperatureValueDisabledAttr} />
                         </div>
                     </div>
                 </div>
 
-                <div class="setting-row" data-tooltip="Enable a top-p override. Some providers/models disallow specifying both temperature and top-p.">
+                <div class="setting-row ${disabledState ? 'locked' : ''}" data-tooltip="Enable a top-p override. Some providers/models disallow specifying both temperature and top-p.">
                     <div class="setting-info">
                         <div class="setting-label">Top P</div>
                         <div class="setting-desc">Nucleus sampling probability cutoff</div>
@@ -260,12 +262,12 @@ export class ProFeatureRenderer extends BaseRenderer {
                                     <div class="switch-slider"></div>
                                 </div>
                             </div>
-                            <input class="advanced-number" type="number" id="advancedModelConfigTopP" min="0" max="1" step="0.01" value="${topPDisplayValue}" ${topPValueDisabledAttr} />
+                            <input class="advanced-number input-field ${disabledState ? 'locked' : ''}" type="number" id="advancedModelConfigTopP" min="0" max="1" step="0.01" value="${topPDisplayValue}" ${topPValueDisabledAttr} />
                         </div>
                     </div>
                 </div>
 
-                <div class="setting-row" data-tooltip="Enable a top-k override.">
+                <div class="setting-row ${disabledState ? 'locked' : ''}" data-tooltip="Enable a top-k override.">
                     <div class="setting-info">
                         <div class="setting-label">Top K</div>
                         <div class="setting-desc">Limit sampling to the top K tokens</div>
@@ -280,12 +282,12 @@ export class ProFeatureRenderer extends BaseRenderer {
                                     <div class="switch-slider"></div>
                                 </div>
                             </div>
-                            <input class="advanced-number" type="number" id="advancedModelConfigTopK" min="0" max="500" step="1" value="${topKDisplayValue}" ${topKValueDisabledAttr} />
+                            <input class="advanced-number input-field ${disabledState ? 'locked' : ''}" type="number" id="advancedModelConfigTopK" min="0" max="500" step="1" value="${topKDisplayValue}" ${topKValueDisabledAttr} />
                         </div>
                     </div>
                 </div>
 
-                <div class="setting-row" data-tooltip="Enable a max output tokens override.">
+                <div class="setting-row ${disabledState ? 'locked' : ''}" data-tooltip="Enable a max output tokens override.">
                     <div class="setting-info">
                         <div class="setting-label">Max Output Tokens</div>
                         <div class="setting-desc">Maximum tokens the model may generate</div>
@@ -300,7 +302,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                                     <div class="switch-slider"></div>
                                 </div>
                             </div>
-                            <input class="advanced-number" type="number" id="advancedModelConfigMaxTokens" min="1" max="65536" step="1" value="${maxTokensDisplayValue}" ${maxTokensValueDisabledAttr} />
+                            <input class="advanced-number input-field ${disabledState ? 'locked' : ''}" type="number" id="advancedModelConfigMaxTokens" min="1" max="65536" step="1" value="${maxTokensDisplayValue}" ${maxTokensValueDisabledAttr} />
                         </div>
                     </div>
                 </div>
@@ -312,13 +314,14 @@ export class ProFeatureRenderer extends BaseRenderer {
         const encryptionAvailable = this.isEncryptionAvailable();
         const encryptionEnabled = this.settings.pro?.encryptionEnabled ?? false;
         const tooltip = this.getEncryptionTooltip(encryptionAvailable);
+        const lockBadge = this.renderLockBadge(!encryptionAvailable);
 
         return `
             <div class="modern-section">
                 <div class="section-header">
-                    <h3 class="section-title">Security Features</h3>
+                    <h3 class="section-title">Security Features ${lockBadge}</h3>
                 </div>
-                <div class="setting-row" data-tooltip="${tooltip}">
+                <div class="setting-row ${!encryptionAvailable ? 'locked' : ''}" data-tooltip="${tooltip}">
                     <div class="setting-info">
                         <div class="setting-label">Encrypted API Key Storage</div>
                         <div class="setting-desc">Securely encrypt and store your API keys using VS Code's built-in SecretStorage</div>
@@ -349,9 +352,9 @@ export class ProFeatureRenderer extends BaseRenderer {
         const commitLengthOptions = this.settings.pro?.commitLengthOptions || { enabled: false, maxLength: 72 };
         const learnFromCommitHistory = this.settings.pro?.learnFromCommitHistory || { enabled: true, maxCommits: 50, includeAuthorInfo: true };
         const targetLanguage = this.settings.commit?.targetLanguage || 'english';
-        const hasValidLicense = (this.settings.pro?.licenseKey || this.settings.pro?.orderId) && this.settings.pro?.validationStatus === 'valid';
-        const disabledState = !hasValidLicense;
-        const proRequiredMessage = !hasValidLicense ? '(Pro feature)' : '';
+        const isPro = this.isProUser() || this.isDevModeEnabled();
+        const disabledState = !isPro;
+        const lockBadge = this.renderLockBadge(disabledState);
 
         const languageOptions = [
             { value: 'english', label: 'English' },
@@ -376,7 +379,7 @@ export class ProFeatureRenderer extends BaseRenderer {
             { value: 'punjabi', label: 'Punjabi (ਪੰਜਾਬੀ)' },
             { value: 'kannada', label: 'Kannada (ಕನ್ನಡ)' },
             { value: 'gujarati', label: 'Gujarati (ગુજરાતી)' },
-            { value: 'bhojpuri', label: 'Bhojpuri (भोजपुरी)' },
+            { value: 'bhojpuri', label: 'Bhojpuri (भোজपुरी)' },
             { value: 'turkish', label: 'Turkish (Türkçe)' },
             { value: 'dutch', label: 'Dutch (Nederlands)' },
             { value: 'polish', label: 'Polish (Polski)' },
@@ -418,12 +421,12 @@ export class ProFeatureRenderer extends BaseRenderer {
         return `
         <div class="modern-section">
             <div class="section-header">
-                <h3 class="section-title">Commit Message Options ${proRequiredMessage}</h3>
+                <h3 class="section-title">Commit Message Options ${lockBadge}</h3>
                 <div class="section-description">Control commit message formatting for consistency</div>
             </div>
 
             <div class="commit-options-row">
-                <div class="compact-setting select-setting" style="grid-column: 1 / -1;">
+                <div class="compact-setting select-setting ${disabledState ? 'locked' : ''}" style="grid-column: 1 / -1;">
                     <div class="setting-info">
                         <div class="setting-label">Target Commit Language</div>
                         <div class="setting-desc">Select the language for AI-generated commit messages. Uses professional developer terminology. Start typing to search languages.</div>
@@ -454,7 +457,7 @@ export class ProFeatureRenderer extends BaseRenderer {
             </div>
 
             <div class="commit-options-row">
-                <div class="compact-setting toggle-setting">
+                <div class="compact-setting toggle-setting ${disabledState ? 'locked' : ''}">
                     <div class="setting-info">
                         <div class="setting-label">Custom Body Line Limit</div>
                     </div>
@@ -469,7 +472,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                     </div>
                 </div>
                 
-                <div class="compact-setting input-setting">
+                <div class="compact-setting input-setting ${disabledState ? 'locked' : ''}">
                     <span>Maximum Body Lines</span>
                     <input type="number" id="commitBodyOptionsMaxLines" 
                         class="input-field" 
@@ -481,7 +484,7 @@ export class ProFeatureRenderer extends BaseRenderer {
             </div>
             
             <div class="commit-options-row">
-                <div class="compact-setting toggle-setting">
+                <div class="compact-setting toggle-setting ${disabledState ? 'locked' : ''}">
                     <div class="setting-info">
                         <div class="setting-label">Custom Summary Length</div>
                     </div>
@@ -496,7 +499,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                     </div>
                 </div>
                 
-                <div class="compact-setting input-setting">
+                <div class="compact-setting input-setting ${disabledState ? 'locked' : ''}">
                     <span>Maximum Summary Length</span>
                     <input type="number" id="commitLengthOptionsMaxLength" 
                         class="input-field" 
@@ -510,12 +513,12 @@ export class ProFeatureRenderer extends BaseRenderer {
         <div class="section-divider"></div>
         
         <div class="section-header">
-            <h4 class="subsection-title">Learn from Commit History ${proRequiredMessage}</h4>
+            <h4 class="subsection-title">Learn from Commit History ${lockBadge}</h4>
             <div class="section-description">Analyze your commit message style and get AI-powered insights</div>
         </div>
         
         <div class="commit-options-row">
-            <div class="compact-setting input-setting">
+            <div class="compact-setting input-setting ${disabledState ? 'locked' : ''}">
                 <span>Max Commits</span>
                 <input type="number" id="learnFromCommitHistoryMaxCommits" 
                     class="input-field" 
@@ -524,7 +527,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                     ${disabledState ? 'disabled' : ''} 
                     data-setting="pro.learnFromCommitHistory.maxCommits" />
             </div>
-            <div class="compact-setting toggle-setting">
+            <div class="compact-setting toggle-setting ${disabledState ? 'locked' : ''}">
                 <div class="setting-info">
                     <div class="setting-label">Include Author Info</div>
                 </div>
@@ -554,7 +557,7 @@ export class ProFeatureRenderer extends BaseRenderer {
 
         ${this.renderChangelogGenerationSection()}
 
-        ${!hasValidLicense ? `
+        ${!isPro ? `
         <div class="pro-upsell">
             <p>Upgrade to GitMind Pro to enable custom commit message options.</p>
             <button class="action-button primary" id="upgradeBtn1">Upgrade to Pro</button>
@@ -569,18 +572,18 @@ export class ProFeatureRenderer extends BaseRenderer {
         const maxVersions = (changelogConfig as any).maxVersions || 10;
         const overwriteExisting = (changelogConfig as any).overwriteExisting || false;
         const maxCommitsEnabled = (changelogConfig as any).maxCommitsEnabled ?? false;
-        const hasValidLicense = (this.settings.pro?.licenseKey || this.settings.pro?.orderId) && this.settings.pro?.validationStatus === 'valid';
-        const disabledState = !hasValidLicense;
-        const proRequiredMessage = !hasValidLicense ? '(Pro feature)' : '';
+        const isPro = this.isProUser() || this.isDevModeEnabled();
+        const disabledState = !isPro;
+        const lockBadge = this.renderLockBadge(disabledState);
 
         return `
         <div class="section-header">
-            <h4 class="subsection-title">Changelog Generation ${proRequiredMessage}</h4>
+            <h4 class="subsection-title">Changelog Generation ${lockBadge}</h4>
             <div class="section-description">Generate professional CHANGELOG.md from your git history using AI</div>
         </div>
 
         <div class="commit-options-row">
-            <div class="compact-setting toggle-setting">
+            <div class="compact-setting toggle-setting ${disabledState ? 'locked' : ''}">
                 <div class="setting-info">
                     <div class="setting-label">Limit Commits</div>
                     <div class="setting-desc">When disabled, commit range is determined automatically from version tags</div>
@@ -595,7 +598,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                     </div>
                 </div>
             </div>
-            <div class="compact-setting input-setting">
+            <div class="compact-setting input-setting ${disabledState ? 'locked' : ''}">
                 <span>Max Commits</span>
                 <input type="number" id="changelogMaxCommits"
                     class="input-field"
@@ -604,7 +607,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                     ${disabledState || !maxCommitsEnabled ? 'disabled' : ''}
                     data-setting="pro.changelog.maxCommits" />
             </div>
-            <div class="compact-setting input-setting">
+            <div class="compact-setting input-setting ${disabledState ? 'locked' : ''}">
                 <span>Max Versions</span>
                 <input type="number" id="changelogMaxVersions"
                     class="input-field"
@@ -616,7 +619,7 @@ export class ProFeatureRenderer extends BaseRenderer {
         </div>
 
         <div class="commit-options-row">
-            <div class="compact-setting toggle-setting">
+            <div class="compact-setting toggle-setting ${disabledState ? 'locked' : ''}">
                 <div class="setting-info">
                     <div class="setting-label">Group by Version Tags</div>
                 </div>
@@ -630,7 +633,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                     </div>
                 </div>
             </div>
-            <div class="compact-setting select-setting">
+            <div class="compact-setting select-setting ${disabledState ? 'locked' : ''}">
                 <span>Version Order</span>
                 <select id="changelogVersionOrder"
                     class="input-field"
@@ -643,7 +646,7 @@ export class ProFeatureRenderer extends BaseRenderer {
         </div>
 
         <div class="commit-options-row">
-            <div class="compact-setting toggle-setting">
+            <div class="compact-setting toggle-setting ${disabledState ? 'locked' : ''}">
                 <div class="setting-info">
                     <div class="setting-label">Overwrite Existing Versions</div>
                     <div class="setting-desc">Replace existing changelog entries when regenerating (otherwise preserves them)</div>
@@ -674,16 +677,16 @@ export class ProFeatureRenderer extends BaseRenderer {
 
     private renderLargeDiffHandlingSection(): string {
         const largeDiffHandling = this.settings.pro?.largeDiffHandling || { enabled: false, chunkSize: 1000, maxChunks: 5 };
-        const hasValidLicense = (this.settings.pro?.licenseKey || this.settings.pro?.orderId) && this.settings.pro?.validationStatus === 'valid';
-        const disabledState = !hasValidLicense;
-        const proRequiredMessage = !hasValidLicense ? '(Pro feature)' : '';
+        const isPro = this.isProUser() || this.isDevModeEnabled();
+        const disabledState = !isPro;
+        const lockBadge = this.renderLockBadge(disabledState);
 
         return `
             <div class="modern-section">
                 <div class="section-header">
-                    <h3 class="section-title">Large Diff Handling ${proRequiredMessage}</h3>
+                    <h3 class="section-title">Large Diff Handling ${lockBadge}</h3>
                 </div>
-                <div class="setting-row">
+                <div class="setting-row ${disabledState ? 'locked' : ''}">
                     <div class="setting-info">
                         <div class="setting-label">Enable Large Diff Processing</div>
                         <div class="setting-desc">Break large diffs into smaller chunks and intelligently combine results</div>
@@ -702,7 +705,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                 </div>
                 
                 <div class="compact-settings">
-                    <div class="compact-setting">
+                    <div class="compact-setting ${disabledState ? 'locked' : ''}">
                         <span>Chunk Size (lines)</span>
                         <input type="number" id="chunkSize" 
                             class="input-field" 
@@ -711,7 +714,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                             ${disabledState ? 'disabled' : ''} 
                             data-setting="pro.largeDiffHandling.chunkSize" />
                     </div>
-                    <div class="compact-setting">
+                    <div class="compact-setting ${disabledState ? 'locked' : ''}">
                         <span>Max Chunks</span>
                         <input type="number" id="maxChunks" 
                             class="input-field" 
@@ -722,7 +725,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                     </div>
                 </div>
                 
-                ${!hasValidLicense ? `
+                ${!isPro ? `
                 <div class="pro-upsell">
                     <p>Upgrade to GitMind Pro to enable large diff processing.</p>
                     <button class="action-button primary" id="upgradeBtn2">Upgrade to Pro</button>
@@ -743,5 +746,19 @@ export class ProFeatureRenderer extends BaseRenderer {
         }
 
         return "Encryption is a Pro feature. Please upgrade to GitMind Pro to enable this feature.";
+    }
+
+    private renderLockBadge(isLocked: boolean): string {
+        if (!isLocked) {
+            return '';
+        }
+        return `
+            <span class="pro-lock-badge" title="Locked (Requires GitMind Pro)">
+                <svg class="gm-lock-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: middle; display: inline-block;">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>Pro Locked
+            </span>
+        `;
     }
 }

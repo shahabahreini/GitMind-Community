@@ -5,6 +5,7 @@ interface Tab {
     label: string;
     content: string;
     tooltip?: string;
+    className?: string;
 }
 
 export class TabManager {
@@ -20,8 +21,9 @@ export class TabManager {
     private renderTabHeader(tabs: Tab[]): string {
         const buttons = tabs.map((tab, index) => {
             const activeClass = index === 0 ? 'active' : '';
+            const customClass = tab.className || '';
             const tooltip = tab.tooltip || `${tab.label} settings`;
-            return `<button class="tab-button ${activeClass}" data-tab="${tab.id}" data-tooltip="${tooltip}">${tab.label}</button>`;
+            return `<button class="tab-button ${activeClass} ${customClass}" data-tab="${tab.id}" data-tooltip="${tooltip}">${tab.label}</button>`;
         }).join('');
 
         return `

@@ -240,80 +240,45 @@ export class SubscriptionManager {
      * Start subscription process
      */
     public async startSubscription(): Promise<void> {
+        // Open the stable public checkout link directly. This does NOT require the
+        // products API (which can fail even with a valid key), so "Buy" always works.
+        const checkoutUrl = this.lemonSqueezy.buildCheckoutUrl(
+            // Prefill the email if we already know it, but never block on it —
+            // the checkout page collects the email itself.
+            await this.getUserEmail(true)
+        );
+
         try {
-            debugLog('Starting subscription process...');
-
-            // Check if API key is available before proceeding
-            const lemonSqueezy = LemonSqueezyService.getInstance();
-
-            vscode.window.showInformationMessage('Loading subscription plans...');
-            const products = await lemonSqueezy.getProducts();
-
-            if (products.length === 0) {
-                vscode.window.showErrorMessage('No subscription plans available. Please try again later or contact support.');
-                return;
-            }
-
-            // Show product selection with detailed information
-            const selectedProduct = await this.showProductSelection(products);
-            if (!selectedProduct) {
-                return;
-            }
-
-            // Get user email
-            const email = await this.getUserEmail();
-            if (!email) {
-                vscode.window.showErrorMessage('Email is required for subscription.');
-                return;
-            }
-
-            // Show product details and confirm before proceeding
-            const proceedWithPurchase = await this.showProductConfirmation(selectedProduct, email);
-            if (!proceedWithPurchase) {
-                return;
-            }
-
-            // Generate checkout URL
-            const checkoutUrl = await this.lemonSqueezy.generateCheckoutUrl(selectedProduct.id, email);
-
-            // Open checkout in browser
             await vscode.env.openExternal(vscode.Uri.parse(checkoutUrl));
-
-            // Show instructions. Activation is NOT automatic — after paying, the user
-            // receives a license key by email and enters it here.
-            const enterKey = 'Enter License Key';
-            const openAgain = 'Open Checkout Again';
-
-            const action = await vscode.window.showInformationMessage(
-                `🚀 Checkout opened for ${selectedProduct.name}!\n\nComplete your purchase in the browser window. You'll receive a license key by email — click "Enter License Key" to activate.`,
-                { modal: false },
-                enterKey,
-                openAgain
-            );
-
-            if (action === enterKey) {
-                await vscode.commands.executeCommand('gitmind.activateWithLicenseKey');
-            } else if (action === openAgain) {
-                await vscode.env.openExternal(vscode.Uri.parse(checkoutUrl));
-            }
-
         } catch (error) {
-            debugLog('Failed to start subscription process:', error);
-
-            // Provide more specific error messages
-            let errorMessage = 'Failed to start subscription process.';
-
-            if (error instanceof Error) {
-                if (error.message.includes('API key is required')) {
-                    errorMessage = 'Subscription service is not properly configured. Please ensure the Lemon Squeezy API key is set in your environment variables or contact support.';
-                } else if (error.message.includes('Failed to fetch')) {
-                    errorMessage = 'Unable to connect to subscription service. Please check your internet connection and try again.';
-                } else {
-                    errorMessage = `Failed to start subscription process: ${error.message}`;
-                }
+            debugLog('Failed to open checkout URL:', error);
+            const copy = 'Copy Checkout Link';
+            const choice = await vscode.window.showErrorMessage(
+                'Could not open the GitMind Pro checkout automatically.',
+                copy
+            );
+            if (choice === copy) {
+                await vscode.env.clipboard.writeText(LemonSqueezyService.CHECKOUT_URL);
+                vscode.window.showInformationMessage('Checkout link copied to clipboard.');
             }
+            return;
+        }
 
-            vscode.window.showErrorMessage(errorMessage);
+        // After paying, the user receives a license key by email and enters it here.
+        const enterKey = 'Enter License Key';
+        const openAgain = 'Open Checkout Again';
+
+        const action = await vscode.window.showInformationMessage(
+            `🚀 GitMind Pro checkout opened!\n\nComplete your purchase in the browser window. You'll receive a license key by email — click "Enter License Key" to activate.`,
+            { modal: false },
+            enterKey,
+            openAgain
+        );
+
+        if (action === enterKey) {
+            await vscode.commands.executeCommand('gitmind.activateWithLicenseKey');
+        } else if (action === openAgain) {
+            await vscode.env.openExternal(vscode.Uri.parse(checkoutUrl));
         }
     }
 
@@ -486,56 +451,6 @@ export class SubscriptionManager {
         }
 
         return email;
-    }
-
-    private async showProductSelection(products: any[]): Promise<any | undefined> {
-        if (products.length === 1) {
-            return products[0];
-        }
-
-        const items = products.map(product => ({
-            label: `${product.name} ${product.testMode ? '(Test Mode)' : ''}`,
-            description: product.priceFormatted,
-            detail: `${product.description} • Status: ${product.status}`,
-            product
-        }));
-
-        const selected = await vscode.window.showQuickPick(items, {
-            title: 'Choose GitMind Pro Subscription',
-            placeHolder: 'Select a subscription plan',
-            ignoreFocusOut: true
-        });
-
-        return selected?.product;
-    }
-
-    /**
-     * Show product confirmation dialog with detailed information
-     */
-    private async showProductConfirmation(product: any, email: string): Promise<boolean> {
-        const testModeNote = product.testMode
-            ? '\n\n[TEST MODE] This is a test purchase and will not charge your payment method.'
-            : '';
-
-        const message = [
-            'Please confirm your subscription details:',
-            '',
-            `Product:        ${product.name}`,
-            `Price:          ${product.priceFormatted}`,
-            `Email:          ${email}`,
-            `Description:    ${product.description}`,
-            testModeNote,
-            '',
-            'Do you want to proceed to checkout?'
-        ].filter(Boolean).join('\n');
-
-        const result = await vscode.window.showInformationMessage(
-            message,
-            { modal: true },
-            'Proceed to Checkout',
-        );
-
-        return result === 'Proceed to Checkout';
     }
 
     private async loadCachedSubscriptions(): Promise<void> {

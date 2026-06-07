@@ -826,4 +826,74 @@ export const proFeaturesModernCSS: string = `
         max-width: 100%;
     }
 }
+
+/* Locked Pro Features styling */
+.pro-feature-container .pro-lock-badge {
+    background: linear-gradient(135deg, rgba(255, 159, 67, 0.15), rgba(255, 82, 82, 0.18));
+    color: #ff4757;
+    border: 1px solid rgba(255, 82, 82, 0.3);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin-left: 10px;
+    vertical-align: middle;
+    box-shadow: 0 2px 6px rgba(255, 82, 82, 0.08);
+    transition: all 0.3s ease;
+}
+
+.pro-feature-container .pro-lock-badge:hover {
+    background: linear-gradient(135deg, rgba(255, 159, 67, 0.22), rgba(255, 82, 82, 0.25));
+    border-color: rgba(255, 82, 82, 0.5);
+    box-shadow: 0 4px 10px rgba(255, 82, 82, 0.15);
+}
+
+.pro-feature-container .pro-lock-badge svg {
+    stroke: #ff4757;
+}
+
+.pro-feature-container .setting-row.locked,
+.pro-feature-container .compact-setting.locked {
+    position: relative;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.pro-feature-container .setting-row.locked:hover,
+.pro-feature-container .compact-setting.locked:hover {
+    opacity: 1;
+    background-color: rgba(255, 82, 82, 0.03) !important;
+    border-color: rgba(255, 82, 82, 0.2) !important;
+}
+
+/* Cohesive inline lock icons next to labels */
+.pro-feature-container .setting-row.locked .setting-label::before,
+.pro-feature-container .compact-setting.locked .setting-label::before,
+.pro-feature-container .compact-setting.locked > span::before {
+    content: "";
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ff5252' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='11' width='18' height='11' rx='2' ry='2'></rect><path d='M7 11V7a5 5 0 0 1 10 0v4'></path></svg>");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    margin-right: 6px;
+    vertical-align: middle;
+    opacity: 0.55;
+    transition: all 0.25s ease;
+}
+
+.pro-feature-container .setting-row.locked:hover .setting-label::before,
+.pro-feature-container .compact-setting.locked:hover .setting-label::before,
+.pro-feature-container .compact-setting.locked:hover > span::before {
+    opacity: 1;
+    transform: scale(1.15);
+}
 `;

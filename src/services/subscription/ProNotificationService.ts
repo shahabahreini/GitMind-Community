@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { SubscriptionManager } from './SubscriptionManager';
+import { LemonSqueezyService } from './LemonSqueezyService';
 import { debugLog } from '../debug/logger';
 
 export class ProNotificationService {
@@ -20,7 +21,7 @@ export class ProNotificationService {
     private readonly DISCOUNT_PERCENT = 15;
     private readonly DISCOUNT_EXPIRY = new Date('2026-06-01T00:00:00Z'); // Valid UNTIL end of May 2026 (thus exp = June 1)
 
-    private constructor() {}
+    private constructor() { }
 
     public static getInstance(): ProNotificationService {
         if (!ProNotificationService.instance) {
@@ -60,7 +61,7 @@ export class ProNotificationService {
 
             // Pick a random feature to highlight
             const randomFeature = this.PRO_FEATURES[Math.floor(Math.random() * this.PRO_FEATURES.length)];
-            
+
             let message = `GitMind: Upgrade to Pro! ${randomFeature}`;
 
             // Check if there is an active discount
@@ -82,8 +83,8 @@ export class ProNotificationService {
             );
 
             if (selection === buyAction) {
-                vscode.env.openExternal(vscode.Uri.parse('https://gitmind.lemonsqueezy.com/checkout/buy/cd58d4e5-92cf-4f59-a6fe-ae6e57010706'));
-                // Also open the Settings UI on the "Pro & License" tab so the user can
+                vscode.env.openExternal(vscode.Uri.parse(LemonSqueezyService.CHECKOUT_URL));
+                // Also open the Settings UI on the "Pro Activation" tab so the user can
                 // activate right after purchasing without hunting for where to enter the key.
                 vscode.commands.executeCommand('gitmind.openSettings', 'subscription-tab');
             } else if (selection === activateAction) {

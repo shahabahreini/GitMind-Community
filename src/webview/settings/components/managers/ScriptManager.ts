@@ -288,6 +288,23 @@ export class ScriptManager {
                 attachButtonHandler('subscribeFromFreeBtn', () => {
                     navigateToSubscriptionTab();
                 });
+
+                // Upgrade button from Custom API locked overlay
+                attachButtonHandler('upgradeFromCustomApiBtn', () => {
+                    navigateToSubscriptionTab();
+                });
+
+                // Locked setting rows and compact settings click handlers
+                document.querySelectorAll('.setting-row.locked, .compact-setting.locked').forEach(el => {
+                    el.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (typeof showToast === 'function') {
+                            showToast('This is a GitMind Pro feature. Redirecting to activation...', 'info');
+                        }
+                        navigateToSubscriptionTab();
+                    });
+                });
                 
                 // Preview Commit History Stats button handler
                 attachButtonHandler('previewCommitHistoryBtn', () => {

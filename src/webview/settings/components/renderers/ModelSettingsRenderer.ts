@@ -23,13 +23,11 @@ export class ModelSettingsRenderer extends BaseRenderer {
     private renderProviderSelector(): string {
         // Check if user is Pro (has active subscription or valid license)
         const isPro = this.settings.pro?.validationStatus === 'valid' ||
-            this.settings.subscription?.status === 'active';
+            this.settings.subscription?.status === 'active' ||
+            this.isDevModeEnabled();
 
-        // Get all providers but filter out Pro-only ones if user is not Pro
+        // Get all providers
         let providers = ProviderConfig.getAllProviders();
-        if (!isPro) {
-            providers = providers.filter(provider => !provider.isPro);
-        }
 
         const currentProvider = this.settings.apiProvider;
 
@@ -54,6 +52,32 @@ export class ModelSettingsRenderer extends BaseRenderer {
     private renderProviderSettings(provider: any): string {
         const isVisible = this.settings.apiProvider === provider.id;
         const providerSettings = this.settings[provider.id as keyof ExtensionSettings] as any;
+        const isPro = this.settings.pro?.validationStatus === 'valid' ||
+            this.settings.subscription?.status === 'active' ||
+            this.isDevModeEnabled();
+
+        if (provider.isPro && !isPro) {
+            return `
+                <div id="${provider.id}Settings" class="api-settings ${isVisible ? '' : 'hidden'} locked-provider-settings">
+                    <div class="provider-locked-overlay">
+                        <div class="provider-locked-content">
+                            <div class="provider-locked-icon-container">
+                                <svg class="provider-locked-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                            </div>
+                            <h4>${provider.name} requires GitMind Pro</h4>
+                            <p>Unlock custom API configuration, advanced routing, model configurations, and secure encryption key storage.</p>
+                            <button type="button" class="upgrade-btn btn btn-primary" id="upgradeFromCustomApiBtn">Upgrade to GitMind Pro</button>
+                        </div>
+                    </div>
+                    <div style="opacity: 0.2; pointer-events: none;">
+                        ${provider.fields.map((field: any) => this.renderProviderField(field, providerSettings)).join('')}
+                    </div>
+                </div>
+            `;
+        }
 
         return `
             <div id="${provider.id}Settings" class="api-settings ${isVisible ? '' : 'hidden'}">
