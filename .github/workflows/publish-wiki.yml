@@ -27,13 +27,14 @@ jobs:
     name: Validate Wiki
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
       - run: node scripts/validate-wiki.mjs
       - name: Validate issue forms and workflow YAML
-        run: ruby -e 'require "yaml"; Dir[".github/ISSUE_TEMPLATE/*.{yml,yaml}", ".github/workflows/*.{yml,yaml}"].each { |file| YAML.load_file(file); puts "valid #{file}" }'
+        run: |
+          ruby -e 'require "yaml"; Dir[".github/ISSUE_TEMPLATE/*.{yml,yaml}", ".github/workflows/*.{yml,yaml}"].each { |file| YAML.load_file(file); puts "valid #{file}" }'
 
   publish:
     name: Publish Wiki
@@ -41,7 +42,7 @@ jobs:
     if: github.event_name == 'push' || inputs.publish
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Require Wiki push token
         env:
           WIKI_PUSH_TOKEN: ${{ secrets.WIKI_PUSH_TOKEN }}
