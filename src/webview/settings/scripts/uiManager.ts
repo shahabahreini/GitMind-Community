@@ -228,14 +228,13 @@ export function getUiManagerScript(): string {
       this.renderActivationBlock = function() {
         return \`
           <div class="gm-activate">
-            <div class="gm-activate-label">⭐ Activate GitMind Pro</div>
+            <div class="gm-activate-label">Activate GitMind Pro</div>
             <div class="gm-activate-row">
               <input type="text" id="bannerLicenseInput" class="gm-activate-input"
                      placeholder="Paste your license key (GITMIND-PRO-…)" autocomplete="off" />
               <button type="button" id="bannerActivateLicenseBtn" class="gm-activate-btn">Activate</button>
             </div>
             <div class="gm-activate-actions">
-              <button type="button" id="bannerActivateEmailBtn" class="gm-activate-link">⚡ Quick activate by email</button>
               <button type="button" id="bannerBuyProBtn" class="gm-activate-link">Buy GitMind Pro</button>
             </div>
           </div>
@@ -336,23 +335,12 @@ export function getUiManagerScript(): string {
 
     document.addEventListener('click', function(e) {
       const target = e.target && e.target.closest
-        ? e.target.closest('#bannerActivateLicenseBtn, #bannerActivateEmailBtn, #bannerBuyProBtn')
+        ? e.target.closest('#bannerActivateLicenseBtn, #bannerBuyProBtn')
         : null;
       if (!target) return;
 
       if (target.id === 'bannerActivateLicenseBtn') {
         submitBannerLicense();
-      } else if (target.id === 'bannerActivateEmailBtn') {
-        // If an email is already configured, activate with it directly (this path
-        // refreshes the settings webview on success). Otherwise run the command,
-        // which prompts the user for their purchase email.
-        const s = window.gitmindSettings || {};
-        const configuredEmail = s.subscription && s.subscription.email;
-        if (configuredEmail) {
-          vscode.postMessage({ command: 'activateProByEmail', customerEmail: configuredEmail });
-        } else {
-          vscode.postMessage({ command: 'executeCommand', commandId: 'gitmind.activateByEmail' });
-        }
       } else if (target.id === 'bannerBuyProBtn') {
         vscode.postMessage({ command: 'executeCommand', commandId: 'gitmind.subscribe' });
       }

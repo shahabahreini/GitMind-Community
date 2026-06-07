@@ -279,23 +279,19 @@ export class SubscriptionManager {
             // Open checkout in browser
             await vscode.env.openExternal(vscode.Uri.parse(checkoutUrl));
 
-            // Show instructions. Activation is NOT automatic — it needs a license key,
-            // an order ID, or an email lookup. Guide the user to the next step explicitly.
-            const activateNow = "I've completed payment — Activate now";
+            // Show instructions. Activation is NOT automatic — after paying, the user
+            // receives a license key by email and enters it here.
             const enterKey = 'Enter License Key';
             const openAgain = 'Open Checkout Again';
 
             const action = await vscode.window.showInformationMessage(
-                `🚀 Checkout opened for ${selectedProduct.name}!\n\nComplete your purchase in the browser window, then come back here to activate. Once you've paid, click "Activate now" and we'll find your license automatically.`,
+                `🚀 Checkout opened for ${selectedProduct.name}!\n\nComplete your purchase in the browser window. You'll receive a license key by email — click "Enter License Key" to activate.`,
                 { modal: false },
-                activateNow,
                 enterKey,
                 openAgain
             );
 
-            if (action === activateNow) {
-                await vscode.commands.executeCommand('gitmind.activateByEmail', email);
-            } else if (action === enterKey) {
+            if (action === enterKey) {
                 await vscode.commands.executeCommand('gitmind.activateWithLicenseKey');
             } else if (action === openAgain) {
                 await vscode.env.openExternal(vscode.Uri.parse(checkoutUrl));

@@ -10,11 +10,10 @@ Unlocked extras with **GitMind Pro**:
 
 ## Already purchased? Activate in seconds
 
-There are three ways to activate — pick whichever is easiest:
+Two ways to activate — pick whichever is easiest:
 
-1. **By email** — run *Activate Pro by Email* and we'll find your license automatically.
-2. **License key** — paste the key from your purchase email.
-3. **One‑click link** — use the activation link on your purchase confirmation page.
+1. **License key** — paste the key from your purchase email into Settings → Pro & License.
+2. **One‑click link** — use the activation link on your purchase confirmation page.
 
 Haven't bought yet? Use **Buy GitMind Pro** to purchase a one‑time, lifetime license.
 

@@ -13,17 +13,20 @@ export class SettingsTemplateGenerator {
   private _nonce: string;
   private _webview: vscode.Webview;
   private _extensionVersion: string;
+  private _initialTab?: string;
 
   constructor(
     settings: ExtensionSettings,
     nonce: string,
     webview: vscode.Webview,
-    extensionVersion: string
+    extensionVersion: string,
+    initialTab?: string
   ) {
     this._settings = settings;
     this._nonce = nonce;
     this._webview = webview;
     this._extensionVersion = extensionVersion;
+    this._initialTab = initialTab;
   }
 
   public generateHtml(): string {
@@ -97,6 +100,7 @@ export class SettingsTemplateGenerator {
       </script>
     </head>
     <body class="loading" style="visibility: hidden;">
+      ${this._initialTab ? `<script nonce="${this._nonce}">try{sessionStorage.setItem('gitmind_active_tab', ${JSON.stringify(this._initialTab)});}catch(e){}</script>` : ''}
       <div class="settings-container" style="opacity: 0;">
         <div id="statusBannerContainer" style="opacity: 0;">
           ${statusBanner.render()}

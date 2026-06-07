@@ -1046,8 +1046,8 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
       await handleChangeCommitStyle();
     }),
 
-    vscode.commands.registerCommand("gitmind.openSettings", () => {
-      SettingsWebview.createOrShow(context.extensionUri);
+    vscode.commands.registerCommand("gitmind.openSettings", (initialTab?: string) => {
+      SettingsWebview.createOrShow(context.extensionUri, typeof initialTab === 'string' ? initialTab : undefined);
       // Removed non-essential telemetry tracking
     }),
 
@@ -1363,62 +1363,10 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
       }
     }),
 
-    vscode.commands.registerCommand("gitmind.activateByEmail", async (email?: string) => {
-      try {
-        const proActivationService = ProActivationService.getInstance();
-        const subscriptionManager = SubscriptionManager.getInstance();
-
-        // Try to reuse a known email (settings / git config) before prompting.
-        if (!email) {
-          email = await subscriptionManager.getUserEmail(true);
-        }
-
-        if (!email) {
-          email = await vscode.window.showInputBox({
-            title: 'Activate GitMind Pro',
-            prompt: 'Enter the email address you used to purchase GitMind Pro',
-            placeHolder: 'your.email@example.com',
-            ignoreFocusOut: true,
-            validateInput: (value) =>
-              value && value.includes('@') ? null : 'Please enter a valid email address'
-          });
-
-          if (!email) {
-            return; // User cancelled
-          }
-        }
-
-        const result = await vscode.window.withProgress({
-          location: vscode.ProgressLocation.Notification,
-          title: "Finding your GitMind Pro purchase...",
-          cancellable: false
-        }, async () => proActivationService.activateWithEmail(email as string));
-
-        if (result.success) {
-          vscode.window.showInformationMessage(result.message);
-          vscode.commands.executeCommand('gitmind.refreshSubscription', { silent: true });
-        } else {
-          // Offer a direct fallback to license-key entry on failure.
-          const choice = await vscode.window.showWarningMessage(
-            result.message,
-            'Enter License Key'
-          );
-          if (choice === 'Enter License Key') {
-            vscode.commands.executeCommand('gitmind.activateWithLicenseKey');
-          }
-        }
-      } catch (error) {
-        debugLog("Email activation error:", error);
-        const errorMessage = error instanceof Error ? error.message : 'Failed to activate by email';
-        vscode.window.showErrorMessage(`Failed to activate by email: ${errorMessage}`);
-      }
-    }),
-
     vscode.commands.registerCommand("gitmind.showActivationQuickPick", async () => {
       try {
         const items: Array<vscode.QuickPickItem & { action: string }> = [
           { label: '$(key) Enter license key', detail: 'Paste the license key from your purchase email', action: 'key' },
-          { label: '$(mail) Activate by email', detail: 'Find your purchase automatically using your email', action: 'email' },
           { label: '$(cloud-download) Buy GitMind Pro', detail: 'Open the checkout to purchase a license', action: 'buy' },
           { label: '$(gear) Open Settings', detail: 'Manage license and Pro features in the settings UI', action: 'settings' }
         ];
@@ -1435,9 +1383,6 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
         switch (selected.action) {
           case 'key':
             vscode.commands.executeCommand('gitmind.activateWithLicenseKey');
-            break;
-          case 'email':
-            vscode.commands.executeCommand('gitmind.activateByEmail');
             break;
           case 'buy':
             vscode.commands.executeCommand('gitmind.subscribe');

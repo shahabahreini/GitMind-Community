@@ -83,6 +83,9 @@ export class ProNotificationService {
 
             if (selection === buyAction) {
                 vscode.env.openExternal(vscode.Uri.parse('https://gitmind.lemonsqueezy.com/checkout/buy/cd58d4e5-92cf-4f59-a6fe-ae6e57010706'));
+                // Also open the Settings UI on the "Pro & License" tab so the user can
+                // activate right after purchasing without hunting for where to enter the key.
+                vscode.commands.executeCommand('gitmind.openSettings', 'subscription-tab');
             } else if (selection === activateAction) {
                 vscode.commands.executeCommand('gitmind.showActivationQuickPick');
             } else if (selection === snoozeAction) {

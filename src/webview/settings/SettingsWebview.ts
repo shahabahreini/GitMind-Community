@@ -25,14 +25,20 @@ export class SettingsWebview {
     return !!SettingsWebview.currentPanel;
   }
 
-  public static createOrShow(extensionUri: vscode.Uri) {
+  public static createOrShow(extensionUri: vscode.Uri, initialTab?: string) {
     const column = vscode.window.activeTextEditor
       ? vscode.window.activeTextEditor.viewColumn
       : undefined;
 
-    // If we already have a panel, show it.
+    // If we already have a panel, show it (and switch to the requested tab).
     if (SettingsWebview.currentPanel) {
       SettingsWebview.currentPanel._panel.reveal(column);
+      if (initialTab) {
+        SettingsWebview.currentPanel._panel.webview.postMessage({
+          command: 'switchTab',
+          tabId: initialTab
+        });
+      }
       return;
     }
 
@@ -51,14 +57,17 @@ export class SettingsWebview {
       }
     );
 
-    new SettingsWebview(panel, extensionUri);
+    new SettingsWebview(panel, extensionUri, initialTab);
   }
 
   private static currentPanel: SettingsWebview | undefined;
 
-  private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
+  private _initialTab?: string;
+
+  private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, initialTab?: string) {
     this._panel = panel;
     this._extensionUri = extensionUri;
+    this._initialTab = initialTab;
     this._settingsManager = new SettingsManager();
     this._messageHandler = new MessageHandler(this._settingsManager);
 
@@ -116,9 +125,12 @@ export class SettingsWebview {
       settings,
       getNonce(),
       webview,
-      extensionVersion
+      extensionVersion,
+      this._initialTab
     );
     this._panel.webview.html = templateGenerator.generateHtml();
+    // One-shot: don't force the tab again on subsequent refreshes.
+    this._initialTab = undefined;
   }
 
   public dispose() {

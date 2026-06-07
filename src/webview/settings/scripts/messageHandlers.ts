@@ -32,6 +32,23 @@ export function getMessageHandlersScript(): string {
         huggingfaceModelsLoaded: () => handleAdvancedModelsLoaded('huggingface', message, ${JSON.stringify(DEFAULT_MODELS.huggingface)}, 2000),
         ollamaModelsLoaded: () => handleAdvancedModelsLoaded('ollama', message, [], 2000),
         
+        switchTab: () => {
+          const tabId = message.tabId;
+          if (!tabId) return;
+          // Retry until the tab system and the target tab button exist
+          // (handles the case where the panel is still initializing).
+          let tries = 0;
+          (function applySwitch() {
+            const ready = typeof window.switchToTab === 'function' &&
+              document.querySelector('.tab-button[data-tab="' + tabId + '"]');
+            if (ready) {
+              window.switchToTab(tabId);
+            } else if (tries++ < 50) {
+              setTimeout(applySwitch, 100);
+            }
+          })();
+        },
+
         settingsSaved: () => handleSettingsSaved(message),
         apiCheckResult: () => handleApiCheckResult(message),
         rateLimitsResult: () => handleRateLimitsResult(message),

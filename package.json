@@ -1159,11 +1159,6 @@
         "category": "GitMind"
       },
       {
-        "command": "gitmind.activateByEmail",
-        "title": "Activate Pro by Email",
-        "category": "GitMind"
-      },
-      {
         "command": "gitmind.showActivationQuickPick",
         "title": "Activate GitMind Pro",
         "category": "GitMind"

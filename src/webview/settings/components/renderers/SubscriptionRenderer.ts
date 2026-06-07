@@ -45,7 +45,6 @@ export class SubscriptionRenderer extends BaseRenderer {
                     case 'proActivationResult':
                         const activateLicenseBtn = document.getElementById('activateLicenseBtn');
                         const activateOrderBtn = document.getElementById('activateOrderBtn');
-                        const activateByEmailBtn = document.getElementById('activateByEmailBtn');
 
                         if (activateLicenseBtn) {
                             activateLicenseBtn.disabled = false;
@@ -55,11 +54,6 @@ export class SubscriptionRenderer extends BaseRenderer {
                         if (activateOrderBtn) {
                             activateOrderBtn.disabled = false;
                             activateOrderBtn.textContent = 'Activate Order';
-                        }
-
-                        if (activateByEmailBtn) {
-                            activateByEmailBtn.disabled = false;
-                            activateByEmailBtn.textContent = 'Activate';
                         }
                         
                         if (message.success) {
@@ -281,7 +275,7 @@ export class SubscriptionRenderer extends BaseRenderer {
         const title = hasValidLicense ? 'Your GitMind Pro License' : 'Already purchased? Activate here';
         const description = hasValidLicense
             ? 'Manage your active GitMind Pro license'
-            : 'Enter your license key, paste your order ID, or activate automatically with your purchase email.';
+            : 'Enter your license key or paste your order ID to activate GitMind Pro.';
 
         return `
             <div class="pro-activation">
@@ -290,33 +284,12 @@ export class SubscriptionRenderer extends BaseRenderer {
                     <div class="section-description">${description}</div>
                 </div>
 
-                ${!hasValidLicense ? this.renderEmailActivationCard() : ''}
-
                 <div class="activation-cards">
                     ${this.renderLicenseKeyActivationCard()}
                     ${this.renderOrderIdActivationCard()}
                 </div>
 
                 ${hasValidLicense ? this.renderProStatusActions() : ''}
-            </div>
-        `;
-    }
-
-    private renderEmailActivationCard(): string {
-        const email = this.settings.subscription?.email || '';
-
-        return `
-            <div class="activation-card activation-card-highlight">
-                <h4>⚡ Fastest: Activate by Email</h4>
-                <p>Just bought GitMind Pro? Enter the email you purchased with and we'll find and apply your license automatically — no key needed.</p>
-                <div class="input-group">
-                    <input type="email"
-                           id="activateEmailInput"
-                           placeholder="your.email@example.com"
-                           value="${email}"
-                           class="license-input" />
-                    ${FormUtils.createButton('activateByEmailBtn', 'Activate', 'btn btn-primary', false, 'Find and activate your GitMind Pro license using your purchase email')}
-                </div>
             </div>
         `;
     }

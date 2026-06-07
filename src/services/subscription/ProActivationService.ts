@@ -346,58 +346,6 @@ export class ProActivationService {
     }
 
     /**
-     * Activate pro features using only the customer's email address.
-     * Looks up the most recent paid order for the email and activates from it.
-     * This is the lowest-friction activation path for users who just purchased.
-     */
-    public async activateWithEmail(email: string): Promise<ProActivationResult> {
-        debugLog(`Attempting to activate with email: ${email}`);
-
-        const cleanEmail = (email || '').trim();
-        if (!cleanEmail || !cleanEmail.includes('@')) {
-            return {
-                success: false,
-                message: 'A valid email address is required to activate by email. Please enter the email you used to purchase GitMind Pro.'
-            };
-        }
-
-        try {
-            const lookup = await this.lemonSqueezyService.findPurchaseByEmail(cleanEmail);
-
-            // Persist the email so future validation / management flows can use it.
-            await updateSubscriptionConfig({ email: cleanEmail });
-
-            // Best path: we resolved the actual license key — activate with it directly.
-            if (lookup.licenseKey) {
-                return await this.activateWithLicenseKey(lookup.licenseKey);
-            }
-
-            // Fallback: we found a paid order — activate via the order (extracts the key).
-            if (lookup.orderId) {
-                return await this.activateWithOrderId(lookup.orderId, cleanEmail);
-            }
-
-            // No purchase resolved — tailor the message to what we did/didn't find.
-            const detail = lookup.customerFound
-                ? `We found your account for ${cleanEmail}, but couldn't locate an active GitMind Pro license on it.`
-                : `We couldn't find any GitMind Pro purchase for ${cleanEmail}.`;
-
-            return {
-                success: false,
-                message: `${detail}\n\nPlease make sure:\n• You're using the same email address you purchased with\n• Your payment has completed (this can take a minute)\n\nIf you have your license key, you can activate it directly instead.${lookup.error ? `\n\n(Details: ${lookup.error})` : ''}`
-            };
-        } catch (error) {
-            debugLog('Email activation error:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-            return {
-                success: false,
-                message: this.formatErrorMessage(errorMessage),
-                details: { error }
-            };
-        }
-    }
-
-    /**
      * Validate existing license (periodic check)
      */
     public async validateExistingLicense(): Promise<boolean> {

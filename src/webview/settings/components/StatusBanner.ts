@@ -135,14 +135,13 @@ export class StatusBanner {
   public static renderActivationBlock(): string {
     return `
       <div class="gm-activate">
-        <div class="gm-activate-label">⭐ Activate GitMind Pro</div>
+        <div class="gm-activate-label">Activate GitMind Pro</div>
         <div class="gm-activate-row">
           <input type="text" id="bannerLicenseInput" class="gm-activate-input"
                  placeholder="Paste your license key (GITMIND-PRO-…)" autocomplete="off" />
           <button type="button" id="bannerActivateLicenseBtn" class="gm-activate-btn">Activate</button>
         </div>
         <div class="gm-activate-actions">
-          <button type="button" id="bannerActivateEmailBtn" class="gm-activate-link">⚡ Quick activate by email</button>
           <button type="button" id="bannerBuyProBtn" class="gm-activate-link">Buy GitMind Pro</button>
         </div>
       </div>

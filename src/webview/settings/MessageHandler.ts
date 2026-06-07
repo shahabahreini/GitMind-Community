@@ -406,42 +406,6 @@ export class MessageHandler {
                 }
                 break;
 
-            case 'activateProByEmail':
-                try {
-                    const { ProActivationService } = await import('../../services/subscription/ProActivationService.js');
-                    const proService = ProActivationService.getInstance();
-
-                    const result = await proService.activateWithEmail(message.customerEmail);
-
-                    if (SettingsWebview.isWebviewOpen()) {
-                        SettingsWebview.postMessageToWebview({
-                            command: 'proActivationResult',
-                            success: result.success,
-                            message: result.message,
-                            details: result.details
-                        });
-                    }
-
-                    if (result.success) {
-                        const updatedSettings = await SettingsManager.getCurrentSettings();
-                        if (SettingsWebview.isWebviewOpen()) {
-                            SettingsWebview.postMessageToWebview({
-                                command: 'updateSettings',
-                                settings: updatedSettings
-                            });
-                        }
-                    }
-                } catch (error) {
-                    if (SettingsWebview.isWebviewOpen()) {
-                        SettingsWebview.postMessageToWebview({
-                            command: 'proActivationResult',
-                            success: false,
-                            message: `Activation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-                        });
-                    }
-                }
-                break;
-
             case 'activateProOrder':
                 try {
                     const { ProActivationService } = await import('../../services/subscription/ProActivationService.js');
