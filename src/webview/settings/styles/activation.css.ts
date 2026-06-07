@@ -1,273 +1,341 @@
 // src/webview/settings/styles/activation.css.ts
 export function getActivationStyles(): string {
     return `
-    .activation-container {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
+    .pro-activation {
+        margin-bottom: 24px;
+        width: 100%;
+        box-sizing: border-box;
     }
-    
-    .activation-methods {
+
+    .activation-card-unified {
+        background: var(--vscode-editor-background);
+        border: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.15));
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .activation-card-unified:hover {
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+    }
+
+    .activation-header {
+        margin-bottom: 20px;
+    }
+
+    .activation-badge {
+        display: inline-block;
+        font-size: 9px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        background: rgba(255, 82, 82, 0.1);
+        color: #ff5252;
+        padding: 3px 8px;
+        border-radius: 4px;
+        margin-bottom: 10px;
+        border: 1px solid rgba(255, 82, 82, 0.2);
+    }
+
+    .activation-header h3 {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0 0 6px 0;
+        color: var(--vscode-foreground);
+    }
+
+    .activation-sub {
+        font-size: 12px;
+        color: var(--vscode-descriptionForeground);
+        margin: 0;
+        line-height: 1.4;
+    }
+
+    /* Segmented Tab Bar */
+    .activation-tabs-nav {
+        display: flex;
+        background: var(--vscode-input-background, rgba(128, 128, 128, 0.05));
+        padding: 4px;
+        border-radius: 8px;
+        gap: 4px;
+        margin-bottom: 20px;
+        border: 1px solid rgba(128, 128, 128, 0.1);
+    }
+
+    .activation-tab-btn {
+        flex: 1;
+        background: transparent;
+        border: none;
+        padding: 8px 12px;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--vscode-descriptionForeground);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 32px;
+        outline: none;
+    }
+
+    .activation-tab-btn:hover:not(.active) {
+        color: var(--vscode-foreground);
+        background: rgba(128, 128, 128, 0.08);
+    }
+
+    .activation-tab-btn.active {
+        background: var(--vscode-editor-background);
+        color: var(--vscode-foreground);
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Tab Content Area */
+    .activation-tab-content {
+        animation: activationFadeIn 0.3s ease;
+    }
+
+    @keyframes activationFadeIn {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .tab-instruction {
+        font-size: 12px;
+        color: var(--vscode-descriptionForeground);
+        margin-top: 0;
+        margin-bottom: 16px;
+        line-height: 1.4;
+    }
+
+    .tab-instruction code {
+        background: var(--vscode-textCodeBlock-background, rgba(128, 128, 128, 0.08));
+        padding: 2px 4px;
+        border-radius: 4px;
+        font-family: var(--vscode-editor-font-family, monospace);
+        font-size: 11px;
+    }
+
+    /* Forms and fields */
+    .activation-form-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        width: 100%;
+    }
+
+    .activation-form-row .input-container {
+        flex: 1;
+    }
+
+    .activation-form-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 12px;
+        margin-bottom: 16px;
     }
-    
-    .activation-method {
-        padding: 16px;
-        border: none;
-        border-radius: 8px;
-        background: var(--vscode-editor-background);
-        transition: all 0.2s ease;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    }
-    
-    .activation-method:hover {
-        border-color: transparent;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        transform: translateY(-1px);
-    }
-    
-    .activation-method h5 {
-        margin: 0 0 6px 0;
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--vscode-foreground);
-        line-height: 1.2;
-    }
-    
-    .method-description {
-        margin: 0 0 10px 0;
-        font-size: 11px;
-        color: var(--vscode-descriptionForeground);
-        line-height: 1.3;
-    }
-    
-    .input-group {
+
+    .input-container {
         display: flex;
+        flex-direction: column;
         gap: 6px;
-        align-items: stretch;
-        margin-bottom: 8px;
     }
-    
-    .license-input, .order-input {
-        flex: 1;
-        font-family: var(--vscode-editor-font-family, monospace);
-        min-width: 0;
-        font-size: 12px;
-        height: 28px;
-        padding: 6px 8px;
-        border: 1px solid var(--vscode-input-border);
-        border-radius: 4px;
+
+    .input-container label {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--vscode-foreground);
+    }
+
+    .license-input-field,
+    .order-input-field,
+    .email-input-field {
+        width: 100%;
+        height: 32px;
+        padding: 6px 12px;
+        border: 1px solid var(--vscode-input-border, rgba(128, 128, 128, 0.2));
+        border-radius: 6px;
         background: var(--vscode-input-background);
         color: var(--vscode-input-foreground);
+        font-size: 13px;
+        font-family: var(--vscode-editor-font-family, monospace);
         box-sizing: border-box;
+        transition: border-color 0.2s ease;
     }
-    
-    .activated-input {
-        background-color: rgba(162, 213, 198, 0.8) !important;
-        color: #333 !important;
-        border-color: rgba(110, 184, 168, 1) !important;
-        opacity: 0.9;
-        cursor: not-allowed;
+
+    .email-input-field {
+        font-family: var(--vscode-font-family, sans-serif);
     }
-    
-    .activated-input:disabled {
-        background-color: rgba(162, 213, 198, 0.8) !important;
-        color: #333 !important;
-        border-color: rgba(110, 184, 168, 1) !important;
-        opacity: 0.9;
-        cursor: not-allowed;
+
+    .license-input-field:focus,
+    .order-input-field:focus,
+    .email-input-field:focus {
+        outline: none;
+        border-color: var(--vscode-focusBorder);
     }
-    
-    .activation-button {
-        background: rgba(59, 130, 246, 1);
-        color: white;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 11px;
-        font-weight: 500;
-        white-space: nowrap;
-        transition: all 0.2s ease;
-        flex-shrink: 0;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        height: 28px;
-        line-height: 16px;
-        box-sizing: border-box;
-    }
-    
-    .activation-button:hover {
-        opacity: 0.9;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-    }
-    
-    .activation-status {
-        margin-top: 8px;
-        padding: 6px 10px;
-        border-radius: 6px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 11px;
-        font-weight: 500;
-        border: none;
-        min-height: 20px;
-    }
-    
-    .activation-status.status-valid {
-        background: rgba(16, 185, 129, 0.1);
-        border: none;
-        color: rgba(16, 185, 129, 1);
-    }
-    
-    .activation-status.status-invalid {
-        background: rgba(239, 68, 68, 0.1);
-        border: none;
-        color: rgba(239, 68, 68, 1);
-    }
-    
-    .status-indicator {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        flex-shrink: 0;
-    }
-    
-    .activation-status.status-valid .status-indicator {
-        background: rgba(16, 185, 129, 1);
-    }
-    
-    .activation-status.status-invalid .status-indicator {
-        background: rgba(239, 68, 68, 1);
-    }
-    
-    .pro-status-panel {
-        margin-top: 8px;
-        padding: 10px 12px;
-        background: rgba(16, 185, 129, 0.05);
-        border: none;
-        border-radius: 6px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        min-height: 32px;
-    }
-    
-    .status-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex: 1;
-    }
-    
-    .pro-badge {
-        background: rgba(16, 185, 129, 1);
-        color: white;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 10px;
+
+    .activation-card-unified .action-btn {
+        height: 32px;
+        font-size: 12px;
         font-weight: 600;
-        letter-spacing: 0.025em;
-        text-transform: uppercase;
-        line-height: 1;
-        height: 16px;
-        display: flex;
-        align-items: center;
-    }
-    
-    .validation-info {
-        color: rgba(6, 95, 70, 1);
-        font-size: 11px;
-        margin: 0;
-        flex: 1;
-    }
-    
-    .pro-actions {
-        display: flex;
-        gap: 6px;
-        margin: 0;
-    }
-    
-    .validate-button, .deactivate-button {
-        background: transparent;
-        border: 1px solid rgba(16, 185, 129, 0.3);
-        color: rgba(16, 185, 129, 1);
-        border-radius: 4px;
-        font-weight: 500;
-        padding: 4px 8px;
-        transition: all 0.2s ease;
+        padding: 0 20px;
+        border-radius: 6px;
         cursor: pointer;
-        font-size: 10px;
-        line-height: 1;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        height: 20px;
+        white-space: nowrap;
         box-sizing: border-box;
     }
-    
-    .deactivate-button {
-        border-color: rgba(239, 68, 68, 0.3);
-        color: rgba(239, 68, 68, 1);
-    }
-    
-    .validate-button:hover {
-        background: rgba(16, 185, 129, 1);
-        color: white;
-    }
-    
-    .deactivate-button:hover {
-        background: rgba(239, 68, 68, 1);
-        color: white;
+
+    .activation-card-unified .action-btn.full-width {
+        width: 100%;
     }
 
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .activation-methods {
+    /* Active Status Styles */
+    .activation-card-unified.active-status {
+        border-color: rgba(16, 185, 129, 0.3);
+        background: linear-gradient(180deg, var(--vscode-editor-background), rgba(16, 185, 129, 0.01));
+    }
+
+    .active-badge {
+        display: inline-block;
+        font-size: 9px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        padding: 3px 8px;
+        border-radius: 4px;
+        margin-bottom: 16px;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .activation-status-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .status-icon-glow {
+        width: 44px;
+        height: 44px;
+        background: rgba(16, 185, 129, 0.1);
+        border: 2px solid rgba(16, 185, 129, 0.3);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #10b981;
+        box-shadow: 0 0 16px rgba(16, 185, 129, 0.15);
+    }
+
+    .status-info-text h3 {
+        font-size: 15px;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+        color: var(--vscode-foreground);
+    }
+
+    .validation-time {
+        font-size: 11px;
+        color: var(--vscode-descriptionForeground);
+        margin: 0;
+    }
+
+    .active-license-details {
+        background: var(--vscode-input-background, rgba(128, 128, 128, 0.05));
+        border: 1px solid rgba(128, 128, 128, 0.1);
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        font-size: 12px;
+    }
+
+    .detail-row:not(:last-child) {
+        border-bottom: 1px solid rgba(128, 128, 128, 0.08);
+    }
+
+    .detail-label {
+        color: var(--vscode-descriptionForeground);
+        font-weight: 500;
+    }
+
+    .detail-value {
+        color: var(--vscode-foreground);
+        font-family: var(--vscode-editor-font-family, monospace);
+        font-weight: 600;
+    }
+
+    .active-actions-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .active-actions-row button {
+        flex: 1;
+        height: 32px;
+        font-weight: 600;
+        font-size: 12px;
+    }
+
+    .device-management-note {
+        background: rgba(128, 128, 128, 0.03);
+        border-radius: 8px;
+        padding: 12px 14px;
+        border-left: 3px solid var(--vscode-focusBorder, #007acc);
+    }
+
+    .device-management-note h5 {
+        margin: 0 0 4px 0;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--vscode-foreground);
+    }
+
+    .device-management-note p {
+        margin: 0;
+        font-size: 11px;
+        color: var(--vscode-descriptionForeground);
+        line-height: 1.4;
+    }
+
+    .device-management-note a {
+        color: var(--vscode-textLink-foreground);
+        text-decoration: none;
+    }
+
+    .device-management-note a:hover {
+        text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+        .activation-form-row {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+        }
+        .activation-form-row .action-btn {
+            width: 100%;
+        }
+        .activation-form-grid {
             grid-template-columns: 1fr;
-            gap: 12px;
+            gap: 10px;
         }
-        
-        .pro-status-panel {
+        .active-actions-row {
             flex-direction: column;
-            gap: 8px;
-            align-items: flex-start;
-        }
-        
-        .pro-actions {
-            align-self: stretch;
-            justify-content: flex-end;
         }
     }
-
-    @media (max-width: 480px) {
-        .activation-method {
-            padding: 12px;
-        }
-        
-        .input-group {
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        .activation-button {
-            width: 100%;
-            text-align: center;
-        }
-        
-        .pro-actions {
-            flex-direction: column;
-            gap: 6px;
-        }
-        
-        .validate-button, .deactivate-button {
-            width: 100%;
-            justify-content: center;
-        }
-    }
-`;
+    `;
 }
