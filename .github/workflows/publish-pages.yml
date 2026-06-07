@@ -31,7 +31,8 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 24
-          cache: npm
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
       - run: npm install --no-audit --no-fund
       - run: npm run docs:validate
       - run: npm run docs:build

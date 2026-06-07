@@ -5,7 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-
 ## v5.0.3 - 2026-06-07
 
 ### New Features
@@ -25,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Integrated Groq AI as a new provider for commit message generation, including default model and API key support.
 - Added configurable endpoint selection for Z.ai, allowing users to choose between "Regular" and "Code Plan" endpoints.
 - Added a `gitmind.resetOnboardingState` command to reset the onboarding state.
-- Added device management instructions and UI for de
+- Added device management instructions and UI
 
 ## v5.0.0 - 2026-06-07
 
