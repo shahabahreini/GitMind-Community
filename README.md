@@ -3,7 +3,7 @@
 GitMind analyzes your Git diff and generates clear, professional commit messages inside VS Code. Choose from 17 built-in AI providers, run locally with Ollama, reuse GitHub Copilot, or connect a custom OpenAI-compatible API with GitMind Pro.
 
 <div align="center">
-  <img src="images/logo.png" alt="GitMind logo" width="140"/>
+  <img src="https://raw.githubusercontent.com/shahabahreini/AI-Commit-Assistant/main/images/logo.png" alt="GitMind logo" width="140"/>
   <br/><br/>
   <a href="https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant">Install from the VS Code Marketplace</a>
 </div>
@@ -11,7 +11,7 @@ GitMind analyzes your Git diff and generates clear, professional commit messages
 <br/>
 
 <div align="center">
-  <img src="images/all_providers.png" alt="GitMind supported AI providers including NVIDIA NIM, OpenAI, Anthropic, Gemini, Groq, Perplexity, Ollama, and GitHub Copilot" width="100%"/>
+  <img src="https://raw.githubusercontent.com/shahabahreini/AI-Commit-Assistant/main/images/all_providers.png" alt="GitMind supported AI providers including NVIDIA NIM, OpenAI, Anthropic, Gemini, Groq, Perplexity, Ollama, and GitHub Copilot" width="100%"/>
   <br/>
   <sub><strong>Bring your preferred AI provider, run locally, or reuse GitHub Copilot.</strong></sub>
 </div>
@@ -19,7 +19,7 @@ GitMind analyzes your Git diff and generates clear, professional commit messages
 <br/>
 
 <div align="center">
-  <img src="images/screenshots/current-configuration-dashboard.png" alt="GitMind current configuration dashboard showing NVIDIA model and feature status" width="100%"/>
+  <img src="https://raw.githubusercontent.com/shahabahreini/AI-Commit-Assistant/main/images/screenshots/current-configuration-dashboard.png" alt="GitMind current configuration dashboard showing NVIDIA model and feature status" width="100%"/>
   <br/>
   <sub><strong>See your provider, model, commit preferences, security, and API status at a glance.</strong></sub>
 </div>
@@ -38,36 +38,36 @@ GitMind analyzes your Git diff and generates clear, professional commit messages
 <table>
   <tr>
     <td width="50%" valign="top">
-      <img src="images/screenshots/nvidia-model-settings-automatic-recovery.png" alt="NVIDIA model settings and GitMind Pro Automatic Recovery"/>
+      <img src="https://raw.githubusercontent.com/shahabahreini/AI-Commit-Assistant/main/images/screenshots/nvidia-model-settings-automatic-recovery.png" alt="NVIDIA model settings and GitMind Pro Automatic Recovery"/>
       <h3 align="center">Models And Automatic Recovery</h3>
       <p align="center">Configure NVIDIA NIM and other providers, load searchable models, retry eligible temporary failures, and select a provider-scoped fallback model.</p>
     </td>
     <td width="50%" valign="top">
-      <img src="images/screenshots/commit-style-selection.png" alt="GitMind professional commit style selection"/>
+      <img src="https://raw.githubusercontent.com/shahabahreini/AI-Commit-Assistant/main/images/screenshots/commit-style-selection.png" alt="GitMind professional commit style selection"/>
       <h3 align="center">Professional Commit Styles</h3>
       <p align="center">Choose Conventional Commits, Angular, Gitmoji, Semantic Release, Ember.js, and other structured formats.</p>
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <img src="images/screenshots/pro-security-large-diff-model-configuration.png" alt="GitMind Pro encrypted key storage, large diff handling, and advanced model configuration"/>
+      <img src="https://raw.githubusercontent.com/shahabahreini/AI-Commit-Assistant/main/images/screenshots/pro-security-large-diff-model-configuration.png" alt="GitMind Pro encrypted key storage, large diff handling, and advanced model configuration"/>
       <h3 align="center">Security And Model Control</h3>
       <p align="center">Encrypt API keys, process large diffs, and tune advanced generation parameters when you need precise control.</p>
     </td>
     <td width="50%" valign="top">
-      <img src="images/screenshots/commit-language-history-learning.png" alt="GitMind target commit language and commit history learning settings"/>
+      <img src="https://raw.githubusercontent.com/shahabahreini/AI-Commit-Assistant/main/images/screenshots/commit-language-history-learning.png" alt="GitMind target commit language and commit history learning settings"/>
       <h3 align="center">Match Your Team</h3>
       <p align="center">Generate in your target language, control message length, and learn from existing commit history.</p>
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <img src="images/screenshots/free-features-settings.png" alt="GitMind free feature settings"/>
+      <img src="https://raw.githubusercontent.com/shahabahreini/AI-Commit-Assistant/main/images/screenshots/free-features-settings.png" alt="GitMind free feature settings"/>
       <h3 align="center">Useful Free Features</h3>
       <p align="center">Control verbose messages, capture all changes, custom context, diagnostics, and anonymous analytics.</p>
     </td>
     <td width="50%" valign="top">
-      <img src="images/screenshots/changelog-generation.png" alt="GitMind AI changelog generation settings"/>
+      <img src="https://raw.githubusercontent.com/shahabahreini/AI-Commit-Assistant/main/images/screenshots/changelog-generation.png" alt="GitMind AI changelog generation settings"/>
       <h3 align="center">AI Changelog Generation</h3>
       <p align="center">Generate professional changelogs from Git history with version grouping and configurable commit ranges.</p>
     </td>
