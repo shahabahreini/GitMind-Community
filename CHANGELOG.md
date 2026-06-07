@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## v5.0.3 - 2026-06-07
+
+### New Features
+
+- Added NVIDIA hosted NIM as a built-in provider, including API validation, dynamic model discovery, searchable model selection, and theme-aware provider branding.
+- Added GitMind Pro Automatic Recovery:
+  - Retried once for timeouts and eligible temporary Gemini service failures.
+  - Switched once to a configured fallback model when the selected model reported a model-specific limit.
+  - Avoided retries for invalid credentials, account limits, permissions, and unrelated failures.
+- Added searchable provider-scoped fallback model selection.
+- Added visible Pro locking for Emoji Enhancement and other premium controls.
+- Introduced dedicated commands for Pro users, including `generateCommitMessagePro` and `openSettingsPro`.
+- Implemented comprehensive UI locking for GitMind Pro features across settings, commit styles, and API providers.
+- Added interactive behavior to locked elements, guiding users to the "Pro Activation" tab with a toast notification.
+- Implemented Pro subscription notification service to inform non-Pro users about subscription benefits.
+- Added support for the `raptor-mini` AI model for Copilot.
+- Integrated Groq AI as a new provider for commit message generation, including default model and API key support.
+- Added configurable endpoint selection for Z.ai, allowing users to choose between "Regular" and "Code Plan" endpoints.
+- Added a `gitmind.resetOnboardingState` command to reset the onboarding state.
+- Added device management instructions and UI for de
+
 ## v5.0.0 - 2026-06-07
 
 ### New Features
@@ -27,7 +49,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Removed email-only Pro activation. Existing purchases can be activated with a license key or verified using order ID and purchase email.
-
 
 ## v4.14.0 - 2026-05-13
 
