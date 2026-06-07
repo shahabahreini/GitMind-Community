@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: GitMind Wiki
+    url: https://github.com/shahabahreini/AI-Commit-Assistant/wiki
+    about: Read setup, feature, security, and troubleshooting documentation.
+  - name: VS Code Marketplace
+    url: https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant
+    about: Install GitMind and review Marketplace details.
+  - name: Releases
+    url: https://github.com/shahabahreini/AI-Commit-Assistant/releases
+    about: Download releases and review changes.
+  - name: Buy GitMind Pro
+    url: https://gitmind.lemonsqueezy.com/checkout/buy/cd58d4e5-92cf-4f59-a6fe-ae6e57010706
+    about: Purchase a lifetime GitMind Pro license.

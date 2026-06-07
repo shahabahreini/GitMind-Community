@@ -640,6 +640,7 @@
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "test": "vscode-test",
     "test:validate": "node scripts/test-validator.js",
+    "validate:wiki": "node scripts/validate-wiki.mjs",
     "test:status": "node scripts/test-status.js",
     "clean": "rimraf dist out",
     "prepare": "npm run compile",

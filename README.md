@@ -5,7 +5,9 @@
 [![Rating](https://img.shields.io/visual-studio-marketplace/r/ShahabBahreiniJangjoo.ai-commit-assistant?color=yellow)](https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant)
 [![OpenVSX](https://img.shields.io/open-vsx/v/ShahabBahreiniJangjoo/ai-commit-assistant?label=OpenVSX&color=9b59b6)](https://open-vsx.org/extension/ShahabBahreiniJangjoo/ai-commit-assistant)
 
-Analyzes staged git changes and generates commit messages using your choice of AI provider. Supports 13 providers and 60+ models — free to use, with an optional Pro tier.
+**Documentation:** [GitMind Wiki](https://github.com/shahabahreini/AI-Commit-Assistant/wiki) · [Quick Start](https://github.com/shahabahreini/AI-Commit-Assistant/wiki/Installation-And-Quick-Start) · [Providers](https://github.com/shahabahreini/AI-Commit-Assistant/wiki/Providers-And-Models) · [Troubleshooting](https://github.com/shahabahreini/AI-Commit-Assistant/wiki/Troubleshooting-And-FAQ)
+
+Analyzes staged Git changes and generates commit messages using 17 built-in AI providers plus a Pro Custom API option.
 
 ## This Repository
 
@@ -80,7 +82,7 @@ or Quick Open (`Ctrl+P` / `Cmd+P`): `ext install ShahabBahreiniJangjoo.ai-commit
 
 ---
 
-# Free And Pro
+## Free And Pro
 
 | Feature                               | Free             | Pro                                                |
 | ------------------------------------- | ---------------- | -------------------------------------------------- |
@@ -105,4 +107,23 @@ GitHub Copilot · OpenAI · Anthropic · Google Gemini · DeepSeek · Grok · Pe
 
 ## Privacy
 
-GitMind collects anonymous usage telemetry — no code, no API keys, no repository content. To disable: VS Code Settings → **Telemetry: Telemetry Level → off**.
+- GitMind sends the selected Git diff and prompt to the provider you configure.
+- Ollama can keep generation local.
+- GitMind Pro can store provider keys in VS Code SecretStorage.
+- Debug logs redact sensitive values.
+- Anonymous telemetry does not include source code, diffs, prompts, commit messages, API keys, or personal information.
+
+## Requirements
+
+- VS Code 1.96.0 or newer
+- Git repository
+- API key for the selected cloud provider, unless using Ollama or GitHub Copilot
+
+## Support
+
+- [Read the Wiki](https://github.com/shahabahreini/AI-Commit-Assistant/wiki)
+- [Report an issue or request](https://github.com/shahabahreini/AI-Commit-Assistant/issues/new/choose)
+- [View releases](https://github.com/shahabahreini/AI-Commit-Assistant/releases)
+- [Sponsor development](https://github.com/sponsors/shahabahreini)
+
+Never post API keys, license keys, full order IDs, purchase emails, source code, diffs, prompts, or private repository data in a public issue.
