@@ -1138,6 +1138,7 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
 
     // Placeholder commands
     vscode.commands.registerCommand("gitmind.loadingIndicator", () => { }),
+    vscode.commands.registerCommand("gitmind.loadingIndicatorPro", () => { }),
     vscode.commands.registerCommand("gitmind.acceptInput", () => {
       debugLog("Accept input command triggered");
     }),

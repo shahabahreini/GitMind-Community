@@ -1093,6 +1093,15 @@
         }
       },
       {
+        "command": "gitmind.loadingIndicatorPro",
+        "title": "Generating Commit Message...",
+        "category": "GitMind",
+        "icon": {
+          "light": "resources/light/loading-spin_pro.svg",
+          "dark": "resources/dark/loading-spin_pro.svg"
+        }
+      },
+      {
         "command": "gitmind.cancelGeneration",
         "title": "Cancel Generation",
         "category": "GitMind",
@@ -1223,6 +1232,16 @@
           "command": "gitmind.generateCommitMessagePro",
           "group": "navigation@1",
           "when": "scmProvider == git && !gitmind.isGenerating && gitmind.isPro"
+        },
+        {
+          "command": "gitmind.loadingIndicator",
+          "group": "navigation@1",
+          "when": "scmProvider == git && gitmind.isGenerating && !gitmind.isPro"
+        },
+        {
+          "command": "gitmind.loadingIndicatorPro",
+          "group": "navigation@1",
+          "when": "scmProvider == git && gitmind.isGenerating && gitmind.isPro"
         },
         {
           "command": "gitmind.cancelGeneration",

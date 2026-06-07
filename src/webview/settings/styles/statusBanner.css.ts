@@ -723,12 +723,52 @@ export function getStatusBannerStyles(): string {
 
       /* ===== Compact "Current Configuration" card (gm-config) ===== */
       .gm-config-card {
+        position: relative;
+        isolation: isolate;
         background: var(--vscode-editor-background);
         border: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.22));
         border-radius: 10px;
         padding: 14px 16px;
         margin-bottom: 20px;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      }
+
+      .gm-config-card.pro-active {
+        border-color: rgba(255, 215, 0, 0.25);
+        box-shadow: 0 2px 8px rgba(255, 215, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
+
+      .gm-config-card.pro-active::after {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: -10px;
+        right: -10px;
+        bottom: -10px;
+        background: radial-gradient(circle, rgba(255, 215, 0, 0.06) 0%, rgba(168, 85, 247, 0.04) 50%, transparent 80%);
+        z-index: -1;
+        filter: blur(12px);
+        pointer-events: none;
+        border-radius: 14px;
+        opacity: 0.95;
+        animation: gm-pro-glow-pulse 8s infinite alternate ease-in-out;
+      }
+
+      @keyframes gm-pro-glow-pulse {
+        0% {
+          opacity: 0.7;
+          transform: scale(0.99);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1.01);
+        }
+      }
+
+      /* Light Theme Overrides */
+      .vscode-light .gm-config-card.pro-active::after {
+        background: radial-gradient(circle, rgba(255, 215, 0, 0.08) 0%, rgba(99, 102, 241, 0.05) 50%, transparent 80%);
+        filter: blur(14px);
       }
 
       .gm-config-head {
@@ -778,30 +818,49 @@ export function getStatusBannerStyles(): string {
       }
 
       .gm-config-model-badge {
-        font-size: 9.5px;
-        font-family: var(--vscode-editor-font-family, 'SF Mono', monospace);
-        font-weight: 600;
-        color: var(--vscode-foreground);
-        opacity: 0.85;
-        background: var(--vscode-keybindingTable-rowsBackground, rgba(128, 128, 128, 0.05));
-        border: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.15));
-        border-left: 2px solid var(--vscode-button-background, #0e639c);
-        border-radius: 4px;
-        padding: 2px 6px;
+        font-size: 10px;
+        font-family: var(--vscode-editor-font-family, 'SF Mono', 'Segoe UI Mono', Monaco, monospace);
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        color: var(--vscode-button-background, #0e639c);
+        background: rgba(128, 128, 128, 0.06);
+        border: 1px solid var(--vscode-button-background, rgba(14, 99, 156, 0.2));
+        border-radius: 20px;
+        padding: 2px 8px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         max-width: 180px;
         display: inline-flex;
         align-items: center;
-        transition: all 0.15s ease;
+        gap: 5px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .gm-config-model-badge::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: #10b981;
+        box-shadow: 0 0 5px rgba(16, 185, 129, 0.8);
+        flex-shrink: 0;
+        display: inline-block;
       }
 
       .gm-config-model-badge:hover {
-        opacity: 1;
-        background: rgba(128, 128, 128, 0.09);
-        border-color: var(--vscode-focusBorder, rgba(128, 128, 128, 0.3));
-        border-left-color: var(--vscode-button-hoverBackground, #1177bb);
+        background: rgba(128, 128, 128, 0.1);
+        border-color: var(--vscode-focusBorder, rgba(14, 99, 156, 0.4));
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        transform: translateY(-0.5px);
+      }
+
+      /* Light Theme Overrides */
+      .vscode-light .gm-config-model-badge {
+        background: rgba(128, 128, 128, 0.04);
+        border-color: rgba(99, 102, 241, 0.25);
+        color: var(--vscode-button-background, #4f46e5);
       }
 
       .gm-config-plan {
@@ -842,6 +901,22 @@ export function getStatusBannerStyles(): string {
         border: 1px solid rgba(128, 128, 128, 0.16);
         font-size: 11px;
         line-height: 1.3;
+        transition: all 0.2s ease;
+      }
+
+      .gm-chip.disabled {
+        opacity: 0.5;
+        background: rgba(128, 128, 128, 0.03);
+        border-color: rgba(128, 128, 128, 0.08);
+      }
+
+      .gm-chip.disabled .k {
+        opacity: 0.5;
+      }
+
+      .gm-chip.disabled .v {
+        color: var(--vscode-descriptionForeground);
+        font-weight: 500;
       }
 
       .gm-chip .k {

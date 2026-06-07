@@ -220,9 +220,10 @@ export function getUiManagerScript(): string {
         return { displayName: config.displayName, model, apiConfigured };
       };
       
-      this.renderChip = function(label, value, dot) {
+      this.renderChip = function(label, value, dot, isDisabled) {
         const dotHtml = dot ? \`<span class="dot \${dot}"></span>\` : '';
-        return \`<span class="gm-chip"><span class="k">\${label}</span>\${dotHtml}<span class="v">\${value}</span></span>\`;
+        const disabledClass = isDisabled || dot === 'off' ? ' disabled' : '';
+        return \`<span class="gm-chip\${disabledClass}"><span class="k">\${label}</span>\${dotHtml}<span class="v">\${value}</span></span>\`;
       };
 
       this.renderActivationBlock = function() {
@@ -251,15 +252,29 @@ export function getUiManagerScript(): string {
         const renderProviderIcon = (provider, size = 40) =>
           window.ProviderIcon ? window.ProviderIcon.renderIcon(provider, size) : '';
 
+        const commitStyle = this._settings.commit?.verbose ? 'Verbose' : 'Concise';
+        const captureAll = this._settings.commit?.captureAllChanges ?? false;
+        const promptCustomization = this._settings.promptCustomization?.enabled ? 'Enabled' : 'Disabled';
+        const diagnostics = this._settings.showDiagnostics ? 'Enabled' : 'Disabled';
+        const analytics = this._settings.telemetry?.enabled !== false ? 'Enabled' : 'Disabled';
+        const activeStyle = this._settings.commitStyle?.style || 'basic';
+        const historyLearning = this._settings.pro?.learnFromCommitHistory?.enabled ? 'Active' : 'Off';
+        const encryption = this._settings.pro?.encryptionEnabled ? 'Encrypted' : 'Off';
+
         const chips = [
-          this.renderChip('API', providerInfo.apiConfigured ? 'Configured' : 'Not set', providerInfo.apiConfigured ? 'on' : 'off'),
-          this.renderChip('Commit', this._settings.commit?.verbose ? 'Verbose' : 'Concise'),
-          this.renderChip('Prompts', this._settings.promptCustomization?.enabled ? 'Enabled' : 'Disabled', this._settings.promptCustomization?.enabled ? 'on' : 'off'),
-          this.renderChip('Analytics', this._settings.telemetry?.enabled !== false ? 'Enabled' : 'Disabled', this._settings.telemetry?.enabled !== false ? 'on' : 'off')
+          this.renderChip('API', providerInfo.apiConfigured ? 'Configured' : 'Not set', providerInfo.apiConfigured ? 'on' : 'off', !providerInfo.apiConfigured),
+          this.renderChip('Commit', commitStyle),
+          this.renderChip('Capture', captureAll ? 'All Changes' : 'Staged Only'),
+          this.renderChip('Style', activeStyle),
+          this.renderChip('Prompts', promptCustomization, this._settings.promptCustomization?.enabled ? 'on' : 'off', !this._settings.promptCustomization?.enabled),
+          this.renderChip('Diagnostics', diagnostics, this._settings.showDiagnostics ? 'on' : 'off', !this._settings.showDiagnostics),
+          this.renderChip('Security', encryption, this._settings.pro?.encryptionEnabled ? 'on' : 'off', !this._settings.pro?.encryptionEnabled),
+          this.renderChip('History', historyLearning, this._settings.pro?.learnFromCommitHistory?.enabled ? 'on' : 'off', !this._settings.pro?.learnFromCommitHistory?.enabled),
+          this.renderChip('Analytics', analytics, this._settings.telemetry?.enabled !== false ? 'on' : 'off', this._settings.telemetry?.enabled === false)
         ];
 
         return \`
-          <div class="gm-config-card">
+          <div class="gm-config-card \${isProUser ? 'pro-active' : ''}">
             <div class="gm-config-head">
               \${renderProviderIcon(provider, 28)}
               <div class="gm-config-title">
