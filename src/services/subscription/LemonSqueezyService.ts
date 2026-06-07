@@ -402,6 +402,61 @@ export class LemonSqueezyService {
     }
 
     /**
+     * Find the most recent paid order for a given customer email.
+     * Used to auto-activate Pro from just an email (no license key/order ID needed).
+     * Returns the order ID string, or null if no paid order is found.
+     */
+    public async findLatestPaidOrderByEmail(email: string): Promise<string | null> {
+        debugLog(`Finding latest paid order for email: ${email}`);
+
+        if (!this.apiKey) {
+            debugLog('No API key available for order lookup by email');
+            return null;
+        }
+
+        const cleanEmail = email.trim();
+        if (!cleanEmail) {
+            return null;
+        }
+
+        try {
+            const response = await this.makeRequestWithRetry(
+                `/orders?filter[store_id]=${this.storeId}&filter[user_email]=${encodeURIComponent(cleanEmail)}&sort=-created_at`,
+                'GET'
+            );
+
+            if (!response.data || response.data.length === 0) {
+                debugLog(`No orders found for email: ${cleanEmail}`);
+                return null;
+            }
+
+            // Prefer the most recent paid order. The API is already sorted by -created_at,
+            // but we filter explicitly to be safe.
+            const paidOrders = response.data.filter(
+                (order: any) => order.attributes?.status === 'paid'
+            );
+
+            if (paidOrders.length === 0) {
+                debugLog(`Found ${response.data.length} order(s) for ${cleanEmail}, but none are paid`);
+                return null;
+            }
+
+            const latest = paidOrders.sort((a: any, b: any) => {
+                const aTime = new Date(a.attributes?.created_at || 0).getTime();
+                const bTime = new Date(b.attributes?.created_at || 0).getTime();
+                return bTime - aTime;
+            })[0];
+
+            const orderId = latest.id?.toString();
+            debugLog(`Found latest paid order for ${cleanEmail}: ${orderId}`);
+            return orderId || null;
+        } catch (error) {
+            debugLog('Failed to find order by email:', error);
+            return null;
+        }
+    }
+
+    /**
      * Get subscription status for a customer email
      */
     public async getSubscriptionStatus(customerEmail: string): Promise<SubscriptionStatus> {

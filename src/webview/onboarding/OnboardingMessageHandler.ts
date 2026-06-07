@@ -77,6 +77,11 @@ export class OnboardingMessageHandler {
                 telemetryService.trackDailyActiveUser();
                 await vscode.commands.executeCommand("gitmind.generateCommitMessage");
                 break;
+            case "activatePro":
+                // User already bought GitMind Pro — open the activation flow
+                telemetryService.trackDailyActiveUser();
+                await vscode.commands.executeCommand("gitmind.showActivationQuickPick");
+                break;
             case "openExternal":
                 // Open external URL
                 if (message.url) {

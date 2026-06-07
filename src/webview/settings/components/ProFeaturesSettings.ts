@@ -39,7 +39,7 @@ export class ProFeaturesSettings {
             { id: 'free-tab', label: 'Free Features', content: this.freeRenderer.render() },
             { id: 'commit-style-tab', label: 'Commit Styles', content: this.commitStyleRenderer.render() },
             { id: 'pro-tab', label: 'Pro Features', content: this.proRenderer.render() },
-            { id: 'subscription-tab', label: 'Get Pro', content: this.subscriptionRenderer.render() }
+            { id: 'subscription-tab', label: 'Pro & License', content: this.subscriptionRenderer.render() }
         ])}
                 
                 ${devModeEnabled ? this.renderDevModeNotice() : ''}

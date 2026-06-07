@@ -71,16 +71,20 @@ export class ProNotificationService {
             }
 
             const buyAction = "Buy GitMind Pro";
+            const activateAction = "Already purchased? Activate";
             const snoozeAction = "Don't show it for 3 weeks";
 
             const selection = await vscode.window.showInformationMessage(
                 message,
                 buyAction,
+                activateAction,
                 snoozeAction
             );
 
             if (selection === buyAction) {
                 vscode.env.openExternal(vscode.Uri.parse('https://gitmind.lemonsqueezy.com/checkout/buy/cd58d4e5-92cf-4f59-a6fe-ae6e57010706'));
+            } else if (selection === activateAction) {
+                vscode.commands.executeCommand('gitmind.showActivationQuickPick');
             } else if (selection === snoozeAction) {
                 await this.context.globalState.update(this.MUTED_UNTIL_KEY, now + this.SNOOZE_DURATION_MS);
                 debugLog('Pro notification snoozed for 3 weeks.');

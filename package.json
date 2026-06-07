@@ -1159,6 +1159,16 @@
         "category": "GitMind"
       },
       {
+        "command": "gitmind.activateByEmail",
+        "title": "Activate Pro by Email",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.showActivationQuickPick",
+        "title": "Activate GitMind Pro",
+        "category": "GitMind"
+      },
+      {
         "command": "gitmind.validateExistingLicense",
         "title": "Validate Existing License",
         "category": "GitMind"
@@ -1235,6 +1245,59 @@
         "key": "ctrl+alt+g",
         "mac": "cmd+alt+g",
         "when": "scmProvider == git"
+      }
+    ],
+    "walkthroughs": [
+      {
+        "id": "gitmind.gettingStarted",
+        "title": "Get Started with GitMind",
+        "description": "Set up AI-powered commit messages and activate GitMind Pro in a few quick steps.",
+        "steps": [
+          {
+            "id": "gitmind.choose-provider",
+            "title": "Choose your AI provider",
+            "description": "Pick from 15+ providers (OpenAI, Anthropic, Gemini, Ollama, Copilot, and more).\n[Open Settings](command:gitmind.openSettings)",
+            "media": {
+              "markdown": "media/walkthroughs/choose-provider.md"
+            },
+            "completionEvents": [
+              "onCommand:gitmind.openSettings"
+            ]
+          },
+          {
+            "id": "gitmind.add-api-key",
+            "title": "Add your API key",
+            "description": "Paste your provider API key in Settings — or choose Ollama/Copilot for a key-free setup.\n[Open Settings](command:gitmind.openSettings)",
+            "media": {
+              "markdown": "media/walkthroughs/add-api-key.md"
+            },
+            "completionEvents": [
+              "onCommand:gitmind.openSettings"
+            ]
+          },
+          {
+            "id": "gitmind.first-commit",
+            "title": "Generate your first commit message",
+            "description": "Stage changes, then let GitMind write the commit message for you.\n[Generate Commit Message](command:gitmind.generateCommitMessage)",
+            "media": {
+              "markdown": "media/walkthroughs/first-commit.md"
+            },
+            "completionEvents": [
+              "onCommand:gitmind.generateCommitMessage"
+            ]
+          },
+          {
+            "id": "gitmind.activate-pro",
+            "title": "Activate GitMind Pro",
+            "description": "Already purchased? Activate by email or license key. New here? Grab a lifetime license.\n[Activate GitMind Pro](command:gitmind.showActivationQuickPick)\n[Buy GitMind Pro](command:gitmind.subscribe)",
+            "media": {
+              "markdown": "media/walkthroughs/activate-pro.md"
+            },
+            "completionEvents": [
+              "onContext:gitmind.isPro"
+            ]
+          }
+        ]
       }
     ]
   },

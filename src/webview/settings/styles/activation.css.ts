@@ -43,6 +43,29 @@ export function getActivationStyles(): string {
         line-height: 1.3;
     }
     
+    .activation-card-highlight {
+        border: 1px solid rgba(59, 130, 246, 0.4) !important;
+        background: rgba(59, 130, 246, 0.06);
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin-bottom: 14px;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08);
+    }
+
+    .activation-card-highlight h4 {
+        margin: 0 0 6px 0;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--vscode-foreground);
+    }
+
+    .activation-card-highlight p {
+        margin: 0 0 10px 0;
+        font-size: 11px;
+        color: var(--vscode-descriptionForeground);
+        line-height: 1.4;
+    }
+
     .input-group {
         display: flex;
         gap: 6px;

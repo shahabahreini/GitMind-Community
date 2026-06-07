@@ -211,6 +211,24 @@ export class ScriptManager {
                     }
                 });
                 
+                // Email activation handler (auto-find license by purchase email)
+                attachButtonHandler('activateByEmailBtn', () => {
+                    const email = getInputValue('activateEmailInput') || getInputValue('subscriptionEmail');
+                    if (!email || email.indexOf('@') === -1) {
+                        showMessage('error', 'Please enter a valid email address');
+                        return;
+                    }
+
+                    setButtonLoadingState('activateByEmailBtn', true, 'Activating...', 'Activate');
+
+                    if (typeof vscode !== 'undefined') {
+                        vscode.postMessage({
+                            command: 'activateProByEmail',
+                            customerEmail: email
+                        });
+                    }
+                });
+
                 // Order activation handler
                 attachButtonHandler('activateOrderBtn', () => {
                     const orderId = getInputValue('orderIdInput');

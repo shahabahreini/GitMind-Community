@@ -215,6 +215,13 @@ export class OnboardingTemplateGenerator {
                     </button>
                 </div>
 
+                <div class="pro-activation-prompt">
+                    <p>Already bought GitMind Pro?</p>
+                    <button class="btn btn-link" id="activateProBtn">
+                        Activate your license &rarr;
+                    </button>
+                </div>
+
                 <div class="additional-actions">
                     <div class="dont-show-again-checkbox">
                         <input type="checkbox" id="dontShowAgainCheckbox" class="checkbox-input" />
@@ -318,6 +325,9 @@ export class OnboardingTemplateGenerator {
             viewDocsBtn: () => {
                 const docsUrl = 'https://github.com/shahabahreini/GitMind-Pro#readme';
                 vscode.postMessage({ command: 'openExternal', url: docsUrl });
+            },
+            activateProBtn: () => {
+                sendCommand('activatePro');
             }
         };
 

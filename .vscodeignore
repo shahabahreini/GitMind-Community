@@ -47,6 +47,7 @@ yarn-upgrade-all/**
 !README.md
 !CHANGELOG.md
 !LICENSE.md
+!media/walkthroughs/*.md
 **/*.gif
 **/*.png
 !images/logo.png

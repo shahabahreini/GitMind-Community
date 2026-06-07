@@ -51,6 +51,33 @@ const state: ExtensionState = {
 export { state };
 
 import { registerCommands, SUPPORTED_PROVIDERS } from "./commands/index";
+import { isProUser } from "./utils/proHelpers";
+
+/**
+ * Reflects the current Pro/Free license state in the status bar and a context key.
+ * Safe to call any time license state may have changed (activate/deactivate/refresh).
+ */
+export function updateProStatusBar(): void {
+  const item = state.statusBarItem;
+  if (!item) {
+    return;
+  }
+
+  const isPro = isProUser();
+  // Drives walkthrough completion and any when-clauses that depend on Pro state.
+  void vscode.commands.executeCommand('setContext', 'gitmind.isPro', isPro);
+
+  if (isPro) {
+    item.text = "$(verified) GitMind Pro";
+    item.tooltip = "GitMind Pro is active — click to manage your license";
+    item.command = "gitmind.manageSubscription";
+  } else {
+    item.text = "$(star-empty) GitMind: Free";
+    item.tooltip = "Activate GitMind Pro";
+    item.command = "gitmind.showActivationQuickPick";
+  }
+  item.show();
+}
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   state.context = context;
@@ -90,11 +117,20 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     debugLog("Startup license validation failed:", error);
   }
 
+  // Reflect Pro/Free state in the status bar + context key.
+  // Exposed as an internal command so other modules can trigger a refresh
+  // without importing extension.ts (avoids a circular import).
+  context.subscriptions.push(
+    vscode.commands.registerCommand('gitmind.internalUpdateProStatusBar', () => updateProStatusBar())
+  );
+  updateProStatusBar();
+
   // Set up periodic license validation (every 24 hours)
   const VALIDATION_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
   const validationTimer = setInterval(async () => {
     try {
       await proActivationService.validateExistingLicense();
+      updateProStatusBar();
     } catch (error) {
       debugLog("Periodic license validation failed:", error);
     }
@@ -125,6 +161,31 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   scmStatusBarItem.command = "gitmind.generateCommitMessage";
 
   const commands = registerCommands(context);
+
+  // Deep-link activation handler so the post-purchase "thank you" page can one-click
+  // activate Pro, e.g. vscode://ShahabBahreiniJangjoo.ai-commit-assistant/activate?key=XXXX
+  const uriHandler = vscode.window.registerUriHandler({
+    handleUri(uri: vscode.Uri) {
+      debugLog(`Received URI: ${uri.toString()}`);
+      if (uri.path !== '/activate') {
+        return;
+      }
+      const params = new URLSearchParams(uri.query);
+      const key = params.get('key');
+      const order = params.get('order');
+      const email = params.get('email');
+
+      if (key) {
+        vscode.commands.executeCommand('gitmind.activateWithLicenseKey', key);
+      } else if (order) {
+        vscode.commands.executeCommand('gitmind.activateWithOrderId', order, email ?? undefined);
+      } else if (email) {
+        vscode.commands.executeCommand('gitmind.activateByEmail', email);
+      } else {
+        vscode.commands.executeCommand('gitmind.showActivationQuickPick');
+      }
+    }
+  });
 
   // Add configuration change listener for encryption toggle and license key security
   const configChangeListener = vscode.workspace.onDidChangeConfiguration(async (event) => {
@@ -173,6 +234,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     state.statusBarItem,
     scmStatusBarItem,
     configChangeListener, // Add the configuration listener
+    uriHandler,
     ...commands
   );
 
