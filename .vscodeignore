@@ -51,7 +51,10 @@ yarn-upgrade-all/**
 **/*.gif
 **/*.png
 !images/logo.png
-!images/s-*.png
+!images/icon-dark.png
+!images/icon-light.png
+!images/all_providers.png
+!images/screenshots/*.png
 **/jest.config.js
 **/jest.setup.js
 **/.prettierrc
