@@ -468,10 +468,12 @@ export class CommitStyleRenderer extends BaseRenderer {
                         <div class="gm-examples-list">
                             ${examples.map((example, index) => {
             const label = index === 0 ? 'Single-line example' : 'Multi-line example';
-            return `<div class="gm-example-item">
-                                        <div class="gm-example-label">${label}</div>
-                                        <div class="gm-example-content">${example}</div>
-                                    </div>`;
+            return `
+                                    <div class="gm-example-item">
+                                        <span class="gm-example-label">${label}</span>
+                                        <pre class="gm-example-content">${example}</pre>
+                                    </div>
+                                `;
         }).join('')}
                         </div>
                     </div>
@@ -551,12 +553,12 @@ export class CommitStyleRenderer extends BaseRenderer {
                 <h4 class="gm-examples-title">Examples</h4>
                 <div class="gm-examples-grid">
                     <div class="gm-example-item">
-                        <div class="gm-example-label">Summary injection:</div>
-                        <div class="gm-example-content">${summaryExample}</div>
+                        <span class="gm-example-label">Summary injection</span>
+                        <pre class="gm-example-content">${summaryExample}</pre>
                     </div>
                     <div class="gm-example-item">
-                        <div class="gm-example-label">Body injection:</div>
-                        <div class="gm-example-content">${bodyExample}</div>
+                        <span class="gm-example-label">Body injection</span>
+                        <pre class="gm-example-content">${bodyExample}</pre>
                     </div>
                 </div>
             </div>
@@ -699,10 +701,12 @@ export class CommitStyleRenderer extends BaseRenderer {
         const examples = this.getExamplesForStyle(currentStyle);
         return examples.map((example, index) => {
             const label = index === 0 ? 'Single-line example' : 'Multi-line example';
-            return `<div class="gm-example-item">
-                <div class="gm-example-label">${label}</div>
-                <div class="gm-example-content">${example}</div>
-            </div>`;
+            return `
+                <div class="gm-example-item">
+                    <span class="gm-example-label">${label}</span>
+                    <pre class="gm-example-content">${example}</pre>
+                </div>
+            `;
         }).join('');
     }
 

@@ -5,16 +5,19 @@ export function getTabStyles(): string {
         margin-top: 1.5rem;
     }
 
-    /* Clean Minimal Tab Header */
+    /* Unified Flat Segmented Control Track */
     .tabs-header {
         display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 0 auto 1rem;
-        padding: 0;
+        background: rgba(128, 128, 128, 0.05);
+        border: 1px solid var(--gm-border-color, rgba(128, 128, 128, 0.12));
+        border-radius: 8px;
+        padding: 3px;
+        margin: 0 auto 1.25rem;
         list-style: none;
-        gap: 8px;
-        position: relative;
+        gap: 2px;
+        align-items: center;
+        justify-content: center;
+        width: fit-content;
     }
 
     /* Clean Flat Tab Buttons */
@@ -23,71 +26,78 @@ export function getTabStyles(): string {
         display: flex;
         align-items: center;
         justify-content: center;
-        height: 36px;
-        min-width: 120px;
+        height: 30px;
+        min-width: 110px;
         padding: 0 16px;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 500;
         text-align: center;
         text-decoration: none;
         cursor: pointer;
-        background: var(--vscode-button-secondaryBackground);
-        color: var(--vscode-button-secondaryForeground);
-        border: 1px solid rgba(128, 128, 128, 0.12);
+        background: transparent;
+        color: var(--vscode-foreground);
+        border: none;
         border-radius: 6px;
-        transition: all 0.2s ease;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        outline: none;
+        opacity: 0.65;
     }
 
-    /* Hover Effect - Subtle */
-    .tab-button:hover:not(.active) {
-        background: var(--vscode-button-secondaryHoverBackground);
-        border-color: var(--vscode-button-background);
-        color: var(--vscode-button-secondaryForeground);
+    /* Hover Effect - Subtle Track Pill */
+    .tab-button:hover:not(.active):not(.locked) {
+        background: var(--vscode-toolbar-hoverBackground, rgba(128, 128, 128, 0.05));
+        color: var(--vscode-foreground);
+        opacity: 0.95;
     }
 
-    /* Active Tab Styling - Simple accent */
+    /* Active Tab Styling - Accent Pill */
     .tab-button.active {
         background: var(--vscode-button-background);
-        color: var(--vscode-button-foreground);
-        border-color: var(--vscode-button-background);
+        color: #ffffff;
         font-weight: 600;
+        opacity: 1;
+    }
+
+    /* Active Tab Hover - Slight dim, always white text */
+    .tab-button.active:hover {
+        background: var(--vscode-button-hoverBackground, var(--vscode-button-background));
+        color: #ffffff;
+        opacity: 0.9;
     }
 
     /* Locked Tab Styling */
     .tab-button.locked {
         position: relative;
         cursor: pointer;
-        opacity: 0.8;
     }
 
     .tab-button.locked::before {
         content: "";
         display: inline-block;
-        width: 12px;
-        height: 12px;
-        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ff5252' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='11' width='18' height='11' rx='2' ry='2'></rect><path d='M7 11V7a5 5 0 0 1 10 0v4'></path></svg>");
+        width: 11px;
+        height: 11px;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ff5252' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='11' width='18' height='11' rx='2' ry='2'></rect><path d='M7 11V7a5 5 0 0 1 10 0v4'></path></svg>");
         background-repeat: no-repeat;
         background-position: center;
         background-size: contain;
-        margin-right: 6px;
-        transition: all 0.25s ease;
+        margin-right: 5px;
+        transition: all 0.2s ease;
     }
 
-    .tab-button.locked:hover {
-        border-color: rgba(255, 82, 82, 0.4) !important;
-        background: rgba(255, 82, 82, 0.05) !important;
+    .tab-button.locked:hover:not(.active) {
+        background: rgba(255, 82, 82, 0.08) !important;
         color: #ff5252 !important;
         opacity: 1;
     }
 
     .tab-button.locked:hover::before {
-        transform: scale(1.15);
+        transform: scale(1.1);
     }
 
     /* Focus visible for accessibility */
     .tab-button:focus-visible {
         outline: 2px solid var(--vscode-focusBorder);
-        outline-offset: 2px;
+        outline-offset: 1px;
     }
 
     /* Clean Tab Content */
@@ -95,7 +105,7 @@ export function getTabStyles(): string {
         display: none;
         background: transparent;
         border-radius: 0;
-        padding: 20px 0;
+        padding: 16px 0;
         margin-top: 0;
         position: relative;
         border: none;
@@ -103,14 +113,14 @@ export function getTabStyles(): string {
 
     .tab-content.active {
         display: block;
-        animation: fadeIn 0.2s ease-in-out;
+        animation: fadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* Fade in animation for content */
     @keyframes fadeIn {
         from {
             opacity: 0;
-            transform: translateY(-5px);
+            transform: translateY(-3px);
         }
         to {
             opacity: 1;
@@ -121,17 +131,17 @@ export function getTabStyles(): string {
     /* Responsive adjustments */
     @media (max-width: 768px) {
         .tabs-header {
-            gap: 6px;
+            gap: 2px;
+            padding: 2px;
         }
 
         .tab-button {
-            min-width: 100px;
-            font-size: 12px;
-            padding: 0 12px;
-            height: 32px;
+            min-width: 90px;
+            font-size: 11px;
+            padding: 0 10px;
+            height: 26px;
         }
     }
-
 
     /* Reduced motion support */
     @media (prefers-reduced-motion: reduce) {
@@ -154,11 +164,11 @@ export function getTabStyles(): string {
     /* High contrast mode support */
     @media (prefers-contrast: high) {
         .tab-button {
-            border-width: 2px;
+            border: 1px solid transparent;
         }
 
         .tab-button.active {
-            border-width: 2px;
+            border: 2px solid var(--vscode-contrastBorder, var(--vscode-focusBorder));
         }
     }
 `;

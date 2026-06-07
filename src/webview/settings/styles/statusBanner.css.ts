@@ -891,23 +891,74 @@ export function getStatusBannerStyles(): string {
         gap: 6px;
       }
 
-      .gm-chip {
-        display: inline-flex;
+      .gm-config-groups {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 12px;
+        margin-top: 14px;
+      }
+
+      .gm-config-group {
+        display: flex;
+        flex-direction: column;
+        background: rgba(128, 128, 128, 0.02);
+        border: 1px solid rgba(128, 128, 128, 0.08);
+        border-radius: 8px;
+        padding: 10px 12px;
+        transition: all 0.2s ease;
+      }
+
+      .gm-config-group:hover {
+        background: rgba(128, 128, 128, 0.04);
+        border-color: rgba(128, 128, 128, 0.12);
+      }
+
+      .gm-config-group-title {
+        display: flex;
         align-items: center;
-        gap: 5px;
-        padding: 4px 9px;
+        gap: 6px;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--vscode-descriptionForeground);
+        margin-bottom: 8px;
+        opacity: 0.85;
+      }
+
+      .gm-config-group-title svg {
+        flex-shrink: 0;
+        color: var(--vscode-button-background, #0e639c);
+      }
+
+      .gm-config-group-items {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .gm-chip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 5px 8px;
         border-radius: 6px;
-        background: rgba(128, 128, 128, 0.08);
-        border: 1px solid rgba(128, 128, 128, 0.16);
+        background: rgba(128, 128, 128, 0.04);
+        border: 1px solid rgba(128, 128, 128, 0.08);
         font-size: 11px;
         line-height: 1.3;
-        transition: all 0.2s ease;
+        transition: all 0.15s ease;
+      }
+
+      .gm-chip:hover {
+        background: rgba(128, 128, 128, 0.08);
+        border-color: rgba(128, 128, 128, 0.14);
       }
 
       .gm-chip.disabled {
         opacity: 0.5;
-        background: rgba(128, 128, 128, 0.03);
-        border-color: rgba(128, 128, 128, 0.08);
+        background: rgba(128, 128, 128, 0.02);
+        border-color: rgba(128, 128, 128, 0.04);
       }
 
       .gm-chip.disabled .k {
@@ -925,7 +976,13 @@ export function getStatusBannerStyles(): string {
         letter-spacing: 0.4px;
         text-transform: uppercase;
         color: var(--vscode-descriptionForeground);
-        opacity: 0.7;
+        opacity: 0.75;
+      }
+
+      .gm-chip-value-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 5px;
       }
 
       .gm-chip .v {
@@ -934,8 +991,8 @@ export function getStatusBannerStyles(): string {
       }
 
       .gm-chip .dot {
-        width: 7px;
-        height: 7px;
+        width: 6px;
+        height: 6px;
         border-radius: 50%;
         flex-shrink: 0;
       }

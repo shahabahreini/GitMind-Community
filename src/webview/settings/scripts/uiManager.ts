@@ -223,7 +223,15 @@ export function getUiManagerScript(): string {
       this.renderChip = function(label, value, dot, isDisabled) {
         const dotHtml = dot ? \`<span class="dot \${dot}"></span>\` : '';
         const disabledClass = isDisabled || dot === 'off' ? ' disabled' : '';
-        return \`<span class="gm-chip\${disabledClass}"><span class="k">\${label}</span>\${dotHtml}<span class="v">\${value}</span></span>\`;
+        return \`
+          <span class="gm-chip\${disabledClass}">
+            <span class="k">\${label}</span>
+            <span class="gm-chip-value-wrapper">
+              \${dotHtml}
+              <span class="v">\${value}</span>
+            </span>
+          </span>
+        \`;
       };
 
       this.renderActivationBlock = function() {
@@ -261,18 +269,6 @@ export function getUiManagerScript(): string {
         const historyLearning = this._settings.pro?.learnFromCommitHistory?.enabled ? 'Active' : 'Off';
         const encryption = this._settings.pro?.encryptionEnabled ? 'Encrypted' : 'Off';
 
-        const chips = [
-          this.renderChip('API', providerInfo.apiConfigured ? 'Configured' : 'Not set', providerInfo.apiConfigured ? 'on' : 'off', !providerInfo.apiConfigured),
-          this.renderChip('Commit', commitStyle),
-          this.renderChip('Capture', captureAll ? 'All Changes' : 'Staged Only'),
-          this.renderChip('Style', activeStyle),
-          this.renderChip('Prompts', promptCustomization, this._settings.promptCustomization?.enabled ? 'on' : 'off', !this._settings.promptCustomization?.enabled),
-          this.renderChip('Diagnostics', diagnostics, this._settings.showDiagnostics ? 'on' : 'off', !this._settings.showDiagnostics),
-          this.renderChip('Security', encryption, this._settings.pro?.encryptionEnabled ? 'on' : 'off', !this._settings.pro?.encryptionEnabled),
-          this.renderChip('History', historyLearning, this._settings.pro?.learnFromCommitHistory?.enabled ? 'on' : 'off', !this._settings.pro?.learnFromCommitHistory?.enabled),
-          this.renderChip('Analytics', analytics, this._settings.telemetry?.enabled !== false ? 'on' : 'off', this._settings.telemetry?.enabled === false)
-        ];
-
         return \`
           <div class="gm-config-card \${isProUser ? 'pro-active' : ''}">
             <div class="gm-config-head">
@@ -287,8 +283,42 @@ export function getUiManagerScript(): string {
               <span class="gm-config-plan \${isProUser ? 'pro' : 'free'}">\${isProUser ? 'PRO' : 'FREE'}</span>
             </div>
 
-            <div class="gm-chips">
-              \${chips.join('')}
+            <div class="gm-config-groups">
+              <div class="gm-config-group">
+                <div class="gm-config-group-title">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.8;"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 15V9a4 4 0 0 0-4-4H9"/><path d="M6 9v6"/></svg>
+                  Commit settings
+                </div>
+                <div class="gm-config-group-items">
+                  \${this.renderChip('Commit', commitStyle)}
+                  \${this.renderChip('Capture', captureAll ? 'All Changes' : 'Staged Only')}
+                  \${this.renderChip('Style', activeStyle)}
+                </div>
+              </div>
+              
+              <div class="gm-config-group">
+                <div class="gm-config-group-title">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.8;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  AI & Security
+                </div>
+                <div class="gm-config-group-items">
+                  \${this.renderChip('Security', encryption, this._settings.pro?.encryptionEnabled ? 'on' : 'off', !this._settings.pro?.encryptionEnabled)}
+                  \${this.renderChip('History', historyLearning, this._settings.pro?.learnFromCommitHistory?.enabled ? 'on' : 'off', !this._settings.pro?.learnFromCommitHistory?.enabled)}
+                  \${this.renderChip('Prompts', promptCustomization, this._settings.promptCustomization?.enabled ? 'on' : 'off', !this._settings.promptCustomization?.enabled)}
+                </div>
+              </div>
+              
+              <div class="gm-config-group">
+                <div class="gm-config-group-title">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.8;"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+                  System & API
+                </div>
+                <div class="gm-config-group-items">
+                  \${this.renderChip('API', providerInfo.apiConfigured ? 'Configured' : 'Not set', providerInfo.apiConfigured ? 'on' : 'off', !providerInfo.apiConfigured)}
+                  \${this.renderChip('Diagnostics', diagnostics, this._settings.showDiagnostics ? 'on' : 'off', !this._settings.showDiagnostics)}
+                  \${this.renderChip('Analytics', analytics, this._settings.telemetry?.enabled !== false ? 'on' : 'off', this._settings.telemetry?.enabled === false)}
+                </div>
+              </div>
             </div>
 
             \${isProUser ? '' : this.renderActivationBlock()}

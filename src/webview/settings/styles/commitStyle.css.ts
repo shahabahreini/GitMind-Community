@@ -130,32 +130,25 @@ export function getCommitStyleStyles(): string {
 
         .gm-style-option {
             border: 1px solid var(--gm-border-color);
-            border-radius: 12px;
-            padding: 16px 20px;
+            border-radius: 8px;
+            padding: 14px 16px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: border-color 0.2s ease, background 0.2s ease;
             position: relative;
             background: var(--gm-card-bg);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
             display: flex;
             flex-direction: column;
             gap: 6px;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
         }
 
         .gm-style-option:hover:not(.gm-style-disabled) {
             border-color: var(--gm-accent-color);
             background: var(--gm-hover-bg);
-            transform: translateY(-2px) scale(1.01);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-            z-index: 2;
         }
 
         .gm-style-option-selected {
             border-color: var(--gm-accent-color) !important;
             background: var(--gm-selected-bg) !important;
-            box-shadow: 0 0 0 1px var(--gm-accent-color) inset, 0 4px 12px rgba(0, 0, 0, 0.1) !important;
         }
 
         .gm-style-option-selected .gm-style-name {
@@ -306,18 +299,14 @@ export function getCommitStyleStyles(): string {
         }
 
         .gm-examples-title {
-            font-weight: 600;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--gm-text-secondary);
             margin: 0 0 12px 0;
-            color: var(--vscode-foreground);
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .gm-examples-title::before {
-            content: "📝";
-            font-size: 14px;
+            display: block;
+            opacity: 0.8;
         }
 
         .gm-examples-container {
@@ -327,33 +316,44 @@ export function getCommitStyleStyles(): string {
         }
 
         .gm-example-item {
-            background: var(--vscode-editor-background);
-            border: 1px solid var(--vscode-widget-border);
-            border-radius: 4px;
-            overflow: hidden;
+            margin-bottom: 14px;
+        }
+
+        .gm-example-item:last-child {
+            margin-bottom: 0;
         }
 
         .gm-example-label {
-            font-size: 10px;
-            font-weight: 600;
-            color: var(--vscode-tab-activeForeground);
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--vscode-descriptionForeground);
             text-transform: uppercase;
-            letter-spacing: 0.6px;
-            padding: 6px 10px;
-            background: var(--vscode-tab-activeBackground);
-            border-bottom: 1px solid var(--vscode-widget-border);
-            margin: 0;
-            display: block;
+            letter-spacing: 0.7px;
+            opacity: 0.75;
+            margin-bottom: 5px;
+            display: inline-block;
         }
 
         .gm-example-content {
-            font-family: var(--vscode-editor-font-family);
-            font-size: 12px;
-            color: var(--vscode-editor-foreground);
-            line-height: 1.4;
+            font-family: var(--vscode-editor-font-family, Monaco, Menlo, Consolas, monospace);
+            font-size: 11.5px;
+            color: var(--vscode-editor-foreground, var(--vscode-foreground));
+            line-height: 1.5;
             white-space: pre-wrap;
-            padding: 10px;
+            padding: 10px 14px;
             margin: 0;
+            background: var(--vscode-textCodeBlock-background, rgba(128, 128, 128, 0.04));
+            border: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.15));
+            border-left: 2px solid var(--vscode-button-background, rgba(0, 122, 204, 0.5));
+            border-radius: 4px;
+            overflow-x: auto;
+            display: block;
+            transition: border-color 0.2s ease;
+        }
+
+        .gm-example-content:hover {
+            border-color: var(--vscode-focusBorder, var(--vscode-button-background));
+            border-left-color: var(--vscode-button-background);
         }
 
         .gm-reference-container {
@@ -602,44 +602,49 @@ export function getCommitStyleStyles(): string {
 
         .gm-examples-toggle {
             background: transparent;
-            border: 1px solid var(--gm-border-color);
-            color: var(--gm-accent-color);
-            padding: 4px 8px;
+            border: 1px solid var(--vscode-button-background, rgba(0, 122, 204, 0.4));
+            color: var(--vscode-button-background, #007acc);
+            padding: 4px 10px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 11px;
-            margin-top: 6px;
+            font-weight: 500;
+            margin-top: 7px;
             display: flex;
             align-items: center;
             gap: 4px;
             transition: all 0.2s ease;
             outline: none;
             width: fit-content;
-            opacity: 0.8;
+            opacity: 0.85;
         }
 
         .gm-examples-toggle:hover {
-            background: var(--gm-accent-color);
-            color: var(--vscode-button-foreground, white);
-            border-color: var(--gm-accent-color);
+            background: var(--vscode-button-background);
+            /* Explicitly white text — button bg is always dark enough */
+            color: #ffffff;
+            border-color: var(--vscode-button-background);
             opacity: 1;
         }
 
         .gm-examples-toggle.gm-examples-toggle-active {
-            background: var(--gm-accent-color);
-            color: var(--vscode-button-foreground, white);
-            border-color: var(--gm-accent-color);
+            background: var(--vscode-button-background);
+            /* White text on filled button — works in both light & dark themes */
+            color: #ffffff;
+            border-color: var(--vscode-button-background);
             opacity: 1;
         }
 
         .gm-examples-toggle.gm-examples-toggle-active:hover {
-            background: var(--gm-accent-hover);
-            border-color: var(--gm-accent-hover);
+            background: var(--vscode-button-hoverBackground, var(--vscode-button-background));
+            border-color: var(--vscode-button-hoverBackground, var(--vscode-button-background));
+            color: #ffffff;
+            opacity: 0.9;
         }
 
         .gm-examples-toggle:focus {
-            outline: 1px solid var(--gm-accent-color);
-            outline-offset: -1px;
+            outline: 1px solid var(--vscode-focusBorder);
+            outline-offset: 1px;
         }
 
         .gm-toggle-icon {
@@ -675,63 +680,14 @@ export function getCommitStyleStyles(): string {
         }
 
         .gm-inline-examples-title {
-            font-size: 12px;
-            font-weight: 500;
-            margin: 0 0 8px 0;
-            color: var(--gm-accent-color);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            opacity: 0.9;
-        }
-
-        .gm-inline-examples-title::before {
-            content: "✨";
-            font-size: 12px;
-            opacity: 0.8;
-        }
-
-        .gm-examples-list .gm-example-item {
-            background: transparent;
-            border: none;
-            padding: 8px 0;
-            margin-bottom: 12px;
-            border-left: 2px solid transparent;
-            padding-left: 12px;
-            transition: all 0.2s ease;
-            border-radius: 0 4px 4px 0;
-        }
-
-        .gm-examples-list .gm-example-item:hover {
-            border-left-color: var(--gm-accent-color);
-            background: var(--gm-hover-bg);
-            padding-left: 16px;
-        }
-
-        .gm-examples-list .gm-example-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .gm-examples-list .gm-example-label {
-            font-size: 10px;
-            font-weight: 500;
-            color: var(--gm-text-secondary);
+            font-size: 11px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
+            letter-spacing: 0.8px;
+            color: var(--gm-text-secondary);
+            margin: 0 0 12px 0;
+            display: block;
             opacity: 0.8;
-        }
-
-        .gm-examples-list .gm-example-content {
-            font-family: var(--vscode-editor-font-family);
-            font-size: 13px;
-            line-height: 1.4;
-            color: var(--gm-text-primary);
-            white-space: pre-line;
-            background: transparent;
-            padding: 0;
-            border: none;
-            opacity: 0.95;
         }
 
         /* Enhanced animations */
@@ -753,6 +709,7 @@ export function getCommitStyleStyles(): string {
         .gm-style-option-selected .gm-examples-toggle:hover {
             background: var(--gm-accent-hover);
             border-color: var(--gm-accent-hover);
+            color: var(--vscode-button-foreground, white);
         }
 
         /* Table of Contents Styles */
