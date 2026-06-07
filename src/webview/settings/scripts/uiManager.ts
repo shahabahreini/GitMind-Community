@@ -220,115 +220,66 @@ export function getUiManagerScript(): string {
         return { displayName: config.displayName, model, apiConfigured };
       };
       
-      this.renderStatusItem = function(label, value, className) {
-        const valueClass = className ? \` class="\${className}"\` : '';
+      this.renderChip = function(label, value, dot) {
+        const dotHtml = dot ? \`<span class="dot \${dot}"></span>\` : '';
+        return \`<span class="gm-chip"><span class="k">\${label}</span>\${dotHtml}<span class="v">\${value}</span></span>\`;
+      };
+
+      this.renderActivationBlock = function() {
         return \`
-          <div class="status-item">
-            <span class="status-label">\${label}</span>
-            <span class="status-value"\${valueClass}>\${value}</span>
+          <div class="gm-activate">
+            <div class="gm-activate-label">⭐ Activate GitMind Pro</div>
+            <div class="gm-activate-row">
+              <input type="text" id="bannerLicenseInput" class="gm-activate-input"
+                     placeholder="Paste your license key (GITMIND-PRO-…)" autocomplete="off" />
+              <button type="button" id="bannerActivateLicenseBtn" class="gm-activate-btn">Activate</button>
+            </div>
+            <div class="gm-activate-actions">
+              <button type="button" id="bannerActivateEmailBtn" class="gm-activate-link">⚡ Quick activate by email</button>
+              <button type="button" id="bannerBuyProBtn" class="gm-activate-link">Buy GitMind Pro</button>
+            </div>
           </div>
         \`;
       };
-      
+
       this.render = function() {
         const providerInfo = this.getProviderInfo();
         const provider = this._settings.apiProvider;
         const hasSubscriptionEmail = !!this._settings.subscription?.email && this._settings.subscription.email.length > 0;
+        const licenseValid = this._settings.pro?.validationStatus === 'valid';
         const isActiveSubscription = this._settings.subscription?.status === 'active';
         const devModeEnabled = typeof window !== 'undefined' && window.GITMIND_DEV_MODE === true;
-        const isProUser = (hasSubscriptionEmail && isActiveSubscription) || devModeEnabled;
+        const isProUser = licenseValid || (hasSubscriptionEmail && isActiveSubscription) || devModeEnabled;
 
-        const statusItems = [
-          this.renderStatusItem('Active Provider', \`<span class="status-badge \${provider}">\${providerInfo.displayName}</span>\`),
-          this.renderStatusItem('User Type', \`<span class="user-type-badge \${isProUser ? 'pro-user' : 'free-user'}">\${isProUser ? 'Pro' : 'Free'}</span>\`),
-          this.renderStatusItem('API Status', providerInfo.apiConfigured ? 'Configured' : 'Not Configured'),
-          this.renderStatusItem('Commit Style', this._settings.commit?.verbose ? 'Verbose' : 'Concise'),
-          this.renderStatusItem('Prompt Customization', this._settings.promptCustomization?.enabled ? 'Enabled' : 'Disabled'),
-          this.renderStatusItem('Anonymous Analytics', 
-            this._settings.telemetry?.enabled !== false ? 'Enabled' : 'Disabled',
-            this._settings.telemetry?.enabled !== false ? 'telemetry-enabled' : 'telemetry-disabled')
-        ];
-
-        const renderProviderIcon = (provider, size = 40) => 
+        const renderProviderIcon = (provider, size = 40) =>
           window.ProviderIcon ? window.ProviderIcon.renderIcon(provider, size) : '';
 
+        const chips = [
+          this.renderChip('API', providerInfo.apiConfigured ? 'Configured' : 'Not set', providerInfo.apiConfigured ? 'on' : 'off'),
+          this.renderChip('Commit', this._settings.commit?.verbose ? 'Verbose' : 'Concise'),
+          this.renderChip('Prompts', this._settings.promptCustomization?.enabled ? 'Enabled' : 'Disabled', this._settings.promptCustomization?.enabled ? 'on' : 'off'),
+          this.renderChip('Analytics', this._settings.telemetry?.enabled !== false ? 'Enabled' : 'Disabled', this._settings.telemetry?.enabled !== false ? 'on' : 'off')
+        ];
+
         return \`
-          <div class="status-banner">
-            <div class="status-banner-header">
-              \${renderProviderIcon(provider, 32)}
-              <div class="status-banner-title">
-                <h3>Current Configuration</h3>
-                <span class="status-provider-name">\${providerInfo.displayName}</span>
+          <div class="gm-config-card">
+            <div class="gm-config-head">
+              \${renderProviderIcon(provider, 28)}
+              <div class="gm-config-title">
+                <span class="gm-config-caption">Current Configuration</span>
+                <span class="gm-config-name">\${providerInfo.displayName}</span>
               </div>
-              \${isProUser ? '<div class="pro-badge-container"><span class="pro-badge-banner">PRO</span></div>' : ''}
+              <span class="gm-config-plan \${isProUser ? 'pro' : 'free'}">\${isProUser ? 'PRO' : 'FREE'}</span>
             </div>
-            <div class="model-section">
-              <div class="model-item">
-                <span class="model-label">Current Model</span>
-                <span class="model-value">\${providerInfo.model}</span>
-              </div>
+
+            <div class="gm-config-model"><span class="k">Model</span>\${providerInfo.model}</div>
+
+            <div class="gm-chips">
+              \${chips.join('')}
             </div>
-            <div class="status-grid">
-              \${statusItems.join('')}
-            </div>
+
+            \${isProUser ? '' : this.renderActivationBlock()}
           </div>
-          
-          <style>
-            .user-type-badge {
-              display: inline-block;
-              padding: 4px 12px;
-              border-radius: 16px;
-              font-size: 12px;
-              font-weight: 600;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-              transition: all 0.2s ease;
-            }
-            
-            .user-type-badge:hover {
-              transform: translateY(-1px);
-              box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-            }
-            
-            .user-type-badge.free-user {
-              background: linear-gradient(135deg, #6b7280, #4b5563);
-              color: #f9fafb;
-            }
-            
-            .user-type-badge.pro-user {
-              background: linear-gradient(135deg, #ffd700, #ffb700);
-              color: #1f2937;
-              box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
-            }
-            
-            .pro-badge-banner {
-              background: linear-gradient(135deg, #ffd700, #ffb700);
-              color: #1f2937;
-              padding: 6px 12px;
-              border-radius: 6px;
-              font-weight: 700;
-              font-size: 11px;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-              box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
-              transition: all 0.2s ease;
-            }
-            
-            .pro-badge-banner:hover {
-              transform: translateY(-1px);
-              box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
-            }
-            
-            .pro-badge-container {
-              margin-left: auto;
-            }
-            
-            .status-banner-header {
-              display: flex;
-              align-items: center;
-            }
-          </style>
         \`;
       };
     };
@@ -363,6 +314,70 @@ export function getUiManagerScript(): string {
       }
     }
     
+    // ----- Current Configuration: inline Pro activation wiring -----
+    // Delegated so it keeps working after the banner re-renders via innerHTML.
+    function submitBannerLicense() {
+      const input = document.getElementById('bannerLicenseInput');
+      const btn = document.getElementById('bannerActivateLicenseBtn');
+      const key = input && input.value ? input.value.trim() : '';
+      if (!key) {
+        if (input) {
+          input.focus();
+          input.style.borderColor = 'var(--vscode-inputValidation-errorBorder, #e51400)';
+        }
+        return;
+      }
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Activating…';
+      }
+      vscode.postMessage({ command: 'activateProLicense', licenseKey: key });
+    }
+
+    document.addEventListener('click', function(e) {
+      const target = e.target && e.target.closest
+        ? e.target.closest('#bannerActivateLicenseBtn, #bannerActivateEmailBtn, #bannerBuyProBtn')
+        : null;
+      if (!target) return;
+
+      if (target.id === 'bannerActivateLicenseBtn') {
+        submitBannerLicense();
+      } else if (target.id === 'bannerActivateEmailBtn') {
+        // If an email is already configured, activate with it directly (this path
+        // refreshes the settings webview on success). Otherwise run the command,
+        // which prompts the user for their purchase email.
+        const s = window.gitmindSettings || {};
+        const configuredEmail = s.subscription && s.subscription.email;
+        if (configuredEmail) {
+          vscode.postMessage({ command: 'activateProByEmail', customerEmail: configuredEmail });
+        } else {
+          vscode.postMessage({ command: 'executeCommand', commandId: 'gitmind.activateByEmail' });
+        }
+      } else if (target.id === 'bannerBuyProBtn') {
+        vscode.postMessage({ command: 'executeCommand', commandId: 'gitmind.subscribe' });
+      }
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && e.target && e.target.id === 'bannerLicenseInput') {
+        e.preventDefault();
+        submitBannerLicense();
+      }
+    });
+
+    // Reset the banner activate button if activation fails (on success the banner
+    // re-renders without the activation block, so no reset is needed).
+    window.addEventListener('message', function(event) {
+      const msg = event.data;
+      if (msg && msg.command === 'proActivationResult' && !msg.success) {
+        const btn = document.getElementById('bannerActivateLicenseBtn');
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Activate';
+        }
+      }
+    });
+
     // Initialize UI
     updateVisibleSettings();
     document.getElementById('apiProvider')?.addEventListener('change', updateVisibleSettings);

@@ -721,6 +721,246 @@ export function getStatusBannerStyles(): string {
         }
       }
 
+      /* ===== Compact "Current Configuration" card (gm-config) ===== */
+      .gm-config-card {
+        background: var(--vscode-editor-background);
+        border: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.22));
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      }
+
+      .gm-config-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .gm-config-head .provider-icon,
+      .gm-config-head svg,
+      .gm-config-head img {
+        flex-shrink: 0;
+      }
+
+      .gm-config-title {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        min-width: 0;
+        flex: 1;
+      }
+
+      .gm-config-caption {
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        color: var(--vscode-descriptionForeground);
+        opacity: 0.65;
+      }
+
+      .gm-config-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--vscode-foreground);
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .gm-config-plan {
+        flex-shrink: 0;
+        font-size: 9px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 3px 8px;
+        border-radius: 8px;
+      }
+
+      .gm-config-plan.pro {
+        background: linear-gradient(135deg, #ffd700, #ffb000);
+        color: #8b4513;
+        box-shadow: 0 1px 3px rgba(255, 215, 0, 0.4);
+      }
+
+      .gm-config-plan.free {
+        background: rgba(128, 128, 128, 0.18);
+        color: var(--vscode-descriptionForeground);
+        border: 1px solid rgba(128, 128, 128, 0.28);
+      }
+
+      .gm-config-model {
+        font-size: 11px;
+        font-family: var(--vscode-editor-font-family, 'SF Mono', monospace);
+        color: var(--vscode-foreground);
+        background: rgba(128, 128, 128, 0.08);
+        border: 1px solid rgba(128, 128, 128, 0.16);
+        border-radius: 5px;
+        padding: 5px 8px;
+        margin-bottom: 10px;
+        word-break: break-all;
+      }
+
+      .gm-config-model .k {
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: var(--vscode-descriptionForeground);
+        opacity: 0.7;
+        margin-right: 6px;
+      }
+
+      .gm-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .gm-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 9px;
+        border-radius: 6px;
+        background: rgba(128, 128, 128, 0.08);
+        border: 1px solid rgba(128, 128, 128, 0.16);
+        font-size: 11px;
+        line-height: 1.3;
+      }
+
+      .gm-chip .k {
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        color: var(--vscode-descriptionForeground);
+        opacity: 0.7;
+      }
+
+      .gm-chip .v {
+        font-weight: 600;
+        color: var(--vscode-foreground);
+      }
+
+      .gm-chip .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .gm-chip .dot.on { background: #10b981; }
+      .gm-chip .dot.off { background: #9ca3af; }
+
+      /* ===== Inline activation block (shown to non-Pro users) ===== */
+      .gm-activate {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px dashed rgba(128, 128, 128, 0.25);
+      }
+
+      .gm-activate-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: var(--vscode-descriptionForeground);
+        opacity: 0.85;
+        margin-bottom: 7px;
+      }
+
+      .gm-activate-row {
+        display: flex;
+        gap: 6px;
+        align-items: stretch;
+      }
+
+      .gm-activate-input {
+        flex: 1;
+        min-width: 0;
+        height: 28px;
+        padding: 6px 8px;
+        font-size: 12px;
+        font-family: var(--vscode-editor-font-family, monospace);
+        border: 1px solid var(--vscode-input-border, rgba(128, 128, 128, 0.3));
+        border-radius: 5px;
+        background: var(--vscode-input-background);
+        color: var(--vscode-input-foreground);
+        box-sizing: border-box;
+      }
+
+      .gm-activate-input::placeholder {
+        color: var(--vscode-input-placeholderForeground);
+        opacity: 0.7;
+      }
+
+      .gm-activate-btn {
+        flex-shrink: 0;
+        height: 28px;
+        padding: 0 14px;
+        font-size: 12px;
+        font-weight: 600;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        background: var(--vscode-button-background);
+        color: var(--vscode-button-foreground);
+      }
+
+      .gm-activate-btn:hover:not(:disabled) {
+        background: var(--vscode-button-hoverBackground);
+      }
+
+      .gm-activate-btn:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+
+      .gm-activate-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 8px;
+      }
+
+      .gm-activate-link {
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--vscode-textLink-foreground);
+        box-shadow: none;
+        height: auto;
+        min-height: 0;
+      }
+
+      .gm-activate-link:hover {
+        color: var(--vscode-textLink-activeForeground);
+        text-decoration: underline;
+        background: none;
+        transform: none;
+        box-shadow: none;
+      }
+
+      @media (max-width: 480px) {
+        .gm-activate-row {
+          flex-direction: column;
+        }
+        .gm-activate-btn {
+          width: 100%;
+        }
+      }
+
       /* Import provider icons */
       ${ProviderIcon.getIconStyles()}
     `;

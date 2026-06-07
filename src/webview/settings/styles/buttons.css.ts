@@ -244,9 +244,12 @@ export function getButtonStyles(): string {
         opacity: 0.6;
         cursor: not-allowed;
         pointer-events: none;
-        background-color: var(--vscode-disabledForeground, rgba(158, 158, 158, 0.3)) !important;
-        color: var(--vscode-disabledForeground, rgba(127, 127, 127, 0.8)) !important;
-        border-color: var(--vscode-disabledForeground, rgba(158, 158, 158, 0.3)) !important;
+        /* Use a subtle background with a dimmed-but-visible foreground. Previously both
+           background AND color were set to --vscode-disabledForeground, which made the
+           label the same color as the button (invisible). */
+        background-color: var(--vscode-button-secondaryBackground, rgba(128, 128, 128, 0.12)) !important;
+        color: var(--vscode-disabledForeground, var(--vscode-descriptionForeground, #8a8a8a)) !important;
+        border-color: var(--vscode-widget-border, rgba(128, 128, 128, 0.22)) !important;
         transform: none !important;
         box-shadow: none !important;
       }

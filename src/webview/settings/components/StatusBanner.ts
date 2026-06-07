@@ -122,12 +122,29 @@ export class StatusBanner {
     };
   }
 
-  private renderInlineStatus(label: string, value: string, className?: string): string {
-    const valueClass = className ? ` class="${className}"` : '';
+  private renderChip(label: string, value: string, dot?: 'on' | 'off'): string {
+    const dotHtml = dot ? `<span class="dot ${dot}"></span>` : '';
+    return `<span class="gm-chip"><span class="k">${label}</span>${dotHtml}<span class="v">${value}</span></span>`;
+  }
+
+  /**
+   * Inline license / quick-activation block, shown only to non-Pro users.
+   * Kept identical to the runtime version in uiManager.ts so the panel looks
+   * the same on first render and after live updates.
+   */
+  public static renderActivationBlock(): string {
     return `
-      <div class="inline-status">
-        <span class="inline-label">${label}:</span>
-        <span class="inline-value"${valueClass}>${value}</span>
+      <div class="gm-activate">
+        <div class="gm-activate-label">⭐ Activate GitMind Pro</div>
+        <div class="gm-activate-row">
+          <input type="text" id="bannerLicenseInput" class="gm-activate-input"
+                 placeholder="Paste your license key (GITMIND-PRO-…)" autocomplete="off" />
+          <button type="button" id="bannerActivateLicenseBtn" class="gm-activate-btn">Activate</button>
+        </div>
+        <div class="gm-activate-actions">
+          <button type="button" id="bannerActivateEmailBtn" class="gm-activate-link">⚡ Quick activate by email</button>
+          <button type="button" id="bannerBuyProBtn" class="gm-activate-link">Buy GitMind Pro</button>
+        </div>
       </div>
     `;
   }
@@ -137,43 +154,37 @@ export class StatusBanner {
     const provider = this._settings.apiProvider;
     const hasSubscriptionEmail = !!this._settings.subscription?.email && this._settings.subscription.email.length > 0;
 
-    // Check real subscription status from API only
+    // Pro if a license is validated OR there's an active subscription OR dev mode.
+    const licenseValid = (this._settings as any).pro?.validationStatus === 'valid';
     const isActiveSubscription = hasSubscriptionEmail && this._settings.subscription?.status === 'active';
-
     const devModeEnabled = process.env.GITMIND_ENCRYPTION_DEV_MODE === 'true';
-    const isProUser = (hasSubscriptionEmail && isActiveSubscription) || devModeEnabled;
-
-    const apiStatus = providerInfo.apiConfigured ?
-      '<span class="status-indicator configured">●</span>Configured' :
-      '<span class="status-indicator disabled">○</span>Not Configured';
+    const isProUser = licenseValid || isActiveSubscription || devModeEnabled;
 
     const commitStyle = this._settings.commit?.verbose ? 'Verbose' : 'Concise';
     const promptCustomization = this._settings.promptCustomization?.enabled ? 'Enabled' : 'Disabled';
     const analytics = this._settings.telemetry?.enabled !== false ? 'Enabled' : 'Disabled';
 
     return `
-      <div class="status-banner-compact" style="background: var(--vscode-editor-background); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
-        <div class="banner-header" style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+      <div class="gm-config-card">
+        <div class="gm-config-head">
           ${ProviderIcon.renderIcon(provider, 28)}
-          <div class="header-content" style="flex: 1; min-width: 0;">
-            <div class="provider-info" style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
-              <span class="provider-name" style="font-size: 18px; font-weight: 600; color: var(--vscode-foreground);">${providerInfo.displayName}</span>
-              ${isProUser ? '<span class="pro-badge">PRO</span>' : '<span class="free-badge">FREE</span>'}
-            </div>
-            <div class="model-display">${providerInfo.model}</div>
+          <div class="gm-config-title">
+            <span class="gm-config-caption">Current Configuration</span>
+            <span class="gm-config-name">${providerInfo.displayName}</span>
           </div>
+          <span class="gm-config-plan ${isProUser ? 'pro' : 'free'}">${isProUser ? 'PRO' : 'FREE'}</span>
         </div>
 
-        <div class="status-content" style="display: flex; flex-direction: column; gap: 6px;">
-          <div class="status-row primary" style="display: flex; gap: 16px; flex-wrap: wrap;">
-            ${this.renderInlineStatus('API', apiStatus)}
-            ${this.renderInlineStatus('Commit', commitStyle)}
-          </div>
-          <div class="status-row secondary" style="display: flex; gap: 16px; flex-wrap: wrap;">
-            ${this.renderInlineStatus('Prompts', promptCustomization)}
-            ${this.renderInlineStatus('Analytics', analytics)}
-          </div>
+        <div class="gm-config-model"><span class="k">Model</span>${providerInfo.model}</div>
+
+        <div class="gm-chips">
+          ${this.renderChip('API', providerInfo.apiConfigured ? 'Configured' : 'Not set', providerInfo.apiConfigured ? 'on' : 'off')}
+          ${this.renderChip('Commit', commitStyle)}
+          ${this.renderChip('Prompts', promptCustomization, this._settings.promptCustomization?.enabled ? 'on' : 'off')}
+          ${this.renderChip('Analytics', analytics, this._settings.telemetry?.enabled !== false ? 'on' : 'off')}
         </div>
+
+        ${isProUser ? '' : StatusBanner.renderActivationBlock()}
       </div>
     `;
   }

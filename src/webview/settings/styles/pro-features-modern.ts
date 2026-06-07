@@ -498,8 +498,8 @@ export const proFeaturesModernCSS: string = `
 .pro-feature-container .btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    background-color: var(--vscode-disabledForeground);
-    color: var(--vscode-disabledForeground);
+    background-color: var(--vscode-button-secondaryBackground, rgba(128, 128, 128, 0.12));
+    color: var(--vscode-disabledForeground, var(--vscode-descriptionForeground, #8a8a8a));
 }
 
 .pro-feature-container .btn-secondary {

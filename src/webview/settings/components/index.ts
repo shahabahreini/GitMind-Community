@@ -3,9 +3,6 @@
 // Main component
 export { ProFeaturesSettings } from './ProFeaturesSettings';
 
-// Provider settings
-export { CustomSettings } from './CustomSettings';
-
 // Renderers
 export { BaseRenderer } from './renderers/BaseRenderer';
 export { ModelSettingsRenderer } from './renderers/ModelSettingsRenderer';

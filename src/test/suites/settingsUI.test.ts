@@ -413,34 +413,6 @@ suite('Settings UI Tests', () => {
         }
     });
 
-    test('OllamaSettings should render searchable dropdown correctly', () => {
-        const mockSettings = {
-            apiProvider: 'ollama',
-            ollama: {
-                url: 'http://localhost:11434',
-                model: 'phi4'
-            }
-        } as any;
-
-        try {
-            const { OllamaSettings } = require('../../webview/settings/components/OllamaSettings');
-            const ollamaSettings = new OllamaSettings(mockSettings);
-            const html = ollamaSettings.render();
-
-            // Check that the HTML contains the expected elements
-            assert.ok(html.includes('id="ollamaUrl"'), 'Should contain URL input');
-            assert.ok(html.includes('id="ollamaModel"'), 'Should contain model input');
-            assert.ok(html.includes('id="loadModelsBtn"'), 'Should contain load models button');
-            assert.ok(html.includes('id="modelDropdown"'), 'Should contain dropdown');
-            assert.ok(html.includes('searchable-dropdown'), 'Should contain searchable dropdown class');
-            assert.ok(html.includes('value="phi4"'), 'Should contain model value');
-            assert.ok(html.includes('value="http://localhost:11434"'), 'Should contain URL value');
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            console.log('OllamaSettings test failed (expected in test environment):', errorMessage);
-        }
-    });
-
     test('Searchable select should render a visible icon toggle', () => {
         const html = FormUtils.createSearchableSelect('testModel', [
             { value: 'alpha', label: 'Alpha', selected: true },
