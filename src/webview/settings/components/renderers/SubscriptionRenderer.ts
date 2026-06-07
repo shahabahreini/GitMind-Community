@@ -360,12 +360,13 @@ export class SubscriptionRenderer extends BaseRenderer {
                         <p class="tab-instruction">Enter the license key received in your purchase receipt email (starts with <code>GITMIND-PRO-</code>).</p>
                         <div class="activation-form-row">
                             <div class="input-container">
-                                <input type="text" 
-                                       id="licenseKeyInput" 
+                                <input type="text"
+                                       id="licenseKeyInput"
                                        placeholder="GITMIND-PRO-XXXX-XXXX-XXXX"
                                        class="license-input-field" />
                             </div>
-                            <button type="button" class="btn btn-primary action-btn" id="activateLicenseBtn">Activate License</button>
+                            <button type="button" class="btn btn-secondary action-btn" id="activateLicenseBtn">Activate License</button>
+                            <button type="button" class="btn action-btn buy-pro-btn js-buy-pro" title="Purchase a GitMind Pro license">Buy GitMind Pro</button>
                         </div>
                     </div>
 
@@ -389,7 +390,10 @@ export class SubscriptionRenderer extends BaseRenderer {
                                        data-setting="subscription.email" />
                             </div>
                         </div>
-                        <button type="button" class="btn btn-primary action-btn full-width" id="activateOrderBtn">Activate Order</button>
+                        <div class="activation-form-row">
+                            <button type="button" class="btn btn-secondary action-btn" id="activateOrderBtn" style="flex: 1;">Activate Order</button>
+                            <button type="button" class="btn action-btn buy-pro-btn js-buy-pro" title="Purchase a GitMind Pro license" style="flex: 1;">Buy GitMind Pro</button>
+                        </div>
                     </div>
                 </div>
             </div>

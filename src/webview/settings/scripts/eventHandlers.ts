@@ -456,6 +456,15 @@ export function getEventHandlersScript(): string {
       }
     });
 
+    // Inline "Buy GitMind Pro" buttons (Pro Activation card). Opening checkout
+    // does not require an email, so go straight to the subscribe command.
+    document.querySelectorAll('.js-buy-pro').forEach(function(btn) {
+      btn.addEventListener('click', function(event) {
+        event.preventDefault();
+        vscode.postMessage({ command: 'gitmind.subscription.subscribe' });
+      });
+    });
+
     document.getElementById('manageSubscriptionBtn')?.addEventListener('click', function(event) {
       event.preventDefault();
       console.log('Manage subscription button clicked');

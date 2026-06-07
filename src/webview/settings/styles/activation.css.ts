@@ -94,6 +94,11 @@ export function getActivationStyles(): string {
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
 
+    .activation-tab-btn.active:hover {
+        background: var(--vscode-editor-background);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+
     /* Tab Content Area */
     .activation-tab-content {
         animation: activationFadeIn 0.3s ease;
@@ -187,6 +192,21 @@ export function getActivationStyles(): string {
         cursor: pointer;
         white-space: nowrap;
         box-sizing: border-box;
+    }
+
+    /* Prominent, focused "Buy GitMind Pro" call-to-action (gold = Pro). */
+    .activation-card-unified .buy-pro-btn {
+        background: linear-gradient(135deg, #ffd700, #ffb000) !important;
+        color: #5a3d00 !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.2px;
+        border: none !important;
+        box-shadow: 0 2px 10px rgba(255, 176, 0, 0.35) !important;
+    }
+
+    .activation-card-unified .buy-pro-btn:hover {
+        background: linear-gradient(135deg, #ffdf33, #ffa000) !important;
+        box-shadow: 0 4px 14px rgba(255, 176, 0, 0.5) !important;
     }
 
     .activation-card-unified .action-btn.full-width {

@@ -233,9 +233,7 @@ export function getUiManagerScript(): string {
               <input type="text" id="bannerLicenseInput" class="gm-activate-input"
                      placeholder="Paste your license key (GITMIND-PRO-…)" autocomplete="off" />
               <button type="button" id="bannerActivateLicenseBtn" class="gm-activate-btn">Activate</button>
-            </div>
-            <div class="gm-activate-actions">
-              <button type="button" id="bannerBuyProBtn" class="gm-activate-link">Buy GitMind Pro</button>
+              <button type="button" id="bannerBuyProBtn" class="gm-activate-btn gm-buy-btn">Buy GitMind Pro</button>
             </div>
           </div>
         \`;
@@ -266,12 +264,13 @@ export function getUiManagerScript(): string {
               \${renderProviderIcon(provider, 28)}
               <div class="gm-config-title">
                 <span class="gm-config-caption">Current Configuration</span>
-                <span class="gm-config-name">\${providerInfo.displayName}</span>
+                <div class="gm-config-name-row">
+                  <span class="gm-config-name">\${providerInfo.displayName}</span>
+                  <span class="gm-config-model-badge" title="\${providerInfo.model}">\${providerInfo.model}</span>
+                </div>
               </div>
               <span class="gm-config-plan \${isProUser ? 'pro' : 'free'}">\${isProUser ? 'PRO' : 'FREE'}</span>
             </div>
-
-            <div class="gm-config-model"><span class="k">Model</span>\${providerInfo.model}</div>
 
             <div class="gm-chips">
               \${chips.join('')}

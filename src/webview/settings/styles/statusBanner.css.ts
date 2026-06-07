@@ -761,14 +761,47 @@ export function getStatusBannerStyles(): string {
         opacity: 0.65;
       }
 
+      .gm-config-name-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 2px;
+        min-width: 0;
+      }
+
       .gm-config-name {
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 600;
         color: var(--vscode-foreground);
         line-height: 1.2;
+      }
+
+      .gm-config-model-badge {
+        font-size: 9.5px;
+        font-family: var(--vscode-editor-font-family, 'SF Mono', monospace);
+        font-weight: 600;
+        color: var(--vscode-foreground);
+        opacity: 0.85;
+        background: var(--vscode-keybindingTable-rowsBackground, rgba(128, 128, 128, 0.05));
+        border: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.15));
+        border-left: 2px solid var(--vscode-button-background, #0e639c);
+        border-radius: 4px;
+        padding: 2px 6px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        max-width: 180px;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.15s ease;
+      }
+
+      .gm-config-model-badge:hover {
+        opacity: 1;
+        background: rgba(128, 128, 128, 0.09);
+        border-color: var(--vscode-focusBorder, rgba(128, 128, 128, 0.3));
+        border-left-color: var(--vscode-button-hoverBackground, #1177bb);
       }
 
       .gm-config-plan {
@@ -791,28 +824,6 @@ export function getStatusBannerStyles(): string {
         background: rgba(128, 128, 128, 0.18);
         color: var(--vscode-descriptionForeground);
         border: 1px solid rgba(128, 128, 128, 0.28);
-      }
-
-      .gm-config-model {
-        font-size: 11px;
-        font-family: var(--vscode-editor-font-family, 'SF Mono', monospace);
-        color: var(--vscode-foreground);
-        background: rgba(128, 128, 128, 0.08);
-        border: 1px solid rgba(128, 128, 128, 0.16);
-        border-radius: 5px;
-        padding: 5px 8px;
-        margin-bottom: 10px;
-        word-break: break-all;
-      }
-
-      .gm-config-model .k {
-        font-size: 9px;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        color: var(--vscode-descriptionForeground);
-        opacity: 0.7;
-        margin-right: 6px;
       }
 
       .gm-chips {
@@ -911,12 +922,13 @@ export function getStatusBannerStyles(): string {
         border: none;
         border-radius: 5px;
         cursor: pointer;
-        background: var(--vscode-button-background);
-        color: var(--vscode-button-foreground);
+        /* Activate is the secondary/neutral action so the gold "Buy" stands out. */
+        background: var(--vscode-button-secondaryBackground, rgba(128, 128, 128, 0.18));
+        color: var(--vscode-button-secondaryForeground, var(--vscode-foreground));
       }
 
       .gm-activate-btn:hover:not(:disabled) {
-        background: var(--vscode-button-hoverBackground);
+        background: var(--vscode-button-secondaryHoverBackground, rgba(128, 128, 128, 0.28));
       }
 
       .gm-activate-btn:disabled {
@@ -924,32 +936,18 @@ export function getStatusBannerStyles(): string {
         cursor: default;
       }
 
-      .gm-activate-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-top: 8px;
+      /* Prominent, focused "Buy GitMind Pro" call-to-action (gold = Pro). */
+      .gm-buy-btn {
+        background: linear-gradient(135deg, #ffd700, #ffb000);
+        color: #5a3d00;
+        font-weight: 800;
+        letter-spacing: 0.2px;
+        box-shadow: 0 2px 10px rgba(255, 176, 0, 0.35);
       }
 
-      .gm-activate-link {
-        background: none;
-        border: none;
-        padding: 0;
-        cursor: pointer;
-        font-size: 11px;
-        font-weight: 500;
-        color: var(--vscode-textLink-foreground);
-        box-shadow: none;
-        height: auto;
-        min-height: 0;
-      }
-
-      .gm-activate-link:hover {
-        color: var(--vscode-textLink-activeForeground);
-        text-decoration: underline;
-        background: none;
-        transform: none;
-        box-shadow: none;
+      .gm-buy-btn:hover:not(:disabled) {
+        background: linear-gradient(135deg, #ffdf33, #ffa000);
+        box-shadow: 0 4px 14px rgba(255, 176, 0, 0.5);
       }
 
       @media (max-width: 480px) {

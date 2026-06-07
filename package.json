@@ -992,17 +992,35 @@
         }
       },
       {
+        "command": "gitmind.generateCommitMessagePro",
+        "title": "Generate GitMind Commit Message",
+        "category": "GitMind",
+        "icon": {
+          "light": "resources/light/generate_pro.svg",
+          "dark": "resources/dark/generate_pro.svg"
+        }
+      },
+      {
         "command": "gitmind.toggleDebug",
         "title": "Toggle Debug Mode",
         "category": "GitMind"
       },
       {
         "command": "gitmind.openSettings",
-        "title": "Open Settings UI",
+        "title": "GitMind Setting",
         "category": "GitMind",
         "icon": {
           "light": "resources/light/settings.svg",
           "dark": "resources/dark/settings.svg"
+        }
+      },
+      {
+        "command": "gitmind.openSettingsPro",
+        "title": "GitMind Setting",
+        "category": "GitMind",
+        "icon": {
+          "light": "resources/light/settings_pro.svg",
+          "dark": "resources/dark/settings_pro.svg"
         }
       },
       {
@@ -1199,7 +1217,12 @@
         {
           "command": "gitmind.generateCommitMessage",
           "group": "navigation@1",
-          "when": "scmProvider == git && !gitmind.isGenerating"
+          "when": "scmProvider == git && !gitmind.isGenerating && !gitmind.isPro"
+        },
+        {
+          "command": "gitmind.generateCommitMessagePro",
+          "group": "navigation@1",
+          "when": "scmProvider == git && !gitmind.isGenerating && gitmind.isPro"
         },
         {
           "command": "gitmind.cancelGeneration",
@@ -1210,7 +1233,12 @@
         {
           "command": "gitmind.openSettings",
           "group": "navigation@3",
-          "when": "scmProvider == git"
+          "when": "scmProvider == git && !gitmind.isPro"
+        },
+        {
+          "command": "gitmind.openSettingsPro",
+          "group": "navigation@3",
+          "when": "scmProvider == git && gitmind.isPro"
         }
       ],
       "commandPalette": [
@@ -1219,18 +1247,31 @@
           "when": "scmProvider == git"
         },
         {
+          "command": "gitmind.generateCommitMessagePro",
+          "when": "false"
+        },
+        {
           "command": "gitmind.toggleDebug"
         },
         {
           "command": "gitmind.openSettings",
           "when": "scmProvider == git"
+        },
+        {
+          "command": "gitmind.openSettingsPro",
+          "when": "false"
         }
       ],
       "view/title": [
         {
           "command": "gitmind.openSettings",
           "group": "1_gitmind@1",
-          "when": "scmProvider == git"
+          "when": "scmProvider == git && !gitmind.isPro"
+        },
+        {
+          "command": "gitmind.openSettingsPro",
+          "group": "1_gitmind@1",
+          "when": "scmProvider == git && gitmind.isPro"
         }
       ]
     },

@@ -970,6 +970,7 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
     }),
 
     vscode.commands.registerCommand("gitmind.generateCommitMessage", handleGenerateCommit),
+    vscode.commands.registerCommand("gitmind.generateCommitMessagePro", handleGenerateCommit),
     vscode.commands.registerCommand("gitmind.checkApiSetup", handleApiSetupCheck),
     vscode.commands.registerCommand("gitmind.checkRateLimits", handleRateLimitsCheck),
     vscode.commands.registerCommand("gitmind.learnFromCommitHistory", learnFromCommitHistory),
@@ -1049,6 +1050,10 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
     vscode.commands.registerCommand("gitmind.openSettings", (initialTab?: string) => {
       SettingsWebview.createOrShow(context.extensionUri, typeof initialTab === 'string' ? initialTab : undefined);
       // Removed non-essential telemetry tracking
+    }),
+
+    vscode.commands.registerCommand("gitmind.openSettingsPro", (initialTab?: string) => {
+      SettingsWebview.createOrShow(context.extensionUri, typeof initialTab === 'string' ? initialTab : undefined);
     }),
 
     vscode.commands.registerCommand("gitmind.openOnboarding", () => {

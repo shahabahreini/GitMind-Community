@@ -150,11 +150,10 @@ export function getMainStyles(): string {
 
     .tab-button {
       background: transparent;
-      border: none;
-      padding: 8px 16px;
+      border: 2px solid transparent;
+      padding: 6px 16px;
       cursor: pointer;
-      color: var(--vscode-foreground);
-      border-bottom: none;
+      color: var(--vscode-tab-inactiveForeground, var(--vscode-descriptionForeground, var(--vscode-foreground)));
       border-radius: 6px;
       transition: all 0.2s ease;
       font-size: 13px;
@@ -162,23 +161,36 @@ export function getMainStyles(): string {
       letter-spacing: 0.02em;
       outline: none;
       white-space: nowrap;
-      opacity: 0.7;
+      opacity: 0.8;
       height: 32px;
       line-height: 16px;
+      box-sizing: border-box;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .tab-button:hover {
-      background: rgba(128, 128, 128, 0.1);
+    .tab-button:hover:not(.active) {
+      background: rgba(128, 128, 128, 0.08);
+      color: var(--vscode-tab-hoverForeground, var(--vscode-foreground));
       opacity: 1;
     }
 
     .tab-button.active {
-      border-bottom: none;
       font-weight: 600;
-      color: var(--vscode-foreground);
+      color: var(--vscode-tab-activeForeground, var(--vscode-foreground));
       background: var(--vscode-editor-background);
       opacity: 1;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+      border-top: 2px solid var(--vscode-tab-activeBorderTop, var(--vscode-focusBorder, #007acc));
+      border-radius: 6px;
+    }
+
+    .tab-button.active:hover {
+      background: var(--vscode-editor-background);
+      color: var(--vscode-tab-activeForeground, var(--vscode-foreground));
+      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.12);
+      border-top-color: var(--vscode-tab-activeBorderTop, var(--vscode-focusBorder, #007acc));
     }
 
     .tab-content {
