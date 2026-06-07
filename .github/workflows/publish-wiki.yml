@@ -4,8 +4,13 @@ on:
   push:
     branches: [main]
     paths:
+      - "docs/handbook/**"
+      - "docs/reference/**"
       - "wiki/**"
-      - "scripts/validate-wiki.mjs"
+      - "scripts/sync-wiki.mjs"
+      - "scripts/validate-docs.mjs"
+      - "package.json"
+      - "package-lock.json"
       - ".github/workflows/publish-wiki.yml"
   workflow_dispatch:
     inputs:
@@ -31,7 +36,8 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 24
-      - run: node scripts/validate-wiki.mjs
+      - run: npm install --no-audit --no-fund
+      - run: npm run docs:validate
       - name: Validate issue forms and workflow YAML
         run: |
           ruby -e 'require "yaml"; Dir[".github/ISSUE_TEMPLATE/*.{yml,yaml}", ".github/workflows/*.{yml,yaml}"].each { |file| YAML.load_file(file); puts "valid #{file}" }'

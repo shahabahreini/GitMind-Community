@@ -1,0 +1,51 @@
+name: Publish Documentation Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "wiki/**"
+      - "scripts/export-product-surface.mjs"
+      - "scripts/sync-wiki.mjs"
+      - "scripts/validate-docs.mjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/publish-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm install --no-audit --no-fund
+      - run: npm run docs:validate
+      - run: npm run docs:build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs/handbook/.vitepress/dist
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

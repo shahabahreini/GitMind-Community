@@ -640,7 +640,12 @@
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "test": "vscode-test",
     "test:validate": "node scripts/test-validator.js",
-    "validate:wiki": "node scripts/validate-wiki.mjs",
+    "validate:wiki": "node scripts/sync-wiki.mjs --check",
+    "docs:export-product-surface": "node scripts/export-product-surface.mjs",
+    "docs:sync-wiki": "node scripts/sync-wiki.mjs",
+    "docs:validate": "node scripts/validate-docs.mjs",
+    "docs:dev": "vitepress dev docs/handbook",
+    "docs:build": "vitepress build docs/handbook",
     "test:status": "node scripts/test-status.js",
     "clean": "rimraf dist out",
     "prepare": "npm run compile",
@@ -661,6 +666,7 @@
     "npm-run-all": "^4.1.5",
     "rimraf": "^6.0.1",
     "typescript": "~5.8.3",
+    "vitepress": "^1.6.4",
     "yarn-upgrade-all": "^0.7.5"
   },
   "dependencies": {

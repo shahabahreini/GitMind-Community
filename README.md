@@ -5,7 +5,7 @@
 [![Rating](https://img.shields.io/visual-studio-marketplace/r/ShahabBahreiniJangjoo.ai-commit-assistant?color=yellow)](https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant)
 [![OpenVSX](https://img.shields.io/open-vsx/v/ShahabBahreiniJangjoo/ai-commit-assistant?label=OpenVSX&color=9b59b6)](https://open-vsx.org/extension/ShahabBahreiniJangjoo/ai-commit-assistant)
 
-**Documentation:** [GitMind Wiki](https://github.com/shahabahreini/AI-Commit-Assistant/wiki) · [Quick Start](https://github.com/shahabahreini/AI-Commit-Assistant/wiki/Installation-And-Quick-Start) · [Providers](https://github.com/shahabahreini/AI-Commit-Assistant/wiki/Providers-And-Models) · [Troubleshooting](https://github.com/shahabahreini/AI-Commit-Assistant/wiki/Troubleshooting-And-FAQ)
+**Documentation:** [GitMind Handbook](https://shahabahreini.github.io/AI-Commit-Assistant/) · [Quick Start](https://shahabahreini.github.io/AI-Commit-Assistant/Installation-And-Quick-Start) · [Providers](https://shahabahreini.github.io/AI-Commit-Assistant/Providers-And-Models) · [Native Wiki mirror](https://github.com/shahabahreini/AI-Commit-Assistant/wiki)
 
 Analyzes staged Git changes and generates commit messages using 17 built-in AI providers plus a Pro Custom API option.
 
@@ -121,7 +121,8 @@ GitHub Copilot · OpenAI · Anthropic · Google Gemini · DeepSeek · Grok · Pe
 
 ## Support
 
-- [Read the Wiki](https://github.com/shahabahreini/AI-Commit-Assistant/wiki)
+- [Read the GitMind Handbook](https://shahabahreini.github.io/AI-Commit-Assistant/)
+- [Use the native GitHub Wiki mirror](https://github.com/shahabahreini/AI-Commit-Assistant/wiki)
 - [Report an issue or request](https://github.com/shahabahreini/AI-Commit-Assistant/issues/new/choose)
 - [View releases](https://github.com/shahabahreini/AI-Commit-Assistant/releases)
 - [Sponsor development](https://github.com/sponsors/shahabahreini)

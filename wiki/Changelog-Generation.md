@@ -1,6 +1,6 @@
 # Changelog Generation
 
-> Verified against GitMind `5.0.0` on June 7, 2026.
+> Verified against GitMind `5.0.2` on June 7, 2026.
 
 GitMind Pro can generate or update `CHANGELOG.md` from Git history.
 

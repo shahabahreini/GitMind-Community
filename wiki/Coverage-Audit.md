@@ -1,8 +1,20 @@
-# GitMind 5.0 Documentation Coverage Audit
+# GitMind 5.x Documentation Coverage Audit
 
-> Verified against GitMind `5.0.0` on June 7, 2026.
+> Verified against GitMind `5.0.2` on June 7, 2026.
 
-This page records the public surface checked during the GitMind 5.0 Wiki refresh. `node scripts/validate-wiki.mjs` compares the Wiki with `package.json` and fails when a public setting is undocumented.
+This page records the public surface checked against the packaged GitMind 5.0.2 release. `npm run docs:validate` compares the handbook and generated Wiki with the sanitized product manifest.
+
+## Verified Counts
+
+| Surface | GitMind 5.0.2 |
+| --- | ---: |
+| Provider choices | 18: 17 built-in plus Pro Custom API |
+| Registered settings | 97 |
+| User-documentable settings | 85 |
+| Registered commands | 43 |
+| Supported public commands | 34 |
+| Commit styles | 12 |
+| Primary settings tabs | 5 |
 
 ## User-Facing Settings
 
@@ -30,8 +42,11 @@ Internal status, migration, test, and debug-state commands are intentionally not
 
 ## Source Checks
 
-- Providers: `package.json` and `src/webview/settings/components/config/ProviderConfig.ts`
-- Styles: `src/config/commitStyles.ts`
-- Recovery: `src/services/api/recovery.ts` and `src/services/api/index.ts`
-- Activation: `src/services/subscription/` and public activation UI/commands
+- Contract source: packaged `ai-commit-assistant-5.0.2.vsix`
+- Sanitized contract: `docs/reference/gitmind-user-surface.json`
 - Screenshots: current files under `images/screenshots/`
+
+## Sanitized Source Inconsistencies
+
+- The 5.0.2 walkthrough text says "17 built-in providers"; this is correct, while the provider selector exposes 18 choices because Custom API is the Pro-only eighteenth choice.
+- Older public repository metadata still describes the open-source 3.5.7 surface and 13 providers. It is not used as the 5.x documentation contract.

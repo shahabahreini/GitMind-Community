@@ -1,8 +1,10 @@
-# GitMind 5.0 Wiki
+# GitMind 5.x User Handbook
 
-> Verified against GitMind `5.0.0` on June 7, 2026.
+> Verified against GitMind `5.0.2` on June 7, 2026.
 
 GitMind generates professional Git commit messages from your changes without leaving VS Code. It supports **17 built-in AI providers**, including local Ollama and GitHub Copilot, plus a **Pro Custom API** option.
+
+![GitMind logo](assets/logo.png)
 
 ![GitMind supported providers](assets/all-providers.png)
 
