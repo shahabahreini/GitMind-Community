@@ -1,0 +1,1 @@
+GitMind Wiki | Verified against GitMind `5.0.0` on June 7, 2026 | [Marketplace](https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant) | [Open VSX](https://open-vsx.org/extension/ShahabBahreiniJangjoo/ai-commit-assistant) | [Support](https://github.com/shahabahreini/AI-Commit-Assistant/issues)
