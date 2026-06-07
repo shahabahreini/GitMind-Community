@@ -589,12 +589,16 @@ export function getButtonStyles(): string {
         flex-shrink: 0;
         white-space: nowrap;
         background-color: var(--vscode-button-secondaryBackground, rgba(128, 128, 128, 0.1));
-        color: var(--vscode-foreground);
-        border: 1px solid rgba(128, 128, 128, 0.15);
+        /* Use the secondary-button foreground so the label always contrasts with the
+           secondary background. --vscode-foreground (editor text) can match the
+           secondary background in some light themes, making the text invisible. */
+        color: var(--vscode-button-secondaryForeground, var(--vscode-foreground, #1f1f1f));
+        border: 1px solid var(--vscode-button-border, rgba(128, 128, 128, 0.15));
       }
 
       .load-models-inline:hover:not([disabled]) {
         background-color: var(--vscode-button-secondaryHoverBackground, rgba(128, 128, 128, 0.2));
+        color: var(--vscode-button-secondaryForeground, var(--vscode-foreground, #1f1f1f));
         border-color: var(--vscode-focusBorder, rgba(0, 122, 204, 0.4));
       }
 
@@ -608,7 +612,7 @@ export function getButtonStyles(): string {
         border-radius: 4px !important;
         cursor: pointer !important;
         padding: 4px !important;
-        color: var(--vscode-icon-foreground) !important;
+        color: var(--vscode-icon-foreground, var(--vscode-foreground, #1f1f1f)) !important;
         transition: all 0.2s ease !important;
         width: 28px !important;
         height: 28px !important;

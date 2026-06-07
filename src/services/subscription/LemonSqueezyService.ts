@@ -402,56 +402,130 @@ export class LemonSqueezyService {
     }
 
     /**
-     * Find the most recent paid order for a given customer email.
-     * Used to auto-activate Pro from just an email (no license key/order ID needed).
-     * Returns the order ID string, or null if no paid order is found.
+     * Result of an email-based purchase lookup.
+     * `notFound` distinguishes "no customer/purchase for this email" from a hard error.
      */
-    public async findLatestPaidOrderByEmail(email: string): Promise<string | null> {
-        debugLog(`Finding latest paid order for email: ${email}`);
+    public async findPurchaseByEmail(email: string): Promise<{
+        licenseKey?: string;
+        orderId?: string;
+        customerFound: boolean;
+        error?: string;
+    }> {
+        debugLog(`Finding purchase for email: ${email}`);
 
         if (!this.apiKey) {
-            debugLog('No API key available for order lookup by email');
-            return null;
+            return { customerFound: false, error: 'No API key available for lookup' };
         }
 
-        const cleanEmail = email.trim();
+        const cleanEmail = email.trim().toLowerCase();
         if (!cleanEmail) {
-            return null;
+            return { customerFound: false, error: 'Email is required' };
         }
 
         try {
-            const response = await this.makeRequestWithRetry(
-                `/orders?filter[store_id]=${this.storeId}&filter[user_email]=${encodeURIComponent(cleanEmail)}&sort=-created_at`,
+            // Step 1: Look up the customer by email (same proven filter as getSubscriptionStatus).
+            const customersResponse = await this.makeRequestWithRetry(
+                `/customers?filter[email]=${encodeURIComponent(cleanEmail)}`,
                 'GET'
             );
 
-            if (!response.data || response.data.length === 0) {
-                debugLog(`No orders found for email: ${cleanEmail}`);
-                return null;
+            const customer = customersResponse?.data?.[0];
+            if (!customer) {
+                debugLog(`No customer found for email: ${cleanEmail}`);
+                return { customerFound: false };
             }
 
-            // Prefer the most recent paid order. The API is already sorted by -created_at,
-            // but we filter explicitly to be safe.
-            const paidOrders = response.data.filter(
-                (order: any) => order.attributes?.status === 'paid'
-            );
+            const customerId = customer.id;
+            debugLog(`Found customer ${customerId} for ${cleanEmail}`);
 
-            if (paidOrders.length === 0) {
-                debugLog(`Found ${response.data.length} order(s) for ${cleanEmail}, but none are paid`);
-                return null;
+            // Step 2: Try the customer's license keys directly (best for one-time license products).
+            const licenseKey = await this.getLicenseKeyForCustomer(customer);
+            if (licenseKey) {
+                debugLog('Resolved license key from customer license-keys relationship');
+                return { licenseKey, customerFound: true };
             }
 
-            const latest = paidOrders.sort((a: any, b: any) => {
-                const aTime = new Date(a.attributes?.created_at || 0).getTime();
-                const bTime = new Date(b.attributes?.created_at || 0).getTime();
-                return bTime - aTime;
-            })[0];
+            // Step 3: Fall back to the customer's most recent paid order.
+            const orderId = await this.getLatestPaidOrderForCustomer(customer, customerId);
+            if (orderId) {
+                debugLog(`Resolved paid order ${orderId} for customer ${customerId}`);
+                return { orderId, customerFound: true };
+            }
 
-            const orderId = latest.id?.toString();
-            debugLog(`Found latest paid order for ${cleanEmail}: ${orderId}`);
-            return orderId || null;
+            debugLog(`Customer ${customerId} found but no license key or paid order located`);
+            return { customerFound: true };
         } catch (error) {
-            debugLog('Failed to find order by email:', error);
+            debugLog('Failed to find purchase by email:', error);
+            return {
+                customerFound: false,
+                error: error instanceof Error ? error.message : 'Lookup failed'
+            };
+        }
+    }
+
+    /**
+     * Resolve a usable license key from a customer's license-keys relationship.
+     */
+    private async getLicenseKeyForCustomer(customer: any): Promise<string | null> {
+        try {
+            const relatedUrl: string | undefined =
+                customer?.relationships?.['license-keys']?.links?.related;
+
+            const response = relatedUrl
+                ? await this.makeRequestWithRetry(relatedUrl, 'GET')
+                : null;
+
+            const keys = response?.data;
+            if (!Array.isArray(keys) || keys.length === 0) {
+                return null;
+            }
+
+            // Prefer an active/inactive (not disabled/expired) key, newest first.
+            const usable = keys
+                .filter((k: any) => k?.attributes?.status !== 'disabled' && k?.attributes?.status !== 'expired')
+                .sort((a: any, b: any) =>
+                    new Date(b.attributes?.created_at || 0).getTime() -
+                    new Date(a.attributes?.created_at || 0).getTime()
+                );
+
+            const chosen = (usable[0] || keys[0])?.attributes;
+            return chosen?.key || null;
+        } catch (error) {
+            debugLog('Could not resolve license key from customer relationship:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Resolve the most recent paid order id for a customer, via the related link.
+     */
+    private async getLatestPaidOrderForCustomer(customer: any, customerId: string): Promise<string | null> {
+        try {
+            const relatedUrl: string | undefined =
+                customer?.relationships?.orders?.links?.related;
+
+            const response = relatedUrl
+                ? await this.makeRequestWithRetry(relatedUrl, 'GET')
+                : await this.makeRequestWithRetry(
+                    `/orders?filter[store_id]=${this.storeId}&filter[customer_id]=${customerId}&sort=-created_at`,
+                    'GET'
+                );
+
+            const orders = response?.data;
+            if (!Array.isArray(orders) || orders.length === 0) {
+                return null;
+            }
+
+            const paid = orders
+                .filter((o: any) => o.attributes?.status === 'paid')
+                .sort((a: any, b: any) =>
+                    new Date(b.attributes?.created_at || 0).getTime() -
+                    new Date(a.attributes?.created_at || 0).getTime()
+                );
+
+            return (paid[0]?.id ?? orders[0]?.id)?.toString() || null;
+        } catch (error) {
+            debugLog('Could not resolve paid order from customer relationship:', error);
             return null;
         }
     }
@@ -831,7 +905,9 @@ export class LemonSqueezyService {
     // Private helper methods
 
     private async makeRequest(endpoint: string, method = 'GET', body?: any): Promise<any> {
-        const url = `${this.baseUrl}${endpoint}`;
+        // Support absolute URLs (e.g. JSON:API "related" links returned by the API)
+        // as well as relative endpoints.
+        const url = endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${endpoint}`;
         const headers: HeadersInit = {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
