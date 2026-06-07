@@ -1,0 +1,32 @@
+name: Feature request
+description: Propose a GitMind workflow or capability
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: "**Never post credentials, customer information, source code, diffs, prompts, or private repository data.**"
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user problem should GitMind solve?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy confirmation
+      options:
+        - label: I removed all sensitive and private information.
+          required: true

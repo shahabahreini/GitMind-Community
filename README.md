@@ -2,6 +2,8 @@
 
 GitMind analyzes your Git diff and generates clear, professional commit messages inside VS Code. Choose from 17 built-in AI providers, run locally with Ollama, reuse GitHub Copilot, or connect a custom OpenAI-compatible API with GitMind Pro.
 
+**Documentation:** [GitMind Wiki](https://github.com/shahabahreini/AI-Commit-Assistant/wiki) · [Quick Start](https://github.com/shahabahreini/AI-Commit-Assistant/wiki/Installation-And-Quick-Start) · [Providers](https://github.com/shahabahreini/AI-Commit-Assistant/wiki/Providers-And-Models) · [Troubleshooting](https://github.com/shahabahreini/AI-Commit-Assistant/wiki/Troubleshooting-And-FAQ)
+
 <div align="center">
   <img src="https://raw.githubusercontent.com/shahabahreini/AI-Commit-Assistant/main/images/logo.png" alt="GitMind logo" width="140"/>
   <br/><br/>
@@ -85,6 +87,8 @@ GitMind analyzes your Git diff and generates clear, professional commit messages
 ```bash
 ext install ShahabBahreiniJangjoo.ai-commit-assistant
 ```
+
+Also available from [Open VSX](https://open-vsx.org/extension/ShahabBahreiniJangjoo/ai-commit-assistant) and the [GitHub releases page](https://github.com/shahabahreini/AI-Commit-Assistant/releases).
 
 ## Supported Providers
 
@@ -175,5 +179,9 @@ GitMind Pro is a one-time lifetime purchase. Activation, deactivation, and curre
 
 ## Support
 
-- [Report an issue](https://github.com/shahabahreini/Gitmind-Pro/issues)
+- [Read the Wiki](https://github.com/shahabahreini/AI-Commit-Assistant/wiki)
+- [Report an issue or request](https://github.com/shahabahreini/AI-Commit-Assistant/issues/new/choose)
+- [View releases](https://github.com/shahabahreini/AI-Commit-Assistant/releases)
 - [Sponsor development](https://github.com/sponsors/shahabahreini)
+
+Never post API keys, license keys, full order IDs, purchase emails, source code, diffs, prompts, or private repository data in a public issue.
