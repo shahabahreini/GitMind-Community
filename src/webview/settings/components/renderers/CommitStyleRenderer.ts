@@ -307,116 +307,6 @@ export class CommitStyleRenderer extends BaseRenderer {
                         }
                     }
 
-                    function getStyleDisplayName(styleId) {
-                        const names = {
-                            'basic': 'Basic Style',
-                            'conventional': 'Conventional Commits',
-                            'angular': 'Angular Style',
-                            'ember': 'Ember.js Style',
-                            'emojigit': 'EmojiGit Style',
-                            'gitmoji': 'Gitmoji Style',
-                            'semantic': 'Semantic Release',
-                            'commitizen': 'Commitizen Style',
-                            'karma': 'Karma (Google)',
-                            'linux': 'Linux Kernel',
-                            'jquery': 'jQuery Style'
-                        };
-                        return names[styleId] || 'Unknown Style';
-                    }
-
-                    function getStyleExamples(styleId) {
-                        const examples = {
-                            'basic': [
-                                'Add user authentication system',
-                                \`Update API documentation for v2.0
-
-- Add new endpoint specifications
-- Include authentication examples
-- Update rate limiting information\`
-                            ],
-                            'conventional': [
-                                'feat(auth): add two-factor authentication',
-                                \`fix(api): resolve user login timeout issue
-
-- Increase connection timeout to 30 seconds
-- Add retry logic for failed requests
-- Improve error messaging for timeouts\`
-                            ],
-                            'angular': [
-                                'feat(directive): add new user directive',
-                                \`fix(service): handle null response in data service
-
-- Add null checks for API responses
-- Implement fallback data handling
-- Update unit tests for edge cases\`
-                            ],
-                            'ember': [
-                                '[FEATURE] Add user profile management',
-                                \`[BUGFIX] Fix memory leak in component teardown
-
-- Properly destroy event listeners
-- Clear component references on destroy
-- Add cleanup to component lifecycle\`
-                            ],
-                            'emojigit': [
-                                '✨ Add user authentication system',
-                                \`🐛 Fix navigation bug in mobile view
-
-- Resolve touch event conflicts
-- Update responsive breakpoints
-- Improve mobile menu accessibility\`
-                            ],
-                            'gitmoji': [
-                                '✨ Add OAuth2 authentication system',
-                                \`🐛 Fix memory leak in image processing
-
-- Properly dispose of image buffers
-- Add garbage collection triggers
-- Update memory monitoring\`
-                            ],
-                            'semantic': [
-                                'feat: add user profile management dashboard',
-                                \`fix: resolve authentication timeout errors
-
-- Increase session timeout to 30 minutes
-- Add automatic token refresh
-- Improve error handling for expired sessions\`
-                            ],
-                            'commitizen': [
-                                'feat(dashboard): add real-time analytics widgets',
-                                \`fix(auth): resolve login timeout issues
-
-- Implement proper session management
-- Add retry logic for failed authentication
-- Update error messaging for better UX\`
-                            ],
-                            'karma': [
-                                'feat(auth): implement enterprise SSO integration',
-                                \`fix(router): resolve memory leak in route transitions
-
-- Properly cleanup event listeners
-- Clear component references on route change
-- Add memory usage monitoring\`
-                            ],
-                            'linux': [
-                                'net: fix use-after-free in TCP socket cleanup',
-                                \`mm: improve memory allocation error handling
-
-- Add proper error checking for allocation failures
-- Implement fallback allocation strategies
-- Update documentation for memory management\`
-                            ],
-                            'jquery': [
-                                'Core: Add ES6 modules support. Fixes #2841',
-                                \`Events: Fix memory leak in event delegation. Fixes #2967
-
-- Properly cleanup delegated event handlers
-- Add memory usage monitoring
-- Update event system documentation\`
-                            ]
-                        };
-                        return examples[styleId] || examples['basic'];
-                    }
                 })();
             </script>
         `;
@@ -695,19 +585,6 @@ export class CommitStyleRenderer extends BaseRenderer {
                 </div>
             </div>
         `;
-    }
-
-    private renderStyleExamples(currentStyle: string): string {
-        const examples = this.getExamplesForStyle(currentStyle);
-        return examples.map((example, index) => {
-            const label = index === 0 ? 'Single-line example' : 'Multi-line example';
-            return `
-                <div class="gm-example-item">
-                    <span class="gm-example-label">${label}</span>
-                    <pre class="gm-example-content">${example}</pre>
-                </div>
-            `;
-        }).join('');
     }
 
     private renderProUpgradeSection(): string {

@@ -113,33 +113,38 @@ export function getEmojiEnhancementStyles(): string {
             margin-bottom: 24px;
         }
         
-        .gm-examples-title {
+        /*
+         * Example styles are scoped to the emoji tab (.gm-emoji-examples) so they
+         * no longer collide with the inline style-selection examples, which use
+         * the same bare class names but a different layout (see commitStyle.css.ts).
+         */
+        .gm-emoji-examples .gm-examples-title {
             margin: 0 0 12px 0;
             font-size: 15px;
             font-weight: 600;
             color: var(--vscode-foreground);
         }
-        
-        .gm-examples-grid {
+
+        .gm-emoji-examples .gm-examples-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
         }
-        
+
         @media (max-width: 768px) {
-            .gm-examples-grid {
+            .gm-emoji-examples .gm-examples-grid {
                 grid-template-columns: 1fr;
             }
         }
-        
-        .gm-example-item {
+
+        .gm-emoji-examples .gm-example-item {
             padding: 16px;
             background: var(--vscode-editor-background);
             border: 1px solid var(--vscode-panel-border);
             border-radius: 6px;
         }
-        
-        .gm-example-label {
+
+        .gm-emoji-examples .gm-example-label {
             font-size: 12px;
             font-weight: 600;
             color: var(--vscode-descriptionForeground);
@@ -150,13 +155,13 @@ export function getEmojiEnhancementStyles(): string {
             align-items: center;
             gap: 6px;
         }
-        
-        .gm-example-label::before {
+
+        .gm-emoji-examples .gm-example-label::before {
             content: '💡';
             font-size: 14px;
         }
-        
-        .gm-example-content {
+
+        .gm-emoji-examples .gm-example-content {
             font-family: var(--vscode-editor-font-family);
             font-size: 13px;
             color: var(--vscode-foreground);

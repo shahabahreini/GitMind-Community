@@ -96,11 +96,25 @@ export function getCommitStyleStyles(): string {
             outline-offset: 2px;
         }
 
+        /* Readability-first (see tabs.css.ts for the full rationale): tint the
+           active pill from the editor background and use --vscode-foreground text,
+           which always contrasts the editor background. Avoids white-on-pale that
+           broke when the theme's button-background resolves to a pale colour. */
         .gm-tab-btn-active {
-            background: var(--vscode-button-background) !important;
-            color: var(--vscode-button-foreground) !important;
-            border-color: var(--vscode-button-background) !important;
-            font-weight: 600;
+            background: var(--vscode-list-activeSelectionBackground, rgba(128, 128, 128, 0.16)) !important;
+            background: color-mix(in srgb, var(--vscode-focusBorder, #0e639c) 16%, var(--vscode-editor-background, transparent)) !important;
+            color: var(--vscode-foreground) !important;
+            border-color: var(--vscode-focusBorder, #0e639c) !important;
+            font-weight: 700;
+            opacity: 1 !important;
+        }
+
+        /* Active tab hover — slightly stronger tint, same readable foreground. */
+        .gm-tab-btn-active:hover {
+            background: var(--vscode-list-activeSelectionBackground, rgba(128, 128, 128, 0.22)) !important;
+            background: color-mix(in srgb, var(--vscode-focusBorder, #0e639c) 24%, var(--vscode-editor-background, transparent)) !important;
+            border-color: var(--vscode-focusBorder, #0e639c) !important;
+            color: var(--vscode-foreground) !important;
             opacity: 1 !important;
         }
 
@@ -290,70 +304,76 @@ export function getCommitStyleStyles(): string {
             height: 0;
         }
 
-        .gm-examples-section {
-            margin-top: 20px;
-            padding: 16px;
-            background: var(--vscode-textCodeBlock-background);
-            border: 1px solid var(--vscode-widget-border);
-            border-radius: 6px;
-        }
-
-        .gm-examples-title {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: var(--gm-text-secondary);
-            margin: 0 0 12px 0;
-            display: block;
-            opacity: 0.8;
-        }
-
-        .gm-examples-container {
-            display: grid;
-            gap: 10px;
+        /*
+         * Inline style-selection examples.
+         * Scoped under .gm-inline-examples so these win over the shared bare
+         * .gm-example-* rules defined in emojiEnhancement.css.ts (which loads
+         * later). Without the scope, that file's white-card/💡 styling leaks in.
+         */
+        .gm-inline-examples .gm-examples-list,
+        .gm-inline-examples .gm-examples-content {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
             width: 100%;
         }
 
-        .gm-example-item {
-            margin-bottom: 14px;
+        .gm-inline-examples .gm-example-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            min-width: 0;
         }
 
-        .gm-example-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .gm-example-label {
+        .gm-inline-examples .gm-example-label {
+            align-self: flex-start;
             font-size: 9px;
             font-weight: 700;
-            color: var(--vscode-descriptionForeground);
+            color: var(--gm-text-secondary);
             text-transform: uppercase;
-            letter-spacing: 0.7px;
-            opacity: 0.75;
-            margin-bottom: 5px;
-            display: inline-block;
+            letter-spacing: 0.6px;
+            margin: 0;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: var(--gm-hover-bg);
+            border: 1px solid var(--gm-border-color);
+            display: inline-flex;
+            align-items: center;
+            gap: 0;
         }
 
-        .gm-example-content {
+        /* No emoji bullet on inline labels — keep them clean */
+        .gm-inline-examples .gm-example-label::before {
+            content: none;
+        }
+
+        .gm-inline-examples .gm-example-content {
             font-family: var(--vscode-editor-font-family, Monaco, Menlo, Consolas, monospace);
             font-size: 11.5px;
             color: var(--vscode-editor-foreground, var(--vscode-foreground));
-            line-height: 1.5;
+            line-height: 1.55;
             white-space: pre-wrap;
-            padding: 10px 14px;
+            word-break: break-word;
+            padding: 12px 14px;
             margin: 0;
             background: var(--vscode-textCodeBlock-background, rgba(128, 128, 128, 0.04));
-            border: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.15));
-            border-left: 2px solid var(--vscode-button-background, rgba(0, 122, 204, 0.5));
-            border-radius: 4px;
+            border: 1px solid var(--gm-border-color);
+            border-left: 3px solid var(--gm-accent-color);
+            border-radius: 6px;
             overflow-x: auto;
             display: block;
-            transition: border-color 0.2s ease;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .gm-example-content:hover {
-            border-color: var(--vscode-focusBorder, var(--vscode-button-background));
-            border-left-color: var(--vscode-button-background);
+        .gm-inline-examples .gm-example-content:hover {
+            border-color: var(--gm-accent-color);
+            border-left-color: var(--gm-accent-color);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         }
 
         .gm-reference-container {
@@ -600,46 +620,50 @@ export function getCommitStyleStyles(): string {
             cursor: pointer;
         }
 
+        /*
+         * Toggle is styled as an OUTLINE button: accent-colored text on a
+         * transparent / lightly-tinted background. We never put white text on an
+         * accent fill — some light themes resolve the accent to a pale color,
+         * which makes white text unreadable (the bug seen on selected cards).
+         */
         .gm-examples-toggle {
             background: transparent;
-            border: 1px solid var(--vscode-button-background, rgba(0, 122, 204, 0.4));
-            color: var(--vscode-button-background, #007acc);
-            padding: 4px 10px;
-            border-radius: 4px;
+            border: 1px solid var(--gm-accent-color);
+            color: var(--gm-accent-color);
+            padding: 4px 12px;
+            border-radius: 5px;
             cursor: pointer;
             font-size: 11px;
-            font-weight: 500;
-            margin-top: 7px;
-            display: flex;
+            font-weight: 600;
+            margin-top: 8px;
+            display: inline-flex;
             align-items: center;
-            gap: 4px;
-            transition: all 0.2s ease;
+            gap: 5px;
+            transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
             outline: none;
             width: fit-content;
-            opacity: 0.85;
         }
 
         .gm-examples-toggle:hover {
-            background: var(--vscode-button-background);
-            /* Explicitly white text — button bg is always dark enough */
-            color: #ffffff;
-            border-color: var(--vscode-button-background);
-            opacity: 1;
+            background: var(--gm-hover-bg);
+            background: color-mix(in srgb, var(--gm-accent-color) 12%, transparent);
+            color: var(--gm-accent-color);
+            border-color: var(--gm-accent-color);
         }
 
         .gm-examples-toggle.gm-examples-toggle-active {
-            background: var(--vscode-button-background);
-            /* White text on filled button — works in both light & dark themes */
-            color: #ffffff;
-            border-color: var(--vscode-button-background);
-            opacity: 1;
+            background: var(--gm-hover-bg);
+            background: color-mix(in srgb, var(--gm-accent-color) 15%, transparent);
+            color: var(--gm-accent-color);
+            border-color: var(--gm-accent-color);
+            font-weight: 700;
         }
 
         .gm-examples-toggle.gm-examples-toggle-active:hover {
-            background: var(--vscode-button-hoverBackground, var(--vscode-button-background));
-            border-color: var(--vscode-button-hoverBackground, var(--vscode-button-background));
-            color: #ffffff;
-            opacity: 0.9;
+            background: var(--gm-hover-bg);
+            background: color-mix(in srgb, var(--gm-accent-color) 22%, transparent);
+            color: var(--gm-accent-color);
+            border-color: var(--gm-accent-color);
         }
 
         .gm-examples-toggle:focus {
@@ -700,16 +724,20 @@ export function getCommitStyleStyles(): string {
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
+        /* Keep the outline-button look even when the card is selected (accent
+           text stays readable; no white-on-pale-accent). */
         .gm-style-option-selected .gm-examples-toggle {
             border-color: var(--gm-accent-color);
-            background: var(--gm-accent-color);
-            color: var(--vscode-button-foreground, white);
+            background: transparent;
+            color: var(--gm-accent-color);
         }
 
-        .gm-style-option-selected .gm-examples-toggle:hover {
-            background: var(--gm-accent-hover);
-            border-color: var(--gm-accent-hover);
-            color: var(--vscode-button-foreground, white);
+        .gm-style-option-selected .gm-examples-toggle:hover,
+        .gm-style-option-selected .gm-examples-toggle.gm-examples-toggle-active {
+            background: var(--gm-hover-bg);
+            background: color-mix(in srgb, var(--gm-accent-color) 15%, transparent);
+            border-color: var(--gm-accent-color);
+            color: var(--gm-accent-color);
         }
 
         /* Table of Contents Styles */

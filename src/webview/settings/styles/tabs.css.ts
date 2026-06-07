@@ -50,19 +50,30 @@ export function getTabStyles(): string {
         opacity: 0.95;
     }
 
-    /* Active Tab Styling - Accent Pill */
+    /* Active Tab Styling.
+       Readability-first design. Earlier attempts filled the pill with the accent
+       and used white text — but this theme resolves --vscode-button-background to
+       a PALE color (so var() fallbacks never fire) while --vscode-button-foreground
+       is white, giving white-on-pale. Instead we tint the pill lightly FROM the
+       editor background and use the normal --vscode-foreground text, which is
+       guaranteed to contrast the editor background in every theme. The "active"
+       affordance is an accent ring + bold weight, not a risky colour pairing. */
     .tab-button.active {
-        background: var(--vscode-button-background);
-        color: #ffffff;
-        font-weight: 600;
+        background: var(--vscode-list-activeSelectionBackground, rgba(128, 128, 128, 0.16));
+        background: color-mix(in srgb, var(--vscode-focusBorder, #0e639c) 16%, var(--vscode-editor-background, transparent));
+        color: var(--vscode-foreground);
+        font-weight: 700;
         opacity: 1;
+        box-shadow: inset 0 0 0 1px var(--vscode-focusBorder, #0e639c);
     }
 
-    /* Active Tab Hover - Slight dim, always white text */
+    /* Active Tab Hover - slightly stronger tint, same readable foreground. */
     .tab-button.active:hover {
-        background: var(--vscode-button-hoverBackground, var(--vscode-button-background));
-        color: #ffffff;
-        opacity: 0.9;
+        background: var(--vscode-list-activeSelectionBackground, rgba(128, 128, 128, 0.22));
+        background: color-mix(in srgb, var(--vscode-focusBorder, #0e639c) 24%, var(--vscode-editor-background, transparent));
+        color: var(--vscode-foreground);
+        opacity: 1;
+        box-shadow: inset 0 0 0 1px var(--vscode-focusBorder, #0e639c);
     }
 
     /* Locked Tab Styling */

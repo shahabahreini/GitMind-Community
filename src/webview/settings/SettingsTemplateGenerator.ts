@@ -40,6 +40,11 @@ export class SettingsTemplateGenerator {
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <!-- Cache-busting token: forces the webview to re-render fresh HTML on every load -->
+      <meta name="gitmind-cache-bust" content="${Date.now()}-${this._nonce}" />
+      <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+      <meta http-equiv="Pragma" content="no-cache" />
+      <meta http-equiv="Expires" content="0" />
       <title>GitMind Settings</title>
       <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' ${this._webview.cspSource}; script-src 'unsafe-inline' ${this._webview.cspSource}; worker-src ${this._webview.cspSource}; child-src ${this._webview.cspSource}; frame-src ${this._webview.cspSource}; connect-src ${this._webview.cspSource}; img-src ${this._webview.cspSource} data:;">
       <style>
