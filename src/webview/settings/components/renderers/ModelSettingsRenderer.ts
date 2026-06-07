@@ -54,7 +54,7 @@ export class ModelSettingsRenderer extends BaseRenderer {
                         <small>Timeouts and temporary Gemini service errors</small>
                     </div>
                     <div class="switch-container ${disabled ? 'disabled' : ''}">
-                        <input class="switch-input" type="checkbox" data-setting="pro.automaticRetry.enabled" ${retryEnabled ? 'checked' : ''} ${disabled}/>
+                        <input class="switch-input" type="checkbox" id="automaticRetryEnabled" data-setting="pro.automaticRetry.enabled" ${retryEnabled ? 'checked' : ''} ${disabled}/>
                         <div class="switch-button"><div class="switch-slider"></div></div>
                     </div>
                 </div>
@@ -66,7 +66,7 @@ export class ModelSettingsRenderer extends BaseRenderer {
                             <small>Used once when the selected model reaches its limit</small>
                         </div>
                         <div class="switch-container ${disabled ? 'disabled' : ''}">
-                            <input class="switch-input" type="checkbox" data-setting="pro.modelFallback.enabled" ${fallbackEnabled ? 'checked' : ''} ${disabled}/>
+                            <input class="switch-input" type="checkbox" id="modelFallbackEnabled" data-setting="pro.modelFallback.enabled" ${fallbackEnabled ? 'checked' : ''} ${disabled}/>
                             <div class="switch-button"><div class="switch-slider"></div></div>
                         </div>
                     </div>

@@ -298,6 +298,8 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           promptCustomizationEnabled: document.getElementById('promptCustomizationEnabled')?.checked ?? false,
           saveLastPrompt: document.getElementById('saveLastPrompt')?.checked ?? false,
           encryptionEnabled: document.getElementById('encryptionEnabled')?.checked ?? false,
+          automaticRetryEnabled: document.getElementById('automaticRetryEnabled')?.checked ?? false,
+          modelFallbackEnabled: document.getElementById('modelFallbackEnabled')?.checked ?? false,
           subscriptionEmail: document.getElementById('subscriptionEmail')?.value || '',
           commitBodyOptionsEnabled: document.getElementById('commitBodyOptionsEnabled')?.checked || false,
           commitBodyOptionsMaxLines: parseInt(document.getElementById('commitBodyOptionsMaxLines')?.value) || 5,

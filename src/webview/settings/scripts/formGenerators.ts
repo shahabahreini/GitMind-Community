@@ -315,6 +315,13 @@ export function generateSettingsCollection(): string {
           ? parseInt(String(document.getElementById('advancedModelConfigMaxTokens')?.value), 10)
           : (currentSettings.pro?.advancedModelConfig?.maxTokens ?? undefined),
       },
+      automaticRetry: {
+        enabled: (window.currentFormValues || currentFormValues).automaticRetryEnabled
+      },
+      modelFallback: {
+        enabled: (window.currentFormValues || currentFormValues).modelFallbackEnabled,
+        models: currentSettings.pro?.modelFallback?.models || {}
+      },
       licenseKey: currentSettings.pro?.licenseKey || '',
       orderId: currentSettings.pro?.orderId || '',
       validationStatus: currentSettings.pro?.validationStatus || 'invalid',

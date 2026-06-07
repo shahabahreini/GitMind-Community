@@ -137,6 +137,8 @@ export function getEventHandlersScript(): string {
         promptCustomizationEnabled: document.getElementById('promptCustomizationEnabled')?.checked || false,
         saveLastPrompt: document.getElementById('saveLastPrompt')?.checked || false,
         encryptionEnabled: document.getElementById('encryptionEnabled')?.checked || false,
+        automaticRetryEnabled: document.getElementById('automaticRetryEnabled')?.checked || false,
+        modelFallbackEnabled: document.getElementById('modelFallbackEnabled')?.checked || false,
         commitBodyOptionsEnabled: document.getElementById('commitBodyOptionsEnabled')?.checked || false,
         commitBodyOptionsMaxLines: parseInt(document.getElementById('commitBodyOptionsMaxLines')?.value) || 5,
         commitLengthOptionsEnabled: document.getElementById('commitLengthOptionsEnabled')?.checked || false,
@@ -771,6 +773,8 @@ export function getEventHandlersScript(): string {
         ['telemetryEnabled', 'telemetry.enabled', (el) => el.checked],
         ['promptCustomizationEnabled', 'promptCustomization.enabled', (el) => el.checked],
         ['saveLastPrompt', 'promptCustomization.saveLastPrompt', (el) => el.checked],
+        ['automaticRetryEnabled', 'pro.automaticRetry.enabled', (el) => el.checked],
+        ['modelFallbackEnabled', 'pro.modelFallback.enabled', (el) => el.checked],
         ['changelogMaxCommitsEnabled', 'pro.changelog.maxCommitsEnabled', (el) => el.checked]
       ];
 
