@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 // Core types
-export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic" | "minimax" | "copilot" | "deepseek" | "grok" | "groq" | "perplexity" | "zai" | "custom";
+export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic" | "minimax" | "copilot" | "deepseek" | "grok" | "groq" | "perplexity" | "zai" | "nvidia" | "custom";
 export type CommitStyle =
     | 'basic'
     | 'conventional'
@@ -245,6 +245,10 @@ export interface ZaiApiConfig extends ApiKeyConfig {
     endpoint?: 'regular' | 'coding';
 }
 
+export interface NvidiaApiConfig extends ApiKeyConfig {
+    type: "nvidia";
+}
+
 export interface CustomApiConfig extends BaseApiConfig {
     type: "custom";
     baseUrl: string;  // IP:Port format
@@ -260,7 +264,7 @@ export type ApiConfig =
     | GeminiApiConfig | HuggingFaceApiConfig | OllamaApiConfig | MistralApiConfig
     | CohereApiConfig | OpenAIApiConfig | TogetherApiConfig | OpenRouterApiConfig
     | AnthropicApiConfig | MiniMaxApiConfig | CopilotApiConfig | DeepSeekApiConfig | GrokApiConfig
-    | GroqApiConfig | PerplexityApiConfig | ZaiApiConfig | CustomApiConfig;
+    | GroqApiConfig | PerplexityApiConfig | ZaiApiConfig | NvidiaApiConfig | CustomApiConfig;
 
 // Response types
 export interface HuggingFaceResponse {

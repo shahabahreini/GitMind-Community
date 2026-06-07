@@ -62,6 +62,10 @@ export interface ExtensionSettings {
         apiKey: string;
         model: string;
     };
+    nvidia?: {
+        apiKey: string;
+        model: string;
+    };
     custom: {
         baseUrl: string;
         endpoint: string;
@@ -109,6 +113,13 @@ export interface ExtensionSettings {
             topK: number;
             maxTokensEnabled: boolean;
             maxTokens: number;
+        };
+        automaticRetry?: {
+            enabled: boolean;
+        };
+        modelFallback?: {
+            enabled: boolean;
+            models: Record<string, string>;
         };
         largeDiffHandling?: {
             enabled: boolean;

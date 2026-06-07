@@ -181,6 +181,8 @@ export class OnboardingManager {
             'MiniMax': 'minimax.apiKey',
             'zai': 'zai.apiKey',
             'Z.ai': 'zai.apiKey',
+            'nvidia': 'nvidia.apiKey',
+            'NVIDIA': 'nvidia.apiKey',
             'custom': 'custom.authToken',
             'Custom API': 'custom.authToken'
         };
@@ -365,7 +367,7 @@ export class OnboardingManager {
         const config = vscode.workspace.getConfiguration('gitmind');
 
         // List of all providers that could be configured
-        const providers = ['gemini', 'huggingface', 'ollama', 'mistral', 'cohere', 'openai', 'together', 'openrouter', 'anthropic', 'minimax', 'copilot', 'deepseek', 'grok', 'perplexity', 'zai', 'custom'];
+        const providers = ['gemini', 'huggingface', 'ollama', 'mistral', 'cohere', 'openai', 'together', 'openrouter', 'anthropic', 'minimax', 'copilot', 'deepseek', 'grok', 'perplexity', 'zai', 'nvidia', 'custom'];
 
         debugLog('Checking API configuration for all providers...');
 

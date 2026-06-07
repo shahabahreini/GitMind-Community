@@ -524,6 +524,13 @@ export class ScriptManager {
                         name: 'Ollama',
                         loadingFlag: 'ollamaModelsLoading',
                         dropdownId: 'ollamaModelDropdown'
+                    },
+                    {
+                        buttonId: 'loadNvidiaModels',
+                        commandId: 'gitmind.loadNvidiaModels',
+                        name: 'NVIDIA',
+                        loadingFlag: 'nvidiaModelsLoading',
+                        dropdownId: 'nvidiaModelDropdown'
                     }
                 ];
 
@@ -1155,6 +1162,19 @@ export class ScriptManager {
                         filterTimeoutKey: '_ollamaFilterTimeout',
                         messageHandlerKey: '_ollamaMessageHandler',
                         clickHandlerKey: '_ollamaClickHandler'
+                    },
+                    {
+                        name: 'NVIDIA',
+                        inputId: 'nvidiaModel',
+                        dropdownId: 'nvidiaModelDropdown',
+                        buttonId: 'loadNvidiaModels',
+                        messageCommand: 'nvidiaModelsLoaded',
+                        loadingFlag: 'nvidiaModelsLoading',
+                        toastShownFlag: '_nvidiaToastShown',
+                        initFlag: 'nvidiaDropdownInitialized',
+                        filterTimeoutKey: '_nvidiaFilterTimeout',
+                        messageHandlerKey: '_nvidiaMessageHandler',
+                        clickHandlerKey: '_nvidiaClickHandler'
                     }
                 ];
 

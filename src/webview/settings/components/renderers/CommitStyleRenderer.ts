@@ -27,7 +27,7 @@ export class CommitStyleRenderer extends BaseRenderer {
                         <button class="gm-tab-btn gm-tab-btn-active" data-gm-tab="selection" type="button">
                             Style Selection
                         </button>
-                        ${hasProAccess ? '<button class="gm-tab-btn" data-gm-tab="emoji" type="button">Emoji Enhancement</button>' : ''}
+                        <button class="gm-tab-btn ${hasProAccess ? '' : 'locked'}" data-gm-tab="emoji" type="button">Emoji Enhancement ${hasProAccess ? '' : '🔒'}</button>
                         <button class="gm-tab-btn" data-gm-tab="reference" type="button">
                             Reference Guide
                         </button>
@@ -53,7 +53,7 @@ export class CommitStyleRenderer extends BaseRenderer {
                             ${!hasProAccess ? this.renderProUpgradeSection() : ''}
                         </div>
 
-                        ${hasProAccess ? this.renderEmojiTab(currentStyle) : ''}
+                        ${this.renderEmojiTab(currentStyle, hasProAccess)}
                         
                         <div class="gm-tab-content" data-gm-content="reference">
                             <div class="gm-reference-container">
@@ -99,6 +99,15 @@ export class CommitStyleRenderer extends BaseRenderer {
                         tabButtons.forEach(button => {
                             button.addEventListener('click', function() {
                                 const targetTab = this.getAttribute('data-gm-tab');
+                                if (targetTab === 'emoji' && !${hasProAccess}) {
+                                    if (typeof showToast === 'function') {
+                                        showToast('Emoji Enhancement is a GitMind Pro feature. Redirecting to activation...', 'info');
+                                    }
+                                    if (typeof navigateToSubscriptionTab === 'function') {
+                                        navigateToSubscriptionTab();
+                                    }
+                                    return;
+                                }
                                 
                                 tabButtons.forEach(btn => btn.classList.remove('gm-tab-btn-active'));
                                 this.classList.add('gm-tab-btn-active');
@@ -372,7 +381,7 @@ export class CommitStyleRenderer extends BaseRenderer {
         `;
     }
 
-    private renderEmojiTab(currentStyle: string): string {
+    private renderEmojiTab(currentStyle: string, hasProAccess: boolean): string {
         const gitmojiSettings = this.settings.commitStyle?.gitmoji;
         const isEnabled = gitmojiSettings?.enabled || false;
         const placement = gitmojiSettings?.placement || 'summary';
@@ -382,8 +391,8 @@ export class CommitStyleRenderer extends BaseRenderer {
         const hasFormatConflict = ['ember', 'linux', 'jquery'].includes(currentStyle);
 
         return `
-            <div class="gm-tab-content" data-gm-content="emoji">
-                <div class="gm-emoji-enhancement-container">
+            <div class="gm-tab-content ${hasProAccess ? '' : 'locked'}" data-gm-content="emoji">
+                <div class="gm-emoji-enhancement-container" style="${hasProAccess ? '' : 'opacity: 0.55;'}">
                     <div class="gm-emoji-header">
                         <h3 class="gm-emoji-title">🎨 Emoji Enhancement</h3>
                         <p class="gm-emoji-description">
@@ -399,7 +408,7 @@ export class CommitStyleRenderer extends BaseRenderer {
                                 <input type="checkbox" 
                                        class="gm-emoji-checkbox" 
                                        ${isEnabled ? 'checked' : ''}
-                                       ${hasEmojiConflict ? 'disabled' : ''} />
+                                       ${hasEmojiConflict || !hasProAccess ? 'disabled' : ''} />
                                 <span class="gm-emoji-toggle-text">Enable emoji injection for "${this.getStyleDisplayName(currentStyle)}" style</span>
                             </label>
                         </div>
@@ -409,15 +418,15 @@ export class CommitStyleRenderer extends BaseRenderer {
                                 <h4 class="gm-placement-title">Injection Location</h4>
                                 <div class="gm-placement-options">
                                     <label class="gm-placement-item">
-                                        <input type="radio" name="gm-emoji-placement" value="summary" ${placement === 'summary' ? 'checked' : ''} />
+                                        <input type="radio" name="gm-emoji-placement" value="summary" ${placement === 'summary' ? 'checked' : ''} ${hasProAccess ? '' : 'disabled'} />
                                         <span class="gm-placement-text">Inject to one line summary</span>
                                     </label>
                                     <label class="gm-placement-item">
-                                        <input type="radio" name="gm-emoji-placement" value="body" ${placement === 'body' ? 'checked' : ''} />
+                                        <input type="radio" name="gm-emoji-placement" value="body" ${placement === 'body' ? 'checked' : ''} ${hasProAccess ? '' : 'disabled'} />
                                         <span class="gm-placement-text">Inject to message body</span>
                                     </label>
                                     <label class="gm-placement-item">
-                                        <input type="radio" name="gm-emoji-placement" value="both" ${placement === 'both' ? 'checked' : ''} />
+                                        <input type="radio" name="gm-emoji-placement" value="both" ${placement === 'both' ? 'checked' : ''} ${hasProAccess ? '' : 'disabled'} />
                                         <span class="gm-placement-text">Both</span>
                                     </label>
                                 </div>

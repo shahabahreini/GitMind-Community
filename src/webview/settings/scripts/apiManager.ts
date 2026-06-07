@@ -25,6 +25,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   groq: { apiKey: true, model: false, displayName: 'Groq' },
   perplexity: { apiKey: true, model: false, displayName: 'Perplexity' },
   zai: { apiKey: true, model: true, endpoint: true, displayName: 'Z.ai' },
+  nvidia: { apiKey: true, model: true, displayName: 'NVIDIA' },
   custom: { model: true, displayName: 'Custom API' }
 };
 

@@ -29,6 +29,7 @@ import { fetchCopilotModels } from "../services/api/copilot";
 import { fetchOpenAIModels } from "../services/api/openai";
 import { fetchZaiModels } from "../services/api/zai";
 import { fetchPerplexityModels } from "../services/api/perplexity";
+import { fetchNvidiaModels } from "../services/api/nvidia";
 import { PromptManager } from "../services/promptManager";
 import { telemetryService } from "../services/telemetry/telemetryService";
 import { SecureKeyManager } from "../services/encryption/SecureKeyManager";
@@ -48,12 +49,12 @@ const TIMEOUT_DURATION = 60000;
 const API_CHECK_TIMEOUT = 15000;
 export const SUPPORTED_PROVIDERS = [
   "Gemini", "Hugging Face", "Ollama", "Mistral", "Cohere", "OpenAI",
-  "Together AI", "OpenRouter", "Anthropic", "MiniMax", "GitHub Copilot", "DeepSeek", "Grok", "Groq", "Perplexity", "Z.ai", "Custom API"
+  "Together AI", "OpenRouter", "Anthropic", "MiniMax", "GitHub Copilot", "DeepSeek", "Grok", "Groq", "Perplexity", "Z.ai", "NVIDIA", "Custom API"
 ];
 
 const API_KEY_PROVIDERS = [
   'gemini', 'openai', 'mistral', 'cohere', 'huggingface', 'anthropic',
-  'minimax', 'together', 'openrouter', 'deepseek', 'grok', 'groq', 'perplexity', 'zai'
+  'minimax', 'together', 'openrouter', 'deepseek', 'grok', 'groq', 'perplexity', 'zai', 'nvidia'
 ];
 
 
@@ -413,7 +414,7 @@ function clampCommitBodyDescription(description: string, maxBodyLines?: number):
 }
 
 async function handleLoadModels(
-  modelType: 'mistral' | 'huggingface' | 'cohere' | 'together' | 'openrouter' | 'grok' | 'groq' | 'deepseek' | 'gemini' | 'anthropic' | 'minimax' | 'openai' | 'zai' | 'perplexity',
+  modelType: 'mistral' | 'huggingface' | 'cohere' | 'together' | 'openrouter' | 'grok' | 'groq' | 'deepseek' | 'gemini' | 'anthropic' | 'minimax' | 'openai' | 'zai' | 'perplexity' | 'nvidia',
   fetchFunction: (apiKey: string) => Promise<any[]>
 ): Promise<void> {
   // Prevent duplicate concurrent calls for the same provider
@@ -433,7 +434,7 @@ async function handleLoadModels(
     const apiKey = await secureKeyManager.getActualApiKey(modelType);
 
     // Validate API key before proceeding
-    if (!apiKey || apiKey.trim() === '') {
+    if (modelType !== 'nvidia' && (!apiKey || apiKey.trim() === '')) {
       const errorMessage = `${modelType.charAt(0).toUpperCase() + modelType.slice(1)} API key is required to load models. Please add your API key in the settings.`;
 
       // Determine the correct message command suffix
@@ -498,7 +499,7 @@ async function handleLoadModels(
 
     await withProgress(`Loading ${modelType} models...`, async () => {
       try {
-        const models = await fetchFunction(apiKey);
+        const models = await fetchFunction(apiKey || "");
         let commandSuffix: string;
         switch (modelType) {
           case 'mistral':
@@ -1031,6 +1032,10 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
 
     vscode.commands.registerCommand("gitmind.loadPerplexityModels", () =>
       handleLoadModels('perplexity', fetchPerplexityModels)
+    ),
+
+    vscode.commands.registerCommand("gitmind.loadNvidiaModels", () =>
+      handleLoadModels('nvidia', fetchNvidiaModels)
     ),
 
     vscode.commands.registerCommand("gitmind.loadCopilotModels", handleLoadCopilotModels),
@@ -1636,4 +1641,3 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
 
   return commands;
 }
-

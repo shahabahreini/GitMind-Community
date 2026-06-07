@@ -1,7 +1,7 @@
 {
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI-Powered Commit Messages",
-  "description": "Generate professional commit messages in seconds using 15 AI providers (OpenAI, Anthropic, MiniMax, Google Gemini, DeepSeek, Grok, Perplexity, Z.ai, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot) and 50+ models. Zero setup options available.",
+  "description": "Generate professional commit messages in seconds using 17 AI providers, including OpenAI, Anthropic, NVIDIA, Gemini, MiniMax, DeepSeek, Grok, Groq, Perplexity, Z.ai, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, and GitHub Copilot.",
   "version": "4.15.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
@@ -50,6 +50,7 @@
             "groq",
             "perplexity",
             "zai",
+            "nvidia",
             "custom"
           ],
           "enumDescriptions": [
@@ -69,6 +70,7 @@
             "Use Groq for ultra-fast AI inference with free models",
             "Use Perplexity AI for generating commit messages",
             "Use Z.ai (GLM) for generating commit messages",
+            "Use NVIDIA hosted NIM models for generating commit messages",
             "Use Custom API endpoint for generating commit messages (Pro feature)"
           ],
           "default": "gemini",
@@ -621,6 +623,16 @@
           "default": "glm-5.1",
           "description": "Z.ai model to use for generating commit messages"
         },
+        "gitmind.nvidia.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API key for NVIDIA hosted NIM [Browse models](https://build.nvidia.com/models)"
+        },
+        "gitmind.nvidia.model": {
+          "type": "string",
+          "default": "meta/llama-3.3-70b-instruct",
+          "markdownDescription": "NVIDIA hosted NIM model ID. [LLM API reference](https://docs.api.nvidia.com/nim/reference/llm-apis)"
+        },
         "gitmind.zai.endpoint": {
           "type": "string",
           "enum": [
@@ -842,6 +854,21 @@
           "description": "Max output tokens (Pro feature)",
           "markdownDescription": "**Pro Feature**: Maximum number of output tokens the model can generate."
         },
+        "gitmind.pro.automaticRetry.enabled": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "**Pro Feature**: Retry generation once for timeouts and eligible Gemini temporary service failures."
+        },
+        "gitmind.pro.modelFallback.enabled": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "**Pro Feature**: Try a configured fallback model once when the provider explicitly reports a model-specific limit."
+        },
+        "gitmind.pro.modelFallback.models": {
+          "type": "object",
+          "default": {},
+          "markdownDescription": "**Pro Feature**: Fallback model IDs keyed by provider."
+        },
         "gitmind.pro.learnFromCommitHistory.enabled": {
           "type": "boolean",
           "default": true,
@@ -1051,6 +1078,11 @@
       {
         "command": "gitmind.loadZaiModels",
         "title": "Load Z.ai Models",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.loadNvidiaModels",
+        "title": "Load NVIDIA Models",
         "category": "GitMind"
       },
       {

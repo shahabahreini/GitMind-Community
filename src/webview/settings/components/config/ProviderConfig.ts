@@ -586,6 +586,44 @@ export class ProviderConfig {
             ]
         },
         {
+            id: 'nvidia',
+            name: 'NVIDIA',
+            fields: [
+                {
+                    id: 'nvidiaApiKey',
+                    key: 'apiKey',
+                    label: 'API Key',
+                    type: 'password',
+                    tooltip: 'Your NVIDIA hosted NIM API key',
+                    link: { url: 'https://build.nvidia.com/models', text: 'Get an NVIDIA API key' }
+                },
+                {
+                    id: 'nvidiaModel',
+                    key: 'model',
+                    label: 'Model',
+                    type: 'model-with-load',
+                    tooltip: 'Hosted NVIDIA NIM chat-completion model',
+                    loadButtonText: 'Load Available Models',
+                    loadButtonId: 'loadNvidiaModels',
+                    loadCommand: 'gitmind.loadNvidiaModels',
+                    defaultOptions: [
+                        'meta/llama-3.3-70b-instruct',
+                        'nvidia/nemotron-3-super-120b-a12b',
+                        'mistralai/mistral-large-3-675b-instruct-2512',
+                        'qwen/qwen3-coder-480b-a35b-instruct'
+                    ]
+                },
+                {
+                    id: 'nvidiaInfo',
+                    key: 'info',
+                    label: '',
+                    type: 'info',
+                    tooltip: '',
+                    content: '<a href="https://docs.api.nvidia.com/nim/reference/llm-apis">NVIDIA NIM LLM API reference</a>'
+                }
+            ]
+        },
+        {
             id: 'custom',
             name: 'Custom API',
             isPro: true,

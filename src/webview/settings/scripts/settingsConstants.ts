@@ -22,12 +22,13 @@ export const PROVIDER_DEFAULTS: ProviderDefaults = {
   grok: { model: "grok-4.4" },
   perplexity: { model: "gpt-5.5-computer" },
   zai: { model: "glm-4.5-flash" },
+  nvidia: { model: "meta/llama-3.3-70b-instruct" },
   custom: { model: "" }
 };
 
 export const API_KEY_PROVIDERS = [
   'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-  'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'perplexity', 'zai'
+  'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'perplexity', 'zai', 'nvidia'
 ];
 
 export const NO_API_KEY_PROVIDERS = ['ollama', 'copilot', 'custom'];

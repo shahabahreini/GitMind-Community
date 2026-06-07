@@ -38,12 +38,13 @@ export class SettingsManager {
         groq: { model: "meta-llama/llama-4-scout-17b-16e-instruct" },
         perplexity: { model: "llama-3.1-sonar-large-128k-online" },
         zai: { model: "glm-5.1", endpoint: "coding" },
+        nvidia: { model: "meta/llama-3.3-70b-instruct" },
         custom: { model: "" }
     };
 
     private static readonly API_KEY_PROVIDERS = [
         'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-        'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'groq', 'perplexity', 'zai'
+        'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'groq', 'perplexity', 'zai', 'nvidia'
     ];
 
     private static readonly NO_API_KEY_PROVIDERS = ['ollama', 'copilot', 'custom'];
@@ -104,6 +105,13 @@ export class SettingsManager {
                     topK: config.get<number>("pro.advancedModelConfig.topK") ?? 40,
                     maxTokensEnabled: config.get<boolean>("pro.advancedModelConfig.maxTokensEnabled") ?? false,
                     maxTokens: config.get<number>("pro.advancedModelConfig.maxTokens") ?? 350,
+                },
+                automaticRetry: {
+                    enabled: config.get<boolean>("pro.automaticRetry.enabled") ?? false,
+                },
+                modelFallback: {
+                    enabled: config.get<boolean>("pro.modelFallback.enabled") ?? false,
+                    models: config.get<Record<string, string>>("pro.modelFallback.models") ?? {},
                 },
                 commitBodyOptions: {
                     enabled: config.get<boolean>("pro.commitBodyOptions.enabled") ?? false,
@@ -428,6 +436,9 @@ export class SettingsManager {
             config.update("pro.advancedModelConfig.topK", settings.pro?.advancedModelConfig?.topK ?? 40, target),
             config.update("pro.advancedModelConfig.maxTokensEnabled", settings.pro?.advancedModelConfig?.maxTokensEnabled ?? false, target),
             config.update("pro.advancedModelConfig.maxTokens", settings.pro?.advancedModelConfig?.maxTokens ?? 350, target),
+            config.update("pro.automaticRetry.enabled", settings.pro?.automaticRetry?.enabled ?? false, target),
+            config.update("pro.modelFallback.enabled", settings.pro?.modelFallback?.enabled ?? false, target),
+            config.update("pro.modelFallback.models", settings.pro?.modelFallback?.models ?? {}, target),
             config.update("pro.licenseKey", settings.pro?.licenseKey || "", target),
             config.update("pro.orderId", settings.pro?.orderId || "", target),
             config.update("pro.instanceId", settings.pro?.instanceId || "", target),

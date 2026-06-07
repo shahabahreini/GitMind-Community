@@ -7,6 +7,7 @@ import { validateGroqAPIKey } from "./groq";
 import { validatePerplexityAPIKey } from "./perplexity";
 import { validateZaiAPIKey } from "./zai";
 import { validateMiniMaxAPIKey } from "./minimax";
+import { validateNvidiaAPIKey } from "./nvidia";
 import { getApiConfig } from "../../config/settings";
 import { ApiConfig, MistralRateLimit, ApiProvider, CustomApiConfig } from "../../config/types";
 import { RequestManager } from "../../utils/requestManager";
@@ -323,6 +324,17 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
             limit: 0,
             remaining: 0,
             notes: "Z.ai rate limits depend on your account tier and model usage. Check your Z.ai dashboard for details."
+        }
+    },
+    nvidia: {
+        requiresApiKey: true,
+        validator: validateNvidiaAPIKey,
+        defaultModel: "meta/llama-3.3-70b-instruct",
+        responseTime: 700,
+        rateLimits: {
+            limit: 0,
+            remaining: 0,
+            notes: "NVIDIA hosted NIM limits depend on the selected model and account."
         }
     },
     custom: {

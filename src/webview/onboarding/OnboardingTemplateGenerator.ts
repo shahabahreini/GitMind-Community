@@ -125,6 +125,7 @@ export class OnboardingTemplateGenerator {
             { id: 'ollama', name: 'Ollama', category: 'Local', tier: 'Free', desc: 'Run models locally on your machine' },
             { id: 'copilot', name: 'GitHub Copilot', category: 'Integrated', tier: 'Subscription', desc: 'Uses existing Copilot subscription' },
             { id: 'minimax', name: 'MiniMax', category: 'Alternative', tier: 'Paid', desc: 'Advanced Chinese AI models' },
+            { id: 'nvidia', name: 'NVIDIA', category: 'Cloud', tier: 'Free', desc: 'Use hosted NVIDIA NIM models' },
             { id: 'custom', name: 'Custom API', category: 'Advanced', tier: 'Pro', desc: 'Connect to any custom API endpoint' }
         ];
 

@@ -23,12 +23,13 @@ export const PROVIDER_DEFAULTS: ProviderDefaults = {
   groq: { model: "meta-llama/llama-4-scout-17b-16e-instruct" },
   perplexity: { model: "sonar-pro" },
   zai: { model: "glm-5.1" },
+  nvidia: { model: "meta/llama-3.3-70b-instruct" },
   custom: { model: "" }
 };
 
 export const API_KEY_PROVIDERS = [
   'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-  'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'groq', 'perplexity', 'zai'
+  'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'groq', 'perplexity', 'zai', 'nvidia'
 ];
 
 export const NO_API_KEY_PROVIDERS = ['ollama', 'copilot', 'custom'];
@@ -178,5 +179,11 @@ export const DEFAULT_MODELS = {
     'sonar',
     'sonar-reasoning',
     'r1-1776'
+  ],
+  nvidia: [
+    'meta/llama-3.3-70b-instruct',
+    'nvidia/nemotron-3-super-120b-a12b',
+    'mistralai/mistral-large-3-675b-instruct-2512',
+    'qwen/qwen3-coder-480b-a35b-instruct'
   ]
 };

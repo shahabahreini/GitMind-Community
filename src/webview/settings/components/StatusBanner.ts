@@ -88,6 +88,11 @@ export class StatusBanner {
       defaultModel: "glm-4.5-flash",
       getApiConfigured: (s) => !!(s as any).zai?.apiKey
     },
+    nvidia: {
+      displayName: "NVIDIA",
+      defaultModel: "meta/llama-3.3-70b-instruct",
+      getApiConfigured: (s) => !!s.nvidia?.apiKey
+    },
     custom: {
       displayName: "Custom API",
       defaultModel: "Custom",

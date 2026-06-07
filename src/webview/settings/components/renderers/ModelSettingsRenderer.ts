@@ -15,8 +15,48 @@ export class ModelSettingsRenderer extends BaseRenderer {
                 <div class="card-content">
                     ${this.renderProviderSelector()}
                     ${this.renderAllProviderSettings()}
+                    ${this.renderRecoverySettings()}
                 </div>
             </div>
+        `;
+    }
+
+    private renderRecoverySettings(): string {
+        const isPro = this.isProUser() || this.isDevModeEnabled();
+        const retryEnabled = this.settings.pro?.automaticRetry?.enabled ?? false;
+        const fallbackEnabled = this.settings.pro?.modelFallback?.enabled ?? false;
+        const fallbackModel = this.settings.pro?.modelFallback?.models?.[this.settings.apiProvider] ?? '';
+        const disabled = isPro ? '' : 'disabled';
+        const locked = isPro ? '' : 'locked';
+
+        return `
+            <div class="section-divider"></div>
+            <div class="modern-section">
+                <div class="section-header"><h3 class="section-title">Automatic Recovery ${isPro ? '' : '<span class="pro-lock-badge">Pro Locked</span>'}</h3></div>
+                <div class="setting-row ${locked}">
+                    <div class="setting-info"><div class="setting-label">Automatic Retry</div><div class="setting-desc">Retry once for timeouts and eligible Gemini service failures</div></div>
+                    <div class="switch-container ${disabled ? 'disabled' : ''}"><input class="switch-input" type="checkbox" data-setting="pro.automaticRetry.enabled" ${retryEnabled ? 'checked' : ''} ${disabled}/><div class="switch-button"><div class="switch-slider"></div></div></div>
+                </div>
+                <div class="setting-row ${locked}">
+                    <div class="setting-info"><div class="setting-label">Automatic Model Fallback</div><div class="setting-desc">Try this model once when the selected model explicitly reaches its limit</div></div>
+                    <div class="setting-control">
+                        <div class="switch-container ${disabled ? 'disabled' : ''}"><input class="switch-input" type="checkbox" data-setting="pro.modelFallback.enabled" ${fallbackEnabled ? 'checked' : ''} ${disabled}/><div class="switch-button"><div class="switch-slider"></div></div></div>
+                        <input class="input-field" id="fallbackModelForProvider" value="${fallbackModel}" placeholder="Fallback model for ${this.settings.apiProvider}" ${disabled}/>
+                    </div>
+                </div>
+            </div>
+            <script>
+                (function () {
+                    const input = document.getElementById('fallbackModelForProvider');
+                    if (!input || input.disabled) return;
+                    input.addEventListener('change', function () {
+                        const models = Object.assign({}, window.gitmindSettings?.pro?.modelFallback?.models || {});
+                        models['${this.settings.apiProvider}'] = input.value.trim();
+                        window.gitmindSettings.pro.modelFallback.models = models;
+                        vscode.postMessage({ command: 'updateSetting', key: 'pro.modelFallback.models', value: models });
+                    });
+                })();
+            </script>
         `;
     }
 
@@ -118,8 +158,9 @@ export class ModelSettingsRenderer extends BaseRenderer {
         const isHuggingFace = field.id.includes('huggingface');
         const isOpenRouter = field.id.includes('openrouter');
         const isOllama = field.id.includes('ollama');
+        const isNvidia = field.id.includes('nvidia');
 
-        if (isHuggingFace || isOpenRouter || isOllama) {
+        if (isHuggingFace || isOpenRouter || isOllama || isNvidia) {
             // For Hugging Face, OpenRouter, and Ollama, render as searchable dropdown with direct input capability
             const defaultOptions = field.defaultOptions || [];
             const currentModel = value || defaultOptions[0] || '';
@@ -137,6 +178,10 @@ export class ModelSettingsRenderer extends BaseRenderer {
                 providerName = 'Ollama';
                 dropdownId = 'ollamaModelDropdown';
                 placeholder = 'Type or select a model (e.g., phi4, llama3.2, mistral)';
+            } else if (isNvidia) {
+                providerName = 'NVIDIA';
+                dropdownId = 'nvidiaModelDropdown';
+                placeholder = 'Type or select a model (e.g., meta/llama-3.3-70b-instruct)';
             }
 
             return FormUtils.createFormGroup(

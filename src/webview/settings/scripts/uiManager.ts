@@ -88,6 +88,11 @@ const PROVIDER_DISPLAY_CONFIG: Record<string, ProviderDisplayConfig> = {
     model: "glm-4.5-flash",
     apiConfigured: (s) => !!s.zai?.apiKey
   },
+  nvidia: {
+    displayName: "NVIDIA",
+    model: "meta/llama-3.3-70b-instruct",
+    apiConfigured: (s) => !!s.nvidia?.apiKey
+  },
   custom: {
     displayName: "Custom API",
     model: "Not configured",
@@ -202,6 +207,7 @@ export function getUiManagerScript(): string {
         groq: { displayName: "Groq", defaultModel: "meta-llama/llama-4-scout-17b-16e-instruct", getApiConfigured: (s) => !!s.groq?.apiKey },
         perplexity: { displayName: "Perplexity", defaultModel: "gpt-5.5-computer", getApiConfigured: (s) => !!s.perplexity?.apiKey },
         zai: { displayName: "Z.ai", defaultModel: "glm-4.5-flash", getApiConfigured: (s) => !!s.zai?.apiKey },
+        nvidia: { displayName: "NVIDIA", defaultModel: "meta/llama-3.3-70b-instruct", getApiConfigured: (s) => !!s.nvidia?.apiKey },
         custom: { displayName: "Custom API", defaultModel: "Not configured", getApiConfigured: (s) => !!(s.custom?.baseUrl && s.custom?.endpoint) }
       };
       

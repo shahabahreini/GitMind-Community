@@ -27,6 +27,7 @@ export function getMessageHandlersScript(): string {
         copilotModelsLoaded: () => handleModelsLoaded('copilot', message, ${JSON.stringify(DEFAULT_MODELS.copilot)}),
         zaiModelsLoaded: () => handleModelsLoaded('zai', message, ${JSON.stringify(DEFAULT_MODELS.zai)}),
         perplexityModelsLoaded: () => handleModelsLoaded('perplexity', message, ${JSON.stringify(DEFAULT_MODELS.perplexity)}),
+        nvidiaModelsLoaded: () => handleAdvancedModelsLoaded('nvidia', message, ${JSON.stringify(DEFAULT_MODELS.nvidia)}, 100),
         
         openrouterModelsLoaded: () => handleAdvancedModelsLoaded('openrouter', message, ${JSON.stringify(DEFAULT_MODELS.openrouter)}, 100),
         huggingfaceModelsLoaded: () => handleAdvancedModelsLoaded('huggingface', message, ${JSON.stringify(DEFAULT_MODELS.huggingface)}, 2000),

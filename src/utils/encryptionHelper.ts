@@ -116,7 +116,7 @@ export class EncryptionHelper {
 
             const providers = [
                 'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-                'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'perplexity', 'zai', 'custom'
+                'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'perplexity', 'zai', 'nvidia', 'custom'
             ];
 
             // Migrate API keys to secure storage
@@ -164,7 +164,7 @@ export class EncryptionHelper {
 
             const providers = [
                 'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-                'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'perplexity', 'zai', 'custom'
+                'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'perplexity', 'zai', 'nvidia', 'custom'
             ];
 
             // Get all encrypted keys and move them back to plain text

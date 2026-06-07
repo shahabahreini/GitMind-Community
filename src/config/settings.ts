@@ -72,6 +72,7 @@ const PROVIDER_DEFAULTS: Record<string, ProviderDefaults> = {
         enabled: false,
         extras: { endpoint: "coding" }
     },
+    nvidia: { model: "meta/llama-3.3-70b-instruct", enabled: false },
     custom: {
         model: "",
         enabled: false,

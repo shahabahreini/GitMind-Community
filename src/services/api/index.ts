@@ -16,6 +16,7 @@ import {
     GrokApiConfig,
     PerplexityApiConfig,
     ZaiApiConfig,
+    NvidiaApiConfig,
     CustomApiConfig,
 } from "../../config/types";
 // Lazy-loaded provider imports - loaded only when needed to reduce bundle size
@@ -33,6 +34,7 @@ import { SubscriptionManager } from "../subscription/SubscriptionManager";
 import { DiffProcessor } from "../diffProcessor";
 import { generateCommitHistoryAnalysisPrompt, validatePromptLength, generateCommitPrompt, getPromptConfig } from './prompts';
 import { BaseAIProvider, GenerationOptions } from "./base";
+import { classifyGenerationFailure, withModel } from "./recovery";
 
 // Timeout configurations
 const STANDARD_REQUEST_TIMEOUT = 10000; // 10 seconds for regular API requests
@@ -51,7 +53,7 @@ const CIRCUIT_BREAKER_THRESHOLD = 3; // Max failures before opening circuit
 const CIRCUIT_BREAKER_RESET_TIME = 60000; // 1 minute cooldown
 
 
-type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter" | "Anthropic" | "MiniMax" | "GitHub Copilot" | "DeepSeek" | "Grok" | "Groq" | "Perplexity" | "Z.ai" | "Custom API";
+type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter" | "Anthropic" | "MiniMax" | "GitHub Copilot" | "DeepSeek" | "Grok" | "Groq" | "Perplexity" | "Z.ai" | "NVIDIA" | "Custom API";
 
 // Type for lazy-loaded provider class
 type ProviderClass = new (...args: any[]) => BaseAIProvider;
@@ -150,6 +152,10 @@ async function loadProviderModule(provider: string): Promise<ProviderClass> {
             case 'zai':
                 const zaiModule = await import('./zai.js');
                 providerClass = zaiModule.ZaiProvider;
+                break;
+            case 'nvidia':
+                const nvidiaModule = await import('./nvidia.js');
+                providerClass = nvidiaModule.NvidiaProvider;
                 break;
             case 'custom':
                 const customModule = await import('./custom.js');
@@ -288,6 +294,15 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         requiresApiKey: true,
         defaultModel: "glm-5.1",
         getProviderClass: async () => loadProviderModule('zai'),
+    },
+    nvidia: {
+        name: "NVIDIA",
+        displayName: "NVIDIA",
+        settingPath: "nvidia.apiKey",
+        docsUrl: "https://build.nvidia.com/models",
+        requiresApiKey: true,
+        defaultModel: "meta/llama-3.3-70b-instruct",
+        getProviderClass: async () => loadProviderModule('nvidia'),
     },
     custom: {
         name: "Custom API",
@@ -497,8 +512,8 @@ export async function generateCommitMessage(
             return await processLargeDiff(validatedConfig, diff, customContext, largeDiffSettings);
         }
 
-        // Generate the commit message
-        const result = await generateMessageWithConfig(validatedConfig, diff, customContext);
+        // Generate the commit message, with at most one Pro recovery attempt.
+        const result = await generateMessageWithRecovery(validatedConfig, diff, customContext);
 
         const duration = Date.now() - startTime;
         telemetryService.trackCommitGeneration(config.type, true);
@@ -538,6 +553,63 @@ export async function generateCommitMessage(
         // Clean up request tracking
         currentRequestController = null;
         isCurrentlyActive = false;
+    }
+}
+
+async function generateMessageWithRecovery(
+    config: ApiConfig,
+    diff: string,
+    customContext: string
+): Promise<string> {
+    const attempt = async (attemptConfig: ApiConfig): Promise<string> => {
+        let timeout: NodeJS.Timeout | undefined;
+        try {
+            return await Promise.race([
+                generateMessageWithConfig(attemptConfig, diff, customContext),
+                new Promise<string>((_, reject) => {
+                    timeout = setTimeout(() => reject(new Error("Request timed out during generation")), 55000);
+                }),
+            ]);
+        } finally {
+            if (timeout) {
+                clearTimeout(timeout);
+            }
+        }
+    };
+
+    try {
+        return await attempt(config);
+    } catch (error) {
+        const subscriptionManager = SubscriptionManager.getInstance();
+        if (!await subscriptionManager.isProUser(undefined, true)) {
+            throw error;
+        }
+
+        const settings = vscode.workspace.getConfiguration("gitmind");
+        const retryEnabled = settings.get<boolean>("pro.automaticRetry.enabled", false);
+        const fallbackEnabled = settings.get<boolean>("pro.modelFallback.enabled", false);
+        const fallbackModels = settings.get<Record<string, string>>("pro.modelFallback.models", {});
+        const failure = classifyGenerationFailure(error, config.type);
+
+        if (fallbackEnabled && failure === "model-limit") {
+            const fallbackModel = fallbackModels[config.type]?.trim();
+            if (fallbackModel && fallbackModel !== config.model) {
+                vscode.window.showInformationMessage(
+                    `${getProviderName(config.type)} reported a model-specific limit. Trying fallback model '${fallbackModel}' once.`
+                );
+                return attempt(withModel(config, fallbackModel));
+            }
+        }
+
+        if (retryEnabled && (failure === "timeout" || failure === "temporary-service")) {
+            const message = failure === "temporary-service" && config.type === "gemini"
+                ? "The service is experiencing issues.\nRetrying once automatically.\nIf it fails: Try again in a few minutes, check the provider's status page, or consider using a different provider temporarily."
+                : `${getProviderName(config.type)} request timed out. Retrying once.`;
+            vscode.window.showInformationMessage(message);
+            return attempt(config);
+        }
+
+        throw error;
     }
 }
 

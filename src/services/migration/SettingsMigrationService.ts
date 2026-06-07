@@ -116,6 +116,7 @@ export class SettingsMigrationService {
             'deepseek.apiKey', 'deepseek.model',
             'grok.apiKey', 'grok.model',
             'perplexity.apiKey', 'perplexity.model',
+            'nvidia.apiKey', 'nvidia.model',
             'commit.verbose',
             'promptCustomization.enabled', 'promptCustomization.saveLastPrompt', 'promptCustomization.lastPrompt',
             'telemetry.enabled', 'telemetry.connectionString', 'showDiagnostics',
@@ -179,6 +180,8 @@ export class SettingsMigrationService {
             'grok.model': 'grok.model',
             'perplexity.apiKey': 'perplexity.apiKey',
             'perplexity.model': 'perplexity.model',
+            'nvidia.apiKey': 'nvidia.apiKey',
+            'nvidia.model': 'nvidia.model',
 
             // Commit settings
             'commit.verbose': 'commit.verbose',
@@ -323,6 +326,7 @@ export class SettingsMigrationService {
             'deepseek.apiKey', 'deepseek.model',
             'grok.apiKey', 'grok.model',
             'perplexity.apiKey', 'perplexity.model',
+            'nvidia.apiKey', 'nvidia.model',
             'commit.verbose',
             'promptCustomization.enabled', 'promptCustomization.saveLastPrompt', 'promptCustomization.lastPrompt',
             'telemetry.enabled', 'telemetry.connectionString', 'showDiagnostics',
@@ -750,6 +754,7 @@ export class SettingsMigrationService {
             'deepseek.apiKey', 'deepseek.model',
             'grok.apiKey', 'grok.model',
             'perplexity.apiKey', 'perplexity.model',
+            'nvidia.apiKey', 'nvidia.model',
             'commit.verbose',
             'promptCustomization.enabled', 'promptCustomization.saveLastPrompt', 'promptCustomization.lastPrompt',
             'telemetry.enabled', 'telemetry.connectionString', 'showDiagnostics',
