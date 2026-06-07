@@ -28,48 +28,55 @@ or Quick Open (`Ctrl+P` / `Cmd+P`): `ext install ShahabBahreiniJangjoo.ai-commit
 
 ---
 
-## Screenshots
+## Highlights
 
-<div align="center">
-  <table>
-    <tr>
-      <td align="center" width="50%">
-        <img src="images/s-14.png" alt="Advanced Settings Panel" width="250"/>
-        <br/><em>Advanced Settings (Pro)</em>
-      </td>
-      <td align="center" width="50%">
-        <img src="images/s-15.png" alt="Commit Styles" width="250"/>
-        <br/><em>Professional Commit Styles</em>
-      </td>
-    </tr>
-    <tr>
-      <td align="center" width="50%">
-        <img src="images/s-12.png" alt="Pro Subscription" width="250"/>
-        <br/><em>Pro Subscription</em>
-      </td>
-      <td align="center" width="50%">
-        <img src="images/s-11.png" alt="API Key Encryption" width="250"/>
-        <br/><em>Encrypted API Key Storage (Pro)</em>
-      </td>
-    </tr>
-    <tr>
-      <td align="center" width="50%">
-        <img src="images/s-13.png" alt="Commit History Analysis" width="250"/>
-        <br/><em>Commit History Analysis (Pro)</em>
-      </td>
-      <td align="center" width="50%">
-        <img src="images/s-16.png" alt="Message Formatting" width="250"/>
-        <br/><em>Message Style & Token Calculator</em>
-      </td>
-    </tr>
-    <tr>
-      <td align="center" colspan="2">
-        <img src="images/s-17.png" alt="Provider Selection" width="400"/>
-        <br/><em>13 AI Providers</em>
-      </td>
-    </tr>
-  </table>
-</div>
+- **18 provider options:** OpenAI, Anthropic, NVIDIA NIM, Google Gemini, MiniMax, DeepSeek, xAI Grok, Groq, Perplexity, Z.ai, Mistral, Cohere, Hugging Face, Together AI, OpenRouter, Ollama, GitHub Copilot, and Custom API.
+- **Searchable, dynamic model selection:** Load current models from supported provider APIs and quickly filter large model catalogs.
+- **Professional commit standards:** Conventional Commits, Angular, Semantic Release, Gitmoji, Linux Kernel, jQuery, Ember.js, and more.
+- **Flexible Git workflow:** Generate from staged changes or enable Capture All Changes to include unstaged and untracked files.
+- **Local and key-free options:** Use Ollama locally or an existing GitHub Copilot subscription.
+- **Large diff support:** Token-aware processing keeps generation useful on substantial changes.
+
+## Explore GitMind
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="images/screenshots/nvidia-model-settings-automatic-recovery.png" alt="NVIDIA model settings and GitMind Pro Automatic Recovery"/>
+      <h3 align="center">Models And Automatic Recovery</h3>
+      <p align="center">Configure NVIDIA NIM and other providers, load searchable models, retry eligible temporary failures, and select a provider-scoped fallback model.</p>
+    </td>
+    <td width="50%" valign="top">
+      <img src="images/screenshots/commit-style-selection.png" alt="GitMind professional commit style selection"/>
+      <h3 align="center">Professional Commit Styles</h3>
+      <p align="center">Choose Conventional Commits, Angular, Gitmoji, Semantic Release, Ember.js, and other structured formats.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="images/screenshots/pro-security-large-diff-model-configuration.png" alt="GitMind Pro encrypted key storage, large diff handling, and advanced model configuration"/>
+      <h3 align="center">Security And Model Control</h3>
+      <p align="center">Encrypt API keys, process large diffs, and tune advanced generation parameters when you need precise control.</p>
+    </td>
+    <td width="50%" valign="top">
+      <img src="images/screenshots/commit-language-history-learning.png" alt="GitMind target commit language and commit history learning settings"/>
+      <h3 align="center">Match Your Team</h3>
+      <p align="center">Generate in your target language, control message length, and learn from existing commit history.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="images/screenshots/free-features-settings.png" alt="GitMind free feature settings"/>
+      <h3 align="center">Useful Free Features</h3>
+      <p align="center">Control verbose messages, capture all changes, custom context, diagnostics, and anonymous analytics.</p>
+    </td>
+    <td width="50%" valign="top">
+      <img src="images/screenshots/changelog-generation.png" alt="GitMind AI changelog generation settings"/>
+      <h3 align="center">AI Changelog Generation</h3>
+      <p align="center">Generate professional changelogs from Git history with version grouping and configurable commit ranges.</p>
+    </td>
+  </tr>
+</table>
 
 ---
 
