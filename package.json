@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI-Powered Commit Messages",
   "description": "Generate professional AI commit messages in VS Code with 18 provider options, searchable models, Conventional Commits, NVIDIA NIM, Ollama, Copilot, and Pro automatic recovery.",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",

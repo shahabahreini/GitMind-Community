@@ -167,17 +167,6 @@ GitMind Pro is a one-time lifetime purchase. Activation, deactivation, and curre
 - Debug logs redact sensitive values.
 - Anonymous telemetry does not include source code, diffs, prompts, commit messages, API keys, or personal information.
 
-Review the [Privacy Compliance Certificate](scripts/privacy-compliance-certificate.md) and [Telemetry Guide](scripts/COMPREHENSIVE_TELEMETRY_GUIDE.md) for details.
-
-## Documentation
-
-- [Custom API Guide](docs/custom-api-guide.md)
-- [Testing Guide](docs/TESTING_GUIDE.md)
-- [Provider Integration Checklist](docs/API-Provider-Checklist.md)
-- [Changelog Generation](docs/CHANGELOG_GENERATION.md)
-- [Version Detection Patterns](docs/VERSION_DETECTION_PATTERNS.md)
-- [Changelog](CHANGELOG.md)
-
 ## Requirements
 
 - VS Code 1.96.0 or newer
