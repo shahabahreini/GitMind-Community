@@ -17,7 +17,7 @@ This is the **primary test suite** that validates all critical paths in the exte
 ##### 1️⃣ UI Settings Structure Validation (4 tests)
 - ✅ Settings Webview static methods exist and are callable
 - ✅ SettingsManager can load default settings correctly
-- ✅ All 15 provider settings components are defined
+- ✅ All 18 provider settings components are defined
 - ✅ Settings schema is complete with all critical settings accessible
 
 **What This Validates:**
@@ -39,7 +39,7 @@ This is the **primary test suite** that validates all critical paths in the exte
 - State synchronization between webview and backend
 
 ##### 3️⃣ API Provider Integration Checkpoints (4 tests)
-- ✅ All 15 providers are configured (gemini, openai, anthropic, minimax, huggingface, ollama, mistral, cohere, together, openrouter, copilot, deepseek, grok, perplexity, custom)
+- ✅ All 18 providers are configured, including Groq, Z.ai, NVIDIA NIM, and Custom API
 - ✅ API validation detects missing keys
 - ✅ Provider-specific configuration validation (ollama URL, copilot model, etc.)
 - ✅ Error messages are actionable with troubleshooting guidance
@@ -133,7 +133,7 @@ When all tests in `criticalFeatureIntegration.test.ts` pass, you can be confiden
 - State synchronization works
 
 ✅ **API Provider Integration Works**
-- All 15 providers are configured
+- All 18 providers are configured
 - API validation catches errors
 - Error messages are helpful
 

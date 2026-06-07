@@ -58,15 +58,15 @@ src/test/
 
 ### 2. AI Providers Testing (`aiProviders.test.ts`)
 
-**Scope**: Comprehensive testing of all 13 AI provider integrations
+**Scope**: Comprehensive testing of all 18 AI provider integrations
 
 **Providers Covered**:
 
-- OpenAI (GPT-4o, GPT-3.5-turbo)
-- Anthropic (Claude-3.5-sonnet)
-- Google Gemini (Gemini-2.5-flash)
+- OpenAI
+- Anthropic
+- Google Gemini
 - DeepSeek (DeepSeek-reasoner)
-- Grok (Grok-3)
+- Grok
 - Perplexity (Sonar models)
 - Mistral AI
 - Cohere
@@ -75,6 +75,11 @@ src/test/
 - OpenRouter
 - Ollama (local models)
 - GitHub Copilot
+- MiniMax
+- Groq
+- Z.ai
+- NVIDIA hosted NIM
+- Custom API
 
 **Test Cases**:
 
@@ -306,7 +311,7 @@ The test suite includes comprehensive error simulation:
 ### Test Coverage
 
 - **Settings Management**: 100% coverage of UI and persistence
-- **AI Providers**: 100% coverage of all 13 providers
+- **AI Providers**: Coverage of all 18 provider configuration paths
 - **Extension Commands**: 100% coverage of all registered commands
 - **Git Integration**: 100% coverage of git operations and diff parsing
 - **Webview Components**: 100% coverage of UI components

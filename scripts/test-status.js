@@ -27,13 +27,13 @@ const testSuites = [
   {
     name: "AI Providers",
     file: "aiProviders.test.ts",
-    description: "13 providers, API validation, model selection",
+    description: "18 providers, API validation, model selection",
     coverage: [
-      "OpenAI/GPT-4o",
-      "Claude-3.5-sonnet",
-      "Gemini-2.5-flash",
-      "DeepSeek-reasoner",
-      "Grok-3",
+      "OpenAI",
+      "Anthropic",
+      "Google Gemini",
+      "NVIDIA NIM",
+      "Automatic Recovery",
       "Perplexity",
       "Mistral",
       "Cohere",
@@ -152,19 +152,24 @@ testSuites.forEach((suite) => {
 // Provider coverage
 console.log("\n🤖 AI Provider Coverage:");
 const providers = [
-  "OpenAI (GPT-4o, GPT-3.5-turbo)",
-  "Anthropic (Claude-3.5-sonnet)",
-  "Google Gemini (Gemini-2.5-flash)",
-  "DeepSeek (DeepSeek-reasoner)",
-  "xAI Grok (Grok-3)",
-  "Perplexity (Sonar models)",
+  "OpenAI",
+  "Anthropic",
+  "Google Gemini",
+  "DeepSeek",
+  "xAI Grok",
+  "Groq",
+  "Perplexity",
   "Mistral AI",
   "Cohere",
   "HuggingFace",
   "Together AI",
   "OpenRouter",
+  "MiniMax",
+  "Z.ai",
+  "NVIDIA hosted NIM",
   "Ollama (local)",
   "GitHub Copilot",
+  "Custom API (Pro)",
 ];
 
 providers.forEach((provider) => {
@@ -189,7 +194,7 @@ const readinessChecks = [
   },
   {
     item: "Test documentation complete",
-    status: fs.existsSync(path.join(__dirname, "../TEST_DOCUMENTATION.md")),
+    status: fs.existsSync(path.join(__dirname, "TEST_DOCUMENTATION.md")),
   },
   { item: "Settings UI tested", status: true },
   { item: "All AI providers tested", status: true },
@@ -224,4 +229,4 @@ if (allReady) {
   console.log("\n⚠️  Please address the issues above before publication.");
 }
 
-console.log("\n📚 For detailed test information, see: TEST_DOCUMENTATION.md");
+console.log("\n📚 For detailed test information, see: scripts/TEST_DOCUMENTATION.md");

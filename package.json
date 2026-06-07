@@ -1,8 +1,8 @@
 {
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI-Powered Commit Messages",
-  "description": "Generate professional commit messages in seconds using 17 AI providers, including OpenAI, Anthropic, NVIDIA, Gemini, MiniMax, DeepSeek, Grok, Groq, Perplexity, Z.ai, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, and GitHub Copilot.",
-  "version": "4.15.0",
+  "description": "Generate professional AI commit messages in VS Code with 18 provider options, searchable models, Conventional Commits, NVIDIA NIM, Ollama, Copilot, and Pro automatic recovery.",
+  "version": "5.0.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -1343,7 +1343,7 @@
           {
             "id": "gitmind.choose-provider",
             "title": "Choose your AI provider",
-            "description": "Pick from 15+ providers (OpenAI, Anthropic, Gemini, Ollama, Copilot, and more).\n[Open Settings](command:gitmind.openSettings)",
+            "description": "Choose from 17 built-in providers, including NVIDIA NIM, OpenAI, Anthropic, Gemini, Ollama, and Copilot.\n[Open Settings](command:gitmind.openSettings)",
             "media": {
               "markdown": "media/walkthroughs/choose-provider.md"
             },
@@ -1376,7 +1376,7 @@
           {
             "id": "gitmind.activate-pro",
             "title": "Activate GitMind Pro",
-            "description": "Already purchased? Activate by email or license key. New here? Grab a lifetime license.\n[Activate GitMind Pro](command:gitmind.showActivationQuickPick)\n[Buy GitMind Pro](command:gitmind.subscribe)",
+            "description": "Activate with a license key or verify your order ID and purchase email. New here? Grab a lifetime license.\n[Activate GitMind Pro](command:gitmind.showActivationQuickPick)\n[Buy GitMind Pro](command:gitmind.subscribe)",
             "media": {
               "markdown": "media/walkthroughs/activate-pro.md"
             },
@@ -1433,13 +1433,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/shahabahreini/AI-Commit-Assistant.git"
+    "url": "https://github.com/shahabahreini/Gitmind-Pro.git"
   },
   "bugs": {
-    "url": "https://github.com/shahabahreini/AI-Commit-Assistant/issues",
+    "url": "https://github.com/shahabahreini/Gitmind-Pro/issues",
     "email": "shahab.ahreini@gmail.com"
   },
-  "homepage": "https://github.com/shahabahreini/AI-Commit-Assistant#readme",
+  "homepage": "https://github.com/shahabahreini/Gitmind-Pro#readme",
   "keywords": [
     "git",
     "commit",
@@ -1455,20 +1455,20 @@
     "openai",
     "claude",
     "anthropic",
-    "gpt-4o",
-    "gpt-4",
-    "o3",
-    "claude-opus-4",
-    "claude-sonnet-4",
-    "gemini-2-5-pro",
-    "gemini-2-5-flash",
+    "ai-commit-message-generator",
+    "automatic-retry",
+    "model-fallback",
+    "searchable-models",
+    "nvidia",
+    "nvidia-nim",
     "deepseek",
     "deepseek-chat",
     "deepseek-reasoner",
     "grok",
-    "grok-3",
+    "groq",
     "perplexity",
-    "sonar-pro",
+    "z-ai",
+    "minimax",
     "mistral",
     "mistral-ai",
     "cohere",
@@ -1477,9 +1477,7 @@
     "local-ai",
     "together-ai",
     "openrouter",
-    "llama",
-    "phi4",
-    "code-llama",
+    "custom-api",
     "free-tier",
     "offline-ai",
     "privacy",
@@ -1520,17 +1518,17 @@
       "description": "Rating"
     },
     {
-      "url": "https://img.shields.io/github/stars/shahabahreini/AI-Commit-Assistant?style=for-the-badge&logo=github&color=yellow",
-      "href": "https://github.com/shahabahreini/AI-Commit-Assistant",
+      "url": "https://img.shields.io/github/stars/shahabahreini/Gitmind-Pro?style=for-the-badge&logo=github&color=yellow",
+      "href": "https://github.com/shahabahreini/Gitmind-Pro",
       "description": "GitHub Stars"
     },
     {
-      "url": "https://img.shields.io/badge/AI_Providers-14-purple?style=for-the-badge&logo=openai",
+      "url": "https://img.shields.io/badge/Provider_Options-18-purple?style=for-the-badge&logo=openai",
       "href": "https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant",
       "description": "Supported AI Providers"
     },
     {
-      "url": "https://img.shields.io/badge/Models-50+-brightgreen?style=for-the-badge&logo=checkmarx",
+      "url": "https://img.shields.io/badge/Models-Dynamic-brightgreen?style=for-the-badge&logo=checkmarx",
       "href": "https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant",
       "description": "Supported AI Models"
     },

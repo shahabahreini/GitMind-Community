@@ -1,371 +1,137 @@
-# GitMind: AI-Powered Commit Messages
+# GitMind: AI Commit Message Generator for VS Code
 
-Stop writing commit messages manually. GitMind analyzes your code changes and generates meaningful commits in seconds using 14 AI providers and 50+ models.
-
-## Why GitMind?
-
-**One Extension, 16+ AI Providers**
-Choose from OpenAI, Anthropic, MiniMax, Google Gemini, DeepSeek, Grok, Groq, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, or GitHub Copilot. Switch anytime.
+GitMind analyzes your Git diff and generates clear, professional commit messages inside VS Code. Choose from 17 built-in AI providers, run locally with Ollama, reuse GitHub Copilot, or connect a custom OpenAI-compatible API with GitMind Pro.
 
 <div align="center">
-<img src="images/all_providers_GitMind.jpg" alt="GitMind Support 15+ AI API Providers" width="80%"/>
+  <img src="images/logo.png" alt="GitMind logo" width="160"/>
+  <br/><br/>
+  <a href="https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant">Install from the VS Code Marketplace</a>
 </div>
 
-**Zero Setup Options Available**
+## Highlights
 
-- GitHub Copilot: Works instantly if you have an active subscription
-- Ollama: Free, private, offline AI running locally
-- Google Gemini: Industry-leading free tier (15 RPM, 2M context)
+- **18 provider options:** OpenAI, Anthropic, NVIDIA NIM, Google Gemini, MiniMax, DeepSeek, xAI Grok, Groq, Perplexity, Z.ai, Mistral, Cohere, Hugging Face, Together AI, OpenRouter, Ollama, GitHub Copilot, and Custom API.
+- **Searchable, dynamic model selection:** Load current models from supported provider APIs and quickly filter large model catalogs.
+- **Professional commit standards:** Conventional Commits, Angular, Semantic Release, Gitmoji, Linux Kernel, jQuery, Ember.js, and more.
+- **Flexible Git workflow:** Generate from staged changes or enable Capture All Changes to include unstaged and untracked files.
+- **Local and key-free options:** Use Ollama locally or an existing GitHub Copilot subscription.
+- **Large diff support:** Token-aware processing keeps generation useful on substantial changes.
 
-**Professional Standards Built In**
-Generate commits following Angular, Conventional Commits, Linux Kernel, jQuery, Ember.js, Semantic Release, and more. No configuration required.
+## Quick Start
 
-**Handles Large Projects**
-Adaptive chunking processes massive diffs without hitting token limits. Tested with 10MB+ repositories.
-
----
-
-## Screenshots
-
-<div align="center">
-  <table>
-    <tr>
-      <td align="center" width="50%">
-        <img src="images/s-14.png" alt="GitMind AI Commit Generation" width="250"/>
-        <br/>
-        <em>Advanced Settings Panel (Pro Users)</em>
-      </td>
-      <td align="center" width="50%">
-        <img src="images/s-15.png" alt="Git Integration" width="250"/>
-        <br/>
-        <em>Professional Commit Styles</em>
-      </td>
-    </tr>
-    <tr>
-      <td align="center" width="50%">
-        <img src="images/s-12.png" alt="Settings Configuration" width="250"/>
-        <br/>
-        <em>Lifetime Pro Subscription</em>
-      </td>
-      <td align="center" width="50%">
-        <img src="images/s-11.png" alt="API Keys Encryption Feature" width="250"/>
-        <br/>
-        <em>API Key Encryption (Pro Users)</em>
-      </td>
-    </tr>
-    <tr>
-      <td align="center" width="50%">
-        <img src="images/s-13.png" alt="Multi-Provider Support" width="250"/>
-        <br/>
-        <em>Commit History Analysis (Pro Users)</em>
-      </td>
-      <td align="center" width="50%">
-        <img src="images/s-16.png" alt="Model Selection" width="250"/>
-        <br/>
-        <em>Short/Verbose Message Style, Customize Prompt, Token Calculator</em>
-      </td>
-    </tr>
-    <tr>
-      <td align="center" colspan="2">
-        <img src="images/s-17.png" alt="Diagnostics Dashboard" width="400"/>
-        <br/>
-        <em>UI Settings with 13 AI Provider Support</em>
-      </td>
-    </tr>
-  </table>
-</div>
-
----
-
-## Installation
-
-Install from [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant)
+1. Install GitMind from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant).
+2. Open **GitMind Settings** and select an AI provider.
+3. Add the provider API key when required, then load or search for a model.
+4. Stage changes, or enable **Capture All Changes**.
+5. Click the GitMind icon in Source Control or run **Generate GitMind Commit Message**.
 
 ```bash
 ext install ShahabBahreiniJangjoo.ai-commit-assistant
 ```
 
----
+## Supported Providers
 
-## Quick Start
+| Provider | Setup | Model selection |
+| --- | --- | --- |
+| Google Gemini | API key | Searchable Gemini models |
+| Hugging Face | Access token | Hosted model ID |
+| Ollama | Local server, no API key | Local model discovery |
+| Mistral AI | API key | Dynamic model discovery |
+| Cohere | API key | Dynamic model discovery |
+| OpenAI | API key | Dynamic model discovery |
+| Together AI | API key | Dynamic model discovery |
+| OpenRouter | API key | Dynamic multi-provider catalog |
+| Anthropic | API key | Dynamic model discovery |
+| MiniMax | API key | Dynamic model discovery |
+| GitHub Copilot | Active Copilot subscription | Available Copilot models |
+| DeepSeek | API key | Chat and reasoning models |
+| xAI Grok | API key | Dynamic model discovery |
+| Groq | API key | Dynamic model discovery |
+| Perplexity | API key | Dynamic model discovery |
+| Z.ai | API key | GLM model selection |
+| NVIDIA hosted NIM | API key from [NVIDIA Build](https://build.nvidia.com/models) | Dynamic NIM model discovery |
+| Custom API | GitMind Pro | OpenAI-compatible endpoint and model |
 
-### 1. Pick Your AI Provider
+Provider catalogs change frequently. GitMind loads current model lists where the provider supports discovery and falls back to known compatible models when necessary.
 
-| Provider           | Best For                                  | Free Tier | Setup Time |
-| ------------------ | ----------------------------------------- | --------- | ---------- |
-| **GitHub Copilot** | Zero setup, existing subscribers          | No        | 0 min      |
-| **Google Gemini**  | Best free tier (15 RPM, 2M context)       | Yes       | 2 min      |
-| **Ollama**         | Complete privacy, offline usage           | Unlimited | 5 min      |
-| **DeepSeek**       | Advanced reasoning, cost-effective        | 50 RPM    | 2 min      |
-| **OpenAI**         | Industry standard, multimodal             | No        | 2 min      |
-| **Anthropic**      | Superior reasoning, long context          | No        | 2 min      |
-| **MiniMax**        | Fast text generation, Anthropic-style API | No        | 2 min      |
-| **Grok**           | Real-time information, X.AI models        | No        | 2 min      |
-| **Groq**           | Ultra-fast inference, Llama 3 models      | No        | 2 min      |
-| **Perplexity**     | Web search capabilities, real-time data   | No        | 2 min      |
-| **Mistral**        | European AI, multilingual support         | No        | 2 min      |
-| **Z.ai (GLM)**     | Latest GLM models, long context           | Trial     | 2 min      |
-| **Cohere**         | Enterprise-grade, multilingual            | Trial     | 2 min      |
-| **Together AI**    | Open-source models, cost-effective        | Trial     | 2 min      |
-| **OpenRouter**     | Multi-model access, unified API           | Trial     | 2 min      |
-| **Hugging Face**   | Custom models, research access            | Trial     | 2 min      |
+## Free And Pro
 
-### 2. Configure
+| Feature | Free | Pro |
+| --- | --- | --- |
+| Built-in AI providers | 17 | 17 |
+| Custom API provider | Locked | Included |
+| Searchable provider and model pickers | Included | Included |
+| Basic and Conventional commit styles | Included | Included |
+| Professional commit styles | Limited | Included |
+| Emoji Enhancement | Visible, locked | Included |
+| Automatic Recovery | Locked | Retry once and optionally switch models once |
+| API key storage | VS Code settings | Encrypted SecretStorage |
+| Target commit language | Default | Searchable language selection |
+| Advanced model parameters | Automatic | Custom temperature, top-p, top-k, and token limits |
+| Commit history learning | Locked | Included |
+| Changelog generation | Locked | Included |
 
-1. Open VS Code Source Control panel
-2. Click settings icon in GitMind section
-3. Select provider
-4. Add API key (not needed for GitHub Copilot or Ollama)
-5. Choose model
+### Automatic Recovery
 
-### 3. Generate
+GitMind Pro can recover from selected generation failures without creating retry loops:
 
-**Option A: Traditional Workflow**
+- Retries once for timeouts and eligible temporary Gemini service failures.
+- Can switch once to a configured fallback model when the selected model reports a model-specific limit.
+- Does not retry invalid API keys, account quota/rate limits, permission errors, or unrelated failures.
+- Shows a clear notification explaining the failure, recovery action, and final result.
 
-1. Stage changes
-2. Click AI button in Source Control
-3. Review generated message
-4. Commit
+The fallback model picker is searchable and scoped to the currently selected provider.
 
-**Option B: Capture All Changes** (no staging needed)
+## NVIDIA NIM
 
-1. Enable "Capture All Changes" in settings
-2. Make changes (no need to stage)
-3. Click AI button in Source Control
-4. Review generated message
-5. Commit
+GitMind supports NVIDIA hosted NIM through its OpenAI-compatible LLM API.
 
----
+1. Create an API key at [NVIDIA Build](https://build.nvidia.com/models).
+2. Select **NVIDIA** in Model Settings.
+3. Add the key and load the available hosted NIM models.
+4. Search for a model and save your settings.
 
-## AI Provider Support
+See the [NVIDIA NIM LLM API reference](https://docs.api.nvidia.com/nim/reference/llm-apis) for provider details.
 
-### All Supported Providers
+## GitMind Pro Activation
 
-| Provider           | Featured Models                    | Context | API Setup                                                     |
-| ------------------ | ---------------------------------- | ------- | ------------------------------------------------------------- |
-| **GitHub Copilot** | gpt-4o, claude-3.5-sonnet, o3      | 128k    | [VS Code Copilot](https://copilot.github.com/)                |
-| **Google Gemini**  | 2.5-flash, 2.5-pro, 2.0-flash      | 2M      | [AI Studio](https://ai.google.dev/gemini-api/docs/api-key)    |
-| **Grok (X.ai)**    | grok-3, grok-3-fast, grok-3-mini               | 128k    | [X.ai Console](https://console.x.ai/)                         |
-| **Groq**           | llama-3.3-70b, llama-3.1-8b, deepseek-r1  | 128k    | [Groq Cloud](https://console.groq.com/)                       |
-| **DeepSeek**       | reasoner, chat                                 | 128k    | [DeepSeek Platform](https://platform.deepseek.com/)           |
-| **Perplexity**     | sonar-pro, sonar-reasoning, sonar  | 127k    | [Perplexity Settings](https://www.perplexity.ai/settings/api) |
-| **Mistral AI**     | large-latest, medium, small        | 128k    | [Mistral Console](https://console.mistral.ai/)                |
-| **Ollama**         | deepseek-r1, llama3.3, phi4, qwen3 | 128k    | [Ollama Download](https://ollama.com/download)                |
-| **OpenAI**         | gpt-4o, gpt-4.1, o3, o4-mini       | 128k    | [OpenAI Platform](https://platform.openai.com/signup)         |
-| **Anthropic**      | claude-opus-4, sonnet-4, haiku     | 200k    | [Anthropic Console](https://console.anthropic.com/)           |
-| **MiniMax**        | MiniMax-M2, MiniMax-M2-Stable      | 128k    | [MiniMax Platform](https://platform.minimax.io/docs)          |
-| **Together AI**    | Llama-3.3-70B, Mixtral-8x7B        | 128k    | [Together Platform](https://api.together.ai/)                 |
-| **Hugging Face**   | Mistral-7B, Zephyr-7B, OpenHermes  | 32k     | [HF Token](https://huggingface.co/settings/tokens)            |
-| **Cohere**         | command-r, command-a-03-2025       | 128k    | [Cohere Dashboard](https://dashboard.cohere.ai/)              |
-| **Z.ai (GLM)**     | 4.7, 4.6, 4.6V-Flash, 4.5-Flash    | 128k    | [Z.ai Console](https://z.ai/)                                 |
-| **OpenRouter**     | Multiple providers & models        | Varies  | [OpenRouter Keys](https://openrouter.ai/keys)                 |
+Open **GitMind Settings > Pro** and activate using either:
 
----
+- The license key from your purchase receipt.
+- Your order ID and purchase email for order verification.
 
-## Free vs Pro
+GitMind Pro is a one-time lifetime purchase. Activation, deactivation, and current Pro status are available directly in the redesigned settings panel.
 
-| Feature                            | Free                | Pro                                     |
-| ---------------------------------- | ------------------- | --------------------------------------- |
-| **AI Providers**                   | 15 providers        | 16 providers (includes Custom API)      |
-| **Models**                         | 60+ models          | 60+ models                              |
-| **Commit Styles**                  | Basic, Conventional | 11 professional styles                  |
-| **Git Integration**                | Yes                 | Yes                                     |
-| **Multi-Repository Support**       | Yes                 | Yes                                     |
-| **Diagnostics & Token Estimation** | Yes                 | Yes                                     |
-| **Verbose/Concise Messages**       | Yes                 | Yes                                     |
-| **Prompt Customization**           | Yes                 | Yes + Save Last Prompt                  |
-| **API Key Storage**                | Plain text          | Encrypted (SecretStorage)               |
-| **Large Diff Processing**          | Limited             | Token-aware chunking                    |
-| **Target Commit Language**         | ✗                   | ✓ 60 languages with search              |
-| **Commit Body Lines**              | Fixed (5 lines)     | Configurable (3-15)                     |
-| **Summary Length**                 | Fixed               | Configurable (50-100 chars)             |
-| **Advanced Model Parameters**      | ✗                   | ✓ Temperature, top-p, top-k, max tokens |
-| **Commit History Analysis**        | ✗                   | ✓                                       |
-| **Changelog Generation**           | ✗                   | ✓                                       |
-| **Gitmoji Support**                | ✗                   | ✓                                       |
-| **Custom API Endpoints**           | ✗                   | ✓                                       |
-| **Multi-Device License**           | Single device       | Multiple devices                        |
+## Privacy And Security
 
----
+- GitMind sends the selected Git diff and prompt to the provider you configure.
+- Ollama can keep generation local.
+- GitMind Pro can store provider keys in VS Code SecretStorage.
+- Debug logs redact sensitive values.
+- Anonymous telemetry does not include source code, diffs, prompts, commit messages, API keys, or personal information.
 
-## Features
+Review the [Privacy Compliance Certificate](scripts/privacy-compliance-certificate.md) and [Telemetry Guide](scripts/COMPREHENSIVE_TELEMETRY_GUIDE.md) for details.
 
-### Core (Free)
+## Documentation
 
-**Multi-Provider AI**
-Access 16 providers with unified configuration: OpenAI, Anthropic, MiniMax, Google Gemini, DeepSeek, Grok, Groq, Perplexity, Mistral, Cohere, HuggingFace, Together AI, OpenRouter, Ollama, GitHub Copilot, Z.ai. Switch providers instantly.
-
-**Basic Commit Style**
-Simple, straightforward commit messages without prefixes or conventions.
-
-**Smart Diff Analysis**
-Automatic staging detection, binary file handling, merge conflict awareness.
-
-**Flexible Change Capture**
-Choose between two workflows:
-
-- **Traditional** (default): Stage changes first, then generate commit message
-- **Capture All Changes**: Enable to analyze all changes (staged + unstaged + untracked) automatically without staging prompt
-
-**Repository Integration**
-Native VS Code SCM panel. Multi-repository workspace support with independent buttons per repository.
-
-**Diagnostics**
-Token estimation, provider/model summary, request preview.
-
-**Debug Logging**
-Optional debug logs for provider requests and responses with sensitive data redaction.
-
-### Pro Features
-
-**Target Commit Language (60 Languages)**
-Generate commits in any language with professional developer terminology:
-
-- **European**: English, Spanish, French, German, Italian, Portuguese, Russian, Polish, Dutch, Swedish, Danish, Norwegian, Finnish, Czech, Romanian, Hungarian, Bulgarian, Croatian, Slovak, Lithuanian, Latvian, Estonian, Greek, Albanian, Armenian, Georgian
-- **Asian**: Chinese, Japanese, Korean, Hindi, Bengali, Urdu, Marathi, Telugu, Tamil, Punjabi, Kannada, Gujarati, Bhojpuri, Vietnamese, Thai, Turkish, Persian, Javanese, Tagalog, Indonesian, Malay, Kazakh, Uzbek, Azerbaijani
-- **African**: Arabic, Amharic, Hausa, Yoruba, Igbo, Oromo, Somali
-- **Searchable dropdown**: Click the language field and start typing to instantly filter (e.g., type "span" for Spanish, "bengali" for Bengali)
-- AI uses widely-accepted technical terminology in the selected language
-- Maintains commit message format and structure in the target language
-- Perfect for international development teams and localized projects
-
-**Professional Commit Styles**
-11 industry-standard formats:
-
-- **Conventional Commits**: Semantic versioning support with types and scopes (`feat(auth): add login`)
-- **Conventional Commits (No Scope)**: Types without scopes for simpler commits (`feat: add OAuth2 integration`)
-- **Angular**: Enterprise-grade with strict conventions
-- **Ember.js**: Tag-based semantic categorization
-- **EmojiGit**: Visual semantic commits with custom emojis
-- **Gitmoji**: Official gitmoji.dev specification
-- **Semantic Release**: Automated release-optimized commits
-- **Commitizen**: Interactive guided commits with validation
-- **Karma (Google)**: Google's strict enterprise convention
-- **Linux Kernel**: Traditional kernel development convention
-- **jQuery**: JavaScript project convention with issue tracking
-
-**Changelog Generation**
-AI-powered changelog from git history with:
-
-- 3-tier version detection (git tags, commit messages, package.json)
-- Precise version boundary filtering (no commit bleed-over between versions)
-- Complete version history (when tags detected, ALL commits retrieved - no artificial limits)
-- Intelligent duplicate detection and conflict resolution
-- Overwrite control (preserve existing entries or regenerate them)
-- Existing changelog policy awareness (format, categories, bullet style preserved)
-- Keep a Changelog specification compliance
-- Professional documentation standards (no emojis, factual tone)
-- Configurable commit limit (10-2500, default 100) - only for repositories without tags
-- Group by version tags option
-- Create new, update existing, or preview modes
-
-**Commit History Analysis**
-Learn from repository patterns:
-
-- Analyzes 10-500 past commits (default 50)
-- Optional author and date information
-- AI-powered pattern recognition
-- Markdown report generation
-- Configurable analysis depth
-
-**Large Diff Processing**
-Token-aware adaptive chunking with:
-
-- Hunk-aware intelligent splitting
-- Automatic split/merge for massive diffs
-- Configurable concurrency (1-8 workers, default 3)
-- Retry logic with exponential backoff (0-5 retries, default 2)
-- Retryable error detection (rate limits, timeouts, network errors)
-- Progress reporting with real-time updates
-
-**API Key Encryption**
-Secure storage using VS Code SecretStorage API:
-
-- Keys encrypted at rest
-- Inaccessible to other extensions
-- Automatic migration from plaintext
-- Pro-only feature
-
-**Custom API Provider**
-Connect to private cloud AI models or custom LLM endpoints:
-
-- Support for any REST API with text generation capabilities
-- Multiple authentication methods (Bearer token, API Key, Basic Auth, or none)
-- Configurable request/response JSON templates with placeholders
-- Built-in connection testing and validation
-- Secure token storage with encryption support
-- Comprehensive [setup guide](docs/custom-api-guide.md) with examples
-
-**Advanced Customization**
-
-- **Target Commit Language**: Generate commit messages in 60 languages (English, Spanish, French, German, Italian, Portuguese, Russian, Chinese, Japanese, Korean, Arabic, Hindi, Turkish, Dutch, Polish, Vietnamese, Thai, Swedish, Danish, Norwegian, Finnish, Greek, Hebrew, Persian, Ukrainian, Czech, Romanian, Hungarian, Indonesian, Malay)
-  - AI uses professional developer terminology widely accepted in each language
-  - Maintains commit format and structure in the target language
-  - Perfect for international teams and localized projects
-- Custom commit body line limits (3-15 lines)
-- Custom summary length limits (50-100 characters)
-- Save/reuse custom prompts
-- Gitmoji support with placement control (summary, body, or both)
-- Custom emoji mappings for commit types
-
-**Multi-Device License**
-Use across multiple development machines with subscription-based access.
-
----
-
-## Configuration
-
-Access via Command Palette: `GitMind: Open Settings`
-
-**Provider Settings**
-
-- AI provider selection
-- Secure API key configuration
-- Model selection
-
-**Message Formatting**
-
-- Commit style (11 professional formats in Pro, including Conventional Commits No Scope)
-- Verbosity control (verbose/concise)
-- Capture all changes (staged + unstaged + untracked)
-- Custom scope and type
-
-**Pro Settings**
-
-- Encrypted API key storage
-- Commit history analysis
-- Advanced model parameters (temperature, top-p, top-k, max tokens)
-- Custom body/summary limits
-- Gitmoji configuration
-- Changelog generation with version conflict resolution
-
----
-
-## Privacy
-
-GitMind collects anonymous usage data (provider statistics, error reports, usage analytics). No code content, file names, personal information, API keys, or repository details are collected.
-
-**Disable telemetry:**
-
-1. Open VS Code Settings (Ctrl/Cmd + ,)
-2. Search "telemetry"
-3. Set "Telemetry: Telemetry Level" to "off"
-
----
+- [Custom API Guide](docs/custom-api-guide.md)
+- [Testing Guide](docs/TESTING_GUIDE.md)
+- [Provider Integration Checklist](docs/API-Provider-Checklist.md)
+- [Changelog Generation](docs/CHANGELOG_GENERATION.md)
+- [Version Detection Patterns](docs/VERSION_DETECTION_PATTERNS.md)
+- [Changelog](CHANGELOG.md)
 
 ## Requirements
 
-- Visual Studio Code ^1.100.0
-- API key from chosen provider OR Ollama for local deployment
-
----
+- VS Code 1.96.0 or newer
+- Git repository
+- API key for the selected cloud provider, unless using Ollama or GitHub Copilot
 
 ## Support
 
-- Report issues: [GitHub Issues](https://github.com/shahabahreini/AI-Commit-Assistant/issues)
-
----
+- [Report an issue](https://github.com/shahabahreini/Gitmind-Pro/issues)
+- [Sponsor development](https://github.com/sponsors/shahabahreini)
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details
+[MIT](LICENSE.md)

@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v5.0.0 - 2026-06-07
+
+### New Features
+
+- Added NVIDIA hosted NIM as a built-in provider, including API validation, dynamic model discovery, searchable model selection, and theme-aware provider branding.
+- Added GitMind Pro Automatic Recovery:
+  - Retry once for timeouts and eligible temporary Gemini service failures.
+  - Switch once to a configured fallback model when the selected model reports a model-specific limit.
+  - Avoid retries for invalid credentials, account limits, permissions, and unrelated failures.
+- Added searchable provider-scoped fallback model selection.
+- Added visible Pro locking for Emoji Enhancement and other premium controls.
+
+### Enhanced
+
+- Redesigned Model Settings and Automatic Recovery with a compact layout, grouped provider status, clearer loading states, and consistent searchable controls.
+- Redesigned GitMind Pro activation, purchase, and subscription status experiences.
+- Standardized dynamic model loading and refreshed provider model defaults.
+- Improved feature-lock messaging and Pro command loading feedback.
+
+### Removed
+
+- Removed email-only Pro activation. Existing purchases can be activated with a license key or verified using order ID and purchase email.
+
 
 ## v4.14.0 - 2026-05-13
 

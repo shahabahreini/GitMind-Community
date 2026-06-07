@@ -77,7 +77,7 @@ try {
 console.log("\n🚀 Test validation completed successfully!");
 console.log("\nTest Coverage Summary:");
 console.log("- Settings UI: Persistence, validation, provider switching");
-console.log("- AI Providers: 13 providers, API validation, model selection");
+console.log("- AI Providers: 18 providers, API validation, model selection");
 console.log("- Extension Commands: All commands, error handling, status");
 console.log("- Git Integration: Diff parsing, commit messages, validation");
 console.log("- Webview Components: Settings panel, onboarding, messaging");
