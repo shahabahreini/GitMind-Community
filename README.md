@@ -80,25 +80,22 @@ or Quick Open (`Ctrl+P` / `Cmd+P`): `ext install ShahabBahreiniJangjoo.ai-commit
 
 ---
 
-## Features
+# Free And Pro
 
-|                                                                          | Free | Pro |
-| ------------------------------------------------------------------------ | :--: | :-: |
-| 13 AI providers, 60+ models                                              |  ✓   |  ✓  |
-| Conventional Commits standard                                            |  ✓   |  ✓  |
-| Verbose / concise message toggle                                         |  ✓   |  ✓  |
-| Custom prompt context                                                    |  ✓   |  ✓  |
-| Diagnostics & token estimation                                           |  ✓   |  ✓  |
-| Local inference via Ollama                                               |  ✓   |  ✓  |
-| Multi-repository workspace support                                       |  ✓   |  ✓  |
-| 11 professional commit styles (Angular, Gitmoji, Linux Kernel, and more) |      |  ✓  |
-| Changelog generation from git history                                    |      |  ✓  |
-| Commit history analysis & quality report                                 |      |  ✓  |
-| Encrypted API key storage                                                |      |  ✓  |
-| Custom API endpoints (private clouds, enterprise)                        |      |  ✓  |
-| Advanced model parameters (temperature, top-p, top-k)                    |      |  ✓  |
-| Commit message output in 60+ languages                                   |      |  ✓  |
-| Multi-device license                                                     |      |  ✓  |
+| Feature                               | Free             | Pro                                                |
+| ------------------------------------- | ---------------- | -------------------------------------------------- |
+| Built-in AI providers                 | 17               | 17                                                 |
+| Custom API provider                   | Locked           | Included                                           |
+| Searchable provider and model pickers | Included         | Included                                           |
+| Basic and Conventional commit styles  | Included         | Included                                           |
+| Professional commit styles            | Limited          | Included                                           |
+| Emoji Enhancement                     | Visible, locked  | Included                                           |
+| Automatic Recovery                    | Locked           | Retry once and optionally switch models once       |
+| API key storage                       | VS Code settings | Encrypted SecretStorage                            |
+| Target commit language                | Default          | Searchable language selection                      |
+| Advanced model parameters             | Automatic        | Custom temperature, top-p, top-k, and token limits |
+| Commit history learning               | Locked           | Included                                           |
+| Changelog generation                  | Locked           | Included                                           |
 
 ## Supported AI Providers
 
