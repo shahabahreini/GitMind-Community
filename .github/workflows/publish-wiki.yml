@@ -1,0 +1,73 @@
+name: Publish Wiki
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/handbook/**"
+      - "docs/reference/**"
+      - "wiki/**"
+      - "scripts/sync-wiki.mjs"
+      - "scripts/validate-docs.mjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/publish-wiki.yml"
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish after validation
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-wiki
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate Wiki
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: npm install --no-audit --no-fund
+      - run: npm run docs:validate
+      - name: Validate issue forms and workflow YAML
+        run: |
+          ruby -e 'require "yaml"; Dir[".github/ISSUE_TEMPLATE/*.{yml,yaml}", ".github/workflows/*.{yml,yaml}"].each { |file| YAML.load_file(file); puts "valid #{file}" }'
+
+  publish:
+    name: Publish Wiki
+    needs: validate
+    if: github.event_name == 'push' || inputs.publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Require Wiki push token
+        env:
+          WIKI_PUSH_TOKEN: ${{ secrets.WIKI_PUSH_TOKEN }}
+        run: test -n "$WIKI_PUSH_TOKEN"
+      - name: Clone initialized Wiki repository
+        env:
+          WIKI_PUSH_TOKEN: ${{ secrets.WIKI_PUSH_TOKEN }}
+        run: git clone "https://x-access-token:${WIKI_PUSH_TOKEN}@github.com/shahabahreini/AI-Commit-Assistant.wiki.git" wiki-repository
+      - name: Synchronize Wiki source
+        run: rsync -av --delete --exclude=.git/ wiki/ wiki-repository/
+      - name: Commit and push changed Wiki content
+        working-directory: wiki-repository
+        run: |
+          if git diff --quiet && git diff --cached --quiet && test -z "$(git ls-files --others --exclude-standard)"; then
+            echo "Wiki is already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          git commit -m "docs: publish GitMind Wiki"
+          git push

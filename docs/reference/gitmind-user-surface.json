@@ -1,0 +1,1425 @@
+{
+  "schemaVersion": 1,
+  "product": {
+    "name": "GitMind",
+    "version": "5.0.2",
+    "auditDate": "2026-06-07",
+    "source": "ai-commit-assistant-5.0.2.vsix",
+    "minimumVSCode": "^1.96.0"
+  },
+  "counts": {
+    "providerChoices": 18,
+    "builtInProviders": 17,
+    "settingsRegistered": 97,
+    "settingsDocumented": 85,
+    "commandsRegistered": 43,
+    "publicCommands": 34,
+    "commitStyles": 12,
+    "primarySettingsTabs": 5
+  },
+  "providers": [
+    {
+      "id": "gemini",
+      "name": "Google Gemini",
+      "availability": "Free",
+      "authentication": "API key",
+      "setupUrl": "https://aistudio.google.com/app/apikey",
+      "defaultModel": "gemini-3.1-flash",
+      "fields": [
+        "gitmind.gemini.apiKey",
+        "gitmind.gemini.model"
+      ],
+      "modelDiscovery": true
+    },
+    {
+      "id": "huggingface",
+      "name": "Hugging Face",
+      "availability": "Free",
+      "authentication": "API key",
+      "setupUrl": "https://huggingface.co/settings/tokens",
+      "defaultModel": "mistralai/Mistral-7B-Instruct-v0.3",
+      "fields": [
+        "gitmind.huggingface.apiKey",
+        "gitmind.huggingface.model"
+      ],
+      "modelDiscovery": true
+    },
+    {
+      "id": "ollama",
+      "name": "Ollama",
+      "availability": "Free",
+      "authentication": "Local server",
+      "setupUrl": "https://ollama.com/library",
+      "defaultModel": "phi4",
+      "fields": [
+        "gitmind.ollama.url",
+        "gitmind.ollama.model"
+      ],
+      "modelDiscovery": true
+    },
+    {
+      "id": "mistral",
+      "name": "Mistral AI",
+      "availability": "Free",
+      "authentication": "API key",
+      "setupUrl": "https://console.mistral.ai/",
+      "defaultModel": "mistral-small-4",
+      "fields": [
+        "gitmind.mistral.apiKey",
+        "gitmind.mistral.model"
+      ],
+      "modelDiscovery": true
+    },
+    {
+      "id": "cohere",
+      "name": "Cohere",
+      "availability": "Free",
+      "authentication": "API key",
+      "setupUrl": "https://dashboard.cohere.com/api-keys",
+      "defaultModel": "command-a",
+      "fields": [
+        "gitmind.cohere.apiKey",
+        "gitmind.cohere.model"
+      ],
+      "modelDiscovery": true
+    },
+    {
+      "id": "openai",
+      "name": "OpenAI",
+      "availability": "Free",
+      "authentication": "API key",
+      "setupUrl": "https://platform.openai.com/api-keys",
+      "defaultModel": "gpt-5.5-instant",
+      "fields": [
+        "gitmind.openai.apiKey",
+        "gitmind.openai.model"
+      ],
+      "modelDiscovery": true
+    },
+    {
+      "id": "together",
+      "name": "Together AI",
+      "availability": "Free",
+      "authentication": "API key",
+      "setupUrl": "https://api.together.xyz/settings/api-keys",
+      "defaultModel": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+      "fields": [
+        "gitmind.together.apiKey",
+        "gitmind.together.model"
+      ],
+      "modelDiscovery": true
+    },
+    {
+      "id": "openrouter",
+      "name": "OpenRouter",
+      "availability": "Free",
+      "authentication": "API key",
+      "setupUrl": "https://openrouter.ai/keys",
+      "defaultModel": "google/gemma-3-27b-it:free",
+      "fields": [
+        "gitmind.openrouter.apiKey",
+        "gitmind.openrouter.model"
+      ],
+      "modelDiscovery": true
+    },
+    {
+      "id": "anthropic",
+      "name": "Anthropic",
+      "availability": "Free",
+      "authentication": "API key",
+      "setupUrl": "https://console.anthropic.com/",
+      "defaultModel": "claude-sonnet-4.6",
+      "fields": [
+        "gitmind.anthropic.apiKey",
+        "gitmind.anthropic.model"
+      ],
+      "modelDiscovery": true
+    },
+    {
+      "id": "minimax",
+      "name": "MiniMax",
+      "availability": "Free",
+      "authentication": "API key",
+      "setupUrl": "https://platform.minimax.io/",
+      "defaultModel": "MiniMax-M2.7",
+      "fields": [
+        "gitmind.minimax.apiKey",
+        "gitmind.minimax.model"
+      ],
+      "modelDiscovery": true
+    },
+    {
+      "id": "copilot",
+      "name": "GitHub Copilot",
+      "availability": "Free",
+      "authentication": "GitHub Copilot sign-in",
+      "setupUrl": null,
+      "defaultModel": "auto",
+      "fields": [
+        "gitmind.copilot.model"
+      ],
+      "modelDiscovery": true
+    },
+    {
+      "id": "deepseek",
+      "name": "DeepSeek",
+      "availability": "Free",
+      "authentication": "API key",
+      "setupUrl": "https://platform.deepseek.com/api_keys",
+      "defaultModel": "deepseek-v4-flash",
+      "fields": [
+        "gitmind.deepseek.apiKey",
+        "gitmind.deepseek.model"
+      ],
+      "modelDiscovery": true
+    },
+    {
+      "id": "grok",
+      "name": "xAI Grok",
+      "availability": "Free",
+      "authentication": "API key",
+      "setupUrl": "https://console.x.ai/",
+      "defaultModel": "grok-4.3",
+      "fields": [
+        "gitmind.grok.apiKey",
+        "gitmind.grok.model"
+      ],
+      "modelDiscovery": true
+    },
+    {
+      "id": "groq",
+      "name": "Groq",
+      "availability": "Free",
+      "authentication": "API key",
+      "setupUrl": "https://console.groq.com/keys",
+      "defaultModel": "meta-llama/llama-4-scout-17b-16e-instruct",
+      "fields": [
+        "gitmind.groq.apiKey",
+        "gitmind.groq.model"
+      ],
+      "modelDiscovery": true
+    },
+    {
+      "id": "perplexity",
+      "name": "Perplexity",
+      "availability": "Free",
+      "authentication": "API key",
+      "setupUrl": "https://www.perplexity.ai/settings/api",
+      "defaultModel": "gpt-5.5-computer",
+      "fields": [
+        "gitmind.perplexity.apiKey",
+        "gitmind.perplexity.model"
+      ],
+      "modelDiscovery": true
+    },
+    {
+      "id": "zai",
+      "name": "Z.ai",
+      "availability": "Free",
+      "authentication": "API key",
+      "setupUrl": "https://z.ai/",
+      "defaultModel": "glm-5.1",
+      "fields": [
+        "gitmind.zai.apiKey",
+        "gitmind.zai.model",
+        "gitmind.zai.endpoint"
+      ],
+      "modelDiscovery": true
+    },
+    {
+      "id": "nvidia",
+      "name": "NVIDIA hosted NIM",
+      "availability": "Free",
+      "authentication": "API key",
+      "setupUrl": "https://build.nvidia.com/models",
+      "defaultModel": "meta/llama-3.3-70b-instruct",
+      "fields": [
+        "gitmind.nvidia.apiKey",
+        "gitmind.nvidia.model"
+      ],
+      "modelDiscovery": true
+    },
+    {
+      "id": "custom",
+      "name": "Custom API",
+      "availability": "Pro",
+      "authentication": "Configurable",
+      "setupUrl": null,
+      "defaultModel": "",
+      "fields": [
+        "gitmind.custom.enabled",
+        "gitmind.custom.baseUrl",
+        "gitmind.custom.endpoint",
+        "gitmind.custom.authType",
+        "gitmind.custom.authToken",
+        "gitmind.custom.headerKey",
+        "gitmind.custom.requestFormat",
+        "gitmind.custom.responseFormat",
+        "gitmind.custom.model"
+      ],
+      "modelDiscovery": false
+    }
+  ],
+  "settings": [
+    {
+      "id": "gitmind.apiProvider",
+      "type": "string",
+      "default": "gemini",
+      "availability": "Free",
+      "description": "Select which AI provider to use for generating commit messages",
+      "values": [
+        "gemini",
+        "huggingface",
+        "ollama",
+        "mistral",
+        "cohere",
+        "openai",
+        "together",
+        "openrouter",
+        "anthropic",
+        "minimax",
+        "copilot",
+        "deepseek",
+        "grok",
+        "groq",
+        "perplexity",
+        "zai",
+        "nvidia",
+        "custom"
+      ]
+    },
+    {
+      "id": "gitmind.debug",
+      "type": "boolean",
+      "default": false,
+      "availability": "Free",
+      "description": "Enable debug mode to show detailed LLM responses and API interactions"
+    },
+    {
+      "id": "gitmind.showOnboarding",
+      "type": "boolean",
+      "default": true,
+      "availability": "Free",
+      "description": "Show the onboarding experience for new users. Disable this to permanently turn off onboarding. Can be re-enabled to allow manual access to the onboarding wizard."
+    },
+    {
+      "id": "gitmind.gemini.apiKey",
+      "type": "string",
+      "default": null,
+      "availability": "Free",
+      "description": "API key for Google's Gemini AI [Learn more](https://aistudio.google.com/app/apikey)"
+    },
+    {
+      "id": "gitmind.huggingface.apiKey",
+      "type": "string",
+      "default": null,
+      "availability": "Free",
+      "description": "API key for Hugging Face [Learn more](https://huggingface.co/settings/tokens)"
+    },
+    {
+      "id": "gitmind.huggingface.model",
+      "type": "string",
+      "default": "mistralai/Mistral-7B-Instruct-v0.3",
+      "availability": "Free",
+      "description": "Model ID for Hugging Face"
+    },
+    {
+      "id": "gitmind.ollama.url",
+      "type": "string",
+      "default": "http://localhost:11434",
+      "availability": "Free",
+      "description": "URL for Ollama API server"
+    },
+    {
+      "id": "gitmind.ollama.model",
+      "type": "string",
+      "default": "phi4",
+      "availability": "Free",
+      "description": "Model name for Ollama"
+    },
+    {
+      "id": "gitmind.mistral.apiKey",
+      "type": "string",
+      "default": null,
+      "availability": "Free",
+      "description": "API key for Mistral AI [Learn more](https://console.mistral.ai/api-keys/)"
+    },
+    {
+      "id": "gitmind.mistral.model",
+      "type": "string",
+      "default": "mistral-small-4",
+      "availability": "Free",
+      "description": "Model name for Mistral AI",
+      "values": [
+        "mistral-medium-3.5",
+        "mistral-large-3",
+        "mistral-small-4",
+        "devstral-2",
+        "ministral-3"
+      ]
+    },
+    {
+      "id": "gitmind.commit.verbose",
+      "type": "boolean",
+      "default": true,
+      "availability": "Free",
+      "description": "Generate verbose commit messages with detailed descriptions. When disabled, only generates the summary line."
+    },
+    {
+      "id": "gitmind.commit.captureAllChanges",
+      "type": "boolean",
+      "default": false,
+      "availability": "Free",
+      "description": "When enabled, GitMind captures both staged and unstaged changes (including untracked files) and will not prompt you to stage changes before generating a commit message."
+    },
+    {
+      "id": "gitmind.commit.targetLanguage",
+      "type": "string",
+      "default": "english",
+      "availability": "Free",
+      "description": "Select the target language for generated commit messages (Pro feature)",
+      "values": [
+        "english",
+        "spanish",
+        "french",
+        "german",
+        "italian",
+        "portuguese",
+        "russian",
+        "chinese",
+        "japanese",
+        "korean",
+        "arabic",
+        "hindi",
+        "bengali",
+        "urdu",
+        "marathi",
+        "telugu",
+        "tamil",
+        "javanese",
+        "tagalog",
+        "punjabi",
+        "kannada",
+        "gujarati",
+        "bhojpuri",
+        "turkish",
+        "dutch",
+        "polish",
+        "vietnamese",
+        "thai",
+        "swedish",
+        "danish",
+        "norwegian",
+        "finnish",
+        "greek",
+        "hebrew",
+        "persian",
+        "ukrainian",
+        "czech",
+        "romanian",
+        "hungarian",
+        "indonesian",
+        "malay",
+        "hausa",
+        "amharic",
+        "yoruba",
+        "igbo",
+        "oromo",
+        "somali",
+        "bulgarian",
+        "croatian",
+        "slovak",
+        "lithuanian",
+        "latvian",
+        "estonian",
+        "albanian",
+        "armenian",
+        "georgian",
+        "kazakh",
+        "uzbek",
+        "azerbaijani"
+      ]
+    },
+    {
+      "id": "gitmind.showDiagnostics",
+      "type": "boolean",
+      "default": false,
+      "availability": "Free",
+      "description": "Show model and token information before generating commit messages"
+    },
+    {
+      "id": "gitmind.telemetry.enabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Free",
+      "description": "Enable extension telemetry to help improve GitMind. **Privacy First**: Only anonymous usage analytics are collected - no code content, file names, or personal information. You can disable this anytime while still respecting VS Code's global telemetry setting."
+    },
+    {
+      "id": "gitmind.gemini.model",
+      "type": "string",
+      "default": "gemini-3.1-flash",
+      "availability": "Free",
+      "description": "Select which Gemini model to use",
+      "values": [
+        "gemini-3.1-pro",
+        "gemini-3.1-flash",
+        "gemini-3.1-flash-lite"
+      ]
+    },
+    {
+      "id": "gitmind.cohere.apiKey",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "API key for Cohere"
+    },
+    {
+      "id": "gitmind.cohere.model",
+      "type": "string",
+      "default": "command-a",
+      "availability": "Free",
+      "description": "Cohere model to use for generating commit messages",
+      "values": [
+        "command-a",
+        "command-a-reasoning",
+        "command-r-plus-08-2024",
+        "command-r-08-2024"
+      ]
+    },
+    {
+      "id": "gitmind.openai.apiKey",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "API key for OpenAI [Learn more](https://platform.openai.com/api-keys)"
+    },
+    {
+      "id": "gitmind.openai.model",
+      "type": "string",
+      "default": "gpt-5.5-instant",
+      "availability": "Free",
+      "description": "OpenAI model to use for generating commit messages",
+      "values": [
+        "gpt-5.5",
+        "gpt-5.5-instant",
+        "o3-mini",
+        "gpt-4o",
+        "gpt-4o-mini",
+        "o1"
+      ]
+    },
+    {
+      "id": "gitmind.promptCustomization.enabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Free",
+      "description": "When enabled, shows a dialog to add custom context when generating commit messages"
+    },
+    {
+      "id": "gitmind.promptCustomization.saveLastPrompt",
+      "type": "boolean",
+      "default": false,
+      "availability": "Free",
+      "description": "Save the last custom prompt and use it as default for next commit message generation"
+    },
+    {
+      "id": "gitmind.commitStyle.style",
+      "type": "string",
+      "default": "conventional",
+      "availability": "Free",
+      "description": "Choose the commit message style for AI generation",
+      "values": [
+        "basic",
+        "conventional",
+        "conventional-no-scope",
+        "angular",
+        "ember",
+        "emojigit",
+        "gitmoji",
+        "semantic",
+        "commitizen",
+        "karma",
+        "linux",
+        "jquery"
+      ]
+    },
+    {
+      "id": "gitmind.together.apiKey",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "API key for Together AI [Learn more](https://api.together.xyz/settings/api-keys)"
+    },
+    {
+      "id": "gitmind.together.model",
+      "type": "string",
+      "default": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+      "availability": "Free",
+      "description": "Together AI model to use for generating commit messages",
+      "values": [
+        "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+        "deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free"
+      ]
+    },
+    {
+      "id": "gitmind.openrouter.apiKey",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "API key for OpenRouter [Learn more](https://openrouter.ai/keys)"
+    },
+    {
+      "id": "gitmind.openrouter.model",
+      "type": "string",
+      "default": "google/gemma-3-27b-it:free",
+      "availability": "Free",
+      "description": "OpenRouter model to use for generating commit messages"
+    },
+    {
+      "id": "gitmind.anthropic.apiKey",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "API key for Anthropic Claude [Learn more](https://console.anthropic.com/)"
+    },
+    {
+      "id": "gitmind.anthropic.model",
+      "type": "string",
+      "default": "claude-sonnet-4.6",
+      "availability": "Free",
+      "description": "Anthropic Claude model to use for generating commit messages",
+      "values": [
+        "claude-opus-4.7",
+        "claude-sonnet-4.6",
+        "claude-haiku-4.5"
+      ]
+    },
+    {
+      "id": "gitmind.minimax.apiKey",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "API key for MiniMax [Learn more](https://platform.minimax.io/docs/api-reference/text-anthropic-api)"
+    },
+    {
+      "id": "gitmind.minimax.model",
+      "type": "string",
+      "default": "MiniMax-M2.7",
+      "availability": "Free",
+      "description": "MiniMax model to use for generating commit messages",
+      "values": [
+        "MiniMax-M2.7",
+        "MiniMax-M2.5",
+        "MiniMax-M2",
+        "MiniMax-Text-01"
+      ]
+    },
+    {
+      "id": "gitmind.copilot.model",
+      "type": "string",
+      "default": "auto",
+      "availability": "Free",
+      "description": "GitHub Copilot model to use for generating commit messages",
+      "values": [
+        "auto",
+        "gpt-5.5",
+        "gpt-5.5-instant",
+        "o3-mini",
+        "claude-opus-4.7",
+        "claude-sonnet-4.6",
+        "gemini-3.1-pro",
+        "gemini-3.1-flash"
+      ]
+    },
+    {
+      "id": "gitmind.deepseek.apiKey",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "API key for DeepSeek AI [Learn more](https://platform.deepseek.com/api_keys)"
+    },
+    {
+      "id": "gitmind.deepseek.model",
+      "type": "string",
+      "default": "deepseek-v4-flash",
+      "availability": "Free",
+      "description": "DeepSeek model to use for generating commit messages",
+      "values": [
+        "deepseek-v4-pro",
+        "deepseek-v4-flash"
+      ]
+    },
+    {
+      "id": "gitmind.grok.apiKey",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "API key for Grok AI [Learn more](https://api.x.ai/)"
+    },
+    {
+      "id": "gitmind.grok.model",
+      "type": "string",
+      "default": "grok-4.3",
+      "availability": "Free",
+      "description": "Grok model to use for generating commit messages",
+      "values": [
+        "grok-4.3",
+        "grok-4.4",
+        "grok-4.5"
+      ]
+    },
+    {
+      "id": "gitmind.groq.apiKey",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "API key for Groq [Learn more](https://console.groq.com/keys)"
+    },
+    {
+      "id": "gitmind.groq.model",
+      "type": "string",
+      "default": "meta-llama/llama-4-scout-17b-16e-instruct",
+      "availability": "Free",
+      "description": "Groq model to use for generating commit messages",
+      "values": [
+        "llama-3.3-70b-versatile",
+        "llama-3.1-8b-instant",
+        "meta-llama/llama-4-scout-17b-16e-instruct"
+      ]
+    },
+    {
+      "id": "gitmind.perplexity.apiKey",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "API key for Perplexity AI [Learn more](https://www.perplexity.ai/settings/api)"
+    },
+    {
+      "id": "gitmind.perplexity.model",
+      "type": "string",
+      "default": "gpt-5.5-computer",
+      "availability": "Free",
+      "description": "Perplexity model to use for generating commit messages",
+      "values": [
+        "gpt-5.5-computer",
+        "gpt-5.4-thinking",
+        "sonar-pro",
+        "sonar-reasoning-pro"
+      ]
+    },
+    {
+      "id": "gitmind.zai.apiKey",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "API key for Z.ai (GLM) [Learn more](https://api.z.ai/)"
+    },
+    {
+      "id": "gitmind.zai.model",
+      "type": "string",
+      "default": "glm-5.1",
+      "availability": "Free",
+      "description": "Z.ai model to use for generating commit messages",
+      "values": [
+        "glm-5.1",
+        "glm-5v-turbo",
+        "glm-5",
+        "glm-5-turbo"
+      ]
+    },
+    {
+      "id": "gitmind.nvidia.apiKey",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "API key for NVIDIA hosted NIM [Browse models](https://build.nvidia.com/models)"
+    },
+    {
+      "id": "gitmind.nvidia.model",
+      "type": "string",
+      "default": "meta/llama-3.3-70b-instruct",
+      "availability": "Free",
+      "description": "NVIDIA hosted NIM model ID. [LLM API reference](https://docs.api.nvidia.com/nim/reference/llm-apis)"
+    },
+    {
+      "id": "gitmind.zai.endpoint",
+      "type": "string",
+      "default": "coding",
+      "availability": "Free",
+      "description": "Z.ai API endpoint type to use",
+      "values": [
+        "regular",
+        "coding"
+      ]
+    },
+    {
+      "id": "gitmind.custom.enabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Pro",
+      "description": "Enable custom API provider (Pro feature)"
+    },
+    {
+      "id": "gitmind.custom.baseUrl",
+      "type": "string",
+      "default": "",
+      "availability": "Pro",
+      "description": "Base URL for custom API endpoint (Pro feature)"
+    },
+    {
+      "id": "gitmind.custom.endpoint",
+      "type": "string",
+      "default": "",
+      "availability": "Pro",
+      "description": "API endpoint path for custom API (Pro feature)"
+    },
+    {
+      "id": "gitmind.custom.authType",
+      "type": "string",
+      "default": "bearer",
+      "availability": "Pro",
+      "description": "Authentication type for custom API (Pro feature)",
+      "values": [
+        "bearer",
+        "apikey",
+        "basic",
+        "none"
+      ]
+    },
+    {
+      "id": "gitmind.custom.authToken",
+      "type": "string",
+      "default": "",
+      "availability": "Pro",
+      "description": "Authentication token for custom API (Pro feature)"
+    },
+    {
+      "id": "gitmind.custom.headerKey",
+      "type": "string",
+      "default": "",
+      "availability": "Pro",
+      "description": "Header key name for API Key authentication (Pro feature)"
+    },
+    {
+      "id": "gitmind.custom.requestFormat",
+      "type": "string",
+      "default": "",
+      "availability": "Pro",
+      "description": "Request format for custom API (Pro feature)"
+    },
+    {
+      "id": "gitmind.custom.responseFormat",
+      "type": "string",
+      "default": "",
+      "availability": "Pro",
+      "description": "Response format path for custom API (Pro feature)"
+    },
+    {
+      "id": "gitmind.custom.model",
+      "type": "string",
+      "default": "",
+      "availability": "Pro",
+      "description": "Model name for custom API (Pro feature)"
+    },
+    {
+      "id": "gitmind.pro.encryptionEnabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Pro",
+      "description": "Enable encrypted storage for API keys (Pro feature only)"
+    },
+    {
+      "id": "gitmind.pro.orderId",
+      "type": "string",
+      "default": "",
+      "availability": "Pro",
+      "description": "Your LemonSqueezy order ID for Pro activation"
+    },
+    {
+      "id": "gitmind.pro.commitBodyOptions.enabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Pro",
+      "description": "Enable custom commit message body line limits (Pro feature)"
+    },
+    {
+      "id": "gitmind.pro.commitBodyOptions.maxLines",
+      "type": "number",
+      "default": 5,
+      "availability": "Pro",
+      "description": "Maximum number of lines in commit message body (Pro feature)",
+      "minimum": 2,
+      "maximum": 15
+    },
+    {
+      "id": "gitmind.pro.commitLengthOptions.enabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Pro",
+      "description": "Enable custom commit message summary length limits (Pro feature)"
+    },
+    {
+      "id": "gitmind.pro.commitLengthOptions.maxLength",
+      "type": "number",
+      "default": 72,
+      "availability": "Pro",
+      "description": "Maximum length of the commit summary line (first line)",
+      "minimum": 50,
+      "maximum": 100
+    },
+    {
+      "id": "gitmind.pro.advancedModelConfig.mode",
+      "type": "string",
+      "default": "auto",
+      "availability": "Pro",
+      "description": "Advanced model configuration mode (Pro feature)",
+      "values": [
+        "auto",
+        "custom"
+      ]
+    },
+    {
+      "id": "gitmind.pro.advancedModelConfig.temperatureEnabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Pro",
+      "description": "Enable custom temperature override (Pro feature)"
+    },
+    {
+      "id": "gitmind.pro.advancedModelConfig.temperature",
+      "type": "number",
+      "default": 0.2,
+      "availability": "Pro",
+      "description": "Temperature value (Pro feature)",
+      "minimum": 0,
+      "maximum": 2
+    },
+    {
+      "id": "gitmind.pro.advancedModelConfig.topPEnabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Pro",
+      "description": "Enable custom top-p override (Pro feature)"
+    },
+    {
+      "id": "gitmind.pro.advancedModelConfig.topP",
+      "type": "number",
+      "default": 0.9,
+      "availability": "Pro",
+      "description": "Top-p value (Pro feature)",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "id": "gitmind.pro.advancedModelConfig.topKEnabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Pro",
+      "description": "Enable custom top-k override (Pro feature)"
+    },
+    {
+      "id": "gitmind.pro.advancedModelConfig.topK",
+      "type": "number",
+      "default": 40,
+      "availability": "Pro",
+      "description": "Top-k value (Pro feature)",
+      "minimum": 0,
+      "maximum": 500
+    },
+    {
+      "id": "gitmind.pro.advancedModelConfig.maxTokensEnabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Pro",
+      "description": "Enable custom max output tokens override (Pro feature)"
+    },
+    {
+      "id": "gitmind.pro.advancedModelConfig.maxTokens",
+      "type": "number",
+      "default": 350,
+      "availability": "Pro",
+      "description": "Max output tokens (Pro feature)",
+      "minimum": 1,
+      "maximum": 65536
+    },
+    {
+      "id": "gitmind.pro.automaticRetry.enabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Pro",
+      "description": "**Pro Feature**: Retry generation once for timeouts and eligible Gemini temporary service failures."
+    },
+    {
+      "id": "gitmind.pro.modelFallback.enabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Pro",
+      "description": "**Pro Feature**: Try a configured fallback model once when the provider explicitly reports a model-specific limit."
+    },
+    {
+      "id": "gitmind.pro.modelFallback.models",
+      "type": "object",
+      "default": {},
+      "availability": "Pro",
+      "description": "**Pro Feature**: Fallback model IDs keyed by provider."
+    },
+    {
+      "id": "gitmind.pro.learnFromCommitHistory.enabled",
+      "type": "boolean",
+      "default": true,
+      "availability": "Pro",
+      "description": "Enable or disable the Learn from Commit History feature (Pro only)"
+    },
+    {
+      "id": "gitmind.pro.learnFromCommitHistory.maxCommits",
+      "type": "number",
+      "default": 50,
+      "availability": "Pro",
+      "description": "Maximum number of commits to analyze when learning from commit history",
+      "minimum": 10,
+      "maximum": 2500
+    },
+    {
+      "id": "gitmind.pro.learnFromCommitHistory.includeAuthorInfo",
+      "type": "boolean",
+      "default": true,
+      "availability": "Pro",
+      "description": "Include author and date information when analyzing commit history"
+    },
+    {
+      "id": "gitmind.pro.changelog.enabled",
+      "type": "boolean",
+      "default": true,
+      "availability": "Pro",
+      "description": "Enable changelog generation from git history (Pro feature)"
+    },
+    {
+      "id": "gitmind.pro.changelog.maxCommitsEnabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Pro",
+      "description": "Enable manual max commits limit for changelog generation"
+    },
+    {
+      "id": "gitmind.pro.changelog.maxCommits",
+      "type": "number",
+      "default": 100,
+      "availability": "Pro",
+      "description": "Maximum number of commits to analyze when generating changelog (only applies when NO version tags detected - with tags, ALL commits between tags are retrieved)",
+      "minimum": 2,
+      "maximum": 2500
+    },
+    {
+      "id": "gitmind.pro.changelog.groupByVersion",
+      "type": "boolean",
+      "default": true,
+      "availability": "Pro",
+      "description": "Group changelog entries by version tags"
+    },
+    {
+      "id": "gitmind.pro.changelog.maxVersions",
+      "type": "number",
+      "default": 10,
+      "availability": "Pro",
+      "description": "Maximum number of versions to process at once (limits token usage)",
+      "minimum": 1,
+      "maximum": 25
+    },
+    {
+      "id": "gitmind.pro.changelog.versionOrder",
+      "type": "string",
+      "default": "newest-first",
+      "availability": "Pro",
+      "description": "Order of versions in generated changelog",
+      "values": [
+        "newest-first",
+        "oldest-first"
+      ]
+    },
+    {
+      "id": "gitmind.pro.changelog.overwriteExisting",
+      "type": "boolean",
+      "default": false,
+      "availability": "Pro",
+      "description": "Overwrite existing version entries when updating changelog"
+    },
+    {
+      "id": "gitmind.commitStyle.gitmoji.enabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Pro",
+      "description": "Enable gitmoji emojis for commit messages (Pro feature)"
+    },
+    {
+      "id": "gitmind.commitStyle.gitmoji.placement",
+      "type": "string",
+      "default": "summary",
+      "availability": "Pro",
+      "description": "Where to place gitmoji emojis in commit messages (Pro feature)",
+      "values": [
+        "summary",
+        "body",
+        "both"
+      ]
+    },
+    {
+      "id": "gitmind.commitStyle.gitmoji.customEmojis",
+      "type": "object",
+      "default": {},
+      "availability": "Pro",
+      "description": "Custom emoji mappings for commit types (Pro feature)"
+    }
+  ],
+  "commands": [
+    {
+      "id": "gitmind.generateCommitMessage",
+      "title": "Generate GitMind Commit Message",
+      "shortcut": {
+        "command": "gitmind.generateCommitMessage",
+        "key": "ctrl+alt+g",
+        "mac": "cmd+alt+g",
+        "when": "scmProvider == git"
+      }
+    },
+    {
+      "id": "gitmind.generateCommitMessagePro",
+      "title": "Generate GitMind Commit Message",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.toggleDebug",
+      "title": "Toggle Debug Mode",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.openSettings",
+      "title": "GitMind Setting",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.openSettingsPro",
+      "title": "GitMind Setting",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.checkApiSetup",
+      "title": "Check API Setup",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.checkRateLimits",
+      "title": "Check Rate Limits",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.loadMistralModels",
+      "title": "Load Mistral Models",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.loadHuggingFaceModels",
+      "title": "Load Hugging Face Models",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.loadZaiModels",
+      "title": "Load Z.ai Models",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.loadNvidiaModels",
+      "title": "Load NVIDIA Models",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.loadGroqModels",
+      "title": "Load Groq Models",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.loadCopilotModels",
+      "title": "Load GitHub Copilot Models",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.learnFromCommitHistory",
+      "title": "Learn from Commit History (Pro)",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.generateChangelog",
+      "title": "Generate Changelog from Git History (Pro)",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.updateChangelog",
+      "title": "Update Changelog (Pro)",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.cancelGeneration",
+      "title": "Cancel Generation",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.clearLastPrompt",
+      "title": "Clear Last Custom Prompt",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.viewLastPrompt",
+      "title": "View Last Custom Prompt",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.changeCommitStyle",
+      "title": "Change Commit Message Style",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.openOnboarding",
+      "title": "Open Onboarding",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.completeOnboarding",
+      "title": "Complete Onboarding",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.skipOnboarding",
+      "title": "Skip Onboarding",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.resetOnboarding",
+      "title": "Reset Onboarding State",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.reEnableOnboarding",
+      "title": "Re-enable Onboarding",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.subscribe",
+      "title": "Subscribe to GitMind Pro",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.manageSubscription",
+      "title": "Manage Subscription",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.refreshSubscription",
+      "title": "Refresh Subscription Status",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.activateWithLicenseKey",
+      "title": "Activate Pro with License Key",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.activateWithOrderId",
+      "title": "Activate Pro with Order ID",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.showActivationQuickPick",
+      "title": "Activate GitMind Pro",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.validateExistingLicense",
+      "title": "Validate Existing License",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.deactivatePro",
+      "title": "Deactivate Pro Features",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.fixLicenseActivation",
+      "title": "Fix License Activation Issues",
+      "shortcut": null
+    }
+  ],
+  "commitStyles": [
+    {
+      "id": "basic",
+      "description": "Simple, straightforward commit messages",
+      "availability": "Free"
+    },
+    {
+      "id": "conventional",
+      "description": "Conventional Commits standard with types and scopes (Pro)",
+      "availability": "Pro"
+    },
+    {
+      "id": "conventional-no-scope",
+      "description": "Conventional Commits types without scopes (Pro)",
+      "availability": "Pro"
+    },
+    {
+      "id": "angular",
+      "description": "Angular commit convention with detailed type definitions (Pro)",
+      "availability": "Pro"
+    },
+    {
+      "id": "ember",
+      "description": "Ember.js style with tags and detailed descriptions (Pro)",
+      "availability": "Pro"
+    },
+    {
+      "id": "emojigit",
+      "description": "Visual semantic commits with custom emojis (Pro)",
+      "availability": "Pro"
+    },
+    {
+      "id": "gitmoji",
+      "description": "Official gitmoji.dev specification with standardized emojis (Pro)",
+      "availability": "Pro"
+    },
+    {
+      "id": "semantic",
+      "description": "Automated release-optimized commits for semantic versioning (Pro)",
+      "availability": "Pro"
+    },
+    {
+      "id": "commitizen",
+      "description": "Interactive guided commits with validation (Pro)",
+      "availability": "Pro"
+    },
+    {
+      "id": "karma",
+      "description": "Google's strict enterprise convention with mandatory scopes (Pro)",
+      "availability": "Pro"
+    },
+    {
+      "id": "linux",
+      "description": "Traditional kernel development convention with subsystems (Pro)",
+      "availability": "Pro"
+    },
+    {
+      "id": "jquery",
+      "description": "JavaScript project convention with issue tracking (Pro)",
+      "availability": "Pro"
+    }
+  ],
+  "uiSections": [
+    "Status dashboard",
+    "Model Settings",
+    "Free Features",
+    "Commit Styles",
+    "Pro Features",
+    "Pro Activation",
+    "Diagnostics",
+    "Onboarding"
+  ],
+  "workflows": [
+    "Staged changes",
+    "Capture All Changes",
+    "Untracked files",
+    "Multi-repository workspaces",
+    "Custom context",
+    "Saved prompts",
+    "Cancellation",
+    "Generated-message review"
+  ],
+  "limits": [
+    {
+      "id": "gitmind.pro.commitBodyOptions.maxLines",
+      "type": "number",
+      "default": 5,
+      "availability": "Pro",
+      "description": "Maximum number of lines in commit message body (Pro feature)",
+      "minimum": 2,
+      "maximum": 15
+    },
+    {
+      "id": "gitmind.pro.commitLengthOptions.maxLength",
+      "type": "number",
+      "default": 72,
+      "availability": "Pro",
+      "description": "Maximum length of the commit summary line (first line)",
+      "minimum": 50,
+      "maximum": 100
+    },
+    {
+      "id": "gitmind.pro.advancedModelConfig.temperature",
+      "type": "number",
+      "default": 0.2,
+      "availability": "Pro",
+      "description": "Temperature value (Pro feature)",
+      "minimum": 0,
+      "maximum": 2
+    },
+    {
+      "id": "gitmind.pro.advancedModelConfig.topP",
+      "type": "number",
+      "default": 0.9,
+      "availability": "Pro",
+      "description": "Top-p value (Pro feature)",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "id": "gitmind.pro.advancedModelConfig.topK",
+      "type": "number",
+      "default": 40,
+      "availability": "Pro",
+      "description": "Top-k value (Pro feature)",
+      "minimum": 0,
+      "maximum": 500
+    },
+    {
+      "id": "gitmind.pro.advancedModelConfig.maxTokens",
+      "type": "number",
+      "default": 350,
+      "availability": "Pro",
+      "description": "Max output tokens (Pro feature)",
+      "minimum": 1,
+      "maximum": 65536
+    },
+    {
+      "id": "gitmind.pro.learnFromCommitHistory.maxCommits",
+      "type": "number",
+      "default": 50,
+      "availability": "Pro",
+      "description": "Maximum number of commits to analyze when learning from commit history",
+      "minimum": 10,
+      "maximum": 2500
+    },
+    {
+      "id": "gitmind.pro.changelog.maxCommits",
+      "type": "number",
+      "default": 100,
+      "availability": "Pro",
+      "description": "Maximum number of commits to analyze when generating changelog (only applies when NO version tags detected - with tags, ALL commits between tags are retrieved)",
+      "minimum": 2,
+      "maximum": 2500
+    },
+    {
+      "id": "gitmind.pro.changelog.maxVersions",
+      "type": "number",
+      "default": 10,
+      "availability": "Pro",
+      "description": "Maximum number of versions to process at once (limits token usage)",
+      "minimum": 1,
+      "maximum": 25
+    }
+  ],
+  "excluded": {
+    "settings": [
+      "transport credentials",
+      "managed prompt state",
+      "managed license state",
+      "subscription state",
+      "developer environment settings"
+    ],
+    "commands": "9 internal or implementation-only commands omitted"
+  }
+}

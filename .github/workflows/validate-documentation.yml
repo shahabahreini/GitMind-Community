@@ -1,0 +1,28 @@
+name: Validate Documentation
+
+on:
+  pull_request:
+    paths:
+      - "docs/**"
+      - "wiki/**"
+      - "scripts/export-product-surface.mjs"
+      - "scripts/sync-wiki.mjs"
+      - "scripts/validate-docs.mjs"
+      - "package.json"
+      - "package-lock.json"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm install --no-audit --no-fund
+      - run: npm run docs:validate
+      - run: npm run docs:build
