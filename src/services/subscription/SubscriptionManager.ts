@@ -119,7 +119,7 @@ export class SubscriptionManager {
         // Prevent duplicate concurrent requests for the same email
         const ongoingRequestKey = `validation_${cacheKey}`;
         const lockTime = this.context?.globalState.get<number>(ongoingRequestKey);
-        if (lockTime && (Date.now() - lockTime) < 30000) {
+        if (lockTime && Math.abs(Date.now() - lockTime) < 30000) {
             debugLog(`Subscription validation already in progress for ${email}, waiting...`);
             // Return cached result if available, otherwise return free status
             return cached?.status || { isActive: false, isPaused: false, isExpired: false, plan: 'free' };

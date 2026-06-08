@@ -1184,8 +1184,7 @@ async function processLargeDiff(
             // Merge deterministically (original order)
             progress.report({ message: "Creating final summary", increment: 0 });
             const mergedPrompt = diffProcessor.mergeChunkResults(results);
-            const finalPrompt = await generateCommitPrompt(mergedPrompt, promptConfig, customContext);
-            return await generateMessageWithConfig(config, finalPrompt, "");
+            return await generateMessageWithConfig(config, mergedPrompt, customContext);
         }
     );
 }
