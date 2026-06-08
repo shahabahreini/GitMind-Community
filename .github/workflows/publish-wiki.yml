@@ -47,16 +47,14 @@ jobs:
     needs: validate
     if: github.event_name == 'push' || inputs.publish
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Require Wiki push token
-        env:
-          WIKI_PUSH_TOKEN: ${{ secrets.WIKI_PUSH_TOKEN }}
-        run: test -n "$WIKI_PUSH_TOKEN"
       - name: Clone initialized Wiki repository
         env:
-          WIKI_PUSH_TOKEN: ${{ secrets.WIKI_PUSH_TOKEN }}
-        run: git clone "https://x-access-token:${WIKI_PUSH_TOKEN}@github.com/shahabahreini/AI-Commit-Assistant.wiki.git" wiki-repository
+          WIKI_PUSH_TOKEN: ${{ secrets.WIKI_PUSH_TOKEN || secrets.GITHUB_TOKEN }}
+        run: git clone "https://x-access-token:${WIKI_PUSH_TOKEN}@github.com/${{ github.repository }}.wiki.git" wiki-repository
       - name: Synchronize Wiki source
         run: rsync -av --delete --exclude=.git/ wiki/ wiki-repository/
       - name: Commit and push changed Wiki content
