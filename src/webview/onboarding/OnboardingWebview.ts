@@ -101,7 +101,7 @@ export class OnboardingWebview {
             // Show confirmation dialog with "Don't show again" as the default action
             const result = await vscode.window.showWarningMessage(
                 "Don't show the GitMind onboarding again?",
-                { modal: true, detail: "You can always access the welcome screen from the Command Palette." },
+                { detail: "You can always access the welcome screen from the Command Palette." },
                 "Don't Show Again",
                 "Show Again"
             );

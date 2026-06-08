@@ -48,6 +48,7 @@ class TelemetryService {
     private lastActiveDate: string = '';
     private sessionId: string;
     private persistentUserId: string;
+    private context?: vscode.ExtensionContext;
 
     constructor() {
         // Application Insights connection string for GitMind VSCode Extension
@@ -70,6 +71,7 @@ class TelemetryService {
     }
 
     public async initialize(context: vscode.ExtensionContext): Promise<void> {
+        this.context = context;
         try {
             // Respect user's telemetry settings
             const config = vscode.workspace.getConfiguration();
@@ -213,8 +215,11 @@ class TelemetryService {
         const now = new Date();
         const today = now.toISOString().split('T')[0];
 
+        // Check global state for the last tracked date to survive window reloads
+        const globalLastActiveDate = this.context?.globalState.get<string>('gitmind.telemetry.lastActiveDate');
+
         // Only track once per day per user session
-        if (this.dailyUserTracked && this.lastActiveDate === today) {
+        if ((this.dailyUserTracked && this.lastActiveDate === today) || globalLastActiveDate === today) {
             return;
         }
 
@@ -239,6 +244,7 @@ class TelemetryService {
 
             this.dailyUserTracked = true;
             this.lastActiveDate = today;
+            this.context?.globalState.update('gitmind.telemetry.lastActiveDate', today);
             debugLog('Daily active user tracked');
         } catch (error) {
             debugLog('Failed to track daily active user:', error);

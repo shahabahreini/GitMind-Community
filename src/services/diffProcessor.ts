@@ -237,13 +237,9 @@ export class DiffProcessor {
             return chunkResults[0];
         }
 
-        // Create a summary prompt from all chunks
-        const summaryPrompt = `I have analyzed ${chunkResults.length} parts of a large code change. Here are the key changes from each part:
+        // Return a concatenated summary of the chunks
+        const summary = `The following is a summary of changes from a large code change, broken down into parts:\n\n${chunkResults.map((result, i) => `Part ${i + 1}:\n${result}`).join('\n\n')}\n\nBased on these parts, please generate the final commit message.`;
 
-${chunkResults.map((result, i) => `Part ${i + 1}: ${result}`).join('\n\n')}
-
-Based on these parts, provide a concise and well-structured git commit message that summarizes all the changes. Follow conventional commit format with a clear subject line (under 72 chars) and bullet points for major changes.`;
-
-        return summaryPrompt;
+        return summary;
     }
 }

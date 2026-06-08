@@ -7,9 +7,10 @@ import {
   validateGitRepository,
   getDiff,
   setCommitMessage,
+  getBranchName
 } from "../services/git/repository";
 import { initializeLogger, debugLog } from "../services/debug/logger";
-import { processCommitMessage } from "../services/api/responseProcessor";
+import { processCommitMessage, applyIssueTracking } from "../services/api/responseProcessor";
 import { getPromptConfig } from "../services/api/prompts";
 import { SettingsWebview } from "../webview/settings/SettingsWebview";
 import { OnboardingWebview } from "../webview/onboarding/OnboardingWebview";
@@ -164,12 +165,14 @@ async function sendApiCheckResult(result: any, provider: string): Promise<void> 
   }
 }
 
+// Track active UI elements per repo
+const activeGenerations = new Map<string, vscode.StatusBarItem>();
+
 // Command Handlers
 async function handleGenerateCommit(repository?: any): Promise<void> {
   const startTime = Date.now();
   const apiConfig = await getApiConfig();
-  let isGenerating = false;
-  let loadingItem: vscode.StatusBarItem | undefined;
+  let repoRoot = "";
 
   try {
     debugLog("Command Started: generateCommitMessage");
@@ -177,24 +180,8 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
     // Track that user is actively using the extension
     telemetryService.trackDailyActiveUser();
 
-    if (isRequestActive()) {
-      await vscode.commands.executeCommand("gitmind.cancelGeneration");
-      return;
-    }
-
-    isGenerating = true;
-
-    await vscode.commands.executeCommand("setContext", "gitmind.isGenerating", true);
-
-    loadingItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-    loadingItem.text = "$(sync~spin) Generating... $(close) Cancel";
-    loadingItem.tooltip = "AI is generating commit message. Click to cancel.";
-    loadingItem.command = "gitmind.cancelGeneration";
-    loadingItem.show();
-
     // Determine which repository to use
-    let targetRepository: vscode.WorkspaceFolder;
-    let repoRoot: string;
+    let targetRepository: vscode.WorkspaceFolder | { uri: vscode.Uri, name: string, index: number };
 
     if (repository?.rootUri) {
       // Command triggered from SCM button - use specific repository
@@ -221,7 +208,25 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
       }
     }
 
-    const diff = await getDiff(targetRepository, repoRoot);
+    if (isRequestActive(repoRoot)) {
+      await vscode.commands.executeCommand("gitmind.cancelGeneration", repoRoot);
+      return;
+    }
+
+    await vscode.commands.executeCommand("setContext", "gitmind.isGenerating", true);
+
+    const loadingItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
+    loadingItem.text = "$(sync~spin) Generating... $(close) Cancel";
+    loadingItem.tooltip = `AI is generating commit message for ${targetRepository.name}. Click to cancel.`;
+    loadingItem.command = {
+        title: "Cancel",
+        command: "gitmind.cancelGeneration",
+        arguments: [repoRoot]
+    };
+    loadingItem.show();
+    activeGenerations.set(repoRoot, loadingItem);
+
+    const diff = await getDiff(targetRepository as vscode.WorkspaceFolder, repoRoot);
     if (!diff?.trim()) {
       telemetryService.trackExtensionError('UserError', 'No changes detected', 'generateCommit');
       vscode.window.showInformationMessage("No changes detected to generate a commit message for.");
@@ -244,7 +249,11 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
 
     if (message?.trim()) {
       const promptConfig = getPromptConfig();
-      const formattedMessage = processCommitMessage(message, promptConfig);
+      let formattedMessage = processCommitMessage(message, promptConfig);
+
+      // Branch name for issue tracking
+      const branchName = await getBranchName(repoRoot);
+      formattedMessage = applyIssueTracking(formattedMessage, branchName);
 
       // Apply gitmoji if enabled and user has Pro access
       const gitmojiService = GitmojiService.getInstance();
@@ -280,11 +289,19 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
       );
     }
   } catch (error) {
+    if (error instanceof Error && error.message.includes("timed out") && repoRoot) {
+        cancelCurrentRequest(repoRoot);
+    }
     await handleError(error, 'generateCommit', apiConfig.type, startTime, true);
   } finally {
-    isGenerating = false;
-    loadingItem?.dispose();
-    await vscode.commands.executeCommand("setContext", "gitmind.isGenerating", false);
+    if (repoRoot) {
+        const item = activeGenerations.get(repoRoot);
+        item?.dispose();
+        activeGenerations.delete(repoRoot);
+    }
+    if (activeGenerations.size === 0) {
+        await vscode.commands.executeCommand("setContext", "gitmind.isGenerating", false);
+    }
   }
 }
 
@@ -962,10 +979,12 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
       await migrationService.forceCleanupLegacySettings();
     }),
 
-    vscode.commands.registerCommand("gitmind.cancelGeneration", async () => {
-      if (isRequestActive()) {
-        cancelCurrentRequest();
-        await vscode.commands.executeCommand("setContext", "gitmind.isGenerating", false);
+    vscode.commands.registerCommand("gitmind.cancelGeneration", async (repoRoot?: string) => {
+      if (isRequestActive(repoRoot)) {
+        cancelCurrentRequest(repoRoot);
+        if (!isRequestActive()) {
+            await vscode.commands.executeCommand("setContext", "gitmind.isGenerating", false);
+        }
         vscode.window.showInformationMessage("Commit message generation cancelled");
       }
     }),

@@ -178,16 +178,23 @@ export async function getDiff(workspaceFolder: vscode.WorkspaceFolder, repositor
 
     const config = vscode.workspace.getConfiguration("gitmind");
     const captureAllChanges = config.get<boolean>("commit.captureAllChanges", false);
+    
+    // Build pathspec exclusions
+    const excludePatterns = config.get<string[]>("commit.excludeFiles", []);
+    let excludeArgs = "";
+    if (excludePatterns && excludePatterns.length > 0) {
+        excludeArgs = " -- . " + excludePatterns.map(p => `":(exclude)${p}"`).join(" ");
+    }
 
     if (captureAllChanges) {
         const diffParts: string[] = [];
 
-        const { stdout: stagedDiff } = await execAsync("git diff --staged", {
+        const { stdout: stagedDiff } = await execAsync(`git diff --staged${excludeArgs}`, {
             cwd: repoRoot,
             maxBuffer: 10 * 1024 * 1024 // 10MB buffer for large diffs
         });
 
-        const { stdout: unstagedDiff } = await execAsync("git diff", {
+        const { stdout: unstagedDiff } = await execAsync(`git diff${excludeArgs}`, {
             cwd: repoRoot,
             maxBuffer: 10 * 1024 * 1024 // 10MB buffer for large diffs
         });
@@ -241,13 +248,13 @@ export async function getDiff(workspaceFolder: vscode.WorkspaceFolder, repositor
         return combinedDiff;
     }
 
-    const { stdout: stagedDiff } = await execAsync("git diff --staged", {
+    const { stdout: stagedDiff } = await execAsync(`git diff --staged${excludeArgs}`, {
         cwd: repoRoot,
         maxBuffer: 10 * 1024 * 1024 // 10MB buffer for large diffs
     });
 
     if (!stagedDiff) {
-        const { stdout: unstagedDiff } = await execAsync("git diff", {
+        const { stdout: unstagedDiff } = await execAsync(`git diff${excludeArgs}`, {
             cwd: repoRoot,
             maxBuffer: 10 * 1024 * 1024 // 10MB buffer for large diffs
         });
@@ -270,6 +277,18 @@ export async function getDiff(workspaceFolder: vscode.WorkspaceFolder, repositor
     }
 
     return stagedDiff;
+}
+
+export async function getBranchName(repositoryRoot: string): Promise<string | undefined> {
+    try {
+        const { stdout } = await execAsync("git rev-parse --abbrev-ref HEAD", {
+            cwd: repositoryRoot
+        });
+        return stdout.trim();
+    } catch (error) {
+        debugLog("Error getting branch name:", error);
+        return undefined;
+    }
 }
 
 export async function setCommitMessage(message: CommitMessage, repositoryRoot?: string) {

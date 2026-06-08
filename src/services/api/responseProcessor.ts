@@ -1,4 +1,5 @@
 // src/services/api/responseProcessor.ts
+import * as vscode from 'vscode';
 import { debugLog } from '../debug/logger';
 import { CommitMessage } from '../../config/types';
 import { PromptConfig } from './prompts';
@@ -121,4 +122,52 @@ export function processCommitMessage(response: string, config: PromptConfig = {}
 
     debugLog("Final commit message", result);
     return result;
+}
+
+export function applyIssueTracking(message: CommitMessage, branchName: string | undefined): CommitMessage {
+    if (!branchName) {
+        return message;
+    }
+
+    const config = vscode.workspace.getConfiguration("gitmind");
+    const enabled = config.get<boolean>("commit.issueTracking.enabled", false);
+    if (!enabled) {
+        return message;
+    }
+
+    const regexStr = config.get<string>("commit.issueTracking.regex", "([A-Z]+-\\\\d+|#\\\\d+)");
+    const placement = config.get<string>("commit.issueTracking.placement", "prepend");
+
+    try {
+        const regex = new RegExp(regexStr);
+        const match = branchName.match(regex);
+        
+        // We match the first capturing group if it exists, otherwise the whole match
+        if (match && match.length > 0) {
+            const issueId = match[1] || match[0];
+            let newSummary = message.summary;
+            let newDescription = message.description || "";
+
+            if (placement === "prepend") {
+                newSummary = `[${issueId}] ${newSummary}`;
+            } else if (placement === "append") {
+                newSummary = `${newSummary} [${issueId}]`;
+            } else if (placement === "body") {
+                if (newDescription) {
+                    newDescription += `\n\nResolves: ${issueId}`;
+                } else {
+                    newDescription = `Resolves: ${issueId}`;
+                }
+            }
+
+            return {
+                summary: newSummary,
+                description: newDescription
+            };
+        }
+    } catch (e) {
+        debugLog("Invalid regex for issue tracking", e);
+    }
+
+    return message;
 }

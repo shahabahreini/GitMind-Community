@@ -332,20 +332,30 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
 };
 
 // Request management
-let currentRequestController: AbortController | null = null;
-let isCurrentlyActive = false;
+const activeRequests = new Map<string, AbortController>();
 
-export function cancelCurrentRequest(): void {
-    if (currentRequestController) {
-        currentRequestController.abort();
-        currentRequestController = null;
+export function cancelCurrentRequest(requestId?: string): void {
+    if (requestId) {
+        const controller = activeRequests.get(requestId);
+        if (controller) {
+            controller.abort();
+            activeRequests.delete(requestId);
+            debugLog(`Request cancelled for ${requestId}`);
+        }
+    } else {
+        for (const controller of activeRequests.values()) {
+            controller.abort();
+        }
+        activeRequests.clear();
+        debugLog("All current requests cancelled");
     }
-    isCurrentlyActive = false;
-    debugLog("Current request cancelled");
 }
 
-export function isRequestActive(): boolean {
-    return isCurrentlyActive;
+export function isRequestActive(requestId?: string): boolean {
+    if (requestId) {
+        return activeRequests.has(requestId);
+    }
+    return activeRequests.size > 0;
 }
 
 /**
@@ -431,15 +441,22 @@ async function handleApiError(
     }
 
     // Enhanced error handling with context
-    if (error.message.includes('Together AI API error: 422') ||
-        error.message.includes('tokens') && error.message.includes('exceed')) {
+    let safeMessage = error.message;
+    // Scrub potential API keys
+    safeMessage = safeMessage.replace(/(sk-[a-zA-Z0-9]{20,})/g, "sk-...[REDACTED]");
+    safeMessage = safeMessage.replace(/(Bearer\s+[a-zA-Z0-9\-\._~+\/]{20,})/gi, "Bearer [REDACTED]");
+
+    if (safeMessage.includes('Together AI API error: 422') ||
+        safeMessage.includes('tokens') && safeMessage.includes('exceed')) {
         // Show the detailed error message as-is for token limit errors
-        await vscode.window.showErrorMessage(error.message, { modal: true });
+        await vscode.window.showErrorMessage(safeMessage, { modal: true });
         return;
     }
 
     // Use the error handler for other errors
-    const errorInfo = APIErrorHandler.handleAPIError(error, provider, context);
+    const tempError = new Error(safeMessage);
+    tempError.name = error.name;
+    const errorInfo = APIErrorHandler.handleAPIError(tempError, provider, context);
     const formattedMessage = APIErrorHandler.formatUserMessage(errorInfo);
 
     await vscode.window.showErrorMessage(formattedMessage, { modal: true });
@@ -455,8 +472,9 @@ export async function generateCommitMessage(
 
     try {
         // Set up request tracking
-        currentRequestController = new AbortController();
-        isCurrentlyActive = true;
+        const controller = new AbortController();
+        const requestId = repositoryRoot || 'global';
+        activeRequests.set(requestId, controller);
 
         // Track the start of generation
         telemetryService.trackDailyActiveUser();
@@ -551,8 +569,8 @@ export async function generateCommitMessage(
         throw error;
     } finally {
         // Clean up request tracking
-        currentRequestController = null;
-        isCurrentlyActive = false;
+        const requestId = repositoryRoot || 'global';
+        activeRequests.delete(requestId);
     }
 }
 
@@ -591,18 +609,18 @@ async function generateMessageWithRecovery(
         const fallbackModels = settings.get<Record<string, string>>("pro.modelFallback.models", {});
         const failure = classifyGenerationFailure(error, config.type);
 
-        if (fallbackEnabled && failure === "model-limit") {
+        if (fallbackEnabled && (failure === "model-limit" || failure === "temporary-service")) {
             const fallbackModel = fallbackModels[config.type]?.trim();
             if (fallbackModel && fallbackModel !== config.model) {
                 vscode.window.showInformationMessage(
-                    `${getProviderName(config.type)} reported a model-specific limit. Trying fallback model '${fallbackModel}' once.`
+                    `${getProviderName(config.type)} reported a limit or temporary issue. Trying fallback model '${fallbackModel}' once.`
                 );
                 return attempt(withModel(config, fallbackModel));
             }
         }
 
         if (retryEnabled && (failure === "timeout" || failure === "temporary-service")) {
-            const message = failure === "temporary-service" && config.type === "gemini"
+            const message = failure === "temporary-service"
                 ? "The service is experiencing issues.\nRetrying once automatically.\nIf it fails: Try again in a few minutes, check the provider's status page, or consider using a different provider temporarily."
                 : `${getProviderName(config.type)} request timed out. Retrying once.`;
             vscode.window.showInformationMessage(message);
@@ -1166,7 +1184,8 @@ async function processLargeDiff(
             // Merge deterministically (original order)
             progress.report({ message: "Creating final summary", increment: 0 });
             const mergedPrompt = diffProcessor.mergeChunkResults(results);
-            return await generateMessageWithConfig(config, "", mergedPrompt);
+            const finalPrompt = await generateCommitPrompt(mergedPrompt, promptConfig, customContext);
+            return await generateMessageWithConfig(config, finalPrompt, "");
         }
     );
 }
@@ -1237,8 +1256,8 @@ export async function generateWithRawPrompt(
 
     try {
         // Set up request tracking
-        currentRequestController = new AbortController();
-        isCurrentlyActive = true;
+        const controller = new AbortController();
+        activeRequests.set('global', controller);
 
         // Track the start of generation
         telemetryService.trackDailyActiveUser();
@@ -1307,8 +1326,7 @@ export async function generateWithRawPrompt(
         throw error;
     } finally {
         // Clean up request tracking
-        currentRequestController = null;
-        isCurrentlyActive = false;
+        activeRequests.delete('global');
     }
 }
 
@@ -1330,8 +1348,8 @@ export async function generateCommitHistoryAnalysis(
 
     try {
         // Set up request tracking
-        currentRequestController = new AbortController();
-        isCurrentlyActive = true;
+        const controller = new AbortController();
+        activeRequests.set('global', controller);
 
         // Track the start of generation
         telemetryService.trackDailyActiveUser();
@@ -1380,8 +1398,7 @@ export async function generateCommitHistoryAnalysis(
         throw error;
     } finally {
         // Clean up request tracking
-        currentRequestController = null;
-        isCurrentlyActive = false;
+        activeRequests.delete('global');
     }
 }
 

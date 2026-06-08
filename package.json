@@ -168,6 +168,52 @@
           "description": "When enabled, GitMind captures both staged and unstaged changes (including untracked files) and will not prompt you to stage changes before generating a commit message.",
           "order": 11
         },
+        "gitmind.commit.excludeFiles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "*-lock.json",
+            "*.lock",
+            "yarn.lock",
+            "pnpm-lock.yaml",
+            "Cargo.lock",
+            "*.min.js",
+            "dist/*",
+            "build/*"
+          ],
+          "description": "List of glob patterns to exclude from AI analysis when generating commit messages. Use this to avoid wasting tokens on large auto-generated files.",
+          "order": 12
+        },
+        "gitmind.commit.issueTracking.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically extract issue tracking IDs (e.g., Jira, GitHub) from the branch name and include them in the commit message.",
+          "order": 13
+        },
+        "gitmind.commit.issueTracking.regex": {
+          "type": "string",
+          "default": "([A-Z]+-\\\\d+|#\\\\d+)",
+          "description": "Regex pattern used to extract the issue ID from the branch name. E.g. '([A-Z]+-\\\\d+)' for Jira (PROJ-123) or '(#\\\\d+)' for GitHub (#123).",
+          "order": 14
+        },
+        "gitmind.commit.issueTracking.placement": {
+          "type": "string",
+          "enum": [
+            "prepend",
+            "append",
+            "body"
+          ],
+          "enumDescriptions": [
+            "Prepend to the summary line: '[PROJ-123] feat: something'",
+            "Append to the summary line: 'feat: something [PROJ-123]'",
+            "Add to the end of the commit body"
+          ],
+          "default": "prepend",
+          "description": "Where to place the extracted issue ID in the generated commit message.",
+          "order": 15
+        },
         "gitmind.commit.targetLanguage": {
           "type": "string",
           "enum": [

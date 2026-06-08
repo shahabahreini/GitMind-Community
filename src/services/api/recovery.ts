@@ -24,7 +24,7 @@ export class ProviderApiError extends Error {
     }
 }
 
-export function classifyGenerationFailure(error: unknown, provider: string): GenerationFailureKind {
+export function classifyGenerationFailure(error: unknown, _provider: string): GenerationFailureKind {
     const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
     const status = error instanceof ProviderApiError ? error.status : undefined;
     const code = error instanceof ProviderApiError ? error.code?.toLowerCase() : undefined;
@@ -69,13 +69,10 @@ export function classifyGenerationFailure(error: unknown, provider: string): Gen
         return "configuration";
     }
     if (
-        provider === "gemini" &&
-        (
-            [500, 502, 503, 504].includes(status ?? 0) ||
-            message.includes("service unavailable") ||
-            message.includes("temporarily unavailable") ||
-            message.includes("overloaded")
-        )
+        [500, 502, 503, 504].includes(status ?? 0) ||
+        message.includes("service unavailable") ||
+        message.includes("temporarily unavailable") ||
+        message.includes("overloaded")
     ) {
         return "temporary-service";
     }
