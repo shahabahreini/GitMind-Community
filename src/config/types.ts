@@ -79,13 +79,13 @@ export type TargetCommitLanguage =
 
 // Model types
 export type GeminiModel =
-    | "gemini-3.1-pro" | "gemini-3-flash" | "gemini-3.1-flash-lite"
+    | "gemini-3.1-pro" | "gemini-3.1-flash" | "gemini-3-flash" | "gemini-3.1-flash-lite"
     | "gemini-2.5-pro" | "gemini-2.5-flash" | "gemini-2.5-flash-lite";
 
 export type AnthropicModel =
     | "claude-opus-4.7" | "claude-sonnet-4.6" | "claude-haiku-4.5";
 
-export type MiniMaxModel = "MiniMax-M2.7" | "MiniMax-M2.7-highspeed" | "MiniMax-M2.5" | "MiniMax-M2.5-highspeed" | "MiniMax-M2.1" | "MiniMax-M2.1-highspeed" | "MiniMax-M2";
+export type MiniMaxModel = "MiniMax-M2.7" | "MiniMax-M2.5" | "MiniMax-M2" | "MiniMax-Text-01";
 
 export type KnownCopilotModel =
     | "auto"

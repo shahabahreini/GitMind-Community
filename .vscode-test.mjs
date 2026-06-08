@@ -1,4 +1,6 @@
 import { defineConfig } from "@vscode/test-cli";
+import os from "os";
+import path from "path";
 
 export default defineConfig({
   files: "out/test/**/*.test.js",
@@ -10,7 +12,8 @@ export default defineConfig({
     "--disable-extensions",
     "--skip-welcome",
     "--skip-release-notes",
-    "--disable-workspace-trust"
+    "--disable-workspace-trust",
+    `--user-data-dir=${path.join(os.tmpdir(), "vsc-test-ud")}`
   ],
   mocha: {
     ui: "tdd",

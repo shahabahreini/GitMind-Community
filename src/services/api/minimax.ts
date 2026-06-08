@@ -18,32 +18,17 @@ const MODEL_CONFIGS: Record<MiniMaxModel, GenerationConfig> = {
         temperature: 0.2,
         top_p: 0.8,
     },
-    "MiniMax-M2.7-highspeed": {
-        max_tokens: 350,
-        temperature: 0.2,
-        top_p: 0.8,
-    },
     "MiniMax-M2.5": {
         max_tokens: 350,
         temperature: 0.2,
         top_p: 0.8,
     },
-    "MiniMax-M2.5-highspeed": {
-        max_tokens: 350,
-        temperature: 0.2,
-        top_p: 0.8,
-    },
-    "MiniMax-M2.1": {
-        max_tokens: 350,
-        temperature: 0.2,
-        top_p: 0.8,
-    },
-    "MiniMax-M2.1-highspeed": {
-        max_tokens: 350,
-        temperature: 0.2,
-        top_p: 0.8,
-    },
     "MiniMax-M2": {
+        max_tokens: 350,
+        temperature: 0.2,
+        top_p: 0.8,
+    },
+    "MiniMax-Text-01": {
         max_tokens: 350,
         temperature: 0.2,
         top_p: 0.8,
@@ -86,7 +71,7 @@ export class MiniMaxProvider extends BaseAIProvider {
         }
 
         const selectedModel = this.model as MiniMaxModel;
-        const validModels: MiniMaxModel[] = ["MiniMax-M2", "MiniMax-M2.1", "MiniMax-M2.1-highspeed", "MiniMax-M2.5", "MiniMax-M2.5-highspeed", "MiniMax-M2.7", "MiniMax-M2.7-highspeed"];
+        const validModels: MiniMaxModel[] = ["MiniMax-M2", "MiniMax-M2.5", "MiniMax-M2.7", "MiniMax-Text-01"];
         if (!validModels.includes(selectedModel)) {
             debugLog("Error: Invalid MiniMax model specified", { model: this.model });
             throw new Error(`Invalid MiniMax model specified: ${this.model}`);

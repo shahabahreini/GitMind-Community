@@ -263,9 +263,8 @@ ${Array(50).fill('+    line').join('\n')}`;
         const results = ['Change A', 'Change B'];
         const merged = processor.mergeChunkResults(results);
 
-        assert.ok(merged.includes('analyzed'), 'Should include analysis context');
-        assert.ok(merged.includes('commit message'), 'Should request commit message');
-        assert.ok(merged.includes('conventional commit'), 'Should mention conventional commit format');
+        assert.ok(merged.includes('The following is a summary of changes'), 'Should include analysis context');
+        assert.ok(merged.includes('generate the final commit message.'), 'Should include format instructions');
     });
 
     test('Edge case: splitDiffIntoChunks with chunk size smaller than header', () => {

@@ -162,14 +162,13 @@ export class ProviderConfig {
                     loadButtonText: 'Load Available Models',
                     loadButtonId: 'loadMiniMaxModels',
                     loadCommand: 'gitmind.loadMiniMaxModels',
+                    loadButtonDisabled: true,
+                    loadButtonDisabledTooltip: "MiniMax won't support model fetch yet!",
                     options: [
                         { value: 'MiniMax-M2.7', label: 'MiniMax M2.7' },
-                        { value: 'MiniMax-M2.7-highspeed', label: 'MiniMax M2.7 Highspeed' },
                         { value: 'MiniMax-M2.5', label: 'MiniMax M2.5' },
-                        { value: 'MiniMax-M2.5-highspeed', label: 'MiniMax M2.5 Highspeed' },
-                        { value: 'MiniMax-M2.1', label: 'MiniMax M2.1' },
-                        { value: 'MiniMax-M2.1-highspeed', label: 'MiniMax M2.1 Highspeed' },
-                        { value: 'MiniMax-M2', label: 'MiniMax M2' }
+                        { value: 'MiniMax-M2', label: 'MiniMax M2' },
+                        { value: 'MiniMax-Text-01', label: 'MiniMax Text-01' }
                     ]
                 }
             ]
