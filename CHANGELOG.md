@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## v5.0.4 - 2026-06-08
+
+### New Features
+
+- Added `gemini-3.1-flash` as the default model and updated model aliases.
+- Added `MiniMax-Text-01` support and pruned deprecated MiniMax models.
+- Added `gitmind.commit.excludeFiles` configuration to ignore lock files and build artifacts.
+- Implemented automatic issue ID extraction from branch names via regex with configurable placement options.
+- Added VSIX release pipeline to automate extension packaging and GitHub Release creation on tag pushes.
+
+### Enhanced
+
+- Simplified prompt generation by removing redundant `generateCommitPrompt` calls.
+- Updated subscription validation to use absolute time difference for lock checks.
+- Improved error handling by scrubbing sensitive data from API logs.
+- Increased `TIMEOUT_DURATION` to 120s to prevent premature request failures.
+- Redirected users with valid license keys to settings instead of the portal.
+- Standardized Node.js version to 20 LTS and switched CI caching to pnpm.
+
+### Technical
+
+- Configured a unique `user-data-dir` in the VS Code test environment.
+- Synchronized model lists across configuration types and webview constants.
+- Cleaned up duplicate entries in MiniMax integration test assertions.
+- Updated `@types/vscode` to `^1.96.0` to align with targeted VS Code API versions.
+
 ## v5.0.3 - 2026-06-07
 
 ### New Features
