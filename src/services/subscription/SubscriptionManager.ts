@@ -312,9 +312,19 @@ export class SubscriptionManager {
     }
 
     /**
-     * Manage subscription (open customer portal)
+     * Manage subscription (open customer portal or settings)
      */
     public async manageSubscription(): Promise<void> {
+        // If they have a valid license key, opening the settings view is appropriate
+        const config = vscode.workspace.getConfiguration('gitmind');
+        const validationStatus = config.get<string>('pro.validationStatus');
+        const licenseKey = config.get<string>('pro.licenseKey');
+
+        if (validationStatus === 'valid' && licenseKey) {
+            vscode.commands.executeCommand('gitmind.openSettings');
+            return;
+        }
+
         const email = await this.getUserEmail();
         if (!email) {
             vscode.window.showWarningMessage('No email configured for subscription management.');

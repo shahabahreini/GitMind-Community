@@ -45,7 +45,7 @@ import { generateChangelog, updateChangelog } from "../services/changelog/genera
 import { state } from "../extension";
 
 // Constants
-const TIMEOUT_DURATION = 60000;
+const TIMEOUT_DURATION = 120000;
 const API_CHECK_TIMEOUT = 15000;
 export const SUPPORTED_PROVIDERS = [
   "Gemini", "Hugging Face", "Ollama", "Mistral", "Cohere", "OpenAI",
