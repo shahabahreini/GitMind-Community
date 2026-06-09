@@ -287,4 +287,90 @@ index 1234567..abcdefg
             permissionDiff.includes('new mode');
         assert.strictEqual(hasPermissionChange, true, 'Should detect permission changes');
     });
+
+    test('getDiff should return diff for lock files when only lock files are staged', async () => {
+        const os = require('os');
+        const fs = require('fs');
+        const path = require('path');
+        const { exec } = require('child_process');
+        const { promisify } = require('util');
+        const execAsync = promisify(exec);
+
+        // Create temporary directory
+        const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gitmind-test-'));
+        try {
+            // Initialize git repo
+            await execAsync('git init', { cwd: tempDir });
+            await execAsync('git config user.name "Test User"', { cwd: tempDir });
+            await execAsync('git config user.email "test@example.com"', { cwd: tempDir });
+            await execAsync('git config commit.gpgsign false', { cwd: tempDir });
+
+            // Create a lock file
+            const lockFilePath = path.join(tempDir, 'package-lock.json');
+            fs.writeFileSync(lockFilePath, JSON.stringify({ name: "test", version: "1.0.0" }, null, 2));
+
+            // Stage it
+            await execAsync('git add package-lock.json', { cwd: tempDir });
+
+            // Get diff
+            const mockWorkspaceFolder = {
+                uri: vscode.Uri.file(tempDir),
+                name: 'temp-workspace',
+                index: 0
+            };
+
+            const diff = await getDiff(mockWorkspaceFolder, tempDir);
+            assert.ok(diff.includes('package-lock.json'), 'Diff should include package-lock.json changes');
+        } finally {
+            // Clean up
+            try {
+                fs.rmSync(tempDir, { recursive: true, force: true });
+            } catch (err) {
+                // Ignore cleanup errors
+            }
+        }
+    });
+
+    test('getDiff should exclude lock files when other files are also staged', async () => {
+        const os = require('os');
+        const fs = require('fs');
+        const path = require('path');
+        const { exec } = require('child_process');
+        const { promisify } = require('util');
+        const execAsync = promisify(exec);
+
+        const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gitmind-test-'));
+        try {
+            await execAsync('git init', { cwd: tempDir });
+            await execAsync('git config user.name "Test User"', { cwd: tempDir });
+            await execAsync('git config user.email "test@example.com"', { cwd: tempDir });
+            await execAsync('git config commit.gpgsign false', { cwd: tempDir });
+
+            // Create a lock file and a source file
+            const lockFilePath = path.join(tempDir, 'package-lock.json');
+            fs.writeFileSync(lockFilePath, JSON.stringify({ name: "test", version: "1.0.0" }, null, 2));
+
+            const srcFilePath = path.join(tempDir, 'index.js');
+            fs.writeFileSync(srcFilePath, 'console.log("hello");');
+
+            // Stage both
+            await execAsync('git add package-lock.json index.js', { cwd: tempDir });
+
+            const mockWorkspaceFolder = {
+                uri: vscode.Uri.file(tempDir),
+                name: 'temp-workspace',
+                index: 0
+            };
+
+            const diff = await getDiff(mockWorkspaceFolder, tempDir);
+            assert.ok(diff.includes('index.js'), 'Diff should include index.js changes');
+            assert.ok(!diff.includes('package-lock.json'), 'Diff should exclude package-lock.json changes');
+        } finally {
+            try {
+                fs.rmSync(tempDir, { recursive: true, force: true });
+            } catch (err) {
+                // Ignore cleanup errors
+            }
+        }
+    });
 });
