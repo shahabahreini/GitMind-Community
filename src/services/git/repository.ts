@@ -186,10 +186,40 @@ export async function getDiff(workspaceFolder: vscode.WorkspaceFolder, repositor
         excludeArgs = " -- . " + excludePatterns.map(p => `":(exclude)${p}"`).join(" ");
     }
 
+    // Check if there are only lock files in the staging area
+    let onlyLockFilesStaged = false;
+    try {
+        const { stdout: nameOnlyStdout } = await execAsync("git diff --staged --name-only", {
+            cwd: repoRoot,
+            maxBuffer: 1024 * 1024
+        });
+        const stagedFiles = nameOnlyStdout
+            .split("\n")
+            .map((f) => f.trim())
+            .filter((f) => f.length > 0);
+
+        if (stagedFiles.length > 0) {
+            onlyLockFilesStaged = stagedFiles.every((file) => {
+                const lower = file.toLowerCase();
+                return (
+                    lower.endsWith(".lock") ||
+                    lower.endsWith("-lock.json") ||
+                    lower.endsWith("lock.yaml") ||
+                    lower.endsWith("lock.json") ||
+                    lower.endsWith("bun.lockb")
+                );
+            });
+        }
+    } catch (error) {
+        debugLog("Error checking staged files for lock files:", error);
+    }
+
+    const stagedDiffCmd = onlyLockFilesStaged ? "git diff --staged" : `git diff --staged${excludeArgs}`;
+
     if (captureAllChanges) {
         const diffParts: string[] = [];
 
-        const { stdout: stagedDiff } = await execAsync(`git diff --staged${excludeArgs}`, {
+        const { stdout: stagedDiff } = await execAsync(stagedDiffCmd, {
             cwd: repoRoot,
             maxBuffer: 10 * 1024 * 1024 // 10MB buffer for large diffs
         });
@@ -248,7 +278,7 @@ export async function getDiff(workspaceFolder: vscode.WorkspaceFolder, repositor
         return combinedDiff;
     }
 
-    const { stdout: stagedDiff } = await execAsync(`git diff --staged${excludeArgs}`, {
+    const { stdout: stagedDiff } = await execAsync(stagedDiffCmd, {
         cwd: repoRoot,
         maxBuffer: 10 * 1024 * 1024 // 10MB buffer for large diffs
     });
