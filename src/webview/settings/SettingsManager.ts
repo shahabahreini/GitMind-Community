@@ -408,61 +408,79 @@ export class SettingsManager {
         }
     }
 
+    private static async updateSingleSetting(
+        config: vscode.WorkspaceConfiguration,
+        section: string,
+        value: any,
+        target: vscode.ConfigurationTarget
+    ): Promise<void> {
+        try {
+            await config.update(section, value, target);
+        } catch (error) {
+            const errorStr = String(error);
+            if (errorStr.includes("not a registered configuration")) {
+                debugLog(`Warning: Setting '${section}' is not registered in VS Code:`, error);
+            } else {
+                throw error;
+            }
+        }
+    }
+
     private static async updateConfigurationSettings(
         config: vscode.WorkspaceConfiguration,
         settings: ExtensionSettings
     ): Promise<void> {
         const target = vscode.ConfigurationTarget.Global;
 
-        const coreUpdates: Thenable<void>[] = [
-            config.update("apiProvider", settings.apiProvider, target),
-            config.update("debug", settings.debug ?? false, target),
-            config.update("promptCustomization.enabled", settings.promptCustomization?.enabled ?? false, target),
-            config.update("promptCustomization.saveLastPrompt", settings.promptCustomization?.saveLastPrompt ?? false, target),
-            config.update("promptCustomization.lastPrompt", settings.promptCustomization?.lastPrompt ?? "", target),
-            config.update("commit.verbose", settings.commit?.verbose ?? true, target),
-            config.update("commit.captureAllChanges", settings.commit?.captureAllChanges ?? false, target),
-            config.update("commit.targetLanguage", settings.commit?.targetLanguage ?? "english", target),
-            config.update("commitStyle.style", settings.commitStyle?.style || "conventional", target),
-            config.update("showDiagnostics", settings.showDiagnostics ?? false, target),
-            config.update("telemetry.enabled", settings.telemetry?.enabled ?? false, target),
-            config.update("pro.encryptionEnabled", settings.pro?.encryptionEnabled ?? false, target),
-            config.update("pro.advancedModelConfig.mode", settings.pro?.advancedModelConfig?.mode ?? 'auto', target),
-            config.update("pro.advancedModelConfig.temperatureEnabled", settings.pro?.advancedModelConfig?.temperatureEnabled ?? false, target),
-            config.update("pro.advancedModelConfig.temperature", settings.pro?.advancedModelConfig?.temperature ?? 0.2, target),
-            config.update("pro.advancedModelConfig.topPEnabled", settings.pro?.advancedModelConfig?.topPEnabled ?? false, target),
-            config.update("pro.advancedModelConfig.topP", settings.pro?.advancedModelConfig?.topP ?? 0.9, target),
-            config.update("pro.advancedModelConfig.topKEnabled", settings.pro?.advancedModelConfig?.topKEnabled ?? false, target),
-            config.update("pro.advancedModelConfig.topK", settings.pro?.advancedModelConfig?.topK ?? 40, target),
-            config.update("pro.advancedModelConfig.maxTokensEnabled", settings.pro?.advancedModelConfig?.maxTokensEnabled ?? false, target),
-            config.update("pro.advancedModelConfig.maxTokens", settings.pro?.advancedModelConfig?.maxTokens ?? 350, target),
-            config.update("pro.automaticRetry.enabled", settings.pro?.automaticRetry?.enabled ?? false, target),
-            config.update("pro.modelFallback.enabled", settings.pro?.modelFallback?.enabled ?? false, target),
-            config.update("pro.modelFallback.models", settings.pro?.modelFallback?.models ?? {}, target),
-            config.update("pro.licenseKey", settings.pro?.licenseKey || "", target),
-            config.update("pro.orderId", settings.pro?.orderId || "", target),
-            config.update("pro.instanceId", settings.pro?.instanceId || "", target),
-            config.update("subscription.email", settings.subscription?.email || "", target),
-            config.update("subscription.plan", settings.subscription?.plan || "free", target),
-            config.update("subscription.status", settings.subscription?.status || "inactive", target),
-            config.update("subscription.lastChecked", settings.subscription?.lastChecked || "", target),
-            config.update("pro.commitBodyOptions.enabled", settings.pro?.commitBodyOptions?.enabled ?? false, target),
-            config.update("pro.commitBodyOptions.maxLines", settings.pro?.commitBodyOptions?.maxLines ?? 5, target),
-            config.update("pro.commitLengthOptions.enabled", settings.pro?.commitLengthOptions?.enabled ?? false, target),
-            config.update("pro.commitLengthOptions.maxLength", settings.pro?.commitLengthOptions?.maxLength ?? 72, target),
-            config.update("pro.learnFromCommitHistory.enabled", settings.pro?.learnFromCommitHistory?.enabled ?? true, target),
-            config.update("pro.learnFromCommitHistory.maxCommits", settings.pro?.learnFromCommitHistory?.maxCommits ?? 50, target),
-            config.update("pro.learnFromCommitHistory.includeAuthorInfo", settings.pro?.learnFromCommitHistory?.includeAuthorInfo ?? true, target),
-            config.update("pro.changelog.enabled", settings.pro?.changelog?.enabled ?? true, target),
-            config.update("pro.changelog.maxCommitsEnabled", settings.pro?.changelog?.maxCommitsEnabled ?? false, target),
-            config.update("pro.changelog.maxCommits", settings.pro?.changelog?.maxCommits ?? 100, target),
-            config.update("pro.changelog.groupByVersion", settings.pro?.changelog?.groupByVersion ?? true, target),
-            config.update("pro.changelog.maxVersions", settings.pro?.changelog?.maxVersions ?? 10, target),
-            config.update("pro.changelog.versionOrder", settings.pro?.changelog?.versionOrder ?? "newest-first", target),
-            config.update("pro.changelog.overwriteExisting", settings.pro?.changelog?.overwriteExisting ?? false, target),
+        const coreUpdates: Promise<void>[] = [
+            SettingsManager.updateSingleSetting(config, "apiProvider", settings.apiProvider, target),
+            SettingsManager.updateSingleSetting(config, "debug", settings.debug ?? false, target),
+            SettingsManager.updateSingleSetting(config, "promptCustomization.enabled", settings.promptCustomization?.enabled ?? false, target),
+            SettingsManager.updateSingleSetting(config, "promptCustomization.saveLastPrompt", settings.promptCustomization?.saveLastPrompt ?? false, target),
+            SettingsManager.updateSingleSetting(config, "promptCustomization.lastPrompt", settings.promptCustomization?.lastPrompt ?? "", target),
+            SettingsManager.updateSingleSetting(config, "commit.verbose", settings.commit?.verbose ?? true, target),
+            SettingsManager.updateSingleSetting(config, "commit.captureAllChanges", settings.commit?.captureAllChanges ?? false, target),
+            SettingsManager.updateSingleSetting(config, "commit.targetLanguage", settings.commit?.targetLanguage ?? "english", target),
+            SettingsManager.updateSingleSetting(config, "commitStyle.style", settings.commitStyle?.style || "conventional", target),
+            SettingsManager.updateSingleSetting(config, "showDiagnostics", settings.showDiagnostics ?? false, target),
+            SettingsManager.updateSingleSetting(config, "telemetry.enabled", settings.telemetry?.enabled ?? false, target),
+            SettingsManager.updateSingleSetting(config, "pro.encryptionEnabled", settings.pro?.encryptionEnabled ?? false, target),
+            SettingsManager.updateSingleSetting(config, "pro.advancedModelConfig.mode", settings.pro?.advancedModelConfig?.mode ?? 'auto', target),
+            SettingsManager.updateSingleSetting(config, "pro.advancedModelConfig.temperatureEnabled", settings.pro?.advancedModelConfig?.temperatureEnabled ?? false, target),
+            SettingsManager.updateSingleSetting(config, "pro.advancedModelConfig.temperature", settings.pro?.advancedModelConfig?.temperature ?? 0.2, target),
+            SettingsManager.updateSingleSetting(config, "pro.advancedModelConfig.topPEnabled", settings.pro?.advancedModelConfig?.topPEnabled ?? false, target),
+            SettingsManager.updateSingleSetting(config, "pro.advancedModelConfig.topP", settings.pro?.advancedModelConfig?.topP ?? 0.9, target),
+            SettingsManager.updateSingleSetting(config, "pro.advancedModelConfig.topKEnabled", settings.pro?.advancedModelConfig?.topKEnabled ?? false, target),
+            SettingsManager.updateSingleSetting(config, "pro.advancedModelConfig.topK", settings.pro?.advancedModelConfig?.topK ?? 40, target),
+            SettingsManager.updateSingleSetting(config, "pro.advancedModelConfig.maxTokensEnabled", settings.pro?.advancedModelConfig?.maxTokensEnabled ?? false, target),
+            SettingsManager.updateSingleSetting(config, "pro.advancedModelConfig.maxTokens", settings.pro?.advancedModelConfig?.maxTokens ?? 350, target),
+            SettingsManager.updateSingleSetting(config, "pro.automaticRetry.enabled", settings.pro?.automaticRetry?.enabled ?? false, target),
+            SettingsManager.updateSingleSetting(config, "pro.modelFallback.enabled", settings.pro?.modelFallback?.enabled ?? false, target),
+            SettingsManager.updateSingleSetting(config, "pro.modelFallback.models", settings.pro?.modelFallback?.models ?? {}, target),
+            SettingsManager.updateSingleSetting(config, "pro.licenseKey", settings.pro?.licenseKey || "", target),
+            SettingsManager.updateSingleSetting(config, "pro.orderId", settings.pro?.orderId || "", target),
+            SettingsManager.updateSingleSetting(config, "pro.instanceId", settings.pro?.instanceId || "", target),
+            SettingsManager.updateSingleSetting(config, "subscription.email", settings.subscription?.email || "", target),
+            SettingsManager.updateSingleSetting(config, "subscription.plan", settings.subscription?.plan || "free", target),
+            SettingsManager.updateSingleSetting(config, "subscription.status", settings.subscription?.status || "inactive", target),
+            SettingsManager.updateSingleSetting(config, "subscription.lastChecked", settings.subscription?.lastChecked || "", target),
+            SettingsManager.updateSingleSetting(config, "pro.commitBodyOptions.enabled", settings.pro?.commitBodyOptions?.enabled ?? false, target),
+            SettingsManager.updateSingleSetting(config, "pro.commitBodyOptions.maxLines", settings.pro?.commitBodyOptions?.maxLines ?? 5, target),
+            SettingsManager.updateSingleSetting(config, "pro.commitLengthOptions.enabled", settings.pro?.commitLengthOptions?.enabled ?? false, target),
+            SettingsManager.updateSingleSetting(config, "pro.commitLengthOptions.maxLength", settings.pro?.commitLengthOptions?.maxLength ?? 72, target),
+            SettingsManager.updateSingleSetting(config, "pro.learnFromCommitHistory.enabled", settings.pro?.learnFromCommitHistory?.enabled ?? true, target),
+            SettingsManager.updateSingleSetting(config, "pro.learnFromCommitHistory.maxCommits", settings.pro?.learnFromCommitHistory?.maxCommits ?? 50, target),
+            SettingsManager.updateSingleSetting(config, "pro.learnFromCommitHistory.includeAuthorInfo", settings.pro?.learnFromCommitHistory?.includeAuthorInfo ?? true, target),
+            SettingsManager.updateSingleSetting(config, "pro.changelog.enabled", settings.pro?.changelog?.enabled ?? true, target),
+            SettingsManager.updateSingleSetting(config, "pro.changelog.maxCommitsEnabled", settings.pro?.changelog?.maxCommitsEnabled ?? false, target),
+            SettingsManager.updateSingleSetting(config, "pro.changelog.maxCommits", settings.pro?.changelog?.maxCommits ?? 100, target),
+            SettingsManager.updateSingleSetting(config, "pro.changelog.groupByVersion", settings.pro?.changelog?.groupByVersion ?? true, target),
+            SettingsManager.updateSingleSetting(config, "pro.changelog.maxVersions", settings.pro?.changelog?.maxVersions ?? 10, target),
+            SettingsManager.updateSingleSetting(config, "pro.changelog.versionOrder", settings.pro?.changelog?.versionOrder ?? "newest-first", target),
+            SettingsManager.updateSingleSetting(config, "pro.changelog.overwriteExisting", settings.pro?.changelog?.overwriteExisting ?? false, target),
         ];
 
-        const providerUpdates: Thenable<void>[] = [];
+        const providerUpdates: Promise<void>[] = [];
 
         Object.keys(SettingsManager.PROVIDER_DEFAULTS).forEach((provider) => {
             const providerSettings = (settings as any)[provider] as any;
@@ -470,40 +488,40 @@ export class SettingsManager {
                 return;
             }
 
-            providerUpdates.push(config.update(`${provider}.model`, providerSettings.model, target));
+            providerUpdates.push(SettingsManager.updateSingleSetting(config, `${provider}.model`, providerSettings.model, target));
 
             if (provider === "ollama" && providerSettings.url !== undefined) {
-                providerUpdates.push(config.update(`${provider}.url`, providerSettings.url, target));
+                providerUpdates.push(SettingsManager.updateSingleSetting(config, `${provider}.url`, providerSettings.url, target));
             }
 
             if (provider === "zai" && providerSettings.endpoint !== undefined) {
-                providerUpdates.push(config.update("zai.endpoint", providerSettings.endpoint, target));
+                providerUpdates.push(SettingsManager.updateSingleSetting(config, "zai.endpoint", providerSettings.endpoint, target));
             }
 
             if (provider === "custom") {
-                providerUpdates.push(config.update("custom.baseUrl", providerSettings.baseUrl, target));
-                providerUpdates.push(config.update("custom.endpoint", providerSettings.endpoint, target));
-                providerUpdates.push(config.update("custom.authType", providerSettings.authType, target));
-                providerUpdates.push(config.update("custom.headerKey", providerSettings.headerKey, target));
-                providerUpdates.push(config.update("custom.requestFormat", providerSettings.requestFormat, target));
-                providerUpdates.push(config.update("custom.responseFormat", providerSettings.responseFormat, target));
-                providerUpdates.push(config.update("custom.enabled", providerSettings.enabled ?? false, target));
+                providerUpdates.push(SettingsManager.updateSingleSetting(config, "custom.baseUrl", providerSettings.baseUrl, target));
+                providerUpdates.push(SettingsManager.updateSingleSetting(config, "custom.endpoint", providerSettings.endpoint, target));
+                providerUpdates.push(SettingsManager.updateSingleSetting(config, "custom.authType", providerSettings.authType, target));
+                providerUpdates.push(SettingsManager.updateSingleSetting(config, "custom.headerKey", providerSettings.headerKey, target));
+                providerUpdates.push(SettingsManager.updateSingleSetting(config, "custom.requestFormat", providerSettings.requestFormat, target));
+                providerUpdates.push(SettingsManager.updateSingleSetting(config, "custom.responseFormat", providerSettings.responseFormat, target));
+                providerUpdates.push(SettingsManager.updateSingleSetting(config, "custom.enabled", providerSettings.enabled ?? false, target));
 
                 const encryptionEnabled = settings.pro?.encryptionEnabled ?? false;
                 const encryptionAvailable = Boolean(settings.subscription?.email) || process.env.GITMIND_ENCRYPTION_DEV_MODE === "true";
                 if (!encryptionEnabled || !encryptionAvailable) {
-                    providerUpdates.push(config.update("custom.authToken", providerSettings.authToken, target));
+                    providerUpdates.push(SettingsManager.updateSingleSetting(config, "custom.authToken", providerSettings.authToken, target));
                 } else {
-                    providerUpdates.push(config.update("custom.authToken", undefined, target));
+                    providerUpdates.push(SettingsManager.updateSingleSetting(config, "custom.authToken", undefined, target));
                 }
             }
 
             const encryptionEnabled = settings.pro?.encryptionEnabled ?? false;
             const encryptionAvailable = Boolean(settings.subscription?.email) || process.env.GITMIND_ENCRYPTION_DEV_MODE === "true";
             if (!encryptionEnabled || !encryptionAvailable) {
-                providerUpdates.push(config.update(`${provider}.apiKey`, providerSettings.apiKey, target));
+                providerUpdates.push(SettingsManager.updateSingleSetting(config, `${provider}.apiKey`, providerSettings.apiKey, target));
             } else {
-                providerUpdates.push(config.update(`${provider}.apiKey`, undefined, target));
+                providerUpdates.push(SettingsManager.updateSingleSetting(config, `${provider}.apiKey`, undefined, target));
             }
         });
 

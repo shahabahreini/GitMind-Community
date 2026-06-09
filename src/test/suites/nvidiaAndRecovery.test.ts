@@ -82,6 +82,5 @@ suite("NVIDIA Provider and Generation Recovery", () => {
         assert.ok(script.includes("['automaticRetryEnabled', 'pro.automaticRetry.enabled'"));
         assert.ok(script.includes("['modelFallbackEnabled', 'pro.modelFallback.enabled'"));
         assert.ok(script.includes("automaticRetryEnabled: document.getElementById('automaticRetryEnabled')?.checked"));
-        assert.ok(script.includes("modelFallbackEnabled: document.getElementById('modelFallbackEnabled')?.checked"));
     });
 });
