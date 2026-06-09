@@ -196,7 +196,14 @@ export class MessageHandler {
                     // Provide immediate feedback
                     // vscode.window.showInformationMessage(`Setting updated: ${message.key} = ${message.value}`);
                 } catch (error) {
-                    vscode.window.showErrorMessage(`Failed to update setting: ${error}`);
+                    const errorStr = String(error);
+                    if (errorStr.includes("not a registered configuration")) {
+                        vscode.window.showWarningMessage(
+                            `Setting '${message.key}' is not registered in this VS Code window. Please reload VS Code or update the GitMind extension.`
+                        );
+                    } else {
+                        vscode.window.showErrorMessage(`Failed to update setting: ${error}`);
+                    }
                 } finally {
                     // Release the lock for this specific setting key
                     this._updateLocks.delete(settingKey);
