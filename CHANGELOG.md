@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+
+## v5.0.5 - 2026-06-09
+
+### Enhanced
+
+- Refactored configuration updates to use `updateSingleSetting` for improved resilience against unregistered configuration errors.
+- Standardized asynchronous configuration updates by replacing Thenable with Promise.
+- Added warning notifications to provide user feedback when settings fail to register.
+
+### Technical
+
+- Updated GitHub Actions to Node.js 24 by setting `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24`.
+- Removed deprecated enablement property from `actions/configure-pages`.
+- Standardized environment configuration across documentation workflows.
+- Updated wiki deployment to use `GITHUB_TOKEN` for authentication and synchronization.
+- Configured dynamic repository references and write permissions for wiki deployment jobs.
+- Removed redundant token validation steps in CI workflows.
+- Updated `.gitignore` to enable version tracking for lock files.
+
 ## v5.0.4 - 2026-06-08
 
 ### New Features
