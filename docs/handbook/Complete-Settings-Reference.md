@@ -1,6 +1,6 @@
 # Complete Settings Reference
 
-> Verified against GitMind `5.0.2` on June 7, 2026.
+> Verified against GitMind `5.0.6` on June 7, 2026.
 
 Open **GitMind Setting** for the guided UI. The table below covers user-configurable settings. API keys and auth tokens have no default. Developer-only environment settings and automatically managed license/subscription state are intentionally omitted.
 
@@ -13,6 +13,10 @@ Open **GitMind Setting** for the guided UI. The table below covers user-configur
 | `gitmind.showOnboarding` | `true` | Show onboarding |
 | `gitmind.commit.verbose` | `true` | Include body |
 | `gitmind.commit.captureAllChanges` | `false` | Include staged, unstaged, untracked |
+| `gitmind.commit.excludeFiles` | `[]` | Glob patterns excluded from AI analysis |
+| `gitmind.commit.issueTracking.enabled` | `false` | Include detected issue references |
+| `gitmind.commit.issueTracking.regex` | default issue pattern | Custom issue-reference regular expression |
+| `gitmind.commit.issueTracking.placement` | `summary` | Place issue references in summary or body |
 | `gitmind.showDiagnostics` | `false` | Show model/token information |
 | `gitmind.telemetry.enabled` | `false` | Anonymous usage analytics; also respects VS Code telemetry |
 | `gitmind.promptCustomization.enabled` | `false` | Ask for custom context |
@@ -59,7 +63,6 @@ Open **GitMind Setting** for the guided UI. The table below covers user-configur
 | Setting | Default | Values / range |
 | --- | --- | --- |
 | `gitmind.pro.encryptionEnabled` | `false` | Store provider keys in VS Code SecretStorage; Pro |
-| `gitmind.pro.orderId` | None | Purchase order ID entered during Pro activation; keep private |
 | `gitmind.pro.advancedModelConfig.mode` | `auto` | `auto` or `custom`; Pro |
 | `gitmind.pro.advancedModelConfig.temperatureEnabled` / `.temperature` | `false` / `0.2` | 0-2; custom mode; provider support varies |
 | `gitmind.pro.advancedModelConfig.topPEnabled` / `.topP` | `false` / `0.9` | 0-1; custom mode |

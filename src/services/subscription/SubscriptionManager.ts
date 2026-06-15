@@ -47,6 +47,7 @@ export class SubscriptionManager {
         const validationStatus = config.get<string>('pro.validationStatus');
         const licenseKey = config.get<string>('pro.licenseKey');
         const orderId = config.get<string>('pro.orderId');
+        const legacySubscriptionStatus = config.get<string>('subscription.status');
 
         // If license key OR order ID is valid, user is pro regardless of subscription status
         if (validationStatus === 'valid' && (licenseKey || orderId)) {
@@ -54,20 +55,14 @@ export class SubscriptionManager {
             return true;
         }
 
-        // Fall back to subscription check only if license validation failed/missing
-        if (!email) {
-            email = await this.getUserEmail(preventPrompt);
+        if (legacySubscriptionStatus === 'active') {
+            debugLog('Honoring previously validated subscription status during license-key migration');
+            return true;
         }
 
-        if (!email) {
-            debugLog('No email available for subscription check and no valid license, returning false');
-            return false;
-        }
-
-        const subscription = await this.getSubscriptionStatus(email);
-        const result = subscription.isActive;
-        debugLog(`Subscription check for ${email}: ${result}`);
-        return result;
+        void email;
+        void preventPrompt;
+        return false;
     }
 
     /**
@@ -79,6 +74,8 @@ export class SubscriptionManager {
         const config = vscode.workspace.getConfiguration('gitmind');
         const validationStatus = config.get<string>('pro.validationStatus');
         const licenseKey = config.get<string>('pro.licenseKey');
+        const legacyOrderId = config.get<string>('pro.orderId');
+        const legacySubscriptionStatus = config.get<string>('subscription.status');
 
         debugLog(`License check: validationStatus=${validationStatus}, hasLicenseKey=${!!licenseKey}`);
 
@@ -105,6 +102,10 @@ export class SubscriptionManager {
             }
 
             return proStatus;
+        }
+
+        if ((validationStatus === 'valid' && legacyOrderId) || legacySubscriptionStatus === 'active') {
+            return { isActive: true, isPaused: false, isExpired: false, plan: 'pro-legacy' };
         }
 
         const cacheKey = email.toLowerCase();
@@ -316,34 +317,7 @@ export class SubscriptionManager {
      * Manage subscription (open customer portal or settings)
      */
     public async manageSubscription(): Promise<void> {
-        // If they have a valid license key, opening the settings view is appropriate
-        const config = vscode.workspace.getConfiguration('gitmind');
-        const validationStatus = config.get<string>('pro.validationStatus');
-        const licenseKey = config.get<string>('pro.licenseKey');
-
-        if (validationStatus === 'valid' && licenseKey) {
-            vscode.commands.executeCommand('gitmind.openSettings');
-            return;
-        }
-
-        const email = await this.getUserEmail();
-        if (!email) {
-            vscode.window.showWarningMessage('No email configured for subscription management.');
-            return;
-        }
-
-        try {
-            const portalUrl = await this.lemonSqueezy.getCustomerPortalUrl(email);
-
-            if (portalUrl) {
-                await vscode.env.openExternal(vscode.Uri.parse(portalUrl));
-            } else {
-                vscode.window.showErrorMessage('Could not find your subscription. Please contact support.');
-            }
-        } catch (error) {
-            debugLog('Failed to open customer portal:', error);
-            vscode.window.showErrorMessage('Failed to open subscription management. Please try again.');
-        }
+        vscode.commands.executeCommand('gitmind.openSettings', 'subscription-tab');
     }
 
     /**

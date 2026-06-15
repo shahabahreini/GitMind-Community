@@ -1,5 +1,9 @@
 .vscode/**
 .vscode-test/**
+.codex/**
+.codex
+scratch/**
+scratch
 out/**
 node_modules/**
 src/**
@@ -30,8 +34,13 @@ azure-development/**
 docs/**
 .trunk/**
 .claude/**
+.claude
+**/.claude/**
+resources/.claude
 build.sh
 scripts/**
+pnpm-lock.yaml
+yarn.lock
 
 # Additional exclusions to reduce size
 .github/**

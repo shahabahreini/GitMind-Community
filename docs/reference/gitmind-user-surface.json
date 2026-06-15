@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "product": {
     "name": "GitMind",
-    "version": "5.0.2",
+    "version": "5.0.6",
     "auditDate": "2026-06-07",
-    "source": "ai-commit-assistant-5.0.2.vsix",
+    "source": "package.json",
     "minimumVSCode": "^1.96.0"
   },
   "counts": {
     "providerChoices": 18,
     "builtInProviders": 17,
     "settingsRegistered": 97,
-    "settingsDocumented": 85,
-    "commandsRegistered": 43,
-    "publicCommands": 34,
+    "settingsDocumented": 88,
+    "commandsRegistered": 40,
+    "publicCommands": 31,
     "commitStyles": 12,
     "primarySettingsTabs": 5
   },
@@ -371,6 +371,48 @@
       "default": false,
       "availability": "Free",
       "description": "When enabled, GitMind captures both staged and unstaged changes (including untracked files) and will not prompt you to stage changes before generating a commit message."
+    },
+    {
+      "id": "gitmind.commit.excludeFiles",
+      "type": "array",
+      "default": [
+        "*-lock.json",
+        "*.lock",
+        "yarn.lock",
+        "pnpm-lock.yaml",
+        "Cargo.lock",
+        "*.min.js",
+        "dist/*",
+        "build/*"
+      ],
+      "availability": "Free",
+      "description": "List of glob patterns to exclude from AI analysis when generating commit messages. Use this to avoid wasting tokens on large auto-generated files."
+    },
+    {
+      "id": "gitmind.commit.issueTracking.enabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Free",
+      "description": "Automatically extract issue tracking IDs (e.g., Jira, GitHub) from the branch name and include them in the commit message."
+    },
+    {
+      "id": "gitmind.commit.issueTracking.regex",
+      "type": "string",
+      "default": "([A-Z]+-\\\\d+|#\\\\d+)",
+      "availability": "Free",
+      "description": "Regex pattern used to extract the issue ID from the branch name. E.g. '([A-Z]+-\\\\d+)' for Jira (PROJ-123) or '(#\\\\d+)' for GitHub (#123)."
+    },
+    {
+      "id": "gitmind.commit.issueTracking.placement",
+      "type": "string",
+      "default": "prepend",
+      "availability": "Free",
+      "description": "Where to place the extracted issue ID in the generated commit message.",
+      "values": [
+        "prepend",
+        "append",
+        "body"
+      ]
     },
     {
       "id": "gitmind.commit.targetLanguage",
@@ -829,13 +871,6 @@
       "description": "Enable encrypted storage for API keys (Pro feature only)"
     },
     {
-      "id": "gitmind.pro.orderId",
-      "type": "string",
-      "default": "",
-      "availability": "Pro",
-      "description": "Your LemonSqueezy order ID for Pro activation"
-    },
-    {
       "id": "gitmind.pro.commitBodyOptions.enabled",
       "type": "boolean",
       "default": false,
@@ -1207,23 +1242,8 @@
       "shortcut": null
     },
     {
-      "id": "gitmind.manageSubscription",
-      "title": "Manage Subscription",
-      "shortcut": null
-    },
-    {
-      "id": "gitmind.refreshSubscription",
-      "title": "Refresh Subscription Status",
-      "shortcut": null
-    },
-    {
       "id": "gitmind.activateWithLicenseKey",
       "title": "Activate Pro with License Key",
-      "shortcut": null
-    },
-    {
-      "id": "gitmind.activateWithOrderId",
-      "title": "Activate Pro with Order ID",
       "shortcut": null
     },
     {

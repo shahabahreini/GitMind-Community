@@ -1,6 +1,6 @@
 # Security And Privacy
 
-> Verified against GitMind `5.0.2` on June 7, 2026.
+> Verified against GitMind `5.0.6` on June 7, 2026.
 
 ## Data Flow
 

@@ -211,30 +211,6 @@ export class ScriptManager {
                     }
                 });
                 
-                // Order activation handler
-                attachButtonHandler('activateOrderBtn', () => {
-                    const orderId = getInputValue('orderIdInput');
-                    if (!orderId) {
-                        showMessage('error', 'Please enter an order ID');
-                        return;
-                    }
-                    const email = getInputValue('subscriptionEmail');
-                    if (!email) {
-                        showMessage('error', 'Please enter your email address');
-                        return;
-                    }
-                    
-                    setButtonLoadingState('activateOrderBtn', true, 'Activating...', 'Activate Order');
-                    
-                    if (typeof vscode !== 'undefined') {
-                        vscode.postMessage({
-                            command: 'activateProOrder',
-                            orderId: orderId,
-                            customerEmail: email
-                        });
-                    }
-                });
-                
                 // License validation handler
                 attachButtonHandler('validateLicenseBtn', () => {
                     setButtonLoadingState('validateLicenseBtn', true, 'Validating...', 'Validate License');

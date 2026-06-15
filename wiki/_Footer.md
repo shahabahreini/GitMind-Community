@@ -1,1 +1,1 @@
-GitMind Wiki | Generated from `docs/handbook/` | Verified against GitMind `5.0.2` on June 7, 2026 | [Pages handbook](https://shahabahreini.github.io/AI-Commit-Assistant/) | [Support](https://github.com/shahabahreini/AI-Commit-Assistant/issues)
+GitMind Wiki | Generated from `docs/handbook/` | Verified against GitMind `5.0.6` on June 7, 2026 | [Pages handbook](https://shahabahreini.github.io/AI-Commit-Assistant/) | [Support](https://github.com/shahabahreini/AI-Commit-Assistant/issues)

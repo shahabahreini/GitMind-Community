@@ -1,6 +1,6 @@
 # Automatic Recovery
 
-> Verified against GitMind `5.0.2` on June 7, 2026.
+> Verified against GitMind `5.0.6` on June 7, 2026.
 
 GitMind Pro Automatic Recovery provides bounded recovery without retry loops.
 

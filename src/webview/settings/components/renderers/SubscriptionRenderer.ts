@@ -13,7 +13,6 @@ export class SubscriptionRenderer extends BaseRenderer {
             ? [
                 this.renderSubscriptionHeader(),
                 this.renderProActivation(),
-                this.renderSubscriptionManagement(),
                 this.renderSubscriptionPlans()
             ]
             : [
@@ -34,7 +33,7 @@ export class SubscriptionRenderer extends BaseRenderer {
         <script>
             // Note: All subscription button event handlers are now managed by ScriptManager
             // to avoid conflicts with the global event handling system.
-            // This includes: subscribeBtn, manageSubscriptionBtn, refreshSubscriptionBtn, activateLicenseBtn, activateOrderBtn
+            // This includes the purchase, license activation, validation, and deactivation controls.
             
             // Handle responses from the extension
             window.addEventListener('message', function(event) {
@@ -161,14 +160,14 @@ export class SubscriptionRenderer extends BaseRenderer {
                     </div>
                 </div>
             `;
-        } else if (hasEmail) {
+        } else if (hasEmail && this.settings.subscription?.status === 'active') {
             return `
                 <div class="subscription-status-card email-configured">
                     <div class="status-info">
                         <div class="status-icon">●</div>
                         <div class="status-details">
-                            <div class="status-title">Email Configured: ${email}</div>
-                            <div class="status-subtitle">Ready to activate Pro features</div>
+                            <div class="status-title">Legacy Pro Access Active</div>
+                            <div class="status-subtitle">Enter your license key to migrate this activation.</div>
                         </div>
                     </div>
                 </div>
@@ -180,7 +179,7 @@ export class SubscriptionRenderer extends BaseRenderer {
                         <div class="status-icon">○</div>
                         <div class="status-details">
                             <div class="status-title">Pro Not Active</div>
-                            <div class="status-subtitle">Configure email or activate license to get started</div>
+                            <div class="status-subtitle">Enter a license key to get started</div>
                         </div>
                     </div>
                 </div>
@@ -225,45 +224,6 @@ export class SubscriptionRenderer extends BaseRenderer {
                 <div class="purchase-info">
                     <p><strong>Note:</strong> GitMind Pro is a one-time purchase that provides lifetime access to all Pro features.</p>
                 </div>` : ''}
-            </div>
-        `;
-    }
-
-    private renderSubscriptionManagement(): string {
-        const hasEmail = this.hasSubscriptionEmail();
-        const email = this.settings.subscription?.email || '';
-
-        return `
-            <div class="subscription-management">
-                <div class="section-header">
-                    <h3 class="section-title">Subscription Management</h3>
-                    <div class="section-description">Manage your GitMind Pro subscription and settings</div>
-                </div>
-                
-                <div class="management-card">
-                    <div class="email-configuration">
-                        <div class="form-group">
-                            <label for="subscriptionEmail" class="subscription-email-label">
-                                <span>Email Address</span>
-                                ${hasEmail ? '<span class="email-verified">✓ Verified</span>' : ''}
-                            </label>
-                            <input type="email" 
-                                   id="subscriptionEmail" 
-                                   value="${email}" 
-                                   placeholder="your-email@example.com"
-                                   class="subscription-email-input ${hasEmail ? 'verified' : ''}"
-                                   data-setting="subscription.email" />
-                            <div class="description">
-                                Enter your email to manage subscription and receive important updates
-                            </div>
-                        </div>
-                        
-                        <div class="management-actions">
-                            ${FormUtils.createButton('manageSubscriptionBtn', 'Manage Subscription', 'btn btn-secondary', !hasEmail, 'Manage your GitMind Pro subscription')}
-                            ${FormUtils.createButton('refreshSubscriptionBtn', 'Refresh Status', 'btn btn-secondary', !hasEmail, 'Refresh your subscription status')}
-                        </div>
-                    </div>
-                </div>
             </div>
         `;
     }
@@ -345,17 +305,6 @@ export class SubscriptionRenderer extends BaseRenderer {
                         <p class="activation-sub">Choose your activation method below to get started immediately.</p>
                     </div>
                     
-                    <div class="activation-tabs-nav">
-                        <button type="button" class="activation-tab-btn active" data-tab-target="license-tab">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; display: inline-block; vertical-align: middle;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                            License Key
-                        </button>
-                        <button type="button" class="activation-tab-btn" data-tab-target="order-tab">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; display: inline-block; vertical-align: middle;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                            Order ID
-                        </button>
-                    </div>
-
                     <div class="activation-tab-content active" id="license-tab">
                         <p class="tab-instruction">Enter the license key received in your purchase receipt email (starts with <code>GITMIND-PRO-</code>).</p>
                         <div class="activation-form-row">
@@ -370,56 +319,8 @@ export class SubscriptionRenderer extends BaseRenderer {
                         </div>
                     </div>
 
-                    <div class="activation-tab-content" id="order-tab" style="display: none;">
-                        <p class="tab-instruction">Enter your LemonSqueezy Order ID and purchase Email Address to activate your device.</p>
-                        <div class="activation-form-grid">
-                            <div class="input-container">
-                                <label for="orderIdInput">Order ID</label>
-                                <input type="text" 
-                                       id="orderIdInput" 
-                                       placeholder="e.g. 1234567"
-                                       class="order-input-field" />
-                            </div>
-                            <div class="input-container">
-                                <label for="subscriptionEmail">Email Address</label>
-                                <input type="email" 
-                                       id="subscriptionEmail" 
-                                       value="${email}"
-                                       placeholder="e.g. name@example.com"
-                                       class="email-input-field"
-                                       data-setting="subscription.email" />
-                            </div>
-                        </div>
-                        <div class="activation-form-row">
-                            <button type="button" class="btn btn-secondary action-btn" id="activateOrderBtn" style="flex: 1;">Activate Order</button>
-                            <button type="button" class="btn action-btn buy-pro-btn js-buy-pro" title="Purchase a GitMind Pro license" style="flex: 1;">Buy GitMind Pro</button>
-                        </div>
-                    </div>
                 </div>
             </div>
-
-            <script>
-                (function() {
-                    const tabs = document.querySelectorAll('.activation-tab-btn');
-                    tabs.forEach(tab => {
-                        tab.addEventListener('click', () => {
-                            tabs.forEach(t => t.classList.remove('active'));
-                            tab.classList.add('active');
-                            
-                            const target = tab.getAttribute('data-tab-target');
-                            document.querySelectorAll('.activation-tab-content').forEach(content => {
-                                if (content.id === target) {
-                                    content.style.display = 'block';
-                                    content.classList.add('active');
-                                } else {
-                                    content.style.display = 'none';
-                                    content.classList.remove('active');
-                                }
-                            });
-                        });
-                    });
-                })();
-            </script>
         `;
     }
 }
