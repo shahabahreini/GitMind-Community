@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v5.0.6 - 2026-06-14
+
+### Enhanced
+
+- Included lock files in diff output when no other non-lock files are staged.
+- Updated `@types/node` to `25.9.3` and `@types/vscode` to `1.120.0`.
+- Upgraded `eslint` to `10.5.0` for improved linting capabilities.
+- Updated `sanitize-html` to `2.17.5` for security patches.
+
+### Technical
+
+- Reverted `@types/vscode` to `1.96.0` to resolve dependency compatibility issues.
+
 ## v5.0.5 - 2026-06-09
 
 ### Enhanced
