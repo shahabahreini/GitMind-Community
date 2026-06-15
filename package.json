@@ -1464,7 +1464,7 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "^25.9.3",
     "@types/sanitize-html": "^2.16.1",
-    "@types/vscode": "^1.120.0",
+    "@types/vscode": "^1.96.0",
     "@typescript-eslint/eslint-plugin": "^8.61.0",
     "@typescript-eslint/parser": "^8.61.0",
     "@vscode/test-cli": "^0.0.11",
