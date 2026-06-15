@@ -1,6 +1,6 @@
 # GitMind Pro
 
-> Verified against GitMind `5.0.2` on June 7, 2026.
+> Verified against GitMind `5.0.6` on June 7, 2026.
 
 GitMind Pro is a one-time lifetime purchase. It unlocks advanced controls while keeping all 17 built-in providers available to Free users.
 
@@ -28,6 +28,6 @@ Locked controls remain visible so Free users can understand what Pro adds. Selec
 1. Open [GitMind Pro checkout](https://gitmind.lemonsqueezy.com/checkout/buy/cd58d4e5-92cf-4f59-a6fe-ae6e57010706).
 2. Keep the purchase receipt and license key private.
 3. Open **GitMind Setting > Pro**.
-4. Activate with the license key, or verify the order ID and purchase email.
+4. Activate with the license key from the purchase email.
 
 See [Activation And License Management](Activation-And-License-Management). Never post license keys, full order IDs, or purchase emails in public issues.

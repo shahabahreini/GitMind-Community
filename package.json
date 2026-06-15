@@ -766,13 +766,6 @@
           "markdownDescription": "Enable encrypted storage for API keys using VS Code's SecretStorage API. **Pro Feature**: This feature is only available for GitMind Pro subscribers. API keys are encrypted and stored securely, making them inaccessible to other extensions.",
           "order": 101
         },
-        "gitmind.pro.orderId": {
-          "type": "string",
-          "default": "",
-          "description": "Your LemonSqueezy order ID for Pro activation",
-          "markdownDescription": "Your LemonSqueezy order ID for activating GitMind Pro features. This can be found in your purchase receipt email.",
-          "order": 102
-        },
         "gitmind.pro.validationStatus": {
           "type": "string",
           "enum": [
@@ -1012,13 +1005,6 @@
           "markdownDescription": "**Pro Feature**: Define custom emojis for specific commit types. Format: `{\"feat\": \"✨\", \"fix\": \"🐛\"}`. Leave empty to use default gitmoji mappings.",
           "order": 112
         },
-        "gitmind.subscription.email": {
-          "type": "string",
-          "default": "",
-          "description": "Your email address for GitMind Pro subscription management",
-          "markdownDescription": "Your email address associated with your GitMind Pro subscription. This is used to validate your subscription status and access premium features.",
-          "order": 106
-        },
         "gitmind.subscription.plan": {
           "type": "string",
           "default": "free",
@@ -1039,18 +1025,6 @@
           "type": "string",
           "default": "",
           "description": "Last time subscription status was checked (internal use)"
-        },
-        "gitmind.environment.LEMONSQUEEZY_API_KEY": {
-          "type": "string",
-          "default": "",
-          "description": "Lemon Squeezy API key for subscription management",
-          "scope": "machine"
-        },
-        "gitmind.environment.LEMONSQUEEZY_STORE_ID": {
-          "type": "string",
-          "default": "197494",
-          "description": "Lemon Squeezy store ID",
-          "scope": "machine"
         }
       }
     },
@@ -1244,23 +1218,8 @@
         "category": "GitMind"
       },
       {
-        "command": "gitmind.manageSubscription",
-        "title": "Manage Subscription",
-        "category": "GitMind"
-      },
-      {
-        "command": "gitmind.refreshSubscription",
-        "title": "Refresh Subscription Status",
-        "category": "GitMind"
-      },
-      {
         "command": "gitmind.activateWithLicenseKey",
         "title": "Activate Pro with License Key",
-        "category": "GitMind"
-      },
-      {
-        "command": "gitmind.activateWithOrderId",
-        "title": "Activate Pro with Order ID",
         "category": "GitMind"
       },
       {
@@ -1441,7 +1400,8 @@
     "watch:esbuild": "node esbuild.js --watch",
     "watch:tsc": "tsc --noEmit --watch",
     "package": "npm run clean && npm run check-types && npm run lint && node esbuild.js --production",
-    "package:vsce": "npx vsce package --allow-package-secrets sendgrid",
+    "package:vsce": "vsce package",
+    "package:audit": "node scripts/audit-vsix.mjs",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
@@ -1469,7 +1429,7 @@
     "@typescript-eslint/parser": "^8.61.0",
     "@vscode/test-cli": "^0.0.11",
     "@vscode/test-electron": "^2.5.2",
-    "@vscode/vsce": "^2.32.0",
+    "@vscode/vsce": "3.9.2",
     "esbuild": "^0.27.7",
     "eslint": "^10.5.0",
     "npm-run-all": "^4.1.5",

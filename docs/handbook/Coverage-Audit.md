@@ -1,6 +1,6 @@
 # GitMind 5.x Documentation Coverage Audit
 
-> Verified against GitMind `5.0.2` on June 7, 2026.
+> Verified against GitMind `5.0.6` on June 7, 2026.
 
 This page records the public surface checked against the packaged GitMind 5.0.2 release. `npm run docs:validate` compares the handbook and generated Wiki with the sanitized product manifest.
 
@@ -22,7 +22,7 @@ This page records the public surface checked against the packaged GitMind 5.0.2 
 - Free Features: verbose output, Capture All Changes, custom context/saved prompt behavior, diagnostics, onboarding, debug, and telemetry.
 - Commit Styles: all 12 styles and all Emoji Enhancement settings.
 - Pro Features: encryption, target language, summary/body limits, advanced model parameters, Automatic Recovery, history learning, and changelog settings.
-- Pro Activation: license-key activation, order verification, validation/status refresh, customer portal, deactivation, device slots, and troubleshooting.
+- Pro Activation: license-key activation, validation, deactivation, device slots, legacy-access migration, and troubleshooting.
 
 Automatically managed values such as the saved last prompt, validation timestamps/status, instance IDs, and subscription state are documented as behavior but are not presented as user-editable settings. Developer-only environment and telemetry transport configuration is intentionally excluded.
 
@@ -36,7 +36,7 @@ Automatically managed values such as the saved last prompt, validation timestamp
 | Prompt and style | View Last Custom Prompt; Clear Last Custom Prompt; Change Commit Message Style |
 | Onboarding | Open, complete, skip, reset, and re-enable onboarding through the walkthrough/UI |
 | Pro workflows | Learn from Commit History; Generate Changelog; Update Changelog |
-| Pro activation | Activate with license key/order ID; validate, refresh, manage, deactivate, and repair activation |
+| Pro activation | Activate with license key; validate, deactivate, repair activation, and migrate legacy access |
 
 Internal status, migration, test, and debug-state commands are intentionally not documented as supported user workflows.
 

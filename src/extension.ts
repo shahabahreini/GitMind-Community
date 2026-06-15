@@ -172,13 +172,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       }
       const params = new URLSearchParams(uri.query);
       const key = params.get('key');
-      const order = params.get('order');
-      const email = params.get('email');
-
       if (key) {
         vscode.commands.executeCommand('gitmind.activateWithLicenseKey', key);
-      } else if (order) {
-        vscode.commands.executeCommand('gitmind.activateWithOrderId', order, email ?? undefined);
       } else {
         vscode.commands.executeCommand('gitmind.showActivationQuickPick');
       }

@@ -28,6 +28,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.repository == 'shahabahreini/AI-Commit-Assistant'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,7 +36,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm install --no-audit --no-fund
+      - run: npm ci --no-audit --no-fund
       - run: npm run docs:validate
       - run: npm run docs:build
       - uses: actions/configure-pages@v5

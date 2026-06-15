@@ -413,44 +413,6 @@ export class MessageHandler {
                 }
                 break;
 
-            case 'activateProOrder':
-                try {
-                    const { ProActivationService } = await import('../../services/subscription/ProActivationService.js');
-                    const proService = ProActivationService.getInstance();
-
-                    const result = await proService.activateWithOrderId(message.orderId, message.customerEmail);
-
-                    if (SettingsWebview.isWebviewOpen()) {
-                        SettingsWebview.postMessageToWebview({
-                            command: 'proActivationResult',
-                            success: result.success,
-                            message: result.message,
-                            details: result.details,
-                            orderId: message.orderId  // Include the order ID for UI masking
-                        });
-                    }
-
-                    // If successful, refresh the settings
-                    if (result.success) {
-                        const updatedSettings = await SettingsManager.getCurrentSettings();
-                        if (SettingsWebview.isWebviewOpen()) {
-                            SettingsWebview.postMessageToWebview({
-                                command: 'updateSettings',
-                                settings: updatedSettings
-                            });
-                        }
-                    }
-                } catch (error) {
-                    if (SettingsWebview.isWebviewOpen()) {
-                        SettingsWebview.postMessageToWebview({
-                            command: 'proActivationResult',
-                            success: false,
-                            message: `Activation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-                        });
-                    }
-                }
-                break;
-
             case 'validateProLicense':
                 try {
                     const { ProActivationService } = await import('../../services/subscription/ProActivationService.js');

@@ -208,11 +208,7 @@ export class SettingsMigrationService {
             'subscription.email': 'subscription.email',
             'subscription.plan': 'subscription.plan',
             'subscription.status': 'subscription.status',
-            'subscription.lastChecked': 'subscription.lastChecked',
-
-            // Environment (legacy)
-            'environment.LEMONSQUEEZY_API_KEY': 'environment.LEMONSQUEEZY_API_KEY',
-            'environment.LEMONSQUEEZY_STORE_ID': 'environment.LEMONSQUEEZY_STORE_ID'
+            'subscription.lastChecked': 'subscription.lastChecked'
         };
 
         // Check each configuration target
@@ -331,8 +327,7 @@ export class SettingsMigrationService {
             'promptCustomization.enabled', 'promptCustomization.saveLastPrompt', 'promptCustomization.lastPrompt',
             'telemetry.enabled', 'telemetry.connectionString', 'showDiagnostics',
             'pro.licenseKey', 'pro.encryptionEnabled', 'pro.orderId', 'pro.validationStatus', 'pro.lastValidation', 'pro.instanceId',
-            'subscription.email', 'subscription.plan', 'subscription.status', 'subscription.lastChecked',
-            'environment.LEMONSQUEEZY_API_KEY', 'environment.LEMONSQUEEZY_STORE_ID'
+            'subscription.email', 'subscription.plan', 'subscription.status', 'subscription.lastChecked'
         ];
 
         // Also dynamically discover any other settings

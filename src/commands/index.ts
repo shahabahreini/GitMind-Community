@@ -1351,48 +1351,6 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
       }
     }),
 
-    vscode.commands.registerCommand("gitmind.activateWithOrderId", async (orderId?: string, email?: string) => {
-      try {
-        const proActivationService = ProActivationService.getInstance();
-
-        // If no order ID provided, prompt user
-        if (!orderId) {
-          orderId = await vscode.window.showInputBox({
-            prompt: 'Enter your LemonSqueezy order ID',
-            placeHolder: 'Order ID from your purchase receipt',
-            ignoreFocusOut: true
-          });
-
-          if (!orderId) {
-            return; // User cancelled
-          }
-        }
-
-        // If no email provided, prompt user (optional)
-        if (!email) {
-          email = await vscode.window.showInputBox({
-            prompt: 'Enter the email used for purchase (optional)',
-            placeHolder: 'your.email@example.com',
-            ignoreFocusOut: true
-          });
-        }
-
-        const result = await proActivationService.activateWithOrderId(orderId, email);
-
-        if (result.success) {
-          vscode.window.showInformationMessage(result.message);
-          // Refresh UI
-          vscode.commands.executeCommand('gitmind.refreshSubscription', { silent: true });
-        } else {
-          vscode.window.showErrorMessage(result.message);
-        }
-      } catch (error) {
-        debugLog("Order activation error:", error);
-        const errorMessage = error instanceof Error ? error.message : 'Failed to activate with order ID';
-        vscode.window.showErrorMessage(`Failed to activate with order ID: ${errorMessage}`);
-      }
-    }),
-
     vscode.commands.registerCommand("gitmind.showActivationQuickPick", async () => {
       try {
         const items: Array<vscode.QuickPickItem & { action: string }> = [
