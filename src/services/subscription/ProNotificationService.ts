@@ -1,12 +1,11 @@
 import * as vscode from 'vscode';
 import { SubscriptionManager } from './SubscriptionManager';
-import { LemonSqueezyService } from './LemonSqueezyService';
+import { GitMindLicenseService } from './GitMindLicenseService';
 import { LegacyEntitlementService } from './LegacyEntitlementService';
 import { debugLog } from '../debug/logger';
 
 export const EXTENSION_ID = 'ShahabBahreiniJangjoo.ai-commit-assistant';
-export const MIGRATION_GUIDE_URL =
-    'https://github.com/shahabahreini/Gitmind-Pro/blob/main/docs/LICENSE-MIGRATION.md';
+export const MIGRATION_GUIDE_URL = 'https://gitmind-pro.com/migrate';
 
 export class ProNotificationService {
     private static instance: ProNotificationService;
@@ -84,7 +83,7 @@ export class ProNotificationService {
             );
 
             if (selection === buyAction) {
-                vscode.env.openExternal(vscode.Uri.parse(LemonSqueezyService.CHECKOUT_URL));
+                vscode.env.openExternal(vscode.Uri.parse(GitMindLicenseService.CHECKOUT_URL));
                 // Also open the Settings UI on the "Pro Activation" tab so the user can
                 // activate right after purchasing without hunting for where to enter the key.
                 vscode.commands.executeCommand('gitmind.openSettings', 'subscription-tab');
@@ -118,19 +117,27 @@ export class ProNotificationService {
         }
         await legacy.recordMigrationNotice(version);
 
-        const learnMore = 'How to migrate';
-        const dismiss = 'Got it';
+        const claim = 'Claim free key';
+        const learnMore = 'What happened?';
+        const dismiss = 'Not now';
 
         const selection = await vscode.window.showInformationMessage(
-            'GitMind Pro is still active — nothing is broken and you do not need to do anything. ' +
-            'We are moving to a new payment provider, and your existing license keeps working. ' +
-            'A free replacement key will be available shortly, which also unlocks self-service ' +
-            'device management.',
+            'GitMind Pro is active and staying that way — nothing is broken and there is nothing ' +
+            'you must do. Our old payment provider closed our store, so we have moved. Claim a ' +
+            'free replacement key (no charge) to restore online validation and manage your devices.',
+            claim,
             learnMore,
             dismiss
         );
 
-        if (selection === learnMore) {
+        if (selection === claim) {
+            // Carry the old key along so the claim page is one field away from done. It is the
+            // only proof of purchase that still exists anywhere — Lemon Squeezy's API is gone
+            // and we were locked out before any customer export was possible.
+            const legacyKey = legacy.getEntitlement()?.legacyKey;
+            const url = GitMindLicenseService.getInstance().buildMigrationUrl(legacyKey);
+            void vscode.env.openExternal(vscode.Uri.parse(url));
+        } else if (selection === learnMore) {
             void vscode.env.openExternal(vscode.Uri.parse(MIGRATION_GUIDE_URL));
         }
 
