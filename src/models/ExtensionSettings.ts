@@ -103,6 +103,10 @@ export interface ExtensionSettings {
     };
     // Pro Features Settings
     pro?: {
+        /** Authoritative entitlement, computed by the host. The webview reads it; it never recomputes it. */
+        isPro?: boolean;
+        /** Pro is being granted by a grandfathered Lemon Squeezy purchase not yet exchanged for a new key. */
+        isLegacyPro?: boolean;
         encryptionEnabled?: boolean;
         licenseKey?: string;
         orderId?: string;

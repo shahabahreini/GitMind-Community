@@ -157,12 +157,11 @@ See the [NVIDIA NIM LLM API reference](https://docs.api.nvidia.com/nim/reference
 
 ## GitMind Pro Activation
 
-Open **GitMind Settings > Pro** and activate using either:
+Open **GitMind Settings > Pro** and paste the license key from your purchase email.
 
-- The license key from your purchase receipt.
-- Your order ID and purchase email for order verification.
+GitMind Pro is a one-time lifetime purchase. Activation, deactivation, and current Pro status are available directly in the settings panel.
 
-GitMind Pro is a one-time lifetime purchase. Activation, deactivation, and current Pro status are available directly in the redesigned settings panel.
+If your key does not work, or you cannot find it, open an issue and we will sort it out — you will not lose access while we do.
 
 ## Privacy And Security
 

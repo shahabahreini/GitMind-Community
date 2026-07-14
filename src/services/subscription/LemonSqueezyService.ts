@@ -11,6 +11,14 @@ export interface SubscriptionStatus {
 
 export interface LicenseValidationResult {
     isValid: boolean;
+    /**
+     * Set only when a trusted server affirmatively states the license was revoked or refunded.
+     * This is the ONLY signal permitted to downgrade a paying customer: a plain `isValid: false`
+     * is inconclusive, because it is indistinguishable from a network failure or a storefront
+     * that no longer exists. The suspended Lemon Squeezy API never sets it — the owned license
+     * server does.
+     */
+    revoked?: boolean;
     status: string;
     licenseKeyId?: string;
     customerId?: string;
@@ -55,6 +63,9 @@ export class LemonSqueezyService {
                 ...(instanceId ? { instance_id: instanceId } : {})
             });
             if (!response.valid || !response.license_key) {
+                // `revoked` is deliberately left unset: since the store was suspended, a "not
+                // valid" answer here is far more likely to mean "this storefront is gone" than
+                // "this customer never paid". Callers treat it as inconclusive and keep Pro.
                 return { isValid: false, status: 'invalid', error: response.error || 'License key is not valid' };
             }
             return {

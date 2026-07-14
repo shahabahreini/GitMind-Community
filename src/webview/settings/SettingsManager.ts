@@ -4,6 +4,7 @@ import { ExtensionSettings } from "../../models/ExtensionSettings";
 import { debugLog } from "../../services/debug/logger";
 import { SecureKeyManager } from '../../services/encryption/SecureKeyManager';
 import { getProviderDefaultModel } from '../../config/providerCatalog';
+import { isProUser, isLegacyProUser } from '../../utils/proHelpers';
 
 interface ProviderConfig {
     apiKey?: string;
@@ -93,6 +94,11 @@ export class SettingsManager {
             },
             showDiagnostics: config.get<boolean>("showDiagnostics") ?? false,
             pro: {
+                // Entitlement is decided once, here, by the host — the webview must never
+                // re-derive it from the raw settings below, or a grandfathered customer ends up
+                // Pro in one panel and Free in another.
+                isPro: isProUser(),
+                isLegacyPro: isLegacyProUser(),
                 encryptionEnabled: SettingsManager.getEncryptionEnabledSetting(config),
                 licenseKey: await SettingsManager.getActualLicenseKey(config),
                 orderId: config.get<string>("pro.orderId") || "",

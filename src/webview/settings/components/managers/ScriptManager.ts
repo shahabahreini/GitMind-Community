@@ -28,11 +28,10 @@ export class ScriptManager {
     private getSharedUtilities(): string {
         return `
             // Shared utility functions
+            // Reads the entitlement the extension host already decided. Re-deriving it here
+            // from raw settings is what made a grandfathered customer look unlicensed.
             function isProUser() {
-                const hasValidLicense = (window.gitmindSettings?.pro?.licenseKey || window.gitmindSettings?.pro?.orderId) &&
-                    window.gitmindSettings?.pro?.validationStatus === 'valid';
-                const devModeEnabled = typeof window !== 'undefined' && window.GITMIND_DEV_MODE === true;
-                return hasValidLicense || devModeEnabled;
+                return window.gitmindSettings?.pro?.isPro === true;
             }
 
             function showProUpgradeMessage(feature) {

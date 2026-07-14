@@ -4,6 +4,7 @@ import { LemonSqueezyService, SubscriptionStatus } from './LemonSqueezyService';
 import { debugLog } from '../debug/logger';
 import { SecureKeyManager } from '../encryption/SecureKeyManager';
 import { SettingsWebview } from '../../webview/settings/SettingsWebview';
+import { isProUser as sharedIsProUser } from '../../utils/proHelpers';
 
 export interface UserSubscription {
     email: string;
@@ -42,27 +43,12 @@ export class SubscriptionManager {
      * Check if user has an active subscription
      */
     public async isProUser(email?: string, preventPrompt: boolean = false): Promise<boolean> {
-        // First check if user has a valid license key - this takes priority
-        const config = vscode.workspace.getConfiguration('gitmind');
-        const validationStatus = config.get<string>('pro.validationStatus');
-        const licenseKey = config.get<string>('pro.licenseKey');
-        const orderId = config.get<string>('pro.orderId');
-        const legacySubscriptionStatus = config.get<string>('subscription.status');
-
-        // If license key OR order ID is valid, user is pro regardless of subscription status
-        if (validationStatus === 'valid' && (licenseKey || orderId)) {
-            debugLog('User has valid license key/order ID, returning true for isProUser');
-            return true;
-        }
-
-        if (legacySubscriptionStatus === 'active') {
-            debugLog('Honoring previously validated subscription status during license-key migration');
-            return true;
-        }
-
+        // Delegates to the one authority in proHelpers rather than re-deriving entitlement.
+        // This used to carry its own subtly different rules, which meant a grandfathered
+        // customer could read as Pro in one part of the UI and Free in another.
         void email;
         void preventPrompt;
-        return false;
+        return sharedIsProUser();
     }
 
     /**

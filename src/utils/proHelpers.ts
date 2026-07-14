@@ -1,13 +1,35 @@
 import * as vscode from 'vscode';
+import { LegacyEntitlementService } from '../services/subscription/LegacyEntitlementService';
 
 /**
  * Helper functions for Pro user validation and license management
  */
 
+/**
+ * The single authority on Pro entitlement. Every other layer (SubscriptionManager, the
+ * webview renderers, the injected webview script) must route through this rather than
+ * re-deriving the answer, so there is exactly one place to reason about access.
+ */
 export function isProUser(): boolean {
+    // Customers inherited from the suspended Lemon Squeezy store keep Pro unconditionally.
+    // Their entitlement is local and no longer depends on any payment provider being alive.
+    if (LegacyEntitlementService.getInstance().hasActiveEntitlement()) {
+        return true;
+    }
+
     const config = vscode.workspace.getConfiguration('gitmind');
     const validationStatus = config.get('pro.validationStatus');
     return validationStatus === 'valid';
+}
+
+/**
+ * True when Pro is being granted by a grandfathered Lemon Squeezy purchase that has not
+ * yet been exchanged for a replacement key. Callers use this to explain the user's state
+ * instead of surfacing a license error — the old provider's API is gone, so a failed
+ * validation says nothing about whether they paid.
+ */
+export function isLegacyProUser(): boolean {
+    return LegacyEntitlementService.getInstance().hasActiveEntitlement();
 }
 
 export function hasValidLicense(): boolean {

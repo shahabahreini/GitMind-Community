@@ -33,6 +33,8 @@ import { fetchPerplexityModels } from "../services/api/perplexity";
 import { fetchNvidiaModels } from "../services/api/nvidia";
 import { PromptManager } from "../services/promptManager";
 import { SecureKeyManager } from "../services/encryption/SecureKeyManager";
+import { isLegacyProUser } from "../utils/proHelpers";
+import { MIGRATION_GUIDE_URL } from "../services/subscription/ProNotificationService";
 import { SubscriptionManager } from "../services/subscription/SubscriptionManager";
 import { ProActivationService } from "../services/subscription/ProActivationService";
 import { LemonSqueezyService } from "../services/subscription/LemonSqueezyService";
@@ -1458,6 +1460,24 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
 
     vscode.commands.registerCommand("gitmind.validateExistingLicense", async () => {
       try {
+        // A grandfathered license cannot be checked against anything: the Lemon Squeezy store
+        // is gone. Explain that rather than running a doomed request and reporting "not valid",
+        // which would tell a paying customer their license failed when it did no such thing.
+        if (isLegacyProUser()) {
+          const learnMore = 'How to migrate';
+          const selection = await vscode.window.showInformationMessage(
+            '✅ GitMind Pro is active. Your license was purchased through our previous payment ' +
+            'provider, so there is no server left to check it against — we honor it locally and ' +
+            'it will not expire. A free replacement key is coming, which restores online ' +
+            'validation and device management.',
+            learnMore
+          );
+          if (selection === learnMore) {
+            void vscode.env.openExternal(vscode.Uri.parse(MIGRATION_GUIDE_URL));
+          }
+          return;
+        }
+
         const proActivationService = ProActivationService.getInstance();
 
         await vscode.window.withProgress({
@@ -1470,7 +1490,10 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
           if (isValid) {
             vscode.window.showInformationMessage('✅ Your license is valid and active.');
           } else {
-            vscode.window.showWarningMessage('❌ Your license is not valid or has expired.');
+            vscode.window.showWarningMessage(
+              '⚠️ We could not confirm your license right now. Your Pro access is unchanged — ' +
+              'this is usually a temporary network issue. Contact support if it persists.'
+            );
           }
 
           // Refresh UI
@@ -1478,8 +1501,9 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
         });
       } catch (error) {
         debugLog("License validation error:", error);
-        const errorMessage = error instanceof Error ? error.message : 'Failed to validate license';
-        vscode.window.showErrorMessage(`Failed to validate license: ${errorMessage}`);
+        vscode.window.showWarningMessage(
+          'GitMind: Could not reach the license server. Your Pro access is unaffected.'
+        );
       }
     }),
 
@@ -1494,9 +1518,10 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
         if (confirm === 'Deactivate') {
           const proActivationService = ProActivationService.getInstance();
 
-          // Call the API to properly deactivate the license on the server
-          // This ensures the license is released on the Lemon Squeezy server
-          const result = await proActivationService.deactivate(true);
+          // For a grandfathered license there is no server to release the seat on, and calling
+          // the suspended Lemon Squeezy API would only throw. Clear local state instead, which
+          // is the entirety of what the entitlement consists of.
+          const result = await proActivationService.deactivate(!isLegacyProUser());
 
           if (result.success) {
             // Show detailed deactivation modal

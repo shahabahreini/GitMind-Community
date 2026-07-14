@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { CommitStyle } from '../config/types';
 import { debugLog } from './debug/logger';
 import { SubscriptionManager } from './subscription/SubscriptionManager';
+import { isProUser } from '../utils/proHelpers';
 
 export interface CommitStyleDefinition {
     id: CommitStyle;
@@ -232,14 +233,9 @@ export class CommitStyleManager {
             return true;
         }
 
-        // Use the same validation logic as the frontend to ensure consistency
-        const config = vscode.workspace.getConfiguration('gitmind');
-        const validationStatus = config.get<string>('pro.validationStatus');
-        const licenseKey = config.get<string>('pro.licenseKey');
-        const orderId = config.get<string>('pro.orderId');
-
-        // Check license/order validation status first (same logic as BaseRenderer.hasValidLicense)
-        const hasValidLicense = Boolean((licenseKey || orderId) && validationStatus === 'valid');
+        // Defer to the single entitlement authority so this can never disagree with the rest
+        // of the app about whether the user is Pro.
+        const hasValidLicense = isProUser();
 
         if (hasValidLicense) {
             debugLog(`Style ${styleId} available via valid license/order`);
