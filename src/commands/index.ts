@@ -32,7 +32,6 @@ import { fetchZaiModels } from "../services/api/zai";
 import { fetchPerplexityModels } from "../services/api/perplexity";
 import { fetchNvidiaModels } from "../services/api/nvidia";
 import { PromptManager } from "../services/promptManager";
-import { telemetryService } from "../services/telemetry/telemetryService";
 import { SecureKeyManager } from "../services/encryption/SecureKeyManager";
 import { SubscriptionManager } from "../services/subscription/SubscriptionManager";
 import { ProActivationService } from "../services/subscription/ProActivationService";
@@ -42,6 +41,10 @@ import { learnFromCommitHistory } from "../services/ai/learnFromCommitHistory";
 import { CommitStyleManager } from "../services/commitStyleManager";
 import { GitmojiService } from "../services/gitmoji/GitmojiService";
 import { generateChangelog, updateChangelog } from "../services/changelog/generateChangelog";
+import { registerSupportCommands } from "./support";
+import { recordSupportEvent, SupportErrorCategory, SupportProvider } from "../services/support/SupportSessionService";
+import { classifyGenerationFailure } from "../services/api/recovery";
+import { formatSafeProviderError } from "../utils/errorHandler";
 
 import { state } from "../extension";
 
@@ -70,38 +73,31 @@ function hasApiKey(apiConfig: any): boolean {
 async function handleError(
   error: unknown,
   command: string,
-  provider: string,
-  startTime: number,
-  isGenerating?: boolean
+  provider = "GitMind"
 ): Promise<void> {
-  const duration = Date.now() - startTime;
   debugLog(`${command} Error:`, error);
 
-  if (error instanceof Error) {
-    telemetryService.trackExtensionError(error.name, error.message, `command.${command}`);
-
-    if (isGenerating) {
-      telemetryService.trackCommitGeneration(provider, false, error.message);
-    }
-
-    if (error.message === 'Request was cancelled') {
-      telemetryService.trackExtensionError('UserCancellation', 'Request was cancelled', `command.${command}`);
+  if (error instanceof Error && classifyGenerationFailure(error, provider) === "cancelled") {
       vscode.window.showInformationMessage(`${command} cancelled`);
       return;
-    }
-
-    const isTokenError = error.message.includes('too large') ||
-      error.message.includes('exceed') ||
-      error.message.includes('tokens');
-
-    const showMethod = isTokenError ? vscode.window.showWarningMessage : vscode.window.showErrorMessage;
-    showMethod(error.message, { modal: true });
-  } else {
-    telemetryService.trackExtensionError('UnknownError', 'An unexpected error occurred', `command.${command}`);
-    vscode.window.showErrorMessage(
-      `An unexpected error occurred. Please check the debug logs for more details.`
-    );
   }
+
+  const message = formatSafeProviderError(error, provider);
+  const isInputLimit = classifyGenerationFailure(error, provider) === "input-limit";
+  const showMethod = isInputLimit ? vscode.window.showWarningMessage : vscode.window.showErrorMessage;
+  showMethod(message, { modal: true });
+}
+
+function supportErrorCategory(error: unknown, provider: string): SupportErrorCategory {
+  const category = classifyGenerationFailure(error, provider);
+  const mapping: Record<string, SupportErrorCategory> = {
+    cancelled: "cancellation", timeout: "timeout", authentication: "authentication",
+    permission: "permission", "account-limit": "billing_quota", "model-limit": "model_quota",
+    "rate-limit": "provider_rate_limit", "input-limit": "input_limit",
+    configuration: "configuration", "content-filter": "content_filter", network: "network",
+    "temporary-service": "temporary_service", "invalid-response": "invalid_response", unknown: "unknown"
+  };
+  return mapping[category] ?? "unknown";
 }
 
 async function withProgress<T>(
@@ -119,16 +115,17 @@ async function withProgress<T>(
 }
 
 async function sendApiCheckResult(result: any, provider: string): Promise<void> {
+  const safeError = result.success ? undefined : formatSafeProviderError(result.error, provider);
   const message = {
     command: 'apiCheckResult',
     success: result.success,
     provider,
     model: result.model,
     responseTime: result.responseTime,
-    details: result.details,
-    error: result.error,
-    warning: result.warning,
-    troubleshooting: result.troubleshooting
+    details: result.success ? result.details : undefined,
+    error: safeError,
+    warning: result.success ? result.warning : undefined,
+    troubleshooting: result.success ? result.troubleshooting : "Verify the selected provider, model, API key, account access, and network connection."
   };
 
   if (SettingsWebview.isWebviewOpen()) {
@@ -145,7 +142,7 @@ async function sendApiCheckResult(result: any, provider: string): Promise<void> 
     OnboardingWebview.postMessageToWebview({
       command: 'connectionTestResult',
       success: result.success,
-      message: result.success ? "Connection successful!" : (result.error || "Connection failed")
+      message: result.success ? "Connection successful!" : (safeError || "Connection failed")
     });
   } else if (!SettingsWebview.isWebviewOpen()) {
     const detailsSuffix = typeof result.details === 'string' && result.details.trim().length > 0
@@ -158,7 +155,7 @@ async function sendApiCheckResult(result: any, provider: string): Promise<void> 
 
     const messageText = result.success
       ? `${provider} API connection successful!${detailsSuffix}`
-      : `${provider} API connection failed: ${result.error}${detailsSuffix}${troubleshootingSuffix}`;
+      : `${safeError}${detailsSuffix}${troubleshootingSuffix}`;
 
     const showMethod = result.success ? vscode.window.showInformationMessage : vscode.window.showErrorMessage;
     showMethod(messageText);
@@ -170,15 +167,18 @@ const activeGenerations = new Map<string, vscode.StatusBarItem>();
 
 // Command Handlers
 async function handleGenerateCommit(repository?: any): Promise<void> {
-  const startTime = Date.now();
   const apiConfig = await getApiConfig();
   let repoRoot = "";
+  const supportStartedAt = Date.now();
+  recordSupportEvent({
+    name: "operation_started",
+    operation: "generate_commit",
+    provider: apiConfig.type as SupportProvider,
+    modelKind: apiConfig.type === "custom" ? "custom" : "built_in"
+  });
 
   try {
     debugLog("Command Started: generateCommitMessage");
-
-    // Track that user is actively using the extension
-    telemetryService.trackDailyActiveUser();
 
     // Determine which repository to use
     let targetRepository: vscode.WorkspaceFolder | { uri: vscode.Uri, name: string, index: number };
@@ -192,7 +192,6 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
       // Command triggered from command palette or other source - use workspace logic
       const workspaceFolders = vscode.workspace.workspaceFolders;
       if (!workspaceFolders) {
-        telemetryService.trackExtensionError('ConfigurationError', 'No workspace folder is open', 'generateCommit');
         vscode.window.showErrorMessage("No workspace folder is open");
         return;
       }
@@ -202,7 +201,6 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
         targetRepository = workspaceFolders[0];
         debugLog(`Found git repository at: ${repoRoot}`);
       } catch (error) {
-        telemetryService.trackExtensionError('ConfigurationError', 'Not a git repository', 'generateCommit');
         vscode.window.showErrorMessage("This is not a git repository. Please initialize git first.");
         return;
       }
@@ -228,7 +226,6 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
 
     const diff = await getDiff(targetRepository as vscode.WorkspaceFolder, repoRoot);
     if (!diff?.trim()) {
-      telemetryService.trackExtensionError('UserError', 'No changes detected', 'generateCommit');
       vscode.window.showInformationMessage("No changes detected to generate a commit message for.");
       return;
     }
@@ -244,8 +241,6 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
         setTimeout(() => reject(new Error("Request timed out after 60 seconds")), TIMEOUT_DURATION)
       )
     ]);
-
-    const duration = Date.now() - startTime;
 
     if (message?.trim()) {
       const promptConfig = getPromptConfig();
@@ -272,27 +267,33 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
 
       await setCommitMessage({ summary, description }, repoRoot);
 
-      telemetryService.trackCommitGeneration(
-        apiConfig.type,
-        true
-      );
+      recordSupportEvent({
+        name: "operation_completed",
+        operation: "generate_commit",
+        provider: apiConfig.type as SupportProvider,
+        outcome: "success",
+        durationMs: Date.now() - supportStartedAt
+      });
 
       vscode.window.showInformationMessage("Commit message generated successfully!");
     } else {
-      telemetryService.trackCommitGeneration(
-        apiConfig.type,
-        false,
-        'empty_response'
-      );
       vscode.window.showWarningMessage(
         "No commit message was generated. This may be due to API limitations or configuration issues."
       );
     }
   } catch (error) {
+    recordSupportEvent({
+      name: "operation_failed",
+      operation: "generate_commit",
+      provider: apiConfig.type as SupportProvider,
+      outcome: classifyGenerationFailure(error, apiConfig.type) === "cancelled" ? "cancelled" : "failure",
+      errorCategory: supportErrorCategory(error, apiConfig.type),
+      durationMs: Date.now() - supportStartedAt
+    });
     if (error instanceof Error && error.message.includes("timed out") && repoRoot) {
         cancelCurrentRequest(repoRoot);
     }
-    await handleError(error, 'generateCommit', apiConfig.type, startTime, true);
+    await handleError(error, 'generateCommit', apiConfig.type);
   } finally {
     if (repoRoot) {
         const item = activeGenerations.get(repoRoot);
@@ -306,9 +307,10 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
 }
 
 async function handleApiSetupCheck(): Promise<void> {
-  const startTime = Date.now();
   const apiConfig = await getApiConfig();
   const provider = apiConfig.type;
+  const supportStartedAt = Date.now();
+  recordSupportEvent({ name: "operation_started", operation: "api_validation", provider: provider as SupportProvider });
 
   try {
     // Focus on core metrics only - tracking errors if API setup fails
@@ -323,14 +325,16 @@ async function handleApiSetupCheck(): Promise<void> {
         ]);
 
         await sendApiCheckResult(result, provider);
+        recordSupportEvent({
+          name: result.success ? "operation_completed" : "operation_failed",
+          operation: "api_validation",
+          provider: provider as SupportProvider,
+          outcome: result.success ? "success" : "failure",
+          errorCategory: result.success ? undefined : supportErrorCategory(result.error, provider),
+          durationMs: Date.now() - supportStartedAt
+        });
       } catch (error) {
         debugLog("API Check Error (inner):", error);
-
-        telemetryService.trackExtensionError(
-          'APIConnectionError',
-          error instanceof Error ? error.message : 'Unknown API error',
-          `checkApiSetup.${provider}`
-        );
 
         const errorResult = {
           success: false,
@@ -340,10 +344,18 @@ async function handleApiSetupCheck(): Promise<void> {
         };
 
         await sendApiCheckResult(errorResult, provider);
+        recordSupportEvent({
+          name: "operation_failed",
+          operation: "api_validation",
+          provider: provider as SupportProvider,
+          outcome: "failure",
+          errorCategory: supportErrorCategory(error, provider),
+          durationMs: Date.now() - supportStartedAt
+        });
       }
     });
   } catch (error) {
-    await handleError(error, 'checkApiSetup', provider, startTime);
+    await handleError(error, 'checkApiSetup', provider);
   }
 }
 
@@ -361,12 +373,13 @@ async function handleRateLimitsCheck(): Promise<void> {
           )
         ]);
 
+        const safeError = result.success ? undefined : formatSafeProviderError(result.error, provider);
         const message = {
           command: 'rateLimitsResult',
           success: result.success,
           limits: result.limits,
           notes: result.notes,
-          error: result.error
+          error: safeError
         };
 
         if (SettingsWebview.isWebviewOpen()) {
@@ -374,7 +387,7 @@ async function handleRateLimitsCheck(): Promise<void> {
         } else {
           const messageText = result.success
             ? `${provider} rate limits retrieved successfully`
-            : `Failed to retrieve ${provider} rate limits: ${result.error}`;
+            : safeError ?? `Unable to retrieve ${provider} rate limits.`;
 
           const showMethod = result.success ? vscode.window.showInformationMessage : vscode.window.showErrorMessage;
           showMethod(messageText);
@@ -382,27 +395,26 @@ async function handleRateLimitsCheck(): Promise<void> {
       } catch (error) {
         debugLog("Rate Limits Check Error (inner):", error);
 
+        const safeError = formatSafeProviderError(error, provider);
         const errorMessage = {
           command: 'rateLimitsResult',
           success: false,
           provider,
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: safeError
         };
 
         if (SettingsWebview.isWebviewOpen()) {
           SettingsWebview.postMessageToWebview(errorMessage);
         } else {
           vscode.window.showErrorMessage(
-            `Rate limits check failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+            safeError
           );
         }
       }
     });
   } catch (error) {
     debugLog("Rate Limits Check Error (outer):", error);
-    vscode.window.showErrorMessage(
-      `Error checking rate limits: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
+    vscode.window.showErrorMessage(formatSafeProviderError(error, provider));
   }
 }
 
@@ -620,16 +632,14 @@ async function handleLoadModels(
           SettingsWebview.postMessageToWebview({
             command: commandSuffix,
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error'
+          error: formatSafeProviderError(error, modelType)
           });
         }
       }
     });
   } catch (error) {
     debugLog(`Load ${modelType} Models Error:`, error);
-    vscode.window.showErrorMessage(
-      `Error loading ${modelType} models: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
+    vscode.window.showErrorMessage(formatSafeProviderError(error, modelType));
   } finally {
     // Always remove from tracking set when done
     modelLoadingInProgress.delete(modelType);
@@ -665,16 +675,14 @@ async function handleLoadCopilotModels(): Promise<void> {
           SettingsWebview.postMessageToWebview({
             command: 'copilotModelsLoaded',
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: formatSafeProviderError(error, modelType)
           });
         }
       }
     });
   } catch (error) {
     debugLog(`Load ${modelType} Models Error:`, error);
-    vscode.window.showErrorMessage(
-      `Error loading ${modelType} models: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
+    vscode.window.showErrorMessage(formatSafeProviderError(error, modelType));
   } finally {
     modelLoadingInProgress.delete(modelType);
   }
@@ -780,8 +788,6 @@ async function handleOnboardingAction(action: 'complete' | 'skip', context: vsco
     const command = action === 'complete' ? "workbench.view.scm" : "gitmind.openSettings";
     await vscode.commands.executeCommand(command);
   }
-
-  // Removed non-essential telemetry tracking
 
   // Note: Webview is already closed by the OnboardingMessageHandler
 }
@@ -950,30 +956,10 @@ Thank you!`);
   }
 }
 
-export async function toggleDebugSetting(): Promise<{ enabled: boolean; target: vscode.ConfigurationTarget }> {
-  const config = vscode.workspace.getConfiguration("gitmind");
-  const inspect = config.inspect<boolean>("debug");
-  const currentDebug = config.get<boolean>("debug") ?? false;
-  const nextDebug = !currentDebug;
-
-  const target = inspect?.workspaceValue !== undefined
-    ? vscode.ConfigurationTarget.Workspace
-    : vscode.ConfigurationTarget.Global;
-
-  await config.update("debug", nextDebug, target);
-  return { enabled: nextDebug, target };
-}
-
 // Command Registration
 export function registerCommands(context: vscode.ExtensionContext): vscode.Disposable[] {
   const commands = [
-    vscode.commands.registerCommand("gitmind.toggleDebug", async () => {
-      const { enabled } = await toggleDebugSetting();
-      const status = enabled ? "enabled" : "disabled";
-      debugLog(`Debug mode ${status}`);
-      vscode.window.showInformationMessage(`Debug mode ${status}`);
-    }),
-
+    ...registerSupportCommands(context),
     vscode.commands.registerCommand("gitmind.cleanupLegacySettings", async () => {
       const migrationService = SettingsMigrationService.getInstance();
       await migrationService.forceCleanupLegacySettings();
@@ -1073,7 +1059,6 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
 
     vscode.commands.registerCommand("gitmind.openSettings", (initialTab?: string) => {
       SettingsWebview.createOrShow(context.extensionUri, typeof initialTab === 'string' ? initialTab : undefined);
-      // Removed non-essential telemetry tracking
     }),
 
     vscode.commands.registerCommand("gitmind.openSettingsPro", (initialTab?: string) => {
@@ -1083,7 +1068,6 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
     vscode.commands.registerCommand("gitmind.openOnboarding", () => {
       if (OnboardingManager.canManuallyOpen(context)) {
         OnboardingWebview.createOrShow(context.extensionUri);
-        // Removed non-essential telemetry tracking
       } else {
         vscode.window.showInformationMessage(
           "Onboarding is disabled in settings. You can enable it in the extension settings under 'Show Onboarding'.",
@@ -1154,10 +1138,8 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
 
       if (action === "Open Onboarding") {
         OnboardingWebview.createOrShow(context.extensionUri);
-        // Removed non-essential telemetry tracking
       }
 
-      // Removed non-essential telemetry tracking
     }),
 
     // Placeholder commands

@@ -1,4 +1,5 @@
 // src/webview/settings/components/config/ProviderConfig.ts
+import { getCuratedModels } from '../../../../config/providerCatalog';
 
 interface ProviderField {
     id: string;
@@ -758,11 +759,23 @@ export class ProviderConfig {
     ];
 
     public static getAllProviders(): Provider[] {
-        return this.providers;
+        return this.providers.map(provider => this.withCatalogModels(provider));
     }
 
     public static getProvider(id: string): Provider | undefined {
-        return this.providers.find(provider => provider.id === id);
+        const provider = this.providers.find(candidate => candidate.id === id);
+        return provider ? this.withCatalogModels(provider) : undefined;
+    }
+
+    private static withCatalogModels(provider: Provider): Provider {
+        const curated = getCuratedModels(provider.id);
+        if (curated.length === 0) { return provider; }
+        return {
+            ...provider,
+            fields: provider.fields.map(field => field.key === 'model'
+                ? { ...field, options: curated.map(model => ({ value: model, label: model })) }
+                : field)
+        };
     }
 
     public static getProviderNames(): Array<{ value: string; label: string }> {

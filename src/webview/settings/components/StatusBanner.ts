@@ -2,6 +2,7 @@
 import { ExtensionSettings } from "../../../models/ExtensionSettings";
 import { getStatusBannerStyles } from "../styles/statusBanner.css";
 import { ProviderIcon } from "./ProviderIcon";
+import { getProviderDefaultModel } from "../../../config/providerCatalog";
 
 interface ProviderConfig {
   displayName: string;
@@ -15,7 +16,7 @@ export class StatusBanner {
   private static readonly PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     gemini: {
       displayName: "Gemini",
-      defaultModel: "gemini-2.5-flash-preview-04-17",
+      defaultModel: getProviderDefaultModel("gemini"),
       getApiConfigured: (s) => !!s.gemini?.apiKey
     },
     huggingface: {
@@ -30,17 +31,17 @@ export class StatusBanner {
     },
     mistral: {
       displayName: "Mistral",
-      defaultModel: "mistral-small-4",
+      defaultModel: getProviderDefaultModel("mistral"),
       getApiConfigured: (s) => !!s.mistral?.apiKey
     },
     cohere: {
       displayName: "Cohere",
-      defaultModel: "command-a-03-2025",
+      defaultModel: getProviderDefaultModel("cohere"),
       getApiConfigured: (s) => !!s.cohere?.apiKey
     },
     openai: {
       displayName: "OpenAI",
-      defaultModel: "gpt-3.5-turbo",
+      defaultModel: getProviderDefaultModel("openai"),
       getApiConfigured: (s) => !!s.openai?.apiKey
     },
     together: {
@@ -55,32 +56,37 @@ export class StatusBanner {
     },
     anthropic: {
       displayName: "Anthropic",
-      defaultModel: "claude-sonnet-4.6",
+      defaultModel: getProviderDefaultModel("anthropic"),
       getApiConfigured: (s) => !!s.anthropic?.apiKey
     },
     minimax: {
       displayName: "MiniMax",
-      defaultModel: "MiniMax-M2",
+      defaultModel: getProviderDefaultModel("minimax"),
       getApiConfigured: (s) => !!(s as any).minimax?.apiKey
     },
     copilot: {
       displayName: "GitHub Copilot",
-      defaultModel: "gpt-5.5-instant",
+      defaultModel: getProviderDefaultModel("copilot"),
       getApiConfigured: () => true
     },
     deepseek: {
       displayName: "DeepSeek",
-      defaultModel: "deepseek-v4-flash",
+      defaultModel: getProviderDefaultModel("deepseek"),
       getApiConfigured: (s) => !!s.deepseek?.apiKey
     },
     grok: {
       displayName: "Grok",
-      defaultModel: "grok-4.4",
+      defaultModel: getProviderDefaultModel("grok"),
       getApiConfigured: (s) => !!s.grok?.apiKey
+    },
+    groq: {
+      displayName: "Groq",
+      defaultModel: getProviderDefaultModel("groq"),
+      getApiConfigured: (s) => !!s.groq?.apiKey
     },
     perplexity: {
       displayName: "Perplexity",
-      defaultModel: "gpt-5.5-computer",
+      defaultModel: getProviderDefaultModel("perplexity"),
       getApiConfigured: (s) => !!s.perplexity?.apiKey
     },
     zai: {
@@ -175,7 +181,6 @@ export class StatusBanner {
     const captureAll = this._settings.commit?.captureAllChanges ?? false;
     const promptCustomization = this._settings.promptCustomization?.enabled ? 'Enabled' : 'Disabled';
     const diagnostics = this._settings.showDiagnostics ? 'Enabled' : 'Disabled';
-    const analytics = this._settings.telemetry?.enabled !== false ? 'Enabled' : 'Disabled';
     const activeStyle = this._settings.commitStyle?.style || 'basic';
     const historyLearning = this._settings.pro?.learnFromCommitHistory?.enabled ? 'Active' : 'Off';
     const encryption = this._settings.pro?.encryptionEnabled ? 'Encrypted' : 'Off';
@@ -227,7 +232,6 @@ export class StatusBanner {
             <div class="gm-config-group-items">
               ${this.renderChip('API', providerInfo.apiConfigured ? 'Configured' : 'Not set', providerInfo.apiConfigured ? 'on' : 'off', !providerInfo.apiConfigured)}
               ${this.renderChip('Diagnostics', diagnostics, this._settings.showDiagnostics ? 'on' : 'off', !this._settings.showDiagnostics)}
-              ${this.renderChip('Analytics', analytics, this._settings.telemetry?.enabled !== false ? 'on' : 'off', this._settings.telemetry?.enabled === false)}
             </div>
           </div>
         </div>

@@ -10,6 +10,12 @@ const wiki = path.join(root, "wiki");
 const check = process.argv.includes("--check");
 const manifest = JSON.parse(fs.readFileSync(path.join(root, "docs/reference/gitmind-user-surface.json"), "utf8"));
 const generated = new Map();
+const verificationDate = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  timeZone: "UTC",
+}).format(new Date(`${manifest.product.auditDate}T00:00:00Z`));
 
 function walk(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -41,8 +47,8 @@ const links = [...generated.keys()]
   .sort()
   .map((name) => `- [${name.slice(0, -3).replaceAll("-", " ")}](${name.slice(0, -3)})`)
   .join("\n");
-generated.set("_Sidebar.md", `**GitMind 5.x Handbook**\n\nVerified against GitMind \`${manifest.product.version}\` on June 7, 2026.\n\n- [Home](Home)\n${links}\n- [Commands And Shortcuts](Commands-And-Shortcuts)\n- [Coverage Audit](Coverage-Audit)\n`);
-generated.set("_Footer.md", `GitMind Wiki | Generated from \`docs/handbook/\` | Verified against GitMind \`${manifest.product.version}\` on June 7, 2026 | [Pages handbook](https://shahabahreini.github.io/AI-Commit-Assistant/) | [Support](https://github.com/shahabahreini/AI-Commit-Assistant/issues)\n`);
+generated.set("_Sidebar.md", `**GitMind 5.x Handbook**\n\nVerified against GitMind \`${manifest.product.version}\` on ${verificationDate}.\n\n- [Home](Home)\n${links}\n- [Commands And Shortcuts](Commands-And-Shortcuts)\n- [Coverage Audit](Coverage-Audit)\n`);
+generated.set("_Footer.md", `GitMind Wiki | Generated from \`docs/handbook/\` | Verified against GitMind \`${manifest.product.version}\` on ${verificationDate} | [Pages handbook](https://shahabahreini.github.io/AI-Commit-Assistant/) | [Support](https://github.com/shahabahreini/AI-Commit-Assistant/issues)\n`);
 
 const assetSource = path.join(handbook, "public/assets");
 for (const name of fs.readdirSync(assetSource)) generated.set(`assets/${name}`, fs.readFileSync(path.join(assetSource, name)));

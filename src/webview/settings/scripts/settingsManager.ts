@@ -294,7 +294,6 @@ export function getSettingsScript(settings: ExtensionSettings, nonce: string): s
           commitTargetLanguage: document.getElementById('commitTargetLanguage')?.value || document.getElementById('commitTargetLanguageValue')?.value || 'english',
           commitStyle: document.querySelector('input[name="gm-commit-style"]:checked')?.value || 'conventional',
           showDiagnostics: document.getElementById('showDiagnostics')?.checked ?? false,
-          telemetryEnabled: document.getElementById('telemetryEnabled')?.checked ?? false,
           promptCustomizationEnabled: document.getElementById('promptCustomizationEnabled')?.checked ?? false,
           saveLastPrompt: document.getElementById('saveLastPrompt')?.checked ?? false,
           encryptionEnabled: document.getElementById('encryptionEnabled')?.checked ?? false,
@@ -495,7 +494,6 @@ function generateInitializationManager(): string {
           const coreSettings = [
             { id: 'commitVerbose', key: 'commit.verbose', getValue: (el) => el.checked },
             { id: 'showDiagnostics', key: 'showDiagnostics', getValue: (el) => el.checked },
-            { id: 'telemetryEnabled', key: 'telemetry.enabled', getValue: (el) => el.checked },
             { id: 'promptCustomizationEnabled', key: 'promptCustomization.enabled', getValue: (el) => el.checked },
             { id: 'saveLastPrompt', key: 'promptCustomization.saveLastPrompt', getValue: (el) => el.checked },
             { id: 'apiProvider', key: 'apiProvider', getValue: (el) => el.value },

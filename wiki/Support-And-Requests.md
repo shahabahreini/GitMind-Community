@@ -1,6 +1,6 @@
 # Support And Requests
 
-> Verified against GitMind `5.0.6` on June 7, 2026.
+> Verified against GitMind `5.0.6` on July 13, 2026.
 
 Use the issue form that matches the request:
 
@@ -11,6 +11,17 @@ Use the issue form that matches the request:
 - **Documentation feedback:** incorrect, missing, or unclear public documentation.
 
 Before filing, search existing issues and review [Troubleshooting And FAQ](Troubleshooting-And-FAQ). Include GitMind version, VS Code version, OS, provider/model, steps, expected behavior, actual behavior, and sanitized diagnostics where relevant.
+
+## Sanitized Support Report (Pro)
+
+For a serious or intermittent problem:
+
+1. Open **GitMind Settings > Pro > Support Report** and select **Start Session**.
+2. Reproduce the problem within 30 minutes.
+3. Select **Stop & Review**, check the privacy summary, and save the JSON.
+4. Open and review the file yourself, then attach it manually to the issue.
+
+The session is local, memory-only, bounded to 1,000 events/512 KB, and erased on restart or when you select **Delete Session**. Nothing is uploaded automatically. The privacy allowlist and excluded data are documented in [Security And Privacy](Security-And-Privacy).
 
 > **Never post API keys, license keys, full order IDs, purchase emails, source code, diffs, prompts, private repository names, or customer information.**
 

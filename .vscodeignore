@@ -40,6 +40,7 @@ resources/.claude
 build.sh
 scripts/**
 pnpm-lock.yaml
+pnpm-workspace.yaml
 yarn.lock
 
 # Additional exclusions to reduce size
@@ -62,8 +63,14 @@ yarn-upgrade-all/**
 !images/logo.png
 !images/icon-dark.png
 !images/icon-light.png
-!images/all_providers.png
-!images/screenshots/*.png
+!images/screenshots/pro-security-large-diff-model-configuration.png
+!images/screenshots/nvidia-model-settings-automatic-recovery.png
+!images/screenshots/current-configuration-dashboard.png
+!images/screenshots/commit-style-selection.png
+!images/screenshots/commit-language-history-learning.png
+!images/screenshots/changelog-generation.png
+images/all_providers.png
+images/all_providers_GitMind.jpg
 **/jest.config.js
 **/jest.setup.js
 **/.prettierrc

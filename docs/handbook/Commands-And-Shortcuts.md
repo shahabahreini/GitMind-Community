@@ -1,17 +1,18 @@
 # Commands And Shortcuts
 
-> Verified against GitMind `5.0.6` on June 7, 2026.
+> Verified against GitMind `5.0.6` on July 13, 2026.
 
-GitMind 5.0.2 registers **43 commands**. The 34 supported public commands below are available from the Command Palette, Source Control actions, settings UI, onboarding, or activation workflows. Internal status, migration, loading-indicator, and developer diagnostics commands are intentionally excluded.
+GitMind registers public commands through the Command Palette, Source Control actions, settings UI, onboarding, and activation workflows. Internal status, migration, loading-indicator, and developer diagnostics commands are intentionally excluded.
 
 | Area | Public command IDs |
 | --- | --- |
 | Generate | `gitmind.generateCommitMessage`, `gitmind.generateCommitMessagePro`, `gitmind.cancelGeneration` |
-| Settings and checks | `gitmind.openSettings`, `gitmind.openSettingsPro`, `gitmind.toggleDebug`, `gitmind.checkApiSetup`, `gitmind.checkRateLimits` |
+| Settings and checks | `gitmind.openSettings`, `gitmind.openSettingsPro`, `gitmind.checkApiSetup`, `gitmind.checkRateLimits` |
 | Model discovery | `gitmind.loadMistralModels`, `gitmind.loadHuggingFaceModels`, `gitmind.loadZaiModels`, `gitmind.loadNvidiaModels`, `gitmind.loadGroqModels`, `gitmind.loadCopilotModels` |
 | Prompt and style | `gitmind.clearLastPrompt`, `gitmind.viewLastPrompt`, `gitmind.changeCommitStyle` |
 | Onboarding | `gitmind.openOnboarding`, `gitmind.completeOnboarding`, `gitmind.skipOnboarding`, `gitmind.resetOnboarding`, `gitmind.reEnableOnboarding` |
 | Pro workflows | `gitmind.learnFromCommitHistory`, `gitmind.generateChangelog`, `gitmind.updateChangelog` |
+| Pro support report | `gitmind.startSupportSession`, `gitmind.stopSupportSession`, `gitmind.saveSupportReport`, `gitmind.deleteSupportSession` |
 | Purchase and activation | `gitmind.subscribe`, `gitmind.activateWithLicenseKey`, `gitmind.showActivationQuickPick`, `gitmind.validateExistingLicense`, `gitmind.deactivatePro`, `gitmind.fixLicenseActivation` |
 
 ## Keyboard Shortcut

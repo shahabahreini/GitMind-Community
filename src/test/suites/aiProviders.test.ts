@@ -63,8 +63,8 @@ suite('AI Providers Tests', () => {
         }
     });
 
-    test('Gemini model alias resolution should map gemini-flash-latest to a stable model ID', () => {
-        assert.strictEqual(getEffectiveGeminiModel('gemini-flash-latest'), "gemini-3.1-flash");
+    test('Gemini model aliases should be passed through for provider-side resolution', () => {
+        assert.strictEqual(getEffectiveGeminiModel('gemini-flash-latest'), 'gemini-flash-latest');
     });
 
     test('Anthropic payload should not include both temperature and top_p when topP override is applied', async () => {

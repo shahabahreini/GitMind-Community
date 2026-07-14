@@ -205,12 +205,10 @@ suite('Configuration Management Tests', () => {
         const validConfigurations = [
             {
                 apiProvider: 'openai',
-                debug: false,
                 'openai.model': "gpt-5.5-instant"
             },
             {
                 apiProvider: 'anthropic',
-                debug: true,
                 'anthropic.model': 'claude-3-5-sonnet-20241022'
             }
         ];
@@ -218,8 +216,6 @@ suite('Configuration Management Tests', () => {
         for (const config of validConfigurations) {
             // Test basic validation
             assert.ok(typeof config.apiProvider === 'string', 'API provider should be string');
-            assert.ok(typeof config.debug === 'boolean', 'Debug should be boolean');
-
             // Test provider-specific validation
             const providerModelKey = `${config.apiProvider}.model`;
             if (config[providerModelKey as keyof typeof config]) {
@@ -338,7 +334,6 @@ suite('Configuration Management Tests', () => {
     test('Configuration should validate complex nested settings', () => {
         const complexConfig = {
             apiProvider: 'openai',
-            debug: false,
             promptCustomization: {
                 enabled: true,
                 saveLastPrompt: true,
@@ -346,9 +341,6 @@ suite('Configuration Management Tests', () => {
             },
             commit: {
                 verbose: true
-            },
-            telemetry: {
-                enabled: false
             }
         };
 
@@ -357,6 +349,5 @@ suite('Configuration Management Tests', () => {
         assert.ok(typeof complexConfig.promptCustomization.enabled === 'boolean', 'Nested boolean should be valid');
         assert.ok(typeof complexConfig.promptCustomization.lastPrompt === 'string', 'Nested string should be valid');
         assert.ok(typeof complexConfig.commit.verbose === 'boolean', 'Commit config should be valid');
-        assert.ok(typeof complexConfig.telemetry.enabled === 'boolean', 'Telemetry config should be valid');
     });
 });

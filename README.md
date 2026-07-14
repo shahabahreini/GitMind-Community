@@ -64,9 +64,8 @@ GitMind analyzes your Git diff and generates clear, professional commit messages
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <img src="https://raw.githubusercontent.com/shahabahreini/AI-Commit-Assistant/main/images/screenshots/free-features-settings.png" alt="GitMind free feature settings"/>
       <h3 align="center">Useful Free Features</h3>
-      <p align="center">Control verbose messages, capture all changes, custom context, diagnostics, and anonymous analytics.</p>
+      <p align="center">Control verbose messages, capture all changes, custom context, and generation diagnostics.</p>
     </td>
     <td width="50%" valign="top">
       <img src="https://raw.githubusercontent.com/shahabahreini/AI-Commit-Assistant/main/images/screenshots/changelog-generation.png" alt="GitMind AI changelog generation settings"/>
@@ -106,7 +105,7 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 | DeepSeek          | API key                                                      | Chat and reasoning models            |
 | xAI Grok          | API key                                                      | Dynamic model discovery              |
 | Groq              | API key                                                      | Dynamic model discovery              |
-| Perplexity        | API key                                                      | Dynamic model discovery              |
+| Perplexity        | API key                                                      | Curated Sonar models                 |
 | Z.ai              | API key                                                      | GLM model selection                  |
 | NVIDIA hosted NIM | API key from [NVIDIA Build](https://build.nvidia.com/models) | Dynamic NIM model discovery          |
 | Custom API        | GitMind Pro                                                  | OpenAI-compatible endpoint and model |
@@ -129,14 +128,15 @@ Provider catalogs change frequently. GitMind loads current model lists where the
 | Advanced model parameters             | Automatic        | Custom temperature, top-p, top-k, and token limits |
 | Commit history learning               | Locked           | Included                                           |
 | Changelog generation                  | Locked           | Included                                           |
+| Sanitized support report              | Locked           | Local, review-before-share JSON report             |
 
 ### Automatic Recovery
 
 GitMind Pro can recover from selected generation failures without creating retry loops:
 
-- Retries once for timeouts and eligible temporary Gemini service failures.
-- Can switch once to a configured fallback model when the selected model reports a model-specific limit.
-- Does not retry invalid API keys, account quota/rate limits, permission errors, or unrelated failures.
+- Retries once for network failures, timeouts, and temporary provider failures.
+- Can switch once to a configured fallback model for model-specific limits and ordinary HTTP 429 rate limits.
+- Does not retry invalid API keys, billing/account quota exhaustion, permission errors, malformed requests, or content-policy failures.
 - Shows a clear notification explaining the failure, recovery action, and final result.
 
 The fallback model picker is searchable and scoped to the currently selected provider.
@@ -166,18 +166,19 @@ GitMind Pro is a one-time lifetime purchase. Activation, deactivation, and curre
 - GitMind sends the selected Git diff and prompt to the provider you configure.
 - Ollama can keep generation local.
 - GitMind Pro can store provider keys in VS Code SecretStorage.
-- Debug logs redact sensitive values.
-- Anonymous telemetry does not include source code, diffs, prompts, commit messages, API keys, or personal information.
+- GitMind does not collect or transmit product telemetry.
+- Pro users can capture a bounded, local support report containing only allowlisted operational metadata. It excludes source, diffs, prompts, paths, URLs, credentials, request/response bodies, raw errors, email, and license/customer data.
 
 ## Requirements
 
-- VS Code 1.96.0 or newer
+- VS Code 1.101.0 or newer
 - Git repository
 - API key for the selected cloud provider, unless using Ollama or GitHub Copilot
 
 ## Support
 
 - [Read the GitMind Handbook](https://shahabahreini.github.io/AI-Commit-Assistant/)
+- For serious debugging, Pro users can open **GitMind Settings > Pro > Support Report**, start a session, reproduce the issue, stop and review it, then save and manually attach the JSON report.
 - [Use the native GitHub Wiki mirror](https://github.com/shahabahreini/AI-Commit-Assistant/wiki)
 - [Report an issue](https://github.com/shahabahreini/Gitmind-Pro/issues)
 - [Sponsor development](https://github.com/sponsors/shahabahreini)

@@ -24,6 +24,9 @@ interface ModelConfig {
 }
 
 const MODEL_CONFIGS: Record<string, ModelConfig> = {
+    "gpt-5.6-sol": { maxTokens: 4000, temperature: 0.2, supportsReasoning: true },
+    "gpt-5.6-terra": { maxTokens: 3000, temperature: 0.2, supportsReasoning: true },
+    "gpt-5.6-luna": { maxTokens: 2000, temperature: 0.2, supportsReasoning: true },
     "gpt-5.5": { maxTokens: 4000, temperature: 0.2 },
     "gpt-5.5-pro": { maxTokens: 4000, temperature: 0.2 },
     "gpt-5.4": { maxTokens: 4000, temperature: 0.2 },
@@ -64,7 +67,7 @@ export class OpenAIProvider extends BaseAIProvider {
             debugLog(`Calling OpenAI API with model: ${this.model}`);
 
             // Get model-specific configuration or use provided options
-            const modelConfig = MODEL_CONFIGS[this.model] || MODEL_CONFIGS["gpt-5.5"];
+            const modelConfig = MODEL_CONFIGS[this.model] || MODEL_CONFIGS["gpt-5.6-terra"];
             const temperature = options?.temperature ?? modelConfig.temperature;
             const maxTokens = options?.maxTokens ?? modelConfig.maxTokens;
             const topP = options?.topP;
@@ -83,9 +86,13 @@ export class OpenAIProvider extends BaseAIProvider {
                             content: prompt
                         }
                     ],
-                    ...(topP !== undefined && options?.temperature === undefined ? { top_p: topP } : {}),
-                    temperature: temperature,
-                    max_tokens: maxTokens
+                    ...(modelConfig.supportsReasoning
+                        ? { max_completion_tokens: maxTokens }
+                        : {
+                            ...(topP !== undefined && options?.temperature === undefined ? { top_p: topP } : {}),
+                            temperature,
+                            max_tokens: maxTokens
+                        })
                 }),
                 signal: controller.signal
             }, { provider: "openai", operation: "chat.completions" });
@@ -203,16 +210,13 @@ export class OpenAIProvider extends BaseAIProvider {
                         if (id.startsWith('o1')) {
                             return 4;
                         }
-                        if (id.startsWith("gpt-5.5-instant")) {
+                        if (id.startsWith('gpt-4-turbo')) {
                             return 5;
                         }
-                        if (id.startsWith('gpt-4-turbo')) {
+                        if (id.startsWith('gpt-4')) {
                             return 6;
                         }
-                        if (id.startsWith('gpt-4')) {
-                            return 7;
-                        }
-                        return 8;
+                        return 7;
                     };
 
                     const priorityA = getPriority(a);

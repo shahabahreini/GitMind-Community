@@ -123,17 +123,12 @@ export function getEventHandlersScript(): string {
       const currentActiveTab = document.querySelector('.tab-button.active')?.getAttribute('data-tab') || 'model-tab';
       sessionStorage.setItem('gitmind_active_tab', currentActiveTab);
 
-      // Log the current checkbox state before collecting form values
-      const telemetryCheckbox = document.getElementById('telemetryEnabled');
-      console.log('Telemetry checkbox state at save time - checked:', telemetryCheckbox?.checked);
-
       const currentFormValues = {
         commitVerbose: document.getElementById('commitVerbose')?.checked || false,
         commitCaptureAllChanges: document.getElementById('commitCaptureAllChanges')?.checked || false,
         commitTargetLanguage: document.getElementById('commitTargetLanguage')?.value || document.getElementById('commitTargetLanguageValue')?.value || 'english',
         commitStyle: document.querySelector('input[name="gm-commit-style"]:checked')?.value || 'conventional',
         showDiagnostics: document.getElementById('showDiagnostics')?.checked || false,
-        telemetryEnabled: document.getElementById('telemetryEnabled')?.checked || false,
         promptCustomizationEnabled: document.getElementById('promptCustomizationEnabled')?.checked || false,
         saveLastPrompt: document.getElementById('saveLastPrompt')?.checked || false,
         encryptionEnabled: document.getElementById('encryptionEnabled')?.checked || false,
@@ -153,17 +148,13 @@ export function getEventHandlersScript(): string {
         changelogOverwriteExisting: document.getElementById('changelogOverwriteExisting')?.checked || false
       };
 
-      console.log('Form values collected - telemetryEnabled:', currentFormValues.telemetryEnabled);
-
       const newSettings = getSettingsFromForm();
       
-      console.log('Settings from form - telemetry.enabled:', newSettings.telemetry?.enabled);
       console.log('Settings from form - commitStyle.style:', newSettings.commitStyle?.style);
       console.log('Saving settings:', {
         commitVerbose: newSettings.commit.verbose,
         commitStyle: newSettings.commitStyle?.style,
         showDiagnostics: newSettings.showDiagnostics,
-        telemetryEnabled: newSettings.telemetry.enabled,
         promptCustomizationEnabled: newSettings.promptCustomization.enabled,
         activeTab: currentActiveTab
       });
@@ -770,7 +761,6 @@ export function getEventHandlersScript(): string {
         ['commitVerbose', 'commit.verbose', (el) => el.checked],
         ['commitTargetLanguage', 'commit.targetLanguage', (el) => el.value],
         ['showDiagnostics', 'showDiagnostics', (el) => el.checked],
-        ['telemetryEnabled', 'telemetry.enabled', (el) => el.checked],
         ['promptCustomizationEnabled', 'promptCustomization.enabled', (el) => el.checked],
         ['saveLastPrompt', 'promptCustomization.saveLastPrompt', (el) => el.checked],
         ['automaticRetryEnabled', 'pro.automaticRetry.enabled', (el) => el.checked],

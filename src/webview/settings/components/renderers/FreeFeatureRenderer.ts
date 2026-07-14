@@ -46,13 +46,6 @@ export class FreeFeatureRenderer extends BaseRenderer {
                 tooltip: 'Display diagnostic information for troubleshooting issues',
                 checked: this.settings.showDiagnostics || false,
                 setting: 'showDiagnostics'
-            },
-            {
-                id: 'telemetryEnabled',
-                label: 'Anonymous Analytics',
-                tooltip: 'Help improve GitMind by sending anonymous usage data',
-                checked: this.settings.telemetry?.enabled || false,
-                setting: 'telemetry.enabled'
             }
         ];
 

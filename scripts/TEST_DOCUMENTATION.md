@@ -110,7 +110,6 @@ src/test/
 - `aiCommitAssistant.terminateProcess` - Process termination
 - `aiCommitAssistant.showOnboarding` - Onboarding display
 - `aiCommitAssistant.showSettings` - Settings panel
-- `aiCommitAssistant.toggleDebug` - Debug mode toggle
 
 **Test Cases**:
 
@@ -119,7 +118,7 @@ src/test/
 - ✅ Error handling for invalid commands
 - ✅ Status bar integration and updates
 - ✅ Output channel management
-- ✅ Debug mode functionality
+- ✅ Sanitized Pro support-report commands
 - ✅ Git repository validation
 - ✅ Command cancellation and cleanup
 
@@ -128,7 +127,7 @@ src/test/
 - Command registration with VS Code
 - Parameter validation and handling
 - Status indication and user feedback
-- Debug logging and diagnostics
+- Diagnostics and privacy-safe Pro support reports
 - Integration with VS Code UI elements
 
 ### 4. Git Integration Testing (`gitIntegration.test.ts`)
@@ -208,7 +207,7 @@ src/test/
 - ✅ Token validation and error messaging
 - ✅ User-friendly error message generation
 - ✅ Error categorization and context
-- ✅ Telemetry and error reporting
+- ✅ Error reporting
 - ✅ Retry mechanisms for transient errors
 - ✅ Fatal error handling and cleanup
 - ✅ Error aggregation and logging
@@ -218,7 +217,7 @@ src/test/
 - Error detection and classification
 - User-friendly error messaging
 - Recovery and retry strategies
-- Logging and telemetry integration
+- Local logging integration
 - Graceful degradation
 
 ### 7. Configuration Management Testing (`configurationManagement.test.ts`)

@@ -17,7 +17,7 @@ const forbidden = [
   /^src(?:\/|$)/,
   /(?:^|\/)test(?:\/|$)/,
   /^scripts(?:\/|$)/,
-  /^(?:pnpm-lock\.yaml|yarn\.lock)$/,
+  /^(?:pnpm-lock\.yaml|pnpm-workspace\.yaml|yarn\.lock)$/,
 ];
 
 const violations = files.filter((file) => forbidden.some((pattern) => pattern.test(file)));

@@ -7,12 +7,13 @@
   "private": false,
   "icon": "images/logo.png",
   "engines": {
-    "vscode": "^1.96.0",
-    "node": ">=16.0.0"
+    "vscode": "^1.101.0",
+    "node": ">=22.0.0"
   },
+  "packageManager": "npm@10",
   "vsce": {
     "dependencies": false,
-    "yarn": true
+    "yarn": false
   },
   "categories": [
     "SCM Providers",
@@ -76,12 +77,6 @@
           "default": "gemini",
           "description": "Select which AI provider to use for generating commit messages",
           "order": 1
-        },
-        "gitmind.debug": {
-          "type": "boolean",
-          "default": false,
-          "description": "Enable debug mode to show detailed LLM responses and API interactions",
-          "order": 2
         },
         "gitmind.showOnboarding": {
           "type": "boolean",
@@ -349,30 +344,18 @@
           "description": "Show model and token information before generating commit messages",
           "order": 11
         },
-        "gitmind.telemetry.enabled": {
-          "type": "boolean",
-          "default": false,
-          "markdownDescription": "Enable extension telemetry to help improve GitMind. **Privacy First**: Only anonymous usage analytics are collected - no code content, file names, or personal information. You can disable this anytime while still respecting VS Code's global telemetry setting.",
-          "order": 12
-        },
-        "gitmind.telemetry.connectionString": {
-          "type": "string",
-          "default": "",
-          "markdownDescription": "Azure Application Insights connection string for telemetry (optional). If not provided, the extension will use the default connection string. **Privacy Protected**: All telemetry data is anonymous and GDPR/CCPA compliant.",
-          "order": 13
-        },
         "gitmind.gemini.model": {
           "type": "string",
           "enum": [
-            "gemini-3.1-pro",
-            "gemini-3.1-flash",
+            "gemini-3.5-flash",
+            "gemini-3.1-pro-preview",
             "gemini-3.1-flash-lite"
           ],
-          "default": "gemini-3.1-flash",
+          "default": "gemini-3.5-flash",
           "description": "Select which Gemini model to use",
           "enumDescriptions": [
-            "Gemini 3.1 Pro - Advanced model with 2M token limit",
-            "Gemini 3.1 Flash - Fast and efficient",
+            "Gemini 3.5 Flash - Stable coding and reasoning model",
+            "Gemini 3.1 Pro Preview - Advanced preview model",
             "Gemini 3.1 Flash-Lite - Lightweight version for low-latency tasks"
           ]
         },
@@ -384,18 +367,16 @@
         "gitmind.cohere.model": {
           "type": "string",
           "enum": [
-            "command-a",
-            "command-a-reasoning",
-            "command-r-plus-08-2024",
-            "command-r-08-2024"
+            "command-a-plus-05-2026",
+            "north-mini-code-1-0",
+            "command-a-reasoning-08-2025"
           ],
           "enumDescriptions": [
-            "Command A - Flagship enterprise model",
-            "Command A Reasoning - Specialized for complex agentic tasks",
-            "Command R+ (08-2024)",
-            "Command R (08-2024)"
+            "Command A+ - Current general-purpose flagship",
+            "North Mini Code - Coding-specialized model",
+            "Command A Reasoning - Complex reasoning model"
           ],
-          "default": "command-a",
+          "default": "command-a-plus-05-2026",
           "description": "Cohere model to use for generating commit messages"
         },
         "gitmind.openai.apiKey": {
@@ -407,22 +388,20 @@
         "gitmind.openai.model": {
           "type": "string",
           "enum": [
+            "gpt-5.6-sol",
+            "gpt-5.6-terra",
+            "gpt-5.6-luna",
             "gpt-5.5",
-            "gpt-5.5-instant",
-            "o3-mini",
-            "gpt-4o",
-            "gpt-4o-mini",
-            "o1"
+            "gpt-5.4-mini"
           ],
-          "default": "gpt-5.5-instant",
+          "default": "gpt-5.6-terra",
           "description": "OpenAI model to use for generating commit messages",
           "enumDescriptions": [
-            "GPT-5.5 - Flagship omnimodal model",
-            "GPT-5.5 Instant - Faster, efficient variant",
-            "o3-mini - Latest efficient reasoning model",
-            "GPT-4o - Free-tier accessible, multimodal model",
-            "GPT-4o Mini - Efficient multimodal model",
-            "o1 - Advanced reasoning model"
+            "GPT-5.6 Sol - Maximum quality",
+            "GPT-5.6 Terra - Balanced quality and cost",
+            "GPT-5.6 Luna - Cost-sensitive workloads",
+            "GPT-5.5 - Previous frontier model",
+            "GPT-5.4 Mini - Fast and economical"
           ],
           "order": 13
         },
@@ -508,16 +487,18 @@
         "gitmind.anthropic.model": {
           "type": "string",
           "enum": [
-            "claude-opus-4.7",
-            "claude-sonnet-4.6",
-            "claude-haiku-4.5"
+            "claude-sonnet-5",
+            "claude-opus-4-8",
+            "claude-fable-5",
+            "claude-haiku-4-5"
           ],
           "enumDescriptions": [
-            "Claude Opus 4.7 - Flagship reasoning model",
-            "Claude Sonnet 4.6 - High-performance daily driver",
+            "Claude Sonnet 5 - Balanced daily driver",
+            "Claude Opus 4.8 - Advanced reasoning model",
+            "Claude Fable 5 - Highest capability",
             "Claude Haiku 4.5 - Fast and cost-efficient"
           ],
-          "default": "claude-sonnet-4.6",
+          "default": "claude-sonnet-5",
           "description": "Anthropic Claude model to use for generating commit messages"
         },
         "gitmind.minimax.apiKey": {
@@ -547,22 +528,22 @@
           "enum": [
             "auto",
             "gpt-5.5",
-            "gpt-5.5-instant",
-            "o3-mini",
-            "claude-opus-4.7",
+            "gpt-5.4-mini",
+            "gpt-5.3-codex",
+            "claude-opus-4.8",
             "claude-sonnet-4.6",
             "gemini-3.1-pro",
-            "gemini-3.1-flash"
+            "gemini-3.5-flash"
           ],
           "enumDescriptions": [
             "Auto - Let GitHub Copilot automatically choose the best model",
-            "GPT-5.5 - OpenAI omnimodal model",
-            "GPT-5.5 Instant - OpenAI faster model",
-            "o3-mini - OpenAI efficient reasoning model",
-            "Claude Opus 4.7 - Anthropic flagship model",
+            "GPT-5.5 - OpenAI frontier model",
+            "GPT-5.4 Mini - Fast coding model",
+            "GPT-5.3 Codex - Agentic coding model",
+            "Claude Opus 4.8 - Anthropic flagship model",
             "Claude Sonnet 4.6 - Anthropic performance model",
             "Gemini 3.1 Pro - Google advanced model",
-            "Gemini 3.1 Flash - Google multimodal model"
+            "Gemini 3.5 Flash - Google stable model"
           ],
           "default": "auto",
           "description": "GitHub Copilot model to use for generating commit messages"
@@ -593,16 +574,12 @@
         "gitmind.grok.model": {
           "type": "string",
           "enum": [
-            "grok-4.3",
-            "grok-4.4",
-            "grok-4.5"
+            "grok-4.4"
           ],
           "enumDescriptions": [
-            "Grok 4.3 - Fastest flagship model",
-            "Grok 4.4 - High-parameter advanced model",
-            "Grok 4.5 - Future high-parameter model"
+            "Grok 4.4 - Default bootstrap model; load account models for the live catalog"
           ],
-          "default": "grok-4.3",
+          "default": "grok-4.4",
           "description": "Grok model to use for generating commit messages"
         },
         "gitmind.groq.apiKey": {
@@ -633,18 +610,16 @@
         "gitmind.perplexity.model": {
           "type": "string",
           "enum": [
-            "gpt-5.5-computer",
-            "gpt-5.4-thinking",
             "sonar-pro",
-            "sonar-reasoning-pro"
+            "sonar-reasoning-pro",
+            "sonar"
           ],
           "enumDescriptions": [
-            "Perplexity Computer (GPT-5.5) - Autonomous orchestrator agent",
-            "GPT-5.4 Thinking - Step-by-step problem solving",
             "Sonar Pro - Advanced search offering",
-            "Sonar Reasoning Pro - Precise reasoning with CoT"
+            "Sonar Reasoning Pro - Precise reasoning with CoT",
+            "Sonar - Cost-effective search model"
           ],
-          "default": "gpt-5.5-computer",
+          "default": "sonar-pro",
           "description": "Perplexity model to use for generating commit messages"
         },
         "gitmind.zai.apiKey": {
@@ -1030,6 +1005,26 @@
     },
     "commands": [
       {
+        "command": "gitmind.startSupportSession",
+        "title": "Start Sanitized Support Session",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.stopSupportSession",
+        "title": "Stop & Review Support Session",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.saveSupportReport",
+        "title": "Save Sanitized Support Report",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.deleteSupportSession",
+        "title": "Delete Sanitized Support Session",
+        "category": "GitMind"
+      },
+      {
         "command": "gitmind.generateCommitMessage",
         "title": "Generate GitMind Commit Message",
         "category": "GitMind",
@@ -1046,11 +1041,6 @@
           "light": "resources/light/generate_pro.svg",
           "dark": "resources/dark/generate_pro.svg"
         }
-      },
-      {
-        "command": "gitmind.toggleDebug",
-        "title": "Toggle Debug Mode",
-        "category": "GitMind"
       },
       {
         "command": "gitmind.openSettings",
@@ -1307,9 +1297,6 @@
           "when": "false"
         },
         {
-          "command": "gitmind.toggleDebug"
-        },
-        {
           "command": "gitmind.openSettings",
           "when": "scmProvider == git"
         },
@@ -1415,6 +1402,7 @@
     "docs:validate": "node scripts/validate-docs.mjs",
     "docs:dev": "vitepress dev docs/handbook",
     "docs:build": "vitepress build docs/handbook",
+    "privacy:validate": "node scripts/privacy-validator.js",
     "test:status": "node scripts/test-status.js",
     "clean": "rimraf dist out",
     "prepare": "npm run compile",
@@ -1422,16 +1410,16 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
-    "@types/node": "^25.9.3",
+    "@types/node": "^25.9.5",
     "@types/sanitize-html": "^2.16.1",
-    "@types/vscode": "^1.96.0",
-    "@typescript-eslint/eslint-plugin": "^8.61.0",
-    "@typescript-eslint/parser": "^8.61.0",
+    "@types/vscode": "^1.101.0",
+    "@typescript-eslint/eslint-plugin": "^8.63.0",
+    "@typescript-eslint/parser": "^8.63.0",
     "@vscode/test-cli": "^0.0.11",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "3.9.2",
     "esbuild": "^0.27.7",
-    "eslint": "^10.5.0",
+    "eslint": "^10.7.0",
     "npm-run-all": "^4.1.5",
     "rimraf": "^6.1.3",
     "typescript": "~5.9.3",
@@ -1439,10 +1427,8 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
-    "applicationinsights": "^3.15.0",
-    "axios": "^1.17.0",
-    "dotenv": "^17.4.2",
-    "sanitize-html": "^2.17.5"
+    "axios": "^1.18.1",
+    "sanitize-html": "^2.17.6"
   },
   "repository": {
     "type": "git",
@@ -1565,15 +1551,6 @@
     "untrustedWorkspaces": {
       "supported": true,
       "description": "This extension requires API keys to be configured for full functionality."
-    }
-  },
-  "telemetry": {
-    "enabled": true,
-    "level": "usage",
-    "description": "This extension collects anonymous usage data to improve functionality. No code content or personal information is collected.",
-    "optOut": {
-      "setting": "telemetry.telemetryLevel",
-      "value": "off"
     }
   },
   "overrides": {

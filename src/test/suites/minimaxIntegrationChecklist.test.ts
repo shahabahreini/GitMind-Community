@@ -61,8 +61,8 @@ suite('MiniMax Integration Checklist', () => {
 
         assert.deepStrictEqual(
             DEFAULT_MODELS.minimax,
-            ["MiniMax-M2.7", "MiniMax-M2.5", "MiniMax-M2", "MiniMax-Text-01"],
-            'Webview DEFAULT_MODELS.minimax should include text-generation models only'
+            ["MiniMax-M2.7", "MiniMax-M2.5"],
+            'Webview DEFAULT_MODELS.minimax should match the curated current models'
         );
 
         const minimaxProvider = ProviderConfig.getProvider('minimax');
@@ -86,8 +86,8 @@ suite('MiniMax Integration Checklist', () => {
         const settingsManager = readRepoFile('src/webview/settings/SettingsManager.ts');
 
         assert.ok(
-            settingsManager.includes('minimax: { model: "MiniMax-M2.7" }'),
-            'SettingsManager PROVIDER_DEFAULTS should include minimax'
+            settingsManager.includes('minimax: { model: getProviderDefaultModel("minimax") }'),
+            'SettingsManager defaults should come from the centralized provider catalog'
         );
 
         assert.ok(

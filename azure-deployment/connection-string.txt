@@ -1,1 +1,0 @@
-InstrumentationKey=***REMOVED***;IngestionEndpoint=https://canadacentral-1.in.applicationinsights.azure.com/;LiveEndpoint=https://canadacentral.livediagnostics.monitor.azure.com/;ApplicationId=***REMOVED***

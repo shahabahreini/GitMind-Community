@@ -1,6 +1,6 @@
 # Documentation Maintainer Guide
 
-> Verified against GitMind `5.0.6` on June 7, 2026.
+> Verified against GitMind `5.0.6` on July 13, 2026.
 
 `docs/handbook/` is the only manually edited documentation source. `wiki/` is generated and must not be edited directly. The sanitized contract at `docs/reference/gitmind-user-surface.json` contains user-facing metadata only.
 
@@ -49,3 +49,12 @@ Revocation is mandatory even when the repository is private because distributed 
 - `unknown option`: compare the workflow command with the exact tool version in `package-lock.json`.
 - Pages `Not Found`: the workflow is running in a repository without Pages enabled; verify publication ownership and repository guards.
 - Wiki repository `not found`: the workflow is running where Wiki is disabled or uninitialized; verify publication ownership and token access.
+## Product Roadmap Priorities
+
+User demand around AI developer tooling favors broader enterprise deployment choices and more control over the final commit before writing it. Recommended next investments are:
+
+1. **Commit Composer:** an editable preview with selectable hunks/files, regeneration controls, and side-by-side alternatives. This is the highest-value workflow improvement because it reduces prompt retries and lets users verify exactly what will be committed.
+2. **Enterprise provider gateways:** Microsoft Azure AI Foundry/OpenAI, AWS Bedrock, and Google Vertex AI. These unlock organization-approved identity, networking, regional, and governance paths.
+3. **High-throughput inference:** Fireworks AI and Cerebras as additional OpenAI-compatible providers, after the enterprise gateways.
+
+Provider additions should use the centralized provider catalog, live account model discovery where the provider supports it, and the shared recovery/error normalization layer. Avoid hard-coding a marketing model list as the only source of truth.

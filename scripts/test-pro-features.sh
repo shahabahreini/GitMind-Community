@@ -48,7 +48,7 @@ echo "3. Test encryption functionality"
 echo ""
 echo "🔍 Debug Information:"
 echo "- Check VS Code Developer Tools (Help > Toggle Developer Tools)"
-echo "- Look for GitMind debug logs in console"
+echo "- Use the sanitized Support Report in Pro Settings for troubleshooting"
 echo "- Check encrypted keys in VS Code secrets storage"
 
 echo ""

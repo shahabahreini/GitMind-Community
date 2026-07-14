@@ -3,8 +3,6 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 
-const EXTENSION_CONFIG_KEY = "gitmind";
-
 type LogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR";
 
 const MAX_LOG_LINE_CHARS = 20_000;
@@ -18,6 +16,7 @@ class Logger {
     private debugChannel?: vscode.OutputChannel;
     private fileStream: fs.WriteStream | null = null;
     private logFilePath: string | null = null;
+    private developmentMode = false;
 
     private constructor() { }
 
@@ -30,6 +29,13 @@ class Logger {
 
     async initialize(channel: vscode.OutputChannel, context: vscode.ExtensionContext): Promise<void> {
         this.debugChannel = channel;
+        this.developmentMode = context.extensionMode === vscode.ExtensionMode.Development;
+
+        // Raw logs are intentionally unavailable in production. Pro support
+        // reports use a separate allowlisted, in-memory recorder.
+        if (!this.developmentMode) {
+            return;
+        }
 
         const logDirUri = context.logUri ?? context.globalStorageUri;
         const logDir = logDirUri.fsPath;
@@ -70,8 +76,7 @@ class Logger {
     }
 
     private isDebugEnabled(): boolean {
-        const config = vscode.workspace.getConfiguration(EXTENSION_CONFIG_KEY);
-        return config.get<boolean>("debug") ?? false;
+        return this.developmentMode;
     }
 
     private logInternal(level: LogLevel, message: string, data?: unknown): void {

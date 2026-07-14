@@ -7,6 +7,7 @@ import { SubscriptionRenderer } from "./renderers/SubscriptionRenderer";
 import { CommitStyleRenderer } from "./renderers/CommitStyleRenderer";
 import { TabManager } from "./managers/TabManager";
 import { ScriptManager } from "./managers/ScriptManager";
+import { SupportRenderer } from "./renderers/SupportRenderer";
 
 export class ProFeaturesSettings {
     private _settings: ExtensionSettings;
@@ -17,6 +18,7 @@ export class ProFeaturesSettings {
     private commitStyleRenderer: CommitStyleRenderer;
     private tabManager: TabManager;
     private scriptManager: ScriptManager;
+    private supportRenderer: SupportRenderer;
 
     constructor(settings: ExtensionSettings) {
         this._settings = settings;
@@ -27,6 +29,7 @@ export class ProFeaturesSettings {
         this.commitStyleRenderer = new CommitStyleRenderer(settings);
         this.tabManager = new TabManager();
         this.scriptManager = new ScriptManager();
+        this.supportRenderer = new SupportRenderer(settings);
     }
 
     public render(): string {
@@ -42,6 +45,7 @@ export class ProFeaturesSettings {
             { id: 'free-tab', label: 'Free Features', content: this.freeRenderer.render() },
             { id: 'commit-style-tab', label: 'Commit Styles', content: this.commitStyleRenderer.render() },
             { id: 'pro-tab', label: 'Pro Features', content: this.proRenderer.render(), className: isPro ? '' : 'locked' },
+            { id: 'support-tab', label: 'Support Report', content: this.supportRenderer.render() },
             { id: 'subscription-tab', label: 'Pro Activation', content: this.subscriptionRenderer.render() }
         ])}
                 

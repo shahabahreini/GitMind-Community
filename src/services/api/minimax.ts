@@ -293,7 +293,7 @@ export async function validateMiniMaxAPIKey(
                 "anthropic-version": "2023-06-01",
             },
             body: JSON.stringify({
-                model: "MiniMax-M2",
+                model: "MiniMax-M2.7",
                 max_tokens: 10,
                 messages: [{ role: "user", content: "Test" }],
             }),
@@ -367,6 +367,6 @@ export async function validateMiniMaxAPIKey(
 }
 
 export async function fetchMiniMaxModels(apiKey: string): Promise<string[]> {
-    const provider = new MiniMaxProvider(apiKey, "MiniMax-M2");
+    const provider = new MiniMaxProvider(apiKey, "MiniMax-M2.7");
     return provider.getModels();
 }

@@ -95,7 +95,6 @@ suite('🔥 Critical Feature Integration Tests', () => {
 
             assert.ok(settings, 'Settings should load');
             assert.ok(typeof settings.apiProvider === 'string', 'API provider should be defined');
-            assert.ok(typeof settings.debug === 'boolean', 'Debug flag should be boolean');
 
             console.log('   ✓ Settings structure validated');
             console.log(`   ✓ Default provider: ${settings.apiProvider}`);
@@ -124,11 +123,9 @@ suite('🔥 Critical Feature Integration Tests', () => {
         test('✅ Settings Schema Completeness', () => {
             const criticalSettings = [
                 'apiProvider',
-                'debug',
                 'commit.verbose',
                 'showDiagnostics',
                 'promptCustomization.enabled',
-                'telemetry.enabled'
             ];
 
             const config = vscode.workspace.getConfiguration('gitmind');
@@ -169,7 +166,6 @@ suite('🔥 Critical Feature Integration Tests', () => {
             try {
                 const testSettings = {
                     apiProvider: 'anthropic',
-                    debug: true,
                     anthropic: { apiKey: 'test-key-12345', model: "claude-sonnet-4.6" },
                     gemini: { apiKey: '', model: '' },
                     openai: { apiKey: '', model: '' },
@@ -203,7 +199,6 @@ suite('🔥 Critical Feature Integration Tests', () => {
                     },
                     commit: { verbose: true },
                     showDiagnostics: false,
-                    telemetry: { enabled: true }
                 };
 
                 // Save settings
@@ -215,8 +210,6 @@ suite('🔥 Critical Feature Integration Tests', () => {
                 // Verify save worked
                 assert.strictEqual(savedData.get('apiProvider'), 'anthropic',
                     'Provider should be saved');
-                assert.strictEqual(savedData.get('debug'), true,
-                    'Debug flag should be saved');
                 assert.strictEqual(savedData.get('anthropic.apiKey'), 'test-key-12345',
                     'API key should be saved');
 
@@ -226,8 +219,6 @@ suite('🔥 Critical Feature Integration Tests', () => {
 
                 assert.strictEqual(loadedSettings.apiProvider, 'anthropic',
                     'Loaded provider should match saved');
-                assert.strictEqual(loadedSettings.debug, true,
-                    'Loaded debug flag should match saved');
 
                 console.log('   ✓ Settings save/load cycle validated');
                 console.log('   ✓ Data persistence confirmed');
@@ -262,7 +253,6 @@ suite('🔥 Critical Feature Integration Tests', () => {
                     command: 'saveSettings',
                     settings: {
                         apiProvider: 'openai',
-                        debug: false,
                         openai: { apiKey: 'sk-test123', model: "gpt-5.5-instant" },
                         // Include all other required providers
                         gemini: { apiKey: '', model: '' },
@@ -287,7 +277,6 @@ suite('🔥 Critical Feature Integration Tests', () => {
                         promptCustomization: { enabled: false, saveLastPrompt: false, lastPrompt: '' },
                         commit: { verbose: true },
                         showDiagnostics: false,
-                        telemetry: { enabled: false }
                     }
                 };
 
@@ -586,7 +575,6 @@ suite('🔥 Critical Feature Integration Tests', () => {
                 // Step 5: User saves settings
                 const finalSettings = {
                     apiProvider: 'anthropic',
-                    debug: false,
                     anthropic: { apiKey: 'sk-ant-test123', model: "claude-sonnet-4.6" },
                     gemini: { apiKey: '', model: '' },
                     openai: { apiKey: '', model: '' },
@@ -610,7 +598,6 @@ suite('🔥 Critical Feature Integration Tests', () => {
                     promptCustomization: { enabled: false, saveLastPrompt: false, lastPrompt: '' },
                     commit: { verbose: true },
                     showDiagnostics: false,
-                    telemetry: { enabled: true }
                 };
 
                 await SettingsManager.saveSettings(finalSettings);

@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Privacy
+
+- Removed all GitMind product telemetry, analytics settings, Application Insights runtime dependencies, and deployment assets.
+- Added automatic cleanup for retired telemetry settings and locally persisted telemetry state.
+- Removed the production raw-debug setting and command; development builds retain local developer logging only.
+- Added Pro-only, local sanitized support sessions with a strict allowlist, privacy validation, explicit review, and manual file sharing.
+
+### Fixed
+
+- Reworked Automatic Recovery so normal HTTP 429/model-limit failures can use the configured fallback, while account/billing quota failures remain excluded.
+- Applied the same bounded recovery behavior to normal generation, custom prompts, commit-history learning, changelog generation, and large-diff chunk/merge requests.
+- Normalized provider errors into meaningful user-safe categories without exposing raw response bodies or credentials.
+
+### Changed
+
+- Centralized provider defaults and curated model choices, refreshed current OpenAI, Gemini, Anthropic, Cohere, MiniMax, Copilot, Perplexity, DeepSeek, and xAI integrations, and corrected xAI model discovery.
+- Updated the extension baseline to VS Code 1.101 and Node.js 22, with npm as the declared package manager.
+- Updated the handbook, generated product surface, Wiki mirror, and UI copy to match the current implementation.
+
 ## v5.0.6 - 2026-06-14
 
 ### Enhanced

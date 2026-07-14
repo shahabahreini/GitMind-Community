@@ -274,12 +274,12 @@ function suggestCorrectProvider(model: string): { provider: string; model: strin
     } else if (lowerModel.includes('gpt-') || lowerModel.includes('openai')) {
         return {
             provider: "OpenAI",
-            model: "gpt-5.5-instant"
+            model: "gpt-5.6-terra"
         };
     } else if (lowerModel.includes('gemini') || lowerModel.includes('google')) {
         return {
             provider: "Gemini",
-            model: "gemini-3.1-flash"
+            model: "gemini-3.5-flash"
         };
     } else if (lowerModel.includes('mistral')) {
         return {

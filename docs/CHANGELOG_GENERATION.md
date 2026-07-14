@@ -81,20 +81,22 @@ User sees:
 - Maintains version distribution
 ```
 
-### Debug Logging
+### Diagnostics And Support Reports
 
-Enable detailed token information:
+Enable the standard model/token estimate prompt:
 
 **settings.json:**
 ```json
 {
-  "gitmind.debug": true
+  "gitmind.showDiagnostics": true
 }
 ```
 
-**Debug Output Example:**
+Production builds do not expose raw debug logs. For a persistent failure, Pro users can start a sanitized Support Report session in GitMind Settings, reproduce the issue, and manually share the reviewed JSON.
+
+**Diagnostic Example:**
 ```
-[GitMind Debug] Token estimation: {
+Token estimation: {
   commitTokens: 45000,
   changelogTokens: 1200,
   policyTokens: 350,
@@ -397,9 +399,9 @@ Initial: Generate full changelog
 Updates: Only new commits (10-20 commits)
 ```
 
-**4. Monitor Token Usage**
+**4. Monitor Token Estimates**
 ```json
-{ "gitmind.debug": true }
+{ "gitmind.showDiagnostics": true }
 ```
 
 ## Troubleshooting
@@ -426,7 +428,7 @@ Updates: Only new commits (10-20 commits)
 1. Ensure CHANGELOG.md exists first
 2. System auto-detects on update mode
 3. Check existing format manually
-4. Debug logging shows detected policy
+4. Reproduce persistent failures with a sanitized Pro Support Report session
 
 ### Issue: Generation timeout
 

@@ -1,13 +1,13 @@
 # Automatic Recovery
 
-> Verified against GitMind `5.0.6` on June 7, 2026.
+> Verified against GitMind `5.0.6` on July 13, 2026.
 
 GitMind Pro Automatic Recovery provides bounded recovery without retry loops.
 
 ## Behavior
 
-- **Automatic Retry** retries once after a timeout or an eligible temporary Gemini service failure.
-- **Model Fallback** tries one configured fallback model when the provider explicitly reports a model-specific limit.
+- **Automatic Retry** retries once after a timeout, network failure, or temporary provider service failure.
+- **Model Fallback** tries one configured fallback model after a model-specific limit or an ordinary provider HTTP 429 rate limit.
 - The fallback picker is searchable and scoped to the selected provider.
 - A fallback must differ from the primary model.
 - A generation performs no more than the initial request plus one recovery request.
@@ -15,7 +15,7 @@ GitMind Pro Automatic Recovery provides bounded recovery without retry loops.
 
 ## Excluded Failures
 
-GitMind does not automatically recover from invalid or missing API keys, permission/access failures, account quota exhaustion, general provider rate limits, billing problems, malformed requests, or unrelated errors.
+GitMind does not automatically recover from invalid or missing API keys, permission/access failures, account or billing quota exhaustion, malformed requests, content-policy failures, or unrelated errors. A 429 that clearly identifies an account/billing quota remains excluded; an ordinary provider/model rate limit may use the configured fallback.
 
 ## Configure
 

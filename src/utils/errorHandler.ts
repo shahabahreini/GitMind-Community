@@ -1,4 +1,5 @@
 import { debugLog } from "../services/debug/logger";
+import { classifyGenerationFailure, normalizeProviderError, ProviderApiError } from "../services/api/recovery";
 
 export interface ErrorInfo {
     provider: string;
@@ -56,12 +57,7 @@ export class APIErrorHandler {
     ];
 
     private static readonly PROVIDER_SUGGESTIONS: Record<string, string> = {
-        'Together AI': 'Try meta-llama/Llama-3.3-70B-Instruct-Turbo (128k)',
-        'Mistral': 'Try mistral-large-latest for larger context',
-        'Anthropic': 'Try claude-sonnet-4 for larger context',
-        'OpenAI': 'Try gpt-4o for larger context',
-        'Gemini': 'Try gemini-2.5-pro for larger context',
-        default: 'Check available models with larger limits'
+        default: 'Select an available model with a larger context window'
     };
 
     static handleAPIError(error: Error, provider: string, context?: {
@@ -83,10 +79,37 @@ export class APIErrorHandler {
             technicalDetails: context
         };
 
-        // Extract status code
-        const statusMatch = error.message.match(/(\d{3})/);
-        if (statusMatch) {
+        // Prefer structured status metadata. Message parsing is retained only for
+        // legacy providers and is never echoed to the user.
+        const statusMatch = error.message.match(/(?:http|api error|error|status)?\s*[:( -]?\s*([45]\d{2})(?:\b|\))/i);
+        if (error instanceof ProviderApiError && error.status) {
+            errorInfo.statusCode = error.status;
+        } else if (statusMatch) {
             errorInfo.statusCode = parseInt(statusMatch[1]);
+        }
+
+        const failure = classifyGenerationFailure(error, provider);
+        switch (failure) {
+            case "input-limit": return this.handleTokenLimitError(error, errorInfo, provider, context);
+            case "model-limit":
+            case "rate-limit": return this.handleRateLimitError(error, errorInfo, provider);
+            case "authentication": return this.handleAuthenticationError(error, errorInfo, provider);
+            case "account-limit": return this.handleQuotaExceededError(error, errorInfo, provider);
+            case "timeout":
+            case "network": return this.handleNetworkError(error, errorInfo, provider);
+            case "permission":
+                errorInfo.userMessage = `${provider} denied access to this model or operation.`;
+                errorInfo.suggestions = ["Check the API key permissions", "Verify that your plan includes the selected model", "Select a model available to this account"];
+                return errorInfo;
+            case "configuration": return this.handleContentFilterError(error, errorInfo, provider);
+            case "content-filter":
+                errorInfo.userMessage = `${provider} blocked the request because of its content policy.`;
+                errorInfo.suggestions = ["Review the staged content", "Remove generated or sensitive content that may trigger the provider policy", "Try again with a smaller change"];
+                return errorInfo;
+            case "temporary-service":
+                errorInfo.userMessage = `${provider} is temporarily unavailable.`;
+                errorInfo.suggestions = ["Try again in a few minutes", "Check the provider status page", "Select another provider temporarily"];
+                return errorInfo;
         }
 
         // Find matching error pattern
@@ -220,7 +243,7 @@ export class APIErrorHandler {
             errorInfo.userMessage = `${provider} API error occurred.`;
             errorInfo.suggestions = [
                 "Check your configuration and try again",
-                "Review the debug logs for more details",
+                "Create a sanitized Support Report from Pro Settings if the issue persists",
                 "Verify your API key and permissions",
                 "Consider trying a different provider"
             ];
@@ -250,12 +273,11 @@ export class APIErrorHandler {
                 "Consider using a different provider temporarily"
             ];
         } else {
-            errorInfo.userMessage = `${provider} API error: ${error.message}`;
+            errorInfo.userMessage = `${provider} could not complete the request.`;
             errorInfo.suggestions = [
                 "Check your configuration and API key",
-                "Review the debug logs for more details",
                 "Verify your internet connection",
-                "Try again or consider using a different provider"
+                "Try again or select a different provider"
             ];
         }
 
@@ -310,4 +332,14 @@ export class APIErrorHandler {
         const fatalPatterns = ['invalid', 'not found', 'suspended', 'billing', 'unauthorized', 'forbidden'];
         return fatalPatterns.some(pattern => error.message.toLowerCase().includes(pattern));
     }
+}
+
+/** Converts any provider failure into an actionable message without echoing raw response data. */
+export function formatSafeProviderError(
+    error: unknown,
+    provider: string,
+    context?: { diffSize?: number; estimatedTokens?: number; filesChanged?: number }
+): string {
+    const normalized = normalizeProviderError(error, provider);
+    return APIErrorHandler.formatUserMessage(APIErrorHandler.handleAPIError(normalized, provider, context));
 }

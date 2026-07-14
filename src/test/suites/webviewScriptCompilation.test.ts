@@ -22,8 +22,6 @@ suite("Webview Script Compilation", () => {
     test("Settings webview inline scripts should be syntactically valid", () => {
         const mockSettings = {
             apiProvider: "gemini",
-            debug: false,
-            telemetry: { enabled: false },
             commit: { verbose: true, captureAllChanges: false },
             promptCustomization: { enabled: false },
             gemini: { apiKey: "", model: "gemini-3.1-flash" },

@@ -1,9 +1,9 @@
 // src/webview/settings/SettingsManager.ts
 import * as vscode from "vscode";
 import { ExtensionSettings } from "../../models/ExtensionSettings";
-import { telemetryService } from "../../services/telemetry/telemetryService";
 import { debugLog } from "../../services/debug/logger";
 import { SecureKeyManager } from '../../services/encryption/SecureKeyManager';
+import { getProviderDefaultModel } from '../../config/providerCatalog';
 
 interface ProviderConfig {
     apiKey?: string;
@@ -22,21 +22,21 @@ export class SettingsManager {
     private static _saveTimeout: NodeJS.Timeout | undefined;
 
     private static readonly PROVIDER_DEFAULTS: ProviderDefaults = {
-        gemini: { model: "gemini-3.1-flash" },
+        gemini: { model: getProviderDefaultModel("gemini") },
         huggingface: { model: "" },
         ollama: { model: "", url: "" },
-        mistral: { model: "mistral-small-4" },
-        cohere: { model: "command-r-plus" },
-        openai: { model: "gpt-5.5-instant" },
+        mistral: { model: getProviderDefaultModel("mistral") },
+        cohere: { model: getProviderDefaultModel("cohere") },
+        openai: { model: getProviderDefaultModel("openai") },
         together: { model: "meta-llama/Llama-3.3-70B-Instruct-Turbo" },
         openrouter: { model: "google/gemma-3-27b-it:free" },
-        anthropic: { model: "claude-sonnet-4.6" },
-        minimax: { model: "MiniMax-M2.7" },
-        copilot: { model: "auto" },
-        deepseek: { model: "deepseek-v4-flash" },
-        grok: { model: "grok-4.4" },
+        anthropic: { model: getProviderDefaultModel("anthropic") },
+        minimax: { model: getProviderDefaultModel("minimax") },
+        copilot: { model: getProviderDefaultModel("copilot") },
+        deepseek: { model: getProviderDefaultModel("deepseek") },
+        grok: { model: getProviderDefaultModel("grok") },
         groq: { model: "meta-llama/llama-4-scout-17b-16e-instruct" },
-        perplexity: { model: "llama-3.1-sonar-large-128k-online" },
+        perplexity: { model: getProviderDefaultModel("perplexity") },
         zai: { model: "glm-5.1", endpoint: "coding" },
         nvidia: { model: "meta/llama-3.3-70b-instruct" },
         custom: { model: "" }
@@ -57,20 +57,12 @@ export class SettingsManager {
     public static async getCurrentSettings(): Promise<ExtensionSettings> {
         const config = vscode.workspace.getConfiguration(SettingsManager.CONFIG_PREFIX);
 
-        // Debug: Log the exact value being read for telemetry
-        const telemetryEnabled = config.get<boolean>("telemetry.enabled");
-        const telemetryEnabledWithDefault = config.get<boolean>("telemetry.enabled") ?? false;
-        console.log('DEBUG getCurrentSettings - telemetry.enabled raw:', telemetryEnabled);
-        console.log('DEBUG getCurrentSettings - telemetry.enabled with default:', telemetryEnabledWithDefault);
-        console.log('DEBUG getCurrentSettings - config inspect:', config.inspect("telemetry.enabled"));
-
         return await SettingsManager.buildSettingsFromConfig(config);
     }
 
     private static async buildSettingsFromConfig(config: vscode.WorkspaceConfiguration): Promise<ExtensionSettings> {
         const settings = {
             apiProvider: config.get<string>("apiProvider") || "gemini",
-            debug: config.get<boolean>("debug") || false,
             promptCustomization: {
                 enabled: config.get<boolean>("promptCustomization.enabled") || false,
                 saveLastPrompt: config.get<boolean>("promptCustomization.saveLastPrompt") || false,
@@ -85,9 +77,6 @@ export class SettingsManager {
                 style: config.get<string>("commitStyle.style") || "conventional",
             },
             showDiagnostics: config.get<boolean>("showDiagnostics") ?? false,
-            telemetry: {
-                enabled: config.get<boolean>("telemetry.enabled") ?? false,
-            },
             pro: {
                 encryptionEnabled: SettingsManager.getEncryptionEnabledSetting(config),
                 licenseKey: await SettingsManager.getActualLicenseKey(config),
@@ -144,9 +133,6 @@ export class SettingsManager {
                 lastChecked: config.get<string>("subscription.lastChecked") || "",
             },
         } as ExtensionSettings;
-
-        // Debug: Log what we're setting for telemetry
-        console.log('DEBUG buildSettingsFromConfig - setting telemetry.enabled to:', config.get<boolean>("telemetry.enabled") ?? false);
 
         // Build provider configurations dynamically with proper API key handling
         const secureKeyManager = SecureKeyManager.getInstance();
@@ -226,12 +212,10 @@ export class SettingsManager {
                 commitVerbose: settings.commit?.verbose,
                 commitStyle: settings.commitStyle?.style,
                 showDiagnostics: settings.showDiagnostics,
-                telemetryEnabled: settings.telemetry?.enabled,
                 promptCustomizationEnabled: settings.promptCustomization?.enabled,
                 encryptionEnabled: settings.pro?.encryptionEnabled
             });
 
-            SettingsManager.trackSettingsChanges(currentSettings, settings);
             await SettingsManager.updateConfigurationSettings(config, settings);
 
             // Handle API key storage based on encryption settings
@@ -256,12 +240,6 @@ export class SettingsManager {
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             debugLog("Error saving settings:", errorMessage);
-
-            telemetryService.trackExtensionError(
-                'settings_save_error',
-                errorMessage,
-                'saveSettings'
-            );
 
             throw error;
         } finally {
@@ -434,7 +412,6 @@ export class SettingsManager {
 
         const coreUpdates: Promise<void>[] = [
             SettingsManager.updateSingleSetting(config, "apiProvider", settings.apiProvider, target),
-            SettingsManager.updateSingleSetting(config, "debug", settings.debug ?? false, target),
             SettingsManager.updateSingleSetting(config, "promptCustomization.enabled", settings.promptCustomization?.enabled ?? false, target),
             SettingsManager.updateSingleSetting(config, "promptCustomization.saveLastPrompt", settings.promptCustomization?.saveLastPrompt ?? false, target),
             SettingsManager.updateSingleSetting(config, "promptCustomization.lastPrompt", settings.promptCustomization?.lastPrompt ?? "", target),
@@ -443,7 +420,6 @@ export class SettingsManager {
             SettingsManager.updateSingleSetting(config, "commit.targetLanguage", settings.commit?.targetLanguage ?? "english", target),
             SettingsManager.updateSingleSetting(config, "commitStyle.style", settings.commitStyle?.style || "conventional", target),
             SettingsManager.updateSingleSetting(config, "showDiagnostics", settings.showDiagnostics ?? false, target),
-            SettingsManager.updateSingleSetting(config, "telemetry.enabled", settings.telemetry?.enabled ?? false, target),
             SettingsManager.updateSingleSetting(config, "pro.encryptionEnabled", settings.pro?.encryptionEnabled ?? false, target),
             SettingsManager.updateSingleSetting(config, "pro.advancedModelConfig.mode", settings.pro?.advancedModelConfig?.mode ?? 'auto', target),
             SettingsManager.updateSingleSetting(config, "pro.advancedModelConfig.temperatureEnabled", settings.pro?.advancedModelConfig?.temperatureEnabled ?? false, target),
@@ -526,100 +502,6 @@ export class SettingsManager {
         });
 
         await Promise.all([...coreUpdates, ...providerUpdates]);
-    }
-
-    /**
-     * Track changes in settings for telemetry
-     */
-    private static trackSettingsChanges(
-        currentSettings: ExtensionSettings,
-        newSettings: ExtensionSettings
-    ): void {
-        const changes: Array<{ setting: string; oldValue: string; newValue: string }> = [];
-
-        // Track core setting changes
-        if (currentSettings.apiProvider !== newSettings.apiProvider) {
-            changes.push({
-                setting: 'apiProvider',
-                oldValue: currentSettings.apiProvider,
-                newValue: newSettings.apiProvider
-            });
-        }
-
-        if (currentSettings.debug !== newSettings.debug) {
-            changes.push({
-                setting: 'debug',
-                oldValue: String(currentSettings.debug || false),
-                newValue: String(newSettings.debug || false)
-            });
-        }
-
-        // Track pro settings changes
-        if (currentSettings.pro?.encryptionEnabled !== newSettings.pro?.encryptionEnabled) {
-            changes.push({
-                setting: 'pro.encryptionEnabled',
-                oldValue: String(currentSettings.pro?.encryptionEnabled || false),
-                newValue: String(newSettings.pro?.encryptionEnabled || false)
-            });
-        }
-
-        // Track subscription changes
-        if (currentSettings.subscription?.email !== newSettings.subscription?.email) {
-            changes.push({
-                setting: 'subscription.email',
-                oldValue: currentSettings.subscription?.email || '',
-                newValue: newSettings.subscription?.email || ''
-            });
-        }
-
-        if (currentSettings.subscription?.status !== newSettings.subscription?.status) {
-            changes.push({
-                setting: 'subscription.status',
-                oldValue: currentSettings.subscription?.status || 'inactive',
-                newValue: newSettings.subscription?.status || 'inactive'
-            });
-        }
-
-        // Track provider changes
-        Object.keys(SettingsManager.PROVIDER_DEFAULTS).forEach(provider => {
-            const currentProvider = (currentSettings as any)[provider];
-            const newProvider = (newSettings as any)[provider];
-
-            if (currentProvider && newProvider) {
-                // Only track API key changes for providers that use API keys
-                if (SettingsManager.API_KEY_PROVIDERS.includes(provider)) {
-                    const oldHasKey = Boolean(currentProvider.apiKey);
-                    const newHasKey = Boolean(newProvider.apiKey);
-
-                    if (oldHasKey !== newHasKey) {
-                        changes.push({
-                            setting: `${provider}.apiKey.configured`,
-                            oldValue: String(oldHasKey),
-                            newValue: String(newHasKey)
-                        });
-                    }
-                }
-
-                if (newProvider.model !== currentProvider.model) {
-                    changes.push({
-                        setting: `${provider}.model`,
-                        oldValue: currentProvider.model || 'none',
-                        newValue: newProvider.model || 'none'
-                    });
-                }
-
-                // Track URL changes for Ollama
-                if (provider === 'ollama' && newProvider.url !== currentProvider.url) {
-                    changes.push({
-                        setting: `${provider}.url`,
-                        oldValue: currentProvider.url || 'none',
-                        newValue: newProvider.url || 'none'
-                    });
-                }
-            }
-        });
-
-        telemetryService.trackDailyActiveUser();
     }
 
     /**

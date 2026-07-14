@@ -53,7 +53,6 @@ const testSuites = [
       "terminateProcess",
       "showOnboarding",
       "showSettings",
-      "toggleDebug",
     ],
   },
   {

@@ -220,7 +220,7 @@ export class GrokProvider extends BaseAIProvider {
         try {
             debugLog("Fetching Grok models from API...");
 
-            const response = await loggedFetch(`${GROK_BASE_URL}/language-models`, {
+            const response = await loggedFetch(`${GROK_BASE_URL}/models`, {
                 method: "GET",
                 headers: {
                     "Authorization": `Bearer ${this.apiKey}`,
@@ -319,20 +319,20 @@ export class GrokProvider extends BaseAIProvider {
                 }
 
                 // Fallback for non-JSON errors
-                throw new Error(`Grok API error: ${response.status} - ${errorText}. Check https://status.x.ai for service status.`);
+                throw new Error(`Grok API error (${response.status}). Check the provider status page and your account permissions.`);
             }
 
             const data = await response.json();
             debugLog("Grok API response:", data);
 
             // Validate response structure
-            if (!data.models || !Array.isArray(data.models)) {
-                debugLog("Invalid response structure - missing or invalid 'models' array");
+            if (!data.data || !Array.isArray(data.data)) {
+                debugLog("Invalid response structure - missing or invalid 'data' array");
                 throw new Error("Invalid response format from Grok API");
             }
 
             // Extract model IDs from the response
-            const modelIds = data.models
+            const modelIds = data.data
                 .map((model: any) => {
                     if (!model || typeof model !== 'object') {
                         debugLog("Invalid model object:", model);
