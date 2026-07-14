@@ -274,6 +274,7 @@ export function getUiManagerScript(): string {
         const activeStyle = this._settings.commitStyle?.style || 'basic';
         const historyLearning = this._settings.pro?.learnFromCommitHistory?.enabled ? 'Active' : 'Off';
         const encryption = this._settings.pro?.encryptionEnabled ? 'Encrypted' : 'Off';
+        const commitIntelligence = this._settings.commitIntelligence?.enabled ? 'Active' : 'Off';
 
         return \`
           <div class="gm-config-card \${isProUser ? 'pro-active' : ''}">
@@ -296,6 +297,7 @@ export function getUiManagerScript(): string {
                   Commit settings
                 </div>
                 <div class="gm-config-group-items">
+                  \${this.renderChip('Intelligence', commitIntelligence, this._settings.commitIntelligence?.enabled ? 'on' : 'off', !this._settings.commitIntelligence?.enabled)}
                   \${this.renderChip('Commit', commitStyle)}
                   \${this.renderChip('Capture', captureAll ? 'All Changes' : 'Staged Only')}
                   \${this.renderChip('Style', activeStyle)}

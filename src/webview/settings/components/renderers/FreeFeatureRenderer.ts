@@ -22,8 +22,11 @@ export class FreeFeatureRenderer extends BaseRenderer {
         const intelligence = this.settings.commitIntelligence;
         const enabled = intelligence?.enabled ?? false;
         const isPro = this.isProUser() || this.isDevModeEnabled();
-        const toggle = (id: string, label: string, tooltip: string, checked: boolean, setting: string, pro = false): string => {
+        const toggle = (id: string, label: string, tooltip: string, checked: boolean, setting: string, pro = false, helperText = ''): string => {
             let html = FormUtils.createToggle(id, label, tooltip, checked, setting);
+            if (helperText) {
+                html = html.replace('</label>', `</label><p class="toggle-description">${helperText}</p>`);
+            }
             if (pro) {
                 html = html.replace('class="toggle-item"', `class="toggle-item ${isPro ? '' : 'locked'}"`)
                     .replace(`id="${id}"`, `id="${id}" ${isPro ? '' : 'disabled aria-disabled="true"'}`)
@@ -34,37 +37,129 @@ export class FreeFeatureRenderer extends BaseRenderer {
 
         return `
             <section class="commit-intelligence-settings" aria-labelledby="commitIntelligenceHeading">
-                <h3 id="commitIntelligenceHeading" class="section-header">Commit Intelligence (Preview)</h3>
-                <p class="description">Opt in to reviewed generation and advanced commit workflows. One-click generation stays unchanged.</p>
-                ${toggle('commitIntelligenceEnabled', 'Commit Intelligence (Preview)', 'Enable reviewed generation and advanced commit actions', enabled, 'commitIntelligence.enabled').replace('id="commitIntelligenceEnabled"', `id="commitIntelligenceEnabled" aria-controls="commitIntelligenceOptions" aria-expanded="${enabled}"`)}
+                <div class="commit-intelligence-banner">
+                    <div class="commit-intelligence-banner-header">
+                        <h3 id="commitIntelligenceHeading" class="section-header" style="margin:0;">Commit Intelligence</h3>
+                        <span class="commit-intelligence-badge">Preview</span>
+                    </div>
+                    <p class="description" style="margin-bottom:12px;">Smart AI assistance that inspects, filters, and refines code changes before committing. One-click instant generation remains unaffected.</p>
+                    ${toggle(
+                        'commitIntelligenceEnabled',
+                        'Enable Commit Intelligence Features',
+                        'Opt in to smart review tools, noise removal, draft options, and multi-commit composing',
+                        enabled,
+                        'commitIntelligence.enabled'
+                    ).replace('id="commitIntelligenceEnabled"', `id="commitIntelligenceEnabled" aria-controls="commitIntelligenceOptions" aria-expanded="${enabled}"`)}
+                </div>
+
                 <div id="commitIntelligenceOptions" class="commit-intelligence-options" ${enabled ? '' : 'hidden'} aria-hidden="${!enabled}">
-                    <div class="settings-subsection">
-                        <h4>Reviewed generation</h4>
-                        <div class="form-group">
-                            <label for="commitDetailMode">Detail mode</label>
+                    <div class="intel-card-module settings-subsection">
+                        <h4 class="intel-card-title">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            Reviewed Generation & Noise Filtering
+                        </h4>
+                        <p class="intel-card-desc">Control how detailed AI messages should be and filter out clutter.</p>
+                        
+                        <div class="form-group" style="margin-bottom: 12px;" data-tooltip="Set message detail level: Auto adjusts length automatically, Concise creates quick summaries, Detailed includes full breakdowns.">
+                            <label for="commitDetailMode" style="margin-bottom: 4px;">Detail mode</label>
                             ${FormUtils.createSelect('commitDetailMode', [
-                                { value: 'legacy', label: 'Legacy (use Verbose Messages)', selected: !this.settings.commit?.detailMode || this.settings.commit.detailMode === 'legacy' },
-                                { value: 'auto', label: 'Auto', selected: this.settings.commit?.detailMode === 'auto' },
-                                { value: 'concise', label: 'Concise', selected: this.settings.commit?.detailMode === 'concise' },
-                                { value: 'detailed', label: 'Detailed', selected: this.settings.commit?.detailMode === 'detailed' }
+                                { value: 'legacy', label: 'Legacy (Use Verbose Messages setting)', selected: !this.settings.commit?.detailMode || this.settings.commit.detailMode === 'legacy' },
+                                { value: 'auto', label: 'Auto (Adapts length to change complexity)', selected: this.settings.commit?.detailMode === 'auto' },
+                                { value: 'concise', label: 'Concise (Short 1-line summary)', selected: this.settings.commit?.detailMode === 'concise' },
+                                { value: 'detailed', label: 'Detailed (In-depth multi-bullet explanation)', selected: this.settings.commit?.detailMode === 'detailed' }
                             ]).replace('<select ', '<select data-setting="commit.detailMode" ')}
                         </div>
-                        ${toggle('commitNoiseFilteringEnabled', 'Noise filtering', 'Classify generated, lock, binary, minified, and formatting-only changes', intelligence?.noiseFilteringEnabled ?? false, 'commit.noiseFiltering.enabled')}
+                        
+                        ${toggle(
+                            'commitNoiseFilteringEnabled',
+                            'Noise filtering',
+                            'Ignores lockfiles, minified files, binaries, and minor formatting so the AI focuses on code logic',
+                            intelligence?.noiseFilteringEnabled ?? false,
+                            'commit.noiseFiltering.enabled',
+                            false,
+                            'Ignores auto-generated lockfiles (package-lock.json), minified assets, and minor formatting so the AI focuses purely on real code logic.'
+                        )}
                     </div>
-                    <div class="settings-subsection">
-                        <h4>Draft choices</h4>
-                        ${toggle('commitCandidatesEnabled', 'Candidates', 'Generate multiple reviewed draft choices', intelligence?.candidatesEnabled ?? false, 'commit.candidates.enabled', true)}
-                        ${toggle('commitHealthEnabled', 'Commit Health', 'Show advisory draft quality checks', intelligence?.healthEnabled ?? false, 'commit.health.enabled', true)}
+
+                    <div class="intel-card-module settings-subsection">
+                        <h4 class="intel-card-title">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+                            Draft Options & Commit Quality
+                        </h4>
+                        <p class="intel-card-desc">Generate alternate message options and check commits for common issues.</p>
+                        
+                        ${toggle(
+                            'commitCandidatesEnabled',
+                            'Candidates',
+                            'Generate 2–3 alternative commit message choices to compare and choose from',
+                            intelligence?.candidatesEnabled ?? false,
+                            'commit.candidates.enabled',
+                            true,
+                            'Generates 2–3 alternate commit message choices side-by-side so you can pick or combine the best message.'
+                        )}
+                        ${toggle(
+                            'commitHealthEnabled',
+                            'Commit Health',
+                            'Scans your commits for common mistakes, missing details, or sensitive info before saving',
+                            intelligence?.healthEnabled ?? false,
+                            'commit.health.enabled',
+                            true,
+                            'Scans your staged changes for common mistakes, leftover debug statements, or missing details before committing.'
+                        )}
                     </div>
-                    <div class="settings-subsection">
-                        <h4>Context</h4>
-                        ${toggle('githubIssueContextEnabled', 'GitHub issue context', 'Fetch issue context only when explicitly requested', intelligence?.githubIssueContextEnabled ?? false, 'commit.githubIssueContext.enabled')}
+
+                    <div class="intel-card-module settings-subsection">
+                        <h4 class="intel-card-title">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                            External Ticket Context
+                        </h4>
+                        <p class="intel-card-desc">Connect issue details from GitHub into AI commit generation.</p>
+                        
+                        ${toggle(
+                            'githubIssueContextEnabled',
+                            'GitHub issue context',
+                            'Pulls issue details from GitHub to reference ticket numbers and descriptions',
+                            intelligence?.githubIssueContextEnabled ?? false,
+                            'commit.githubIssueContext.enabled',
+                            false,
+                            'Fetch linked issue information from GitHub only when requested so commit messages automatically reference fixed ticket numbers.'
+                        )}
                     </div>
-                    <div class="settings-subsection">
-                        <h4>Advanced Pro workflows</h4>
-                        ${toggle('composerEnabled', 'Composer', 'Compose a reviewed atomic commit series', intelligence?.composerEnabled ?? false, 'composer.enabled', true)}
-                        ${toggle('allowHunkSplitting', 'Hunk splitting', 'Allow divisible text hunks to move between Composer groups', intelligence?.allowHunkSplitting ?? false, 'composer.allowHunkSplitting', true)}
-                        ${toggle('reviewEnabled', 'Pre-commit review', 'Run an opt-in review before insertion', intelligence?.reviewEnabled ?? false, 'review.enabled', true)}
+
+                    <div class="intel-card-module settings-subsection">
+                        <h4 class="intel-card-title">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                            Advanced Pro Workflows
+                        </h4>
+                        <p class="intel-card-desc">Compose multi-commit series, split hunks, and review AI suggestions.</p>
+                        
+                        ${toggle(
+                            'composerEnabled',
+                            'Composer',
+                            'Split a large batch of changes into a clean sequence of smaller sub-commits',
+                            intelligence?.composerEnabled ?? false,
+                            'composer.enabled',
+                            true,
+                            'Composes large multi-file changes into an organized sequence of smaller, logical sub-commits.'
+                        )}
+                        ${toggle(
+                            'allowHunkSplitting',
+                            'Hunk splitting',
+                            'Allows breaking apart individual code changes within a file across separate commits',
+                            intelligence?.allowHunkSplitting ?? false,
+                            'composer.allowHunkSplitting',
+                            true,
+                            'Allows splitting individual sections of changes inside a single file into separate commits.'
+                        )}
+                        ${toggle(
+                            'reviewEnabled',
+                            'Pre-commit review',
+                            'Displays a final review window to confirm AI commit suggestions before inserting',
+                            intelligence?.reviewEnabled ?? false,
+                            'review.enabled',
+                            true,
+                            'Shows an interactive review panel to check and confirm AI suggestions before anything is saved to Git.'
+                        )}
                     </div>
                 </div>
             </section>`;
