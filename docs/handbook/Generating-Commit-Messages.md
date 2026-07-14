@@ -10,11 +10,23 @@ Enable `gitmind.commit.captureAllChanges` to include staged, unstaged, and untra
 
 ## Review Context And Intent
 
-The workspace accepts optional **Why / intended outcome**, issue or branch context, and user notes. Changes receive stable local IDs and are classified as source, formatting-only, generated, lockfile, minified, binary, or configured exclusions. Every decision is reversible before generation.
+The workspace uses a guided 3-step dashboard (`1: Scope & Intent` ➔ `2: Generate Draft` ➔ `3: Quality Review & Insertion`) with Git branch badges and vector line icons. It accepts optional **Why / intended outcome**, issue or branch context, and user notes. Changes receive stable local IDs with file line diff stats (`+24/-10`) and are classified as source, formatting-only, generated, lockfile, minified, binary, or configured exclusions. Every decision is reversible before generation, with quick bulk context buttons (`Include All`, `Summarize All`, `Exclude All`).
 
 Likely private keys, credential assignments, high-entropy strings, sensitive filenames, and oversized content are screened locally. A finding must be excluded, summarized, or separately overridden. This screening is best-effort and cannot prove that content is secret-free.
 
 Before each generation or repair request, GitMind shows the provider, model, destination host, context categories, included/summarized/excluded files, and estimated input/output tokens. Ollama and loopback Custom API endpoints receive the same preview without the remote-data warning.
+
+## Candidate Selection & QuickPick Multiline Preview
+
+When `gitmind.commit.candidates.enabled` is active:
+- Running **GitMind: Draft Options & Commit Quality** (`gitmind.draftChoices`) prompts the AI model for 3 distinct candidate archetypes: **Candidate 1 (Concise 1-liner)**, **Candidate 2 (Detailed breakdown)**, and **Candidate 3 (Intent focus)**.
+- The interactive VS Code QuickPick selector features a **live multiline preview in the top placeholder bar**: as you navigate between candidate choices using arrow keys, the full un-truncated commit message (subject and body) is rendered instantly.
+- Selecting a candidate inserts the draft directly into your SCM input box or launches the Reviewed Workspace panel for deeper review.
+
+## Quality Review & Pre-Commit Code Review
+
+- **Commit Health Rating Gauge**: Displays a visual score meter (0–100) with line-item conventional compliance status checks.
+- **Pre-Commit Code Review Panel**: When `gitmind.review.enabled` is active, GitMind automatically executes a pre-commit code review pass and renders findings with color-coded severity callouts (`ERROR`, `WARNING`, `INFO`), details, and impacted file atom tags right above the editable draft.
 
 ## Shape The Result
 
@@ -33,7 +45,7 @@ Custom context should explain intent that is not obvious from the diff, such as 
 
 ## Validation And Repair
 
-GitMind validates empty output, subject/body structure, style, type, scope, length, whitespace, repeated file inventories, boilerplate, trailers, ticket rules, and repository policy. Invalid drafts stay editable but cannot be inserted into Source Control. **Repair edited draft** creates a separate request with a new provider preview and confirmation.
+GitMind validates empty output, subject/body structure, style, type, scope, length, whitespace, repeated file inventories, boilerplate, trailers, ticket rules, and repository policy. It also automatically cleans and deduplicates trailing colons across all 16 providers to prevent invalid formatting like `feat(commit)::`. Invalid drafts stay editable but cannot be inserted into Source Control. **Repair edited draft** creates a separate request with a new provider preview and confirmation.
 
 Only a valid draft that you explicitly choose is inserted into the selected repository's SCM input. Normal generation never stages, commits, pushes, rewrites history, creates remote objects, or adds AI attribution.
 

@@ -7,7 +7,7 @@ GitMind registers public commands through the Command Palette, Source Control ac
 | Area | Public command IDs |
 | --- | --- |
 | Generate | `gitmind.generateCommitMessage`, `gitmind.generateCommitMessagePro`, `gitmind.cancelGeneration` |
-| Commit intelligence | `gitmind.advancedCommitActions`, `gitmind.openCommitWorkspace`, `gitmind.commitComposer`, `gitmind.reviewChanges` |
+| Commit intelligence | `gitmind.advancedCommitActions`, `gitmind.openCommitWorkspace`, `gitmind.commitComposer`, `gitmind.reviewChanges`, `gitmind.draftChoices` |
 | Adjacent drafts | `gitmind.draftSquashMessage`, `gitmind.draftPullRequest`, `gitmind.draftStashMessage`, `gitmind.draftReleaseNotes`, `gitmind.explainCommit` |
 | Settings and checks | `gitmind.openSettings`, `gitmind.openSettingsPro`, `gitmind.checkApiSetup`, `gitmind.checkRateLimits` |
 | Model discovery | `gitmind.loadMistralModels`, `gitmind.loadHuggingFaceModels`, `gitmind.loadZaiModels`, `gitmind.loadNvidiaModels`, `gitmind.loadGroqModels`, `gitmind.loadCopilotModels` |

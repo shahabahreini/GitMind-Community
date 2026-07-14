@@ -31,6 +31,9 @@ GitMind analyzes your Git diff and generates clear, professional commit messages
 - **18 provider options:** OpenAI, Anthropic, NVIDIA NIM, Google Gemini, MiniMax, DeepSeek, xAI Grok, Groq, Perplexity, Z.ai, Mistral, Cohere, Hugging Face, Together AI, OpenRouter, Ollama, GitHub Copilot, and Custom API.
 - **Searchable, dynamic model selection:** Load current models from supported provider APIs and quickly filter large model catalogs.
 - **Professional commit standards:** Conventional Commits, Angular, Semantic Release, Gitmoji, Linux Kernel, jQuery, Ember.js, and more.
+- **3-Candidate Choice QuickPick with Live Multiline Preview:** Compare 3 distinct AI candidate archetypes (Concise, Detailed, Intent) with full un-truncated multiline live preview as you navigate choices.
+- **Guided Reviewed Commit Workspace:** Interactive 3-step dashboard with branch badges, file line change stats (`+24/-10`), noise classification, bulk context controls, and Commit Health rating meter (0–100).
+- **Pre-Commit Code Review Panel:** Real-time pre-commit code review findings with color-coded severity callouts (`ERROR`, `WARNING`, `INFO`).
 - **Flexible Git workflow:** Generate from staged changes or enable Capture All Changes to include unstaged and untracked files.
 - **Local and key-free options:** Use Ollama locally or an existing GitHub Copilot subscription.
 - **Large diff support:** Token-aware processing keeps generation useful on substantial changes.
