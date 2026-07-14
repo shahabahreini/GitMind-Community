@@ -15,6 +15,7 @@ Verified against GitMind `5.0.6` on July 13, 2026.
 - [Installation And Quick Start](Installation-And-Quick-Start)
 - [Interface Map](Interface-Map)
 - [Maintainer Guide](Maintainer-Guide)
+- [Product Roadmap](Product-Roadmap)
 - [Provider Reference](Provider-Reference)
 - [Providers And Models](Providers-And-Models)
 - [Security And Privacy](Security-And-Privacy)

@@ -51,10 +51,6 @@ Revocation is mandatory even when the repository is private because distributed 
 - Wiki repository `not found`: the workflow is running where Wiki is disabled or uninitialized; verify publication ownership and token access.
 ## Product Roadmap Priorities
 
-User demand around AI developer tooling favors broader enterprise deployment choices and more control over the final commit before writing it. Recommended next investments are:
+Keep the public [Product Roadmap](Product-Roadmap) focused on user outcomes and broad phases. Do not publish internal evidence scoring, competitor analysis, monetization assumptions, or target dates there.
 
-1. **Commit Composer:** an editable preview with selectable hunks/files, regeneration controls, and side-by-side alternatives. This is the highest-value workflow improvement because it reduces prompt retries and lets users verify exactly what will be committed.
-2. **Enterprise provider gateways:** Microsoft Azure AI Foundry/OpenAI, AWS Bedrock, and Google Vertex AI. These unlock organization-approved identity, networking, regional, and governance paths.
-3. **High-throughput inference:** Fireworks AI and Cerebras as additional OpenAI-compatible providers, after the enterprise gateways.
-
-Provider additions should use the centralized provider catalog, live account model discovery where the provider supports it, and the shared recovery/error normalization layer. Avoid hard-coding a marketing model list as the only source of truth.
+Roadmap changes should preserve explicit user review before Git operations, make provider-bound context visible, and keep organization capabilities within the Pro track. Provider additions should use the centralized provider catalog, live account model discovery where supported, and the shared recovery and error-normalization layer.

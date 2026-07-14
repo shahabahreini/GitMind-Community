@@ -57,6 +57,7 @@ export default defineConfig({
           { text: "Security & Privacy", link: "/Security-And-Privacy" },
           { text: "Troubleshooting & FAQ", link: "/Troubleshooting-And-FAQ" },
           { text: "Support & Requests", link: "/Support-And-Requests" },
+          { text: "Product Roadmap", link: "/Product-Roadmap" },
           { text: "Maintainer Guide", link: "/Maintainer-Guide" },
           { text: "Coverage Audit", link: "/Coverage-Audit" },
         ],

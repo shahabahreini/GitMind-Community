@@ -16,6 +16,7 @@ GitMind generates professional Git commit messages from your changes without lea
 - [Providers And Models](Providers-And-Models)
 - [Generating Commit Messages](Generating-Commit-Messages)
 - [Complete Settings Reference](Complete-Settings-Reference)
+- [Product Roadmap](Product-Roadmap)
 - [Troubleshooting And FAQ](Troubleshooting-And-FAQ)
 
 ## Highlights
