@@ -134,6 +134,7 @@ export interface CommitConfig {
     includeScope: boolean;
     addBulletPoints: boolean;
     verbose: boolean;
+    detailMode?: 'auto' | 'concise' | 'detailed';
     captureAllChanges?: boolean;
     targetLanguage?: TargetCommitLanguage;
     gitmoji?: GitmojiConfig;
@@ -315,8 +316,8 @@ export interface CommitMessage {
 }
 
 export interface ExtensionState {
-    debugChannel: vscode.OutputChannel;
-    statusBarItem: vscode.StatusBarItem;
+    debugChannel?: vscode.OutputChannel;
+    statusBarItem?: vscode.StatusBarItem;
     context?: vscode.ExtensionContext;
 }
 

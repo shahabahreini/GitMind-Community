@@ -23,6 +23,7 @@ export class SettingsMigrationService {
 
         try {
             await this.cleanupRetiredTelemetry(context);
+            await this.migrateCommitDetailMode();
 
             const workspaceConfig = vscode.workspace.getConfiguration();
             const hasOldSettings = await this.checkForLegacySettings(workspaceConfig);
@@ -70,6 +71,24 @@ export class SettingsMigrationService {
         } catch (error) {
             debugLog("Error during settings migration:", error);
             // Don't throw - migration failure shouldn't break extension activation
+        }
+    }
+
+    /** Preserve an explicitly chosen legacy verbosity value without changing new-install defaults. */
+    private async migrateCommitDetailMode(): Promise<void> {
+        const config = vscode.workspace.getConfiguration('gitmind');
+        const detail = config.inspect<string>('commit.detailMode');
+        const verbose = config.inspect<boolean>('commit.verbose');
+        const mappings: Array<[unknown, unknown, vscode.ConfigurationTarget]> = [
+            [detail?.globalValue, verbose?.globalValue, vscode.ConfigurationTarget.Global],
+            [detail?.workspaceValue, verbose?.workspaceValue, vscode.ConfigurationTarget.Workspace],
+            [detail?.workspaceFolderValue, verbose?.workspaceFolderValue, vscode.ConfigurationTarget.WorkspaceFolder]
+        ];
+        for (const [current, legacy, target] of mappings) {
+            if (current === undefined && typeof legacy === 'boolean') {
+                try { await config.update('commit.detailMode', legacy ? 'detailed' : 'concise', target); }
+                catch (error) { debugLog(`Unable to migrate commit detail mode for ${vscode.ConfigurationTarget[target]}:`, error); }
+            }
         }
     }
 

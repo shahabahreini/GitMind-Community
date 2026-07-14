@@ -70,8 +70,23 @@ export class SettingsManager {
             },
             commit: {
                 verbose: config.get<boolean>("commit.verbose") ?? true,
+                detailMode: (() => {
+                    const detail = config.inspect<'auto' | 'concise' | 'detailed'>("commit.detailMode");
+                    const explicitlySet = detail?.globalValue !== undefined || detail?.workspaceValue !== undefined || detail?.workspaceFolderValue !== undefined;
+                    return explicitlySet ? config.get<'auto' | 'concise' | 'detailed'>("commit.detailMode", 'auto') : 'legacy';
+                })(),
                 captureAllChanges: config.get<boolean>("commit.captureAllChanges") ?? false,
                 targetLanguage: config.get<string>("commit.targetLanguage") ?? "english",
+            },
+            commitIntelligence: {
+                enabled: config.get<boolean>("commitIntelligence.enabled") ?? false,
+                noiseFilteringEnabled: config.get<boolean>("commit.noiseFiltering.enabled") ?? false,
+                candidatesEnabled: config.get<boolean>("commit.candidates.enabled") ?? false,
+                healthEnabled: config.get<boolean>("commit.health.enabled") ?? false,
+                githubIssueContextEnabled: config.get<boolean>("commit.githubIssueContext.enabled") ?? false,
+                composerEnabled: config.get<boolean>("composer.enabled") ?? false,
+                allowHunkSplitting: config.get<boolean>("composer.allowHunkSplitting") ?? false,
+                reviewEnabled: config.get<boolean>("review.enabled") ?? false,
             },
             commitStyle: {
                 style: config.get<string>("commitStyle.style") || "conventional",
@@ -416,10 +431,19 @@ export class SettingsManager {
             SettingsManager.updateSingleSetting(config, "promptCustomization.saveLastPrompt", settings.promptCustomization?.saveLastPrompt ?? false, target),
             SettingsManager.updateSingleSetting(config, "promptCustomization.lastPrompt", settings.promptCustomization?.lastPrompt ?? "", target),
             SettingsManager.updateSingleSetting(config, "commit.verbose", settings.commit?.verbose ?? true, target),
+            SettingsManager.updateSingleSetting(config, "commit.detailMode", settings.commit?.detailMode === 'legacy' ? undefined : settings.commit?.detailMode, target),
             SettingsManager.updateSingleSetting(config, "commit.captureAllChanges", settings.commit?.captureAllChanges ?? false, target),
             SettingsManager.updateSingleSetting(config, "commit.targetLanguage", settings.commit?.targetLanguage ?? "english", target),
             SettingsManager.updateSingleSetting(config, "commitStyle.style", settings.commitStyle?.style || "conventional", target),
             SettingsManager.updateSingleSetting(config, "showDiagnostics", settings.showDiagnostics ?? false, target),
+            SettingsManager.updateSingleSetting(config, "commitIntelligence.enabled", settings.commitIntelligence?.enabled ?? false, target),
+            SettingsManager.updateSingleSetting(config, "commit.noiseFiltering.enabled", settings.commitIntelligence?.noiseFilteringEnabled ?? false, target),
+            SettingsManager.updateSingleSetting(config, "commit.candidates.enabled", settings.commitIntelligence?.candidatesEnabled ?? false, target),
+            SettingsManager.updateSingleSetting(config, "commit.health.enabled", settings.commitIntelligence?.healthEnabled ?? false, target),
+            SettingsManager.updateSingleSetting(config, "commit.githubIssueContext.enabled", settings.commitIntelligence?.githubIssueContextEnabled ?? false, target),
+            SettingsManager.updateSingleSetting(config, "composer.enabled", settings.commitIntelligence?.composerEnabled ?? false, target),
+            SettingsManager.updateSingleSetting(config, "composer.allowHunkSplitting", settings.commitIntelligence?.allowHunkSplitting ?? false, target),
+            SettingsManager.updateSingleSetting(config, "review.enabled", settings.commitIntelligence?.reviewEnabled ?? false, target),
             SettingsManager.updateSingleSetting(config, "pro.encryptionEnabled", settings.pro?.encryptionEnabled ?? false, target),
             SettingsManager.updateSingleSetting(config, "pro.advancedModelConfig.mode", settings.pro?.advancedModelConfig?.mode ?? 'auto', target),
             SettingsManager.updateSingleSetting(config, "pro.advancedModelConfig.temperatureEnabled", settings.pro?.advancedModelConfig?.temperatureEnabled ?? false, target),

@@ -27,7 +27,7 @@ class Logger {
         return Logger.instance;
     }
 
-    async initialize(channel: vscode.OutputChannel, context: vscode.ExtensionContext): Promise<void> {
+    async initialize(channel: vscode.OutputChannel | undefined, context: vscode.ExtensionContext): Promise<void> {
         this.debugChannel = channel;
         this.developmentMode = context.extensionMode === vscode.ExtensionMode.Development;
 
@@ -230,7 +230,7 @@ class Logger {
 const logger = Logger.getInstance();
 
 export const initializeLogger = async (
-    channel: vscode.OutputChannel,
+    channel: vscode.OutputChannel | undefined,
     context: vscode.ExtensionContext,
 ): Promise<vscode.Disposable> => {
     await logger.initialize(channel, context);

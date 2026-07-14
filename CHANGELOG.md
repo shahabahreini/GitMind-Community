@@ -5,7 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## v6.0.0 - 2026-07-14
+
+### Commit Intelligence
+
+- Added an explicitly opt-in reviewed commit workspace with optional intent, issue/branch context, notes, reversible context selection, local noise classification, secret screening, and inline provider/model/host/token disclosure. Existing one-click generation remains the default.
+- Added automatic, concise, and detailed output modes; deterministic policy validation and separately confirmed repair; and exact insertion of only a valid user-approved draft into the selected repository's SCM input.
+- Added versioned `.gitmind/commit-policy.json` rules and safe static commitlint JSON import without executing JavaScript configuration.
+- Added Pro three-candidate generation, advisory weighted Commit Health, stable-ID change review, and reviewed squash, pull-request, stash, release-note, and explanation drafts.
+- Added Pro Commit Composer with local relationship analysis, file/hunk plans, stale/conflict/in-progress guards, hook execution in a temporary detached worktree, branch compare-and-swap, excluded-index preservation, rollback, and no push behavior.
+- Added explicit GitHub issue authentication/fetch for selected issues; other trackers continue to use pasted summaries.
+
+### Safety And Compatibility
+
+- Replaced shell-interpolated Git paths with argument-based process execution and treated repository/user context as delimited untrusted data.
+- Preserved all 18 providers, 12 commit styles, existing command aliases, licensing, settings, changelog, recovery, multi-repository SCM targeting, and sanitized support workflows.
+- Eliminated extension-host disposable-leak warnings during clean test shutdown.
 
 ### Privacy
 

@@ -45,6 +45,7 @@ import { registerSupportCommands } from "./support";
 import { recordSupportEvent, SupportErrorCategory, SupportProvider } from "../services/support/SupportSessionService";
 import { classifyGenerationFailure } from "../services/api/recovery";
 import { formatSafeProviderError } from "../utils/errorHandler";
+import { registerCommitIntelligenceCommands } from "./commitIntelligence";
 
 import { state } from "../extension";
 
@@ -958,8 +959,14 @@ Thank you!`);
 
 // Command Registration
 export function registerCommands(context: vscode.ExtensionContext): vscode.Disposable[] {
+  // Registered by registerCommitIntelligenceCommands:
+  // "gitmind.openCommitWorkspace", "gitmind.commitComposer",
+  // "gitmind.draftSquashMessage", "gitmind.draftPullRequest", "gitmind.draftStashMessage",
+  // "gitmind.draftReleaseNotes", "gitmind.explainCommit", "gitmind.reviewChanges",
+  // "gitmind.advancedCommitActions".
   const commands = [
     ...registerSupportCommands(context),
+    ...registerCommitIntelligenceCommands(context),
     vscode.commands.registerCommand("gitmind.cleanupLegacySettings", async () => {
       const migrationService = SettingsMigrationService.getInstance();
       await migrationService.forceCleanupLegacySettings();

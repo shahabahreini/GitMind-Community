@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI-Powered Commit Messages",
   "description": "Generate professional AI commit messages in VS Code with 18 provider options, searchable models, Conventional Commits, NVIDIA NIM, Ollama, Copilot, and Pro automatic recovery.",
-  "version": "5.1.0",
+  "version": "6.0.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -154,8 +154,62 @@
         "gitmind.commit.verbose": {
           "type": "boolean",
           "default": true,
-          "description": "Generate verbose commit messages with detailed descriptions. When disabled, only generates the summary line.",
+          "description": "Legacy verbosity setting. Explicit values are migrated to gitmind.commit.detailMode.",
           "order": 10
+        },
+        "gitmind.commitIntelligence.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable the opt-in Commit Intelligence preview workspace and advanced commit actions.",
+          "order": 11
+        },
+        "gitmind.commit.detailMode": {
+          "type": "string",
+          "enum": ["auto", "concise", "detailed"],
+          "default": "auto",
+          "description": "Choose whether reviewed commit drafts include a body. Auto uses intent and change complexity.",
+          "order": 10
+        },
+        "gitmind.commit.noiseFiltering.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Classify formatting-only, generated, lock, binary, and minified changes before generation."
+        },
+        "gitmind.commit.candidates.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Generate concise, detailed, and intent-focused candidates in one request (Pro)."
+        },
+        "gitmind.commit.githubIssueContext.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allow selected GitHub issue context after explicit authentication and review."
+        },
+        "gitmind.commit.health.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show advisory Commit Health subscores for reviewed drafts (Pro)."
+        },
+        "gitmind.composer.allowHunkSplitting": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allow divisible text hunks to be reassigned between Composer groups (Pro)."
+        },
+        "gitmind.composer.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable the atomic commit Composer workflow (Pro)."
+        },
+        "gitmind.review.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable opt-in pre-commit change review (Pro)."
+        },
+        "gitmind.review.blockingThreshold": {
+          "type": "string",
+          "enum": ["off", "warning", "error"],
+          "default": "off",
+          "description": "Minimum review severity that blocks Composer apply. Off is advisory only."
         },
         "gitmind.commit.captureAllChanges": {
           "type": "boolean",
@@ -1043,6 +1097,51 @@
         }
       },
       {
+        "command": "gitmind.openCommitWorkspace",
+        "title": "Open Commit Workspace",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.advancedCommitActions",
+        "title": "Advanced Commit Actions…",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.commitComposer",
+        "title": "Compose Atomic Commit Series (Pro)",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.draftSquashMessage",
+        "title": "Draft Squash Message (Pro)",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.draftPullRequest",
+        "title": "Draft Pull Request Description (Pro)",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.draftStashMessage",
+        "title": "Draft Stash Message (Pro)",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.draftReleaseNotes",
+        "title": "Draft Release Notes (Pro)",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.explainCommit",
+        "title": "Explain Commit (Pro)",
+        "category": "GitMind"
+      },
+      {
+        "command": "gitmind.reviewChanges",
+        "title": "Review Changes (Pro)",
+        "category": "GitMind"
+      },
+      {
         "command": "gitmind.openSettings",
         "title": "GitMind Setting",
         "category": "GitMind",
@@ -1303,6 +1402,42 @@
         {
           "command": "gitmind.openSettingsPro",
           "when": "false"
+        },
+        {
+          "command": "gitmind.advancedCommitActions",
+          "when": "gitmind.commitIntelligenceEnabled"
+        },
+        {
+          "command": "gitmind.openCommitWorkspace",
+          "when": "gitmind.commitIntelligenceEnabled"
+        },
+        {
+          "command": "gitmind.commitComposer",
+          "when": "gitmind.commitIntelligenceEnabled"
+        },
+        {
+          "command": "gitmind.draftSquashMessage",
+          "when": "gitmind.commitIntelligenceEnabled"
+        },
+        {
+          "command": "gitmind.draftPullRequest",
+          "when": "gitmind.commitIntelligenceEnabled"
+        },
+        {
+          "command": "gitmind.draftStashMessage",
+          "when": "gitmind.commitIntelligenceEnabled"
+        },
+        {
+          "command": "gitmind.draftReleaseNotes",
+          "when": "gitmind.commitIntelligenceEnabled"
+        },
+        {
+          "command": "gitmind.explainCommit",
+          "when": "gitmind.commitIntelligenceEnabled"
+        },
+        {
+          "command": "gitmind.reviewChanges",
+          "when": "gitmind.commitIntelligenceEnabled"
         }
       ],
       "view/title": [

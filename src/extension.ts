@@ -42,8 +42,6 @@ import { generateChangelog, updateChangelog } from "./services/changelog/generat
 
 
 const state: ExtensionState = {
-  debugChannel: vscode.window.createOutputChannel("GitMind Debug"),
-  statusBarItem: vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100),
   context: undefined,
 };
 
@@ -51,6 +49,8 @@ export { state };
 
 import { registerCommands, SUPPORTED_PROVIDERS } from "./commands/index";
 import { isProUser } from "./utils/proHelpers";
+import { configChangeDisposable, updateCommitIntelligenceContext } from "./config/settings";
+import { CommitWorkspace } from "./webview/commit/CommitWorkspace";
 
 /**
  * Reflects the current Pro/Free license state in the status bar and a context key.
@@ -79,8 +79,10 @@ export function updateProStatusBar(): void {
 }
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
+  const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+  state.statusBarItem = statusBarItem;
   state.context = context;
-  context.subscriptions.push(await initializeLogger(state.debugChannel, context));
+  context.subscriptions.push(await initializeLogger(undefined, context));
   debugLog("GitMind is now active");
 
   // Perform settings migration and cleanup first
@@ -120,9 +122,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   // Exposed as an internal command so other modules can trigger a refresh
   // without importing extension.ts (avoids a circular import).
   context.subscriptions.push(
+    configChangeDisposable,
     vscode.commands.registerCommand('gitmind.internalUpdateProStatusBar', () => updateProStatusBar())
   );
   updateProStatusBar();
+  await updateCommitIntelligenceContext();
 
   // Set up periodic license validation (every 24 hours)
   const VALIDATION_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
@@ -212,8 +216,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   });
 
   context.subscriptions.push(
-    state.debugChannel,
-    state.statusBarItem,
+    statusBarItem,
     scmStatusBarItem,
     configChangeListener, // Add the configuration listener
     uriHandler,
@@ -245,6 +248,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 }
 
 export function deactivate(): void {
-  state.debugChannel?.dispose();
-  state.statusBarItem?.dispose();
+  CommitWorkspace.disposeAll();
+  state.debugChannel = undefined;
+  state.statusBarItem = undefined;
+  state.context = undefined;
 }

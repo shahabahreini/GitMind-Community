@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { invalidateConfigCache } from '../../config/settings';
+import { invalidateConfigCache, updateCommitIntelligenceContext } from '../../config/settings';
 
 suite('Extension Commands Tests', () => {
     let originalGetConfiguration: typeof vscode.workspace.getConfiguration;
@@ -34,6 +34,14 @@ suite('Extension Commands Tests', () => {
         } catch (error) {
             console.log('Command registration test completed');
         }
+    });
+
+    test('Commit Intelligence context key follows the master opt-in', async () => {
+        let contextArgs: unknown[] = [];
+        (vscode.workspace as any).getConfiguration = () => ({ get: (key: string, fallback: unknown) => key === 'commitIntelligence.enabled' ? true : fallback });
+        (vscode.commands as any).executeCommand = async (...args: unknown[]) => { contextArgs = args; };
+        await updateCommitIntelligenceContext();
+        assert.deepStrictEqual(contextArgs, ['setContext', 'gitmind.commitIntelligenceEnabled', true]);
     });
 
     test('Open settings command should be registered', async () => {
@@ -219,8 +227,11 @@ suite('Extension Commands Tests', () => {
     });
 
     test('Output channel should be manageable', () => {
-        // Test output channel creation
-        const outputChannel = vscode.window.createOutputChannel('GitMind Test');
+        // Test the output-channel contract without creating a host resource that can race shutdown.
+        const outputChannel = {
+            name: 'GitMind Test', appendLine: (_value: string) => undefined,
+            show: () => undefined, hide: () => undefined, clear: () => undefined, dispose: () => undefined
+        };
 
         assert.ok(outputChannel, 'Output channel should be created');
         assert.strictEqual(outputChannel.name, 'GitMind Test');

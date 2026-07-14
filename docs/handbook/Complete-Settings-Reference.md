@@ -1,6 +1,6 @@
 # Complete Settings Reference
 
-> Verified against GitMind `5.0.6` on July 13, 2026.
+> Verified against GitMind `6.0.0` on July 14, 2026.
 
 Open **GitMind Setting** for the guided UI. The table below covers user-configurable settings. API keys and auth tokens have no default. Developer-only environment settings and automatically managed license/subscription state are intentionally omitted.
 
@@ -11,6 +11,16 @@ Open **GitMind Setting** for the guided UI. The table below covers user-configur
 | `gitmind.apiProvider` | `gemini` | 17 built-ins plus Pro `custom` |
 | `gitmind.showOnboarding` | `true` | Show onboarding |
 | `gitmind.commit.verbose` | `true` | Include body |
+| `gitmind.commit.detailMode` | `auto` | `auto`, `concise`, `detailed`; legacy verbosity migrates |
+| `gitmind.commitIntelligence.enabled` | `false` | Master opt-in for Commit Intelligence (Preview) |
+| `gitmind.commit.noiseFiltering.enabled` | `false` | Preview semantic-noise classifications |
+| `gitmind.commit.candidates.enabled` | `false` | Three candidates in one request; Pro |
+| `gitmind.commit.githubIssueContext.enabled` | `false` | Explicit GitHub issue fetch and authentication |
+| `gitmind.commit.health.enabled` | `false` | Advisory 0–100 Commit Health; Pro |
+| `gitmind.composer.enabled` | `false` | Atomic Commit Composer; Pro |
+| `gitmind.composer.allowHunkSplitting` | `false` | Reassign divisible text hunks; Pro |
+| `gitmind.review.enabled` | `false` | Opt-in change review; Pro |
+| `gitmind.review.blockingThreshold` | `off` | `off`, `warning`, `error` |
 | `gitmind.commit.captureAllChanges` | `false` | Include staged, unstaged, untracked |
 | `gitmind.commit.excludeFiles` | `[]` | Glob patterns excluded from AI analysis |
 | `gitmind.commit.issueTracking.enabled` | `false` | Include detected issue references |

@@ -8,7 +8,8 @@ suite('Webview Components Tests', () => {
     let extensionUri: vscode.Uri;
 
     setup(() => {
-        extensionUri = vscode.Uri.file('/mock/extension/path');
+        extensionUri = vscode.extensions.getExtension('ShahabBahreiniJangjoo.ai-commit-assistant')?.extensionUri
+            ?? vscode.Uri.file(process.cwd());
     });
 
     test('Settings webview should create properly', () => {

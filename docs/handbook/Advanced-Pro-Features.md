@@ -1,10 +1,23 @@
 # Advanced Pro Features
 
-> Verified against GitMind `5.0.6` on July 13, 2026.
+> Verified against GitMind `6.0.0` on July 14, 2026.
 
 ## Large Diff Processing
 
 GitMind Pro estimates available model context and splits substantial diffs into manageable chunks. Chunk summaries are combined into the final commit message. Large diffs still cost more, take longer, and may omit low-priority detail; review the result.
+
+## Commit Composer
+
+`gitmind.commitComposer` uses the selected stable change IDs and a local relationship graph for shared paths, source/tests, imports, configuration, generated outputs, locks, renames, and hunk proximity. AI proposals may refer only to those IDs. Binary, rename-only, submodule, and generated-file atoms remain indivisible.
+
+The editable plan supports grouping, ordering, exclusions, and group messages. Applying a reviewed plan rejects detached or stale state and active conflicts/merge/rebase/cherry-pick operations. GitMind prepares commits in a temporary detached worktree so hooks run, compare-and-swaps the original branch, preserves excluded work, restores the ref and byte-equivalent index on failure, removes temporary worktrees, and never pushes.
+
+## Candidates, Health, And Review
+
+- `gitmind.commit.candidates.enabled` requests concise, detailed, and intent-focused candidates in one provider request.
+- Commit Health is an advisory 0–100 score weighted 30% relevance, 25% atomicity, 25% rule compliance, 10% intent completeness, and 10% verbosity.
+- `gitmind.review.enabled` enables opt-in findings tied to stable change IDs. `gitmind.review.blockingThreshold` defaults to `off`; only explicit `warning` or `error` thresholds block apply.
+- Squash, pull-request, stash, release-note, explanation, and review commands create editable drafts only.
 
 ## Model Parameters
 
