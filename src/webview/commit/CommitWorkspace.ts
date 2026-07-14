@@ -83,6 +83,12 @@ export class CommitWorkspace implements vscode.Disposable {
     const panel = vscode.window.createWebviewPanel("gitmind.commitWorkspace", `GitMind · ${kind}`, vscode.ViewColumn.Active, { enableScripts: true, retainContextWhenHidden: false, localResourceRoots: [extensionUri] });
     const workspace = new CommitWorkspace(panel, { changeSet, selection, kind, draft: "", preview });
     this.panels.set(key, workspace);
+    if (kind === "review" || config.get<boolean>("review.enabled", false)) {
+      void workspace.handleGenerate({
+        type: "generate",
+        selections: selection.items.map(item => ({ atomId: item.atomId, decision: item.decision }))
+      });
+    }
   }
 
   private async handleGenerate(message: Extract<IncomingMessage, { type: "generate" | "repair" }>): Promise<void> {
@@ -165,11 +171,13 @@ export class CommitWorkspace implements vscode.Disposable {
       this.state.draft = results[0].draft; this.state.validation = results[0].validation;
       this.state.draftSnapshot = this.snapshotKey(this.state.changeSet.snapshot);
       this.panel.webview.postMessage({ type: "result", results });
-      if (setting.get<boolean>("review.enabled", false)) {
+      if (setting.get<boolean>("review.enabled", false) || requestKind === "review") {
         try {
           const findings = await this.runPreCommitReview({ snapshot: this.state.changeSet.snapshot, groups: [{ id: "c1", atomIds: this.state.selection.items.filter(i => i.decision === "included").map(i => i.atomId), message: results[0].draft }], excludedAtomIds: [] });
-          this.panel.webview.postMessage({ type: "reviewFindings", findings });
-        } catch { /* Suppress secondary review error */ }
+          this.panel.webview.postMessage({ type: "reviewFindings", findings, atomMap: this.buildAtomPathMap() });
+        } catch (error) {
+          this.panel.webview.postMessage({ type: "reviewFindingsError", message: error instanceof Error ? error.message : "Pre-commit code review failed." });
+        }
       }
     } catch (error) {
       this.panel.webview.postMessage({ type: "error", message: error instanceof Error ? error.message : "Generation failed" });
@@ -233,6 +241,17 @@ export class CommitWorkspace implements vscode.Disposable {
         return;
       }
       if (!validation.valid) { void vscode.window.showErrorMessage("GitMind cannot insert an invalid draft. Edit it until all blocking findings are resolved."); return; }
+      const setting = vscode.workspace.getConfiguration("gitmind");
+      if (setting.get<boolean>("review.enabled", false)) {
+        const policy = await loadRepositoryPolicy(this.state.changeSet.repositoryRoot, {
+          reviewBlockingThreshold: setting.get<"off" | "warning" | "error">("review.blockingThreshold", "off")
+        });
+        const reviewFindings = await this.runPreCommitReview({ snapshot: this.state.changeSet.snapshot, groups: [{ id: "c1", atomIds: this.state.selection.items.filter(i => i.decision === "included").map(i => i.atomId), message: raw.draft }], excludedAtomIds: [] });
+        if (reviewBlocks(reviewFindings, policy.reviewBlockingThreshold)) {
+          void vscode.window.showErrorMessage(`Pre-commit review findings meet configured '${policy.reviewBlockingThreshold}' blocking threshold. Resolve findings before inserting.`);
+          return;
+        }
+      }
       const currentSnapshot = await captureSnapshot(this.state.changeSet.repositoryRoot);
       if (!this.state.draftSnapshot || this.state.draftSnapshot !== this.snapshotKey(currentSnapshot)) {
         this.state.draft = ""; this.state.validation = undefined; this.state.draftSnapshot = undefined;
@@ -301,6 +320,14 @@ export class CommitWorkspace implements vscode.Disposable {
 
   private pathForAtom(atomId: string): string {
     return this.state.changeSet.atoms.find(atom => atom.id === atomId)?.path ?? "unknown path";
+  }
+
+  private buildAtomPathMap(): Record<string, string> {
+    const map: Record<string, string> = {};
+    for (const atom of this.state.changeSet.atoms) {
+      map[atom.id] = atom.path;
+    }
+    return map;
   }
 
   private snapshotKey(snapshot: ChangeSet["snapshot"]): string {
@@ -428,6 +455,9 @@ button:disabled { opacity: 0.5; cursor: default; }
 .severity-error { background: var(--vscode-inputValidation-errorBackground, #f87171); color: #fff; }
 .severity-warning { background: var(--vscode-inputValidation-warningBackground, #fbbf24); color: #000; }
 .severity-info { background: var(--vscode-badge-background); color: var(--vscode-badge-foreground); }
+.atom-tag { display: inline-block; font-size: 10px; font-family: var(--vscode-editor-font-family, monospace); padding: 2px 6px; border-radius: 3px; background: var(--vscode-badge-background); color: var(--vscode-badge-foreground); margin: 2px 4px 2px 0; }
+.atom-tag.clickable { cursor: pointer; }
+.atom-tag.clickable:hover { opacity: 0.8; text-decoration: underline; }
 .health-meter-box { border: 1px solid var(--vscode-panel-border); border-radius: 6px; padding: 12px 14px; margin: 12px 0; background: var(--vscode-sideBar-background); }
 .health-meter-head { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 600; margin-bottom: 6px; }
 .health-bar-track { height: 8px; border-radius: 4px; background: var(--vscode-panel-border); overflow: hidden; }
@@ -598,6 +628,11 @@ addEventListener('message', event => {
     q('#issue').value = m.label;
     q('#status').textContent = 'Issue context fetched successfully.';
   }
+  if (m.type === 'reviewFindingsError') {
+    const box = q('#reviewFindingsContainer');
+    box.hidden = false;
+    box.innerHTML = '<div style="font-weight:600;margin-bottom:8px;font-size:13px;color:var(--vscode-inputValidation-errorForeground);">Pre-Commit Code Review Failed</div><div style="font-size:12px;color:var(--vscode-descriptionForeground);">' + m.message + '</div>';
+  }
   if (m.type === 'reviewFindings') {
     const box = q('#reviewFindingsContainer');
     box.hidden = false;
@@ -608,8 +643,23 @@ addEventListener('message', event => {
       m.findings.forEach(f => {
         const card = document.createElement('div');
         card.className = 'finding-card';
-        card.innerHTML = '<div class="finding-header"><span>' + f.title + '</span><span class="finding-severity severity-' + f.severity + '">' + f.severity + '</span></div><div style="font-size:11px;color:var(--vscode-descriptionForeground);">' + f.detail + '</div>';
+        const atomLinks = (f.atomIds || []).map(id => {
+          const path = (m.atomMap && m.atomMap[id]) ? m.atomMap[id] : id;
+          return '<span class="atom-tag clickable" data-atom-id="' + id + '">' + path + '</span>';
+        }).join(' ');
+        card.innerHTML = '<div class="finding-header"><span>' + f.title + '</span><span class="finding-severity severity-' + f.severity + '">' + f.severity + '</span></div><div style="font-size:11px;color:var(--vscode-descriptionForeground);margin-bottom:4px;">' + f.detail + '</div>' + (atomLinks ? '<div style="font-size:11px;margin-top:4px;">Impacted files: ' + atomLinks + '</div>' : '');
         box.appendChild(card);
+      });
+      box.querySelectorAll('.atom-tag.clickable').forEach(tag => {
+        tag.onclick = (e) => {
+          const id = tag.getAttribute('data-atom-id');
+          const row = document.querySelector('tr[data-id="' + id + '"]');
+          if (row) {
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            row.style.outline = '2px solid var(--vscode-focusBorder)';
+            setTimeout(() => { row.style.outline = ''; }, 2000);
+          }
+        };
       });
     }
   }
