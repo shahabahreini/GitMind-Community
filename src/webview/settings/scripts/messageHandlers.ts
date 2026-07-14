@@ -847,338 +847,425 @@ export function getMessageHandlersScript(): string {
     function createStatsDisplay(stats, context) {
       const warningClass = stats.warnings.length > 0 ? 'has-warnings' : '';
       const recommendationClass = stats.recommendations.length > 0 ? 'has-recommendations' : '';
-      
+
+      // Determine Token Budget Tier
+      let tokenTier = 'Standard';
+      let tokenClass = 'tier-standard';
+      if (stats.estimatedTokens < 5000) {
+        tokenTier = 'Lightweight';
+        tokenClass = 'tier-light';
+      } else if (stats.estimatedTokens > 50000) {
+        tokenTier = 'Extensive';
+        tokenClass = 'tier-heavy';
+      } else if (stats.estimatedTokens > 25000) {
+        tokenTier = 'Heavy';
+        tokenClass = 'tier-moderate';
+      }
+
+      // Determine Conventional Rating Tier
+      let convRating = 'Good';
+      let convClass = 'rating-good';
+      if (stats.conventionalCommitPercentage >= 80) {
+        convRating = 'Excellent';
+        convClass = 'rating-excellent';
+      } else if (stats.conventionalCommitPercentage < 50) {
+        convRating = 'Mixed';
+        convClass = 'rating-mixed';
+      }
+
+      // SVG Icon helper definitions
+      const icons = {
+        commit: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="6" r="3"/><circle cx="12" cy="18" r="3"/><line x1="12" y1="9" x2="12" y2="15"/></svg>',
+        zap: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+        users: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+        target: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+        calendar: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+        file: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>',
+        warning: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+        bulb: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1.55.62 2.96 1.63 4 .76.76 1.23 1.52 1.41 2.5"/></svg>'
+      };
+
+      function getCommitTypeColor(type) {
+        var lower = type.toLowerCase();
+        if (lower.startsWith('feat')) return 'var(--type-feat, #10b981)';
+        if (lower.startsWith('fix')) return 'var(--type-fix, #ef4444)';
+        if (lower.startsWith('doc')) return 'var(--type-docs, #0ea5e9)';
+        if (lower.startsWith('refactor') || lower.startsWith('style')) return 'var(--type-refactor, #a855f7)';
+        if (lower.startsWith('test')) return 'var(--type-test, #f59e0b)';
+        return 'var(--type-chore, #64748b)';
+      }
+
+      var commitCountMeta = stats.actualCommitsFound < stats.totalCommits ? stats.actualCommitsFound + '/' + stats.totalCommits + ' Fetched' : 'Complete';
+      var authorCountMeta = stats.uniqueAuthors + (stats.uniqueAuthors === 1 ? ' Author' : ' Authors');
+
+      var commitTypesHtml = Object.keys(stats.commitTypes).length > 0 ? \`
+        <div class="stats-card-section">
+          <div class="section-card-header">
+            \${icons.file}
+            <h3>Commit Types Distribution</h3>
+          </div>
+          <div class="commit-types-grid">
+            \${Object.entries(stats.commitTypes)
+              .sort(function(a, b) { return b[1] - a[1]; })
+              .map(function(entry) {
+                var type = entry[0];
+                var count = entry[1];
+                var percent = Math.round((count / stats.actualCommitsFound) * 100);
+                var color = getCommitTypeColor(type);
+                return \`
+                  <div class="commit-type-row">
+                    <div class="type-row-header">
+                      <span class="type-name-badge" style="border-color: \${color}; color: \${color};">\${type}</span>
+                      <span class="type-count-text">\${count} (\${percent}%)</span>
+                    </div>
+                    <div class="type-bar-track">
+                      <div class="type-bar-fill" style="width: \${percent}%; background-color: \${color};"></div>
+                    </div>
+                  </div>
+                \`;
+              }).join('')}
+          </div>
+        </div>
+      \` : '';
+
+      var topAuthorsHtml = stats.topAuthors.length > 0 ? \`
+        <div class="stats-card-section">
+          <div class="section-card-header">
+            \${icons.users}
+            <h3>Top Contributors</h3>
+          </div>
+          <div class="contributors-list">
+            \${stats.topAuthors.map(function(author, index) {
+              return \`
+                <div class="contributor-item">
+                  <span class="rank-badge">#\${index + 1}</span>
+                  <span class="author-name">\${author.name}</span>
+                  <span class="author-commit-badge">\${author.count} \${author.count === 1 ? 'commit' : 'commits'}</span>
+                </div>
+              \`;
+            }).join('')}
+          </div>
+        </div>
+      \` : '';
+
+      var warningsHtml = stats.warnings.length > 0 ? \`
+        <div class="alert-callout warning-callout \${warningClass}">
+          <div class="callout-header">
+            \${icons.warning}
+            <span>Warnings</span>
+          </div>
+          <ul class="callout-list">
+            \${stats.warnings.map(function(warning) { return '<li>' + warning + '</li>'; }).join('')}
+          </ul>
+        </div>
+      \` : '';
+
+      var recommendationsHtml = stats.recommendations.length > 0 ? \`
+        <div class="alert-callout info-callout \${recommendationClass}">
+          <div class="callout-header">
+            \${icons.bulb}
+            <span>Recommendations</span>
+          </div>
+          <ul class="callout-list">
+            \${stats.recommendations.map(function(rec) { return '<li>' + rec + '</li>'; }).join('')}
+          </ul>
+        </div>
+      \` : '';
+
       return \`
         <div class="git-stats-container">
-          <!-- Summary Cards -->
+          <div class="stats-header-badge">
+            <span class="context-label">\${context || 'Analysis'}</span>
+          </div>
+
+          <!-- Summary KPI Grid -->
           <div class="stats-grid">
             <div class="stat-card">
+              <div class="stat-card-head">
+                <div class="stat-icon-wrapper">\${icons.commit}</div>
+                <span class="stat-meta-badge">\${commitCountMeta}</span>
+              </div>
               <div class="stat-value">\${stats.actualCommitsFound.toLocaleString()}</div>
-              <div class="stat-label">Commits\${stats.actualCommitsFound < stats.totalCommits ? \` (\${stats.totalCommits} requested)\` : ''}</div>
+              <div class="stat-label">Commits Analyzed</div>
             </div>
+
             <div class="stat-card">
+              <div class="stat-card-head">
+                <div class="stat-icon-wrapper">\${icons.zap}</div>
+                <span class="stat-meta-badge \${tokenClass}">\${tokenTier}</span>
+              </div>
               <div class="stat-value">\${stats.estimatedTokens.toLocaleString()}</div>
-              <div class="stat-label">Tokens\${stats.estimatedTokens > 50000 ? ' (High)' : stats.estimatedTokens < 500 ? ' (Low)' : ''}</div>
+              <div class="stat-label">Est. Tokens</div>
             </div>
+
             <div class="stat-card">
+              <div class="stat-card-head">
+                <div class="stat-icon-wrapper">\${icons.users}</div>
+                <span class="stat-meta-badge">\${authorCountMeta}</span>
+              </div>
               <div class="stat-value">\${stats.uniqueAuthors}</div>
-              <div class="stat-label">Authors</div>
+              <div class="stat-label">Contributors</div>
             </div>
+
             <div class="stat-card">
+              <div class="stat-card-head">
+                <div class="stat-icon-wrapper">\${icons.target}</div>
+                <span class="stat-meta-badge \${convClass}">\${convRating}</span>
+              </div>
               <div class="stat-value">\${stats.conventionalCommitPercentage}%</div>
               <div class="stat-label">Conventional</div>
             </div>
           </div>
 
-          <!-- Date Range -->
-          <div class="stats-section compact">
-            <h3>Date Range</h3>
-            <div class="date-range">\${stats.dateRange.oldest} → \${stats.dateRange.newest}</div>
+          <!-- Date Range Timeline -->
+          <div class="stats-card-section">
+            <div class="section-card-header">
+              \${icons.calendar}
+              <h3>Analysis Date Range</h3>
+            </div>
+            <div class="date-timeline-wrapper">
+              <span class="date-pill">\${stats.dateRange.oldest}</span>
+              <span class="timeline-arrow">➔</span>
+              <span class="date-pill">\${stats.dateRange.newest}</span>
+            </div>
           </div>
 
-          <!-- Commit Types -->
-          \${Object.keys(stats.commitTypes).length > 0 ? \`
-            <div class="stats-section compact">
-              <h3>Commit Types</h3>
-              <div class="commit-types">
-                \${Object.entries(stats.commitTypes)
-                  .sort((a, b) => b[1] - a[1])
-                  .map(([type, count]) => \`
-                    <div class="commit-type-item">
-                      <span class="commit-type-label">\${type}</span>
-                      <span class="commit-type-count">\${count}</span>
-                      <div class="commit-type-bar" style="width: \${(count / stats.actualCommitsFound) * 100}%"></div>
-                    </div>
-                  \`).join('')}
+          <!-- Commit Types Breakdown -->
+          \${commitTypesHtml}
+
+          <!-- Top Contributors Leaderboard -->
+          \${topAuthorsHtml}
+
+          <!-- File Changes & Quality Metrics -->
+          <div class="stats-card-section">
+            <div class="section-card-header">
+              \${icons.file}
+              <h3>Repository Impact Metrics</h3>
+            </div>
+            <div class="impact-metrics-row">
+              <div class="metric-chip">
+                <span class="metric-title">Files Changed</span>
+                <span class="metric-val">\${stats.filesChangedStats.total.toLocaleString()}</span>
+              </div>
+              <div class="metric-chip">
+                <span class="metric-title">Avg / Commit</span>
+                <span class="metric-val">\${stats.filesChangedStats.average}</span>
+              </div>
+              <div class="metric-chip">
+                <span class="metric-title">Max Single Commit</span>
+                <span class="metric-val">\${stats.filesChangedStats.max}</span>
+              </div>
+              <div class="metric-chip">
+                <span class="metric-title">Avg Msg Length</span>
+                <span class="metric-val">\${stats.averageMessageLength} chars</span>
               </div>
             </div>
-          \` : ''}
-
-          <!-- Top Authors -->
-          \${stats.topAuthors.length > 0 ? \`
-            <div class="stats-section compact">
-              <h3>Top Contributors</h3>
-              <div class="top-authors">
-                \${stats.topAuthors.map((author, index) => \`
-                  <div class="author-item">
-                    <span class="author-rank">#\${index + 1}</span>
-                    <span class="author-name">\${author.name}</span>
-                    <span class="author-count">\${author.count}</span>
-                  </div>
-                \`).join('')}
-              </div>
-            </div>
-          \` : ''}
-
-          <!-- File Changes Stats -->
-          <div class="stats-section compact">
-            <h3>File Changes</h3>
-            <div class="file-stats">
-              <span>Total: <strong>\${stats.filesChangedStats.total.toLocaleString()}</strong></span>
-              <span>Avg: <strong>\${stats.filesChangedStats.average}</strong></span>
-              <span>Max: <strong>\${stats.filesChangedStats.max}</strong></span>
-            </div>
           </div>
 
-          <!-- Version Tags -->
-          \${stats.hasVersionTags ? \`
-            <div class="stats-section compact">
-              <h3>Version Tags</h3>
-              <p>\${stats.versionTagCount} version tags found</p>
-            </div>
-          \` : ''}
+          <!-- Warnings Alert Callout -->
+          \${warningsHtml}
 
-          <!-- Warnings -->
-          \${stats.warnings.length > 0 ? \`
-            <div class="stats-section compact warnings-section \${warningClass}">
-              <h3>Warnings</h3>
-              <ul class="warnings-list">
-                \${stats.warnings.map(warning => \`<li>\${warning}</li>\`).join('')}
-              </ul>
-            </div>
-          \` : ''}
-
-          <!-- Recommendations -->
-          \${stats.recommendations.length > 0 ? \`
-            <div class="stats-section compact recommendations-section \${recommendationClass}">
-              <h3>Recommendations</h3>
-              <ul class="recommendations-list">
-                \${stats.recommendations.map(rec => \`<li>\${rec}</li>\`).join('')}
-              </ul>
-            </div>
-          \` : ''}
-
-          <!-- Message Quality -->
-          <div class="stats-section compact">
-            <h3>Message Quality</h3>
-            <p>Average length: <strong>\${stats.averageMessageLength}</strong> characters\${stats.averageMessageLength < 20 ? ' (too short)' : stats.averageMessageLength > 100 ? ' (good detail)' : ''}</p>
-          </div>
+          <!-- Recommendations Alert Callout -->
+          \${recommendationsHtml}
         </div>
 
         <style>
           .git-stats-container {
-            padding: 20px;
+            padding: 4px;
             max-width: 900px;
             margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            font-family: var(--vscode-font-family);
           }
           
+          .stats-header-badge {
+            margin-bottom: 4px;
+          }
+          .context-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            background: var(--vscode-button-background, #007acc);
+            color: var(--vscode-button-foreground, #ffffff);
+            padding: 3px 10px;
+            border-radius: 12px;
+            display: inline-block;
+          }
+
           .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
           }
           
           .stat-card {
             background: var(--vscode-editor-background);
             border: 1px solid var(--vscode-panel-border);
             border-radius: 8px;
-            padding: 16px;
-            text-align: center;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
           }
-          
-          .stat-icon {
-            font-size: 32px;
+
+          .stat-card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             margin-bottom: 8px;
           }
+
+          .stat-icon-wrapper {
+            color: var(--vscode-textLink-foreground, #007acc);
+            display: flex;
+            align-items: center;
+          }
+
+          .stat-meta-badge {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: var(--vscode-input-background);
+            color: var(--vscode-descriptionForeground);
+            border: 1px solid var(--vscode-panel-border);
+          }
+
+          .tier-light { background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.3); }
+          .tier-standard { background: rgba(14, 165, 233, 0.1); color: #0ea5e9; border-color: rgba(14, 165, 233, 0.3); }
+          .tier-moderate { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border-color: rgba(245, 158, 11, 0.3); }
+          .tier-heavy { background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.3); }
+
+          .rating-excellent { background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.3); }
+          .rating-good { background: rgba(14, 165, 233, 0.1); color: #0ea5e9; border-color: rgba(14, 165, 233, 0.3); }
+          .rating-mixed { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border-color: rgba(245, 158, 11, 0.3); }
           
           .stat-value {
-            font-size: 28px;
-            font-weight: bold;
-            color: var(--vscode-textLink-foreground);
-            margin-bottom: 4px;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--vscode-foreground);
+            line-height: 1.2;
+            margin-bottom: 2px;
           }
           
           .stat-label {
-            font-size: 12px;
-            color: var(--vscode-descriptionForeground);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-          }
-          
-          .stat-note {
             font-size: 11px;
             color: var(--vscode-descriptionForeground);
-            margin-top: 4px;
+            font-weight: 500;
           }
           
-          .stat-warning {
-            color: var(--vscode-editorWarning-foreground);
-            font-size: 11px;
-            margin-top: 4px;
-          }
-          
-          .stat-success {
-            color: var(--vscode-testing-iconPassed);
-            font-size: 11px;
-            margin-top: 4px;
-          }
-          
-          .stats-section {
+          .stats-card-section {
             background: var(--vscode-editor-background);
             border: 1px solid var(--vscode-panel-border);
             border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 16px;
+            padding: 14px 16px;
           }
-          
-          .stats-section h3 {
-            margin: 0 0 12px 0;
-            font-size: 16px;
+
+          .section-card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
             color: var(--vscode-foreground);
           }
-          
-          .date-range {
+          .section-card-header h3 {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 600;
+          }
+
+          .date-timeline-wrapper {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             flex-wrap: wrap;
           }
-          
-          .date-label {
-            color: var(--vscode-descriptionForeground);
-          }
-          
-          .date-separator {
-            color: var(--vscode-descriptionForeground);
-          }
-          
-          .commit-types {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-          }
-          
-          .commit-type-item {
-            display: grid;
-            grid-template-columns: 100px 50px 1fr;
-            align-items: center;
-            gap: 12px;
-          }
-          
-          .commit-type-label {
-            font-family: monospace;
-            font-weight: bold;
-          }
-          
-          .commit-type-count {
-            text-align: right;
-            color: var(--vscode-descriptionForeground);
-          }
-          
-          .commit-type-bar {
-            height: 20px;
-            background: var(--vscode-textLink-foreground);
-            border-radius: 4px;
-            min-width: 2px;
-          }
-          
-          .top-authors {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-          }
-          
-          .author-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 8px;
+          .date-pill {
             background: var(--vscode-input-background);
+            border: 1px solid var(--vscode-panel-border);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-family: var(--vscode-editor-font-family, monospace);
+            font-size: 12px;
+            color: var(--vscode-foreground);
+          }
+          .timeline-arrow {
+            color: var(--vscode-descriptionForeground);
+            font-size: 14px;
+          }
+
+          .commit-types-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+          }
+          .commit-type-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+          }
+          .type-row-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          }
+          .type-name-badge {
+            font-family: var(--vscode-editor-font-family, monospace);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 1px 8px;
             border-radius: 4px;
+            border: 1px solid;
+            background: rgba(128, 128, 128, 0.05);
           }
-          
-          .author-rank {
-            font-weight: bold;
-            color: var(--vscode-textLink-foreground);
-            min-width: 30px;
+          .type-count-text {
+            font-size: 11px;
+            color: var(--vscode-descriptionForeground);
           }
-          
+          .type-bar-track {
+            height: 6px;
+            width: 100%;
+            background: var(--vscode-input-background, rgba(128, 128, 128, 0.15));
+            border-radius: 3px;
+            overflow: hidden;
+          }
+          .type-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+          }
+
+          .contributors-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+          }
+          .contributor-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 10px;
+            background: var(--vscode-input-background);
+            border-radius: 6px;
+            border: 1px solid var(--vscode-panel-border);
+          }
+          .rank-badge {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--vscode-button-background, #007acc);
+            background: rgba(0, 122, 204, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            min-width: 24px;
+            text-align: center;
+            margin-right: 8px;
+          }
           .author-name {
             flex: 1;
-          }
-          
-          .author-count {
-            color: var(--vscode-descriptionForeground);
-            font-size: 12px;
-          }
-          
-          .file-stats {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-          }
-          
-          .file-stat-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-            border-bottom: 1px solid var(--vscode-panel-border);
-          }
-          
-          .file-stat-item:last-child {
-            border-bottom: none;
-          }
-          
-          .file-stat-label {
-            color: var(--vscode-descriptionForeground);
-          }
-          
-          .version-tags-info {
-            padding: 8px;
-          }
-          
-          .info-note {
-            color: var(--vscode-descriptionForeground);
-            font-size: 12px;
-            margin-top: 8px;
-          }
-          
-          .warnings-section {
-            border-left: 4px solid var(--vscode-editorWarning-foreground);
-          }
-          
-          .warnings-list {
-            margin: 0;
-            padding-left: 20px;
-          }
-          
-          .warnings-list li {
-            color: var(--vscode-editorWarning-foreground);
-            margin-bottom: 8px;
-          }
-          
-          .recommendations-section {
-            border-left: 4px solid var(--vscode-textLink-foreground);
-          }
-          
-          .recommendations-list {
-            margin: 0;
-            padding-left: 20px;
-          }
-          
-          .recommendations-list li {
-            color: var(--vscode-textLink-foreground);
-            margin-bottom: 8px;
-          }
-          
-          .message-quality {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-          }
-          
-          .quality-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-          }
-          
-          .quality-label {
-            color: var(--vscode-descriptionForeground);
-          }
-          
-          .quality-warning {
             color: var(--vscode-editorWarning-foreground);
             font-size: 13px;
             margin: 8px 0 0 0;

@@ -567,8 +567,10 @@ suite('Integration Integrity - Commit Style Registration', () => {
 
 suite('Integration Integrity - Command Registration', () => {
 
+    let extensionSource: string;
     let commandsSource: string;
     let supportCommandsSource: string;
+    let intelCommandsSource: string;
 
     suiteSetup(() => {
         extensionSource = readSource('src/extension.ts');
@@ -576,6 +578,7 @@ suite('Integration Integrity - Command Registration', () => {
         // The extension.ts simply calls registerCommands(context).
         commandsSource = readSource('src/commands/index.ts');
         supportCommandsSource = readSource('src/commands/support.ts');
+        intelCommandsSource = readSource('src/commands/commitIntelligence.ts');
         packageJson = readJSON('package.json');
     });
 
@@ -585,11 +588,12 @@ suite('Integration Integrity - Command Registration', () => {
         const missingInExtension: string[] = [];
 
         for (const cmd of pkgCommands) {
-            // Check that either extension.ts or commands/index.ts registers this command
+            // Check that extension.ts, commands/index.ts, support.ts, or commitIntelligence.ts registers this command
             const inExtension = extensionSource.includes(`"${cmd}"`) || extensionSource.includes(`'${cmd}'`);
             const inCommands = commandsSource.includes(`"${cmd}"`) || commandsSource.includes(`'${cmd}'`);
             const inSupportCommands = supportCommandsSource.includes(`"${cmd}"`) || supportCommandsSource.includes(`'${cmd}'`);
-            if (!inExtension && !inCommands && !inSupportCommands) {
+            const inIntelCommands = intelCommandsSource.includes(`"${cmd}"`) || intelCommandsSource.includes(`'${cmd}'`);
+            if (!inExtension && !inCommands && !inSupportCommands && !inIntelCommands) {
                 missingInExtension.push(cmd);
             }
         }

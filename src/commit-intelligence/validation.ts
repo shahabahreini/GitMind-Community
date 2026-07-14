@@ -19,7 +19,10 @@ function matchesCase(value: string, style: SubjectCase): boolean {
 }
 
 export function validateCandidate(message: string, policy: CommitPolicy, options: { conventional?: boolean; changedFiles?: string[] } = {}): ValidationResult {
-  const normalized = message.replace(/\r\n/g, "\n").trim();
+  const normalized = message
+    .replace(/\r\n/g, "\n")
+    .replace(/^([a-z0-9-]+(?:\([^)]+\))?!?)(?:\s*:){2,}/gim, "$1:")
+    .trim();
   const issues: ValidationIssue[] = [];
   if (!normalized) {return { valid: false, normalized, issues: [{ code: "empty", message: "The provider returned an empty message", severity: "error" }] };}
   if (/\t| +$/m.test(normalized)) {issues.push({ code: "whitespace", message: "Message contains tabs or trailing whitespace", severity: "error" });}

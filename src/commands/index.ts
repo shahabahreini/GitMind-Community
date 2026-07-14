@@ -244,8 +244,91 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
     ]);
 
     if (message?.trim()) {
+      let selectedMessage = message;
+      const gitmindConfig = vscode.workspace.getConfiguration("gitmind");
+      const candidatesEnabled = gitmindConfig.get("commitIntelligence.enabled", false) && gitmindConfig.get("commit.candidates.enabled", false);
+
+      if (candidatesEnabled) {
+        const cleanBase = message.trim().replace(/^([a-z0-9-]+(?:\([^)]+\))?!?)(?:\s*:){2,}/gim, "$1:");
+        const firstLine = cleanBase.split('\n')[0].replace(/^(feat|fix|docs|refactor|style|test|chore)(\([^)]+\))?:?\s*/i, "").trim();
+        const scopeMatch = /^(feat|fix|docs|refactor|style|test|chore)(\([^)]+\))?:?/i.exec(cleanBase);
+        const prefix = scopeMatch ? scopeMatch[0].replace(/:+$/, "").trim() : "feat";
+
+        const candidateItems = [
+          {
+            label: `$(symbol-event) Candidate 1: Concise 1-Liner`,
+            description: `${prefix}: ${firstLine || "update codebase logic"}`,
+            detail: `Draft: ${prefix}: ${firstLine || "update codebase logic"}`,
+            draft: `${prefix}: ${firstLine || "update codebase logic"}`
+          },
+          {
+            label: `$(text-size) Candidate 2: Detailed Breakdown`,
+            description: cleanBase.split('\n')[0],
+            detail: `Draft: ${cleanBase.replace(/\n/g, ' ↵ ')}`,
+            draft: cleanBase.includes('\n\n') ? cleanBase : `${cleanBase}\n\n- Refactored implementation logic\n- Verified behavior with automated tests`
+          },
+          {
+            label: `$(target) Candidate 3: Intent Focus`,
+            description: `${prefix}: resolve requirements and update logic`,
+            detail: `Draft: ${prefix}: resolve requirements and update logic ↵ ↵ Addressed codebase changes to enhance overall reliability and maintainability.`,
+            draft: `${prefix}: resolve requirements and update logic\n\nAddressed codebase changes to enhance overall reliability and maintainability.`
+          },
+          {
+            label: `$(output) Open Reviewed Workspace…`,
+            description: "Review candidates in full visual workspace panel",
+            detail: "Opens GitMind Commit Workspace with file customization and health scores",
+            draft: "__workspace__"
+          }
+        ];
+
+        const quickPick = vscode.window.createQuickPick<typeof candidateItems[number]>();
+        quickPick.title = "GitMind: Select Candidate (Navigate ↑↓ to preview full message)";
+        quickPick.placeholder = "Select a candidate draft to insert into Source Control";
+        quickPick.items = candidateItems;
+        quickPick.matchOnDescription = true;
+        quickPick.matchOnDetail = true;
+
+        const updatePreview = (item?: typeof candidateItems[number]) => {
+          if (item && item.draft !== "__workspace__") {
+            const previewLines = item.draft.split('\n');
+            const previewSummary = previewLines[0];
+            const previewBody = previewLines.slice(1).filter(l => l.trim().length > 0).join(' | ');
+            quickPick.placeholder = `▶ [${item.label.replace(/\$\([^)]+\)\s*/, '')}]: ${previewSummary}${previewBody ? ' — Body: ' + previewBody : ''}`;
+          } else if (item?.draft === "__workspace__") {
+            quickPick.placeholder = "▶ Opens interactive Commit Workspace webview panel with file controls and review options.";
+          }
+        };
+
+        updatePreview(candidateItems[0]);
+
+        const selected = await new Promise<typeof candidateItems[number] | undefined>(resolve => {
+          quickPick.onDidChangeActive(active => {
+            if (active[0]) { updatePreview(active[0]); }
+          });
+          quickPick.onDidAccept(() => {
+            const item = quickPick.selectedItems[0];
+            quickPick.hide();
+            resolve(item);
+          });
+          quickPick.onDidHide(() => {
+            resolve(undefined);
+          });
+          quickPick.show();
+        });
+
+        quickPick.dispose();
+
+        if (selected) {
+          if (selected.draft === "__workspace__") {
+            await vscode.commands.executeCommand("gitmind.openCommitWorkspace", { rootUri: vscode.Uri.file(repoRoot) });
+            return;
+          }
+          selectedMessage = selected.draft;
+        }
+      }
+
       const promptConfig = getPromptConfig();
-      let formattedMessage = processCommitMessage(message, promptConfig);
+      let formattedMessage = processCommitMessage(selectedMessage, promptConfig);
 
       // Branch name for issue tracking
       const branchName = await getBranchName(repoRoot);

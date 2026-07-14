@@ -57,8 +57,8 @@ export function processCommitMessage(response: string, config: PromptConfig = {}
         throw new Error("Empty response received from AI");
     }
 
-    // Get the first line as summary
-    let summary = lines[0];
+    // Get the first line as summary and clean any duplicated colons (e.g., "feat(scope)::")
+    let summary = lines[0].replace(/^([a-z0-9-]+(?:\([^)]+\))?!?)(?:\s*:){2,}/gim, '$1:');
     debugLog("Initial summary", summary);
 
     // Check if this is a style that should not be modified

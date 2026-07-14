@@ -3,7 +3,7 @@ import { GenerationEnvelope } from "./models";
 export function renderPortablePrompt(envelope: GenerationEnvelope): string {
   const bodyRule = envelope.detailMode === "concise" ? "Return subject only." : envelope.detailMode === "detailed" ? "Return a subject and useful body." : "Choose a body only when the supplied context has multiple concerns, explicit intent, breaking changes, more than two files, or more than three hunks.";
   const task = envelope.kind === "candidates"
-    ? "Return strict JSON with a candidates array containing exactly three objects: {mode: concise|detailed|intent, message: string}."
+    ? "Return strict JSON with a candidates array containing exactly three objects representing distinct alternative draft choices: [{mode: 'concise', message: string}, {mode: 'detailed', message: string}, {mode: 'intent', message: string}]. Candidate 1 ('concise') MUST be a single-line summary (type(scope): subject). Candidate 2 ('detailed') MUST include a subject line and a structured bulleted body detailing changes. Candidate 3 ('intent') MUST emphasize the developer's problem-solving goal. Do NOT return minor rephrasings of the exact same sentence."
     : envelope.kind === "composer"
       ? "Return strict JSON {groups:[{id:string, atomIds:string[], message:string}], excludedAtomIds:string[]}. Use only known atom IDs."
       : envelope.kind === "review"
