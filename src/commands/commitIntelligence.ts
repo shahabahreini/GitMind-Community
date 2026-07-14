@@ -6,6 +6,7 @@ import { CommitWorkspace } from "../webview/commit/CommitWorkspace";
 
 const COMMANDS: Array<{ id: string; kind: GenerationKind; pro: boolean; setting?: string }> = [
   { id: "gitmind.openCommitWorkspace", kind: "commit", pro: false },
+  { id: "gitmind.draftChoices", kind: "candidates", pro: true, setting: "commit.candidates.enabled" },
   { id: "gitmind.commitComposer", kind: "composer", pro: true, setting: "composer.enabled" },
   { id: "gitmind.draftSquashMessage", kind: "squash", pro: true },
   { id: "gitmind.draftPullRequest", kind: "pull-request", pro: true },

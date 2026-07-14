@@ -1112,6 +1112,11 @@
         "category": "GitMind"
       },
       {
+        "command": "gitmind.draftChoices",
+        "title": "Draft Choices (Pro)",
+        "category": "GitMind"
+      },
+      {
         "command": "gitmind.draftSquashMessage",
         "title": "Draft Squash Message (Pro)",
         "category": "GitMind"
@@ -1413,6 +1418,10 @@
         },
         {
           "command": "gitmind.commitComposer",
+          "when": "gitmind.commitIntelligenceEnabled"
+        },
+        {
+          "command": "gitmind.draftChoices",
           "when": "gitmind.commitIntelligenceEnabled"
         },
         {

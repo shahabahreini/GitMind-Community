@@ -44,7 +44,7 @@ suite("GitMind 6 commit intelligence", () => {
     assert.match(commandsSource, /registerCommand\("gitmind\.generateCommitMessage", handleGenerateCommit\)/);
     assert.match(commandsSource, /registerCommand\("gitmind\.generateCommitMessagePro", handleGenerateCommit\)/);
     const manifest = JSON.parse(await readFile(path.join(process.cwd(), "package.json"), "utf8"));
-    const advanced = new Set(["gitmind.advancedCommitActions", "gitmind.openCommitWorkspace", "gitmind.commitComposer", "gitmind.draftSquashMessage", "gitmind.draftPullRequest", "gitmind.draftStashMessage", "gitmind.draftReleaseNotes", "gitmind.explainCommit", "gitmind.reviewChanges"]);
+    const advanced = new Set(["gitmind.advancedCommitActions", "gitmind.openCommitWorkspace", "gitmind.draftChoices", "gitmind.commitComposer", "gitmind.draftSquashMessage", "gitmind.draftPullRequest", "gitmind.draftStashMessage", "gitmind.draftReleaseNotes", "gitmind.explainCommit", "gitmind.reviewChanges"]);
     const palette = manifest.contributes.menus.commandPalette.filter((item: { command: string }) => advanced.has(item.command));
     assert.strictEqual(palette.length, advanced.size);
     assert.ok(palette.every((item: { when?: string }) => item.when === "gitmind.commitIntelligenceEnabled"));
