@@ -35,6 +35,8 @@ import { PromptManager } from "../services/promptManager";
 import { SecureKeyManager } from "../services/encryption/SecureKeyManager";
 import { isLegacyProUser } from "../utils/proHelpers";
 import { MIGRATION_GUIDE_URL } from "../services/subscription/ProNotificationService";
+import { LegacyEntitlementService } from "../services/subscription/LegacyEntitlementService";
+import { GitMindLicenseService } from "../services/subscription/GitMindLicenseService";
 import { SubscriptionManager } from "../services/subscription/SubscriptionManager";
 import { ProActivationService } from "../services/subscription/ProActivationService";
 import { LemonSqueezyService } from "../services/subscription/LemonSqueezyService";
@@ -1458,22 +1460,113 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
       }
     }),
 
+    /**
+     * Exchanges a grandfathered Lemon Squeezy purchase for a real license — without leaving
+     * the editor.
+     *
+     * The whole flow is: confirm your email, done. No browser, no hunting for a UUID in an
+     * inbox, no copying a key back. These are customers who already paid us and were let down
+     * by a payment provider; making them work for what they own would be the wrong ask.
+     */
+    vscode.commands.registerCommand("gitmind.claimFreeLicense", async () => {
+      const legacy = LegacyEntitlementService.getInstance();
+      const entitlement = legacy.getEntitlement();
+      const licenseService = GitMindLicenseService.getInstance();
+
+      const email = await vscode.window.showInputBox({
+        title: 'Claim your free GitMind Pro license',
+        prompt: 'We will email your replacement key here. Nothing is charged.',
+        value: entitlement?.email ?? '',
+        ignoreFocusOut: true,
+        placeHolder: 'you@example.com',
+        validateInput: (value) =>
+          /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+            ? undefined
+            : 'Please enter a valid email address.'
+      });
+
+      if (!email) {
+        return; // Cancelled. Their Pro access is untouched.
+      }
+
+      const result = await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: 'Claiming your free GitMind Pro license…',
+          cancellable: false
+        },
+        () => licenseService.claimFreeLicense(email, entitlement?.legacyKey)
+      );
+
+      if (!result.ok) {
+        // A failed claim is not a licensing problem. They keep Pro exactly as before — the
+        // grandfathered entitlement is local and nothing here touched it. Say so plainly,
+        // because the one thing a paying customer must never wonder is whether they just
+        // lost what they bought.
+        const openPage = 'Try in browser';
+        const selection = await vscode.window.showWarningMessage(
+          `We could not claim your key right now: ${result.error} ` +
+          'Your Pro features are unaffected — nothing has changed. Try again later, or use the website.',
+          openPage
+        );
+        if (selection === openPage) {
+          void vscode.env.openExternal(
+            vscode.Uri.parse(licenseService.buildMigrationUrl(entitlement?.legacyKey))
+          );
+        }
+        return;
+      }
+
+      // Activate it immediately. This also marks the legacy entitlement migrated, so the
+      // "claim your free key" notice stops for good.
+      const activation = await ProActivationService.getInstance()
+        .activateWithLicenseKey(result.licenseKey);
+
+      if (!activation.success) {
+        // The key is real and was emailed; only activation stumbled. Give them the key so
+        // they are never dependent on this one code path having worked.
+        const copy = 'Copy key';
+        const selection = await vscode.window.showWarningMessage(
+          `Your free license key is ${result.licenseKey} — we have emailed it to you as well. ` +
+          `We could not activate it automatically (${activation.message}). ` +
+          'Paste it into GitMind settings and you are done. Your Pro features are unaffected.',
+          copy
+        );
+        if (selection === copy) {
+          await vscode.env.clipboard.writeText(result.licenseKey);
+        }
+        return;
+      }
+
+      const copy = 'Copy key';
+      const selection = await vscode.window.showInformationMessage(
+        `✅ Done. Your GitMind Pro license is ${result.licenseKey}, it is active on this machine, ` +
+        `and we have emailed a copy to ${email}. Nothing was charged.`,
+        copy
+      );
+      if (selection === copy) {
+        await vscode.env.clipboard.writeText(result.licenseKey);
+      }
+
+      void vscode.commands.executeCommand('gitmind.refreshSubscription', { silent: true });
+    }),
+
     vscode.commands.registerCommand("gitmind.validateExistingLicense", async () => {
       try {
         // A grandfathered license cannot be checked against anything: the Lemon Squeezy store
         // is gone. Explain that rather than running a doomed request and reporting "not valid",
         // which would tell a paying customer their license failed when it did no such thing.
         if (isLegacyProUser()) {
-          const learnMore = 'How to migrate';
+          const claim = 'Claim free key';
           const selection = await vscode.window.showInformationMessage(
-            '✅ GitMind Pro is active. Your license was purchased through our previous payment ' +
-            'provider, so there is no server left to check it against — we honor it locally and ' +
-            'it will not expire. A free replacement key is coming, which restores online ' +
-            'validation and device management.',
-            learnMore
+            '✅ GitMind Pro is active. Your license was bought through our previous payment ' +
+            'provider, whose store has closed — so there is no server left to check it against. ' +
+            'We honour it locally and it will not expire. Claim a free replacement key (no ' +
+            'charge) to restore online validation and device management.',
+            claim
           );
-          if (selection === learnMore) {
-            void vscode.env.openExternal(vscode.Uri.parse(MIGRATION_GUIDE_URL));
+          if (selection === claim) {
+            void vscode.commands.executeCommand('gitmind.claimFreeLicense');
           }
           return;
         }

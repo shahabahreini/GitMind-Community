@@ -104,6 +104,67 @@ export class GitMindLicenseService {
         });
     }
 
+    /**
+     * Exchanges a Lemon Squeezy purchase for a free replacement license.
+     *
+     * Unauthenticated, so it cannot go through `call()` — there is no key to sign with yet,
+     * which is the entire problem it solves.
+     *
+     * `legacyKey` is optional. Plenty of legitimate customers cannot produce one: the key may
+     * be sitting behind the `[ENCRYPTED]` placeholder, or they may have been recognised by
+     * their subscription record rather than by a key at all. Requiring it would turn away
+     * exactly the people this exists to rescue. The server bounds the endpoint by machine,
+     * window and rate limit instead — none of which depend on the key.
+     *
+     * @returns the new license key, or an error message safe to show the user.
+     */
+    public async claimFreeLicense(
+        email: string,
+        legacyKey?: string
+    ): Promise<{ ok: true; licenseKey: string } | { ok: false; error: string }> {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), this.requestTimeoutMs);
+
+        try {
+            const response = await fetch(`${this.baseUrl}/migrate/claim`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    machine_id: this.getMachineId(),
+                    email: email.trim(),
+                    ...(legacyKey ? { legacy_key: legacyKey } : {})
+                }),
+                signal: controller.signal
+            });
+
+            const result = await response.json() as Record<string, unknown>;
+
+            if (result.status === 'success' && typeof result.license_key === 'string') {
+                return { ok: true, licenseKey: result.license_key };
+            }
+
+            return {
+                ok: false,
+                error: typeof result.error === 'string'
+                    ? result.error
+                    : `The licence server responded with HTTP ${response.status}.`
+            };
+        } catch (error) {
+            debugLog('Free license claim failed:', error);
+            return {
+                ok: false,
+                error: error instanceof Error && error.name === 'AbortError'
+                    ? 'The licence server took too long to respond.'
+                    : 'Could not reach the licence server.'
+            };
+        } finally {
+            clearTimeout(timer);
+        }
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // Transport
     // ─────────────────────────────────────────────────────────────────────────

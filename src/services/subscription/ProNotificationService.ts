@@ -131,12 +131,9 @@ export class ProNotificationService {
         );
 
         if (selection === claim) {
-            // Carry the old key along so the claim page is one field away from done. It is the
-            // only proof of purchase that still exists anywhere — Lemon Squeezy's API is gone
-            // and we were locked out before any customer export was possible.
-            const legacyKey = legacy.getEntitlement()?.legacyKey;
-            const url = GitMindLicenseService.getInstance().buildMigrationUrl(legacyKey);
-            void vscode.env.openExternal(vscode.Uri.parse(url));
+            // Claim in place. The old flow sent them to a browser to retype a UUID and copy a
+            // key back; this asks them to confirm an email address and does the rest.
+            void vscode.commands.executeCommand('gitmind.claimFreeLicense');
         } else if (selection === learnMore) {
             void vscode.env.openExternal(vscode.Uri.parse(MIGRATION_GUIDE_URL));
         }

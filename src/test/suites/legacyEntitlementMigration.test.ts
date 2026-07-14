@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { LegacyEntitlementService } from '../../services/subscription/LegacyEntitlementService';
+import { GitMindLicenseService } from '../../services/subscription/GitMindLicenseService';
 import { ProActivationService } from '../../services/subscription/ProActivationService';
 import { isProUser, isLegacyProUser } from '../../utils/proHelpers';
 import { invalidateConfigCache } from '../../config/settings';
@@ -200,6 +201,104 @@ suite('Legacy Lemon Squeezy entitlement', () => {
 
             assert.notStrictEqual(settings['pro.validationStatus'], 'invalid');
             assert.strictEqual(isProUser(), true, 'a suspended storefront must not cost Pro');
+        });
+    });
+
+    suite('claiming a free replacement license', () => {
+        test('claims without a legacy key — the population that was otherwise stranded', async () => {
+            // Grandfathered by subscription status alone, with no key anywhere. The claim
+            // endpoint used to require a Lemon Squeezy UUID, which meant these customers —
+            // who had paid — were refused by the one flow built to rescue them.
+            settings['subscription.status'] = 'active';
+            const service = await freshService();
+
+            assert.strictEqual(service.hasActiveEntitlement(), true);
+            assert.strictEqual(service.getEntitlement()?.legacyKey, undefined);
+
+            let sentBody: Record<string, unknown> = {};
+            globalThis.fetch = (async (_url: string, init: { body: string }) => {
+                sentBody = JSON.parse(init.body);
+                return {
+                    ok: true,
+                    status: 200,
+                    json: async () => ({ status: 'success', license_key: 'AAAAA-BBBBB-CCCCC-DDDDD' })
+                };
+            }) as unknown as typeof globalThis.fetch;
+
+            const result = await GitMindLicenseService.getInstance()
+                .claimFreeLicense('paid@example.com');
+
+            assert.strictEqual(result.ok, true);
+            assert.ok(!('legacy_key' in sentBody), 'no legacy key should be sent when none is held');
+            assert.ok(sentBody.machine_id, 'the machine must always identify itself');
+            assert.strictEqual(sentBody.email, 'paid@example.com');
+        });
+
+        test('sends the legacy key when one is held', async () => {
+            settings['pro.validationStatus'] = 'valid';
+            settings['pro.licenseKey'] = LS_KEY;
+            await freshService();
+
+            let sentBody: Record<string, unknown> = {};
+            globalThis.fetch = (async (_url: string, init: { body: string }) => {
+                sentBody = JSON.parse(init.body);
+                return {
+                    ok: true,
+                    status: 200,
+                    json: async () => ({ status: 'success', license_key: 'AAAAA-BBBBB-CCCCC-DDDDD' })
+                };
+            }) as unknown as typeof globalThis.fetch;
+
+            const entitlement = LegacyEntitlementService.getInstance().getEntitlement();
+            await GitMindLicenseService.getInstance()
+                .claimFreeLicense('paid@example.com', entitlement?.legacyKey);
+
+            assert.strictEqual(sentBody.legacy_key, LS_KEY);
+        });
+
+        test('a failed claim never costs the customer their Pro', async () => {
+            // The single rule of this whole subsystem. Claiming is an *upgrade* to a real
+            // licence; failing to claim must leave them exactly as they were.
+            settings['pro.validationStatus'] = 'valid';
+            settings['pro.licenseKey'] = LS_KEY;
+            const service = await freshService();
+
+            globalThis.fetch = (async () => {
+                throw new Error('getaddrinfo ENOTFOUND gitmind-pro.com');
+            }) as unknown as typeof globalThis.fetch;
+
+            const result = await GitMindLicenseService.getInstance()
+                .claimFreeLicense('paid@example.com');
+
+            assert.strictEqual(result.ok, false);
+            assert.strictEqual(service.hasActiveEntitlement(), true, 'entitlement must survive');
+            assert.strictEqual(isProUser(), true, 'a failed claim must never downgrade anyone');
+        });
+
+        test('a server refusal is surfaced verbatim, and still costs nothing', async () => {
+            settings['pro.validationStatus'] = 'valid';
+            settings['pro.licenseKey'] = LS_KEY;
+            const service = await freshService();
+
+            globalThis.fetch = (async () => ({
+                ok: false,
+                status: 409,
+                json: async () => ({
+                    status: 'error',
+                    revoked: false,
+                    error: 'A free replacement licence has already been issued for this machine.'
+                })
+            })) as unknown as typeof globalThis.fetch;
+
+            const result = await GitMindLicenseService.getInstance()
+                .claimFreeLicense('paid@example.com');
+
+            assert.strictEqual(result.ok, false);
+            assert.ok(
+                !result.ok && result.error.includes('already been issued'),
+                'the user should be told what the server actually said'
+            );
+            assert.strictEqual(isProUser(), true);
         });
     });
 

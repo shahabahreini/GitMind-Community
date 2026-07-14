@@ -1327,6 +1327,11 @@
         "category": "GitMind"
       },
       {
+        "command": "gitmind.claimFreeLicense",
+        "title": "Claim Free Replacement License (Lemon Squeezy customers)",
+        "category": "GitMind"
+      },
+      {
         "command": "gitmind.deactivatePro",
         "title": "Deactivate Pro Features",
         "category": "GitMind"
