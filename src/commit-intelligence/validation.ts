@@ -89,7 +89,16 @@ export function scoreCommitHealth(message: string, validation: ValidationResult,
 
 export function validateReviewFindings(findings: readonly ReviewFinding[], knownAtomIds: readonly string[]): ReviewFinding[] {
   const known = new Set(knownAtomIds);
-  return findings.filter(finding => finding.atomIds.length > 0 && finding.atomIds.every(id => known.has(id)) && ["info", "warning", "error"].includes(finding.severity));
+  return (findings ?? [])
+    .filter(finding => finding && typeof finding.title === "string" && ["info", "warning", "error"].includes(finding.severity))
+    .filter(finding => !Array.isArray(finding.atomIds) || finding.atomIds.length === 0 || finding.atomIds.some(id => known.has(id)))
+    .map(finding => {
+      const validAtomIds = Array.isArray(finding.atomIds) ? finding.atomIds.filter(id => known.has(id)) : [];
+      return {
+        ...finding,
+        atomIds: validAtomIds.length > 0 ? validAtomIds : knownAtomIds.slice()
+      };
+    });
 }
 
 export function reviewBlocks(findings: readonly ReviewFinding[], threshold: CommitPolicy["reviewBlockingThreshold"]): boolean {
