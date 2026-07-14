@@ -20,7 +20,6 @@ src/test/
 │   ├── extensionCommands.test.ts # Command registration (15+ tests)
 │   ├── gitIntegration.test.ts    # Git operations (20+ tests)
 │   ├── settingsUI.test.ts        # Settings UI (40+ tests)
-│   ├── telemetryToggleSimple.test.ts  # Telemetry (10+ tests)
 │   ├── tokenCounter.test.ts      # Token estimation (45 tests) ✨ NEW
 │   └── webviewComponents.test.ts # Webview lifecycle (25+ tests)
 └── README.md                      # This file
@@ -206,13 +205,6 @@ Tests webview lifecycle:
 - State management
 - Disposal and cleanup
 
-### 12. Telemetry Tests (`telemetryToggleSimple.test.ts`)
-Tests telemetry behavior:
-- Respects VS Code settings
-- Privacy compliance
-- Event tracking
-- Opt-out functionality
-
 ## Test Quality Standards
 
 ### Test Naming Convention
@@ -305,7 +297,7 @@ npm run compile   # Verify build
 - Secure API key storage (Pro)
 - Commit history learning (Pro)
 - Multi-repository support
-- Telemetry with privacy controls
+- No product telemetry
 
 ## Test Development Guidelines
 
@@ -429,12 +421,11 @@ test.skip('Skip this test', () => {
 | Error Handling | 20+ | ✅ |
 | Commands | 15+ | ✅ |
 | Webview | 25+ | ✅ |
-| Telemetry | 10+ | ✅ |
-| **Total** | **290+** | **✅** |
+| **Total** | **280+** | **✅** |
 
 ### Coverage Metrics
-- **Test Files:** 12 suites
-- **Test Cases:** 290+ tests
+- **Test Files:** 11 suites
+- **Test Cases:** 280+ tests
 - **Code Coverage:** ~70%+ estimated
 - **Execution Time:** < 5 seconds (unit tests)
 - **Success Rate:** 100% (all tests passing)

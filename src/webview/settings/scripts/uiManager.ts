@@ -1,5 +1,6 @@
 // src/webview/settings/scripts/uiManager.ts
 import { ProviderIcon } from '../components/ProviderIcon';
+import { getProviderDefaultModel } from '../../../config/providerCatalog';
 
 interface ProviderDisplayConfig {
   displayName: string;
@@ -10,7 +11,7 @@ interface ProviderDisplayConfig {
 const PROVIDER_DISPLAY_CONFIG: Record<string, ProviderDisplayConfig> = {
   gemini: {
     displayName: "Gemini",
-    model: "gemini-2.5-flash-preview-04-17",
+    model: getProviderDefaultModel("gemini"),
     apiConfigured: (s) => !!s.gemini?.apiKey
   },
   huggingface: {
@@ -25,17 +26,17 @@ const PROVIDER_DISPLAY_CONFIG: Record<string, ProviderDisplayConfig> = {
   },
   mistral: {
     displayName: "Mistral",
-    model: "mistral-small-4",
+    model: getProviderDefaultModel("mistral"),
     apiConfigured: (s) => !!s.mistral?.apiKey
   },
   cohere: {
     displayName: "Cohere",
-    model: "command-a-03-2025",
+    model: getProviderDefaultModel("cohere"),
     apiConfigured: (s) => !!s.cohere?.apiKey
   },
   openai: {
     displayName: "OpenAI",
-    model: "gpt-3.5-turbo",
+    model: getProviderDefaultModel("openai"),
     apiConfigured: (s) => !!s.openai?.apiKey
   },
   together: {
@@ -50,27 +51,27 @@ const PROVIDER_DISPLAY_CONFIG: Record<string, ProviderDisplayConfig> = {
   },
   anthropic: {
     displayName: "Anthropic",
-    model: "claude-sonnet-4.6",
+    model: getProviderDefaultModel("anthropic"),
     apiConfigured: (s) => !!s.anthropic?.apiKey
   },
   minimax: {
     displayName: "MiniMax",
-    model: "MiniMax-M2",
+    model: getProviderDefaultModel("minimax"),
     apiConfigured: (s) => !!s.minimax?.apiKey
   },
   copilot: {
     displayName: "GitHub Copilot",
-    model: "gpt-5.5-instant",
+    model: getProviderDefaultModel("copilot"),
     apiConfigured: () => true
   },
   deepseek: {
     displayName: "DeepSeek",
-    model: "deepseek-v4-flash",
+    model: getProviderDefaultModel("deepseek"),
     apiConfigured: (s) => !!s.deepseek?.apiKey
   },
   grok: {
     displayName: "Grok",
-    model: "grok-4.4",
+    model: getProviderDefaultModel("grok"),
     apiConfigured: (s) => !!s.grok?.apiKey
   },
   groq: {
@@ -80,7 +81,7 @@ const PROVIDER_DISPLAY_CONFIG: Record<string, ProviderDisplayConfig> = {
   },
   perplexity: {
     displayName: "Perplexity",
-    model: "gpt-5.5-computer",
+    model: getProviderDefaultModel("perplexity"),
     apiConfigured: (s) => !!s.perplexity?.apiKey
   },
   zai: {
@@ -191,21 +192,21 @@ export function getUiManagerScript(): string {
       this._settings = settings;
       
       const PROVIDER_CONFIGS = {
-        gemini: { displayName: "Gemini", defaultModel: "gemini-2.5-flash-preview-04-17", getApiConfigured: (s) => !!s.gemini?.apiKey },
+        gemini: { displayName: "Gemini", defaultModel: "gemini-3.5-flash", getApiConfigured: (s) => !!s.gemini?.apiKey },
         huggingface: { displayName: "Hugging Face", defaultModel: "Not configured", getApiConfigured: (s) => !!s.huggingface?.apiKey },
         ollama: { displayName: "Ollama", defaultModel: "Not configured", getApiConfigured: (s) => !!s.ollama?.url },
         mistral: { displayName: "Mistral", defaultModel: "mistral-small-4", getApiConfigured: (s) => !!s.mistral?.apiKey },
-        cohere: { displayName: "Cohere", defaultModel: "command-a-03-2025", getApiConfigured: (s) => !!s.cohere?.apiKey },
-        openai: { displayName: "OpenAI", defaultModel: "gpt-3.5-turbo", getApiConfigured: (s) => !!s.openai?.apiKey },
+        cohere: { displayName: "Cohere", defaultModel: "command-a-plus-05-2026", getApiConfigured: (s) => !!s.cohere?.apiKey },
+        openai: { displayName: "OpenAI", defaultModel: "gpt-5.6-terra", getApiConfigured: (s) => !!s.openai?.apiKey },
         together: { displayName: "Together AI", defaultModel: "meta-llama/Llama-3.3-70B-Instruct-Turbo", getApiConfigured: (s) => !!s.together?.apiKey },
         openrouter: { displayName: "OpenRouter", defaultModel: "google/gemma-3-27b-it:free", getApiConfigured: (s) => !!s.openrouter?.apiKey },
-        anthropic: { displayName: "Anthropic", defaultModel: "claude-sonnet-4.6", getApiConfigured: (s) => !!s.anthropic?.apiKey },
-        minimax: { displayName: "MiniMax", defaultModel: "MiniMax-M2", getApiConfigured: (s) => !!s.minimax?.apiKey },
-        copilot: { displayName: "GitHub Copilot", defaultModel: "gpt-5.5-instant", getApiConfigured: () => true },
+        anthropic: { displayName: "Anthropic", defaultModel: "claude-sonnet-5", getApiConfigured: (s) => !!s.anthropic?.apiKey },
+        minimax: { displayName: "MiniMax", defaultModel: "MiniMax-M2.7", getApiConfigured: (s) => !!s.minimax?.apiKey },
+        copilot: { displayName: "GitHub Copilot", defaultModel: "auto", getApiConfigured: () => true },
         deepseek: { displayName: "DeepSeek", defaultModel: "deepseek-v4-flash", getApiConfigured: (s) => !!s.deepseek?.apiKey },
         grok: { displayName: "Grok", defaultModel: "grok-4.4", getApiConfigured: (s) => !!s.grok?.apiKey },
         groq: { displayName: "Groq", defaultModel: "meta-llama/llama-4-scout-17b-16e-instruct", getApiConfigured: (s) => !!s.groq?.apiKey },
-        perplexity: { displayName: "Perplexity", defaultModel: "gpt-5.5-computer", getApiConfigured: (s) => !!s.perplexity?.apiKey },
+        perplexity: { displayName: "Perplexity", defaultModel: "sonar-pro", getApiConfigured: (s) => !!s.perplexity?.apiKey },
         zai: { displayName: "Z.ai", defaultModel: "glm-4.5-flash", getApiConfigured: (s) => !!s.zai?.apiKey },
         nvidia: { displayName: "NVIDIA", defaultModel: "meta/llama-3.3-70b-instruct", getApiConfigured: (s) => !!s.nvidia?.apiKey },
         custom: { displayName: "Custom API", defaultModel: "Not configured", getApiConfigured: (s) => !!(s.custom?.baseUrl && s.custom?.endpoint) }
@@ -270,7 +271,6 @@ export function getUiManagerScript(): string {
         const captureAll = this._settings.commit?.captureAllChanges ?? false;
         const promptCustomization = this._settings.promptCustomization?.enabled ? 'Enabled' : 'Disabled';
         const diagnostics = this._settings.showDiagnostics ? 'Enabled' : 'Disabled';
-        const analytics = this._settings.telemetry?.enabled !== false ? 'Enabled' : 'Disabled';
         const activeStyle = this._settings.commitStyle?.style || 'basic';
         const historyLearning = this._settings.pro?.learnFromCommitHistory?.enabled ? 'Active' : 'Off';
         const encryption = this._settings.pro?.encryptionEnabled ? 'Encrypted' : 'Off';
@@ -322,7 +322,6 @@ export function getUiManagerScript(): string {
                 <div class="gm-config-group-items">
                   \${this.renderChip('API', providerInfo.apiConfigured ? 'Configured' : 'Not set', providerInfo.apiConfigured ? 'on' : 'off', !providerInfo.apiConfigured)}
                   \${this.renderChip('Diagnostics', diagnostics, this._settings.showDiagnostics ? 'on' : 'off', !this._settings.showDiagnostics)}
-                  \${this.renderChip('Analytics', analytics, this._settings.telemetry?.enabled !== false ? 'on' : 'off', this._settings.telemetry?.enabled === false)}
                 </div>
               </div>
             </div>

@@ -29,12 +29,13 @@ import { getApiConfig } from "../../config/settings";
 import { estimateTokens } from "../../utils/tokenCounter";
 import { workspace } from "vscode";
 import { APIErrorHandler } from "../../utils/errorHandler";
-import { telemetryService } from "../telemetry/telemetryService";
 import { SubscriptionManager } from "../subscription/SubscriptionManager";
 import { DiffProcessor } from "../diffProcessor";
 import { generateCommitHistoryAnalysisPrompt, validatePromptLength, generateCommitPrompt, getPromptConfig } from './prompts';
 import { BaseAIProvider, GenerationOptions } from "./base";
-import { classifyGenerationFailure, withModel } from "./recovery";
+import { classifyGenerationFailure, normalizeProviderError, withModel } from "./recovery";
+import { recordSupportEvent, SupportOperation, SupportProvider } from "../support/SupportSessionService";
+import { getProviderDefaultModel } from "../../config/providerCatalog";
 
 // Timeout configurations
 const STANDARD_REQUEST_TIMEOUT = 10000; // 10 seconds for regular API requests
@@ -184,7 +185,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         settingPath: "gemini.apiKey",
         docsUrl: "https://aistudio.google.com/app/apikey",
         requiresApiKey: true,
-        defaultModel: "gemini-3.1-flash",
+        defaultModel: getProviderDefaultModel("gemini"),
         getProviderClass: async () => loadProviderModule('gemini'),
     },
     huggingface: {
@@ -241,7 +242,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         settingPath: "anthropic.apiKey",
         docsUrl: "https://console.anthropic.com/",
         requiresApiKey: true,
-        defaultModel: "claude-sonnet-4.6",
+        defaultModel: getProviderDefaultModel("anthropic"),
         getProviderClass: async () => loadProviderModule('anthropic'),
     },
     minimax: {
@@ -250,7 +251,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         settingPath: "minimax.apiKey",
         docsUrl: "https://platform.minimax.io/docs/api-reference/text-anthropic-api",
         requiresApiKey: true,
-        defaultModel: "MiniMax-M2",
+        defaultModel: getProviderDefaultModel("minimax"),
         getProviderClass: async () => loadProviderModule('minimax'),
     },
     deepseek: {
@@ -326,7 +327,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         settingPath: "",
         docsUrl: "",
         requiresApiKey: false,
-        defaultModel: "gpt-5.5-instant",
+        defaultModel: getProviderDefaultModel("copilot"),
         getProviderClass: async () => loadProviderModule('copilot'),
     },
 };
@@ -401,29 +402,25 @@ async function handleApiError(
     error: unknown,
     config: ApiConfig,
     context?: { diffSize?: number; filesChanged?: number }
-): Promise<void> {
+): Promise<Error> {
     debugLog("API Error:", error);
 
-    if (!(error instanceof Error)) {
-        await vscode.window.showErrorMessage("An unknown error occurred");
-        return;
-    }
-
     const provider = getProviderName(config.type);
+    const normalizedError = normalizeProviderError(error, config.type);
 
     // Record failure for circuit breaker
     recordCircuitBreakerFailure(provider);
 
     // Handle cancellation specifically
-    if (error.message === 'Request was cancelled') {
-        return;
+    if (classifyGenerationFailure(normalizedError, config.type) === "cancelled") {
+        return normalizedError;
     }
 
     // Handle Ollama-specific errors
     if (
         provider === "Ollama" &&
-        (error.message.includes("not configured") ||
-            error.message.includes("not running"))
+        (normalizedError.message.includes("not configured") ||
+            normalizedError.message.includes("not running"))
     ) {
         const result = await vscode.window.showErrorMessage(
             "Ollama is not configured properly. Would you like to configure it now?",
@@ -437,29 +434,12 @@ async function handleApiError(
             const instructions = getOllamaInstallInstructions();
             await vscode.window.showInformationMessage(instructions, { modal: true });
         }
-        return;
+        return new Error("Ollama is not configured or running. Open Model Settings and verify the local service URL.");
     }
 
-    // Enhanced error handling with context
-    let safeMessage = error.message;
-    // Scrub potential API keys
-    safeMessage = safeMessage.replace(/(sk-[a-zA-Z0-9]{20,})/g, "sk-...[REDACTED]");
-    safeMessage = safeMessage.replace(/(Bearer\s+[a-zA-Z0-9\-\._~+\/]{20,})/gi, "Bearer [REDACTED]");
-
-    if (safeMessage.includes('Together AI API error: 422') ||
-        safeMessage.includes('tokens') && safeMessage.includes('exceed')) {
-        // Show the detailed error message as-is for token limit errors
-        await vscode.window.showErrorMessage(safeMessage, { modal: true });
-        return;
-    }
-
-    // Use the error handler for other errors
-    const tempError = new Error(safeMessage);
-    tempError.name = error.name;
-    const errorInfo = APIErrorHandler.handleAPIError(tempError, provider, context);
+    const errorInfo = APIErrorHandler.handleAPIError(normalizedError, provider, context);
     const formattedMessage = APIErrorHandler.formatUserMessage(errorInfo);
-
-    await vscode.window.showErrorMessage(formattedMessage, { modal: true });
+    return new Error(formattedMessage);
 }
 
 export async function generateCommitMessage(
@@ -475,9 +455,6 @@ export async function generateCommitMessage(
         const controller = new AbortController();
         const requestId = repositoryRoot || 'global';
         activeRequests.set(requestId, controller);
-
-        // Track the start of generation
-        telemetryService.trackDailyActiveUser();
 
         // First validate and potentially update the configuration
         const validatedConfig = await validateAndUpdateConfig(config);
@@ -533,40 +510,21 @@ export async function generateCommitMessage(
         // Generate the commit message, with at most one Pro recovery attempt.
         const result = await generateMessageWithRecovery(validatedConfig, diff, customContext);
 
-        const duration = Date.now() - startTime;
-        telemetryService.trackCommitGeneration(config.type, true);
-
         return result;
     } catch (unknownError) {
         const duration = Date.now() - startTime;
         const error = unknownError instanceof Error ? unknownError : new Error(String(unknownError));
         debugLog("Generate Commit Message Error:", error);
 
-        // Track the error
-        telemetryService.trackExtensionError(
-            'commit_generation_error',
-            error.message,
-            `provider:${config.type}`
-        );
-        telemetryService.trackCommitGeneration(config.type, false);
-
         // Handle cancellation specifically
         if (error.message === 'Request was cancelled' || error.message === 'User cancelled token count confirmation') {
             debugLog("Request was cancelled by user");
-            telemetryService.trackExtensionError(
-                'commit_generation_cancelled',
-                error.message,
-                `provider:${config.type}`
-            );
             return "";
         }
 
         // Handle API errors with context
         const errorContext = { diffSize: diff.length };
-        await handleApiError(error, config, errorContext);
-
-        // Rethrow to be handled upstream
-        throw error;
+        throw await handleApiError(error, config, errorContext);
     } finally {
         // Clean up request tracking
         const requestId = repositoryRoot || 'global';
@@ -574,12 +532,125 @@ export async function generateCommitMessage(
     }
 }
 
+type RecoveryOperation = <T>(operation: (config: ApiConfig) => Promise<T>) => Promise<T>;
+
+export interface RecoveryDependencies {
+    isProUser?: () => Promise<boolean>;
+    getSetting?: <T>(key: string, defaultValue: T) => T;
+    notify?: (message: string) => void;
+    supportOperation?: SupportOperation;
+}
+
+export function createRecoveryOperation(
+    config: ApiConfig,
+    dependencies: RecoveryDependencies = {}
+): RecoveryOperation {
+    let effectiveConfig = config;
+    let recoveryDecision: Promise<{ config: ApiConfig; kind: "fallback" | "retry" } | null> | undefined;
+    let recoveryAttemptClaimed = false;
+    const supportOperation = dependencies.supportOperation ?? "generate_commit";
+
+    const decideRecovery = async (
+        error: unknown,
+        attemptedConfig: ApiConfig
+    ): Promise<{ config: ApiConfig; kind: "fallback" | "retry" } | null> => {
+        const normalizedError = normalizeProviderError(error, attemptedConfig.type);
+        const isProUser = dependencies.isProUser
+            ?? (() => SubscriptionManager.getInstance().isProUser(undefined, true));
+        if (!await isProUser()) {
+            return null;
+        }
+
+        const settings = vscode.workspace.getConfiguration("gitmind");
+        const getSetting = dependencies.getSetting
+            ?? (<T>(key: string, defaultValue: T): T => settings.get<T>(key, defaultValue));
+        const notify = dependencies.notify
+            ?? ((message: string): void => { void vscode.window.showInformationMessage(message); });
+        const retryEnabled = getSetting("pro.automaticRetry.enabled", false);
+        const fallbackEnabled = getSetting("pro.modelFallback.enabled", false);
+        const fallbackModels = getSetting<Record<string, string>>("pro.modelFallback.models", {});
+        const failure = classifyGenerationFailure(normalizedError, attemptedConfig.type);
+
+        if (fallbackEnabled && (failure === "model-limit" || failure === "rate-limit")) {
+            const fallbackModel = fallbackModels[attemptedConfig.type]?.trim();
+            if (fallbackModel && fallbackModel !== attemptedConfig.model) {
+                effectiveConfig = withModel(attemptedConfig, fallbackModel);
+                notify(
+                    `${getProviderName(attemptedConfig.type)} reached a request limit. Trying fallback model '${fallbackModel}' once.`
+                );
+                recordSupportEvent({
+                    name: "recovery_attempted",
+                    operation: supportOperation,
+                    provider: attemptedConfig.type as SupportProvider,
+                    recoveryAction: "fallback_model"
+                });
+                return { config: effectiveConfig, kind: "fallback" };
+            }
+        }
+
+        if (retryEnabled && (failure === "timeout" || failure === "temporary-service" || failure === "network")) {
+            notify(
+                `${getProviderName(attemptedConfig.type)} is temporarily unavailable. Retrying once.`
+            );
+            recordSupportEvent({
+                name: "recovery_attempted",
+                operation: supportOperation,
+                provider: attemptedConfig.type as SupportProvider,
+                recoveryAction: "retry_same_model"
+            });
+            return { config: attemptedConfig, kind: "retry" };
+        }
+
+        return null;
+    };
+
+    return async <T>(operation: (attemptConfig: ApiConfig) => Promise<T>): Promise<T> => {
+        const attemptedConfig = effectiveConfig;
+        try {
+            return await operation(attemptedConfig);
+        } catch (error) {
+            // A shared promise makes model switching atomic for concurrent large-diff chunks.
+            recoveryDecision ??= decideRecovery(error, attemptedConfig);
+            const decision = await recoveryDecision;
+            if (!decision || recoveryAttemptClaimed) {
+                throw normalizeProviderError(error, attemptedConfig.type);
+            }
+            recoveryAttemptClaimed = true;
+            try {
+                const result = await operation(decision.config);
+                recordSupportEvent({
+                    name: "recovery_completed",
+                    operation: supportOperation,
+                    provider: attemptedConfig.type as SupportProvider,
+                    outcome: "success",
+                    recoveryAction: decision.kind === "fallback" ? "fallback_model" : "retry_same_model"
+                });
+                return result;
+            } catch {
+                recordSupportEvent({
+                    name: "recovery_completed",
+                    operation: supportOperation,
+                    provider: attemptedConfig.type as SupportProvider,
+                    outcome: "failure",
+                    recoveryAction: decision.kind === "fallback" ? "fallback_model" : "retry_same_model"
+                });
+                const action = decision.kind === "fallback" ? "configured fallback model" : "automatic retry";
+                throw new Error(
+                    `${getProviderName(attemptedConfig.type)} request failed using the primary model and the ${action}. ` +
+                    "Check the provider's usage limits and model availability, then try again."
+                );
+            }
+        }
+    };
+}
+
 async function generateMessageWithRecovery(
     config: ApiConfig,
     diff: string,
-    customContext: string
+    customContext: string,
+    recovery: RecoveryOperation = createRecoveryOperation(config)
 ): Promise<string> {
-    const attempt = async (attemptConfig: ApiConfig): Promise<string> => {
+    return recovery(async (attemptConfig): Promise<string> => {
         let timeout: NodeJS.Timeout | undefined;
         try {
             return await Promise.race([
@@ -593,42 +664,7 @@ async function generateMessageWithRecovery(
                 clearTimeout(timeout);
             }
         }
-    };
-
-    try {
-        return await attempt(config);
-    } catch (error) {
-        const subscriptionManager = SubscriptionManager.getInstance();
-        if (!await subscriptionManager.isProUser(undefined, true)) {
-            throw error;
-        }
-
-        const settings = vscode.workspace.getConfiguration("gitmind");
-        const retryEnabled = settings.get<boolean>("pro.automaticRetry.enabled", false);
-        const fallbackEnabled = settings.get<boolean>("pro.modelFallback.enabled", false);
-        const fallbackModels = settings.get<Record<string, string>>("pro.modelFallback.models", {});
-        const failure = classifyGenerationFailure(error, config.type);
-
-        if (fallbackEnabled && (failure === "model-limit" || failure === "temporary-service")) {
-            const fallbackModel = fallbackModels[config.type]?.trim();
-            if (fallbackModel && fallbackModel !== config.model) {
-                vscode.window.showInformationMessage(
-                    `${getProviderName(config.type)} reported a limit or temporary issue. Trying fallback model '${fallbackModel}' once.`
-                );
-                return attempt(withModel(config, fallbackModel));
-            }
-        }
-
-        if (retryEnabled && (failure === "timeout" || failure === "temporary-service")) {
-            const message = failure === "temporary-service"
-                ? "The service is experiencing issues.\nRetrying once automatically.\nIf it fails: Try again in a few minutes, check the provider's status page, or consider using a different provider temporarily."
-                : `${getProviderName(config.type)} request timed out. Retrying once.`;
-            vscode.window.showInformationMessage(message);
-            return attempt(config);
-        }
-
-        throw error;
-    }
+    });
 }
 
 /**
@@ -967,6 +1003,7 @@ async function processLargeDiff(
     settings: { chunkSize: number, maxChunks: number }
 ): Promise<string> {
     const diffProcessor = DiffProcessor.getInstance();
+    const recovery = createRecoveryOperation(config);
 
     // Show progress notification
     return vscode.window.withProgress(
@@ -1065,13 +1102,12 @@ async function processLargeDiff(
             }
             const chunks = adaptiveChunks.slice(0, totalChunks);
 
-            // Concurrency and retry settings (with safe defaults)
+            // Concurrency setting. Recovery state is shared by every chunk.
             const proSettings = vscode.workspace.getConfiguration('gitmind').get('pro') as any || {};
             const ldSettings = (proSettings.largeDiffHandling || {}) as any;
             const maxConcurrency: number = Math.max(1, Math.min(8, Number(ldSettings.concurrency) || 3));
-            const maxRetries: number = Math.max(0, Math.min(5, Number(ldSettings.retries) || 2));
 
-            debugLog(`[LargeDiff] Final chunks to process: ${chunks.length}, concurrency=${maxConcurrency}, retries=${maxRetries}`);
+            debugLog(`[LargeDiff] Final chunks to process: ${chunks.length}, concurrency=${maxConcurrency}`);
             chunks.forEach((c, idx) => {
                 const lines = c.split('\n').length;
                 const tokens = estimateTokens(c);
@@ -1082,70 +1118,24 @@ async function processLargeDiff(
             let completed = 0;
             const increment = 100 / Math.max(1, chunks.length);
 
-            // Retryable error detection
-            const isRetryable = (err: unknown): boolean => {
-                const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
-                if (msg.includes('rate limit') || msg.includes('429')) { return true; }
-                if (msg.includes('timeout')) { return true; }
-                if (msg.includes('temporarily unavailable') || msg.includes('service is temporarily') || msg.includes('overloaded')) { return true; }
-                if (msg.includes('network') || msg.includes('failed to fetch') || msg.includes('ecconnreset')) { return true; }
-                if (msg.includes('500') || msg.includes('502') || msg.includes('503') || msg.includes('504')) { return true; }
-                // Treat token/context length errors as non-retryable here (we already split adaptively)
-                if (msg.includes('context_length') || (msg.includes('token') && msg.includes('exceed'))) { return false; }
-                return false;
-            };
-
-            // Process a single chunk with retries
+            // Process a single chunk through operation-wide recovery.
             const processChunkWithRetries = async (index: number): Promise<void> => {
                 const chunk = chunks[index];
                 const ctx = `${customContext ? customContext + "\n" : ""}This is part ${index + 1} of ${chunks.length} from a large change.`;
-                let attempt = 0;
-                let delay = 600;
-                while (true) {
-                    if (token.isCancellationRequested) {
-                        throw new Error("Request was cancelled");
-                    }
-                    try {
-                        // Validate again just before sending (defensive)
-                        const val = await validateChunkPrompt(chunk, ctx);
-                        if (!val.valid) {
-                            debugLog(`[LargeDiff] Warning: chunk ${index + 1} prompt still too long at send time; attempting last-mile split`);
-                            const subparts = await adaptChunkToFit(chunk);
-                            // Replace this chunk with first subpart and queue remaining ones immediately after
-                            // Note: to keep deterministic ordering and progress, we will process only the first part here
-                            const first = subparts[0];
-                            const remaining = subparts.slice(1);
-                            // Send first now
-                            const res = await generateMessageWithConfig(config, first, ctx);
-                            results[index] = res;
-                            completed++;
-                            progress.report({ message: `Processed ${completed}/${chunks.length} chunks`, increment });
-                            // Append the rest to the end synchronously (best effort within budget if room)
-                            // Only process remaining if we have capacity within totalChunks budget
-                            // This maintains deterministic order while avoiding reshaping arrays mid-flight
-                            break;
-                        }
-
-                        const res = await generateMessageWithConfig(config, chunk, ctx);
-                        results[index] = res;
-                        completed++;
-                        progress.report({ message: `Processed ${completed}/${chunks.length} chunks`, increment });
-                        return;
-                    } catch (err) {
-                        if (token.isCancellationRequested) {
-                            throw new Error("Request was cancelled");
-                        }
-                        attempt++;
-                        const msg = err instanceof Error ? err.message : String(err);
-                        debugLog(`[LargeDiff] Chunk ${index + 1} attempt ${attempt} failed: ${msg}`);
-                        telemetryService.trackExtensionError('chunk_processing_error', msg, `provider:${config.type};large_diff`);
-                        if (attempt > maxRetries || !isRetryable(err)) {
-                            throw err instanceof Error ? err : new Error(String(err));
-                        }
-                        await new Promise((r) => setTimeout(r, delay + Math.floor(Math.random() * 250)));
-                        delay = Math.min(8000, delay * 2);
-                    }
+                if (token.isCancellationRequested) {
+                    throw new Error("Request was cancelled");
                 }
+
+                const val = await validateChunkPrompt(chunk, ctx);
+                let chunkToSend = chunk;
+                if (!val.valid) {
+                    debugLog(`[LargeDiff] Warning: chunk ${index + 1} prompt still too long at send time; attempting last-mile split`);
+                    chunkToSend = (await adaptChunkToFit(chunk))[0];
+                }
+
+                results[index] = await generateMessageWithRecovery(config, chunkToSend, ctx, recovery);
+                completed++;
+                progress.report({ message: `Processed ${completed}/${chunks.length} chunks`, increment });
             };
 
             // Worker pool
@@ -1184,7 +1174,7 @@ async function processLargeDiff(
             // Merge deterministically (original order)
             progress.report({ message: "Creating final summary", increment: 0 });
             const mergedPrompt = diffProcessor.mergeChunkResults(results);
-            return await generateMessageWithConfig(config, mergedPrompt, customContext);
+            return await generateMessageWithRecovery(config, mergedPrompt, customContext, recovery);
         }
     );
 }
@@ -1241,7 +1231,7 @@ async function validateAndUpdateConfig(config: ApiConfig): Promise<ApiConfig | n
  * This is useful for features like changelog generation that need custom prompts
  * @param config API configuration
  * @param prompt The raw prompt to send to the AI
- * @param featureName Name of the feature for telemetry (e.g., 'changelog', 'analysis')
+ * @param featureName Name of the feature for diagnostic error context (e.g., 'changelog', 'analysis')
  * @param skipValidation Skip prompt length validation (use when feature has its own validation)
  * @returns Generated content from the AI
  */
@@ -1257,9 +1247,6 @@ export async function generateWithRawPrompt(
         // Set up request tracking
         const controller = new AbortController();
         activeRequests.set('global', controller);
-
-        // Track the start of generation
-        telemetryService.trackDailyActiveUser();
 
         // First validate and potentially update the configuration
         const validatedConfig = await validateAndUpdateConfig(config);
@@ -1292,24 +1279,19 @@ export async function generateWithRawPrompt(
         debugLog(`[${featureName}] Calling ${provider} with prompt length: ${prompt.length}`);
 
         // Generate the content using the raw prompt
-        const result = await generateWithRawPromptInternal(validatedConfig, prompt);
-
-        const duration = Date.now() - startTime;
-        telemetryService.trackCommitGeneration(config.type, true); // Reuse existing telemetry
+        const supportOperation: SupportOperation = featureName === "changelog"
+            ? "generate_changelog"
+            : featureName.includes("history") || featureName.includes("analysis")
+                ? "learn_history"
+                : "generate_commit";
+        const recovery = createRecoveryOperation(validatedConfig, { supportOperation });
+        const result = await recovery((attemptConfig) => generateWithRawPromptInternal(attemptConfig, prompt));
 
         return result;
     } catch (unknownError) {
         const duration = Date.now() - startTime;
         const error = unknownError instanceof Error ? unknownError : new Error(String(unknownError));
         debugLog(`Generate ${featureName} Error:`, error);
-
-        // Track the error
-        telemetryService.trackExtensionError(
-            `${featureName}_error`,
-            error.message,
-            `provider:${config.type}`
-        );
-        telemetryService.trackCommitGeneration(config.type, false);
 
         // Handle cancellation specifically
         if (error.message === 'Request was cancelled') {
@@ -1319,10 +1301,7 @@ export async function generateWithRawPrompt(
 
         // Handle API errors with context
         const errorContext = { diffSize: prompt.length };
-        await handleApiError(error, config, errorContext);
-
-        // Rethrow to be handled upstream
-        throw error;
+        throw await handleApiError(error, config, errorContext);
     } finally {
         // Clean up request tracking
         activeRequests.delete('global');
@@ -1350,9 +1329,6 @@ export async function generateCommitHistoryAnalysis(
         const controller = new AbortController();
         activeRequests.set('global', controller);
 
-        // Track the start of generation
-        telemetryService.trackDailyActiveUser();
-
         // First validate and potentially update the configuration
         const validatedConfig = await validateAndUpdateConfig(config);
         if (!validatedConfig) {
@@ -1364,24 +1340,16 @@ export async function generateCommitHistoryAnalysis(
         showModelInfo(validatedConfig);
 
         // Generate the analysis using the dedicated function
-        const result = await generateAnalysisWithConfig(validatedConfig, commitHistory, maxCommits, includeAuthorInfo);
-
-        const duration = Date.now() - startTime;
-        telemetryService.trackCommitGeneration(config.type, true); // Reuse existing telemetry
+        const recovery = createRecoveryOperation(validatedConfig, { supportOperation: "learn_history" });
+        const result = await recovery((attemptConfig) =>
+            generateAnalysisWithConfig(attemptConfig, commitHistory, maxCommits, includeAuthorInfo)
+        );
 
         return result;
     } catch (unknownError) {
         const duration = Date.now() - startTime;
         const error = unknownError instanceof Error ? unknownError : new Error(String(unknownError));
         debugLog("Generate Commit History Analysis Error:", error);
-
-        // Track the error
-        telemetryService.trackExtensionError(
-            'commit_analysis_error',
-            error.message,
-            `provider:${config.type}`
-        );
-        telemetryService.trackCommitGeneration(config.type, false);
 
         // Handle cancellation specifically
         if (error.message === 'Request was cancelled') {
@@ -1391,10 +1359,7 @@ export async function generateCommitHistoryAnalysis(
 
         // Handle API errors with context
         const errorContext = { diffSize: commitHistory.length };
-        await handleApiError(error, config, errorContext);
-
-        // Rethrow to be handled upstream
-        throw error;
+        throw await handleApiError(error, config, errorContext);
     } finally {
         // Clean up request tracking
         activeRequests.delete('global');

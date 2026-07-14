@@ -1,6 +1,6 @@
 # GitMind Pro
 
-> Verified against GitMind `5.0.6` on June 7, 2026.
+> Verified against GitMind `5.0.6` on July 13, 2026.
 
 GitMind Pro is a one-time lifetime purchase. It unlocks advanced controls while keeping all 17 built-in providers available to Free users.
 
@@ -20,6 +20,7 @@ GitMind Pro is a one-time lifetime purchase. It unlocks advanced controls while 
 | Large diff processing | Standard request | Token-aware chunking |
 | Commit-history learning | Locked | Included |
 | Changelog generation | Locked | Included |
+| Sanitized Support Report | Locked | Local, review-before-share JSON report |
 
 Locked controls remain visible so Free users can understand what Pro adds. Selecting or running a locked feature opens an activation or purchase path; it does not silently enable the feature.
 
@@ -31,3 +32,5 @@ Locked controls remain visible so Free users can understand what Pro adds. Selec
 4. Activate with the license key from the purchase email.
 
 See [Activation And License Management](Activation-And-License-Management). Never post license keys, full order IDs, or purchase emails in public issues.
+
+For serious debugging, open **GitMind Settings > Pro > Support Report**, start a bounded session, reproduce the issue, stop and review it, and save the report locally. GitMind does not upload reports automatically. See [Support And Requests](Support-And-Requests).

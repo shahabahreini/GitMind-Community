@@ -6,9 +6,12 @@ import path from "node:path";
 import process from "node:process";
 
 const root = process.cwd();
-const input = process.argv[2] || process.env.GITMIND_PRODUCT_SOURCE || "ai-commit-assistant-5.0.2.vsix";
+const input = process.argv[2] || process.env.GITMIND_PRODUCT_SOURCE || "package.json";
 const output = path.join(root, "docs/reference/gitmind-user-surface.json");
-const auditDate = process.env.GITMIND_AUDIT_DATE || "2026-06-07";
+const sourceDate = process.env.SOURCE_DATE_EPOCH
+  ? new Date(Number(process.env.SOURCE_DATE_EPOCH) * 1000)
+  : new Date();
+const auditDate = process.env.GITMIND_AUDIT_DATE || sourceDate.toISOString().slice(0, 10);
 
 function loadPackage(source) {
   const absolute = path.resolve(root, source);
@@ -27,7 +30,6 @@ const styleSetting = properties["gitmind.commitStyle.style"];
 if (!providerSetting || !styleSetting) throw new Error("Source does not expose the GitMind 5.x user surface.");
 
 const internalSettings = [
-  /^gitmind\.telemetry\.connectionString$/,
   /^gitmind\.promptCustomization\.lastPrompt$/,
   /^gitmind\.pro\.(licenseKey|validationStatus|lastValidation|instanceId)$/,
   /^gitmind\.subscription\./,

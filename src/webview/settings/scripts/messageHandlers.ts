@@ -235,7 +235,6 @@ export function getMessageHandlersScript(): string {
     }
 
     function handleSettingsSaved(message) {
-      console.log('handleSettingsSaved called with telemetry.enabled:', message.settings?.telemetry?.enabled);
       showToast('Settings saved successfully', 'success', false);
       
       preserveAndRestoreTabState(() => {
@@ -243,15 +242,7 @@ export function getMessageHandlersScript(): string {
           currentSettings = message.settings;
           window.gitmindSettings = currentSettings;
           
-          // Log the specific telemetry checkbox state before update
-          const telemetryCheckbox = document.getElementById('telemetryEnabled');
-          console.log('Telemetry checkbox before update - checked:', telemetryCheckbox?.checked);
-          
           updateSettingsFromMessage();
-          
-          // Log the telemetry checkbox state after update
-          console.log('Telemetry checkbox after update - checked:', telemetryCheckbox?.checked);
-          console.log('Settings telemetry.enabled:', currentSettings.telemetry?.enabled);
         }
         animateStatusBannerUpdate();
       });

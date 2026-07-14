@@ -3,17 +3,17 @@
   "product": {
     "name": "GitMind",
     "version": "5.0.6",
-    "auditDate": "2026-06-07",
+    "auditDate": "2026-07-13",
     "source": "package.json",
-    "minimumVSCode": "^1.96.0"
+    "minimumVSCode": "^1.101.0"
   },
   "counts": {
     "providerChoices": 18,
     "builtInProviders": 17,
-    "settingsRegistered": 97,
-    "settingsDocumented": 88,
-    "commandsRegistered": 40,
-    "publicCommands": 31,
+    "settingsRegistered": 94,
+    "settingsDocumented": 86,
+    "commandsRegistered": 43,
+    "publicCommands": 34,
     "commitStyles": 12,
     "primarySettingsTabs": 5
   },
@@ -24,7 +24,7 @@
       "availability": "Free",
       "authentication": "API key",
       "setupUrl": "https://aistudio.google.com/app/apikey",
-      "defaultModel": "gemini-3.1-flash",
+      "defaultModel": "gemini-3.5-flash",
       "fields": [
         "gitmind.gemini.apiKey",
         "gitmind.gemini.model"
@@ -76,7 +76,7 @@
       "availability": "Free",
       "authentication": "API key",
       "setupUrl": "https://dashboard.cohere.com/api-keys",
-      "defaultModel": "command-a",
+      "defaultModel": "command-a-plus-05-2026",
       "fields": [
         "gitmind.cohere.apiKey",
         "gitmind.cohere.model"
@@ -89,7 +89,7 @@
       "availability": "Free",
       "authentication": "API key",
       "setupUrl": "https://platform.openai.com/api-keys",
-      "defaultModel": "gpt-5.5-instant",
+      "defaultModel": "gpt-5.6-terra",
       "fields": [
         "gitmind.openai.apiKey",
         "gitmind.openai.model"
@@ -128,7 +128,7 @@
       "availability": "Free",
       "authentication": "API key",
       "setupUrl": "https://console.anthropic.com/",
-      "defaultModel": "claude-sonnet-4.6",
+      "defaultModel": "claude-sonnet-5",
       "fields": [
         "gitmind.anthropic.apiKey",
         "gitmind.anthropic.model"
@@ -179,7 +179,7 @@
       "availability": "Free",
       "authentication": "API key",
       "setupUrl": "https://console.x.ai/",
-      "defaultModel": "grok-4.3",
+      "defaultModel": "grok-4.4",
       "fields": [
         "gitmind.grok.apiKey",
         "gitmind.grok.model"
@@ -205,7 +205,7 @@
       "availability": "Free",
       "authentication": "API key",
       "setupUrl": "https://www.perplexity.ai/settings/api",
-      "defaultModel": "gpt-5.5-computer",
+      "defaultModel": "sonar-pro",
       "fields": [
         "gitmind.perplexity.apiKey",
         "gitmind.perplexity.model"
@@ -287,13 +287,6 @@
         "nvidia",
         "custom"
       ]
-    },
-    {
-      "id": "gitmind.debug",
-      "type": "boolean",
-      "default": false,
-      "availability": "Free",
-      "description": "Enable debug mode to show detailed LLM responses and API interactions"
     },
     {
       "id": "gitmind.showOnboarding",
@@ -490,21 +483,14 @@
       "description": "Show model and token information before generating commit messages"
     },
     {
-      "id": "gitmind.telemetry.enabled",
-      "type": "boolean",
-      "default": false,
-      "availability": "Free",
-      "description": "Enable extension telemetry to help improve GitMind. **Privacy First**: Only anonymous usage analytics are collected - no code content, file names, or personal information. You can disable this anytime while still respecting VS Code's global telemetry setting."
-    },
-    {
       "id": "gitmind.gemini.model",
       "type": "string",
-      "default": "gemini-3.1-flash",
+      "default": "gemini-3.5-flash",
       "availability": "Free",
       "description": "Select which Gemini model to use",
       "values": [
-        "gemini-3.1-pro",
-        "gemini-3.1-flash",
+        "gemini-3.5-flash",
+        "gemini-3.1-pro-preview",
         "gemini-3.1-flash-lite"
       ]
     },
@@ -518,14 +504,13 @@
     {
       "id": "gitmind.cohere.model",
       "type": "string",
-      "default": "command-a",
+      "default": "command-a-plus-05-2026",
       "availability": "Free",
       "description": "Cohere model to use for generating commit messages",
       "values": [
-        "command-a",
-        "command-a-reasoning",
-        "command-r-plus-08-2024",
-        "command-r-08-2024"
+        "command-a-plus-05-2026",
+        "north-mini-code-1-0",
+        "command-a-reasoning-08-2025"
       ]
     },
     {
@@ -538,16 +523,15 @@
     {
       "id": "gitmind.openai.model",
       "type": "string",
-      "default": "gpt-5.5-instant",
+      "default": "gpt-5.6-terra",
       "availability": "Free",
       "description": "OpenAI model to use for generating commit messages",
       "values": [
+        "gpt-5.6-sol",
+        "gpt-5.6-terra",
+        "gpt-5.6-luna",
         "gpt-5.5",
-        "gpt-5.5-instant",
-        "o3-mini",
-        "gpt-4o",
-        "gpt-4o-mini",
-        "o1"
+        "gpt-5.4-mini"
       ]
     },
     {
@@ -627,13 +611,14 @@
     {
       "id": "gitmind.anthropic.model",
       "type": "string",
-      "default": "claude-sonnet-4.6",
+      "default": "claude-sonnet-5",
       "availability": "Free",
       "description": "Anthropic Claude model to use for generating commit messages",
       "values": [
-        "claude-opus-4.7",
-        "claude-sonnet-4.6",
-        "claude-haiku-4.5"
+        "claude-sonnet-5",
+        "claude-opus-4-8",
+        "claude-fable-5",
+        "claude-haiku-4-5"
       ]
     },
     {
@@ -665,12 +650,12 @@
       "values": [
         "auto",
         "gpt-5.5",
-        "gpt-5.5-instant",
-        "o3-mini",
-        "claude-opus-4.7",
+        "gpt-5.4-mini",
+        "gpt-5.3-codex",
+        "claude-opus-4.8",
         "claude-sonnet-4.6",
         "gemini-3.1-pro",
-        "gemini-3.1-flash"
+        "gemini-3.5-flash"
       ]
     },
     {
@@ -701,13 +686,11 @@
     {
       "id": "gitmind.grok.model",
       "type": "string",
-      "default": "grok-4.3",
+      "default": "grok-4.4",
       "availability": "Free",
       "description": "Grok model to use for generating commit messages",
       "values": [
-        "grok-4.3",
-        "grok-4.4",
-        "grok-4.5"
+        "grok-4.4"
       ]
     },
     {
@@ -739,14 +722,13 @@
     {
       "id": "gitmind.perplexity.model",
       "type": "string",
-      "default": "gpt-5.5-computer",
+      "default": "sonar-pro",
       "availability": "Free",
       "description": "Perplexity model to use for generating commit messages",
       "values": [
-        "gpt-5.5-computer",
-        "gpt-5.4-thinking",
         "sonar-pro",
-        "sonar-reasoning-pro"
+        "sonar-reasoning-pro",
+        "sonar"
       ]
     },
     {
@@ -1107,6 +1089,26 @@
   ],
   "commands": [
     {
+      "id": "gitmind.startSupportSession",
+      "title": "Start Sanitized Support Session",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.stopSupportSession",
+      "title": "Stop & Review Support Session",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.saveSupportReport",
+      "title": "Save Sanitized Support Report",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.deleteSupportSession",
+      "title": "Delete Sanitized Support Session",
+      "shortcut": null
+    },
+    {
       "id": "gitmind.generateCommitMessage",
       "title": "Generate GitMind Commit Message",
       "shortcut": {
@@ -1119,11 +1121,6 @@
     {
       "id": "gitmind.generateCommitMessagePro",
       "title": "Generate GitMind Commit Message",
-      "shortcut": null
-    },
-    {
-      "id": "gitmind.toggleDebug",
-      "title": "Toggle Debug Mode",
       "shortcut": null
     },
     {

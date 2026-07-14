@@ -13,6 +13,7 @@ import {
 } from "./types";
 import { SecureKeyManager } from "../services/encryption/SecureKeyManager";
 import { debugLog } from "../services/debug/logger";
+import { getProviderDefaultModel } from "./providerCatalog";
 
 interface ProviderDefaults {
     model: string;
@@ -44,7 +45,7 @@ export function invalidateConfigCache(): void {
 }
 
 const PROVIDER_DEFAULTS: Record<string, ProviderDefaults> = {
-    gemini: { model: "gemini-3.1-flash", enabled: false },
+    gemini: { model: getProviderDefaultModel("gemini"), enabled: false },
     huggingface: {
         model: "mistralai/Mistral-7B-Instruct-v0.3",
         enabled: true,
@@ -55,18 +56,18 @@ const PROVIDER_DEFAULTS: Record<string, ProviderDefaults> = {
         enabled: false,
         extras: { url: "http://localhost:11434" }
     },
-    mistral: { model: "mistral-small-4", enabled: false },
-    cohere: { model: "command-a-03-2025", enabled: false },
-    openai: { model: "gpt-5.5-instant", enabled: false },
+    mistral: { model: getProviderDefaultModel("mistral"), enabled: false },
+    cohere: { model: getProviderDefaultModel("cohere"), enabled: false },
+    openai: { model: getProviderDefaultModel("openai"), enabled: false },
     together: { model: "meta-llama/Llama-3.3-70B-Instruct-Turbo", enabled: false },
     openrouter: { model: "google/gemma-3-27b-it:free", enabled: false },
-    anthropic: { model: "claude-sonnet-4.6", enabled: false },
-    minimax: { model: "MiniMax-M2.7", enabled: false },
-    copilot: { model: "auto", enabled: false },
-    deepseek: { model: "deepseek-v4-flash", enabled: false },
-    grok: { model: "grok-4.4", enabled: false },
+    anthropic: { model: getProviderDefaultModel("anthropic"), enabled: false },
+    minimax: { model: getProviderDefaultModel("minimax"), enabled: false },
+    copilot: { model: getProviderDefaultModel("copilot"), enabled: false },
+    deepseek: { model: getProviderDefaultModel("deepseek"), enabled: false },
+    grok: { model: getProviderDefaultModel("grok"), enabled: false },
     groq: { model: "meta-llama/llama-4-scout-17b-16e-instruct", enabled: false },
-    perplexity: { model: "gpt-5.5-computer", enabled: false },
+    perplexity: { model: getProviderDefaultModel("perplexity"), enabled: false },
     zai: {
         model: "glm-5.1",
         enabled: false,
@@ -99,7 +100,6 @@ export function getConfiguration(): ExtensionConfig {
 
     const result: ExtensionConfig = {
         provider: config.get("apiProvider", "mistral"),
-        debug: config.get("debug", false),
         commit: {
             style: config.get("commit.style", "conventional"),
             maxLength: config.get("commit.maxLength", 72),

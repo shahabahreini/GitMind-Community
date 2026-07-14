@@ -109,7 +109,7 @@ npm test
 ### Debugging Tests
 
 ```bash
-# Enable debug mode
+# Attach a debugger to the test host
 npm test -- --inspect-brk
 
 # Or use VS Code debugger
@@ -319,10 +319,10 @@ If you encounter test issues:
 
 1. Check the test output for specific error messages
 2. Review this documentation for common failures
-3. Run tests in debug mode for detailed output
-4. Open an issue on GitHub with test failure details
+3. Attach the VS Code debugger when detailed execution inspection is needed
+4. Open an issue with sanitized failure details; never attach source, credentials, raw API bodies, or customer data
 
 ---
 
-**Last Updated:** December 2024
-**Test Suite Version:** 1.0.0
+**Last Updated:** July 13, 2026
+**Test Suite Version:** 5.0.6

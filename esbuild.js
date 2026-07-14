@@ -36,13 +36,12 @@ async function main() {
 		platform: 'node',
 		outfile: 'dist/extension.js',
 		external: [
-			'vscode',
-			'applicationinsights'
+			'vscode'
 		],
 		logLevel: 'silent',
 		treeShaking: true,
 		drop: production ? ['console', 'debugger'] : [],
-		target: 'node16',
+		target: 'node22',
 		plugins: [
 			/* add to the end of plugins array */
 			esbuildProblemMatcherPlugin,

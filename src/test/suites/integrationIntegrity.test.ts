@@ -568,12 +568,14 @@ suite('Integration Integrity - Commit Style Registration', () => {
 suite('Integration Integrity - Command Registration', () => {
 
     let commandsSource: string;
+    let supportCommandsSource: string;
 
     suiteSetup(() => {
         extensionSource = readSource('src/extension.ts');
         // All commands are registered in commands/index.ts via registerCommands().
         // The extension.ts simply calls registerCommands(context).
         commandsSource = readSource('src/commands/index.ts');
+        supportCommandsSource = readSource('src/commands/support.ts');
         packageJson = readJSON('package.json');
     });
 
@@ -586,7 +588,8 @@ suite('Integration Integrity - Command Registration', () => {
             // Check that either extension.ts or commands/index.ts registers this command
             const inExtension = extensionSource.includes(`"${cmd}"`) || extensionSource.includes(`'${cmd}'`);
             const inCommands = commandsSource.includes(`"${cmd}"`) || commandsSource.includes(`'${cmd}'`);
-            if (!inExtension && !inCommands) {
+            const inSupportCommands = supportCommandsSource.includes(`"${cmd}"`) || supportCommandsSource.includes(`'${cmd}'`);
+            if (!inExtension && !inCommands && !inSupportCommands) {
                 missingInExtension.push(cmd);
             }
         }

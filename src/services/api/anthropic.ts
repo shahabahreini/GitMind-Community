@@ -12,18 +12,22 @@ interface GenerationConfig {
 }
 
 const MODEL_CONFIGS: Record<AnthropicModel, GenerationConfig> = {
-    // Claude 4 Series (Latest)
-    "claude-opus-4.7": {
+    "claude-sonnet-5": {
         max_tokens: 350,
         temperature: 0.2,
         top_p: 0.8
     },
-    "claude-sonnet-4.6": {
+    "claude-opus-4-8": {
         max_tokens: 350,
         temperature: 0.2,
         top_p: 0.8
     },
-    "claude-haiku-4.5": {
+    "claude-fable-5": {
+        max_tokens: 350,
+        temperature: 0.2,
+        top_p: 0.8
+    },
+    "claude-haiku-4-5": {
         max_tokens: 350,
         temperature: 0.2,
         top_p: 0.8
@@ -46,9 +50,10 @@ export class AnthropicProvider extends BaseAIProvider {
 
         // Validate model
         const validModels: AnthropicModel[] = [
-            "claude-opus-4.7",
-            "claude-sonnet-4.6",
-            "claude-haiku-4.5"
+            "claude-sonnet-5",
+            "claude-opus-4-8",
+            "claude-fable-5",
+            "claude-haiku-4-5"
         ];
 
         // Use type assertion to check if model is in validModels, but proceed even if not perfectly matching
@@ -63,7 +68,7 @@ export class AnthropicProvider extends BaseAIProvider {
             debugLog("Prompt:", prompt);
 
             // Get model-specific configuration
-            const config = MODEL_CONFIGS[this.model as AnthropicModel] || MODEL_CONFIGS["claude-sonnet-4.6"];
+            const config = MODEL_CONFIGS[this.model as AnthropicModel] || MODEL_CONFIGS["claude-sonnet-5"];
             const temperatureOverride = options?.temperature;
             // For commit messages we want strict max tokens, for analysis we might want more (handled by option or default)
             const maxTokens = options?.maxTokens ?? config.max_tokens;

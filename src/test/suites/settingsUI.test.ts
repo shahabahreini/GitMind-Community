@@ -76,8 +76,6 @@ suite('Settings UI Tests', () => {
                 switch (key) {
                     case 'apiProvider':
                         return 'openai';
-                    case 'debug':
-                        return false;
                     case 'openai.apiKey':
                         return 'test-api-key';
                     case 'openai.model':
@@ -100,7 +98,6 @@ suite('Settings UI Tests', () => {
             const settings = await settingsManager.getSettings();
 
             assert.strictEqual(settings.apiProvider, 'openai');
-            assert.strictEqual(settings.debug, false);
             assert.strictEqual(settings.openai.apiKey, 'test-api-key');
             assert.strictEqual(settings.openai.model, "gpt-5.5-instant");
         } finally {
@@ -135,7 +132,6 @@ suite('Settings UI Tests', () => {
                 const settingsManager = new SettingsManager();
                 const testSettings = {
                     apiProvider: 'gemini',
-                    debug: true,
                     gemini: {
                         apiKey: 'new-gemini-key',
                         model: "gemini-3.1-pro"
@@ -182,10 +178,7 @@ suite('Settings UI Tests', () => {
                     commitStyle: {
                         style: 'conventional'
                     },
-                    showDiagnostics: false,
-                    telemetry: {
-                        enabled: true
-                    }
+                    showDiagnostics: false
                 };
 
                 // Use timeout for saveSettings operation
@@ -197,7 +190,6 @@ suite('Settings UI Tests', () => {
                 ]);
 
                 assert.strictEqual(savedSettings['apiProvider'], 'gemini');
-                assert.strictEqual(savedSettings['debug'], true);
                 assert.strictEqual(savedSettings['gemini.apiKey'], 'new-gemini-key');
                 assert.strictEqual(savedSettings['gemini.model'], "gemini-3.1-pro");
                 assert.strictEqual(savedSettings['commit.targetLanguage'], 'spanish');
@@ -253,7 +245,6 @@ suite('Settings UI Tests', () => {
             const mockSettingsManager = {
                 getSettings: async () => ({
                     apiProvider: 'openai',
-                    debug: false,
                     openai: { apiKey: 'test', model: "gpt-5.5-instant" }
                 })
             };
@@ -305,7 +296,6 @@ suite('Settings UI Tests', () => {
                 // First session - save settings
                 const testSettings = {
                     apiProvider: 'anthropic',
-                    debug: true,
                     anthropic: {
                         apiKey: 'test-anthropic-key',
                         model: 'claude-3-5-sonnet-20241022'
@@ -343,10 +333,7 @@ suite('Settings UI Tests', () => {
                     commit: {
                         verbose: true
                     },
-                    showDiagnostics: false,
-                    telemetry: {
-                        enabled: true
-                    }
+                    showDiagnostics: false
                 };
 
                 // Use timeout for saveSettings operation
@@ -367,7 +354,6 @@ suite('Settings UI Tests', () => {
                 ]) as any;
 
                 assert.strictEqual(loadedSettings.apiProvider, 'anthropic');
-                assert.strictEqual(loadedSettings.debug, true);
                 assert.strictEqual(loadedSettings.anthropic.apiKey, 'test-anthropic-key');
                 assert.strictEqual(loadedSettings.anthropic.model, 'claude-3-5-sonnet-20241022');
 
@@ -404,9 +390,8 @@ suite('Settings UI Tests', () => {
             // Should use default values when no configuration exists
             // Check what the actual default is from package.json
             assert.strictEqual(settings.apiProvider, 'gemini'); // Default provider from package.json
-            assert.strictEqual(settings.debug, false);
-            assert.strictEqual(settings.gemini.model, "gemini-3.1-flash"); // Default from SettingsManager
-            assert.strictEqual(settings.openai.model, "gpt-5.5-instant");
+            assert.strictEqual(settings.gemini.model, "gemini-3.5-flash");
+            assert.strictEqual(settings.openai.model, "gpt-5.6-terra");
         } finally {
             vscode.workspace.getConfiguration = originalGetConfiguration;
             invalidateConfigCache();

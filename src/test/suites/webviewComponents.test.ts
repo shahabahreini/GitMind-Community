@@ -212,7 +212,6 @@ suite('Webview Components Tests', () => {
         const unsafeInput = '<script>alert("xss")</script>';
         const testSettings = {
             apiProvider: 'openai',
-            debug: false,
             openai: {
                 apiKey: unsafeInput,
                 model: "gpt-5.5-instant"

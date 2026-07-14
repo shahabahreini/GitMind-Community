@@ -79,24 +79,24 @@ export type TargetCommitLanguage =
 
 // Model types
 export type GeminiModel =
-    | "gemini-3.1-pro" | "gemini-3.1-flash" | "gemini-3-flash" | "gemini-3.1-flash-lite"
+    | "gemini-3.5-flash" | "gemini-3.1-pro-preview" | "gemini-3.1-flash-lite"
     | "gemini-2.5-pro" | "gemini-2.5-flash" | "gemini-2.5-flash-lite";
 
 export type AnthropicModel =
-    | "claude-opus-4.7" | "claude-sonnet-4.6" | "claude-haiku-4.5";
+    | "claude-sonnet-5" | "claude-opus-4-8" | "claude-fable-5" | "claude-haiku-4-5";
 
 export type MiniMaxModel = "MiniMax-M2.7" | "MiniMax-M2.5" | "MiniMax-M2" | "MiniMax-Text-01";
 
 export type KnownCopilotModel =
     | "auto"
     // OpenAI Models
-    | "gpt-5.5" | "gpt-5.4" | "o3-pro"
+    | "gpt-5.5" | "gpt-5.4" | "gpt-5.4-mini" | "gpt-5.3-codex"
     // Other Models
     | "raptor-mini"
     // Anthropic Models
-    | "claude-opus-4.7" | "claude-sonnet-4.6"
+    | "claude-opus-4.8" | "claude-sonnet-4.6"
     // Google Models
-    | "gemini-3.1-pro" | "gemini-3-flash";
+    | "gemini-3.1-pro" | "gemini-3.5-flash";
 
 export type CopilotModel = KnownCopilotModel | string;
 
@@ -110,7 +110,7 @@ export type GroqModel =
     | "meta-llama/llama-4-scout-17b-16e-instruct";
 
 export type PerplexityModel =
-    | "gpt-5.5-computer" | "gpt-5.4-thinking" | "sonar-pro" | "sonar-reasoning-pro";
+    | "sonar-pro" | "sonar-reasoning-pro" | "sonar";
 
 export type ZaiModel =
     | "glm-5.1" | "glm-5" | "glm-5-turbo"
@@ -147,7 +147,6 @@ export interface GitmojiConfig {
 
 export interface ExtensionConfig {
     provider: ApiProvider;
-    debug: boolean;
     commit: CommitConfig;
     promptCustomization: {
         enabled: boolean;

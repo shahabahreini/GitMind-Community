@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { APIErrorHandler } from '../../utils/errorHandler';
+import { ProviderApiError } from '../../services/api/recovery';
 
 suite('Error Handling Tests', () => {
     let originalShowErrorMessage: typeof vscode.window.showErrorMessage;
@@ -130,6 +131,21 @@ suite('Error Handling Tests', () => {
         }
     });
 
+    test('central presenter never echoes provider response bodies or credentials', () => {
+        const rawError = new ProviderApiError(
+            'upstream body: {"apiKey":"sk-private-value","email":"person@example.com"}',
+            { status: 418, provider: 'custom' }
+        );
+        const formatted = APIErrorHandler.formatUserMessage(
+            APIErrorHandler.handleAPIError(rawError, 'Custom API')
+        );
+
+        assert.ok(!formatted.includes('sk-private-value'));
+        assert.ok(!formatted.includes('person@example.com'));
+        assert.ok(!formatted.includes('upstream body'));
+        assert.match(formatted, /could not complete the request/);
+    });
+
     test('Request cancellation should be handled correctly', () => {
         const cancellationError = new Error('Request was cancelled');
         cancellationError.name = 'AbortError';
@@ -213,10 +229,10 @@ suite('Error Handling Tests', () => {
         assert.ok(context.filesChanged > 0, 'Should preserve files changed context');
     });
 
-    test('Error telemetry should not expose sensitive data', () => {
+    test('Displayed error messages should not expose sensitive data', () => {
         const sensitiveError = new Error('API call failed with key: sk-1234567890abcdef');
 
-        // Telemetry should sanitize sensitive information
+        // User-facing diagnostics should sanitize sensitive information
         const sanitizedMessage = sensitiveError.message.replace(/sk-[a-zA-Z0-9]+/g, 'sk-****');
 
         assert.ok(!sanitizedMessage.includes('sk-1234567890abcdef'), 'Should not expose API keys');

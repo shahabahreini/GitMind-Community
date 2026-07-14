@@ -3,7 +3,6 @@ import * as vscode from "vscode";
 import { getNonce } from "../../utils/getNonce";
 import { OnboardingTemplateGenerator } from "./OnboardingTemplateGenerator";
 import { OnboardingMessageHandler } from "./OnboardingMessageHandler";
-import { telemetryService } from "../../services/telemetry/telemetryService";
 
 export class OnboardingWebview {
     public static readonly viewType = "gitmind.onboarding";
@@ -66,9 +65,6 @@ export class OnboardingWebview {
         this._messageHandler = new OnboardingMessageHandler(() => {
             OnboardingWebview.close();
         });
-
-        // Track onboarding webview creation
-        telemetryService.trackDailyActiveUser();
 
         // Set the webview's initial html content
         this._update();

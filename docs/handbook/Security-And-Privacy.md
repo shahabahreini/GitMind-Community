@@ -1,6 +1,6 @@
 # Security And Privacy
 
-> Verified against GitMind `5.0.6` on June 7, 2026.
+> Verified against GitMind `5.0.6` on July 13, 2026.
 
 ## Data Flow
 
@@ -15,13 +15,15 @@ Ollama can keep generation local when its server and model run on your machine. 
 - Custom API tokens are credentials and must be protected.
 - Never commit keys in workspace settings or paste them into issues, screenshots, logs, or prompts.
 
-## Diagnostics And Debug Logging
+## Diagnostics And Support Reports
 
-`gitmind.showDiagnostics` shows model/token information before generation. `gitmind.debug` adds detailed API interaction logs for troubleshooting. Sensitive values are redacted, but debug output can still reveal provider names, models, errors, and repository context; inspect it before sharing.
+`gitmind.showDiagnostics` shows model/token estimates before generation. Production builds do not expose raw debug logging. Pro users can opt into a 30-minute sanitized support session from **GitMind Settings > Pro > Support Report**. The report stays in memory until the user reviews and saves it; GitMind never uploads it automatically.
 
-## Telemetry
+The report uses a fixed allowlist: extension/VS Code versions, platform family, operation/provider categories, HTTP status, relative timing, and recovery outcomes. It rejects source code, diffs, prompts, commit content, repository/file paths, URLs, credentials, API bodies, raw errors, email, and license/customer identifiers. Review the JSON before attaching it to an issue.
 
-`gitmind.telemetry.enabled` defaults to `false` and also respects VS Code's global telemetry setting. GitMind telemetry is intended to contain anonymous usage/error categories, not source code, diffs, prompts, commit messages, API keys, or personal information.
+## Product Telemetry
+
+GitMind does not collect or transmit product telemetry. Provider requests still send the selected prompt and diff to the provider configured by the user, as described above; those functional requests are not analytics.
 
 ## Privacy Boundary
 

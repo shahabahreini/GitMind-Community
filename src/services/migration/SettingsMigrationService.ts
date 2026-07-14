@@ -18,10 +18,12 @@ export class SettingsMigrationService {
      * Perform migration from old aiCommitAssistant settings to new gitmind settings
      * and cleanup old settings to prevent conflicts
      */
-    public async migrateAndCleanupSettings(): Promise<void> {
+    public async migrateAndCleanupSettings(context?: vscode.ExtensionContext): Promise<void> {
         debugLog("Starting settings migration and cleanup...");
 
         try {
+            await this.cleanupRetiredTelemetry(context);
+
             const workspaceConfig = vscode.workspace.getConfiguration();
             const hasOldSettings = await this.checkForLegacySettings(workspaceConfig);
 
@@ -69,7 +71,54 @@ export class SettingsMigrationService {
             debugLog("Error during settings migration:", error);
             // Don't throw - migration failure shouldn't break extension activation
         }
-    }    /**
+    }
+
+    /**
+     * Delete settings and extension storage left by retired telemetry versions.
+     * This is intentionally idempotent and must run even when no legacy
+     * aiCommitAssistant namespace is present.
+     */
+    private async cleanupRetiredTelemetry(context?: vscode.ExtensionContext): Promise<void> {
+        const config = vscode.workspace.getConfiguration('gitmind');
+        const targets = [
+            vscode.ConfigurationTarget.Global,
+            vscode.ConfigurationTarget.Workspace,
+            vscode.ConfigurationTarget.WorkspaceFolder
+        ];
+
+        for (const key of ['telemetry.enabled', 'telemetry.connectionString', 'debug']) {
+            for (const target of targets) {
+                try {
+                    await config.update(key, undefined, target);
+                } catch (error) {
+                    // Workspace-folder updates are unavailable when no folder is open.
+                    debugLog(`Unable to remove retired setting gitmind.${key} from ${vscode.ConfigurationTarget[target]}:`, error);
+                }
+            }
+        }
+
+        if (context) {
+            await Promise.allSettled([
+                context.secrets.delete('applicationinsights-key'),
+                context.globalState.update('gitmind.telemetry.lastActiveDate', undefined),
+                this.deleteRetiredDebugLogs(context.logUri),
+                this.deleteRetiredDebugLogs(context.globalStorageUri)
+            ]);
+        }
+    }
+
+    private async deleteRetiredDebugLogs(directory: vscode.Uri): Promise<void> {
+        try {
+            const entries = await vscode.workspace.fs.readDirectory(directory);
+            await Promise.all(entries
+                .filter(([name, type]) => type === vscode.FileType.File && /^gitmind-debug-.*\.log$/i.test(name))
+                .map(([name]) => vscode.workspace.fs.delete(vscode.Uri.joinPath(directory, name))));
+        } catch {
+            // The directory may not exist on first activation.
+        }
+    }
+
+    /**
      * Check if any legacy aiCommitAssistant settings exist
      */
     private async checkForLegacySettings(_workspaceConfig: vscode.WorkspaceConfiguration): Promise<boolean> {
@@ -191,9 +240,6 @@ export class SettingsMigrationService {
             'promptCustomization.saveLastPrompt': 'promptCustomization.saveLastPrompt',
             'promptCustomization.lastPrompt': 'promptCustomization.lastPrompt',
 
-            // Telemetry
-            'telemetry.enabled': 'telemetry.enabled',
-            'telemetry.connectionString': 'telemetry.connectionString',
             'showDiagnostics': 'showDiagnostics',
 
             // Pro features

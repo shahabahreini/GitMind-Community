@@ -20,17 +20,10 @@ export class MessageHandler {
         switch (message.command) {
             case "saveSettings":
                 try {
-                    // Log the incoming settings for debugging
-                    console.log('Saving settings - telemetry.enabled:', message.settings.telemetry?.enabled);
-
                     await SettingsManager.saveSettings(message.settings);
 
                     // Get the updated settings from VS Code to ensure they were saved correctly
                     const updatedSettings = await SettingsManager.getCurrentSettings();
-
-                    // Log the retrieved settings for debugging
-                    console.log('Retrieved settings after save - telemetry.enabled:', updatedSettings.telemetry?.enabled);
-                    console.log('Full telemetry object:', updatedSettings.telemetry);
 
                     // Send confirmation back to webview with updated settings
                     if (SettingsWebview.isWebviewOpen()) {

@@ -23,7 +23,6 @@ import { getApiConfig } from '../config/settings';
 import { SettingsWebview } from '../webview/settings/SettingsWebview';
 import { OnboardingWebview } from '../webview/onboarding/OnboardingWebview';
 import { SubscriptionManager } from '../services/subscription/SubscriptionManager';
-import { telemetryService } from '../services/telemetry/telemetryService';
 import { debugLog } from '../services/debug/logger';
 
 suite('GitMind Extension Integration Tests', () => {
@@ -105,7 +104,6 @@ suite('GitMind Extension Integration Tests', () => {
             'ai-commit-assistant.generateCommitMessage',
             'ai-commit-assistant.openSettings',
             'ai-commit-assistant.checkApiSetup',
-            'ai-commit-assistant.toggleDebug',
             'ai-commit-assistant.cancelGeneration',
             'ai-commit-assistant.openOnboarding',
             'ai-commit-assistant.completeOnboarding',
@@ -259,21 +257,6 @@ suite('GitMind Extension Integration Tests', () => {
         }
     }).timeout(20000);
 
-    test('Debug mode should be toggleable', async () => {
-        try {
-            // Get current debug state
-            const config = vscode.workspace.getConfiguration('aiCommitAssistant');
-            const initialDebugState = config.get<boolean>('debug', false);
-
-            // Toggle debug mode
-            await vscode.commands.executeCommand('ai-commit-assistant.toggleDebug');
-
-            console.log(`Debug mode toggle test completed (initial state: ${initialDebugState})`);
-        } catch (error) {
-            console.log('Debug toggle test completed with expected limitation');
-        }
-    });
-
     test('Onboarding system should be functional', async () => {
         try {
             await vscode.commands.executeCommand('ai-commit-assistant.openOnboarding');
@@ -337,7 +320,6 @@ suite('GitMind Extension Integration Tests', () => {
     test('Configuration schema should be complete', () => {
         const requiredConfigKeys = [
             'apiProvider',
-            'debug',
             'gemini.apiKey',
             'gemini.model',
             'openai.apiKey',
@@ -346,7 +328,6 @@ suite('GitMind Extension Integration Tests', () => {
             'anthropic.model',
             'promptCustomization.enabled',
             'commit.verbose',
-            'telemetry.enabled'
         ];
 
         // Test configuration accessibility
@@ -388,7 +369,6 @@ suite('GitMind Extension Integration Tests', () => {
     test('Feature flags should be properly configured', () => {
         const featureFlags = {
             promptCustomization: true,
-            telemetry: true,
             diagnostics: true,
             onboarding: true,
             multiProvider: true
@@ -526,49 +506,6 @@ suite('GitMind Extension Integration Tests', () => {
         }
     }).timeout(10000);
 
-    test('Telemetry and Error Tracking', async () => {
-        try {
-            // Test telemetry service initialization
-            assert.ok(telemetryService, 'Telemetry service should be accessible');
-
-            // Test telemetry methods
-            const telemetryMethods = [
-                'trackDailyActiveUser',
-                'trackCommitGeneration',
-                'trackExtensionError',
-                'trackFeatureUsage'
-            ];
-
-            for (const method of telemetryMethods) {
-                assert.ok(typeof (telemetryService as any)[method] === 'function',
-                    `Telemetry method ${method} should be available`);
-            }
-
-            // Test error tracking scenarios
-            const errorScenarios = [
-                { type: 'APIError', message: 'Rate limit exceeded', context: 'generateCommit' },
-                { type: 'ConfigurationError', message: 'Invalid API key', context: 'settings' },
-                { type: 'NetworkError', message: 'Connection timeout', context: 'apiCall' }
-            ];
-
-            for (const scenario of errorScenarios) {
-                try {
-                    // Test error tracking (should not throw)
-                    telemetryService.trackExtensionError(scenario.type, scenario.message, scenario.context);
-                    console.log(`   - Error scenario '${scenario.type}': tracked successfully`);
-                } catch (error) {
-                    console.log(`   - Error scenario '${scenario.type}': completed with limitation`);
-                }
-            }
-
-            console.log('✅ Telemetry and Error Tracking tests completed');
-            console.log(`   - Telemetry methods: ${telemetryMethods.length} verified`);
-            console.log(`   - Error scenarios: ${errorScenarios.length} tested`);
-        } catch (error) {
-            console.log('Telemetry test completed with expected limitation');
-        }
-    }).timeout(8000);
-
     test('Extension Lifecycle and Resource Management', async () => {
         try {
             // Test extension context handling
@@ -642,7 +579,7 @@ console.log(`
 📋 TESTING SCOPE:
 • Settings UI - Save/load configurations, UI interactions
 • AI Providers - All 13 providers (OpenAI, Anthropic, Gemini, etc.)
-• Core Commands - Generate messages, API setup checks, debug mode
+• Core Commands - Generate messages, API setup checks, sanitized Pro support reports
 • Git Integration - Repository validation, diff processing
 • Webview Components - Settings panel, onboarding workflow
 • Error Handling - Invalid API keys, network issues, user guidance

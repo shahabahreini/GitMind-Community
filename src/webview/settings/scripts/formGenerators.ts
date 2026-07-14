@@ -31,15 +31,6 @@ export function generateFormInitialization(): string {
     `} catch (e) { console.warn('Failed to set showDiagnostics:', e); }`,
 
     `try {`,
-    `  const telemetryEnabledEl = document.getElementById('telemetryEnabled');`,
-    `  if (telemetryEnabledEl) {`,
-    `    const telemetryValue = currentSettings.telemetry?.enabled ?? false;`,
-    `    console.log('Setting telemetry checkbox to:', telemetryValue, 'from settings:', currentSettings.telemetry);`,
-    `    telemetryEnabledEl.checked = telemetryValue;`,
-    `  }`,
-    `} catch (e) { console.warn('Failed to set telemetryEnabled:', e); }`,
-
-    `try {`,
     `  const promptCustomizationEnabledEl = document.getElementById('promptCustomizationEnabled');`,
     `  if (promptCustomizationEnabledEl) promptCustomizationEnabledEl.checked = currentSettings.promptCustomization?.enabled ?? false;`,
     `} catch (e) { console.warn('Failed to set promptCustomizationEnabled:', e); }`,
@@ -246,8 +237,7 @@ export function generateFormInitialization(): string {
 
 export function generateSettingsCollection(): string {
   const settingsObj: string[] = [
-    `apiProvider: (document.getElementById('apiProvider')?.value || currentSettings.apiProvider || 'huggingface'),`,
-    `debug: currentSettings.debug,`
+    `apiProvider: (document.getElementById('apiProvider')?.value || currentSettings.apiProvider || 'huggingface'),`
   ];
 
   Object.keys(PROVIDER_DEFAULTS).forEach(provider => {
@@ -293,7 +283,6 @@ export function generateSettingsCollection(): string {
     },`,
     `commitStyle: { style: (window.currentFormValues || currentFormValues).commitStyle },`,
     `showDiagnostics: (window.currentFormValues || currentFormValues).showDiagnostics,`,
-    `telemetry: { enabled: (window.currentFormValues || currentFormValues).telemetryEnabled },`,
     `pro: { 
       encryptionEnabled: (window.currentFormValues || currentFormValues).encryptionEnabled,
       advancedModelConfig: {
@@ -371,8 +360,6 @@ export function generateProviderForm(_provider: string, _settings: any, _default
     `if (document.getElementById('commitTargetLanguageValue')) document.getElementById('commitTargetLanguageValue').value = currentSettings.commit?.targetLanguage ?? 'english';`,
     `if (window.reinitializeLanguageDropdown) window.reinitializeLanguageDropdown();`,
     `document.getElementById('showDiagnostics').checked = currentSettings.showDiagnostics ?? false;`,
-    `document.getElementById('telemetryEnabled').checked = currentSettings.telemetry?.enabled ?? false;`,
-    `console.log('generateProviderForm: Set telemetry checkbox to:', currentSettings.telemetry?.enabled ?? false, 'from settings:', currentSettings.telemetry);`,
     `document.getElementById('promptCustomizationEnabled').checked = currentSettings.promptCustomization?.enabled ?? false;`,
     `document.getElementById('saveLastPrompt').checked = currentSettings.promptCustomization?.saveLastPrompt || false;`,
     `// Pro features: use the setting as determined by the backend`,
@@ -450,8 +437,6 @@ export function generateUpdateSettingsCode(): string {
     `if (document.getElementById('commitTargetLanguageValue')) document.getElementById('commitTargetLanguageValue').value = currentSettings.commit?.targetLanguage ?? 'english';`,
     `if (window.reinitializeLanguageDropdown) window.reinitializeLanguageDropdown();`,
     `document.getElementById('showDiagnostics').checked = currentSettings.showDiagnostics ?? false;`,
-    `document.getElementById('telemetryEnabled').checked = currentSettings.telemetry?.enabled ?? false;`,
-    `console.log('generateUpdateSettingsCode: Set telemetry checkbox to:', currentSettings.telemetry?.enabled ?? false, 'from settings:', currentSettings.telemetry);`,
     `document.getElementById('promptCustomizationEnabled').checked = currentSettings.promptCustomization?.enabled ?? false;`,
     `document.getElementById('saveLastPrompt').checked = currentSettings.promptCustomization?.saveLastPrompt || false;`,
     `// Pro features: use the setting as determined by the backend`,
@@ -523,8 +508,6 @@ export function generateUpdateSettingsCodePreserveDropdowns(): string {
     `document.getElementById('apiProvider').value = currentUIProvider || currentSettings.apiProvider || 'huggingface';`,
     `document.getElementById('commitVerbose').checked = currentSettings.commit?.verbose ?? true;`,
     `document.getElementById('showDiagnostics').checked = currentSettings.showDiagnostics ?? false;`,
-    `document.getElementById('telemetryEnabled').checked = currentSettings.telemetry?.enabled ?? false;`,
-    `console.log('generateUpdateSettingsCodePreserveDropdowns: Set telemetry checkbox to:', currentSettings.telemetry?.enabled ?? false, 'from settings:', currentSettings.telemetry);`,
     `document.getElementById('promptCustomizationEnabled').checked = currentSettings.promptCustomization?.enabled ?? false;`,
     `document.getElementById('saveLastPrompt').checked = currentSettings.promptCustomization?.saveLastPrompt || false;`,
     `// Pro features: use the setting as determined by the backend`,

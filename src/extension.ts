@@ -29,7 +29,6 @@ import { fetchCopilotModels } from "./services/api/copilot";
 import { fetchOpenAIModels } from "./services/api/openai";
 import { fetchZaiModels } from "./services/api/zai";
 import { PromptManager } from "./services/promptManager";
-import { telemetryService } from "./services/telemetry/telemetryService";
 import { SecureKeyManager } from "./services/encryption/SecureKeyManager";
 import { SubscriptionManager } from "./services/subscription/SubscriptionManager";
 import { ProActivationService } from "./services/subscription/ProActivationService";
@@ -86,7 +85,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   // Perform settings migration and cleanup first
   const migrationService = SettingsMigrationService.getInstance();
-  await migrationService.migrateAndCleanupSettings();
+  await migrationService.migrateAndCleanupSettings(context);
 
   // Initialize SecureKeyManager
   const secureKeyManager = SecureKeyManager.getInstance();
@@ -141,16 +140,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       clearInterval(validationTimer);
     }
   });
-
-  await telemetryService.initialize(context);
-
-  // Debug: Check telemetry configuration from all scopes
-  const config = vscode.workspace.getConfiguration("gitmind");
-  const telemetryInspect = config.inspect("telemetry.enabled");
-  debugLog("Telemetry configuration inspection:", telemetryInspect);
-  debugLog("Telemetry setting value:", config.get("telemetry.enabled"));
-
-  telemetryService.trackDailyActiveUser();
 
   debugLog("Extension configuration:", vscode.workspace.getConfiguration("gitmind"));
   debugLog(`Supported API providers: ${SUPPORTED_PROVIDERS.join(", ")}`);
@@ -235,9 +224,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   if (shouldShowOnboarding) {
     OnboardingWebview.createOrShow(context.extensionUri);
-    // Removed non-essential telemetry tracking
-  } else {
-    // Removed non-essential telemetry tracking
   }
 
   // Auto-migrate API keys for pro users
@@ -256,13 +242,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   }
 
   debugLog("GitMind extension activated successfully with all icons");
-  // Removed non-essential telemetry tracking
 }
 
 export function deactivate(): void {
-  // Removed non-essential telemetry tracking
-  telemetryService.flush();
-
   state.debugChannel?.dispose();
   state.statusBarItem?.dispose();
 }

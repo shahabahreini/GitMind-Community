@@ -8,6 +8,13 @@ import { spawnSync } from "node:child_process";
 const root = process.cwd();
 const handbook = path.join(root, "docs/handbook");
 const manifest = JSON.parse(fs.readFileSync(path.join(root, "docs/reference/gitmind-user-surface.json"), "utf8"));
+const packageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
+const verificationDate = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  timeZone: "UTC",
+}).format(new Date(`${manifest.product.auditDate}T00:00:00Z`));
 const errors = [];
 const files = [];
 function walk(directory) {
@@ -23,9 +30,10 @@ const text = files.map((file) => fs.readFileSync(file, "utf8")).join("\n");
 const fail = (message) => errors.push(message);
 
 if (!manifest.product.version || !manifest.product.auditDate) fail("Manifest lacks required version/audit date metadata.");
+if (manifest.product.version !== packageJson.version) fail("Manifest version does not match package.json.");
 for (const file of files) {
   const pageText = fs.readFileSync(file, "utf8");
-  if (!pageText.includes(`Verified against GitMind \`${manifest.product.version}\` on June 7, 2026`)) {
+  if (!pageText.includes(`Verified against GitMind \`${manifest.product.version}\` on ${verificationDate}`)) {
     fail(`Handbook page lacks required verification metadata: ${path.relative(root, file)}`);
   }
 }
@@ -46,7 +54,6 @@ const sensitivePatterns = [
   /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/g,
   /\bGITMIND-PRO-[A-Z0-9]{4}(?:-[A-Z0-9]{4}){2,}\b/g,
   /gitmind\.environment\./g,
-  /gitmind\.telemetry\.connectionString/g,
 ];
 for (const pattern of sensitivePatterns) if (pattern.test(text)) fail(`Sensitive or internal-only content matched ${pattern}.`);
 

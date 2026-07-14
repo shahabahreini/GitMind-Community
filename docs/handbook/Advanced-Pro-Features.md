@@ -1,6 +1,6 @@
 # Advanced Pro Features
 
-> Verified against GitMind `5.0.6` on June 7, 2026.
+> Verified against GitMind `5.0.6` on July 13, 2026.
 
 ## Large Diff Processing
 
@@ -30,3 +30,7 @@ Provider support varies. Disabled parameters and `auto` mode leave decisions to 
 Run **GitMind: Learn from Commit History (Pro)** to analyze your repository's recent conventions. Configure 10-2500 commits and whether author/date information is included. The learned context helps future messages match the repository, but generated output still requires review.
 
 Commit history and diffs are included in provider prompts when these features use a cloud provider.
+
+## Sanitized Support Report
+
+The Pro Settings support tab can capture a 30-minute, memory-only session containing fixed operational categories and relative timing. It is designed for reproducing difficult provider and recovery failures without collecting code, diffs, prompts, paths, credentials, raw API bodies, raw errors, or customer identifiers. The user must review and save the JSON locally, then share it manually.

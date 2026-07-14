@@ -1,6 +1,6 @@
 # Troubleshooting And FAQ
 
-> Verified against GitMind `5.0.6` on June 7, 2026.
+> Verified against GitMind `5.0.6` on July 13, 2026.
 
 ## Provider And Model Problems
 
@@ -17,7 +17,7 @@
 - Stage changes, or enable Capture All Changes.
 - In a multi-repository workspace, select the intended repository.
 - For large changes, split the work into focused commits or use Pro large-diff processing.
-- If generation appears stuck, use **Cancel Generation**, inspect Output/debug logs, and retry.
+- If generation appears stuck, use **Cancel Generation** and retry. Pro users can capture a sanitized Support Report while reproducing persistent failures.
 
 ## Activation
 
@@ -30,7 +30,7 @@
 
 1. Record GitMind version, VS Code version, OS, provider, model, and reproducible steps.
 2. Run **Check API Setup** and note the sanitized error.
-3. Enable diagnostics or debug only long enough to reproduce.
+3. Pro users can start a sanitized Support Report session, reproduce the issue, then stop and review the report.
 4. Remove source code, diffs, prompts, repository names/paths, emails, IDs, and credentials before sharing.
 
 ## FAQ

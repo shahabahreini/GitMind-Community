@@ -181,7 +181,7 @@ export class OnboardingTemplateGenerator {
         const features = [
             { title: 'AI-Powered Generation', desc: 'Automatically generate contextual commit messages from your code changes' },
             { title: 'Multiple Commit Styles', desc: 'Choose from Conventional, Semantic, Descriptive, and more formats' },
-            { title: 'Privacy Controls', desc: 'Optional telemetry and secure API key storage with encryption' },
+            { title: 'Privacy by Design', desc: 'No usage telemetry, with secure API key storage and optional encryption' },
             { title: 'Customizable Prompts', desc: 'Add custom context to your commit generation requests' },
             { title: 'Multi-Repository Support', desc: 'Independent configuration for each Git repository' },
             { title: 'Pro Features Available', desc: 'Commit history learning, changelog generation, large diff support, and more' }

@@ -7,6 +7,8 @@ import { loggedFetch } from "./loggedFetch";
 // Define Cohere model types
 export enum CohereModel {
     // Command A Models
+    COMMAND_A_PLUS_05_2026 = "command-a-plus-05-2026",
+    NORTH_MINI_CODE_1_0 = "north-mini-code-1-0",
     COMMAND_A_03_2025 = "command-a-03-2025",
     COMMAND_A_REASONING_08_2025 = "command-a-reasoning-08-2025",
     COMMAND_A_TRANSLATE_08_2025 = "command-a-translate-08-2025",
@@ -47,6 +49,8 @@ const DEFAULT_CONFIG: GenerationConfig = {
 
 const MODEL_CONFIGS: Record<string, GenerationConfig> = {
     // Command A Models
+    [CohereModel.COMMAND_A_PLUS_05_2026]: DEFAULT_CONFIG,
+    [CohereModel.NORTH_MINI_CODE_1_0]: DEFAULT_CONFIG,
     [CohereModel.COMMAND_A_03_2025]: DEFAULT_CONFIG,
     [CohereModel.COMMAND_A_REASONING_08_2025]: DEFAULT_CONFIG,
     [CohereModel.COMMAND_A_TRANSLATE_08_2025]: DEFAULT_CONFIG,
@@ -319,7 +323,7 @@ export async function validateCohereAPIKey(
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: CohereModel.COMMAND_LIGHT,
+                model: CohereModel.COMMAND_A_PLUS_05_2026,
                 messages: [
                     {
                         role: "user",

@@ -1,1 +1,0 @@
-InstrumentationKey=fff83741-d639-438a-8cc1-528623bf2c2e;IngestionEndpoint=https://canadacentral-1.in.applicationinsights.azure.com/;LiveEndpoint=https://canadacentral.livediagnostics.monitor.azure.com/;ApplicationId=aaa7702a-4008-4c73-9ac6-8502b537724f

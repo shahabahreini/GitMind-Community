@@ -1,6 +1,6 @@
 **GitMind 5.x Handbook**
 
-Verified against GitMind `5.0.6` on June 7, 2026.
+Verified against GitMind `5.0.6` on July 13, 2026.
 
 - [Home](Home)
 - [Activation And License Management](Activation-And-License-Management)
@@ -19,6 +19,7 @@ Verified against GitMind `5.0.6` on June 7, 2026.
 - [Providers And Models](Providers-And-Models)
 - [Security And Privacy](Security-And-Privacy)
 - [Support And Requests](Support-And-Requests)
+- [Telemetry Retirement](Telemetry-Retirement)
 - [Troubleshooting And FAQ](Troubleshooting-And-FAQ)
 - [providers anthropic](providers-anthropic)
 - [providers cohere](providers-cohere)

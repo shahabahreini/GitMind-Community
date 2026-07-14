@@ -1,6 +1,6 @@
 # Complete Settings Reference
 
-> Verified against GitMind `5.0.6` on June 7, 2026.
+> Verified against GitMind `5.0.6` on July 13, 2026.
 
 Open **GitMind Setting** for the guided UI. The table below covers user-configurable settings. API keys and auth tokens have no default. Developer-only environment settings and automatically managed license/subscription state are intentionally omitted.
 
@@ -9,7 +9,6 @@ Open **GitMind Setting** for the guided UI. The table below covers user-configur
 | Setting | Default | Values / notes |
 | --- | --- | --- |
 | `gitmind.apiProvider` | `gemini` | 17 built-ins plus Pro `custom` |
-| `gitmind.debug` | `false` | Detailed redacted API/debug output |
 | `gitmind.showOnboarding` | `true` | Show onboarding |
 | `gitmind.commit.verbose` | `true` | Include body |
 | `gitmind.commit.captureAllChanges` | `false` | Include staged, unstaged, untracked |
@@ -18,7 +17,6 @@ Open **GitMind Setting** for the guided UI. The table below covers user-configur
 | `gitmind.commit.issueTracking.regex` | default issue pattern | Custom issue-reference regular expression |
 | `gitmind.commit.issueTracking.placement` | `summary` | Place issue references in summary or body |
 | `gitmind.showDiagnostics` | `false` | Show model/token information |
-| `gitmind.telemetry.enabled` | `false` | Anonymous usage analytics; also respects VS Code telemetry |
 | `gitmind.promptCustomization.enabled` | `false` | Ask for custom context |
 | `gitmind.promptCustomization.saveLastPrompt` | `false` | Prefill last context |
 
@@ -26,21 +24,21 @@ Open **GitMind Setting** for the guided UI. The table below covers user-configur
 
 | Provider | Settings | Defaults / values |
 | --- | --- | --- |
-| Gemini | `gitmind.gemini.apiKey`, `gitmind.gemini.model` | `gemini-3.1-flash` |
+| Gemini | `gitmind.gemini.apiKey`, `gitmind.gemini.model` | `gemini-3.5-flash` |
 | Hugging Face | `gitmind.huggingface.apiKey`, `gitmind.huggingface.model` | `mistralai/Mistral-7B-Instruct-v0.3` |
 | Ollama | `gitmind.ollama.url`, `gitmind.ollama.model` | `http://localhost:11434`, `phi4` |
 | Mistral | `gitmind.mistral.apiKey`, `gitmind.mistral.model` | `mistral-small-4` |
-| Cohere | `gitmind.cohere.apiKey`, `gitmind.cohere.model` | `command-a` |
-| OpenAI | `gitmind.openai.apiKey`, `gitmind.openai.model` | `gpt-5.5-instant` |
+| Cohere | `gitmind.cohere.apiKey`, `gitmind.cohere.model` | `command-a-plus-05-2026` |
+| OpenAI | `gitmind.openai.apiKey`, `gitmind.openai.model` | `gpt-5.6-terra` |
 | Together AI | `gitmind.together.apiKey`, `gitmind.together.model` | `meta-llama/Llama-3.3-70B-Instruct-Turbo` |
 | OpenRouter | `gitmind.openrouter.apiKey`, `gitmind.openrouter.model` | `google/gemma-3-27b-it:free` |
-| Anthropic | `gitmind.anthropic.apiKey`, `gitmind.anthropic.model` | `claude-sonnet-4.6` |
+| Anthropic | `gitmind.anthropic.apiKey`, `gitmind.anthropic.model` | `claude-sonnet-5` |
 | MiniMax | `gitmind.minimax.apiKey`, `gitmind.minimax.model` | `MiniMax-M2.7` |
 | Copilot | `gitmind.copilot.model` | `auto` |
 | DeepSeek | `gitmind.deepseek.apiKey`, `gitmind.deepseek.model` | `deepseek-v4-flash` |
-| Grok | `gitmind.grok.apiKey`, `gitmind.grok.model` | `grok-4.3` |
+| Grok | `gitmind.grok.apiKey`, `gitmind.grok.model` | `grok-4.4` |
 | Groq | `gitmind.groq.apiKey`, `gitmind.groq.model` | `meta-llama/llama-4-scout-17b-16e-instruct` |
-| Perplexity | `gitmind.perplexity.apiKey`, `gitmind.perplexity.model` | `gpt-5.5-computer` |
+| Perplexity | `gitmind.perplexity.apiKey`, `gitmind.perplexity.model` | `sonar-pro` |
 | Z.ai | `gitmind.zai.apiKey`, `gitmind.zai.model`, `gitmind.zai.endpoint` | `glm-5.1`; `regular` or `coding` (default) |
 | NVIDIA | `gitmind.nvidia.apiKey`, `gitmind.nvidia.model` | `meta/llama-3.3-70b-instruct` |
 
@@ -93,3 +91,5 @@ Open **GitMind Setting** for the guided UI. The table below covers user-configur
 | `gitmind.custom.requestFormat`, `gitmind.custom.responseFormat` | `openai`, `anthropic`, or `custom` |
 
 See [Custom API Guide](Custom-API-Guide) and [Security And Privacy](Security-And-Privacy). Do not put credentials in workspace settings committed to Git.
+
+The Pro Support Report is command-driven and stores no persistent setting. Use the Support Report tab to start, stop/review, save, or delete a session.

@@ -10,6 +10,7 @@ import { validateMiniMaxAPIKey } from "./minimax";
 import { validateNvidiaAPIKey } from "./nvidia";
 import { getApiConfig } from "../../config/settings";
 import { ApiConfig, MistralRateLimit, ApiProvider, CustomApiConfig } from "../../config/types";
+import { getProviderDefaultModel } from "../../config/providerCatalog";
 import { RequestManager } from "../../utils/requestManager";
 import { isCopilotAvailable, validateCopilotAccess } from "./copilot";
 import { validateCustomAPI } from "./custom";
@@ -209,7 +210,7 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
     openai: {
         requiresApiKey: true,
         validator: validateOpenAIApiKey,
-        defaultModel: "gpt-5.5-instant",
+        defaultModel: getProviderDefaultModel("openai"),
         responseTime: 550,
         rateLimits: {
             limit: 200,
@@ -242,7 +243,7 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
     anthropic: {
         requiresApiKey: true,
         validator: validateAnthropicApiKey,
-        defaultModel: "claude-sonnet-4.6",
+        defaultModel: getProviderDefaultModel("anthropic"),
         responseTime: 800,
         rateLimits: {
             limit: 1000,
@@ -253,7 +254,7 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
     minimax: {
         requiresApiKey: true,
         validator: validateMiniMaxAPIKey,
-        defaultModel: "MiniMax-M2",
+        defaultModel: getProviderDefaultModel("minimax"),
         responseTime: 800,
         rateLimits: {
             limit: 0,
@@ -267,7 +268,7 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
             const available = await isCopilotAvailable();
             return available ? await validateCopilotAccess() : { success: false, error: "GitHub Copilot not available" };
         },
-        defaultModel: "gpt-5.5-instant",
+        defaultModel: getProviderDefaultModel("copilot"),
         responseTime: 400,
         rateLimits: { limit: 0, remaining: 0, notes: "GitHub Copilot uses VS Code's built-in rate limiting" }
     },
@@ -307,7 +308,7 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
     perplexity: {
         requiresApiKey: true,
         validator: validatePerplexityAPIKey,
-        defaultModel: "gpt-5.5-computer",
+        defaultModel: getProviderDefaultModel("perplexity"),
         responseTime: 400,
         rateLimits: {
             limit: 20,

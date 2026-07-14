@@ -962,7 +962,7 @@ export class ChangelogService {
         try {
             // Call AI API with raw changelog prompt using the centralized API infrastructure
             // This uses generateWithRawPrompt to avoid commit-specific prompt formatting
-            // while still benefiting from circuit breaker, error handling, and telemetry
+        // while still benefiting from circuit breaker and error handling
             // Skip generic validation since we have our own comprehensive token estimation
             const { generateWithRawPrompt } = await import('../api/index.js');
             const changelog = await generateWithRawPrompt(apiConfig, prompt, 'changelog', true);

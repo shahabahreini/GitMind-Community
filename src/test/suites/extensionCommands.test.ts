@@ -1,6 +1,5 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { toggleDebugSetting } from '../../commands/index';
 import { invalidateConfigCache } from '../../config/settings';
 
 suite('Extension Commands Tests', () => {
@@ -58,18 +57,6 @@ suite('Extension Commands Tests', () => {
             );
         } catch (error) {
             console.log('API check command registration test completed');
-        }
-    });
-
-    test('Toggle debug command should be registered', async () => {
-        try {
-            const commands = await vscode.commands.getCommands();
-            assert.ok(
-                commands.includes('ai-commit-assistant.toggleDebug'),
-                'Toggle debug command should be registered'
-            );
-        } catch (error) {
-            console.log('Debug toggle command registration test completed');
         }
     });
 
@@ -151,30 +138,6 @@ suite('Extension Commands Tests', () => {
         } catch (error) {
             console.log('Settings command test completed');
         }
-    });
-
-    test('Debug toggle should change debug state', async () => {
-        let debugToggled = false;
-        let updatedTarget: vscode.ConfigurationTarget | undefined;
-        const mockConfig = {
-            get: (_key: string, _value?: any) => _value,
-            update: (key: string, _value: any, target?: vscode.ConfigurationTarget) => {
-                if (key === 'debug') {
-                    debugToggled = true;
-                    updatedTarget = target;
-                }
-                return Promise.resolve();
-            },
-            inspect: () => ({ key: '', defaultValue: undefined, workspaceValue: true }),
-            has: () => true
-        };
-
-        (vscode.workspace as any).getConfiguration = () => mockConfig;
-
-        await toggleDebugSetting();
-
-        assert.strictEqual(debugToggled, true, 'Debug setting should be updated');
-        assert.strictEqual(updatedTarget, vscode.ConfigurationTarget.Workspace, 'Debug toggle should update workspace scope when workspace value exists');
     });
 
     test('Extension context should be properly managed', () => {
