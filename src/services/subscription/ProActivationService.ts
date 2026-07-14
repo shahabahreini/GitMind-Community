@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { LemonSqueezyService } from './LemonSqueezyService';
+import { GitMindLicenseService } from './GitMindLicenseService';
 import { debugLog } from '../debug/logger';
 import {
     isProUser,
@@ -80,10 +81,38 @@ export interface LicenseDeactivationResponse {
 export class ProActivationService {
     private static instance: ProActivationService;
     private readonly lemonSqueezyService: LemonSqueezyService;
+    private readonly licenseService: GitMindLicenseService;
     private validationInProgress = false;
 
     private constructor() {
         this.lemonSqueezyService = LemonSqueezyService.getInstance();
+        this.licenseService = GitMindLicenseService.getInstance();
+    }
+
+    /**
+     * The license key, wherever it currently lives.
+     *
+     * SecretStorage is the real home. The plain setting is only consulted for users who
+     * upgraded from a build that wrote it there, and the `[ENCRYPTED]` sentinel it may
+     * contain is a placeholder, not a key.
+     */
+    private async resolveLicenseKey(): Promise<string | undefined> {
+        try {
+            const { state } = await import('../../extension.js');
+            const context = (state as { context?: vscode.ExtensionContext })?.context;
+            if (context) {
+                const { getSecureLicenseKey } = await import('../../utils/proHelpers.js');
+                const secureKey = await getSecureLicenseKey(context);
+                if (secureKey && secureKey !== '[ENCRYPTED]') {
+                    return secureKey;
+                }
+            }
+        } catch (error) {
+            debugLog('Could not read the license key from secret storage:', error);
+        }
+
+        const settingKey = getLicenseKey();
+        return settingKey && settingKey !== '[ENCRYPTED]' ? settingKey : undefined;
     }
 
     public static getInstance(): ProActivationService {
@@ -144,6 +173,11 @@ export class ProActivationService {
                     status: 'active',
                     lastChecked: new Date().toISOString()
                 });
+
+                // The migration is complete for this user: they now hold a real key that a
+                // live server can vouch for, so the grandfathered entitlement has done its job
+                // and the "claim your free key" notice must never appear again.
+                await LegacyEntitlementService.getInstance().markMigrated();
 
                 debugLog('Pro activation successful');
 
@@ -217,61 +251,51 @@ export class ProActivationService {
     }
 
     /**
-     * Activate license using the Lemon Squeezy API
+     * Activates this machine against the GitMind licensing server.
+     *
+     * The server is idempotent about it: re-activating a machine that is already active is a
+     * heartbeat, not an error, and it does not consume a second device slot. So there is
+     * nothing to "clean up" first — the old implementation deactivated the previous instance
+     * before activating, and could burn an activation in the process.
      */
     private async activateLicenseWithAPI(licenseKey: string): Promise<LicenseActivationResponse> {
-        // First, try to clean up any existing instances for this license
-        const existingInstanceId = getInstanceId();
-        if (existingInstanceId) {
-            debugLog(`Found existing instance ID: ${existingInstanceId}, attempting to deactivate before creating new instance`);
-            try {
-                await this.lemonSqueezyService.deactivateLicenseKey(licenseKey, existingInstanceId);
-                debugLog('Successfully deactivated existing instance');
-            } catch (deactivationError) {
-                debugLog('Failed to deactivate existing instance (this is expected if instance was already invalid):', deactivationError);
-                // Continue with activation even if deactivation fails
+        debugLog(`Activating license ${licenseKey.substring(0, 5)}… on machine ${this.licenseService.getMachineId()}`);
+
+        const result = await this.licenseService.activate(licenseKey);
+
+        // Reshaped into the response the rest of this class already expects, so the calling
+        // code did not have to change when the provider did.
+        return {
+            activated: result.isValid,
+            error: result.isValid ? null : (result.error ?? 'Activation failed'),
+            license_key: {
+                id: 0,
+                status: result.status,
+                key: licenseKey,
+                activation_limit: result.activationsLimit ?? 0,
+                activation_usage: result.activationsCount ?? 0,
+                created_at: new Date().toISOString(),
+                expires_at: null,
+                test_mode: false
+            },
+            instance: {
+                id: this.licenseService.getMachineId(),
+                name: 'vscode-extension',
+                created_at: new Date().toISOString()
+            },
+            meta: {
+                store_id: 0,
+                order_id: 0,
+                order_item_id: 0,
+                variant_id: 0,
+                variant_name: '',
+                product_id: 0,
+                product_name: result.productName ?? 'GitMind Pro',
+                customer_id: 0,
+                customer_name: '',
+                customer_email: result.customerEmail ?? ''
             }
-        }
-
-        // Also try to clean up any other invalid instances
-        debugLog('Cleaning up any invalid instances for this license');
-        try {
-            const cleanupResult = await this.lemonSqueezyService.cleanupInvalidInstances(licenseKey);
-            debugLog(`Cleanup result: cleaned ${cleanupResult.cleaned} instances, ${cleanupResult.errors.length} errors`);
-        } catch (cleanupError) {
-            debugLog('Failed to clean up instances (continuing with activation):', cleanupError);
-        }
-
-        const activationData = {
-            license_key: licenseKey,
-            instance_name: 'vscode-extension'
-        };
-
-        debugLog('Activating license with API:', {
-            license_key: licenseKey.substring(0, 8) + '...',
-            instance_name: activationData.instance_name
-        });
-
-        // Use the existing makeRequestWithRetry method from LemonSqueezyService
-        const response = await this.lemonSqueezyService.makeRequestWithRetry('/licenses/activate', 'POST', activationData);
-
-        debugLog('License activation API response:', {
-            activated: response.activated,
-            error: response.error,
-            hasLicenseKey: !!response.license_key,
-            hasInstance: !!response.instance,
-            hasMeta: !!response.meta,
-            instanceId: response.instance?.id
-        });
-
-        // Log the actual instance ID for debugging
-        if (response.instance && response.instance.id) {
-            debugLog(`Activation returned instance ID: ${response.instance.id}`);
-        } else {
-            debugLog('Warning: Activation did not return a valid instance ID');
-        }
-
-        return response;
+        } as LicenseActivationResponse;
     }
 
     /**
@@ -306,51 +330,12 @@ export class ProActivationService {
 
         try {
             debugLog('Performing periodic license validation');
-            let instanceId = getInstanceId();
 
-            // If we don't have an instance ID, try to find existing instances first
-            if (!instanceId) {
-                debugLog('No instance ID found, attempting to find existing license instances');
-                try {
-                    const recentInstanceId = await this.lemonSqueezyService.getRecentLicenseInstance(licenseKey);
-                    if (recentInstanceId) {
-                        instanceId = recentInstanceId;
-                        debugLog(`Found existing instance ID: ${instanceId}`);
-
-                        // Save the instance ID for future use
-                        await updateProConfig({
-                            instanceId: instanceId
-                        });
-                    }
-                } catch (findError) {
-                    debugLog('Error finding existing instances:', findError);
-                }
-            }
-
-            // Validate with the instance ID (if we have one)
-            let validation;
-            if (instanceId) {
-                debugLog(`Using instance ID for validation: ${instanceId}`);
-                validation = await this.lemonSqueezyService.validateLicenseKey(licenseKey, instanceId, 'vscode-extension');
-            } else {
-                debugLog('No instance ID available, performing validation without instance');
-                validation = await this.lemonSqueezyService.validateLicenseKey(licenseKey, undefined, 'vscode-extension');
-
-                // If validation succeeds but still no instance ID, try activation to create one
-                if (validation.isValid && !validation.instanceId) {
-                    debugLog('Validation successful but no instance ID returned, attempting activation to create instance');
-                    try {
-                        const activation = await this.activateLicenseWithAPI(licenseKey);
-                        if (activation.activated && activation.instance && activation.instance.id) {
-                            validation.instanceId = activation.instance.id;
-                            debugLog(`Created new instance ID through activation: ${activation.instance.id}`);
-                        }
-                    } catch (activationError) {
-                        debugLog('Failed to create instance through activation:', activationError);
-                        // Continue with validation result even without instance ID
-                    }
-                }
-            }
+            // No instance hunting. The device identity IS vscode.env.machineId, so the server
+            // can always resolve this machine from the request itself. The old code had to
+            // discover, cache and sometimes re-mint an opaque "instance id" — and could burn
+            // an activation slot doing it.
+            const validation = await this.licenseService.check(licenseKey);
 
             const updateData: any = {
                 lastValidation: new Date().toISOString()
@@ -415,241 +400,41 @@ export class ProActivationService {
      * Deactivate pro features
      */
     public async deactivate(withApiCall: boolean = true, licenseKey?: string, instanceId?: string): Promise<ProActivationResult> {
-        debugLog('Deactivating pro features', { withApiCall, hasLicenseKey: !!licenseKey, hasInstanceId: !!instanceId });
+        debugLog('Deactivating pro features', { withApiCall });
 
-        let apiResponse: LicenseDeactivationResponse | null = null;        // If no license key or instance ID was provided, try to get them from config
-        if (withApiCall && (!licenseKey || !instanceId)) {
-            // Try to get secure license key first, fallback to regular method
-            try {
-                const { getSecureLicenseKey } = await import('../../utils/proHelpers.js');
+        void instanceId; // The machine identifies itself now; no opaque instance to pass.
 
-                // Get the extension context from global state
-                const { state } = await import('../../extension.js');
-                const context = (state as any)?.context;
+        let apiResponse: LicenseDeactivationResponse | null = null;
 
-                if (context) {
-                    // Try to get the decrypted license key from secure storage
-                    const secureLicenseKey = await getSecureLicenseKey(context);
-                    if (secureLicenseKey && secureLicenseKey !== '[ENCRYPTED]') {
-                        licenseKey = secureLicenseKey;
-                        debugLog('Successfully retrieved decrypted license key from secure storage');
-                    } else {
-                        debugLog('Secure license key not available or still encrypted');
-                    }
-                } else {
-                    debugLog('Extension context not available for secure key retrieval');
-                }
+        // Release the device slot on the server, so the customer can use it on another
+        // machine. Best-effort by design: if the network is down, the local state is still
+        // cleared. Refusing to deactivate because a server was unreachable would trap the
+        // user in exactly the position this whole rewrite exists to prevent.
+        //
+        // The old implementation needed ~90 lines here to recover a key that its own
+        // encryption had made unreadable, and its last-resort branch re-activated the licence
+        // purely to mint an instance id it could then deactivate — burning an activation slot
+        // in order to free one. All of that is gone: the key lives in SecretStorage and the
+        // device is just vscode.env.machineId.
+        if (withApiCall) {
+            const key = licenseKey ?? await this.resolveLicenseKey();
 
-                // Fallback to regular method if secure retrieval didn't work
-                if (!licenseKey || licenseKey === '[ENCRYPTED]') {
-                    const regularLicenseKey = getLicenseKey();
-                    if (regularLicenseKey && regularLicenseKey !== '[ENCRYPTED]') {
-                        licenseKey = regularLicenseKey;
-                        debugLog('Retrieved license key from regular storage');
-                    } else if (regularLicenseKey === '[ENCRYPTED]') {
-                        debugLog('License key is encrypted and cannot be decrypted without proper context');
-
-                        // Try one more approach - use EncryptionHelper directly if we have context
-                        if (context && context.secrets) {
-                            try {
-                                const { EncryptionHelper } = await import('../../utils/encryptionHelper.js');
-                                const directKey = await EncryptionHelper.getLicenseKey(context);
-                                if (directKey && directKey !== '[ENCRYPTED]') {
-                                    licenseKey = directKey;
-                                    debugLog('Successfully retrieved license key using EncryptionHelper directly');
-                                }
-                            } catch (encryptionError) {
-                                debugLog('Failed to retrieve license key using EncryptionHelper:', encryptionError);
-                            }
-                        }
-                    }
-                }
-            } catch (error) {
-                debugLog('Failed to retrieve secure license key:', error);
-                licenseKey = getLicenseKey();
-            }
-
-            // Get instance ID from config
-            if (!instanceId) {
-                instanceId = getInstanceId();
-                debugLog(`Retrieved instance ID from config: ${instanceId || 'not found'}`);
-            }
-
-            // If we still don't have instance ID but have a license key, try multiple approaches to find it
-            if (!instanceId && licenseKey && licenseKey !== '[ENCRYPTED]') {
-                debugLog('Missing instance ID, attempting multiple recovery methods');
-
+            if (key) {
                 try {
-                    // Method 1: Try to get existing instances for this license
-                    debugLog('Method 1: Searching for existing license instances');
-                    const recentInstanceId = await this.lemonSqueezyService.getRecentLicenseInstance(licenseKey);
-                    if (recentInstanceId) {
-                        instanceId = recentInstanceId;
-                        debugLog(`Found existing instance ID: ${instanceId}`);
-
-                        // Save the instance ID for future use
-                        await updateProConfig({
-                            instanceId: instanceId
-                        });
-                    } else {
-                        debugLog('Method 1: No existing instances found');
-
-                        // Method 2: Try license validation - sometimes returns instance info
-                        debugLog('Method 2: Attempting license validation to find instance');
-                        try {
-                            const validation = await this.lemonSqueezyService.validateLicenseKey(licenseKey);
-                            if (validation.isValid && validation.instanceId) {
-                                instanceId = validation.instanceId;
-                                debugLog(`Found instance ID through validation: ${instanceId}`);
-
-                                // Save the instance ID for future use
-                                await updateProConfig({
-                                    instanceId: instanceId
-                                });
-                            } else {
-                                debugLog('Method 2: Validation did not return instance ID');
-
-                                // Method 3: As last resort, create a new instance through activation
-                                // This should only be done if we're sure we need to deactivate
-                                debugLog('Method 3: Creating new instance through activation (last resort)');
-                                const activation = await this.activateLicenseWithAPI(licenseKey);
-                                if (activation.activated && activation.instance && activation.instance.id) {
-                                    instanceId = activation.instance.id;
-                                    debugLog(`Created new instance ID through activation: ${instanceId}`);
-
-                                    // Save the instance ID for future use
-                                    await updateProConfig({
-                                        instanceId: instanceId
-                                    });
-                                } else {
-                                    debugLog('Method 3: Failed to create new instance through activation');
-                                }
-                            }
-                        } catch (validationError) {
-                            debugLog('Method 2 failed, trying Method 3:', validationError);
-
-                            // Method 3: As last resort, create a new instance through activation
-                            try {
-                                debugLog('Method 3: Creating new instance through activation (fallback)');
-                                const activation = await this.activateLicenseWithAPI(licenseKey);
-                                if (activation.activated && activation.instance && activation.instance.id) {
-                                    instanceId = activation.instance.id;
-                                    debugLog(`Created new instance ID through activation: ${instanceId}`);
-
-                                    // Save the instance ID for future use
-                                    await updateProConfig({
-                                        instanceId: instanceId
-                                    });
-                                } else {
-                                    debugLog('Method 3: Failed to create new instance through activation');
-                                }
-                            } catch (activationError) {
-                                debugLog('Method 3 also failed:', activationError);
-                            }
-                        }
-                    }
-                } catch (instanceSearchError) {
-                    debugLog('All instance recovery methods failed:', instanceSearchError);
+                    const result = await this.licenseService.deactivate(key);
+                    debugLog(`Server-side deactivation: ${result.revoked ? 'released' : 'not released'}`);
+                    apiResponse = {
+                        deactivated: result.revoked === true,
+                        error: result.error ?? null
+                    } as LicenseDeactivationResponse;
+                } catch (error) {
+                    debugLog('Server-side deactivation failed; clearing local state anyway:', error);
                 }
+            } else {
+                debugLog('No license key available to deactivate against the server.');
             }
-
-            debugLog('Retrieved license key and instance ID from config', {
-                hasLicenseKey: !!licenseKey,
-                hasInstanceId: !!instanceId,
-                licenseKeyEncrypted: licenseKey === '[ENCRYPTED]'
-            });
         }
 
-        // If API deactivation is requested and we have the required parameters
-        if (withApiCall && licenseKey && instanceId && licenseKey !== '[ENCRYPTED]') {
-            try {
-                debugLog('Attempting comprehensive API deactivation with LemonSqueezy');
-                const comprehensiveResult = await this.lemonSqueezyService.comprehensiveDeactivation(licenseKey, instanceId);
-
-                if (comprehensiveResult.success) {
-                    debugLog('Comprehensive deactivation successful');
-
-                    // Update the stored instance ID if it changed
-                    if (comprehensiveResult.instanceId && comprehensiveResult.instanceId !== instanceId) {
-                        debugLog(`Updating stored instance ID to: ${comprehensiveResult.instanceId}`);
-                        await updateProConfig({
-                            instanceId: comprehensiveResult.instanceId
-                        });
-                    }
-
-                    // Use the actual API response from the comprehensive deactivation
-                    apiResponse = comprehensiveResult.apiResponse || {
-                        deactivated: true,
-                        error: null,
-                        license_key: undefined as any,
-                        meta: undefined as any
-                    };
-
-                    // If the API response doesn't have license/meta information, try to get it from validation
-                    if (apiResponse && (!apiResponse.license_key || !apiResponse.meta)) {
-                        debugLog('API response missing license info, attempting to get from validation');
-                        try {
-                            const validation = await this.lemonSqueezyService.validateLicenseKey(licenseKey);
-                            if (validation.isValid) {
-                                // Enhance the API response with validation data
-                                if (!apiResponse.meta && validation.customerName) {
-                                    apiResponse.meta = {
-                                        store_id: 0,
-                                        order_id: 0,
-                                        order_item_id: 0,
-                                        product_id: 0,
-                                        variant_id: 0,
-                                        customer_id: 0,
-                                        customer_name: validation.customerName,
-                                        customer_email: validation.customerEmail || '',
-                                        product_name: validation.productName || 'GitMind Pro',
-                                        variant_name: validation.variantName || 'Default'
-                                    };
-                                }
-                                if (!apiResponse.license_key && validation.activationsLimit) {
-                                    apiResponse.license_key = {
-                                        id: 0,
-                                        status: 'active',
-                                        key: licenseKey.substring(0, 8) + '...',
-                                        activation_limit: validation.activationsLimit,
-                                        activation_usage: validation.activationsCount || 0,
-                                        created_at: new Date().toISOString(),
-                                        expires_at: validation.expiresAt ? validation.expiresAt.toISOString() : null
-                                    };
-                                }
-                                debugLog('Enhanced API response with validation data');
-                            }
-                        } catch (validationError) {
-                            debugLog('Failed to enhance API response with validation data:', validationError);
-                        }
-                    }
-                } else {
-                    debugLog('Comprehensive deactivation failed:', comprehensiveResult.error);
-                    return {
-                        success: false,
-                        message: 'Failed to deactivate license through LemonSqueezy API after trying multiple strategies: ' + (comprehensiveResult.error || 'Unknown error'),
-                        details: comprehensiveResult
-                    };
-                }
-            } catch (error) {
-                debugLog('Comprehensive deactivation error:', error);
-                const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred during API deactivation';
-                return {
-                    success: false,
-                    message: 'Failed to deactivate license through LemonSqueezy API: ' + errorMessage,
-                    details: { error }
-                };
-            }
-        } else if (withApiCall && licenseKey === '[ENCRYPTED]') {
-            debugLog('Cannot deactivate encrypted license key without proper decryption context');
-            // Still proceed with local deactivation but warn user
-        } else if (withApiCall && (!licenseKey || !instanceId)) {
-            debugLog('Cannot perform API deactivation - missing license key or instance ID', {
-                hasLicenseKey: !!licenseKey,
-                hasInstanceId: !!instanceId,
-                licenseKeyEncrypted: licenseKey === '[ENCRYPTED]'
-            });
-        }
 
         // Always perform local deactivation to ensure Pro features are disabled. The
         // grandfathered entitlement must go too — it outranks the settings below, so leaving it
