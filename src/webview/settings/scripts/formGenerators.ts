@@ -1,5 +1,15 @@
 import { PROVIDER_DEFAULTS, API_KEY_PROVIDERS } from './constants';
 
+function commitIntelligenceUpdateLines(): string[] {
+  return [
+    `const commitIntelligenceValues = { commitIntelligenceEnabled: currentSettings.commitIntelligence?.enabled ?? false, commitNoiseFilteringEnabled: currentSettings.commitIntelligence?.noiseFilteringEnabled ?? false, commitCandidatesEnabled: currentSettings.commitIntelligence?.candidatesEnabled ?? false, commitHealthEnabled: currentSettings.commitIntelligence?.healthEnabled ?? false, githubIssueContextEnabled: currentSettings.commitIntelligence?.githubIssueContextEnabled ?? false, composerEnabled: currentSettings.commitIntelligence?.composerEnabled ?? false, allowHunkSplitting: currentSettings.commitIntelligence?.allowHunkSplitting ?? false, reviewEnabled: currentSettings.commitIntelligence?.reviewEnabled ?? false };`,
+    `Object.entries(commitIntelligenceValues).forEach(([id, value]) => { const el = document.getElementById(id); if (el) el.checked = value; });`,
+    `if (document.getElementById('commitDetailMode')) document.getElementById('commitDetailMode').value = currentSettings.commit?.detailMode ?? 'legacy';`,
+    `const commitIntelligenceOptions = document.getElementById('commitIntelligenceOptions'); const commitIntelligenceMaster = document.getElementById('commitIntelligenceEnabled');`,
+    `if (commitIntelligenceOptions && commitIntelligenceMaster) { commitIntelligenceOptions.hidden = !commitIntelligenceMaster.checked; commitIntelligenceOptions.setAttribute('aria-hidden', String(!commitIntelligenceMaster.checked)); commitIntelligenceMaster.setAttribute('aria-expanded', String(commitIntelligenceMaster.checked)); }`
+  ];
+}
+
 export function generateFormInitialization(): string {
   const formInits: string[] = [
     `try {`,
@@ -11,6 +21,13 @@ export function generateFormInitialization(): string {
     `  const commitVerboseEl = document.getElementById('commitVerbose');`,
     `  if (commitVerboseEl) commitVerboseEl.checked = currentSettings.commit?.verbose ?? true;`,
     `} catch (e) { console.warn('Failed to set commitVerbose:', e); }`,
+
+    `try {`,
+    `  const values = { commitIntelligenceEnabled: currentSettings.commitIntelligence?.enabled ?? false, commitNoiseFilteringEnabled: currentSettings.commitIntelligence?.noiseFilteringEnabled ?? false, commitCandidatesEnabled: currentSettings.commitIntelligence?.candidatesEnabled ?? false, commitHealthEnabled: currentSettings.commitIntelligence?.healthEnabled ?? false, githubIssueContextEnabled: currentSettings.commitIntelligence?.githubIssueContextEnabled ?? false, composerEnabled: currentSettings.commitIntelligence?.composerEnabled ?? false, allowHunkSplitting: currentSettings.commitIntelligence?.allowHunkSplitting ?? false, reviewEnabled: currentSettings.commitIntelligence?.reviewEnabled ?? false };`,
+    `  Object.entries(values).forEach(([id, value]) => { const el = document.getElementById(id); if (el) el.checked = value; });`,
+    `  const detail = document.getElementById('commitDetailMode'); if (detail) detail.value = currentSettings.commit?.detailMode ?? 'legacy';`,
+    `  const options = document.getElementById('commitIntelligenceOptions'); if (options) { options.hidden = !values.commitIntelligenceEnabled; options.setAttribute('aria-hidden', String(!values.commitIntelligenceEnabled)); }`,
+    `} catch (e) { console.warn('Failed to initialize Commit Intelligence:', e); }`,
 
     `try {`,
     `  const commitCaptureAllChangesEl = document.getElementById('commitCaptureAllChanges');`,
@@ -278,8 +295,19 @@ export function generateSettingsCollection(): string {
     },`,
     `commit: {
       verbose: (window.currentFormValues || currentFormValues).commitVerbose,
+      detailMode: (document.getElementById('commitDetailMode')?.value || currentSettings.commit?.detailMode || 'legacy'),
       captureAllChanges: (window.currentFormValues || currentFormValues).commitCaptureAllChanges,
       targetLanguage: (window.currentFormValues || currentFormValues).commitTargetLanguage,
+    },`,
+    `commitIntelligence: {
+      enabled: document.getElementById('commitIntelligenceEnabled')?.checked ?? false,
+      noiseFilteringEnabled: document.getElementById('commitNoiseFilteringEnabled')?.checked ?? false,
+      candidatesEnabled: document.getElementById('commitCandidatesEnabled')?.checked ?? false,
+      healthEnabled: document.getElementById('commitHealthEnabled')?.checked ?? false,
+      githubIssueContextEnabled: document.getElementById('githubIssueContextEnabled')?.checked ?? false,
+      composerEnabled: document.getElementById('composerEnabled')?.checked ?? false,
+      allowHunkSplitting: document.getElementById('allowHunkSplitting')?.checked ?? false,
+      reviewEnabled: document.getElementById('reviewEnabled')?.checked ?? false
     },`,
     `commitStyle: { style: (window.currentFormValues || currentFormValues).commitStyle },`,
     `showDiagnostics: (window.currentFormValues || currentFormValues).showDiagnostics,`,
@@ -439,6 +467,7 @@ export function generateUpdateSettingsCode(): string {
     `document.getElementById('showDiagnostics').checked = currentSettings.showDiagnostics ?? false;`,
     `document.getElementById('promptCustomizationEnabled').checked = currentSettings.promptCustomization?.enabled ?? false;`,
     `document.getElementById('saveLastPrompt').checked = currentSettings.promptCustomization?.saveLastPrompt || false;`,
+    ...commitIntelligenceUpdateLines(),
     `// Pro features: use the setting as determined by the backend`,
     `document.getElementById('encryptionEnabled').checked = currentSettings.pro?.encryptionEnabled ?? false;`,
     `if (document.getElementById('advancedModelConfigMode')) document.getElementById('advancedModelConfigMode').value = currentSettings.pro?.advancedModelConfig?.mode ?? 'auto';`,
@@ -510,6 +539,7 @@ export function generateUpdateSettingsCodePreserveDropdowns(): string {
     `document.getElementById('showDiagnostics').checked = currentSettings.showDiagnostics ?? false;`,
     `document.getElementById('promptCustomizationEnabled').checked = currentSettings.promptCustomization?.enabled ?? false;`,
     `document.getElementById('saveLastPrompt').checked = currentSettings.promptCustomization?.saveLastPrompt || false;`,
+    ...commitIntelligenceUpdateLines(),
     `// Pro features: use the setting as determined by the backend`,
     `document.getElementById('encryptionEnabled').checked = currentSettings.pro?.encryptionEnabled ?? false;`,
     `if (document.getElementById('advancedModelConfigMode')) document.getElementById('advancedModelConfigMode').value = currentSettings.pro?.advancedModelConfig?.mode ?? 'auto';`,

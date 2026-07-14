@@ -501,6 +501,15 @@ function generateInitializationManager(): string {
             { id: 'commitBodyOptionsMaxLines', key: 'pro.commitBodyOptions.maxLines', getValue: (el) => parseInt(el.value) || 5 },
             { id: 'commitLengthOptionsEnabled', key: 'pro.commitLengthOptions.enabled', getValue: (el) => el.checked },
             { id: 'commitLengthOptionsMaxLength', key: 'pro.commitLengthOptions.maxLength', getValue: (el) => parseInt(el.value) || 72 }
+            ,{ id: 'commitIntelligenceEnabled', key: 'commitIntelligence.enabled', getValue: (el) => el.checked }
+            ,{ id: 'commitDetailMode', key: 'commit.detailMode', getValue: (el) => el.value }
+            ,{ id: 'commitNoiseFilteringEnabled', key: 'commit.noiseFiltering.enabled', getValue: (el) => el.checked }
+            ,{ id: 'commitCandidatesEnabled', key: 'commit.candidates.enabled', getValue: (el) => el.checked }
+            ,{ id: 'commitHealthEnabled', key: 'commit.health.enabled', getValue: (el) => el.checked }
+            ,{ id: 'githubIssueContextEnabled', key: 'commit.githubIssueContext.enabled', getValue: (el) => el.checked }
+            ,{ id: 'composerEnabled', key: 'composer.enabled', getValue: (el) => el.checked }
+            ,{ id: 'allowHunkSplitting', key: 'composer.allowHunkSplitting', getValue: (el) => el.checked }
+            ,{ id: 'reviewEnabled', key: 'review.enabled', getValue: (el) => el.checked }
           ];
 
           coreSettings.forEach(setting => {
@@ -511,6 +520,13 @@ function generateInitializationManager(): string {
           });
 
           window.setupProviderEventListeners?.();
+          const master = document.getElementById('commitIntelligenceEnabled');
+          const options = document.getElementById('commitIntelligenceOptions');
+          if (master && options) {
+            const updateVisibility = () => { options.hidden = !master.checked; options.setAttribute('aria-hidden', String(!master.checked)); master.setAttribute('aria-expanded', String(master.checked)); };
+            master.addEventListener('change', updateVisibility);
+            updateVisibility();
+          }
         } catch (error) {
           console.error('Error setting up form event listeners:', error);
         }

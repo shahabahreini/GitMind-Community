@@ -1239,7 +1239,8 @@ export async function generateWithRawPrompt(
     config: ApiConfig,
     prompt: string,
     featureName: string = 'raw_prompt',
-    skipValidation: boolean = false
+    skipValidation: boolean = false,
+    allowRecovery: boolean = true
 ): Promise<string> {
     const startTime = Date.now();
 
@@ -1284,8 +1285,9 @@ export async function generateWithRawPrompt(
             : featureName.includes("history") || featureName.includes("analysis")
                 ? "learn_history"
                 : "generate_commit";
-        const recovery = createRecoveryOperation(validatedConfig, { supportOperation });
-        const result = await recovery((attemptConfig) => generateWithRawPromptInternal(attemptConfig, prompt));
+        const result = allowRecovery
+            ? await createRecoveryOperation(validatedConfig, { supportOperation })((attemptConfig) => generateWithRawPromptInternal(attemptConfig, prompt))
+            : await generateWithRawPromptInternal(validatedConfig, prompt);
 
         return result;
     } catch (unknownError) {

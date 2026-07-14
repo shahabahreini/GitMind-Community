@@ -1,6 +1,16 @@
 // src/models/ExtensionSettings.ts
 export interface ExtensionSettings {
     apiProvider: string;
+    commitIntelligence?: {
+        enabled: boolean;
+        noiseFilteringEnabled: boolean;
+        candidatesEnabled: boolean;
+        healthEnabled: boolean;
+        githubIssueContextEnabled: boolean;
+        composerEnabled: boolean;
+        allowHunkSplitting: boolean;
+        reviewEnabled: boolean;
+    };
     showDiagnostics?: boolean;
     gemini: {
         apiKey: string;
@@ -79,6 +89,7 @@ export interface ExtensionSettings {
     };
     commit?: {
         verbose: boolean;
+        detailMode?: 'legacy' | 'auto' | 'concise' | 'detailed';
         captureAllChanges?: boolean;
         targetLanguage?: string;
     };

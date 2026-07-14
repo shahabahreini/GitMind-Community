@@ -2,6 +2,10 @@
 
 > Internal product research, July 14, 2026. This document is advisory and does not promise release dates.
 
+## v6 Implementation Status
+
+GitMind 6.0.0 implements the approved release subset: reviewed context selection and privacy preflights, deterministic validation and repair, three candidates, repository policy and safe commitlint import, advisory Commit Health, transactional Commit Composer, opt-in review, and adjacent draft workflows. Enterprise gateways, non-GitHub tracker authentication, a persistent Intent Ledger, Acceptance Learning, and a Capability Router remain evidence-backed future options and are not v6 product claims.
+
 ## Executive Decision
 
 GitMind should first make a single generated message more relevant, concise, policy-compliant, and safe to review. It should then make commit composition interactive and reversible. The strongest product opportunity is not another one-click diff summarizer; it is a trusted workflow that combines the diff with human intent, separates unrelated work, previews every mutation, and makes the provider boundary visible.

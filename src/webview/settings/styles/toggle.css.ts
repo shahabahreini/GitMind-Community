@@ -42,6 +42,24 @@ export function getToggleStyles(): string {
         cursor: pointer;
     }
 
+    .commit-intelligence-settings { margin-top: 16px; }
+    .commit-intelligence-settings .section-header { margin: 0 0 4px; }
+    .commit-intelligence-options { margin: 12px 0 0 16px; border-left: 1px solid var(--vscode-panel-border); padding-left: 16px; }
+    .commit-intelligence-options[hidden] { display: none; }
+    .settings-subsection { margin-bottom: 16px; }
+    .settings-subsection h4 { margin: 0 0 8px; color: var(--vscode-editor-foreground); font-size: 13px; }
+    .toggle-item.locked { opacity: 0.65; }
+    .pro-lock-badge { margin-left: 6px; color: var(--vscode-descriptionForeground); font-size: 11px; }
+
+    @media (prefers-reduced-motion: reduce) {
+        .toggle-item, .switch-container, .switch-slider { transition: none; }
+        .toggle-item:hover { transform: none; }
+    }
+
+    @media (forced-colors: active) {
+        .toggle-item, .commit-intelligence-options { border-color: CanvasText; }
+    }
+
     /* Modern Switch Container - Exact Pro Features Modern Sizing */
     .switch-container {
         position: relative;

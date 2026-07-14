@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "product": {
     "name": "GitMind",
-    "version": "5.0.6",
-    "auditDate": "2026-07-13",
+    "version": "6.0.0",
+    "auditDate": "2026-07-14",
     "source": "package.json",
     "minimumVSCode": "^1.101.0"
   },
   "counts": {
     "providerChoices": 18,
     "builtInProviders": 17,
-    "settingsRegistered": 94,
-    "settingsDocumented": 86,
-    "commandsRegistered": 43,
-    "publicCommands": 34,
+    "settingsRegistered": 104,
+    "settingsDocumented": 96,
+    "commandsRegistered": 52,
+    "publicCommands": 43,
     "commitStyles": 12,
     "primarySettingsTabs": 5
   },
@@ -356,7 +356,87 @@
       "type": "boolean",
       "default": true,
       "availability": "Free",
-      "description": "Generate verbose commit messages with detailed descriptions. When disabled, only generates the summary line."
+      "description": "Legacy verbosity setting. Explicit values are migrated to gitmind.commit.detailMode."
+    },
+    {
+      "id": "gitmind.commitIntelligence.enabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Free",
+      "description": "Enable the opt-in Commit Intelligence preview workspace and advanced commit actions."
+    },
+    {
+      "id": "gitmind.commit.detailMode",
+      "type": "string",
+      "default": "auto",
+      "availability": "Free",
+      "description": "Choose whether reviewed commit drafts include a body. Auto uses intent and change complexity.",
+      "values": [
+        "auto",
+        "concise",
+        "detailed"
+      ]
+    },
+    {
+      "id": "gitmind.commit.noiseFiltering.enabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Free",
+      "description": "Classify formatting-only, generated, lock, binary, and minified changes before generation."
+    },
+    {
+      "id": "gitmind.commit.candidates.enabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Free",
+      "description": "Generate concise, detailed, and intent-focused candidates in one request (Pro)."
+    },
+    {
+      "id": "gitmind.commit.githubIssueContext.enabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Free",
+      "description": "Allow selected GitHub issue context after explicit authentication and review."
+    },
+    {
+      "id": "gitmind.commit.health.enabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Free",
+      "description": "Show advisory Commit Health subscores for reviewed drafts (Pro)."
+    },
+    {
+      "id": "gitmind.composer.allowHunkSplitting",
+      "type": "boolean",
+      "default": false,
+      "availability": "Free",
+      "description": "Allow divisible text hunks to be reassigned between Composer groups (Pro)."
+    },
+    {
+      "id": "gitmind.composer.enabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Free",
+      "description": "Enable the atomic commit Composer workflow (Pro)."
+    },
+    {
+      "id": "gitmind.review.enabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Free",
+      "description": "Enable opt-in pre-commit change review (Pro)."
+    },
+    {
+      "id": "gitmind.review.blockingThreshold",
+      "type": "string",
+      "default": "off",
+      "availability": "Free",
+      "description": "Minimum review severity that blocks Composer apply. Off is advisory only.",
+      "values": [
+        "off",
+        "warning",
+        "error"
+      ]
     },
     {
       "id": "gitmind.commit.captureAllChanges",
@@ -1121,6 +1201,51 @@
     {
       "id": "gitmind.generateCommitMessagePro",
       "title": "Generate GitMind Commit Message",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.openCommitWorkspace",
+      "title": "Open Commit Workspace",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.advancedCommitActions",
+      "title": "Advanced Commit Actions…",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.commitComposer",
+      "title": "Compose Atomic Commit Series (Pro)",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.draftSquashMessage",
+      "title": "Draft Squash Message (Pro)",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.draftPullRequest",
+      "title": "Draft Pull Request Description (Pro)",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.draftStashMessage",
+      "title": "Draft Stash Message (Pro)",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.draftReleaseNotes",
+      "title": "Draft Release Notes (Pro)",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.explainCommit",
+      "title": "Explain Commit (Pro)",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.reviewChanges",
+      "title": "Review Changes (Pro)",
       "shortcut": null
     },
     {

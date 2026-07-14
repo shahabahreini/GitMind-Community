@@ -1,11 +1,63 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { debugLog } from '../services/debug/logger';
 import { findGitRepository } from '../services/git/repository';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
+
+function parseGitArguments(command: string): string[] {
+    if (/[\0\r\n]/.test(command)) {
+        throw new Error('Invalid Git command');
+    }
+    const args: string[] = [];
+    let current = '';
+    let quote: '"' | "'" | undefined;
+    let escaped = false;
+    for (const character of command.trim()) {
+        if (escaped) {
+            current += character;
+            escaped = false;
+            continue;
+        }
+        if (character === '\\') {
+            escaped = true;
+            continue;
+        }
+        if (quote) {
+            if (character === quote) {
+                quote = undefined;
+            } else {
+                current += character;
+            }
+            continue;
+        }
+        if (character === '"' || character === "'") {
+            quote = character;
+        } else if (/\s/.test(character)) {
+            if (current) {
+                args.push(current);
+                current = '';
+            }
+        } else {
+            if (/[;|&><`$()]/.test(character)) {
+                throw new Error('Shell operators are not allowed in Git commands');
+            }
+            current += character;
+        }
+    }
+    if (quote || escaped) {
+        throw new Error('Malformed Git command');
+    }
+    if (current) {
+        args.push(current);
+    }
+    if (args.shift() !== 'git' || args.length === 0) {
+        throw new Error('Only Git commands are allowed');
+    }
+    return args;
+}
 
 /**
  * Interface for Git command execution result
@@ -25,9 +77,10 @@ export async function executeGitCommand(command: string, workspacePath?: string)
     try {
         const searchPath = workspacePath || getWorkspacePath();
         const repoRoot = await findGitRepository(searchPath);
-        const { stdout, stderr } = await execAsync(command, {
+        const { stdout, stderr } = await execFileAsync('git', parseGitArguments(command), {
             cwd: repoRoot,
-            maxBuffer: 10 * 1024 * 1024 // 10MB buffer for large git outputs
+            maxBuffer: 10 * 1024 * 1024, // 10MB buffer for large git outputs
+            encoding: 'utf8'
         });
         return { stdout, stderr };
     } catch (error) {
@@ -181,6 +234,9 @@ export async function getLastCommitMessage(): Promise<string> {
  */
 export async function getCommitHistory(count: number = 10): Promise<string[]> {
     try {
+        if (!Number.isSafeInteger(count) || count < 1 || count > 10_000) {
+            throw new Error('Invalid commit history count');
+        }
         const { stdout } = await executeGitCommand(`git log -${count} --pretty=format:"%h - %s"`);
         return stdout.split('\n').filter(line => line.trim());
     } catch (error) {
@@ -212,6 +268,9 @@ export async function isRepositoryRoot(workspacePath?: string): Promise<boolean>
  */
 export async function getGitConfig(key: string): Promise<string> {
     try {
+        if (!/^[A-Za-z][A-Za-z0-9.-]*$/.test(key)) {
+            throw new Error('Invalid Git config key');
+        }
         const { stdout } = await executeGitCommand(`git config --get ${key}`);
         return stdout.trim();
     } catch (error) {

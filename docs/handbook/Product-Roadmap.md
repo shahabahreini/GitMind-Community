@@ -1,8 +1,8 @@
 # Product Roadmap
 
-> Verified against GitMind `5.0.6` on July 13, 2026.
+> Verified against GitMind `6.0.0` on July 14, 2026.
 
-This roadmap describes the outcomes GitMind is exploring next. It is directional, may change as we learn, and does not promise specific features or release dates. GitMind will continue to offer Free and Pro; organization-focused capabilities are part of the Pro roadmap rather than a separate plan.
+This roadmap distinguishes the stable v6 implementation from deliberately deferred work. GitMind continues to offer Free and Pro.
 
 ## Product Principles
 
@@ -11,7 +11,7 @@ This roadmap describes the outcomes GitMind is exploring next. It is directional
 - Privacy comes before convenience: local providers remain available, and sensitive content should be easy to detect and exclude.
 - Better commits matter more than longer messages: output should be concise, relevant, and aligned with repository conventions.
 
-## Now: Quality, Context, And Privacy
+## Shipped In v6: Quality, Context, And Privacy
 
 The first priority is making everyday generation more dependable for everyone:
 
@@ -23,7 +23,7 @@ The first priority is making everyday generation more dependable for everyone:
 - Preview the context and approximate token volume that will be sent to the selected provider.
 - Detect likely secrets and sensitive paths before submission, with controls to exclude them.
 
-## Next: Compose And Compare
+## Shipped In v6 Pro: Compose And Compare
 
 The next Pro workflow is an interactive Commit Composer for turning a mixed working tree into clear, reviewable commits:
 
@@ -33,23 +33,21 @@ The next Pro workflow is an interactive Commit Composer for turning a mixed work
 - Use richer context only when you choose it, including issue text, repository history, session summaries, and notes.
 - Highlight possible quality problems such as missing intent, mixed concerns, unusual verbosity, or repository-rule violations.
 
-## Later: More Git Workflows
+## Shipped In v6 Pro: More Git Workflows
 
 The same context and review experience can support more than individual commit messages:
 
 - Squash messages, pull-request descriptions, stash messages, release notes, and explanations of existing commits.
 - Optional pre-commit review with severity levels; blocking remains off unless explicitly configured.
-- A local session ledger for approved intent, tradeoffs, and issue context, retained or discarded only by your choice.
-- Local learning from your edits to accepted messages without uploading diffs or editing behavior.
-- Guidance on which configured model best matches a preference for speed, privacy, cost, or output quality.
+- Reviewed squash, pull-request, stash, release-note, explanation, and change-review drafts are available without creating remote or stash objects.
 
-## Pro For Repositories And Organizations
+## Deferred Beyond v6
 
 The organization-focused Pro track aims to make GitMind fit established development and compliance practices:
 
 - Version-controlled repository policies for commit types, scopes, tickets, length, language, trailers, and custom validation.
 - Compatibility with commitlint rules and organization-managed defaults.
-- Enterprise provider gateways for Azure AI Foundry/OpenAI, AWS Bedrock, and Google Vertex AI, supporting approved identity, networking, and regional deployment choices.
+- Enterprise provider gateways, multi-host issue authentication, a persistent Intent Ledger, Acceptance Learning, and a Capability Router are not part of v6.
 - Local compliance summaries without remote activity tracking or product telemetry.
 - AI attribution remains off by default; every trailer requires an explicit, previewed choice.
 

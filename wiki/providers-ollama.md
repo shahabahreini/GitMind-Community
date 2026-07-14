@@ -1,4 +1,4 @@
 # Ollama
-> Verified against GitMind `5.0.6` on July 13, 2026.
+> Verified against GitMind `6.0.0` on July 14, 2026.
 
 Ollama is the local option and requires no API key. Start Ollama at `http://localhost:11434`, pull the selected model, and use local model discovery; the default is `phi4`. The diff and prompt remain local unless your Ollama server forwards them elsewhere.

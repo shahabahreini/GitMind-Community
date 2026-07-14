@@ -25,10 +25,18 @@ interface ProviderDefaults {
 let configCache: { config: ExtensionConfig; timestamp: number } | null = null;
 const CONFIG_CACHE_TTL = 1000; // 1 second TTL
 
+export async function updateCommitIntelligenceContext(): Promise<void> {
+    const enabled = vscode.workspace.getConfiguration('gitmind').get('commitIntelligence.enabled', false);
+    await vscode.commands.executeCommand('setContext', 'gitmind.commitIntelligenceEnabled', enabled);
+}
+
 // Register configuration change listener to invalidate cache
 const configChangeDisposable = vscode.workspace.onDidChangeConfiguration((e) => {
     if (e.affectsConfiguration('gitmind')) {
         configCache = null;
+        if (e.affectsConfiguration('gitmind.commitIntelligence.enabled')) {
+            void updateCommitIntelligenceContext();
+        }
     }
 });
 
@@ -106,6 +114,7 @@ export function getConfiguration(): ExtensionConfig {
             includeScope: config.get("commit.includeScope", true),
             addBulletPoints: config.get("commit.addBulletPoints", true),
             verbose: config.get("commit.verbose", true),
+            detailMode: config.get("commit.detailMode", "auto"),
             captureAllChanges: config.get("commit.captureAllChanges", false),
             targetLanguage: config.get("commit.targetLanguage", "english"),
         },

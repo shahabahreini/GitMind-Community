@@ -1,6 +1,6 @@
 # Activation And License Management
 
-> Verified against GitMind `5.0.6` on July 13, 2026.
+> Verified against GitMind `6.0.0` on July 14, 2026.
 
 Open **GitMind Setting > Pro** or run **GitMind: Activate GitMind Pro**.
 

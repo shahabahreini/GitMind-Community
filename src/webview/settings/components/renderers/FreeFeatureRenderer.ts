@@ -10,11 +10,64 @@ export class FreeFeatureRenderer extends BaseRenderer {
                     <div class="free-features-toggles">
                         ${this.renderToggleFeatures()}
                     </div>
+                    ${this.renderCommitIntelligence()}
                     
                     ${this.renderUpgradePromptIfNeeded()}
                 </div>
             </div>
         `;
+    }
+
+    private renderCommitIntelligence(): string {
+        const intelligence = this.settings.commitIntelligence;
+        const enabled = intelligence?.enabled ?? false;
+        const isPro = this.isProUser() || this.isDevModeEnabled();
+        const toggle = (id: string, label: string, tooltip: string, checked: boolean, setting: string, pro = false): string => {
+            let html = FormUtils.createToggle(id, label, tooltip, checked, setting);
+            if (pro) {
+                html = html.replace('class="toggle-item"', `class="toggle-item ${isPro ? '' : 'locked'}"`)
+                    .replace(`id="${id}"`, `id="${id}" ${isPro ? '' : 'disabled aria-disabled="true"'}`)
+                    .replace(`>${label}</label>`, `>${label} <span class="pro-lock-badge" title="Requires GitMind Pro">Pro</span></label>`);
+            }
+            return html;
+        };
+
+        return `
+            <section class="commit-intelligence-settings" aria-labelledby="commitIntelligenceHeading">
+                <h3 id="commitIntelligenceHeading" class="section-header">Commit Intelligence (Preview)</h3>
+                <p class="description">Opt in to reviewed generation and advanced commit workflows. One-click generation stays unchanged.</p>
+                ${toggle('commitIntelligenceEnabled', 'Commit Intelligence (Preview)', 'Enable reviewed generation and advanced commit actions', enabled, 'commitIntelligence.enabled').replace('id="commitIntelligenceEnabled"', `id="commitIntelligenceEnabled" aria-controls="commitIntelligenceOptions" aria-expanded="${enabled}"`)}
+                <div id="commitIntelligenceOptions" class="commit-intelligence-options" ${enabled ? '' : 'hidden'} aria-hidden="${!enabled}">
+                    <div class="settings-subsection">
+                        <h4>Reviewed generation</h4>
+                        <div class="form-group">
+                            <label for="commitDetailMode">Detail mode</label>
+                            ${FormUtils.createSelect('commitDetailMode', [
+                                { value: 'legacy', label: 'Legacy (use Verbose Messages)', selected: !this.settings.commit?.detailMode || this.settings.commit.detailMode === 'legacy' },
+                                { value: 'auto', label: 'Auto', selected: this.settings.commit?.detailMode === 'auto' },
+                                { value: 'concise', label: 'Concise', selected: this.settings.commit?.detailMode === 'concise' },
+                                { value: 'detailed', label: 'Detailed', selected: this.settings.commit?.detailMode === 'detailed' }
+                            ]).replace('<select ', '<select data-setting="commit.detailMode" ')}
+                        </div>
+                        ${toggle('commitNoiseFilteringEnabled', 'Noise filtering', 'Classify generated, lock, binary, minified, and formatting-only changes', intelligence?.noiseFilteringEnabled ?? false, 'commit.noiseFiltering.enabled')}
+                    </div>
+                    <div class="settings-subsection">
+                        <h4>Draft choices</h4>
+                        ${toggle('commitCandidatesEnabled', 'Candidates', 'Generate multiple reviewed draft choices', intelligence?.candidatesEnabled ?? false, 'commit.candidates.enabled', true)}
+                        ${toggle('commitHealthEnabled', 'Commit Health', 'Show advisory draft quality checks', intelligence?.healthEnabled ?? false, 'commit.health.enabled', true)}
+                    </div>
+                    <div class="settings-subsection">
+                        <h4>Context</h4>
+                        ${toggle('githubIssueContextEnabled', 'GitHub issue context', 'Fetch issue context only when explicitly requested', intelligence?.githubIssueContextEnabled ?? false, 'commit.githubIssueContext.enabled')}
+                    </div>
+                    <div class="settings-subsection">
+                        <h4>Advanced Pro workflows</h4>
+                        ${toggle('composerEnabled', 'Composer', 'Compose a reviewed atomic commit series', intelligence?.composerEnabled ?? false, 'composer.enabled', true)}
+                        ${toggle('allowHunkSplitting', 'Hunk splitting', 'Allow divisible text hunks to move between Composer groups', intelligence?.allowHunkSplitting ?? false, 'composer.allowHunkSplitting', true)}
+                        ${toggle('reviewEnabled', 'Pre-commit review', 'Run an opt-in review before insertion', intelligence?.reviewEnabled ?? false, 'review.enabled', true)}
+                    </div>
+                </div>
+            </section>`;
     }
 
     private renderToggleFeatures(): string {

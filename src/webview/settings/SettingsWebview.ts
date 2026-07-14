@@ -112,6 +112,12 @@ export class SettingsWebview {
       this._disposables
     );
 
+    vscode.workspace.onDidChangeConfiguration(async event => {
+      if (!event.affectsConfiguration('gitmind')) { return; }
+      const settings = await this._settingsManager.getSettings();
+      await this._panel.webview.postMessage({ command: 'updateSettings', settings, preserveDropdowns: true });
+    }, null, this._disposables);
+
     SettingsWebview.currentPanel = this;
   }
 

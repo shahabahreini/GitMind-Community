@@ -1,12 +1,16 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
-import { exec } from "child_process";
+import { execFile } from "child_process";
 import { promisify } from "util";
 import { CommitMessage } from "../../config/types";
 import { debugLog } from "../debug/logger";
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
+const execGit = async (args: readonly string[], cwd: string, maxBuffer = 1024 * 1024): Promise<{ stdout: string; stderr: string }> => {
+    const result = await execFileAsync("git", [...args], { cwd, maxBuffer, encoding: "utf8" });
+    return { stdout: result.stdout, stderr: result.stderr };
+};
 const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
 
@@ -28,15 +32,9 @@ async function findGitRepositoriesInSubdirectories(searchPath: string, maxDepth:
         try {
             // Check if current directory is a git repository
             try {
-                await execAsync("git rev-parse --is-inside-work-tree", {
-                    cwd: currentPath,
-                    maxBuffer: 1024 * 1024
-                });
+                await execGit(["rev-parse", "--is-inside-work-tree"], currentPath);
 
-                const { stdout } = await execAsync("git rev-parse --show-toplevel", {
-                    cwd: currentPath,
-                    maxBuffer: 1024 * 1024
-                });
+                const { stdout } = await execGit(["rev-parse", "--show-toplevel"], currentPath);
 
                 const repoRoot = stdout.trim();
                 if (!repositories.includes(repoRoot)) {
@@ -84,16 +82,10 @@ export async function findGitRepository(startPath: string): Promise<string> {
 
     while (currentPath !== path.dirname(currentPath)) {
         try {
-            await execAsync("git rev-parse --is-inside-work-tree", {
-                cwd: currentPath,
-                maxBuffer: 1024 * 1024
-            });
+            await execGit(["rev-parse", "--is-inside-work-tree"], currentPath);
 
             // Get the actual repository root
-            const { stdout } = await execAsync("git rev-parse --show-toplevel", {
-                cwd: currentPath,
-                maxBuffer: 1024 * 1024
-            });
+            const { stdout } = await execGit(["rev-parse", "--show-toplevel"], currentPath);
 
             return stdout.trim();
         } catch (error) {
@@ -181,18 +173,14 @@ export async function getDiff(workspaceFolder: vscode.WorkspaceFolder, repositor
     
     // Build pathspec exclusions
     const excludePatterns = config.get<string[]>("commit.excludeFiles", []);
-    let excludeArgs = "";
-    if (excludePatterns && excludePatterns.length > 0) {
-        excludeArgs = " -- . " + excludePatterns.map(p => `":(exclude)${p}"`).join(" ");
-    }
+    const excludeArgs = excludePatterns && excludePatterns.length > 0
+        ? ["--", ".", ...excludePatterns.map(pattern => `:(exclude)${pattern}`)]
+        : [];
 
     // Check if there are only lock files in the staging area
     let onlyLockFilesStaged = false;
     try {
-        const { stdout: nameOnlyStdout } = await execAsync("git diff --staged --name-only", {
-            cwd: repoRoot,
-            maxBuffer: 1024 * 1024
-        });
+        const { stdout: nameOnlyStdout } = await execGit(["diff", "--staged", "--name-only"], repoRoot);
         const stagedFiles = nameOnlyStdout
             .split("\n")
             .map((f) => f.trim())
@@ -214,28 +202,19 @@ export async function getDiff(workspaceFolder: vscode.WorkspaceFolder, repositor
         debugLog("Error checking staged files for lock files:", error);
     }
 
-    const stagedDiffCmd = onlyLockFilesStaged ? "git diff --staged" : `git diff --staged${excludeArgs}`;
+    const stagedDiffArgs = ["diff", "--staged", ...(onlyLockFilesStaged ? [] : excludeArgs)];
 
     if (captureAllChanges) {
         const diffParts: string[] = [];
 
-        const { stdout: stagedDiff } = await execAsync(stagedDiffCmd, {
-            cwd: repoRoot,
-            maxBuffer: 10 * 1024 * 1024 // 10MB buffer for large diffs
-        });
+        const { stdout: stagedDiff } = await execGit(stagedDiffArgs, repoRoot, 10 * 1024 * 1024);
 
-        const { stdout: unstagedDiff } = await execAsync(`git diff${excludeArgs}`, {
-            cwd: repoRoot,
-            maxBuffer: 10 * 1024 * 1024 // 10MB buffer for large diffs
-        });
+        const { stdout: unstagedDiff } = await execGit(["diff", ...excludeArgs], repoRoot, 10 * 1024 * 1024);
 
-        const { stdout: untrackedFilesStdout } = await execAsync("git ls-files --others --exclude-standard", {
-            cwd: repoRoot,
-            maxBuffer: 1024 * 1024
-        });
+        const { stdout: untrackedFilesStdout } = await execGit(["ls-files", "--others", "--exclude-standard", "-z"], repoRoot);
 
         const untrackedFiles = untrackedFilesStdout
-            .split("\n")
+            .split("\0")
             .map((f) => f.trim())
             .filter((f) => f.length > 0);
 
@@ -249,13 +228,7 @@ export async function getDiff(workspaceFolder: vscode.WorkspaceFolder, repositor
 
         for (const filePath of untrackedFiles) {
             try {
-                const { stdout: filePatch } = await execAsync(
-                    `git diff --no-index -- /dev/null "${filePath.replace(/"/g, '\\"')}"`,
-                    {
-                        cwd: repoRoot,
-                        maxBuffer: 10 * 1024 * 1024
-                    }
-                );
+                const { stdout: filePatch } = await execGit(["diff", "--no-index", "--", "/dev/null", filePath], repoRoot, 10 * 1024 * 1024);
                 if (filePatch?.trim()) {
                     diffParts.push(filePatch);
                 }
@@ -278,16 +251,10 @@ export async function getDiff(workspaceFolder: vscode.WorkspaceFolder, repositor
         return combinedDiff;
     }
 
-    const { stdout: stagedDiff } = await execAsync(stagedDiffCmd, {
-        cwd: repoRoot,
-        maxBuffer: 10 * 1024 * 1024 // 10MB buffer for large diffs
-    });
+    const { stdout: stagedDiff } = await execGit(stagedDiffArgs, repoRoot, 10 * 1024 * 1024);
 
     if (!stagedDiff) {
-        const { stdout: unstagedDiff } = await execAsync(`git diff${excludeArgs}`, {
-            cwd: repoRoot,
-            maxBuffer: 10 * 1024 * 1024 // 10MB buffer for large diffs
-        });
+        const { stdout: unstagedDiff } = await execGit(["diff", ...excludeArgs], repoRoot, 10 * 1024 * 1024);
 
         if (!unstagedDiff) {
             throw new Error("No changes detected");
@@ -311,9 +278,7 @@ export async function getDiff(workspaceFolder: vscode.WorkspaceFolder, repositor
 
 export async function getBranchName(repositoryRoot: string): Promise<string | undefined> {
     try {
-        const { stdout } = await execAsync("git rev-parse --abbrev-ref HEAD", {
-            cwd: repositoryRoot
-        });
+        const { stdout } = await execGit(["rev-parse", "--abbrev-ref", "HEAD"], repositoryRoot);
         return stdout.trim();
     } catch (error) {
         debugLog("Error getting branch name:", error);
@@ -373,15 +338,10 @@ export async function setCommitMessage(message: CommitMessage, repositoryRoot?: 
         }
     }
 
-    const config = vscode.workspace.getConfiguration("gitmind");
-    const isVerbose = config.get("commit.verbose", true);
-
-    // Format message based on verbose setting
-    const formattedMessage = isVerbose
-        ? message.summary + '\n\n' + message.description
+    // The reviewed draft is authoritative; do not silently add or remove its body.
+    const formattedMessage = message.description?.trim()
+        ? message.summary + '\n\n' + message.description.trim()
         : message.summary;
 
     targetRepository.inputBox.value = formattedMessage;
 }
-
-
