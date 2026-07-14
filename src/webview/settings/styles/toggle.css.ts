@@ -17,19 +17,16 @@ export function getToggleStyles(): string {
         position: relative;
     }
     
-    .toggle-item:hover {
+    .toggle-item:hover,
+    .toggle-item:focus-within {
         border-color: var(--vscode-focusBorder);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         transform: translateY(-1px);
+        z-index: 20000;
     }
     
     .toggle-item:last-child {
         margin-bottom: 0;
-    }
-
-    .toggle-item:focus-within {
-        border-color: var(--vscode-focusBorder);
-        box-shadow: 0 0 0 1px var(--vscode-focusBorder);
     }
 
     .toggle-content {
@@ -42,14 +39,83 @@ export function getToggleStyles(): string {
         cursor: pointer;
     }
 
-    .commit-intelligence-settings { margin-top: 16px; }
-    .commit-intelligence-settings .section-header { margin: 0 0 4px; }
-    .commit-intelligence-options { margin: 12px 0 0 16px; border-left: 1px solid var(--vscode-panel-border); padding-left: 16px; }
+    /* Commit Intelligence Modern Card Modules */
+    .commit-intelligence-settings {
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid var(--vscode-panel-border);
+    }
+    .commit-intelligence-banner {
+        background: var(--vscode-editor-inactiveSelectionBackground, rgba(0, 122, 204, 0.06));
+        border: 1px solid var(--vscode-focusBorder, rgba(0, 122, 204, 0.3));
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin-bottom: 16px;
+    }
+    .commit-intelligence-banner-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+    .commit-intelligence-badge {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        background: var(--vscode-badge-background, #007acc);
+        color: var(--vscode-badge-foreground, #ffffff);
+        padding: 2px 8px;
+        border-radius: 10px;
+        letter-spacing: 0.5px;
+    }
+    .commit-intelligence-options {
+        margin: 16px 0 0 0;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
     .commit-intelligence-options[hidden] { display: none; }
+    
+    .intel-card-module {
+        background: var(--vscode-editor-background);
+        border: 1px solid var(--vscode-panel-border);
+        border-radius: 8px;
+        padding: 14px 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        transition: border-color 0.2s ease;
+    }
+    .intel-card-module:hover {
+        border-color: var(--vscode-focusBorder);
+    }
+    .intel-card-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--vscode-foreground);
+        margin: 0 0 4px 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .intel-card-desc {
+        font-size: 11px;
+        color: var(--vscode-descriptionForeground);
+        margin: 0 0 12px 0;
+        line-height: 1.4;
+    }
+
     .settings-subsection { margin-bottom: 16px; }
     .settings-subsection h4 { margin: 0 0 8px; color: var(--vscode-editor-foreground); font-size: 13px; }
-    .toggle-item.locked { opacity: 0.65; }
-    .pro-lock-badge { margin-left: 6px; color: var(--vscode-descriptionForeground); font-size: 11px; }
+    .toggle-item.locked { opacity: 0.7; }
+    .pro-lock-badge {
+        margin-left: 6px;
+        color: var(--vscode-badge-foreground, #ffffff);
+        background: var(--vscode-button-background, #007acc);
+        font-size: 10px;
+        font-weight: 700;
+        padding: 1px 6px;
+        border-radius: 4px;
+        text-transform: uppercase;
+    }
 
     @media (prefers-reduced-motion: reduce) {
         .toggle-item, .switch-container, .switch-slider { transition: none; }

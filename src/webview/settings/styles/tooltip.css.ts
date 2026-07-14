@@ -6,6 +6,12 @@ export function getTooltipStyles(): string {
         position: relative;
         cursor: pointer;
     }
+
+    /* Elevate stacking context on hover/focus so tooltips pop above preceding dropdowns and form controls */
+    [data-tooltip]:hover,
+    [data-tooltip]:focus-within {
+        z-index: 20000 !important;
+    }
     
     [data-tooltip]:before,
     [data-tooltip]:after {
@@ -13,7 +19,7 @@ export function getTooltipStyles(): string {
         opacity: 0;
         pointer-events: none;
         position: absolute;
-        z-index: 15000;
+        z-index: 25000;
         transition: all 0.15s ease;
         transform: translate(-50%, 10px);
         left: 50%;
@@ -28,15 +34,16 @@ export function getTooltipStyles(): string {
         padding: 8px 12px;
         border-radius: 6px;
         white-space: normal;
-        max-width: 250px;
+        max-width: 280px;
         width: max-content;
         min-width: 150px;
         font-size: 11px;
-        line-height: 1.4;
+        line-height: 1.45;
         margin-bottom: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
         border: 1px solid var(--vscode-panel-border);
-        text-align: center;
+        text-align: left;
+        word-wrap: break-word;
     }
     
     /* Tooltip arrow */
@@ -50,7 +57,9 @@ export function getTooltipStyles(): string {
     
     /* Show tooltip on hover */
     [data-tooltip]:hover:before,
-    [data-tooltip]:hover:after {
+    [data-tooltip]:hover:after,
+    [data-tooltip]:focus-within:before,
+    [data-tooltip]:focus-within:after {
         visibility: visible;
         opacity: 1;
         transform: translate(-50%, 0);
