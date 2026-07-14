@@ -12,9 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added an explicitly opt-in reviewed commit workspace with optional intent, issue/branch context, notes, reversible context selection, local noise classification, secret screening, and inline provider/model/host/token disclosure. Existing one-click generation remains the default.
 - Added automatic, concise, and detailed output modes; deterministic policy validation and separately confirmed repair; and exact insertion of only a valid user-approved draft into the selected repository's SCM input.
 - Added versioned `.gitmind/commit-policy.json` rules and safe static commitlint JSON import without executing JavaScript configuration.
-- Added Pro three-candidate generation, advisory weighted Commit Health, stable-ID change review, and reviewed squash, pull-request, stash, release-note, and explanation drafts.
-- Added Pro Commit Composer with local relationship analysis, file/hunk plans, stale/conflict/in-progress guards, hook execution in a temporary detached worktree, branch compare-and-swap, excluded-index preservation, rollback, and no push behavior.
-- Added explicit GitHub issue authentication/fetch for selected issues; other trackers continue to use pasted summaries.
+- Added interactive QuickPick candidate selection (`gitmind.draftChoices`) with live multiline preview in the top placeholder bar, displaying complete candidate subject and body text as the user navigates choices with arrow keys.
+- Prompted AI candidate engine to generate three distinct archetypes: Candidate 1 (Concise 1-liner), Candidate 2 (Detailed breakdown), and Candidate 3 (Intent-focused summary).
+- Overhauled the Reviewed Commit Workspace into a guided 3-step dashboard with branch pill badges, vector stroke SVG line icons, file line diff stats (`+24/-10`), noise classification indicators, and bulk context action buttons (`Include All`, `Summarize All`, `Exclude All`).
+- Added real-time Commit Health Score visual gauge meter (0–100) with line-item conventional compliance status checks.
+- Added dedicated Pre-Commit Code Review Panel rendering findings with color-coded severity tags (`ERROR`, `WARNING`, `INFO`), details, and impacted file atom links when `review.enabled` is active.
+- Added global colon sanitization across all 16 AI providers, prompt envelopes, and response processors, ensuring prefix formatting never creates double colons like `feat(commit)::`.
+- Added Commit Intelligence status indicator (`Intelligence: Active / Off`) to the top settings configuration banner.
+- Redesigned Changelog Statistics and Git History Statistics popups with metric KPI cards, rating badges, vector line icons, and zero emojis.
 
 ### Safety And Compatibility
 
