@@ -1,7 +1,12 @@
 import * as vscode from 'vscode';
 import { SubscriptionManager } from './SubscriptionManager';
 import { LemonSqueezyService } from './LemonSqueezyService';
+import { LegacyEntitlementService } from './LegacyEntitlementService';
 import { debugLog } from '../debug/logger';
+
+export const EXTENSION_ID = 'ShahabBahreiniJangjoo.ai-commit-assistant';
+export const MIGRATION_GUIDE_URL =
+    'https://github.com/shahabahreini/Gitmind-Pro/blob/main/docs/LICENSE-MIGRATION.md';
 
 export class ProNotificationService {
     private static instance: ProNotificationService;
@@ -15,11 +20,6 @@ export class ProNotificationService {
         "Access unlimited AI commit generations and advanced features to boost productivity.",
         "Get early access to all new GitMind features and prioritized support."
     ];
-
-    // Discount Configuration - update these values before publishing to apply a promo
-    private readonly DISCOUNT_CODE = 'K2NZIWNW';
-    private readonly DISCOUNT_PERCENT = 15;
-    private readonly DISCOUNT_EXPIRY = new Date('2026-06-01T00:00:00Z'); // Valid UNTIL end of May 2026 (thus exp = June 1)
 
     private constructor() { }
 
@@ -42,6 +42,14 @@ export class ProNotificationService {
         }
 
         try {
+            // Customers inherited from the suspended Lemon Squeezy store keep Pro, but they
+            // are the people who most need to hear what happened — so they get the migration
+            // notice rather than an upsell they already paid for.
+            if (LegacyEntitlementService.getInstance().hasActiveEntitlement()) {
+                await this.showMigrationNotice();
+                return;
+            }
+
             const subscriptionManager = SubscriptionManager.getInstance();
             const isPro = await subscriptionManager.isProUser(undefined, true);
 
@@ -62,14 +70,7 @@ export class ProNotificationService {
             // Pick a random feature to highlight
             const randomFeature = this.PRO_FEATURES[Math.floor(Math.random() * this.PRO_FEATURES.length)];
 
-            let message = `GitMind: Upgrade to Pro! ${randomFeature}`;
-
-            // Check if there is an active discount
-            if (new Date() < this.DISCOUNT_EXPIRY) {
-                const options: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric', year: 'numeric' };
-                const expiryString = this.DISCOUNT_EXPIRY.toLocaleDateString(undefined, options);
-                message += ` 🎉 Use code ${this.DISCOUNT_CODE} for ${this.DISCOUNT_PERCENT}% OFF! (Valid until ${expiryString})`;
-            }
+            const message = `GitMind: Upgrade to Pro! ${randomFeature}`;
 
             const buyAction = "Buy GitMind Pro";
             const activateAction = "Already purchased? Activate";
@@ -97,5 +98,42 @@ export class ProNotificationService {
         } catch (error) {
             debugLog('Error in checking/showing pro notification:', error);
         }
+    }
+
+    /**
+     * Tells a grandfathered Lemon Squeezy customer where they stand, once per release.
+     *
+     * Pacing this to extension updates rather than to a timer means it can never nag daily,
+     * and an update is when people are already paying attention to the extension. The tone is
+     * deliberately reassuring first: their Pro is not at risk, and the message must never read
+     * as a licensing problem they have to fix today.
+     */
+    private async showMigrationNotice(): Promise<void> {
+        const legacy = LegacyEntitlementService.getInstance();
+        const version =
+            vscode.extensions.getExtension(EXTENSION_ID)?.packageJSON?.version ?? 'unknown';
+
+        if (!legacy.shouldShowMigrationNotice(version)) {
+            return;
+        }
+        await legacy.recordMigrationNotice(version);
+
+        const learnMore = 'How to migrate';
+        const dismiss = 'Got it';
+
+        const selection = await vscode.window.showInformationMessage(
+            'GitMind Pro is still active — nothing is broken and you do not need to do anything. ' +
+            'We are moving to a new payment provider, and your existing license keeps working. ' +
+            'A free replacement key will be available shortly, which also unlocks self-service ' +
+            'device management.',
+            learnMore,
+            dismiss
+        );
+
+        if (selection === learnMore) {
+            void vscode.env.openExternal(vscode.Uri.parse(MIGRATION_GUIDE_URL));
+        }
+
+        debugLog(`Migration notice shown for version ${version}`);
     }
 }

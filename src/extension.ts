@@ -48,7 +48,8 @@ const state: ExtensionState = {
 export { state };
 
 import { registerCommands, SUPPORTED_PROVIDERS } from "./commands/index";
-import { isProUser } from "./utils/proHelpers";
+import { LegacyEntitlementService } from "./services/subscription/LegacyEntitlementService";
+import { isProUser, isLegacyProUser } from "./utils/proHelpers";
 import { configChangeDisposable, updateCommitIntelligenceContext } from "./config/settings";
 import { CommitWorkspace } from "./webview/commit/CommitWorkspace";
 
@@ -66,7 +67,13 @@ export function updateProStatusBar(): void {
   // Drives walkthrough completion and any when-clauses that depend on Pro state.
   void vscode.commands.executeCommand('setContext', 'gitmind.isPro', isPro);
 
-  if (isPro) {
+  if (isPro && isLegacyProUser()) {
+    item.text = "$(verified) GitMind Pro";
+    item.tooltip =
+      "GitMind Pro is active. Your license predates our payment provider change — " +
+      "no action needed. Click to manage your license.";
+    item.command = "gitmind.manageSubscription";
+  } else if (isPro) {
     item.text = "$(verified) GitMind Pro";
     item.tooltip = "GitMind Pro is active — click to manage your license";
     item.command = "gitmind.manageSubscription";
@@ -88,6 +95,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   // Perform settings migration and cleanup first
   const migrationService = SettingsMigrationService.getInstance();
   await migrationService.migrateAndCleanupSettings(context);
+
+  // Adopt any Pro customer inherited from the suspended Lemon Squeezy store before anything
+  // else asks whether they are Pro. isProUser() is synchronous and reads the record this
+  // writes, so running late here would briefly present a paying customer as Free.
+  await LegacyEntitlementService.getInstance().initialize(context);
+  debugLog("LegacyEntitlementService initialized");
 
   // Initialize SecureKeyManager
   const secureKeyManager = SecureKeyManager.getInstance();

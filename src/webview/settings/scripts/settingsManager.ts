@@ -564,8 +564,7 @@ function generateProFeatureManager(): string {
     // Pro feature UI management
     function updateProFeatureUI(settings) {
       try {
-        const hasValidLicense = (settings.pro?.licenseKey || settings.pro?.orderId) &&
-          settings.pro?.validationStatus === 'valid';
+        const hasValidLicense = settings.pro?.isPro === true;
 
         if (hasValidLicense) {
           ProUIManager.enableProFeatures(settings);
@@ -683,10 +682,7 @@ function generateProFeatureManager(): string {
       },
 
       handleEncryptionForFreeUsers: function(settings) {
-        const hasValidLicense = (settings.pro?.licenseKey || settings.pro?.orderId) &&
-          settings.pro?.validationStatus === 'valid';
-        const devModeEnabled = typeof window !== 'undefined' && window.GITMIND_DEV_MODE === true;
-        const encryptionAvailable = hasValidLicense || devModeEnabled;
+        const encryptionAvailable = settings.pro?.isPro === true;
         
         this.toggleEncryption(encryptionAvailable);
       },
@@ -735,8 +731,7 @@ function generateUtilityFunctions(): string {
   return `
     // Copy API Key function
     function copyAPIKey(fieldId) {
-      const hasValidLicense = (currentSettings.pro?.licenseKey || currentSettings.pro?.orderId) &&
-        currentSettings.pro?.validationStatus === 'valid';
+      const hasValidLicense = currentSettings.pro?.isPro === true;
       
       if (!hasValidLicense) {
         if (typeof vscode !== 'undefined') {

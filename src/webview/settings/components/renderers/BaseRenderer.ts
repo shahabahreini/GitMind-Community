@@ -27,19 +27,19 @@ export abstract class BaseRenderer {
     }
 
     protected hasValidLicense(): boolean {
-        // `validationStatus === 'valid'` is the authoritative Pro signal — it is
-        // only set after a successful license/subscription validation, and it is
-        // what the rest of the app uses (see utils/proHelpers.isProUser()).
-        //
-        // We intentionally do NOT also require licenseKey/orderId to be present:
-        // when the key is stored encrypted in secure storage, it is not always
-        // carried into the settings object at render time, which previously made
-        // genuine Pro users look unlicensed and stripped Pro-only UI (e.g. the
-        // Emoji Enhancement tab).
-        return this.settings.pro?.validationStatus === 'valid';
+        return this.isProUser();
     }
 
+    /**
+     * Reads the entitlement the host already decided (SettingsManager sets `pro.isPro` from
+     * utils/proHelpers.isProUser()). Renderers must not re-derive Pro from raw settings —
+     * doing so is what let a grandfathered customer look Free in parts of the UI.
+     */
     protected isProUser(): boolean {
-        return this.hasActiveSubscription() || this.hasValidLicense();
+        return this.settings.pro?.isPro === true;
+    }
+
+    protected isLegacyProUser(): boolean {
+        return this.settings.pro?.isLegacyPro === true;
     }
 }

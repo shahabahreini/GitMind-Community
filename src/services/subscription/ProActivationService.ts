@@ -3,12 +3,14 @@ import { LemonSqueezyService } from './LemonSqueezyService';
 import { debugLog } from '../debug/logger';
 import {
     isProUser,
+    isLegacyProUser,
     needsLicenseValidation,
     getLicenseKey,
     getInstanceId,
     updateProConfig,
     updateSubscriptionConfig
 } from '../../utils/proHelpers';
+import { LegacyEntitlementService } from './LegacyEntitlementService';
 
 export interface ProActivationResult {
     success: boolean;
@@ -273,82 +275,17 @@ export class ProActivationService {
     }
 
     /**
-     * Activate pro features using an order ID
-     */
-    public async activateWithOrderId(orderId: string, customerEmail?: string): Promise<ProActivationResult> {
-        debugLog(`Attempting to activate with order ID: ${orderId}`);
-
-        if (!orderId || orderId.trim() === '') {
-            return {
-                success: false,
-                message: 'Order ID is required. Please enter a valid order ID to continue.'
-            };
-        }
-
-        try {
-            // Check the order status
-            const orderStatus = await this.lemonSqueezyService.checkOrderStatus(orderId);
-
-            if (orderStatus.isValid && orderStatus.status === 'paid') {
-                // If we got license keys from the order, use the first one
-                if (orderStatus.licenseKeys && orderStatus.licenseKeys.length > 0) {
-                    const licenseKey = orderStatus.licenseKeys[0];
-                    debugLog(`Found license key in order: ${licenseKey.substring(0, 8)}...`);
-
-                    // Activate using the license key
-                    return await this.activateWithLicenseKey(licenseKey);
-                } else {
-                    // No license keys found, but order is valid - activate directly
-                    await updateProConfig({
-                        orderId: orderId,
-                        lastValidation: new Date().toISOString(),
-                        validationStatus: 'valid'
-                    });
-
-                    await updateSubscriptionConfig({
-                        email: orderStatus.customerEmail || customerEmail || '',
-                        plan: 'pro',
-                        status: 'active',
-                        lastChecked: new Date().toISOString()
-                    });
-
-                    return {
-                        success: true,
-                        message: `Welcome to GitMind Pro!\n\nYour order has been verified and your Pro features are now active.\n\nOrder Details:\n• Product: ${orderStatus.productName || 'GitMind Pro'}\n• Customer: ${orderStatus.customerName || 'N/A'}\n• Total: ${orderStatus.total ? `${orderStatus.total} ${orderStatus.currency}` : 'N/A'}`,
-                        details: orderStatus
-                    };
-                }
-            } else {
-                const errorMessage = orderStatus.error || 'Order not found or payment not completed';
-                return {
-                    success: false,
-                    message: this.formatOrderErrorMessage(errorMessage, orderStatus.status),
-                    details: orderStatus
-                };
-            }
-        } catch (error) {
-            debugLog('Order activation error:', error);
-
-            await updateProConfig({
-                orderId: orderId,
-                lastValidation: new Date().toISOString(),
-                validationStatus: 'error'
-            });
-
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-
-            return {
-                success: false,
-                message: this.formatErrorMessage(errorMessage),
-                details: { error }
-            };
-        }
-    }
-
-    /**
      * Validate existing license (periodic check)
      */
     public async validateExistingLicense(): Promise<boolean> {
+        // Grandfathered Lemon Squeezy customers are never validated against the network. The
+        // store is suspended, so the API can only answer "invalid" — which would say nothing
+        // about whether they paid, and everything about a provider that no longer exists.
+        if (isLegacyProUser()) {
+            debugLog('Skipping validation for a grandfathered Lemon Squeezy license');
+            return true;
+        }
+
         if (this.validationInProgress) {
             debugLog('License validation already in progress, skipping');
             return isProUser();
@@ -416,9 +353,23 @@ export class ProActivationService {
             }
 
             const updateData: any = {
-                lastValidation: new Date().toISOString(),
-                validationStatus: validation.isValid ? 'valid' : 'invalid'
+                lastValidation: new Date().toISOString()
             };
+
+            // Fail open. A validation that merely failed to reach an answer — offline, a
+            // timeout, a 5xx, a 404 from a store that no longer exists — proves nothing about
+            // whether this customer paid, so it must never cost them Pro. Only an affirmative
+            // revocation from a server we trust may downgrade someone.
+            if (validation.isValid) {
+                updateData.validationStatus = 'valid';
+            } else if (validation.revoked) {
+                updateData.validationStatus = 'invalid';
+            } else {
+                debugLog(
+                    `License validation was inconclusive (${validation.status}); ` +
+                    'preserving the existing Pro state'
+                );
+            }
 
             // Store instanceId if returned from validation and we don't have one already stored
             if (validation.instanceId && !getInstanceId()) {
@@ -435,7 +386,7 @@ export class ProActivationService {
                     status: 'active',
                     lastChecked: new Date().toISOString()
                 });
-            } else if (!validation.isValid) {
+            } else if (validation.revoked) {
                 await updateSubscriptionConfig({
                     plan: 'free',
                     status: 'expired',
@@ -443,17 +394,18 @@ export class ProActivationService {
                 });
             }
 
-            debugLog(`License validation result: ${validation.isValid ? 'valid' : 'invalid'}`);
-            return validation.isValid;
+            debugLog(`License validation result: ${validation.status}`);
+            return validation.isValid || (!validation.revoked && isProUser());
         } catch (error) {
-            debugLog('Periodic license validation failed:', error);
+            // Same rule as above: an exception is an inconclusive answer, not a revocation.
+            // Touch only the timestamp so the existing entitlement survives.
+            debugLog('Periodic license validation failed; preserving existing Pro state:', error);
 
             await updateProConfig({
-                lastValidation: new Date().toISOString(),
-                validationStatus: 'error'
+                lastValidation: new Date().toISOString()
             });
 
-            return false;
+            return isProUser();
         } finally {
             this.validationInProgress = false;
         }
@@ -699,7 +651,11 @@ export class ProActivationService {
             });
         }
 
-        // Always perform local deactivation to ensure Pro features are disabled
+        // Always perform local deactivation to ensure Pro features are disabled. The
+        // grandfathered entitlement must go too — it outranks the settings below, so leaving it
+        // in place would silently restore Pro on the next isProUser() call.
+        await LegacyEntitlementService.getInstance().clearEntitlement();
+
         await updateProConfig({
             licenseKey: '',
             validationStatus: 'invalid',
@@ -925,89 +881,6 @@ Troubleshooting Steps:
 • Try again in a few minutes if this is a temporary server issue`;
     }
 
-    /**
-     * Format error message for order-based activation failures
-     */
-    private formatOrderErrorMessage(error: string, status?: string): string {
-        if (status === 'pending') {
-            return `Order Pending
-
-Your order is still being processed. Please wait a few minutes and try again.
-
-If payment was recently completed, it may take some time for the order status to update.`;
-        }
-
-        if (status === 'cancelled' || status === 'refunded') {
-            return `Order Cancelled
-
-This order has been cancelled or refunded and cannot be used for activation.
-
-Please use a valid order ID or contact support if you believe this is an error.`;
-        }
-
-        // Clean up HTTP error messages for order activation
-        let cleanError = error;
-        const httpMatch = error.match(/HTTP (\d+): ([^-]+) - (.+)/);
-        if (httpMatch) {
-            const httpStatus = httpMatch[1];
-            const statusText = httpMatch[2].trim();
-            const responseBody = httpMatch[3];
-
-            try {
-                const jsonResponse = JSON.parse(responseBody);
-                if (jsonResponse.error) {
-                    cleanError = jsonResponse.error;
-                } else if (jsonResponse.message) {
-                    cleanError = jsonResponse.message;
-                } else {
-                    cleanError = `${statusText} (${httpStatus})`;
-                }
-            } catch (parseError) {
-                cleanError = responseBody || `${statusText} (${httpStatus})`;
-            }
-        }
-
-        // Handle common order-related errors
-        const lowerError = cleanError.toLowerCase();
-        if (lowerError.includes('order not found') || lowerError.includes('not found')) {
-            return `Order Not Found
-
-The order ID you entered could not be found in our system.
-
-Troubleshooting Steps:
-• Verify you entered the correct order ID from your purchase receipt
-• Check that payment has been completed successfully
-• Ensure the order was placed with the correct email address
-
-If you continue to have issues, please contact support with your order details.`;
-        }
-
-        if (lowerError.includes('no license keys') || lowerError.includes('license keys not found')) {
-            return `No License Keys Found
-
-This order does not have any license keys associated with it.
-
-This could mean:
-• The order is for a different product that doesn't include license keys
-• The order is still being processed
-• There was an issue during order fulfillment
-
-Please contact support with your order ID for assistance.`;
-        }
-
-        const displayError = cleanError.length > 100 ? cleanError.substring(0, 100) + '...' : cleanError;
-
-        return `Order Validation Failed
-
-${displayError}
-
-Please verify your order ID and ensure the payment has been completed. If you continue to experience issues, contact support.
-
-Troubleshooting Steps:
-• Double-check your order ID for typos
-• Confirm payment was successful
-• Allow some time for order processing if recently purchased`;
-    }
 
     /**
      * Format success message for license deactivation

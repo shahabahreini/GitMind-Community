@@ -1,6 +1,7 @@
 // src/services/encryption/SecureKeyManager.ts
 import * as vscode from 'vscode';
 import { debugLog } from '../debug/logger';
+import { isProUser } from '../../utils/proHelpers';
 
 // Placeholder text to display in settings when a key is encrypted
 export const ENCRYPTED_KEY_PLACEHOLDER = "[ENCRYPTED]";
@@ -178,12 +179,10 @@ export class SecureKeyManager {
     private async isProUserAsync(): Promise<boolean> {
         const config = vscode.workspace.getConfiguration('gitmind');
 
-        // If a valid license/order ID exists, treat as Pro without requiring subscription email.
-        // This avoids interactive prompts during background checks (and in test runners).
-        const validationStatus = config.get<string>('pro.validationStatus');
-        const licenseKey = config.get<string>('pro.licenseKey');
-        const orderId = config.get<string>('pro.orderId');
-        if (validationStatus === 'valid' && ((licenseKey && licenseKey.length > 0) || (orderId && orderId.length > 0))) {
+        // Defer to the single entitlement authority rather than re-deriving Pro here. This
+        // avoids interactive prompts during background checks (and in test runners), and it
+        // means grandfathered customers keep their encrypted API-key storage.
+        if (isProUser()) {
             return true;
         }
 
