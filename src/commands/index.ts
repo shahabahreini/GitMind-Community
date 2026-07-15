@@ -1508,6 +1508,11 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
         return; // Cancelled. Their Pro access is untouched.
       }
 
+      // Remember the address so the settings panel can show which email the
+      // replacement license belongs to.
+      await vscode.workspace.getConfiguration('gitmind')
+        .update('subscription.email', email.trim(), vscode.ConfigurationTarget.Global);
+
       const result = await vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,
@@ -1655,7 +1660,7 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
     vscode.commands.registerCommand("gitmind.forceDeactivatePro", async () => {
       try {
         const confirm = await vscode.window.showWarningMessage(
-          'Force deactivate GitMind Pro? This will clean up local Pro settings without attempting to contact LemonSqueezy servers.',
+          'Force deactivate GitMind Pro? This cleans up local Pro settings without contacting the license server — the device slot stays occupied until you remove it from your account portal.',
           { modal: true },
           'Force Deactivate'
         );

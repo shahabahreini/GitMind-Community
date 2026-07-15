@@ -34,7 +34,41 @@ export class SubscriptionRenderer extends BaseRenderer {
             // Note: All subscription button event handlers are now managed by ScriptManager
             // to avoid conflicts with the global event handling system.
             // This includes the purchase, license activation, validation, and deactivation controls.
-            
+            // The account-email edit controls below are wired here because their IDs are
+            // unique to this tab and they do not exist in the global handler map.
+
+            (function () {
+                const editBtn = document.getElementById('editSubscriptionEmailBtn');
+                const editRow = document.getElementById('subscriptionEmailEditRow');
+                const input = document.getElementById('subscriptionEmailEditInput');
+                const valueEl = document.getElementById('subscriptionEmailValue');
+                if (!editBtn || !editRow || !input || !valueEl) { return; }
+
+                editBtn.addEventListener('click', function () {
+                    const open = editRow.style.display !== 'none';
+                    editRow.style.display = open ? 'none' : 'flex';
+                    editBtn.textContent = open ? 'Edit' : 'Close';
+                    if (!open) { input.focus(); }
+                });
+
+                document.getElementById('cancelSubscriptionEmailBtn')?.addEventListener('click', function () {
+                    editRow.style.display = 'none';
+                    editBtn.textContent = 'Edit';
+                });
+
+                document.getElementById('saveSubscriptionEmailBtn')?.addEventListener('click', function () {
+                    const email = input.value.trim();
+                    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+                        alert('Enter a valid email address.');
+                        return;
+                    }
+                    vscode.postMessage({ command: 'updateSetting', key: 'subscription.email', value: email });
+                    valueEl.textContent = email;
+                    editRow.style.display = 'none';
+                    editBtn.textContent = 'Edit';
+                });
+            })();
+
             // Handle responses from the extension
             window.addEventListener('message', function(event) {
                 const message = event.data;
@@ -275,11 +309,20 @@ export class SubscriptionRenderer extends BaseRenderer {
                                 <span class="detail-label">${activeDetailLabel}</span>
                                 <span class="detail-value">${activeDetailValue}</span>
                             </div>
-                            ${email ? `
                             <div class="detail-row">
-                                <span class="detail-label">Associated Email</span>
-                                <span class="detail-value">${email}</span>
-                            </div>` : ''}
+                                <span class="detail-label">Account Email</span>
+                                <span class="detail-value" id="subscriptionEmailValue">${email ? FormUtils.escapeHtml(email) : '<em>Not set</em>'}</span>
+                                <button type="button" class="btn btn-secondary btn-small" id="editSubscriptionEmailBtn" title="Change the email associated with your license">Edit</button>
+                            </div>
+                            <div class="detail-row" id="subscriptionEmailEditRow" style="display: none;">
+                                <input type="email"
+                                       id="subscriptionEmailEditInput"
+                                       class="license-input-field"
+                                       placeholder="you@example.com"
+                                       value="${FormUtils.escapeHtml(email)}" />
+                                <button type="button" class="btn btn-primary btn-small" id="saveSubscriptionEmailBtn">Save</button>
+                                <button type="button" class="btn btn-secondary btn-small" id="cancelSubscriptionEmailBtn">Cancel</button>
+                            </div>
                         </div>
 
                         <div class="active-actions-row">
@@ -289,7 +332,7 @@ export class SubscriptionRenderer extends BaseRenderer {
 
                         <div class="device-management-note">
                             <h5>Device Management Note</h5>
-                            <p>Each license can be deactivated directly from the device it is registered on. If a device becomes unavailable and you need to free up a slot, please <a href="https://github.com/shahabahreini/Gitmind-Pro/issues" target="_blank">raise a support ticket</a>.</p>
+                            <p>Rename, remove, or reactivate any of your devices from your <a href="https://gitmind-pro.com/portal" target="_blank">account portal</a> — including machines you no longer have access to.</p>
                         </div>
                     </div>
                 </div>

@@ -164,9 +164,11 @@ export class ProActivationService {
                     });
                 }
 
-                // Update subscription configuration with customer info
+                // Update subscription configuration with customer info. Only overwrite
+                // the stored email when the server actually returned one — a blank
+                // response must not erase the address the panel shows.
                 await updateSubscriptionConfig({
-                    email: activation.meta.customer_email,
+                    ...(activation.meta.customer_email ? { email: activation.meta.customer_email } : {}),
                     plan: 'pro',
                     status: 'active',
                     lastChecked: new Date().toISOString()
@@ -194,14 +196,14 @@ export class ProActivationService {
                     }
                 });
 
-                const activationsRemaining = activation.license_key.activation_limit - activation.license_key.activation_usage;
-                const expiryInfo = activation.license_key.expires_at
-                    ? `Expires: ${new Date(activation.license_key.expires_at).toLocaleDateString()}`
-                    : 'Lifetime license';
-
                 return {
                     success: true,
-                    message: this.formatSuccessMessage(activation.meta.customer_name, activation.meta.product_name, activationsRemaining, expiryInfo),
+                    message: this.formatSuccessMessage(
+                        activation.meta.customer_email,
+                        activation.meta.product_name,
+                        activation.license_key.activation_usage,
+                        activation.license_key.activation_limit
+                    ),
                     details: {
                         customerName: activation.meta.customer_name,
                         customerEmail: activation.meta.customer_email,
@@ -209,7 +211,7 @@ export class ProActivationService {
                         variantName: activation.meta.variant_name,
                         activationLimit: activation.license_key.activation_limit,
                         activationUsage: activation.license_key.activation_usage,
-                        activationsRemaining: activationsRemaining,
+                        activationsRemaining: activation.license_key.activation_limit - activation.license_key.activation_usage,
                         expiresAt: activation.license_key.expires_at ? new Date(activation.license_key.expires_at) : null,
                         testMode: activation.license_key.test_mode,
                         instanceId: activation.instance.id
@@ -520,16 +522,11 @@ export class ProActivationService {
         } else if (withApiCall && licenseKey && instanceId && licenseKey !== '[ENCRYPTED]') {
             successMessage = this.formatDeactivationSuccessMessage(undefined, true);
         } else if (withApiCall && (licenseKey === '[ENCRYPTED]' || !licenseKey || !instanceId)) {
-            // More specific message for when we can't access encrypted license info
-            if (licenseKey === '[ENCRYPTED]') {
-                successMessage = 'GitMind Pro has been deactivated locally. Note: Could not release the license activation on LemonSqueezy servers because the license key is encrypted and secure storage is not accessible in this context. The license may still be active on the LemonSqueezy servers.\n\nTo properly deactivate the license:\n1. Re-enable Pro features temporarily\n2. Use the deactivation option from the settings\n3. This will ensure proper server-side deactivation';
-            } else if (!licenseKey) {
-                successMessage = 'GitMind Pro has been deactivated locally. Note: Could not release the license activation on LemonSqueezy servers because no license key was found. The license may still be active on the LemonSqueezy servers.';
-            } else if (!instanceId) {
-                successMessage = 'GitMind Pro has been deactivated locally. Note: Could not release the license activation on LemonSqueezy servers because no instance ID was found. This can happen when:\n\n• Encryption settings were changed\n• The license was activated in a different session\n• Configuration data was corrupted\n\nTo properly deactivate:\n1. Try reactivating your license first\n2. Then deactivate it properly to ensure server-side deactivation\n3. Or manually deactivate from your LemonSqueezy customer portal\n\nThe license may still be active on the LemonSqueezy servers and may need to be manually deactivated from your account.';
-            } else {
-                successMessage = 'GitMind Pro has been deactivated locally. Note: Could not release the license activation on LemonSqueezy servers due to missing license information. The license may still be active on the LemonSqueezy servers.';
-            }
+            // The local state is cleared either way; the only open question is whether
+            // the device slot was released on the license server.
+            successMessage = 'GitMind Pro has been deactivated locally, but the device slot could not be '
+                + 'released on the license server because the stored license details were not accessible. '
+                + `This device may still count against your license — you can remove it any time from your account portal at ${GitMindLicenseService.PORTAL_URL}.`;
         }
 
         return {
@@ -570,25 +567,32 @@ export class ProActivationService {
     }
 
     /**
-     * Format success message for license activation
+     * Format success message for license activation. Lines whose value the server did
+     * not provide are omitted — an empty "Customer:" reads like something went wrong.
      */
-    private formatSuccessMessage(customerName: string, productName: string, activationsRemaining: number, expiryInfo: string): string {
+    private formatSuccessMessage(customerEmail: string, productName: string, devicesUsed: number, devicesLimit: number): string {
+        const details: string[] = [];
+        if (customerEmail) {
+            details.push(`• Account: ${customerEmail}`);
+        }
+        if (productName) {
+            details.push(`• Product: ${productName}`);
+        }
+        if (devicesLimit > 0) {
+            details.push(`• Devices in use: ${devicesUsed} of ${devicesLimit}`);
+        }
+        details.push('• License Type: Lifetime — no renewal required');
+
         return `Welcome to GitMind Pro!
 
 Your license has been successfully activated and Pro features are now available.
 
 Activation Details:
-• Customer: ${customerName}
-• Product: ${productName}
-• Activations Remaining: ${activationsRemaining}
-• ${expiryInfo}
+${details.join('\n')}
 
 You can now enjoy all Pro features including advanced AI models, unlimited commits, and priority support.
 
-Device Management:
-• Each device can only be deactivated from the device itself.
-• You cannot retrieve or remove all registered devices at once.
-• If a device is no longer available and you need to free up a license spot, please raise a support ticket at https://github.com/shahabahreini/Gitmind-Pro/issues and it will be addressed.`;
+Manage your devices (rename, remove, or reactivate) any time from your account portal at ${GitMindLicenseService.PORTAL_URL}.`;
     }
 
     /**
@@ -626,7 +630,7 @@ Device Management:
             'license key not found': 'The license key you entered was not found in our system. Please double-check that you entered the correct license key from your purchase confirmation email.',
             'license_key not found': 'The license key you entered was not found in our system. Please double-check that you entered the correct license key from your purchase confirmation email.',
             'license key expired': 'Your license key has expired. Please contact support or purchase a new license.',
-            'activation limit exceeded': 'Activation limit exceeded. You have reached the maximum number of activations for this license. Each device can only be deactivated from the device itself. If a device is no longer available, please raise a support ticket at https://github.com/shahabahreini/Gitmind-Pro/issues to free up a license spot.',
+            'activation limit exceeded': 'Activation limit exceeded. You have reached the maximum number of devices for this license. Remove a device you no longer use from your account portal at https://gitmind-pro.com/portal to free up a slot, then activate this machine again.',
             'license key disabled': 'This license key has been disabled. Please contact support for assistance.',
             'invalid license key': 'Invalid license key format. Please check that you entered the license key correctly.',
             'not found (404)': 'The license key could not be found in our system. Please verify you entered the correct license key.',
@@ -673,7 +677,8 @@ Troubleshooting Steps:
     private formatDeactivationSuccessMessage(apiResponse?: LicenseDeactivationResponse, wasApiCall: boolean = false): string {
         if (!apiResponse || !apiResponse.deactivated) {
             if (wasApiCall) {
-                return 'GitMind Pro has been deactivated locally. Note: The license activation status on LemonSqueezy servers was not updated.';
+                return 'GitMind Pro has been deactivated locally. Note: the device slot may not have been '
+                    + `released on the license server — check your devices at ${GitMindLicenseService.PORTAL_URL}.`;
             }
             return 'GitMind Pro has been deactivated locally.';
         }
@@ -682,40 +687,24 @@ Troubleshooting Steps:
         const licenseInfo = apiResponse.license_key;
 
         let message = 'GitMind Pro Deactivated Successfully\n\n';
-        message += 'Your license activation has been released from this device and is now available for use on another device.\n\n';
+        message += 'This device has been released from your license and the slot is free for another machine.\n\n';
 
-        message += 'Deactivation Details:\n';
-
-        if (meta?.customer_name) {
-            message += `• License Owner: ${meta.customer_name}`;
-            if (meta.customer_email) {
-                message += ` (${meta.customer_email})`;
-            }
-            message += '\n';
+        const details: string[] = [];
+        if (meta?.customer_email) {
+            details.push(`• Account: ${meta.customer_email}`);
         }
-
         if (meta?.product_name) {
-            message += `• Product: ${meta.product_name}\n`;
+            details.push(`• Product: ${meta.product_name}`);
         }
-
         if (licenseInfo?.activation_limit) {
-            const remaining = licenseInfo.activation_limit - licenseInfo.activation_usage;
-            message += `• License Usage: ${licenseInfo.activation_usage}/${licenseInfo.activation_limit} activations\n`;
-            message += `• Activations Remaining: ${remaining}\n`;
+            details.push(`• Devices in use: ${licenseInfo.activation_usage} of ${licenseInfo.activation_limit}`);
+        }
+        if (details.length > 0) {
+            message += 'Deactivation Details:\n' + details.join('\n') + '\n';
         }
 
-        if (licenseInfo?.expires_at) {
-            const expiryDate = new Date(licenseInfo.expires_at);
-            message += `• License Expires: ${expiryDate.toLocaleDateString()}\n`;
-        } else {
-            message += '• License Type: Lifetime\n';
-        }
-
-        message += '\nYou can reactivate your license on any device using your original license key.';
-        message += '\n\nDevice Management:';
-        message += '\n• Each device can only be deactivated from the device itself.';
-        message += '\n• You cannot retrieve or remove all registered devices at once.';
-        message += '\n• If a device is no longer available and you need to free up a license spot, please raise a support ticket at https://github.com/shahabahreini/Gitmind-Pro/issues and it will be addressed.';
+        message += '\nYou can reactivate on any device with your original license key, and manage all your '
+            + `devices from your account portal at ${GitMindLicenseService.PORTAL_URL}.`;
 
         return message;
     }
