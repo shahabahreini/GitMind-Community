@@ -13,9 +13,9 @@ GitMind analyzes your Git diff and generates clear, professional commit messages
 <br/>
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/shahabahreini/AI-Commit-Assistant/main/images/all_providers.png" alt="GitMind supported AI providers including NVIDIA NIM, OpenAI, Anthropic, Gemini, Groq, Perplexity, Ollama, and GitHub Copilot" width="100%"/>
+  <video src="https://gitmind-pro.com/assets/videos/Gitmind-pro-Demo.mp4" width="100%" controls autoplay loop muted></video>
   <br/>
-  <sub><strong>Bring your preferred AI provider, run locally, or reuse GitHub Copilot.</strong></sub>
+  <sub><strong>GitMind Pro in action — AI-powered commit generation and workflow features.</strong></sub>
 </div>
 
 <br/>
