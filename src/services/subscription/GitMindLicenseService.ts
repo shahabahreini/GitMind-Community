@@ -167,6 +167,33 @@ export class GitMindLicenseService {
         }
     }
 
+    public async createCheckout(email: string): Promise<{ ok: true; checkoutRef: string; pollToken: string; checkoutUrl: string } | { ok: false; error: string }> {
+        const result = await this.callPublic('/checkout', { email: email.trim() });
+        if (result.status === 'success' && typeof result.checkout_ref === 'string' && typeof result.poll_token === 'string' && typeof result.checkout_url === 'string') {
+            return { ok: true, checkoutRef: result.checkout_ref, pollToken: result.poll_token, checkoutUrl: result.checkout_url };
+        }
+        return { ok: false, error: typeof result.error === 'string' ? result.error : 'Could not create checkout.' };
+    }
+
+    public async pollCheckoutStatus(checkoutRef: string, pollToken: string): Promise<{ status: 'pending' | 'paid' | 'expired'; licenseKey?: string }> {
+        const result = await this.callPublic('/checkout/status', { checkout_ref: checkoutRef, poll_token: pollToken });
+        const status = result.status;
+        if (status === 'paid' && typeof result.license_key === 'string') return { status, licenseKey: result.license_key };
+        return { status: status === 'pending' ? 'pending' : 'expired' };
+    }
+
+    private async callPublic(endpoint: string, body: Record<string, string>): Promise<Record<string, unknown>> {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), this.requestTimeoutMs);
+        try {
+            const response = await fetch(`${this.baseUrl}${endpoint}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(body), signal: controller.signal });
+            return await response.json() as Record<string, unknown>;
+        } catch (error) {
+            debugLog(`Public checkout request to ${endpoint} failed:`, error);
+            return { status: 'error', error: error instanceof Error && error.name === 'AbortError' ? 'The licence server took too long to respond.' : 'Could not reach the licence server.' };
+        } finally { clearTimeout(timer); }
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // Transport
     // ─────────────────────────────────────────────────────────────────────────

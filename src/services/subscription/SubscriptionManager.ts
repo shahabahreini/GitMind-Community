@@ -232,43 +232,33 @@ export class SubscriptionManager {
      * Start subscription process
      */
     public async startSubscription(): Promise<void> {
-        // Send buyers to the GitMind Pro pricing page on our own site. Checkout itself is
-        // created server-side there (Polar), so this is a plain, always-working link — no
-        // products API call that can fail, and no dependency on the retired storefront.
-        const checkoutUrl = GitMindLicenseService.CHECKOUT_URL;
-
-        try {
-            await vscode.env.openExternal(vscode.Uri.parse(checkoutUrl));
-        } catch (error) {
-            debugLog('Failed to open checkout URL:', error);
-            const copy = 'Copy Checkout Link';
-            const choice = await vscode.window.showErrorMessage(
-                'Could not open the GitMind Pro checkout automatically.',
-                copy
-            );
-            if (choice === copy) {
-                await vscode.env.clipboard.writeText(checkoutUrl);
-                vscode.window.showInformationMessage('Checkout link copied to clipboard.');
-            }
+        const quick = 'Quick checkout — enter email here';
+        const details = 'View pricing details on website';
+        if (await vscode.window.showQuickPick([quick, details], { placeHolder: 'Buy GitMind Pro' }) !== quick) {
+            await vscode.env.openExternal(vscode.Uri.parse(GitMindLicenseService.CHECKOUT_URL));
             return;
         }
-
-        // After paying, the user receives a license key by email and enters it here.
-        const enterKey = 'Enter License Key';
-        const openAgain = 'Open Checkout Again';
-
-        const action = await vscode.window.showInformationMessage(
-            `🚀 GitMind Pro checkout opened!\n\nComplete your purchase in the browser window. You'll receive a license key by email — click "Enter License Key" to activate.`,
-            { modal: false },
-            enterKey,
-            openAgain
-        );
-
-        if (action === enterKey) {
-            await vscode.commands.executeCommand('gitmind.activateWithLicenseKey');
-        } else if (action === openAgain) {
-            await vscode.env.openExternal(vscode.Uri.parse(checkoutUrl));
+        const email = await vscode.window.showInputBox({ prompt: 'Email for your GitMind Pro license', value: await this.getUserEmail(true), validateInput: value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()) ? undefined : 'Enter a valid email address.' });
+        if (!email) return;
+        const checkout = await GitMindLicenseService.getInstance().createCheckout(email);
+        if (!checkout.ok) { vscode.window.showErrorMessage(`${checkout.error} Opening pricing details instead.`); await vscode.env.openExternal(vscode.Uri.parse(GitMindLicenseService.CHECKOUT_URL)); return; }
+        await vscode.env.openExternal(vscode.Uri.parse(checkout.checkoutUrl));
+        const paid = await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: 'Waiting for GitMind Pro payment…', cancellable: true }, async (_progress, cancellation) => {
+            for (let elapsed = 0; elapsed < 900 && !cancellation.isCancellationRequested; elapsed += 4) {
+                const status = await GitMindLicenseService.getInstance().pollCheckoutStatus(checkout.checkoutRef, checkout.pollToken);
+                if (status.status === 'paid' && status.licenseKey) return status.licenseKey;
+                if (status.status === 'expired') break;
+                await new Promise(resolve => setTimeout(resolve, 4000));
+            }
+            return undefined;
+        });
+        if (paid) {
+            const result = await (await import('./ProActivationService.js')).ProActivationService.getInstance().activateWithLicenseKey(paid);
+            vscode.window.showInformationMessage(result.success ? '✅ Pro activated on this machine. Account details were emailed to you.' : result.message, 'Manage Devices').then(choice => { if (choice === 'Manage Devices') void vscode.commands.executeCommand('gitmind.openAccountPortal'); });
+        } else {
+            vscode.window.showInformationMessage('Your license key and account details were emailed — run “Activate Pro with License Key” when ready.', 'Open Account Portal').then(choice => { if (choice === 'Open Account Portal') void vscode.commands.executeCommand('gitmind.openAccountPortal'); });
         }
+        void vscode.commands.executeCommand('gitmind.refreshSubscription', { silent: true });
     }
 
     /**

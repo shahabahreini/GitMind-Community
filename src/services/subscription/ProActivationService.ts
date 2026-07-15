@@ -81,6 +81,7 @@ export class ProActivationService {
     private static instance: ProActivationService;
     private readonly licenseService: GitMindLicenseService;
     private validationInProgress = false;
+    private deactivationNoticeShown = false;
 
     private constructor() {
         this.licenseService = GitMindLicenseService.getInstance();
@@ -344,8 +345,22 @@ export class ProActivationService {
             // revocation from a server we trust may downgrade someone.
             if (validation.isValid) {
                 updateData.validationStatus = 'valid';
+                this.deactivationNoticeShown = false;
             } else if (validation.revoked) {
                 updateData.validationStatus = 'invalid';
+                if (!this.deactivationNoticeShown) {
+                    this.deactivationNoticeShown = true;
+                    const action = await vscode.window.showWarningMessage(
+                    'GitMind Pro was deactivated for this device from your account. Reactivate it in the portal or re-activate this machine.',
+                    'Open Portal',
+                    'Re-activate'
+                    );
+                    if (action === 'Open Portal') {
+                        void vscode.commands.executeCommand('gitmind.openAccountPortal');
+                    } else if (action === 'Re-activate') {
+                        void vscode.commands.executeCommand('gitmind.activateWithLicenseKey');
+                    }
+                }
             } else {
                 debugLog(
                     `License validation was inconclusive (${validation.status}); ` +
