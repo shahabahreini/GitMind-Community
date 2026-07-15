@@ -215,12 +215,29 @@ suite('Settings UI Tests', () => {
             assert.ok(typeof SettingsWebview.createOrShow === 'function', 'createOrShow method should exist');
             assert.ok(typeof SettingsWebview.postMessageToWebview === 'function', 'postMessageToWebview method should exist');
             assert.ok(typeof SettingsWebview.isWebviewOpen === 'function', 'isWebviewOpen method should exist');
+            assert.ok(typeof SettingsWebview.refreshEntitlementView === 'function', 'refreshEntitlementView method should exist');
 
             // Test webview panel properties
             assert.ok(mockWebviewPanel.onDidDispose, 'WebviewPanel should have onDidDispose method');
             assert.ok(typeof mockWebviewPanel.onDidDispose === 'function', 'onDidDispose should be a function');
         } catch (error) {
             assert.fail(`Failed to create settings webview: ${error}`);
+        }
+    });
+
+    test('SettingsWebview entitlement refresh safely no-ops without an open panel', async () => {
+        const settingsWebview = SettingsWebview as any;
+        const existingPanel = settingsWebview.currentPanel;
+        settingsWebview.currentPanel = undefined;
+
+        try {
+            assert.strictEqual(SettingsWebview.isWebviewOpen(), false, 'Settings panel should not be open');
+
+            await SettingsWebview.refreshEntitlementView();
+
+            assert.strictEqual(SettingsWebview.isWebviewOpen(), false, 'Entitlement refresh should not create a Settings panel');
+        } finally {
+            settingsWebview.currentPanel = existingPanel;
         }
     });
 

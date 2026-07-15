@@ -25,6 +25,22 @@ export class SettingsWebview {
     return !!SettingsWebview.currentPanel;
   }
 
+  /**
+   * Rebuild the open Settings document after an entitlement transition.
+   *
+   * Some Settings markup only exists for either Free or Pro users, so a
+   * targeted DOM update cannot accurately reflect a license change. Replacing
+   * the existing panel's HTML keeps the panel itself open; the webview's
+   * session storage restores the active tab via `gitmind_active_tab`.
+   */
+  public static async refreshEntitlementView(): Promise<void> {
+    if (!SettingsWebview.currentPanel) {
+      return;
+    }
+
+    await SettingsWebview.currentPanel._update();
+  }
+
   public static createOrShow(extensionUri: vscode.Uri, initialTab?: string) {
     const column = vscode.window.activeTextEditor
       ? vscode.window.activeTextEditor.viewColumn
