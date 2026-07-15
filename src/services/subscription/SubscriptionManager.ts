@@ -239,7 +239,7 @@ export class SubscriptionManager {
             return;
         }
         const email = await vscode.window.showInputBox({ prompt: 'Email for your GitMind Pro license', value: await this.getUserEmail(true), validateInput: value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()) ? undefined : 'Enter a valid email address.' });
-        if (!email) return;
+        if (!email) { return; }
         const checkout = await GitMindLicenseService.getInstance().createCheckout(email);
         if (!checkout.ok) { vscode.window.showErrorMessage(`${checkout.error} Opening pricing details instead.`); await vscode.env.openExternal(vscode.Uri.parse(GitMindLicenseService.CHECKOUT_URL)); return; }
 
@@ -261,8 +261,8 @@ export class SubscriptionManager {
             const deadline = Date.now() + 900_000;
             while (Date.now() < deadline && !cancellation.isCancellationRequested) {
                 const status = await GitMindLicenseService.getInstance().pollCheckoutStatus(checkout.checkoutRef, checkout.pollToken);
-                if (status.status === 'paid' && status.licenseKey) return { paid: status.licenseKey };
-                if (status.status === 'expired') return { expired: true };
+                if (status.status === 'paid' && status.licenseKey) { return { paid: status.licenseKey }; }
+                if (status.status === 'expired') { return { expired: true }; }
                 // 'error' is inconclusive — back off a little and keep waiting.
                 await new Promise(resolve => setTimeout(resolve, status.status === 'error' ? 10_000 : 5_000));
             }
@@ -273,11 +273,11 @@ export class SubscriptionManager {
             await this.completePendingCheckout(outcome.paid);
         } else if (outcome.expired) {
             await this.context?.globalState.update(SubscriptionManager.PENDING_CHECKOUT_KEY, undefined);
-            vscode.window.showWarningMessage('The checkout session expired before payment was completed. No charge was made — you can start again any time.', 'Buy GitMind Pro').then(choice => { if (choice === 'Buy GitMind Pro') void vscode.commands.executeCommand('gitmind.subscribe'); });
+            vscode.window.showWarningMessage('The checkout session expired before payment was completed. No charge was made — you can start again any time.', 'Buy GitMind Pro').then(choice => { if (choice === 'Buy GitMind Pro') { void vscode.commands.executeCommand('gitmind.subscribe'); } });
         } else {
             vscode.window.showInformationMessage('Payment confirmation has not reached GitMind yet. If you completed the payment, use "Check payment status" in a moment — GitMind also re-checks automatically on the next start. Your license and account details will be emailed either way.', 'Check payment status', 'Open Account Portal').then(choice => {
-                if (choice === 'Check payment status') void this.resumePendingCheckout({ silent: false });
-                if (choice === 'Open Account Portal') void vscode.commands.executeCommand('gitmind.openAccountPortal');
+                if (choice === 'Check payment status') { void this.resumePendingCheckout({ silent: false }); }
+                if (choice === 'Open Account Portal') { void vscode.commands.executeCommand('gitmind.openAccountPortal'); }
             });
         }
         void vscode.commands.executeCommand('gitmind.refreshSubscription', { silent: true });
@@ -301,12 +301,12 @@ export class SubscriptionManager {
     public async resumePendingCheckout(options: { silent?: boolean } = {}): Promise<void> {
         const pending = this.context?.globalState.get<{ checkoutRef: string; pollToken: string; email: string; createdAt: number }>(SubscriptionManager.PENDING_CHECKOUT_KEY);
         if (!pending) {
-            if (!options.silent) vscode.window.showInformationMessage('There is no pending GitMind Pro checkout to check.');
+            if (!options.silent) { vscode.window.showInformationMessage('There is no pending GitMind Pro checkout to check.'); }
             return;
         }
         if (Date.now() - pending.createdAt > SubscriptionManager.PENDING_CHECKOUT_TTL_MS) {
             await this.context?.globalState.update(SubscriptionManager.PENDING_CHECKOUT_KEY, undefined);
-            if (!options.silent) vscode.window.showInformationMessage('The previous checkout session has expired. If you paid, activate with the key from your email — or contact support and we will sort it out.', 'Enter License Key').then(choice => { if (choice === 'Enter License Key') void vscode.commands.executeCommand('gitmind.showActivationQuickPick'); });
+            if (!options.silent) { vscode.window.showInformationMessage('The previous checkout session has expired. If you paid, activate with the key from your email — or contact support and we will sort it out.', 'Enter License Key').then(choice => { if (choice === 'Enter License Key') { void vscode.commands.executeCommand('gitmind.showActivationQuickPick'); } }); }
             return;
         }
 
@@ -318,7 +318,7 @@ export class SubscriptionManager {
         }
         if (status.status === 'expired') {
             await this.context?.globalState.update(SubscriptionManager.PENDING_CHECKOUT_KEY, undefined);
-            if (!options.silent) vscode.window.showInformationMessage('That checkout was not completed and has expired. No charge was made.');
+            if (!options.silent) { vscode.window.showInformationMessage('That checkout was not completed and has expired. No charge was made.'); }
             return;
         }
         if (!options.silent) {
@@ -332,7 +332,7 @@ export class SubscriptionManager {
     private async completePendingCheckout(licenseKey: string): Promise<void> {
         await this.context?.globalState.update(SubscriptionManager.PENDING_CHECKOUT_KEY, undefined);
         const result = await (await import('./ProActivationService.js')).ProActivationService.getInstance().activateWithLicenseKey(licenseKey);
-        vscode.window.showInformationMessage(result.success ? '✅ Pro activated on this machine. Account details were emailed to you.' : result.message, 'Manage Devices').then(choice => { if (choice === 'Manage Devices') void vscode.commands.executeCommand('gitmind.openAccountPortal'); });
+        vscode.window.showInformationMessage(result.success ? '✅ Pro activated on this machine. Account details were emailed to you.' : result.message, 'Manage Devices').then(choice => { if (choice === 'Manage Devices') { void vscode.commands.executeCommand('gitmind.openAccountPortal'); } });
     }
 
     /**
