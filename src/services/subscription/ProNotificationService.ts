@@ -6,6 +6,7 @@ import { debugLog } from '../debug/logger';
 
 export const EXTENSION_ID = 'ShahabBahreiniJangjoo.ai-commit-assistant';
 export const MIGRATION_GUIDE_URL = 'https://gitmind-pro.com/migrate';
+export const GITHUB_ISSUES_URL = 'https://github.com/shahabahreini/AI-Commit-Assistant/issues/new';
 
 export class ProNotificationService {
     private static instance: ProNotificationService;
@@ -100,12 +101,11 @@ export class ProNotificationService {
     }
 
     /**
-     * Tells a grandfathered Lemon Squeezy customer where they stand, once per release.
+     * Tells a grandfathered Lemon Squeezy customer where they stand.
      *
-     * Pacing this to extension updates rather than to a timer means it can never nag daily,
-     * and an update is when people are already paying attention to the extension. The tone is
-     * deliberately reassuring first: their Pro is not at risk, and the message must never read
-     * as a licensing problem they have to fix today.
+     * Reminds un-migrated users on extension launch until claimed. On the 4th notice,
+     * warns that auto-migration will occur on the next launch. On the 5th notice (or higher),
+     * auto-migration is triggered automatically.
      */
     private async showMigrationNotice(): Promise<void> {
         const legacy = LegacyEntitlementService.getInstance();
@@ -117,27 +117,69 @@ export class ProNotificationService {
         }
         await legacy.recordMigrationNotice(version);
 
+        const count = await legacy.incrementMigrationNoticeCount();
+
+        if (count >= 5) {
+            try {
+                debugLog(`Auto-migrating legacy entitlement on 5th launch notice (attempt ${count})...`);
+                await vscode.commands.executeCommand('gitmind.claimFreeLicense');
+            } catch (error) {
+                await this.handleMigrationFailure(error);
+            }
+            return;
+        }
+
         const claim = 'Claim free key';
         const learnMore = 'What happened?';
         const dismiss = 'Not now';
 
+        let message: string;
+        if (count === 4) {
+            message = 'Reminder (4/5): Our old payment provider closed our store and we have moved. ' +
+                'Please claim your free replacement key now. If not claimed, GitMind will automatically ' +
+                'migrate your key on the next launch.';
+        } else {
+            message = 'GitMind Pro is active and staying that way — nothing is broken and there is nothing ' +
+                'you must do. Our old payment provider closed our store, so we have moved. Claim a ' +
+                'free replacement key (no charge) to restore online validation and manage your devices.';
+        }
+
         const selection = await vscode.window.showInformationMessage(
-            'GitMind Pro is active and staying that way — nothing is broken and there is nothing ' +
-            'you must do. Our old payment provider closed our store, so we have moved. Claim a ' +
-            'free replacement key (no charge) to restore online validation and manage your devices.',
+            message,
             claim,
             learnMore,
             dismiss
         );
 
         if (selection === claim) {
-            // Claim in place. The old flow sent them to a browser to retype a UUID and copy a
-            // key back; this asks them to confirm an email address and does the rest.
+            // Claim in place.
             void vscode.commands.executeCommand('gitmind.claimFreeLicense');
         } else if (selection === learnMore) {
             void vscode.env.openExternal(vscode.Uri.parse(MIGRATION_GUIDE_URL));
         }
 
-        debugLog(`Migration notice shown for version ${version}`);
+        debugLog(`Migration notice shown (count ${count}, version ${version})`);
+    }
+
+    public async handleMigrationFailure(error: unknown): Promise<void> {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        const webSupport = 'Webpage Support';
+        const reportGithub = 'Report Issue on GitHub';
+        const tryAgain = 'Try Claiming Key';
+
+        const selection = await vscode.window.showErrorMessage(
+            `GitMind Pro license migration failed: ${errorMsg}. Please reach out for support or report the issue.`,
+            webSupport,
+            reportGithub,
+            tryAgain
+        );
+
+        if (selection === webSupport) {
+            void vscode.env.openExternal(vscode.Uri.parse(MIGRATION_GUIDE_URL));
+        } else if (selection === reportGithub) {
+            void vscode.env.openExternal(vscode.Uri.parse(GITHUB_ISSUES_URL));
+        } else if (selection === tryAgain) {
+            void vscode.commands.executeCommand('gitmind.claimFreeLicense');
+        }
     }
 }

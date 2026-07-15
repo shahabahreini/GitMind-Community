@@ -1527,15 +1527,21 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
         // grandfathered entitlement is local and nothing here touched it. Say so plainly,
         // because the one thing a paying customer must never wonder is whether they just
         // lost what they bought.
-        const openPage = 'Try in browser';
+        const openPage = 'Webpage Support';
+        const openGithub = 'Report Issue on GitHub';
         const selection = await vscode.window.showWarningMessage(
           `We could not claim your key right now: ${result.error} ` +
-          'Your Pro features are unaffected — nothing has changed. Try again later, or use the website.',
-          openPage
+          'Your Pro features are unaffected — nothing has changed. Try again later, or use the website/community ticket.',
+          openPage,
+          openGithub
         );
         if (selection === openPage) {
           void vscode.env.openExternal(
             vscode.Uri.parse(licenseService.buildMigrationUrl(entitlement?.legacyKey))
+          );
+        } else if (selection === openGithub) {
+          void vscode.env.openExternal(
+            vscode.Uri.parse('https://github.com/shahabahreini/AI-Commit-Assistant/issues/new')
           );
         }
         return;

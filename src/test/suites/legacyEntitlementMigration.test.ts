@@ -303,18 +303,24 @@ suite('Legacy Lemon Squeezy entitlement', () => {
     });
 
     suite('migration notice', () => {
-        test('shows once per extension version, then stops', async () => {
+        test('shows on extension startup while un-migrated, and tracks notice count', async () => {
             settings['pro.validationStatus'] = 'valid';
             settings['pro.licenseKey'] = LS_KEY;
             const service = await freshService();
 
             assert.strictEqual(service.shouldShowMigrationNotice('6.1.0'), true);
+            assert.strictEqual(service.getMigrationNoticeCount(), 0);
 
-            await service.recordMigrationNotice('6.1.0');
+            const count1 = await service.incrementMigrationNoticeCount();
+            assert.strictEqual(count1, 1);
+            assert.strictEqual(service.shouldShowMigrationNotice('6.1.0'), true);
+
+            const count2 = await service.incrementMigrationNoticeCount();
+            assert.strictEqual(count2, 2);
+
+            await service.markMigrated();
             assert.strictEqual(service.shouldShowMigrationNotice('6.1.0'), false);
-
-            // The next release is the next time we are allowed to say anything.
-            assert.strictEqual(service.shouldShowMigrationNotice('6.2.0'), true);
+            assert.strictEqual(service.getMigrationNoticeCount(), 0);
         });
 
         test('is never shown to someone without a legacy entitlement', async () => {

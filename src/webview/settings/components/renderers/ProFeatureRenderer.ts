@@ -53,7 +53,8 @@ export class ProFeatureRenderer extends BaseRenderer {
                         const validateLicenseBtn = document.getElementById('validateLicenseBtn');
                         if (validateLicenseBtn) {
                             validateLicenseBtn.disabled = false;
-                            validateLicenseBtn.textContent = 'Validate';
+                            validateLicenseBtn.classList.remove('loading');
+                            validateLicenseBtn.textContent = 'Validate License';
                         }
                         
                         alert(message.message);

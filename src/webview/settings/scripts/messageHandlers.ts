@@ -150,6 +150,7 @@ export function getMessageHandlersScript(): string {
       const button = document.getElementById(buttonId);
       if (button) {
         button.disabled = !enabled;
+        button.classList.remove('loading');
         if (text) button.textContent = text;
       }
     }
@@ -680,7 +681,7 @@ export function getMessageHandlersScript(): string {
 
     function handleLicenseValidationResult(message) {
       console.log('License validation result:', message);
-      updateButton('validateLicenseBtn', true, 'Validate');
+      updateButton('validateLicenseBtn', true, 'Validate License');
       
       if (message.success) {
         const isValid = message.isValid;
