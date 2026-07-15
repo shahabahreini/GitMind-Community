@@ -788,6 +788,13 @@
           "markdownDescription": "**License Key**: Your GitMind Pro license key. [Buy GitMind Pro](https://gitmind-pro.com/pricing) — a one-time lifetime purchase — or [manage your devices](https://gitmind-pro.com/portal). Pro unlocks encrypted API key storage and advanced features.",
           "order": 100
         },
+        "gitmind.pro.orderId": {
+          "type": "string",
+          "default": "",
+          "description": "Legacy order reference (internal use)",
+          "order": 100,
+          "readOnly": true
+        },
         "gitmind.pro.encryptionEnabled": {
           "type": "boolean",
           "default": false,
