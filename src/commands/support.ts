@@ -6,7 +6,7 @@ import {
   SUPPORT_SESSION_DURATION_MS
 } from "../services/support/SupportSessionService";
 
-const ISSUE_URL = "https://github.com/shahabahreini/AI-Commit-Assistant/issues/new";
+const ISSUE_URL = "https://github.com/shahabahreini/GitMind-Community/issues/new";
 
 async function requirePro(): Promise<boolean> {
   if (await SubscriptionManager.getInstance().isProUser(undefined, true)) {

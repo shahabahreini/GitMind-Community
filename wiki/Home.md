@@ -30,10 +30,11 @@ GitMind generates professional Git commit messages from your changes without lea
 
 ## Install And Support
 
+- [Official Website](https://gitmind-pro.com)
 - [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant)
 - [Open VSX](https://open-vsx.org/extension/ShahabBahreiniJangjoo/ai-commit-assistant)
-- [Releases](https://github.com/shahabahreini/AI-Commit-Assistant/releases)
+- [Releases](https://github.com/shahabahreini/GitMind-Community/releases)
 - [Support And Requests](Support-And-Requests)
-- [Buy GitMind Pro](https://gitmind.lemonsqueezy.com/checkout/buy/cd58d4e5-92cf-4f59-a6fe-ae6e57010706)
+- [Buy GitMind Pro](https://gitmind-pro.com/pricing)
 
 GitMind sends the selected diff and prompt to the provider you configure. Use Ollama when changes must remain local. Never post API keys, license keys, order IDs, purchase emails, source code, diffs, or private repository data in public issues.

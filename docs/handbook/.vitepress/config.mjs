@@ -1,6 +1,6 @@
 import { defineConfig } from "vitepress";
 
-const repo = "https://github.com/shahabahreini/AI-Commit-Assistant";
+const repo = "https://github.com/shahabahreini/GitMind-Community";
 
 export default defineConfig({
   title: "GitMind Handbook",

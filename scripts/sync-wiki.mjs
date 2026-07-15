@@ -48,7 +48,7 @@ const links = [...generated.keys()]
   .map((name) => `- [${name.slice(0, -3).replaceAll("-", " ")}](${name.slice(0, -3)})`)
   .join("\n");
 generated.set("_Sidebar.md", `**GitMind 5.x Handbook**\n\nVerified against GitMind \`${manifest.product.version}\` on ${verificationDate}.\n\n- [Home](Home)\n${links}\n- [Commands And Shortcuts](Commands-And-Shortcuts)\n- [Coverage Audit](Coverage-Audit)\n`);
-generated.set("_Footer.md", `GitMind Wiki | Generated from \`docs/handbook/\` | Verified against GitMind \`${manifest.product.version}\` on ${verificationDate} | [Pages handbook](https://shahabahreini.github.io/AI-Commit-Assistant/) | [Support](https://github.com/shahabahreini/AI-Commit-Assistant/issues)\n`);
+generated.set("_Footer.md", `GitMind Wiki | Generated from \`docs/handbook/\` | Verified against GitMind \`${manifest.product.version}\` on ${verificationDate} | [Website](https://gitmind-pro.com) | [Pages handbook](https://shahabahreini.github.io/AI-Commit-Assistant/) | [Support](https://github.com/shahabahreini/GitMind-Community/issues)\n`);
 
 const assetSource = path.join(handbook, "public/assets");
 for (const name of fs.readdirSync(assetSource)) generated.set(`assets/${name}`, fs.readFileSync(path.join(assetSource, name)));

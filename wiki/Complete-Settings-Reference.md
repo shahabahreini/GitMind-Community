@@ -14,7 +14,7 @@ Open **GitMind Setting** for the guided UI. The table below covers user-configur
 | `gitmind.commit.detailMode` | `auto` | `auto`, `concise`, `detailed`; legacy verbosity migrates |
 | `gitmind.commitIntelligence.enabled` | `false` | Master opt-in for Commit Intelligence (Preview) |
 | `gitmind.commit.noiseFiltering.enabled` | `false` | Preview semantic-noise classifications |
-| `gitmind.commit.candidates.enabled` | `false` | Three candidates in one request; Pro |
+| `gitmind.commit.candidates.enabled` | `false` | Three distinct archetypes (Concise, Detailed, Intent) with QuickPick multiline preview; Pro |
 | `gitmind.commit.githubIssueContext.enabled` | `false` | Explicit GitHub issue fetch and authentication |
 | `gitmind.commit.health.enabled` | `false` | Advisory 0–100 Commit Health; Pro |
 | `gitmind.composer.enabled` | `false` | Atomic Commit Composer; Pro |

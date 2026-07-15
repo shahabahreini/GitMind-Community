@@ -15,8 +15,9 @@ Order-ID and email-based activation are no longer offered because they require a
 
 - **Validate Existing License** checks the current activation.
 - **Deactivate Pro Features** contacts the licensing service and releases the current device slot.
+- **Self-Service Device Portal:** You can view, rename, and release device slots online at [gitmind-pro.com/portal](https://gitmind-pro.com/portal). New licenses can be purchased at [gitmind-pro.com/pricing](https://gitmind-pro.com/pricing).
 
-Deactivate before moving to another device when possible. If the old device is unavailable, open a private activation/license support request. Do not publish the license key, full order ID, purchase email, or customer details.
+Deactivate before moving to another device when possible. If the old device is unavailable, manage your active slots at [gitmind-pro.com/portal](https://gitmind-pro.com/portal) or open a private activation/license support request. Do not publish the license key, full order ID, purchase email, or customer details.
 
 ## Troubleshooting
 

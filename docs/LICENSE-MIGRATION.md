@@ -24,11 +24,11 @@ No. GitMind detects your existing license by itself.
 
 ## What is coming next
 
-We are moving to a new payment provider. When that is ready, you will be offered a **free replacement license key** — no charge, and no action needed until then. The new key restores online validation and adds self-service device management, so you can move GitMind to a new machine without contacting us.
+We are moving to a new licensing system available at [gitmind-pro.com/migrate](https://gitmind-pro.com/migrate). When ready, you can claim your replacement key on our official website at [gitmind-pro.com](https://gitmind-pro.com). The new key restores online validation and adds self-service device management, so you can move GitMind to a new machine without contacting us.
 
 You will see a one-time notice about this after a GitMind update. It will not nag you.
 
 ## Something is wrong
 
 If GitMind shows **Free** but you paid for Pro, open an issue at
-<https://github.com/shahabahreini/Gitmind-Pro/issues> with the email address you purchased with. We will restore your access. You will not be asked to pay again.
+<https://github.com/shahabahreini/GitMind-Community/issues> with the email address you purchased with. We will restore your access. You will not be asked to pay again.

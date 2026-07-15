@@ -26,7 +26,7 @@ Locked controls remain visible so Free users can understand what Pro adds. Selec
 
 ## Purchase And Activate
 
-1. Open [GitMind Pro checkout](https://gitmind.lemonsqueezy.com/checkout/buy/cd58d4e5-92cf-4f59-a6fe-ae6e57010706).
+1. Open [GitMind Pro pricing and checkout](https://gitmind-pro.com/pricing).
 2. Keep the purchase receipt and license key private.
 3. Open **GitMind Setting > Pro**.
 4. Activate with the license key from the purchase email.

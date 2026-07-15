@@ -324,7 +324,7 @@ export class OnboardingTemplateGenerator {
                 }
             },
             viewDocsBtn: () => {
-                const docsUrl = 'https://github.com/shahabahreini/GitMind-Pro#readme';
+                const docsUrl = 'https://gitmind-pro.com';
                 vscode.postMessage({ command: 'openExternal', url: docsUrl });
             },
             activateProBtn: () => {
