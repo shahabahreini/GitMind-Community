@@ -242,23 +242,97 @@ export class SubscriptionManager {
         if (!email) return;
         const checkout = await GitMindLicenseService.getInstance().createCheckout(email);
         if (!checkout.ok) { vscode.window.showErrorMessage(`${checkout.error} Opening pricing details instead.`); await vscode.env.openExternal(vscode.Uri.parse(GitMindLicenseService.CHECKOUT_URL)); return; }
-        await vscode.env.openExternal(vscode.Uri.parse(checkout.checkoutUrl));
-        const paid = await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: 'Waiting for GitMind Pro payment…', cancellable: true }, async (_progress, cancellation) => {
-            for (let elapsed = 0; elapsed < 900 && !cancellation.isCancellationRequested; elapsed += 4) {
-                const status = await GitMindLicenseService.getInstance().pollCheckoutStatus(checkout.checkoutRef, checkout.pollToken);
-                if (status.status === 'paid' && status.licenseKey) return status.licenseKey;
-                if (status.status === 'expired') break;
-                await new Promise(resolve => setTimeout(resolve, 4000));
-            }
-            return undefined;
+
+        // Remember the email so the settings panel can show which address the
+        // license belongs to, and remember the checkout so payment confirmation can
+        // be re-checked later — the server keeps the session alive for an hour, far
+        // longer than anyone keeps a progress notification open.
+        const config = vscode.workspace.getConfiguration('gitmind');
+        await config.update('subscription.email', email.trim(), vscode.ConfigurationTarget.Global);
+        await this.context?.globalState.update(SubscriptionManager.PENDING_CHECKOUT_KEY, {
+            checkoutRef: checkout.checkoutRef,
+            pollToken: checkout.pollToken,
+            email: email.trim(),
+            createdAt: Date.now(),
         });
-        if (paid) {
-            const result = await (await import('./ProActivationService.js')).ProActivationService.getInstance().activateWithLicenseKey(paid);
-            vscode.window.showInformationMessage(result.success ? '✅ Pro activated on this machine. Account details were emailed to you.' : result.message, 'Manage Devices').then(choice => { if (choice === 'Manage Devices') void vscode.commands.executeCommand('gitmind.openAccountPortal'); });
+
+        await vscode.env.openExternal(vscode.Uri.parse(checkout.checkoutUrl));
+        const outcome = await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: 'Waiting for GitMind Pro payment… (you can close this — GitMind keeps checking)', cancellable: true }, async (_progress, cancellation) => {
+            const deadline = Date.now() + 900_000;
+            while (Date.now() < deadline && !cancellation.isCancellationRequested) {
+                const status = await GitMindLicenseService.getInstance().pollCheckoutStatus(checkout.checkoutRef, checkout.pollToken);
+                if (status.status === 'paid' && status.licenseKey) return { paid: status.licenseKey };
+                if (status.status === 'expired') return { expired: true };
+                // 'error' is inconclusive — back off a little and keep waiting.
+                await new Promise(resolve => setTimeout(resolve, status.status === 'error' ? 10_000 : 5_000));
+            }
+            return {};
+        });
+
+        if (outcome.paid) {
+            await this.completePendingCheckout(outcome.paid);
+        } else if (outcome.expired) {
+            await this.context?.globalState.update(SubscriptionManager.PENDING_CHECKOUT_KEY, undefined);
+            vscode.window.showWarningMessage('The checkout session expired before payment was completed. No charge was made — you can start again any time.', 'Buy GitMind Pro').then(choice => { if (choice === 'Buy GitMind Pro') void vscode.commands.executeCommand('gitmind.subscribe'); });
         } else {
-            vscode.window.showInformationMessage('Payment confirmation has not reached GitMind yet. If payment was completed, your license and account details will be emailed after confirmation. You can activate later with the emailed key.', 'Open Account Portal').then(choice => { if (choice === 'Open Account Portal') void vscode.commands.executeCommand('gitmind.openAccountPortal'); });
+            vscode.window.showInformationMessage('Payment confirmation has not reached GitMind yet. If you completed the payment, use "Check payment status" in a moment — GitMind also re-checks automatically on the next start. Your license and account details will be emailed either way.', 'Check payment status', 'Open Account Portal').then(choice => {
+                if (choice === 'Check payment status') void this.resumePendingCheckout({ silent: false });
+                if (choice === 'Open Account Portal') void vscode.commands.executeCommand('gitmind.openAccountPortal');
+            });
         }
         void vscode.commands.executeCommand('gitmind.refreshSubscription', { silent: true });
+    }
+
+    private static readonly PENDING_CHECKOUT_KEY = 'gitmind.pendingCheckout';
+
+    /** Server-side checkout sessions live for one hour. */
+    private static readonly PENDING_CHECKOUT_TTL_MS = 60 * 60 * 1000;
+
+    /**
+     * Re-check a checkout that was paid (or abandoned) after the progress
+     * notification was cancelled or timed out.
+     *
+     * This exists because the original flow had exactly one shot: if the poll loop
+     * ended before the payment confirmation reached the server, the buyer was told
+     * to wait for an email even though the server would happily hand over the key
+     * for another hour. Called from the "Check payment status" button and once,
+     * silently, on extension startup.
+     */
+    public async resumePendingCheckout(options: { silent?: boolean } = {}): Promise<void> {
+        const pending = this.context?.globalState.get<{ checkoutRef: string; pollToken: string; email: string; createdAt: number }>(SubscriptionManager.PENDING_CHECKOUT_KEY);
+        if (!pending) {
+            if (!options.silent) vscode.window.showInformationMessage('There is no pending GitMind Pro checkout to check.');
+            return;
+        }
+        if (Date.now() - pending.createdAt > SubscriptionManager.PENDING_CHECKOUT_TTL_MS) {
+            await this.context?.globalState.update(SubscriptionManager.PENDING_CHECKOUT_KEY, undefined);
+            if (!options.silent) vscode.window.showInformationMessage('The previous checkout session has expired. If you paid, activate with the key from your email — or contact support and we will sort it out.', 'Enter License Key').then(choice => { if (choice === 'Enter License Key') void vscode.commands.executeCommand('gitmind.showActivationQuickPick'); });
+            return;
+        }
+
+        const status = await GitMindLicenseService.getInstance().pollCheckoutStatus(pending.checkoutRef, pending.pollToken);
+        if (status.status === 'paid' && status.licenseKey) {
+            await this.completePendingCheckout(status.licenseKey);
+            void vscode.commands.executeCommand('gitmind.refreshSubscription', { silent: true });
+            return;
+        }
+        if (status.status === 'expired') {
+            await this.context?.globalState.update(SubscriptionManager.PENDING_CHECKOUT_KEY, undefined);
+            if (!options.silent) vscode.window.showInformationMessage('That checkout was not completed and has expired. No charge was made.');
+            return;
+        }
+        if (!options.silent) {
+            vscode.window.showInformationMessage(status.status === 'pending'
+                ? 'Payment has not been confirmed yet. If you just paid, give it a few seconds and check again.'
+                : 'Could not reach the licence server to check. Your payment state is unaffected — try again in a moment.');
+        }
+    }
+
+    /** Payment confirmed: activate the freshly minted key and clear the pending state. */
+    private async completePendingCheckout(licenseKey: string): Promise<void> {
+        await this.context?.globalState.update(SubscriptionManager.PENDING_CHECKOUT_KEY, undefined);
+        const result = await (await import('./ProActivationService.js')).ProActivationService.getInstance().activateWithLicenseKey(licenseKey);
+        vscode.window.showInformationMessage(result.success ? '✅ Pro activated on this machine. Account details were emailed to you.' : result.message, 'Manage Devices').then(choice => { if (choice === 'Manage Devices') void vscode.commands.executeCommand('gitmind.openAccountPortal'); });
     }
 
     /**
@@ -356,7 +430,10 @@ export class SubscriptionManager {
                 return;
             }
 
-            await this.context.secrets.delete('gitmind.subscription.details');
+            // Stored under 'subscription_details' (see storeSecureSubscriptionDetails);
+            // 'gitmind.subscription.details' was never the write key, so deleting it
+            // here left the real record behind on email change.
+            await this.context.secrets.delete('subscription_details');
         } catch (error) {
             console.error('Failed to clear secure subscription details:', error);
         }

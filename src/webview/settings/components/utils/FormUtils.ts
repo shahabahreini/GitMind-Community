@@ -19,6 +19,16 @@ interface Link {
 }
 
 export class FormUtils {
+    /** Escape a value that ends up inside rendered HTML (attribute or text). */
+    public static escapeHtml(value: string): string {
+        return value
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     public static createFormGroup(label: string, tooltip: string, content: string): string {
         const tooltipAttr = tooltip ? `data-tooltip="${tooltip}"` : '';
         return `

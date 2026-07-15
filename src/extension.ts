@@ -130,6 +130,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     debugLog("Startup license validation failed:", error);
   }
 
+  // If a Quick Checkout was paid after its "Waiting for payment…" notification was
+  // cancelled or timed out, pick it up now: the server keeps the session (and the
+  // freshly minted key) available for an hour.
+  try {
+    await subscriptionManager.resumePendingCheckout({ silent: true });
+  } catch (error) {
+    debugLog("Pending checkout resume failed:", error);
+  }
+
   // Reflect Pro/Free state in the status bar + context key.
   // Exposed as an internal command so other modules can trigger a refresh
   // without importing extension.ts (avoids a circular import).
