@@ -179,8 +179,10 @@ export class ProActivationService {
 
                 debugLog('Pro activation successful');
 
-                // Refresh UI immediately to show Pro status
-                vscode.commands.executeCommand('gitmind.refreshSubscription', { silent: true });
+                // Apply the entitlement change to all live extension surfaces before
+                // reporting success. A customer must never need to close and reopen
+                // the GitMind settings view just because their license state changed.
+                await this.refreshEntitlementUi();
 
                 // Show success notification
                 vscode.window.showInformationMessage(
@@ -466,6 +468,10 @@ export class ProActivationService {
             lastChecked: new Date().toISOString()
         });
 
+        // Update command enablement, status bar, feature gates, and any already-open
+        // settings view as soon as local deactivation is complete.
+        await this.refreshEntitlementUi();
+
         // Handle encryption and API key migration when downgrading to free
         try {
             const { SecureKeyManager } = await import('../encryption/SecureKeyManager.js');
@@ -579,6 +585,47 @@ export class ProActivationService {
             message: successMessage,
             apiResponse: apiResponse
         };
+    }
+
+    /**
+     * Refresh every in-memory view of entitlement without reloading the VS Code
+     * window. Configuration writes alone update storage but do not force an open
+     * webview, cached Pro check, or status bar to re-render.
+     */
+    private async refreshEntitlementUi(): Promise<void> {
+        try {
+            const { SecureKeyManager } = await import('../encryption/SecureKeyManager.js');
+            SecureKeyManager.getInstance().refreshProUserCache();
+        } catch (error) {
+            debugLog('Could not refresh the Pro entitlement cache:', error);
+        }
+
+        try {
+            const { updateCommitIntelligenceContext } = await import('../../config/settings.js');
+            await updateCommitIntelligenceContext();
+            await vscode.commands.executeCommand('gitmind.internalUpdateProStatusBar');
+            await vscode.commands.executeCommand('gitmind.refreshSubscription', { silent: true });
+        } catch (error) {
+            debugLog('Could not refresh GitMind entitlement commands:', error);
+        }
+
+        try {
+            const { SettingsWebview } = await import('../../webview/settings/SettingsWebview.js');
+            if (!SettingsWebview.isWebviewOpen()) {
+                return;
+            }
+            const { SettingsManager } = await import('../../webview/settings/SettingsManager.js');
+            SettingsWebview.postMessageToWebview({
+                command: 'updateSettings',
+                settings: await SettingsManager.getCurrentSettings(),
+                forceRefresh: true,
+                refreshUI: true
+            });
+            SettingsWebview.postMessageToWebview({ command: 'refreshProFeaturesUI' });
+            SettingsWebview.postMessageToWebview({ command: 'updateEncryptionStatus' });
+        } catch (error) {
+            debugLog('Could not refresh the open GitMind settings view:', error);
+        }
     }
 
     /**
