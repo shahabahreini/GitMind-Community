@@ -1,10 +1,15 @@
 // src/services/subscription/SubscriptionManager.ts
 import * as vscode from 'vscode';
-import { LemonSqueezyService, SubscriptionStatus } from './LemonSqueezyService';
+import type { SubscriptionStatus } from './licenseTypes';
+import { GitMindLicenseService } from './GitMindLicenseService';
 import { debugLog } from '../debug/logger';
 import { SecureKeyManager } from '../encryption/SecureKeyManager';
 import { SettingsWebview } from '../../webview/settings/SettingsWebview';
 import { isProUser as sharedIsProUser } from '../../utils/proHelpers';
+
+/** A user without a valid license key is Free. Pro is granted by the license, not by a
+ *  subscription lookup — GitMind Pro is a one-time purchase, so there is nothing to poll. */
+const FREE_STATUS: SubscriptionStatus = { isActive: false, isPaused: false, isExpired: false, plan: 'free' };
 
 export interface UserSubscription {
     email: string;
@@ -14,18 +19,15 @@ export interface UserSubscription {
 }
 
 /**
- * Manages user subscription state and integrates with Lemon Squeezy
+ * Manages the cached Pro/Free state derived from the user's license key.
  */
 export class SubscriptionManager {
     private static instance: SubscriptionManager;
     private context: vscode.ExtensionContext | undefined;
-    private lemonSqueezy: LemonSqueezyService;
     private subscriptionCache: Map<string, UserSubscription> = new Map();
     private readonly cacheExpiration = 5 * 60 * 1000; // 5 minutes
 
-    private constructor() {
-        this.lemonSqueezy = LemonSqueezyService.getInstance();
-    }
+    private constructor() { }
 
     public static getInstance(): SubscriptionManager {
         if (!SubscriptionManager.instance) {
@@ -109,7 +111,7 @@ export class SubscriptionManager {
         if (lockTime && Math.abs(Date.now() - lockTime) < 30000) {
             debugLog(`Subscription validation already in progress for ${email}, waiting...`);
             // Return cached result if available, otherwise return free status
-            return cached?.status || { isActive: false, isPaused: false, isExpired: false, plan: 'free' };
+            return cached?.status || FREE_STATUS;
         }
 
         // Mark validation as in progress
@@ -120,7 +122,9 @@ export class SubscriptionManager {
         debugLog(`Fetching fresh subscription status for ${email}`);
 
         try {
-            const status = await this.lemonSqueezy.validateSubscription(email);
+            // Pro is determined by the license key check above. Without one, the account is
+            // Free — there is no subscription endpoint to poll for a one-time product.
+            const status = FREE_STATUS;
 
             // Cache the result
             const userSubscription: UserSubscription = {
@@ -228,13 +232,10 @@ export class SubscriptionManager {
      * Start subscription process
      */
     public async startSubscription(): Promise<void> {
-        // Open the stable public checkout link directly. This does NOT require the
-        // products API (which can fail even with a valid key), so "Buy" always works.
-        const checkoutUrl = this.lemonSqueezy.buildCheckoutUrl(
-            // Prefill the email if we already know it, but never block on it —
-            // the checkout page collects the email itself.
-            await this.getUserEmail(true)
-        );
+        // Send buyers to the GitMind Pro pricing page on our own site. Checkout itself is
+        // created server-side there (Polar), so this is a plain, always-working link — no
+        // products API call that can fail, and no dependency on the retired storefront.
+        const checkoutUrl = GitMindLicenseService.CHECKOUT_URL;
 
         try {
             await vscode.env.openExternal(vscode.Uri.parse(checkoutUrl));
@@ -246,7 +247,7 @@ export class SubscriptionManager {
                 copy
             );
             if (choice === copy) {
-                await vscode.env.clipboard.writeText(LemonSqueezyService.CHECKOUT_URL);
+                await vscode.env.clipboard.writeText(checkoutUrl);
                 vscode.window.showInformationMessage('Checkout link copied to clipboard.');
             }
             return;

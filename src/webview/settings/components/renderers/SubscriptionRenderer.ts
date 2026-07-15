@@ -98,19 +98,19 @@ export class SubscriptionRenderer extends BaseRenderer {
                                 });
                             } else {
                                 // API deactivation failed
-                                let errorMsg = 'Failed to deactivate GitMind Pro through the LemonSqueezy API.\\n';
-                                
+                                let errorMsg = 'Failed to deactivate GitMind Pro on the license server.\\n';
+
                                 if (response.error) {
                                     errorMsg += '\\nError: ' + response.error;
                                 }
-                                
+
                                 alert(errorMsg);
                             }
                         } else {
                             // Local deactivation only (no API response) - show simple success
                             vscode.postMessage({
                                 command: 'showSimpleMessage',
-                                message: message.message || 'GitMind Pro has been deactivated locally. Your license activation status may not be updated on the LemonSqueezy servers.',
+                                message: message.message || 'GitMind Pro has been deactivated locally. This device may still show as active in your account portal until it syncs.',
                                 type: 'info'
                             });
                         }

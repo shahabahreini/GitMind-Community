@@ -32,7 +32,6 @@ import { PromptManager } from "./services/promptManager";
 import { SecureKeyManager } from "./services/encryption/SecureKeyManager";
 import { SubscriptionManager } from "./services/subscription/SubscriptionManager";
 import { ProActivationService } from "./services/subscription/ProActivationService";
-import { LemonSqueezyService } from "./services/subscription/LemonSqueezyService";
 import { ProNotificationService } from "./services/subscription/ProNotificationService";
 import { SettingsMigrationService } from "./services/migration/SettingsMigrationService";
 import { learnFromCommitHistory } from "./services/ai/learnFromCommitHistory";

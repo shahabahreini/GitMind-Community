@@ -42,7 +42,7 @@ export async function generateChangelog() {
             if (action === 'Upgrade to Pro') {
                 vscode.commands.executeCommand('gitmind.subscribe');
             } else if (action === 'Learn More') {
-                vscode.env.openExternal(vscode.Uri.parse('https://gitmind.com/pro'));
+                vscode.env.openExternal(vscode.Uri.parse('https://gitmind-pro.com/pricing'));
             }
 
             await safeSendResult(false, 'Not a Pro user');

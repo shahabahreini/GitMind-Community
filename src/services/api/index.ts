@@ -831,7 +831,7 @@ async function generateMessageWithConfig(
                 "Learn More"
             ).then(selection => {
                 if (selection === "Learn More") {
-                    vscode.env.openExternal(vscode.Uri.parse("https://gitmind.com/pro"));
+                    vscode.env.openExternal(vscode.Uri.parse("https://gitmind-pro.com/pricing"));
                 }
             });
             return "";

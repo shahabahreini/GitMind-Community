@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as crypto from 'crypto';
 import * as os from 'os';
 import { debugLog } from '../debug/logger';
-import type { LicenseValidationResult } from './LemonSqueezyService';
+import type { LicenseValidationResult } from './licenseTypes';
 
 /**
  * Client for the GitMind Pro licensing API at gitmind-pro.com.
@@ -37,6 +37,8 @@ export class GitMindLicenseService {
     public static readonly CHECKOUT_URL = 'https://gitmind-pro.com/pricing';
     public static readonly MIGRATE_URL = 'https://gitmind-pro.com/migrate';
     public static readonly RESEND_KEY_URL = 'https://gitmind-pro.com/portal/resend-key';
+    /** Where a customer manages their license, sees active devices, and deactivates them. */
+    public static readonly PORTAL_URL = 'https://gitmind-pro.com/portal';
 
     public static getInstance(): GitMindLicenseService {
         if (!GitMindLicenseService.instance) {
