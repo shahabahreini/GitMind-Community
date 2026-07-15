@@ -6,7 +6,7 @@ import { debugLog } from '../debug/logger';
 
 export const EXTENSION_ID = 'ShahabBahreiniJangjoo.ai-commit-assistant';
 export const MIGRATION_GUIDE_URL = 'https://gitmind-pro.com/migrate';
-export const GITHUB_ISSUES_URL = 'https://github.com/shahabahreini/AI-Commit-Assistant/issues/new';
+export const GITHUB_ISSUES_URL = 'https://github.com/shahabahreini/GitMind-Community/issues/new';
 
 export class ProNotificationService {
     private static instance: ProNotificationService;

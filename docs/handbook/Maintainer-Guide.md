@@ -17,8 +17,8 @@ Provider catalogs and account quotas are provider-controlled. Document GitMind d
 ## Repository And CI Ownership
 
 - `GitMind-Pro` is the private source repository. Its workflows validate builds, tests, documentation, and VSIX contents, but must not publish Releases, Pages, or Wiki content.
-- `shahabahreini/AI-Commit-Assistant` is the public publication repository. Only this repository may publish VSIX releases, Pages, and Wiki content.
-- Publication workflows must include an explicit `github.repository == 'shahabahreini/AI-Commit-Assistant'` guard. Never enable duplicate publication from the private repository.
+- `shahabahreini/GitMind-Community` is the public publication repository. Only this repository may publish VSIX releases, Pages, and Wiki content.
+- Publication workflows must include an explicit `github.repository == 'shahabahreini/GitMind-Community'` guard. Never enable duplicate publication from the private repository.
 
 ## Release Preflight
 

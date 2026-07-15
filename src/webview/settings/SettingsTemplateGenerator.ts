@@ -118,11 +118,16 @@ export class SettingsTemplateGenerator {
           <div class="settings-footer-row">
             <span class="settings-footer-meta">v${this._extensionVersion}</span>
             <span class="settings-footer-sep">•</span>
-            <span class="settings-footer-meta">Shahab Bahreini</span>
+            <a
+              class="settings-footer-link"
+              href="https://gitmind-pro.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >gitmind-pro.com</a>
             <span class="settings-footer-sep">•</span>
             <a
               class="settings-footer-link"
-              href="https://github.com/shahabahreini/AI-Commit-Assistant/issues"
+              href="https://github.com/shahabahreini/GitMind-Community/issues"
               target="_blank"
               rel="noopener noreferrer"
             >Report a bug / improvement</a>

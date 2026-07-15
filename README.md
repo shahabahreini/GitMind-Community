@@ -2,7 +2,7 @@
 
 GitMind analyzes your Git diff and generates clear, professional commit messages inside VS Code. Choose from 17 built-in AI providers, run locally with Ollama, reuse GitHub Copilot, or connect a custom OpenAI-compatible API with GitMind Pro.
 
-**Documentation:** [GitMind Handbook](https://shahabahreini.github.io/AI-Commit-Assistant/) · [Quick Start](https://shahabahreini.github.io/AI-Commit-Assistant/Installation-And-Quick-Start) · [Providers](https://shahabahreini.github.io/AI-Commit-Assistant/Providers-And-Models) · [Native Wiki mirror](https://github.com/shahabahreini/AI-Commit-Assistant/wiki)
+**Website:** [gitmind-pro.com](https://gitmind-pro.com) · **Documentation:** [GitMind Handbook](https://shahabahreini.github.io/AI-Commit-Assistant/) · [Quick Start](https://shahabahreini.github.io/AI-Commit-Assistant/Installation-And-Quick-Start) · [Providers](https://shahabahreini.github.io/AI-Commit-Assistant/Providers-And-Models) · [Native Wiki mirror](https://github.com/shahabahreini/GitMind-Community/wiki)
 
 <div align="center">
   <img src="https://raw.githubusercontent.com/shahabahreini/AI-Commit-Assistant/main/images/logo.png" alt="GitMind logo" width="140"/>
@@ -159,9 +159,9 @@ See the [NVIDIA NIM LLM API reference](https://docs.api.nvidia.com/nim/reference
 
 Open **GitMind Settings > Pro** and paste the license key from your purchase email.
 
-GitMind Pro is a one-time lifetime purchase. Activation, deactivation, and current Pro status are available directly in the settings panel.
+GitMind Pro is a one-time lifetime purchase available at [gitmind-pro.com/pricing](https://gitmind-pro.com/pricing). You can manage your licenses and active devices at [gitmind-pro.com/portal](https://gitmind-pro.com/portal). Activation, deactivation, and current Pro status are also available directly in the settings panel.
 
-If your key does not work, or you cannot find it, open an issue and we will sort it out — you will not lose access while we do.
+If your key does not work, or you cannot find it, open an issue at [GitMind-Community Issues](https://github.com/shahabahreini/GitMind-Community/issues) and we will sort it out — you will not lose access while we do.
 
 ## Privacy And Security
 
@@ -179,8 +179,9 @@ If your key does not work, or you cannot find it, open an issue and we will sort
 
 ## Support
 
+- [Official Website](https://gitmind-pro.com)
 - [Read the GitMind Handbook](https://shahabahreini.github.io/AI-Commit-Assistant/)
 - For serious debugging, Pro users can open **GitMind Settings > Pro > Support Report**, start a session, reproduce the issue, stop and review it, then save and manually attach the JSON report.
-- [Use the native GitHub Wiki mirror](https://github.com/shahabahreini/AI-Commit-Assistant/wiki)
-- [Report an issue](https://github.com/shahabahreini/Gitmind-Pro/issues)
+- [Use the native GitHub Wiki mirror](https://github.com/shahabahreini/GitMind-Community/wiki)
+- [Report an issue](https://github.com/shahabahreini/GitMind-Community/issues)
 - [Sponsor development](https://github.com/sponsors/shahabahreini)

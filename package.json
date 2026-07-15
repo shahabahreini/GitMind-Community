@@ -1595,13 +1595,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/shahabahreini/Gitmind-Pro.git"
+    "url": "https://github.com/shahabahreini/GitMind-Community.git"
   },
   "bugs": {
-    "url": "https://github.com/shahabahreini/Gitmind-Pro/issues",
+    "url": "https://github.com/shahabahreini/GitMind-Community/issues",
     "email": "shahab.ahreini@gmail.com"
   },
-  "homepage": "https://github.com/shahabahreini/Gitmind-Pro#readme",
+  "homepage": "https://gitmind-pro.com",
   "keywords": [
     "git",
     "commit",
@@ -1680,8 +1680,8 @@
       "description": "Rating"
     },
     {
-      "url": "https://img.shields.io/github/stars/shahabahreini/Gitmind-Pro?style=for-the-badge&logo=github&color=yellow",
-      "href": "https://github.com/shahabahreini/Gitmind-Pro",
+      "url": "https://img.shields.io/github/stars/shahabahreini/GitMind-Community?style=for-the-badge&logo=github&color=yellow",
+      "href": "https://github.com/shahabahreini/GitMind-Community",
       "description": "GitHub Stars"
     },
     {

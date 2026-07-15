@@ -27,9 +27,10 @@ The session is local, memory-only, bounded to 1,000 events/512 KB, and erased on
 
 ## Links
 
-- [Open an issue](https://github.com/shahabahreini/AI-Commit-Assistant/issues/new/choose)
-- [Releases](https://github.com/shahabahreini/AI-Commit-Assistant/releases)
+- [Official Website](https://gitmind-pro.com)
+- [Open an issue](https://github.com/shahabahreini/GitMind-Community/issues/new/choose)
+- [Releases](https://github.com/shahabahreini/GitMind-Community/releases)
 - [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant)
 - [Open VSX](https://open-vsx.org/extension/ShahabBahreiniJangjoo/ai-commit-assistant)
-- [Buy GitMind Pro](https://gitmind.lemonsqueezy.com/checkout/buy/cd58d4e5-92cf-4f59-a6fe-ae6e57010706)
+- [Buy GitMind Pro](https://gitmind-pro.com/pricing)
 - [GitHub Sponsors](https://github.com/sponsors/shahabahreini)
