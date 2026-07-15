@@ -38,15 +38,18 @@ export function getSubscriptionStyles(): string {
     .subscription-status-card {
         display: flex;
         align-items: center;
-        padding: 0.75rem;
-        border-radius: 6px;
-        margin-top: 1rem;
-        border: 1px solid rgba(128, 128, 128, 0.12);
+        justify-content: center;
+        padding: 0.85rem 1.25rem;
+        border-radius: 8px;
+        margin: 1rem auto 0;
+        max-width: 480px;
+        border: 1px solid rgba(128, 128, 128, 0.18);
         background: var(--vscode-editor-background);
     }
 
     .subscription-status-card.pro-active {
         background: var(--vscode-inputValidation-infoBackground);
+        border-color: rgba(16, 185, 129, 0.4);
     }
 
     .subscription-status-card.email-configured {
@@ -56,21 +59,33 @@ export function getSubscriptionStyles(): string {
     .subscription-status-card.not-configured {
         background: var(--vscode-editor-background);
     }
-    
+
     .status-info {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 0.85rem;
+        text-align: left;
     }
-    
+
+    /* A fixed circular badge, so the glyph reads as an icon rather than a stray
+       character floating on its own line. */
     .status-icon {
-        font-size: 1.2rem;
+        flex: 0 0 auto;
+        width: 2rem;
+        height: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 1rem;
         font-weight: 600;
         color: var(--vscode-foreground);
+        background: rgba(128, 128, 128, 0.12);
     }
 
     .pro-active .status-icon {
         color: var(--vscode-testing-iconPassed);
+        background: rgba(16, 185, 129, 0.15);
     }
 
     .email-configured .status-icon {
@@ -80,19 +95,75 @@ export function getSubscriptionStyles(): string {
     .not-configured .status-icon {
         color: var(--vscode-descriptionForeground);
     }
-    
+
     .status-details {
         flex: 1;
+        min-width: 0;
     }
-    
+
     .status-title {
-        font-weight: 500;
+        font-weight: 600;
         color: var(--vscode-foreground);
-        margin-bottom: 0.2rem;
+        margin-bottom: 0.15rem;
+        line-height: 1.3;
     }
-    
+
     .status-subtitle {
         font-size: 0.85rem;
+        color: var(--vscode-descriptionForeground);
+        line-height: 1.3;
+    }
+
+    /* Account email (top panel) */
+    .account-email-section {
+        max-width: 480px;
+        margin: 0.75rem auto 0;
+        text-align: left;
+    }
+
+    .account-email-row {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .account-email-row .detail-label {
+        flex: 0 0 auto;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--vscode-descriptionForeground);
+    }
+
+    .account-email-row .detail-value {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--vscode-foreground);
+    }
+
+    .account-email-row input.license-input-field {
+        flex: 1;
+        min-width: 0;
+        padding: 0.4rem 0.6rem;
+        border-radius: 4px;
+        border: 1px solid var(--vscode-input-border, transparent);
+        background: var(--vscode-input-background);
+        color: var(--vscode-input-foreground);
+    }
+
+    .btn-small {
+        padding: 0.3rem 0.75rem;
+        font-size: 0.8rem;
+        border-radius: 4px;
+        white-space: nowrap;
+    }
+
+    .email-hint {
+        margin: 0.4rem 0 0;
+        font-size: 0.8rem;
+        line-height: 1.35;
         color: var(--vscode-descriptionForeground);
     }
     

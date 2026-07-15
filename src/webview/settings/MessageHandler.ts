@@ -358,6 +358,49 @@ export class MessageHandler {
                 }
                 break;
 
+            case 'changeSubscriptionEmail':
+                try {
+                    const newEmail = String(message.email ?? '').trim();
+                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+                        SettingsWebview.postMessageToWebview({
+                            command: 'emailChangeResult',
+                            success: false,
+                            error: 'Enter a valid email address.'
+                        });
+                        break;
+                    }
+
+                    // setUserEmail is the reset path on purpose: it clears the cached
+                    // subscription state and re-derives it for the new address, so the
+                    // panel never shows one email's entitlement next to another email.
+                    // (Dynamic import: SubscriptionManager pulls in SettingsWebview,
+                    // which owns this handler — a static import would be circular.)
+                    const { SubscriptionManager } = await import('../../services/subscription/SubscriptionManager.js');
+                    await SubscriptionManager.getInstance().setUserEmail(newEmail);
+
+                    const settingsAfterEmailChange = await SettingsManager.getCurrentSettings();
+                    if (SettingsWebview.isWebviewOpen()) {
+                        SettingsWebview.postMessageToWebview({
+                            command: 'emailChangeResult',
+                            success: true,
+                            email: newEmail
+                        });
+                        SettingsWebview.postMessageToWebview({
+                            command: 'updateSettings',
+                            settings: settingsAfterEmailChange,
+                            refreshUI: true
+                        });
+                    }
+                } catch (error) {
+                    debugLog('Failed to change subscription email:', error);
+                    SettingsWebview.postMessageToWebview({
+                        command: 'emailChangeResult',
+                        success: false,
+                        error: error instanceof Error ? error.message : 'Unknown error'
+                    });
+                }
+                break;
+
             case 'checkUserStatusTransition':
                 try {
                     const secureKeyManager = SecureKeyManager.getInstance();

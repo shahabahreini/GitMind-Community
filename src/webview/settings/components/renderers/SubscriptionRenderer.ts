@@ -34,38 +34,79 @@ export class SubscriptionRenderer extends BaseRenderer {
             // Note: All subscription button event handlers are now managed by ScriptManager
             // to avoid conflicts with the global event handling system.
             // This includes the purchase, license activation, validation, and deactivation controls.
-            // The account-email edit controls below are wired here because their IDs are
-            // unique to this tab and they do not exist in the global handler map.
+            // The account-email controls in the top panel are wired here because their
+            // IDs are unique to this tab and they do not exist in the global handler map.
 
             (function () {
-                const editBtn = document.getElementById('editSubscriptionEmailBtn');
                 const editRow = document.getElementById('subscriptionEmailEditRow');
-                const input = document.getElementById('subscriptionEmailEditInput');
-                const valueEl = document.getElementById('subscriptionEmailValue');
-                if (!editBtn || !editRow || !input || !valueEl) { return; }
+                const input = document.getElementById('subscriptionEmail');
+                const saveBtn = document.getElementById('saveSubscriptionEmailBtn');
+                if (!editRow || !input || !saveBtn) { return; }
 
-                editBtn.addEventListener('click', function () {
-                    const open = editRow.style.display !== 'none';
-                    editRow.style.display = open ? 'none' : 'flex';
-                    editBtn.textContent = open ? 'Edit' : 'Close';
-                    if (!open) { input.focus(); }
-                });
+                // Present only when an email is already registered (label mode).
+                const changeBtn = document.getElementById('changeSubscriptionEmailBtn');
+                const displayRow = document.getElementById('accountEmailDisplayRow');
+                const valueEl = document.getElementById('subscriptionEmailValue');
+                const hint = document.getElementById('subscriptionEmailHint');
+                const registeredEmail = valueEl ? valueEl.textContent.trim() : '';
+
+                if (changeBtn) {
+                    changeBtn.addEventListener('click', function () {
+                        const open = editRow.style.display !== 'none';
+                        editRow.style.display = open ? 'none' : 'flex';
+                        if (displayRow) { displayRow.style.display = open ? 'flex' : 'none'; }
+                        if (hint) { hint.style.display = open ? 'none' : 'block'; }
+                        if (!open) { input.focus(); }
+                    });
+                }
 
                 document.getElementById('cancelSubscriptionEmailBtn')?.addEventListener('click', function () {
+                    input.value = registeredEmail;
                     editRow.style.display = 'none';
-                    editBtn.textContent = 'Edit';
+                    if (displayRow) { displayRow.style.display = 'flex'; }
+                    if (hint) { hint.style.display = 'none'; }
                 });
 
-                document.getElementById('saveSubscriptionEmailBtn')?.addEventListener('click', function () {
+                saveBtn.addEventListener('click', function () {
                     const email = input.value.trim();
                     if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
                         alert('Enter a valid email address.');
                         return;
                     }
-                    vscode.postMessage({ command: 'updateSetting', key: 'subscription.email', value: email });
-                    valueEl.textContent = email;
+                    if (registeredEmail && email === registeredEmail) {
+                        // Nothing changed — just close the editor.
+                        editRow.style.display = 'none';
+                        if (displayRow) { displayRow.style.display = 'flex'; }
+                        if (hint) { hint.style.display = 'none'; }
+                        return;
+                    }
+                    if (registeredEmail && !confirm(
+                        'Change the account email from ' + registeredEmail + ' to ' + email + '?\\n\\n' +
+                        'This resets the stored subscription state in this editor. An activated ' +
+                        'license stays on this machine and is re-checked afterwards.'
+                    )) {
+                        return;
+                    }
+                    saveBtn.disabled = true;
+                    saveBtn.textContent = 'Saving…';
+                    vscode.postMessage({ command: 'changeSubscriptionEmail', email: email });
+                });
+
+                window.addEventListener('message', function (event) {
+                    const message = event.data;
+                    if (message.command !== 'emailChangeResult') { return; }
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = registeredEmail ? 'Save' : 'Register';
+                    if (!message.success) {
+                        alert('Could not save the email: ' + (message.error || 'unknown error'));
+                        return;
+                    }
+                    // The backend re-sends full settings (refreshUI) which re-renders this
+                    // tab in label mode; updating in place covers the gap until then.
+                    if (valueEl) { valueEl.textContent = message.email; }
                     editRow.style.display = 'none';
-                    editBtn.textContent = 'Edit';
+                    if (displayRow) { displayRow.style.display = 'flex'; }
+                    if (hint) { hint.style.display = 'none'; }
                 });
             })();
 
@@ -157,7 +198,6 @@ export class SubscriptionRenderer extends BaseRenderer {
 
     private renderSubscriptionHeader(): string {
         const hasValidLicense = this.hasValidLicense();
-        const hasEmail = this.hasSubscriptionEmail();
 
         return `
             <div class="subscription-header">
@@ -169,6 +209,65 @@ export class SubscriptionRenderer extends BaseRenderer {
                     Unlock advanced features including encryption, large diff handling, custom commit styles, and more.
                 </div>
                 ${this.renderSubscriptionStatus()}
+                ${this.renderAccountEmailSection()}
+            </div>
+        `;
+    }
+
+    /**
+     * The account email lives in the top panel because purchase, migration, and key
+     * delivery all revolve around it. Once registered it renders as a plain label —
+     * changing it is deliberately behind a "Change" click plus a confirm, because a
+     * change resets the locally stored subscription state.
+     *
+     * The input keeps the id "subscriptionEmail" in BOTH modes (hidden while the
+     * label is shown): the Buy button's handler reads that field, and it previously
+     * dead-ended with "enter your email" when no such field existed anywhere.
+     */
+    private renderAccountEmailSection(): string {
+        const email = this.settings.subscription?.email || '';
+        const safeEmail = FormUtils.escapeHtml(email);
+
+        if (email) {
+            return `
+                <div class="account-email-section">
+                    <div class="account-email-row" id="accountEmailDisplayRow">
+                        <span class="detail-label">Account Email</span>
+                        <span class="detail-value" id="subscriptionEmailValue">${safeEmail}</span>
+                        <button type="button" class="btn btn-secondary btn-small" id="changeSubscriptionEmailBtn"
+                                title="Change the email associated with your GitMind Pro account">Change</button>
+                    </div>
+                    <div class="account-email-row" id="subscriptionEmailEditRow" style="display: none;">
+                        <input type="email"
+                               id="subscriptionEmail"
+                               class="license-input-field"
+                               placeholder="you@example.com"
+                               value="${safeEmail}" />
+                        <button type="button" class="btn btn-primary btn-small" id="saveSubscriptionEmailBtn">Save</button>
+                        <button type="button" class="btn btn-secondary btn-small" id="cancelSubscriptionEmailBtn">Cancel</button>
+                    </div>
+                    <p class="email-hint" id="subscriptionEmailHint" style="display: none;">
+                        Changing the account email resets the stored subscription state in this editor.
+                        An activated license stays on this machine and is re-checked against the new address.
+                    </p>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="account-email-section">
+                <div class="account-email-row" id="subscriptionEmailEditRow">
+                    <span class="detail-label">Account Email</span>
+                    <input type="email"
+                           id="subscriptionEmail"
+                           class="license-input-field"
+                           placeholder="you@example.com" />
+                    <button type="button" class="btn btn-primary btn-small" id="saveSubscriptionEmailBtn">Register</button>
+                </div>
+                <p class="email-hint">
+                    Register the email for your GitMind Pro purchase — license keys and account
+                    details are delivered there. Required before buying from inside VS Code.
+                </p>
             </div>
         `;
     }
@@ -309,20 +408,11 @@ export class SubscriptionRenderer extends BaseRenderer {
                                 <span class="detail-label">${activeDetailLabel}</span>
                                 <span class="detail-value">${activeDetailValue}</span>
                             </div>
+                            ${email ? `
                             <div class="detail-row">
                                 <span class="detail-label">Account Email</span>
-                                <span class="detail-value" id="subscriptionEmailValue">${email ? FormUtils.escapeHtml(email) : '<em>Not set</em>'}</span>
-                                <button type="button" class="btn btn-secondary btn-small" id="editSubscriptionEmailBtn" title="Change the email associated with your license">Edit</button>
-                            </div>
-                            <div class="detail-row" id="subscriptionEmailEditRow" style="display: none;">
-                                <input type="email"
-                                       id="subscriptionEmailEditInput"
-                                       class="license-input-field"
-                                       placeholder="you@example.com"
-                                       value="${FormUtils.escapeHtml(email)}" />
-                                <button type="button" class="btn btn-primary btn-small" id="saveSubscriptionEmailBtn">Save</button>
-                                <button type="button" class="btn btn-secondary btn-small" id="cancelSubscriptionEmailBtn">Cancel</button>
-                            </div>
+                                <span class="detail-value">${FormUtils.escapeHtml(email)}</span>
+                            </div>` : ''}
                         </div>
 
                         <div class="active-actions-row">

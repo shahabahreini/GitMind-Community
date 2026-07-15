@@ -444,8 +444,17 @@ export function getEventHandlersScript(): string {
           });
         }, 100);
       } else {
-        // If no email, show error message
-        showToast('Please enter your email address before subscribing', 'error');
+        // No registered email yet — point at the Account Email field in the top
+        // panel instead of dead-ending, and put the cursor in it.
+        showToast('Register your account email first — see the Account Email field at the top of this tab', 'error');
+        const emailEditRow = document.getElementById('subscriptionEmailEditRow');
+        const emailDisplayRow = document.getElementById('accountEmailDisplayRow');
+        if (emailEditRow) { emailEditRow.style.display = 'flex'; }
+        if (emailDisplayRow) { emailDisplayRow.style.display = 'none'; }
+        if (emailField) {
+          emailField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          emailField.focus();
+        }
       }
     });
 
