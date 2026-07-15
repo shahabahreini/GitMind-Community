@@ -39,7 +39,6 @@ import { LegacyEntitlementService } from "../services/subscription/LegacyEntitle
 import { GitMindLicenseService } from "../services/subscription/GitMindLicenseService";
 import { SubscriptionManager } from "../services/subscription/SubscriptionManager";
 import { ProActivationService } from "../services/subscription/ProActivationService";
-import { LemonSqueezyService } from "../services/subscription/LemonSqueezyService";
 import { SettingsMigrationService } from "../services/migration/SettingsMigrationService";
 import { learnFromCommitHistory } from "../services/ai/learnFromCommitHistory";
 import { CommitStyleManager } from "../services/commitStyleManager";
@@ -1264,6 +1263,26 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
         const errorMessage = error instanceof Error ? error.message : 'Failed to open customer portal';
         vscode.window.showErrorMessage(`Failed to open customer portal: ${errorMessage}`);
       }
+    }),
+
+    // Opens the GitMind Pro account portal in the browser, where the customer can see
+    // every device on their license and deactivate any of them — the same actions the
+    // extension offers for this machine, but for all of their machines at once.
+    vscode.commands.registerCommand("gitmind.openAccountPortal", async () => {
+      try {
+        await vscode.env.openExternal(vscode.Uri.parse(GitMindLicenseService.PORTAL_URL));
+      } catch (error) {
+        debugLog("Open account portal error:", error);
+        const copy = 'Copy Link';
+        const choice = await vscode.window.showErrorMessage(
+          'Could not open the account portal automatically.',
+          copy
+        );
+        if (choice === copy) {
+          await vscode.env.clipboard.writeText(GitMindLicenseService.PORTAL_URL);
+          vscode.window.showInformationMessage('Portal link copied to clipboard.');
+        }
+      }
     }), vscode.commands.registerCommand("gitmind.refreshSubscription", async (options: { silent?: boolean; email?: string } = {}) => {
       try {
         const subscriptionManager = SubscriptionManager.getInstance();
@@ -1669,93 +1688,6 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
         debugLog("Force Pro deactivation error:", error);
         const errorMessage = error instanceof Error ? error.message : 'Failed to force deactivate Pro';
         vscode.window.showErrorMessage(`Failed to force deactivate Pro: ${errorMessage}`);
-      }
-    }),
-
-    vscode.commands.registerCommand("gitmind.fixLicenseActivation", async () => {
-      try {
-        await vscode.window.withProgress({
-          location: vscode.ProgressLocation.Notification,
-          title: "Checking license activation status...",
-          cancellable: false
-        }, async () => {
-          const proActivationService = ProActivationService.getInstance();
-          const config = vscode.workspace.getConfiguration('gitmind');
-
-          // Check if we have a license key but missing instance ID
-          const licenseKey = config.get<string>('pro.licenseKey');
-          const instanceId = config.get<string>('pro.instanceId');
-
-          if (licenseKey && licenseKey !== '[ENCRYPTED]' && !instanceId) {
-            debugLog('Found license key without instance ID, attempting to validate and retrieve');
-
-            try {
-              const lemonSqueezyService = LemonSqueezyService.getInstance();
-              const validation = await lemonSqueezyService.validateLicenseKey(licenseKey);
-
-              if (validation.isValid && validation.instanceId) {
-                // Update config with the retrieved instance ID
-                await config.update('pro.instanceId', validation.instanceId, vscode.ConfigurationTarget.Global);
-                await config.update('pro.validationStatus', 'valid', vscode.ConfigurationTarget.Global);
-                await config.update('pro.lastValidation', new Date().toISOString(), vscode.ConfigurationTarget.Global);
-
-                vscode.window.showInformationMessage(`✅ License activation fixed! Instance ID retrieved and saved.`);
-                debugLog(`Fixed license activation - retrieved instance ID: ${validation.instanceId}`);
-
-                // Refresh UI
-                vscode.commands.executeCommand('gitmind.refreshSubscription', { silent: true });
-                return;
-              }
-            } catch (error) {
-              debugLog('Failed to validate license during fix attempt:', error);
-            }
-          }
-
-          // Check if we have encrypted license key
-          if (licenseKey === '[ENCRYPTED]') {
-            try {
-              const { EncryptionHelper } = await import('../utils/encryptionHelper.js');
-              const decryptedKey = await EncryptionHelper.getLicenseKey(context);
-
-              if (decryptedKey && !instanceId) {
-                const lemonSqueezyService = LemonSqueezyService.getInstance();
-                const validation = await lemonSqueezyService.validateLicenseKey(decryptedKey);
-
-                if (validation.isValid && validation.instanceId) {
-                  await config.update('pro.instanceId', validation.instanceId, vscode.ConfigurationTarget.Global);
-                  await config.update('pro.validationStatus', 'valid', vscode.ConfigurationTarget.Global);
-                  await config.update('pro.lastValidation', new Date().toISOString(), vscode.ConfigurationTarget.Global);
-
-                  vscode.window.showInformationMessage(`✅ Encrypted license activation fixed! Instance ID retrieved and saved.`);
-                  debugLog(`Fixed encrypted license activation - retrieved instance ID: ${validation.instanceId}`);
-
-                  // Refresh UI
-                  vscode.commands.executeCommand('gitmind.refreshSubscription', { silent: true });
-                  return;
-                }
-              }
-            } catch (error) {
-              debugLog('Failed to handle encrypted license during fix attempt:', error);
-            }
-          }
-
-          // If we get here, no fix was needed or possible
-          const hasLicense = !!(licenseKey && licenseKey !== '');
-          const hasInstance = !!(instanceId && instanceId !== '');
-          const validationStatus = config.get<string>('pro.validationStatus');
-
-          if (hasLicense && hasInstance && validationStatus === 'valid') {
-            vscode.window.showInformationMessage('✅ License activation appears to be working correctly.');
-          } else if (!hasLicense) {
-            vscode.window.showInformationMessage('ℹ️ No license key found. Use "Activate Pro with License Key" to activate your license.');
-          } else {
-            vscode.window.showWarningMessage('⚠️ License activation issues detected. You may need to reactivate your license.');
-          }
-        });
-      } catch (error) {
-        debugLog("Fix license activation error:", error);
-        const errorMessage = error instanceof Error ? error.message : 'Failed to fix license activation';
-        vscode.window.showErrorMessage(`Failed to fix license activation: ${errorMessage}`);
       }
     }),
 

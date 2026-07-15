@@ -785,7 +785,7 @@
           "type": "string",
           "default": "",
           "description": "[LEGACY] Your GitMind Pro license key for accessing premium features",
-          "markdownDescription": "**Legacy License Key**: For backwards compatibility only. New users should use the subscription system. [Subscribe to Pro](https://gitmind.com/pro) to enable encrypted API key storage and advanced features.",
+          "markdownDescription": "**License Key**: Your GitMind Pro license key. [Buy GitMind Pro](https://gitmind-pro.com/pricing) — a one-time lifetime purchase — or [manage your devices](https://gitmind-pro.com/portal). Pro unlocks encrypted API key storage and advanced features.",
           "order": 100
         },
         "gitmind.pro.encryptionEnabled": {
@@ -1037,23 +1037,23 @@
         "gitmind.subscription.plan": {
           "type": "string",
           "default": "free",
-          "description": "Your current subscription plan",
-          "markdownDescription": "Your current GitMind subscription plan (free, pro-monthly, pro-yearly). This is automatically updated based on your subscription status.",
+          "description": "Your current plan",
+          "markdownDescription": "Your current GitMind plan (free or pro). Pro is a one-time lifetime license. This is updated automatically from your license status.",
           "order": 107,
           "readOnly": true
         },
         "gitmind.subscription.status": {
           "type": "string",
           "default": "free",
-          "description": "Your subscription status",
-          "markdownDescription": "Your current subscription status (active, paused, expired, cancelled). This is automatically updated based on your subscription status.",
+          "description": "Your license status",
+          "markdownDescription": "Your current license status (active or free). This is updated automatically from your license status.",
           "order": 108,
           "readOnly": true
         },
         "gitmind.subscription.lastChecked": {
           "type": "string",
           "default": "",
-          "description": "Last time subscription status was checked (internal use)"
+          "description": "Last time license status was checked (internal use)"
         }
       }
     },
@@ -1308,7 +1308,7 @@
       },
       {
         "command": "gitmind.subscribe",
-        "title": "Subscribe to GitMind Pro",
+        "title": "Buy GitMind Pro (Lifetime License)",
         "category": "GitMind"
       },
       {
@@ -1332,6 +1332,11 @@
         "category": "GitMind"
       },
       {
+        "command": "gitmind.openAccountPortal",
+        "title": "Open Account Portal (Manage Devices)",
+        "category": "GitMind"
+      },
+      {
         "command": "gitmind.deactivatePro",
         "title": "Deactivate Pro Features",
         "category": "GitMind"
@@ -1339,11 +1344,6 @@
       {
         "command": "gitmind.forceDeactivatePro",
         "title": "Force Deactivate Pro (Local Only)",
-        "category": "GitMind"
-      },
-      {
-        "command": "gitmind.fixLicenseActivation",
-        "title": "Fix License Activation Issues",
         "category": "GitMind"
       },
       {
@@ -1517,7 +1517,7 @@
           {
             "id": "gitmind.activate-pro",
             "title": "Activate GitMind Pro",
-            "description": "Activate with a license key or verify your order ID and purchase email. New here? Grab a lifetime license.\n[Activate GitMind Pro](command:gitmind.showActivationQuickPick)\n[Buy GitMind Pro](command:gitmind.subscribe)",
+            "description": "Activate with your license key. New here? Grab a one-time lifetime license — no subscription.\n[Activate GitMind Pro](command:gitmind.showActivationQuickPick)\n[Buy GitMind Pro](command:gitmind.subscribe)\n[Manage Devices](command:gitmind.openAccountPortal)",
             "media": {
               "markdown": "media/walkthroughs/activate-pro.md"
             },

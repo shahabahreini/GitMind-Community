@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { LemonSqueezyService } from './LemonSqueezyService';
 import { GitMindLicenseService } from './GitMindLicenseService';
 import { debugLog } from '../debug/logger';
 import {
@@ -80,12 +79,10 @@ export interface LicenseDeactivationResponse {
 
 export class ProActivationService {
     private static instance: ProActivationService;
-    private readonly lemonSqueezyService: LemonSqueezyService;
     private readonly licenseService: GitMindLicenseService;
     private validationInProgress = false;
 
     private constructor() {
-        this.lemonSqueezyService = LemonSqueezyService.getInstance();
         this.licenseService = GitMindLicenseService.getInstance();
     }
 
