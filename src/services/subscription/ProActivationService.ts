@@ -468,10 +468,6 @@ export class ProActivationService {
             lastChecked: new Date().toISOString()
         });
 
-        // Update command enablement, status bar, feature gates, and any already-open
-        // settings view as soon as local deactivation is complete.
-        await this.refreshEntitlementUi();
-
         // Handle encryption and API key migration when downgrading to free
         try {
             const { SecureKeyManager } = await import('../encryption/SecureKeyManager.js');
@@ -508,58 +504,14 @@ export class ProActivationService {
                 secureKeyManager.clearApiKeyCache();
             }
 
-            // Notify the settings webview to update if it's open
-            try {
-                const { SettingsWebview } = await import('../../webview/settings/SettingsWebview.js');
-                if (SettingsWebview.isWebviewOpen()) {
-                    // First notify of pro status change
-                    SettingsWebview.postMessageToWebview({
-                        command: 'proDeactivationResult',
-                        success: true,
-                        message: 'Pro features have been deactivated. API keys are now accessible in standard storage.'
-                    });
-
-                    // Force complete refresh of settings with updated key values
-                    // Use a slight delay to ensure deactivation processing is complete
-                    setTimeout(async () => {
-                        try {
-                            const { SettingsManager } = await import('../../webview/settings/SettingsManager.js');
-                            const currentConfig = await SettingsManager.getCurrentSettings();
-
-                            SettingsWebview.postMessageToWebview({
-                                command: 'updateSettings',
-                                settings: currentConfig,
-                                forceRefresh: true,
-                                refreshUI: true
-                            });
-
-                            // Also update encryption status specifically
-                            SettingsWebview.postMessageToWebview({
-                                command: 'updateEncryptionStatus'
-                            });
-
-                            // Trigger UI refresh for pro features
-                            SettingsWebview.postMessageToWebview({
-                                command: 'refreshProFeaturesUI'
-                            });
-                        } catch (settingsError) {
-                            debugLog('Error refreshing settings after deactivation:', settingsError);
-                        }
-                    }, 500);
-                }
-            } catch (webviewError) {
-                debugLog('Could not notify webview of pro status change:', webviewError);
-            }
-
-            // Trigger a command to refresh the subscription status
-            try {
-                vscode.commands.executeCommand('gitmind.refreshSubscription', { silent: true });
-            } catch (commandError) {
-                debugLog('Could not execute refresh subscription command:', commandError);
-            }
         } catch (error) {
             debugLog('Error handling encryption during deactivation:', error);
         }
+
+        // Configuration, key migration, and cache cleanup are now complete. Refresh
+        // commands and rebuild any open Settings document exactly once so state-only
+        // updates never race with entitlement-specific markup.
+        await this.refreshEntitlementUi();
 
         let successMessage = 'GitMind Pro has been deactivated locally.';
 
@@ -611,18 +563,7 @@ export class ProActivationService {
 
         try {
             const { SettingsWebview } = await import('../../webview/settings/SettingsWebview.js');
-            if (!SettingsWebview.isWebviewOpen()) {
-                return;
-            }
-            const { SettingsManager } = await import('../../webview/settings/SettingsManager.js');
-            SettingsWebview.postMessageToWebview({
-                command: 'updateSettings',
-                settings: await SettingsManager.getCurrentSettings(),
-                forceRefresh: true,
-                refreshUI: true
-            });
-            SettingsWebview.postMessageToWebview({ command: 'refreshProFeaturesUI' });
-            SettingsWebview.postMessageToWebview({ command: 'updateEncryptionStatus' });
+            await SettingsWebview.refreshEntitlementView();
         } catch (error) {
             debugLog('Could not refresh the open GitMind settings view:', error);
         }
