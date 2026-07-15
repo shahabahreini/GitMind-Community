@@ -256,7 +256,7 @@ export class SubscriptionManager {
             const result = await (await import('./ProActivationService.js')).ProActivationService.getInstance().activateWithLicenseKey(paid);
             vscode.window.showInformationMessage(result.success ? '✅ Pro activated on this machine. Account details were emailed to you.' : result.message, 'Manage Devices').then(choice => { if (choice === 'Manage Devices') void vscode.commands.executeCommand('gitmind.openAccountPortal'); });
         } else {
-            vscode.window.showInformationMessage('Your license key and account details were emailed — run “Activate Pro with License Key” when ready.', 'Open Account Portal').then(choice => { if (choice === 'Open Account Portal') void vscode.commands.executeCommand('gitmind.openAccountPortal'); });
+            vscode.window.showInformationMessage('Payment confirmation has not reached GitMind yet. If payment was completed, your license and account details will be emailed after confirmation. You can activate later with the emailed key.', 'Open Account Portal').then(choice => { if (choice === 'Open Account Portal') void vscode.commands.executeCommand('gitmind.openAccountPortal'); });
         }
         void vscode.commands.executeCommand('gitmind.refreshSubscription', { silent: true });
     }

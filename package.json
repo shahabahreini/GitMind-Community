@@ -816,6 +816,13 @@
           "order": 104,
           "readOnly": true
         },
+        "gitmind.subscription.email": {
+          "type": "string",
+          "default": "",
+          "description": "Email address associated with your GitMind Pro license",
+          "markdownDescription": "Email address associated with your GitMind Pro license. It is updated automatically after a successful license activation.",
+          "order": 106
+        },
         "gitmind.pro.instanceId": {
           "type": "string",
           "default": "",
