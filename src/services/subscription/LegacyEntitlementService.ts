@@ -20,6 +20,7 @@ export interface LegacyEntitlement {
 
 const ENTITLEMENT_KEY = 'gitmind.pro.legacyEntitlement';
 const NOTICE_VERSION_KEY = 'gitmind.pro.lastMigrationNoticeVersion';
+const NOTICE_COUNT_KEY = 'gitmind.pro.migrationNoticeCount';
 
 /** Lemon Squeezy issues license keys as UUIDs. */
 const LEMON_SQUEEZY_KEY_PATTERN =
@@ -67,6 +68,7 @@ export class LegacyEntitlementService {
         }
         this.cached = { ...this.cached, migrated: true };
         await this.context.globalState.update(ENTITLEMENT_KEY, this.cached);
+        await this.context.globalState.update(NOTICE_COUNT_KEY, undefined);
         debugLog('Legacy entitlement marked as migrated');
     }
 
@@ -76,19 +78,29 @@ export class LegacyEntitlementService {
         }
         this.cached = undefined;
         await this.context.globalState.update(ENTITLEMENT_KEY, undefined);
+        await this.context.globalState.update(NOTICE_COUNT_KEY, undefined);
         debugLog('Legacy entitlement cleared');
     }
 
+    public getMigrationNoticeCount(): number {
+        return this.context?.globalState.get<number>(NOTICE_COUNT_KEY) ?? 0;
+    }
+
+    public async incrementMigrationNoticeCount(): Promise<number> {
+        const nextCount = this.getMigrationNoticeCount() + 1;
+        await this.context?.globalState.update(NOTICE_COUNT_KEY, nextCount);
+        return nextCount;
+    }
+
     /**
-     * True when the migration notice has not yet been shown for this extension version.
-     * The notice is paced to releases rather than to a timer: an update is when users are
-     * already looking at the extension, and it means we can never nag daily.
+     * Returns true whenever an un-migrated legacy entitlement is active so that
+     * the migration prompt can run on extension startup until claimed.
      */
-    public shouldShowMigrationNotice(currentVersion: string): boolean {
+    public shouldShowMigrationNotice(_currentVersion?: string): boolean {
         if (!this.context || !this.hasActiveEntitlement()) {
             return false;
         }
-        return this.context.globalState.get<string>(NOTICE_VERSION_KEY) !== currentVersion;
+        return true;
     }
 
     public async recordMigrationNotice(currentVersion: string): Promise<void> {
