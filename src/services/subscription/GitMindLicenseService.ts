@@ -178,8 +178,8 @@ export class GitMindLicenseService {
     public async pollCheckoutStatus(checkoutRef: string, pollToken: string): Promise<{ status: 'pending' | 'paid' | 'expired' | 'error'; licenseKey?: string }> {
         const result = await this.callPublic('/checkout/status', { checkout_ref: checkoutRef, poll_token: pollToken });
         const status = result.status;
-        if (status === 'paid' && typeof result.license_key === 'string') return { status, licenseKey: result.license_key };
-        if (status === 'pending' || status === 'expired') return { status };
+        if (status === 'paid' && typeof result.license_key === 'string') { return { status, licenseKey: result.license_key }; }
+        if (status === 'pending' || status === 'expired') { return { status }; }
         // Anything else — network failure, a 429, a 5xx — says nothing about the
         // payment. Callers must keep waiting, not treat it as an expired checkout:
         // a single dropped request during a 15-minute wait used to end the whole
