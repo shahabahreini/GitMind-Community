@@ -68,6 +68,8 @@ const API_KEY_PROVIDERS = [
   'minimax', 'together', 'openrouter', 'deepseek', 'grok', 'groq', 'perplexity', 'zai', 'nvidia'
 ];
 
+const HEALTH_READY_RECOMMENDATION = "The staged change set is focused and ready for review.";
+
 
 // Export state for access by other modules
 
@@ -266,7 +268,14 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
       const healthEnabled = gitmindConfig.get("commit.health.enabled", false) && await SubscriptionManager.getInstance().isProUser();
       const health = healthEnabled ? scoreCommitHealth(await collectChangeSet(repoRoot, false)) : undefined;
       if (health) {recordHealthScan(repoRoot, health);}
-      const healthSummary = health ? `Health ${health.overall}/100 · ${health.recommendations[0]}` : undefined;
+      // Health is a separate report, not part of the generated commit message.
+      // Keep the normal success feedback short; only surface Health here when it
+      // identified an actionable concern. The report retains the full score and
+      // rationale for users who choose to inspect it.
+      const healthNeedsReview = Boolean(health && health.recommendations.some(
+        recommendation => recommendation !== HEALTH_READY_RECOMMENDATION
+      ));
+      const healthSummary = healthNeedsReview ? "Health check recommends a review." : undefined;
 
       if (candidatesEnabled) {
         const cleanBase = message.trim().replace(/^([a-z0-9-]+(?:\([^)]+\))?!?)(?:\s*:){2,}/gim, "$1:");
@@ -377,8 +386,17 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
         support: { name: "operation_completed", operation: "generate_commit", outcome: "success" }
       });
 
-      const action = await vscode.window.showInformationMessage(healthSummary ? `Commit message generated successfully! ${healthSummary}` : "Commit message generated successfully!", ...(healthSummary ? ["Open Health Report"] : []));
-      if (action === "Open Health Report") {await vscode.commands.executeCommand("gitmind.openHealthReport", { rootUri: vscode.Uri.file(repoRoot) });}
+      // Do not await the notification: VS Code keeps an actionable notification
+      // pending until it is dismissed, which used to keep the SCM spinner alive.
+      void vscode.window.showInformationMessage(
+        healthSummary ? `Commit message generated successfully! ${healthSummary}` : "Commit message generated successfully!",
+        ...(healthSummary ? ["Open Health Report"] : [])
+      ).then(action => {
+        if (action === "Open Health Report") {
+          return vscode.commands.executeCommand("gitmind.openHealthReport", { rootUri: vscode.Uri.file(repoRoot) });
+        }
+        return undefined;
+      });
     } else {
       vscode.window.showWarningMessage(
         "No commit message was generated. This may be due to API limitations or configuration issues."

@@ -8,6 +8,7 @@ import { CommitStyleRenderer } from "./renderers/CommitStyleRenderer";
 import { TabManager } from "./managers/TabManager";
 import { ScriptManager } from "./managers/ScriptManager";
 import { SupportRenderer } from "./renderers/SupportRenderer";
+import { CommitWorkflowRenderer } from "./renderers/CommitWorkflowRenderer";
 
 export class ProFeaturesSettings {
     private _settings: ExtensionSettings;
@@ -19,6 +20,7 @@ export class ProFeaturesSettings {
     private tabManager: TabManager;
     private scriptManager: ScriptManager;
     private supportRenderer: SupportRenderer;
+    private commitWorkflowRenderer: CommitWorkflowRenderer;
 
     constructor(settings: ExtensionSettings) {
         this._settings = settings;
@@ -30,6 +32,7 @@ export class ProFeaturesSettings {
         this.tabManager = new TabManager();
         this.scriptManager = new ScriptManager();
         this.supportRenderer = new SupportRenderer(settings);
+        this.commitWorkflowRenderer = new CommitWorkflowRenderer(settings);
     }
 
     public render(): string {
@@ -42,9 +45,9 @@ export class ProFeaturesSettings {
             <div id="proFeaturesSettings" class="settings-section pro-features-section">
                 ${this.tabManager.renderTabContainer([
             { id: 'model-tab', label: 'Model Settings', content: this.modelRenderer.render() },
-            { id: 'free-tab', label: 'Free Features', content: this.freeRenderer.render() },
+            { id: 'free-tab', label: 'General', content: this.freeRenderer.render() },
             { id: 'commit-style-tab', label: 'Commit Styles', content: this.commitStyleRenderer.render() },
-            { id: 'pro-tab', label: 'Pro Features', content: this.proRenderer.render(), className: isPro ? '' : 'locked' },
+            { id: 'pro-tab', label: 'Pro Workspace', content: `${this.commitWorkflowRenderer.render()}${this.proRenderer.render()}`, className: isPro ? '' : 'locked' },
             { id: 'support-tab', label: 'Support Report', content: this.supportRenderer.render() },
             { id: 'subscription-tab', label: 'Pro Activation', content: this.subscriptionRenderer.render() }
         ])}

@@ -181,6 +181,10 @@ export class CommitWorkspace implements vscode.Disposable {
       recordHealthScan(this.state.changeSet.repositoryRoot, results[0].health);
       this.state.draftSnapshot = this.snapshotKey(this.state.changeSet.snapshot);
       this.panel.webview.postMessage({ type: "result", results });
+      // Rendering a result is complete generation. Optional review may take a
+      // separate provider round-trip, but must never keep the Generate button
+      // in its loading state or make Health appear to block the workflow.
+      this.panel.webview.postMessage({ type: "busy", value: false });
       if (setting.get<boolean>("review.enabled", false) || requestKind === "review") {
         try {
           const findings = await this.runPreCommitReview({ snapshot: this.state.changeSet.snapshot, groups: [{ id: "c1", atomIds: this.state.selection.items.filter(i => i.decision === "included").map(i => i.atomId), message: results[0].draft }], excludedAtomIds: [] });
@@ -423,16 +427,12 @@ export class CommitWorkspace implements vscode.Disposable {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style nonce="${nonce}">
 body { font-family: var(--vscode-font-family); font-size: 13px; color: var(--vscode-foreground); background: var(--vscode-editor-background); padding: 20px; max-width: 980px; margin: 0 auto; line-height: 1.5; }
-.header-card { display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--vscode-panel-border); background: var(--vscode-sideBar-background); padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.workspace-header { display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid var(--vscode-panel-border); padding: 0 0 16px; margin-bottom: 18px; gap: 16px; }
+.workspace-header h1 { font-size: 18px; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 8px; }
+.workspace-subtitle { color: var(--vscode-descriptionForeground); font-size: 12px; margin: 5px 0 0; }
 .header-title-group { display: flex; align-items: center; gap: 10px; }
 .header-title-group h1 { font-size: 18px; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 8px; }
 .branch-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-family: var(--vscode-editor-font-family, monospace); padding: 3px 8px; border-radius: 12px; background: var(--vscode-badge-background); color: var(--vscode-badge-foreground); font-weight: 500; }
-.stepper-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid var(--vscode-panel-border); background: var(--vscode-sideBar-background); padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; }
-.step-item { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; color: var(--vscode-descriptionForeground); opacity: 0.85; }
-.step-item.active { color: var(--vscode-foreground); opacity: 1; font-weight: 600; }
-.step-num { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); font-size: 11px; font-weight: 700; }
-.step-item.active .step-num { background: var(--vscode-button-background); color: var(--vscode-button-foreground); }
-.stepper-arrow { color: var(--vscode-descriptionForeground); font-size: 14px; opacity: 0.5; }
 section, details { border: 1px solid var(--vscode-panel-border); border-radius: 6px; padding: 16px; margin: 16px 0; background: var(--vscode-editor-background); }
 summary { cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; user-select: none; font-size: 14px; }
 textarea, input, select { box-sizing: border-box; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border); border-radius: 4px; padding: 8px 10px; font-family: inherit; font-size: 12px; }
@@ -468,56 +468,45 @@ button:disabled { opacity: 0.5; cursor: default; }
 .atom-tag { display: inline-block; font-size: 10px; font-family: var(--vscode-editor-font-family, monospace); padding: 2px 6px; border-radius: 3px; background: var(--vscode-badge-background); color: var(--vscode-badge-foreground); margin: 2px 4px 2px 0; }
 .atom-tag.clickable { cursor: pointer; }
 .atom-tag.clickable:hover { opacity: 0.8; text-decoration: underline; }
-.health-meter-box { border: 1px solid var(--vscode-panel-border); border-radius: 6px; padding: 12px 14px; margin: 12px 0; background: var(--vscode-sideBar-background); }
-.health-meter-head { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 600; margin-bottom: 6px; }
+.health-report { border: 1px solid var(--vscode-panel-border); border-radius: 8px; padding: 14px; margin: 16px 0; background: var(--vscode-sideBar-background); }
+.health-report-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.health-report-head h2 { margin: 0; font-size: 14px; }
+.health-report-head p { margin: 3px 0 0; color: var(--vscode-descriptionForeground); font-size: 11px; }
+.health-score { border-radius: 999px; padding: 4px 9px; font-size: 12px; font-weight: 700; border: 1px solid currentColor; white-space: nowrap; }
 .health-bar-track { height: 8px; border-radius: 4px; background: var(--vscode-panel-border); overflow: hidden; }
 .health-bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s ease; }
+.health-metrics { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.health-metric { padding: 8px; border-radius: 5px; background: var(--vscode-editor-background); border: 1px solid var(--vscode-panel-border); }
+.health-metric span { display: block; color: var(--vscode-descriptionForeground); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; }
+.health-metric strong { display: block; margin-top: 2px; font-size: 14px; }
+.health-recommendations { margin: 12px 0 0; padding: 9px 11px; border-radius: 5px; background: var(--vscode-textCodeBlock-background); color: var(--vscode-descriptionForeground); font-size: 11px; line-height: 1.45; }
 .table-bulk-controls { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
 .bulk-btn { font-size: 11px; padding: 3px 8px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
-@media(max-width:600px) { body { padding: 12px; } td:last-child { width: auto; } .stepper-bar { flex-direction: column; align-items: flex-start; } }
+@media(max-width:600px) { body { padding: 12px; } td:last-child { width: auto; } .workspace-header { flex-direction: column; } .health-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 @media(forced-colors:active){section,details,button,textarea,input,select{border-color:CanvasText}}
 </style></head>
 <body>
 
-<!-- Header Card -->
-<div class="header-card">
+<div class="workspace-header">
   <div class="header-title-group">
     <h1>${svgIcons.wand} GitMind Reviewed Workspace</h1>
-    <span class="branch-pill">${svgIcons.branch} ${branchName}</span>
+    <p class="workspace-subtitle">${svgIcons.branch} ${branchName} · Review selected changes, then generate or refine a draft.</p>
   </div>
   <div class="workflow-mode-tag">
     <span class="candidate-badge">${escapeHtml(this.state.kind).toUpperCase()} WORKFLOW</span>
   </div>
 </div>
 
-<!-- Stepper Bar -->
-<div class="stepper-bar">
-  <div class="step-item active">
-    <span class="step-num">1</span>
-    <span>Scope & Intent</span>
-  </div>
-  <span class="stepper-arrow">➔</span>
-  <div class="step-item active">
-    <span class="step-num">2</span>
-    <span>Generate Draft</span>
-  </div>
-  <span class="stepper-arrow">➔</span>
-  <div class="step-item active">
-    <span class="step-num">3</span>
-    <span>Quality Review & Insertion</span>
-  </div>
-</div>
-
 <!-- Step 1 & Step 2: Context & Generation -->
 <section aria-labelledby="generateHeading">
-  <h2 id="generateHeading" style="margin-top:0;font-size:15px;display:flex;align-items:center;gap:8px;">${svgIcons.wand} Generation Engine</h2>
+  <h2 id="generateHeading" style="margin-top:0;font-size:15px;display:flex;align-items:center;gap:8px;">${svgIcons.wand} Prepare draft</h2>
   <div style="display:flex;gap:8px;margin-bottom:12px;">
     <button class="primary" id="generate">${svgIcons.wand} Generate Draft</button>
     <button id="cancel">${svgIcons.check} Cancel</button>
   </div>
-  <p style="margin:4px 0 10px;font-size:12px;color:var(--vscode-descriptionForeground);">Clicking Generate requests commit choices using the context configured below.</p>
+  <p style="margin:4px 0 10px;font-size:12px;color:var(--vscode-descriptionForeground);">Generate with the selected files and optional context below.</p>
   <div class="disclosure" id="requestSummary">
     <span id="requestProvider">Provider: ${escapeHtml(preview?.provider ?? "unknown")}</span>
     <span id="requestModel">Model: ${escapeHtml(preview?.model ?? "unknown")}</span>
@@ -555,12 +544,12 @@ button:disabled { opacity: 0.5; cursor: default; }
 <p id="status" role="status" aria-live="polite"></p>
 <div id="secretReview" class="warning" tabindex="-1" hidden></div>
 <div id="reviewFindingsContainer" class="review-findings-container" hidden></div>
-<div id="healthMeter" class="health-meter-box" ${healthEnabled ? '' : 'hidden'}></div>
+<section id="healthMeter" class="health-report" aria-labelledby="healthReportHeading" ${healthEnabled ? '' : 'hidden'}></section>
 <div id="candidates"></div>
 
 <!-- Step 3: Editable Draft & Action -->
 <section aria-labelledby="draftHeading">
-  <h2 id="draftHeading" style="margin-top:0;font-size:15px;display:flex;align-items:center;gap:8px;">${svgIcons.file} Editable Commit Draft</h2>
+  <h2 id="draftHeading" style="margin-top:0;font-size:15px;display:flex;align-items:center;gap:8px;">${svgIcons.file} Commit draft</h2>
   <label class="sr-only" for="draft">Editable draft</label>
   <textarea id="draft" placeholder="Generated draft will appear here..."></textarea>
   <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -675,6 +664,10 @@ addEventListener('message', event => {
     }
   }
   if (m.type === 'result') {
+    // Be defensive about message ordering: a result always ends generation,
+    // even if an optional Health or review update follows it.
+    q('#generate').disabled = false;
+    q('#repair').disabled = false;
     q('#candidates').innerHTML = '';
     if (m.results.length > 1) {
       m.results.forEach((r, i) => {
@@ -720,8 +713,11 @@ function updateHealthMeter(r) {
   box.hidden = false;
   const score = r.health.overall || 0;
   const color = score >= 80 ? 'var(--vscode-testing-iconPassed, #10b981)' : score >= 50 ? 'var(--vscode-inputValidation-warningBorder, #f59e0b)' : 'var(--vscode-inputValidation-errorBorder, #ef4444)';
-  const tips = (r.health.recommendations || []).map(tip => '<li>' + tip.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])) + '</li>').join('');
-  box.innerHTML = '<div class="health-meter-head"><span>Commit Health · staged changes</span><span style="color:' + color + ';">' + score + '/100</span></div><div class="health-bar-track"><div class="health-bar-fill" style="width:' + score + '%;background:' + color + ';"></div></div><small>This local score checks scope, change size, safety, tests, and staging—not commit-message wording.</small><ul style="margin:6px 0 0;padding-left:18px;">' + tips + '</ul>';
+  const escape = value => String(value).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const labels = { scope: 'Scope', changeSize: 'Size', safety: 'Safety', testCoverage: 'Tests', staging: 'Staged' };
+  const metrics = Object.entries(r.health.subscores || {}).map(([key, value]) => '<div class="health-metric"><span>' + (labels[key] || key) + '</span><strong>' + value + '</strong></div>').join('');
+  const tips = (r.health.recommendations || []).map(escape).join(' ');
+  box.innerHTML = '<div class="health-report-head"><div><h2 id="healthReportHeading">Commit Health</h2><p>Local assessment of staged changes. It does not score commit-message wording.</p></div><span class="health-score" style="color:' + color + ';">' + score + ' / 100</span></div><div class="health-bar-track" style="margin-top:12px;"><div class="health-bar-fill" style="width:' + score + '%;background:' + color + ';"></div></div><div class="health-metrics">' + metrics + '</div><div class="health-recommendations">' + tips + '</div>';
 }
 if (healthEnabled) { updateHealthMeter({ health: initialHealth }); }
 </script></body></html>`;

@@ -10,48 +10,12 @@ export class FreeFeatureRenderer extends BaseRenderer {
                     <div class="free-features-toggles">
                         ${this.renderToggleFeatures()}
                     </div>
-                    ${this.renderCommitHealth()}
                     ${this.renderCommitIntelligence()}
                     
                     ${this.renderUpgradePromptIfNeeded()}
                 </div>
             </div>
         `;
-    }
-
-    private renderCommitHealth(): string {
-        const intelligence = this.settings.commitIntelligence;
-        const enabled = intelligence?.healthEnabled ?? false;
-        const isPro = this.isProUser() || this.isDevModeEnabled();
-        const status = this.settings.health;
-        let toggle = FormUtils.createToggle('commitHealthEnabled', 'Enable Commit Health', 'Locally score staged changes for scope, size, safety, tests, and staging.', enabled, 'commit.health.enabled');
-        if (!isPro) {
-            toggle = toggle.replace('class="toggle-item"', 'class="toggle-item locked"')
-                .replace('id="commitHealthEnabled"', 'id="commitHealthEnabled" disabled aria-disabled="true"')
-                .replace('>Enable Commit Health</label>', '>Enable Commit Health <span class="pro-lock-badge" title="Requires GitMind Pro">Pro</span></label>');
-        }
-        return `
-            <section class="commit-intelligence-settings" aria-labelledby="commitHealthHeading">
-                <div class="commit-intelligence-banner">
-                    <div class="commit-intelligence-banner-header"><h3 id="commitHealthHeading" class="section-header" style="margin:0;">Commit Health</h3><span class="commit-intelligence-badge">Local</span></div>
-                    <p class="description" style="margin-bottom:12px;">A deterministic, local change-hygiene report. It evaluates staged content and metadata only—never AI output or commit-message wording.</p>
-                    ${toggle}
-                    ${isPro ? '<button type="button" class="button secondary" data-command="gitmind.openHealthReport">Open Health Report</button>' : '<p class="toggle-description">Commit Health is available with GitMind Pro. Activate Pro to enable local reports and history analysis.</p>'}
-                    <p class="toggle-description"><strong>Status:</strong> ${status?.currentChangeStatus ?? 'Checking workspace…'}${status?.lastScore !== undefined ? ` · Last local scan: ${status.lastScore}/100` : ''}${status?.lastScanAt ? ` (${new Date(status.lastScanAt).toLocaleString()})` : ''}</p>
-                </div>
-                <div class="intel-card-module settings-subsection" aria-labelledby="historyHealthHeading">
-                    <h4 id="historyHealthHeading" class="intel-card-title">History Health</h4>
-                    <p class="intel-card-desc">Analyze local commit change metadata without sending repository content to a provider.</p>
-                    <label for="historyHealthMode">Range</label>
-                    <select id="historyHealthMode"><option value="last-n">Last N commits</option><option value="date-range">Date range</option></select>
-                    <input id="historyHealthCount" type="number" min="1" max="500" value="25" aria-label="Number of commits" />
-                    <input id="historyHealthStart" type="date" aria-label="History start date" />
-                    <input id="historyHealthEnd" type="date" aria-label="History end date" />
-                    <button type="button" class="button secondary" id="analyzeHistoryHealth" ${isPro ? '' : 'disabled aria-disabled="true"'}>Analyze History</button>
-                    <button type="button" class="button secondary" id="getHistoryHealthGuidance" ${isPro ? '' : 'disabled aria-disabled="true"'}>Get AI Guidance</button>
-                    <div id="historyHealthResult" class="toggle-description" aria-live="polite"></div>
-                </div>
-            </section>`;
     }
 
     private renderCommitIntelligence(): string {
@@ -78,7 +42,7 @@ export class FreeFeatureRenderer extends BaseRenderer {
                         <h3 id="commitIntelligenceHeading" class="section-header" style="margin:0;">Commit Intelligence</h3>
                         <span class="commit-intelligence-badge">Preview</span>
                     </div>
-                    <p class="description" style="margin-bottom:12px;">Smart AI assistance that inspects, filters, and refines code changes before committing. One-click instant generation remains unaffected.</p>
+                    <p class="description" style="margin-bottom:12px;">Core reviewed-generation controls. Commit Health and advanced workflows are organized in the Pro Workspace tab.</p>
                     ${toggle(
                         'commitIntelligenceEnabled',
                         'Enable Commit Intelligence Features',
@@ -119,24 +83,6 @@ export class FreeFeatureRenderer extends BaseRenderer {
 
                     <div class="intel-card-module settings-subsection">
                         <h4 class="intel-card-title">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
-                            Draft Options & Commit Quality
-                        </h4>
-                        <p class="intel-card-desc">Generate alternate message options and check commits for common issues.</p>
-                        
-                        ${toggle(
-                            'commitCandidatesEnabled',
-                            'Candidates',
-                            'Generate 2–3 alternative commit message choices to compare and choose from',
-                            intelligence?.candidatesEnabled ?? false,
-                            'commit.candidates.enabled',
-                            true,
-                            'Generates 2–3 alternate commit message choices side-by-side so you can pick or combine the best message.'
-                        )}
-                    </div>
-
-                    <div class="intel-card-module settings-subsection">
-                        <h4 class="intel-card-title">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
                             External Ticket Context
                         </h4>
@@ -153,41 +99,6 @@ export class FreeFeatureRenderer extends BaseRenderer {
                         )}
                     </div>
 
-                    <div class="intel-card-module settings-subsection">
-                        <h4 class="intel-card-title">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-                            Advanced Pro Workflows
-                        </h4>
-                        <p class="intel-card-desc">Compose multi-commit series, split hunks, and review AI suggestions.</p>
-                        
-                        ${toggle(
-                            'composerEnabled',
-                            'Composer',
-                            'Split a large batch of changes into a clean sequence of smaller sub-commits',
-                            intelligence?.composerEnabled ?? false,
-                            'composer.enabled',
-                            true,
-                            'Composes large multi-file changes into an organized sequence of smaller, logical sub-commits.'
-                        )}
-                        ${toggle(
-                            'allowHunkSplitting',
-                            'Hunk splitting',
-                            'Allows breaking apart individual code changes within a file across separate commits',
-                            intelligence?.allowHunkSplitting ?? false,
-                            'composer.allowHunkSplitting',
-                            true,
-                            'Allows splitting individual sections of changes inside a single file into separate commits.'
-                        )}
-                        ${toggle(
-                            'reviewEnabled',
-                            'Pre-commit review',
-                            'Displays a final review window to confirm AI commit suggestions before inserting',
-                            intelligence?.reviewEnabled ?? false,
-                            'review.enabled',
-                            true,
-                            'Shows an interactive review panel to check and confirm AI suggestions before anything is saved to Git.'
-                        )}
-                    </div>
                 </div>
             </section>`;
     }

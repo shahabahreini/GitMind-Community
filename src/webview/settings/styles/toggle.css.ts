@@ -117,9 +117,58 @@ export function getToggleStyles(): string {
         text-transform: uppercase;
     }
 
+    /* Pro Workspace: compact, task-oriented controls rather than general toggles. */
+    .pro-commit-workspace {
+        margin: 0 0 20px;
+        padding: 18px;
+        border: 1px solid var(--vscode-panel-border);
+        border-radius: 10px;
+        background: var(--vscode-editor-background);
+    }
+    .pro-workspace-heading, .health-settings-main, .history-health-heading {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+    }
+    .section-kicker { display: block; color: var(--vscode-descriptionForeground); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
+    .pro-workspace-heading .section-title { margin: 0; font-size: 16px; }
+    .pro-workspace-heading .section-description { margin: 5px 0 18px; color: var(--vscode-descriptionForeground); font-size: 12px; }
+    .health-settings-card { border: 1px solid var(--vscode-focusBorder); border-radius: 8px; padding: 16px; background: var(--vscode-editor-inactiveSelectionBackground, rgba(0,122,204,.06)); }
+    .health-settings-copy h4, .history-health-heading h4 { margin: 0; font-size: 14px; }
+    .health-settings-copy p, .history-health-heading p { margin: 4px 0 0; color: var(--vscode-descriptionForeground); font-size: 12px; line-height: 1.45; }
+    .health-settings-status { display: grid; gap: 3px; text-align: right; font-size: 12px; white-space: nowrap; }
+    .health-settings-status span { color: var(--vscode-descriptionForeground); font-size: 11px; }
+    .health-settings-card > .toggle-item { margin: 16px 0 10px; background: var(--vscode-editor-background); }
+    .health-actions { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .field-helper { color: var(--vscode-descriptionForeground); font-size: 11px; }
+    .history-health-panel { border-top: 1px solid var(--vscode-panel-border); padding-top: 15px; }
+    .local-badge { border: 1px solid var(--vscode-panel-border); border-radius: 999px; padding: 3px 8px; color: var(--vscode-descriptionForeground); font-size: 10px; font-weight: 600; white-space: nowrap; }
+    .history-health-controls { display: grid; grid-template-columns: minmax(150px, 1.25fr) minmax(85px, .55fr) minmax(130px, .8fr) minmax(130px, .8fr) auto; gap: 10px; align-items: end; margin-top: 14px; }
+    .compact-field { display: grid; gap: 5px; min-width: 0; }
+    .compact-field span { color: var(--vscode-descriptionForeground); font-size: 11px; font-weight: 600; }
+    .compact-field select, .compact-field input { box-sizing: border-box; width: 100%; min-height: 31px; margin: 0; }
+    .history-date-field { display: none; }
+    .history-date-field.is-visible { display: grid; }
+    .history-health-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .history-health-actions .button { margin: 0; white-space: nowrap; }
+    .history-health-result { min-height: 18px; margin-top: 12px; padding: 9px 10px; border-radius: 5px; background: var(--vscode-textCodeBlock-background); color: var(--vscode-descriptionForeground); font-size: 11px; line-height: 1.45; }
+    .workflow-settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+    .workflow-setting-card { border: 1px solid var(--vscode-panel-border); border-radius: 7px; background: var(--vscode-editor-background); padding: 11px; }
+    .workflow-setting-card .toggle-item { padding: 0; margin: 0; border: 0; background: transparent; }
+    .workflow-setting-card p { margin: 7px 0 0; color: var(--vscode-descriptionForeground); font-size: 11px; line-height: 1.4; }
+
     @media (prefers-reduced-motion: reduce) {
         .toggle-item, .switch-container, .switch-slider { transition: none; }
         .toggle-item:hover { transform: none; }
+    }
+
+    @media (max-width: 760px) {
+        .pro-workspace-heading, .health-settings-main, .history-health-heading { flex-direction: column; gap: 8px; }
+        .health-settings-status { text-align: left; white-space: normal; }
+        .history-health-controls { grid-template-columns: 1fr 1fr; }
+        .history-health-actions { grid-column: 1 / -1; }
+        .workflow-settings-grid { grid-template-columns: 1fr; }
     }
 
     @media (forced-colors: active) {

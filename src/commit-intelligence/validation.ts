@@ -83,12 +83,13 @@ export function scoreCommitHealth(changeSet: ChangeSet, selection?: ContextSelec
   const changedLines = staged.reduce((total, atom) => total + atom.additions + atom.deletions, 0);
   const secretFindings = staged.reduce((total, atom) => total + (/(?:private[_-]?key|api[_-]?key|secret|password)\s*[=:]/i.test(atom.patch) || /-----BEGIN [A-Z ]*PRIVATE KEY-----/.test(atom.patch) ? 1 : 0), 0);
   const debugFindings = staged.reduce((total, atom) => total + ((atom.patch.match(/^\+.*(?:console\.log\(|debugger\b)/gm) ?? []).length), 0);
-  const sourceFiles = [...files].filter(file => /\.(?:[cm]?[jt]sx?|py|rb|go|rs|java|cs|php)$/i.test(file));
-  const hasTests = [...files].some(file => /(?:^|\/)(?:test|tests|__tests__)\/|\.(?:test|spec)\.[cm]?[jt]sx?$/i.test(file));
   const scope = clamp(100 - Math.max(0, roots.size - 1) * 16 - Math.max(0, files.size - 10) * 3);
   const changeSize = clamp(100 - Math.max(0, changedLines - 250) / 12 - Math.max(0, changedLines - 1000) / 8);
   const safety = clamp(100 - secretFindings * 55 - debugFindings * 12);
-  const testCoverage = sourceFiles.length === 0 || hasTests ? 100 : 55;
+  // A diff alone cannot prove that a source change needs a test. Treating a
+  // missing test-file change as a failure produced noisy false positives, so
+  // Health reports test activity when present but never guesses coverage.
+  const testCoverage = 100;
   const staging = staged.length ? 100 : 0;
   const subscores = { scope, changeSize, safety, testCoverage, staging };
   const recommendations: string[] = [];
@@ -96,7 +97,6 @@ export function scoreCommitHealth(changeSet: ChangeSet, selection?: ContextSelec
   if (scope < 80) {recommendations.push("Consider splitting unrelated areas into smaller commits.");}
   if (changeSize < 80) {recommendations.push("Consider splitting this large change into reviewable pieces.");}
   if (safety < 100) {recommendations.push("Remove credentials and temporary debug statements before committing.");}
-  if (testCoverage < 100) {recommendations.push("Add or update tests for the changed source files.");}
   if (!recommendations.length) {recommendations.push("The staged change set is focused and ready for review.");}
   return {
     overall: clamp(scope * .25 + changeSize * .20 + safety * .35 + testCoverage * .15 + staging * .05),
@@ -105,7 +105,7 @@ export function scoreCommitHealth(changeSet: ChangeSet, selection?: ContextSelec
       scope: "Number of files and top-level areas touched",
       changeSize: "Changed lines kept within a reviewable range",
       safety: "Potential credentials and added debug statements",
-      testCoverage: "Changed source files accompanied by test changes",
+      testCoverage: "Test changes are informative, but coverage is not inferred from a diff",
       staging: "Only staged changes are eligible for this score"
     },
     recommendations
