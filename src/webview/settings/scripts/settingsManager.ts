@@ -530,6 +530,13 @@ function generateInitializationManager(): string {
           document.querySelectorAll('[data-command]').forEach(button => button.addEventListener('click', () => vscode.postMessage({ command: 'executeCommand', commandId: button.dataset.command })));
           const analyzeHistory = document.getElementById('analyzeHistoryHealth');
           if (analyzeHistory) analyzeHistory.addEventListener('click', () => vscode.postMessage({ command: 'analyzeHistoryHealth', mode: document.getElementById('historyHealthMode')?.value || 'last-n', count: Number(document.getElementById('historyHealthCount')?.value) || 25, start: document.getElementById('historyHealthStart')?.value, end: document.getElementById('historyHealthEnd')?.value }));
+          const historyMode = document.getElementById('historyHealthMode');
+          const updateHistoryRange = () => {
+            const dateRange = historyMode?.value === 'date-range';
+            document.querySelectorAll('.history-date-field').forEach(field => field.classList.toggle('is-visible', dateRange));
+            document.getElementById('historyHealthCountField')?.toggleAttribute('hidden', dateRange);
+          };
+          if (historyMode) { historyMode.addEventListener('change', updateHistoryRange); updateHistoryRange(); }
           const guidance = document.getElementById('getHistoryHealthGuidance');
           if (guidance) guidance.addEventListener('click', () => vscode.postMessage({ command: 'getHistoryHealthGuidance' }));
         } catch (error) {

@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "product": {
     "name": "GitMind",
-    "version": "6.0.0",
-    "auditDate": "2026-07-14",
+    "version": "6.1.0",
+    "auditDate": "2026-07-16",
     "source": "package.json",
     "minimumVSCode": "^1.101.0"
   },
   "counts": {
     "providerChoices": 18,
     "builtInProviders": 17,
-    "settingsRegistered": 104,
-    "settingsDocumented": 96,
-    "commandsRegistered": 52,
-    "publicCommands": 43,
+    "settingsRegistered": 106,
+    "settingsDocumented": 97,
+    "commandsRegistered": 55,
+    "publicCommands": 46,
     "commitStyles": 12,
     "primarySettingsTabs": 5
   },
@@ -403,7 +403,7 @@
       "type": "boolean",
       "default": false,
       "availability": "Free",
-      "description": "Show advisory Commit Health subscores for reviewed drafts (Pro)."
+      "description": "Enable deterministic local Commit Health reports for staged changes (Pro)."
     },
     {
       "id": "gitmind.composer.allowHunkSplitting",
@@ -926,6 +926,13 @@
       "description": "Model name for custom API (Pro feature)"
     },
     {
+      "id": "gitmind.pro.orderId",
+      "type": "string",
+      "default": "",
+      "availability": "Pro",
+      "description": "Legacy order reference (internal use)"
+    },
+    {
       "id": "gitmind.pro.encryptionEnabled",
       "type": "boolean",
       "default": false,
@@ -1209,6 +1216,11 @@
       "shortcut": null
     },
     {
+      "id": "gitmind.openHealthReport",
+      "title": "Open Commit Health Report",
+      "shortcut": null
+    },
+    {
       "id": "gitmind.advancedCommitActions",
       "title": "Advanced Commit Actions…",
       "shortcut": null
@@ -1216,6 +1228,11 @@
     {
       "id": "gitmind.commitComposer",
       "title": "Compose Atomic Commit Series (Pro)",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.draftChoices",
+      "title": "Draft Choices (Pro)",
       "shortcut": null
     },
     {
@@ -1360,7 +1377,7 @@
     },
     {
       "id": "gitmind.subscribe",
-      "title": "Subscribe to GitMind Pro",
+      "title": "Buy GitMind Pro (Lifetime License)",
       "shortcut": null
     },
     {
@@ -1379,13 +1396,18 @@
       "shortcut": null
     },
     {
-      "id": "gitmind.deactivatePro",
-      "title": "Deactivate Pro Features",
+      "id": "gitmind.claimFreeLicense",
+      "title": "Claim Free Replacement License (Lemon Squeezy customers)",
       "shortcut": null
     },
     {
-      "id": "gitmind.fixLicenseActivation",
-      "title": "Fix License Activation Issues",
+      "id": "gitmind.openAccountPortal",
+      "title": "Open Account Portal (Manage Devices)",
+      "shortcut": null
+    },
+    {
+      "id": "gitmind.deactivatePro",
+      "title": "Deactivate Pro Features",
       "shortcut": null
     }
   ],

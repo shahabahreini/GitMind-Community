@@ -14,6 +14,7 @@ import { reviewBlocks, scoreCommitHealth, shouldIncludeBody, validateCandidate, 
 import { analyzeHistoryHealth } from "../../commit-intelligence/health";
 import { ApiConfig, CommitStyle } from "../../config/types";
 import { FreeFeatureRenderer } from "../../webview/settings/components/renderers/FreeFeatureRenderer";
+import { CommitWorkflowRenderer } from "../../webview/settings/components/renderers/CommitWorkflowRenderer";
 import { ExtensionSettings } from "../../models/ExtensionSettings";
 
 const execFileAsync = promisify(execFile);
@@ -51,20 +52,20 @@ suite("GitMind 6 commit intelligence", () => {
     assert.ok(palette.every((item: { when?: string }) => item.when === "gitmind.commitIntelligenceEnabled"));
   });
 
-  test("shows Commit Health independently of disabled Commit Intelligence and explains the Pro lock", () => {
+  test("keeps General settings focused and groups Health plus Pro workflows together", () => {
     const settings = { apiProvider: "gemini", promptCustomization: { enabled: false, saveLastPrompt: false, lastPrompt: "" },
       commit: { verbose: true, detailMode: "auto" }, commitIntelligence: { enabled: false, noiseFilteringEnabled: false,
         candidatesEnabled: false, healthEnabled: false, githubIssueContextEnabled: false, composerEnabled: false,
         allowHunkSplitting: false, reviewEnabled: false } } as ExtensionSettings;
-    const html = new FreeFeatureRenderer(settings).render();
-    assert.match(html, /class="toggle-item/);
-    assert.match(html, /class="switch-container"/);
-    assert.match(html, /data-setting="commitIntelligence\.enabled"/);
-    assert.match(html, /id="commitIntelligenceOptions"[^>]*hidden/);
-    assert.match(html, /pro-lock-badge/);
-    assert.match(html, /<h3 id="commitHealthHeading"[^>]*>Commit Health<\/h3>/);
-    assert.match(html, /Commit Health is available with GitMind Pro/);
-    assert.match(html, /History Health/);
+    const generalHtml = new FreeFeatureRenderer(settings).render();
+    const proHtml = new CommitWorkflowRenderer(settings).render();
+    assert.match(generalHtml, /data-setting="commitIntelligence\.enabled"/);
+    assert.match(generalHtml, /id="commitIntelligenceOptions"[^>]*hidden/);
+    assert.doesNotMatch(generalHtml, /History Health/);
+    assert.match(proHtml, /Commit Health & reviewed workflows/);
+    assert.match(proHtml, /History Health/);
+    assert.match(proHtml, /Draft choices/);
+    assert.match(proHtml, /pro-lock-badge/);
   });
 
   test("uses theme tokens and actionable one-time secret warning controls", async () => {
@@ -184,9 +185,29 @@ suite("GitMind 6 commit intelligence", () => {
     assert.ok(health.overall >= 0 && health.overall <= 100);
     assert.ok(health.recommendations.length > 0);
     assert.ok(!Object.values(health.explanations).join(" ").toLowerCase().includes("subject"));
+    assert.strictEqual(health.subscores.testCoverage, 100, "Health must not infer missing test coverage from a diff");
+    assert.ok(!health.recommendations.some(recommendation => /add or update tests/i.test(recommendation)));
     assert.strictEqual(reviewBlocks([{ id: "1", severity: "warning", title: "x", detail: "x", atomIds: [changeSet.atoms[0].id] }], "error"), false);
     assert.strictEqual(reviewBlocks([{ id: "1", severity: "error", title: "x", detail: "x", atomIds: [changeSet.atoms[0].id] }], "error"), true);
     assert.strictEqual(validateReviewFindings([{ id: "1", severity: "error", title: "x", detail: "x", atomIds: ["unknown"] }], [changeSet.atoms[0].id]).length, 0);
+  });
+
+  test("ends generation before an optional review request begins", async () => {
+    const source = await readFile(path.join(process.cwd(), "src", "webview", "commit", "CommitWorkspace.ts"), "utf8");
+    assert.ok(source.indexOf('this.panel.webview.postMessage({ type: "busy", value: false });\n      if (setting.get<boolean>("review.enabled"') >= 0);
+    assert.ok(source.includes("q('#generate').disabled = false;"));
+  });
+
+  test("does not keep the Source Control spinner alive for the Health notification", async () => {
+    const source = await readFile(path.join(process.cwd(), "src", "commands", "index.ts"), "utf8");
+    assert.match(source, /void vscode\.window\.showInformationMessage\(/);
+    assert.doesNotMatch(source, /const action = await vscode\.window\.showInformationMessage\(healthSummary/);
+  });
+
+  test("keeps successful generation feedback brief when Health has no concerns", async () => {
+    const source = await readFile(path.join(process.cwd(), "src", "commands", "index.ts"), "utf8");
+    assert.match(source, /const healthSummary = healthNeedsReview \? "Health check recommends a review\." : undefined;/);
+    assert.doesNotMatch(source, /Health \$\{health\.overall\}\/100/);
   });
 
   test("keeps Health Report discoverable only while the health capability is enabled", async () => {
