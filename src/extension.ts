@@ -8,7 +8,7 @@ import {
   getDiff,
   setCommitMessage,
 } from "./services/git/repository";
-import { initializeLogger, debugLog } from "./services/debug/logger";
+import { diagnosticLog, elapsedDiagnosticOperation, initializeLogger, debugLog, startDiagnosticOperation } from "./services/debug/logger";
 import { processCommitMessage } from "./services/api/responseProcessor";
 import { getPromptConfig } from "./services/api/prompts";
 import { SettingsWebview } from "./webview/settings/SettingsWebview";
@@ -89,7 +89,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   state.statusBarItem = statusBarItem;
   state.context = context;
   context.subscriptions.push(await initializeLogger(undefined, context));
-  debugLog("GitMind is now active");
+  const diagnostics = startDiagnosticOperation("activation", "extension_activation");
+  diagnosticLog({
+    subsystem: "activation", event: "activation.started", functionName: "activate", operationId: diagnostics.id,
+    support: { name: "operation_started", operation: "extension_activation" }
+  });
 
   // Perform settings migration and cleanup first
   const migrationService = SettingsMigrationService.getInstance();
@@ -127,7 +131,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   try {
     await proActivationService.validateExistingLicense();
   } catch (error) {
-    debugLog("Startup license validation failed:", error);
+    diagnosticLog({ subsystem: "subscription", event: "subscription.startup_validation_failed", functionName: "activate", operationId: diagnostics.id, outcome: "failure", data: { errorName: error instanceof Error ? error.name : "UnknownError" }, support: { name: "operation_progress", operation: "subscription", outcome: "failure", errorCategory: "unknown" } });
   }
 
   // If a Quick Checkout was paid after its "Waiting for payment…" notification was
@@ -136,7 +140,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   try {
     await subscriptionManager.resumePendingCheckout({ silent: true });
   } catch (error) {
-    debugLog("Pending checkout resume failed:", error);
+    diagnosticLog({ subsystem: "subscription", event: "subscription.pending_checkout_resume_failed", functionName: "activate", operationId: diagnostics.id, outcome: "failure", data: { errorName: error instanceof Error ? error.name : "UnknownError" }, support: { name: "operation_progress", operation: "subscription", outcome: "failure", errorCategory: "unknown" } });
   }
 
   // Reflect Pro/Free state in the status bar + context key.
@@ -158,7 +162,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       await proActivationService.validateExistingLicense();
       updateProStatusBar();
     } catch (error) {
-      debugLog("Periodic license validation failed:", error);
+      diagnosticLog({ subsystem: "subscription", event: "subscription.periodic_validation_failed", functionName: "validationTimer", outcome: "failure", data: { errorName: error instanceof Error ? error.name : "UnknownError" }, support: { name: "operation_progress", operation: "subscription", outcome: "failure", errorCategory: "unknown" } });
     }
   }, VALIDATION_INTERVAL);
 
@@ -168,8 +172,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     }
   });
 
-  debugLog("Extension configuration:", vscode.workspace.getConfiguration("gitmind"));
-  debugLog(`Supported API providers: ${SUPPORTED_PROVIDERS.join(", ")}`);
+  diagnosticLog({ subsystem: "activation", event: "activation.provider_catalog_loaded", functionName: "activate", operationId: diagnostics.id, data: { providerCount: SUPPORTED_PROVIDERS.length } });
 
   const scmStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
   scmStatusBarItem.text = "$(github-action) GitMind: Generate Commit";
@@ -182,7 +185,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   // activate Pro, e.g. vscode://ShahabBahreiniJangjoo.ai-commit-assistant/activate?key=XXXX
   const uriHandler = vscode.window.registerUriHandler({
     handleUri(uri: vscode.Uri) {
-      debugLog(`Received URI: ${uri.toString()}`);
+      diagnosticLog({ subsystem: "activation", event: "activation.uri_received", functionName: "handleUri", operationId: diagnostics.id, data: { pathKind: uri.path === "/activate" ? "activate" : "other", hasQuery: Boolean(uri.query) } });
       if (uri.path !== '/activate') {
         return;
       }
@@ -208,13 +211,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         const result = await EncryptionHelper.handleEncryptionToggle(context, encryptionEnabled);
         if (result.success) {
           vscode.window.showInformationMessage(`GitMind: ${result.message}`);
-          debugLog('Encryption toggle handled successfully:', result.details);
+          diagnosticLog({ subsystem: "configuration", event: "configuration.encryption_toggle_completed", functionName: "onDidChangeConfiguration", outcome: "success" });
         } else {
           vscode.window.showWarningMessage(`GitMind: ${result.message}`);
-          debugLog('Encryption toggle failed:', result.message);
+          diagnosticLog({ subsystem: "configuration", event: "configuration.encryption_toggle_failed", functionName: "onDidChangeConfiguration", outcome: "failure" });
         }
       } catch (error) {
-        debugLog('Error handling encryption toggle:', error);
+        diagnosticLog({ subsystem: "configuration", event: "configuration.encryption_toggle_failed", functionName: "onDidChangeConfiguration", outcome: "failure", data: { errorName: error instanceof Error ? error.name : "UnknownError" } });
         vscode.window.showErrorMessage('GitMind: Failed to toggle encryption');
       }
     }
@@ -232,7 +235,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
           await EncryptionHelper.storeLicenseKey(context, licenseKey);
           debugLog('License key secured successfully');
         } catch (error) {
-          debugLog('Error securing license key:', error);
+          diagnosticLog({ subsystem: "configuration", event: "configuration.license_key_storage_failed", functionName: "onDidChangeConfiguration", outcome: "failure", data: { errorName: error instanceof Error ? error.name : "UnknownError" } });
         }
       }
     }
@@ -258,7 +261,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       await secureKeyManager.migrateToSecureStorage();
     }
   } catch (error) {
-    debugLog("Auto-migration failed:", error);
+    diagnosticLog({ subsystem: "configuration", event: "configuration.key_migration_failed", functionName: "activate", operationId: diagnostics.id, outcome: "failure", data: { errorName: error instanceof Error ? error.name : "UnknownError" } });
     // Don't show error to user as this is optional
   }
 
@@ -267,7 +270,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     scmStatusBarItem.show();
   }
 
-  debugLog("GitMind extension activated successfully with all icons");
+  diagnosticLog({ subsystem: "activation", event: "activation.completed", functionName: "activate", operationId: diagnostics.id, outcome: "success", durationMs: elapsedDiagnosticOperation(diagnostics), support: { name: "operation_completed", operation: "extension_activation", outcome: "success" } });
 }
 
 export function deactivate(): void {

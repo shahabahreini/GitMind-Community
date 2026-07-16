@@ -9,7 +9,7 @@ import {
   setCommitMessage,
   getBranchName
 } from "../services/git/repository";
-import { initializeLogger, debugLog } from "../services/debug/logger";
+import { diagnosticLog, elapsedDiagnosticOperation, initializeLogger, debugLog, startDiagnosticOperation } from "../services/debug/logger";
 import { processCommitMessage, applyIssueTracking } from "../services/api/responseProcessor";
 import { getPromptConfig } from "../services/api/prompts";
 import { SettingsWebview } from "../webview/settings/SettingsWebview";
@@ -173,12 +173,12 @@ const activeGenerations = new Map<string, vscode.StatusBarItem>();
 async function handleGenerateCommit(repository?: any): Promise<void> {
   const apiConfig = await getApiConfig();
   let repoRoot = "";
-  const supportStartedAt = Date.now();
-  recordSupportEvent({
-    name: "operation_started",
-    operation: "generate_commit",
-    provider: apiConfig.type as SupportProvider,
-    modelKind: apiConfig.type === "custom" ? "custom" : "built_in"
+  const diagnostics = startDiagnosticOperation("command", "generate_commit");
+  diagnosticLog({
+    subsystem: "command", event: "command.generate_commit_started", functionName: "handleGenerateCommit",
+    operationId: diagnostics.id, provider: apiConfig.type as SupportProvider,
+    data: { modelKind: apiConfig.type === "custom" ? "custom" : "built_in" },
+    support: { name: "operation_started", operation: "generate_commit", modelKind: apiConfig.type === "custom" ? "custom" : "built_in" }
   });
 
   try {
@@ -202,6 +202,7 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
       // Command triggered from command palette or other source - use workspace logic
       const workspaceFolders = vscode.workspace.workspaceFolders;
       if (!workspaceFolders) {
+        diagnosticLog({ subsystem: "command", event: "command.generate_commit_skipped", functionName: "handleGenerateCommit", operationId: diagnostics.id, outcome: "skipped", support: { name: "operation_progress", operation: "generate_commit", outcome: "success" } });
         vscode.window.showErrorMessage("No workspace folder is open");
         return;
       }
@@ -211,12 +212,14 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
         targetRepository = workspaceFolders[0];
         debugLog(`Found git repository at: ${repoRoot}`);
       } catch (error) {
+        diagnosticLog({ subsystem: "git", event: "git.repository_validation_failed", functionName: "handleGenerateCommit", operationId: diagnostics.id, outcome: "failure", data: { errorName: error instanceof Error ? error.name : "UnknownError" }, support: { name: "operation_progress", operation: "git_operation", outcome: "failure", errorCategory: "configuration" } });
         vscode.window.showErrorMessage("This is not a git repository. Please initialize git first.");
         return;
       }
     }
 
     if (isRequestActive(repoRoot)) {
+      diagnosticLog({ subsystem: "command", event: "command.generate_commit_cancelled_previous", functionName: "handleGenerateCommit", operationId: diagnostics.id, outcome: "cancelled", support: { name: "operation_progress", operation: "generate_commit", outcome: "cancelled", errorCategory: "cancellation" } });
       await vscode.commands.executeCommand("gitmind.cancelGeneration", repoRoot);
       return;
     }
@@ -236,6 +239,7 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
 
     const diff = await getDiff(targetRepository as vscode.WorkspaceFolder, repoRoot);
     if (!diff?.trim()) {
+      diagnosticLog({ subsystem: "git", event: "git.diff_empty", functionName: "handleGenerateCommit", operationId: diagnostics.id, outcome: "skipped", support: { name: "operation_progress", operation: "git_operation", outcome: "success" } });
       vscode.window.showInformationMessage("No changes detected to generate a commit message for.");
       return;
     }
@@ -246,7 +250,7 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
     // to prevent interfering with user style choices during commit generation
 
     const message = await Promise.race([
-      generateCommitMessage(apiConfig, diff, customContext, repoRoot),
+      generateCommitMessage(apiConfig, diff, customContext, repoRoot, diagnostics.id),
       new Promise<string>((_, reject) =>
         setTimeout(() => reject(new Error("Request timed out after 60 seconds")), TIMEOUT_DURATION)
       )
@@ -360,12 +364,10 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
 
       await setCommitMessage({ summary, description }, repoRoot);
 
-      recordSupportEvent({
-        name: "operation_completed",
-        operation: "generate_commit",
-        provider: apiConfig.type as SupportProvider,
-        outcome: "success",
-        durationMs: Date.now() - supportStartedAt
+      diagnosticLog({
+        subsystem: "command", event: "command.generate_commit_completed", functionName: "handleGenerateCommit",
+        operationId: diagnostics.id, provider: apiConfig.type as SupportProvider, outcome: "success", durationMs: elapsedDiagnosticOperation(diagnostics),
+        support: { name: "operation_completed", operation: "generate_commit", outcome: "success" }
       });
 
       vscode.window.showInformationMessage("Commit message generated successfully!");
@@ -375,13 +377,12 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
       );
     }
   } catch (error) {
-    recordSupportEvent({
-      name: "operation_failed",
-      operation: "generate_commit",
-      provider: apiConfig.type as SupportProvider,
-      outcome: classifyGenerationFailure(error, apiConfig.type) === "cancelled" ? "cancelled" : "failure",
-      errorCategory: supportErrorCategory(error, apiConfig.type),
-      durationMs: Date.now() - supportStartedAt
+    const outcome = classifyGenerationFailure(error, apiConfig.type) === "cancelled" ? "cancelled" : "failure";
+    diagnosticLog({
+      subsystem: "command", event: "command.generate_commit_failed", functionName: "handleGenerateCommit",
+      operationId: diagnostics.id, provider: apiConfig.type as SupportProvider, outcome, durationMs: elapsedDiagnosticOperation(diagnostics),
+      data: { errorName: error instanceof Error ? error.name : "UnknownError" },
+      support: { name: "operation_failed", operation: "generate_commit", outcome, errorCategory: supportErrorCategory(error, apiConfig.type) }
     });
     if (error instanceof Error && error.message.includes("timed out") && repoRoot) {
         cancelCurrentRequest(repoRoot);

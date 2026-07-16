@@ -216,11 +216,8 @@ export class CommitHistoryLearningService {
 
             debugLog(`[CommitHistory-${analysisId}] Formatted ${commits.length} commits for analysis`);
 
-            // Log the complete commit history being sent for analysis
-            debugLog(`[CommitHistory-${analysisId}] ==================== COMMIT HISTORY CONTENT ====================`);
-            debugLog(`[CommitHistory-${analysisId}] Complete commit history being sent to AI provider:`);
-            debugLog(commitHistory);
-            debugLog(`[CommitHistory-${analysisId}] ================================================================`);
+            // Content is intentionally never logged; the count is enough to diagnose sizing issues.
+            debugLog(`[CommitHistory-${analysisId}] Commit history prepared (${commitHistory.length} characters)`);
 
             // Get the current API configuration
             const apiConfig = await getApiConfig();

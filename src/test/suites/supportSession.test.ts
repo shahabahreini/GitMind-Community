@@ -36,6 +36,34 @@ suite("Sanitized Support Session", () => {
     service.dispose();
   });
 
+  test("records an ephemeral correlation ID and subsystem only when both are allowlisted", () => {
+    const service = new SupportSessionService();
+    const correlationId = "2a79b1a6-c908-4a9c-a9bf-44a2d6e2709f";
+    service.start(environment);
+    service.record({
+      name: "operation_progress",
+      operation: "provider_request",
+      subsystem: "provider",
+      correlationId,
+      outcome: "success"
+    });
+    const report = service.buildReport();
+    assert.strictEqual(report.events[1].correlationId, correlationId);
+    assert.strictEqual(report.events[1].subsystem, "provider");
+    service.dispose();
+  });
+
+  test("drops malformed correlation IDs and unknown subsystems", () => {
+    const service = new SupportSessionService();
+    service.start(environment);
+    service.record({
+      name: "operation_progress", operation: "provider_request",
+      correlationId: "not-an-id", subsystem: "private-machine" as any
+    } as any);
+    assert.strictEqual(service.getStatus().droppedEvents, 1);
+    service.dispose();
+  });
+
   test("drops non-allowlisted runtime input", () => {
     const service = new SupportSessionService();
     service.start(environment);

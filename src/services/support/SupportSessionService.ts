@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 
-export const SUPPORT_REPORT_SCHEMA_VERSION = 1;
+export const SUPPORT_REPORT_SCHEMA_VERSION = 2;
 export const SUPPORT_SESSION_DURATION_MS = 30 * 60 * 1000;
 export const SUPPORT_REPORT_MAX_BYTES = 512 * 1024;
 export const SUPPORT_REPORT_MAX_EVENTS = 1000;
@@ -13,12 +13,13 @@ const PROVIDERS = [
 
 const OPERATIONS = [
   "api_validation", "generate_changelog", "generate_commit", "learn_history",
-  "model_discovery", "settings", "support_session"
+  "model_discovery", "settings", "support_session", "extension_activation",
+  "git_operation", "provider_request", "recovery", "subscription", "webview"
 ] as const;
 
 const EVENT_NAMES = [
   "operation_completed", "operation_failed", "operation_started",
-  "recovery_attempted", "recovery_completed", "session_started", "session_stopped"
+  "operation_progress", "recovery_attempted", "recovery_completed", "session_started", "session_stopped"
 ] as const;
 
 const ERROR_CATEGORIES = [
@@ -31,6 +32,10 @@ const ERROR_CATEGORIES = [
 const OUTCOMES = ["cancelled", "failure", "success"] as const;
 const RECOVERY_ACTIONS = ["fallback_model", "retry_same_model"] as const;
 const MODEL_KINDS = ["built_in", "custom", "unknown"] as const;
+const SUBSYSTEMS = [
+  "activation", "command", "configuration", "git", "provider", "recovery",
+  "subscription", "support", "webview"
+] as const;
 const STOP_REASONS = ["deleted", "expired", "exported", "user"] as const;
 const SAFE_PLATFORMS: readonly NodeJS.Platform[] = [
   "aix", "android", "darwin", "freebsd", "haiku", "linux", "openbsd", "sunos", "win32", "cygwin", "netbsd"
@@ -39,8 +44,8 @@ const SAFE_ARCHITECTURES = [
   "arm", "arm64", "ia32", "loong64", "mips", "mipsel", "ppc", "ppc64", "riscv64", "s390", "s390x", "x64", "unknown"
 ] as const;
 const EVENT_KEYS = [
-  "durationMs", "elapsedMs", "errorCategory", "httpStatus", "modelKind", "name",
-  "operation", "outcome", "provider", "recoveryAction", "sequence"
+  "correlationId", "durationMs", "elapsedMs", "errorCategory", "httpStatus", "modelKind", "name",
+  "operation", "outcome", "provider", "recoveryAction", "sequence", "subsystem"
 ] as const;
 
 export type SupportProvider = typeof PROVIDERS[number];
@@ -50,6 +55,7 @@ export type SupportErrorCategory = typeof ERROR_CATEGORIES[number];
 export type SupportOutcome = typeof OUTCOMES[number];
 export type SupportRecoveryAction = typeof RECOVERY_ACTIONS[number];
 export type SupportModelKind = typeof MODEL_KINDS[number];
+export type SupportSubsystem = typeof SUBSYSTEMS[number];
 export type SupportStopReason = typeof STOP_REASONS[number];
 
 export interface SupportEnvironment {
@@ -69,6 +75,9 @@ export interface SupportEventInput {
   httpStatus?: number;
   durationMs?: number;
   recoveryAction?: SupportRecoveryAction;
+  /** Ephemeral UUID allowing one user operation to be followed in a report. */
+  correlationId?: string;
+  subsystem?: SupportSubsystem;
 }
 
 interface SupportEvent extends SupportEventInput {
@@ -112,8 +121,8 @@ export interface SupportSessionStatus {
 
 const INCLUDED_FIELDS = Object.freeze([
   "Extension, VS Code, operating-system family, and architecture versions",
-  "Operation, provider, model classification, result, and recovery enums",
-  "HTTP status codes and relative timing"
+  "Operation, subsystem, provider, model classification, result, and recovery enums",
+  "Ephemeral operation correlation IDs, HTTP status codes, and relative timing"
 ]);
 
 const EXCLUDED_FIELDS = Object.freeze([
@@ -184,6 +193,14 @@ function sanitizeEvent(input: SupportEventInput, sequence: number, elapsedMs: nu
   if (input.durationMs !== undefined) {
     if (!Number.isFinite(input.durationMs) || input.durationMs < 0) { return undefined; }
     event.durationMs = Math.min(Math.round(input.durationMs), 24 * 60 * 60 * 1000);
+  }
+  if (input.correlationId !== undefined) {
+    if (typeof input.correlationId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(input.correlationId)) { return undefined; }
+    event.correlationId = input.correlationId;
+  }
+  if (input.subsystem !== undefined) {
+    if (!isOneOf(input.subsystem, SUBSYSTEMS)) { return undefined; }
+    event.subsystem = input.subsystem;
   }
 
   return event;
