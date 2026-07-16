@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## v6.1.0 - 2026-07-15
+
+### New Features (Pro)
+
+- Added dedicated Pro workspace tab to group health and workflow tools.
+- Implemented local commit hygiene scoring system for staged changes, evaluating scope, size, safety, and test coverage.
+- Added `gitmind.openHealthReport` command and dedicated settings card for Pro users to manage health checks.
+- Added device management, deactivation, and "+2 devices" add-on purchase flow.
+
+### Enhanced
+
+- Implemented local history health analysis to provide insights without requiring AI providers.
+- Decoupled health metrics from AI-generated commit messages to ensure objective, deterministic analysis.
+- Centralized health scan recording into a reusable function within the health module.
+- Replaced legacy debug logging with a structured diagnostic event system using operation correlation IDs.
+- Updated workspace header and health report UI for improved readability.
+- Improved license validation cadence from 24h to 6h.
+- Updated configuration enum arrays for improved schema readability.
+
+### Bug Fixes
+
+- Resolved persistent migration notice for active users by implementing self-healing logic for legacy entitlements.
+- Ensured generation state is correctly reset after asynchronous operations.
+
+### Technical
+
+- Added integration tests to verify local-only execution of health checks.
+- Added structured error codes for device limits and account status.
+- Enforced strict redaction of sensitive data in all diagnostic outputs.
+
 ## v6.0.0 - 2026-07-14
 
 ### Commit Intelligence
