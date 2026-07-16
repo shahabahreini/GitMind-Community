@@ -8,8 +8,12 @@ const lastScans = new Map<string, { score: HealthScore; scannedAt: number }>();
 
 export async function analyzeCurrentHealth(repositoryRoot: string): Promise<HealthScore> {
   const score = scoreCommitHealth(await collectChangeSet(repositoryRoot, false));
-  lastScans.set(repositoryRoot, { score, scannedAt: Date.now() });
+  recordHealthScan(repositoryRoot, score);
   return score;
+}
+
+export function recordHealthScan(repositoryRoot: string, score: HealthScore): void {
+  lastScans.set(repositoryRoot, { score, scannedAt: Date.now() });
 }
 
 export function getLastHealthScan(repositoryRoot: string): { score: HealthScore; scannedAt: number } | undefined {

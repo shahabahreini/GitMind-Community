@@ -11,6 +11,7 @@ import { ChangeSet, CompositionPlan, ContextSelection, GenerationKind, HealthSco
 import { loadRepositoryPolicy } from "../../commit-intelligence/policy";
 import { parseJsonObject, renderPortablePrompt } from "../../commit-intelligence/prompt";
 import { reviewBlocks, scoreCommitHealth, shouldIncludeBody, validateCandidate, validateReviewFindings } from "../../commit-intelligence/validation";
+import { recordHealthScan } from "../../commit-intelligence/health";
 
 interface WorkspaceState {
   changeSet: ChangeSet;
@@ -82,7 +83,9 @@ export class CommitWorkspace implements vscode.Disposable {
     const envelope = buildEnvelope(changeSet, selection, kind, { detailMode: "concise", style: extensionConfig.commit.style, targetLanguage: extensionConfig.commit.targetLanguage ?? "english" });
     const preview = buildRequestPreview(apiConfig, changeSet, selection, envelope, 500);
     const panel = vscode.window.createWebviewPanel("gitmind.commitWorkspace", `GitMind · ${kind}`, vscode.ViewColumn.Active, { enableScripts: true, retainContextWhenHidden: false, localResourceRoots: [extensionUri] });
-    const workspace = new CommitWorkspace(panel, { changeSet, selection, kind, draft: "", preview, health: scoreCommitHealth(changeSet, selection) });
+    const health = scoreCommitHealth(changeSet, selection);
+    recordHealthScan(repositoryRoot, health);
+    const workspace = new CommitWorkspace(panel, { changeSet, selection, kind, draft: "", preview, health });
     this.panels.set(key, workspace);
     if (kind === "review" || config.get<boolean>("review.enabled", false)) {
       void workspace.handleGenerate({
@@ -170,6 +173,7 @@ export class CommitWorkspace implements vscode.Disposable {
         return { draft: validation.normalized, validation, health: scoreCommitHealth(this.state.changeSet, this.state.selection) };
       });
       this.state.draft = results[0].draft; this.state.validation = results[0].validation; this.state.health = results[0].health;
+      recordHealthScan(this.state.changeSet.repositoryRoot, results[0].health);
       this.state.draftSnapshot = this.snapshotKey(this.state.changeSet.snapshot);
       this.panel.webview.postMessage({ type: "result", results });
       if (setting.get<boolean>("review.enabled", false) || requestKind === "review") {
