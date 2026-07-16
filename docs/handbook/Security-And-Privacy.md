@@ -31,7 +31,13 @@ Generation and adjacent workflows create editable drafts only. Commit Composer i
 
 `gitmind.showDiagnostics` shows model/token estimates before generation. Production builds do not expose raw debug logging. Development logging does not make raw commit-intelligence prompts, diffs, issue bodies, or provider responses part of support reports. Pro users can opt into a 30-minute sanitized support session from **GitMind Settings > Pro > Support Report**. The report stays in memory until the user reviews and saves it; GitMind never uploads it automatically.
 
-The report uses a fixed allowlist: extension/VS Code versions, platform family, operation/provider categories, HTTP status, relative timing, and recovery outcomes. It rejects source code, diffs, prompts, commit content, repository/file paths, URLs, credentials, API bodies, raw errors, email, and license/customer identifiers. Review the JSON before attaching it to an issue.
+The report uses a fixed allowlist: extension/VS Code versions, platform family, subsystem and operation/provider categories, ephemeral per-operation correlation IDs, HTTP status, relative timing, and recovery outcomes. It rejects source code, diffs, prompts, commit content, repository/file paths, URLs, credentials, API bodies, raw errors, email, and license/customer identifiers. Review the JSON before attaching it to an issue.
+
+### Reading a support timeline
+
+Start a support session, reproduce one issue, then group report events by `correlationId`. A normal commit-generation trace is: `command.generate_commit_started` → Git validation/diff progress → provider generation/request progress → an optional recovery attempt → `command.generate_commit_completed`. A terminal `operation_failed` includes only a safe error category and HTTP status where known. The `subsystem` field identifies the failing phase: `activation`, `command`, `configuration`, `git`, `provider`, `recovery`, `subscription`, `support`, or `webview`.
+
+Development builds additionally write structured JSON events to **GitMind Diagnostics**. These events carry the same lifecycle names and timing, but the logger still redacts credentials and suppresses legacy prompt, response, diff, history, configuration, URL, and multiline payload logs.
 
 ## Product Telemetry
 

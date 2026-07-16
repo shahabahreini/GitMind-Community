@@ -1,6 +1,6 @@
 // src/services/api/responseProcessor.ts
 import * as vscode from 'vscode';
-import { debugLog } from '../debug/logger';
+import { diagnosticLog } from '../debug/logger';
 import { CommitMessage } from '../../config/types';
 import { PromptConfig } from './prompts';
 import { removeCodeBlocks, cleanMarkdown } from './utils';
@@ -14,44 +14,31 @@ function clampBulletPoints(bulletPoints: string[], maxBodyLines?: number): strin
         return bulletPoints;
     }
 
-    debugLog(`[DEBUG] Clamping commit body bullet points from ${bulletPoints.length} to ${maxBodyLines}`);
+    diagnosticLog({ subsystem: "provider", event: "response.body_clamped", functionName: "clampBulletPoints", data: { originalCount: bulletPoints.length, maxBodyLines } });
     return bulletPoints.slice(0, maxBodyLines);
 }
 
 export function processCommitMessage(response: string, config: PromptConfig = {}): CommitMessage {
-    debugLog("Processing Response (original)");
-    debugLog(response);
+    diagnosticLog({ subsystem: "provider", event: "response.processing_started", functionName: "processCommitMessage", data: { responseLength: response.length } });
 
     // Analyze the response for debugging
     const responseAnalysis = {
         responseLength: response.length,
         containsCodeBlocks: response.includes('```'),
-        firstLine: response.split('\n')[0],
         bulletPointCount: (response.match(/^- /gm) || []).length,
         nonEmptyLineCount: response.split('\n').filter(line => line.trim()).length,
         emptyLinesAfterFirst: response.split('\n').slice(1).findIndex(line => line.trim() !== '') + 1
     };
 
-    debugLog("=== RESPONSE FORMAT ANALYSIS ===");
-    debugLog("Response analysis", responseAnalysis);
-
-    const bulletPointSamples = (response.match(/^- .+$/gm) || []).slice(0, 3);
-    debugLog("Bullet point samples", bulletPointSamples);
-    debugLog("=== END ANALYSIS ===");
+    diagnosticLog({ subsystem: "provider", event: "response.format_analyzed", functionName: "processCommitMessage", data: responseAnalysis });
 
     // Remove code blocks and clean markdown
     let processed = response.trim();
-    debugLog("After original", JSON.stringify(processed));
-
     processed = removeCodeBlocks(processed);
-    debugLog("After code_blocks_removed", JSON.stringify(processed));
-
     processed = cleanMarkdown(processed);
-    debugLog("After markdown_cleaned", JSON.stringify(processed));
 
     // Split into lines and filter out empty ones
     const lines = processed.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-    debugLog("Split lines", lines);
 
     if (lines.length === 0) {
         throw new Error("Empty response received from AI");
@@ -59,7 +46,6 @@ export function processCommitMessage(response: string, config: PromptConfig = {}
 
     // Get the first line as summary and clean any duplicated colons (e.g., "feat(scope)::")
     let summary = lines[0].replace(/^([a-z0-9-]+(?:\([^)]+\))?!?)(?:\s*:){2,}/gim, '$1:');
-    debugLog("Initial summary", summary);
 
     // Check if this is a style that should not be modified
     const isEmberStyle = config.style === 'ember' && summary.match(/^\[.+\]/);
@@ -69,11 +55,10 @@ export function processCommitMessage(response: string, config: PromptConfig = {}
     const isJqueryStyle = config.style === 'jquery' && summary.match(/^[A-Z][a-z]+: .+\. (Fixes|Closes|Refs) #\d+/);
     const isBasicStyle = config.style === 'basic' || !config.style;
 
-    debugLog(`Style detection: ember=${isEmberStyle}, emoji=${isEmojiStyle}, conventional=${isConventionalStyle}, linux=${isLinuxStyle}, jquery=${isJqueryStyle}, basic=${isBasicStyle}, configStyle=${config.style}`);
+    diagnosticLog({ subsystem: "provider", event: "response.style_detected", functionName: "processCommitMessage", data: { ember: Boolean(isEmberStyle), emoji: isEmojiStyle, conventional: Boolean(isConventionalStyle), linux: Boolean(isLinuxStyle), jquery: Boolean(isJqueryStyle), basic: isBasicStyle, configuredStyle: config.style ?? "basic" } });
 
     // Don't modify the summary if it already matches the expected format for the current style
     if (isEmberStyle || isEmojiStyle || isConventionalStyle || isLinuxStyle || isJqueryStyle) {
-        debugLog("Summary already has correct format for style, not modifying");
     } else if (isBasicStyle) {
         // Only add default type for basic style when no recognizable format is present
         if (
@@ -81,37 +66,29 @@ export function processCommitMessage(response: string, config: PromptConfig = {}
             !summary.match(/^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|add|update|remove|create|delete|implement|improve)(\(.+\))?: /i)
         ) {
             summary = `refactor: ${summary}`;
-            debugLog("Added default type", summary);
         }
     }
 
-    debugLog("Final summary after processing", summary);
 
     // Get description lines (everything after the first line)
     const descriptionLines = lines.slice(1);
-    debugLog("Description lines before processing", descriptionLines);
 
     // Filter and process bullet points
     const nonEmptyDescriptionLines = descriptionLines.filter(line => line.trim() !== '');
-    debugLog("Non-empty description lines", nonEmptyDescriptionLines);
 
     const bulletPoints: string[] = [];
     for (const line of nonEmptyDescriptionLines) {
         if (line.startsWith('- ')) {
-            debugLog("Found bullet point", line);
             bulletPoints.push(line);
         } else if (line.trim() && !line.includes('DIFF TO ANALYZE:') && !line.includes('Here is the diff')) {
             // Convert non-bullet points to bullet points if they're actual content
             const bulletLine = `- ${line}`;
-            debugLog("Converted to bullet point", bulletLine);
             bulletPoints.push(bulletLine);
         }
     }
 
     const clampedBulletPoints = clampBulletPoints(bulletPoints, config.maxBodyLines);
 
-    debugLog("Processed bullet points", bulletPoints);
-    debugLog("Clamped bullet points", clampedBulletPoints);
 
     const description = clampedBulletPoints.join('\n');
 
@@ -120,7 +97,7 @@ export function processCommitMessage(response: string, config: PromptConfig = {}
         description: description.trim()
     };
 
-    debugLog("Final commit message", result);
+    diagnosticLog({ subsystem: "provider", event: "response.processing_completed", functionName: "processCommitMessage", outcome: "success", data: { summaryLength: result.summary.length, bodyLineCount: clampedBulletPoints.length } });
     return result;
 }
 
@@ -166,7 +143,7 @@ export function applyIssueTracking(message: CommitMessage, branchName: string | 
             };
         }
     } catch (e) {
-        debugLog("Invalid regex for issue tracking", e);
+        diagnosticLog({ subsystem: "configuration", event: "configuration.issue_tracking_pattern_invalid", functionName: "applyIssueTracking", outcome: "failure", data: { errorName: e instanceof Error ? e.name : "UnknownError" } });
     }
 
     return message;

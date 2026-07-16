@@ -24,7 +24,7 @@ import {
     checkOllamaAvailability,
     getOllamaInstallInstructions,
 } from "../../utils/ollamaHelper";
-import { debugLog } from "../debug/logger";
+import { debugLog, diagnosticLog, startDiagnosticOperation } from "../debug/logger";
 import { getApiConfig } from "../../config/settings";
 import { estimateTokens } from "../../utils/tokenCounter";
 import { workspace } from "vscode";
@@ -446,9 +446,17 @@ export async function generateCommitMessage(
     config: ApiConfig,
     diff: string,
     customContext: string = "",
-    repositoryRoot?: string
+    repositoryRoot?: string,
+    operationId?: string,
 ): Promise<string> {
     const startTime = Date.now();
+    const diagnostics = operationId ?? startDiagnosticOperation("provider", "generate_commit").id;
+    diagnosticLog({
+        subsystem: "provider", event: "provider.generation_started", functionName: "generateCommitMessage",
+        operationId: diagnostics, provider: config.type as SupportProvider,
+        data: { diffSizeBucket: Math.ceil(diff.length / 10_000) * 10_000, hasCustomContext: Boolean(customContext) },
+        support: { name: "operation_progress", operation: "generate_commit", outcome: "success" },
+    });
 
     try {
         // Set up request tracking
@@ -459,13 +467,13 @@ export async function generateCommitMessage(
         // First validate and potentially update the configuration
         const validatedConfig = await validateAndUpdateConfig(config);
         if (!validatedConfig) {
-            debugLog("No valid configuration available");
+            diagnosticLog({ subsystem: "configuration", event: "configuration.invalid", functionName: "generateCommitMessage", operationId: diagnostics, provider: config.type as SupportProvider, outcome: "failure", support: { name: "operation_progress", operation: "generate_commit", outcome: "failure", errorCategory: "configuration" } });
             throw new Error(`${getProviderName(config.type)} configuration is invalid. Please check your API key and settings.`);
         }
 
         // Log estimated token usage
         const tokenEstimate = estimateTokens(diff);
-        debugLog(`Estimated tokens for diff: ${tokenEstimate}`);
+        diagnosticLog({ subsystem: "provider", event: "provider.token_estimated", functionName: "generateCommitMessage", operationId: diagnostics, provider: config.type as SupportProvider, data: { tokenEstimate } });
 
         // Get repository name for diagnostics
         let repositoryName: string | undefined;
@@ -503,18 +511,18 @@ export async function generateCommitMessage(
 
         // If it's a large diff and the Pro feature is enabled, use chunked processing
         if (isLargeDiff && largeDiffSettings.enabled && await subscriptionManager.isProUser()) {
-            debugLog("Using large diff handling for commit generation");
-            return await processLargeDiff(validatedConfig, diff, customContext, largeDiffSettings);
+            diagnosticLog({ subsystem: "provider", event: "provider.large_diff_processing", functionName: "generateCommitMessage", operationId: diagnostics, provider: config.type as SupportProvider, data: { tokenEstimate }, support: { name: "operation_progress", operation: "generate_commit", outcome: "success" } });
+            return await processLargeDiff(validatedConfig, diff, customContext, largeDiffSettings, diagnostics);
         }
 
         // Generate the commit message, with at most one Pro recovery attempt.
-        const result = await generateMessageWithRecovery(validatedConfig, diff, customContext);
+        const result = await generateMessageWithRecovery(validatedConfig, diff, customContext, undefined, diagnostics);
 
         return result;
     } catch (unknownError) {
         const duration = Date.now() - startTime;
         const error = unknownError instanceof Error ? unknownError : new Error(String(unknownError));
-        debugLog("Generate Commit Message Error:", error);
+        diagnosticLog({ subsystem: "provider", event: "provider.generation_failed", functionName: "generateCommitMessage", operationId: diagnostics, provider: config.type as SupportProvider, outcome: "failure", durationMs: duration, data: { errorName: error.name }, support: { name: "operation_progress", operation: "generate_commit", outcome: "failure", errorCategory: "unknown" } });
 
         // Handle cancellation specifically
         if (error.message === 'Request was cancelled' || error.message === 'User cancelled token count confirmation') {
@@ -539,6 +547,7 @@ export interface RecoveryDependencies {
     getSetting?: <T>(key: string, defaultValue: T) => T;
     notify?: (message: string) => void;
     supportOperation?: SupportOperation;
+    operationId?: string;
 }
 
 export function createRecoveryOperation(
@@ -578,11 +587,10 @@ export function createRecoveryOperation(
                 notify(
                     `${getProviderName(attemptedConfig.type)} reached a request limit. Trying fallback model '${fallbackModel}' once.`
                 );
-                recordSupportEvent({
-                    name: "recovery_attempted",
-                    operation: supportOperation,
-                    provider: attemptedConfig.type as SupportProvider,
-                    recoveryAction: "fallback_model"
+                diagnosticLog({
+                    subsystem: "recovery", event: "recovery.fallback_model_attempted", functionName: "createRecoveryOperation",
+                    operationId: dependencies.operationId, provider: attemptedConfig.type as SupportProvider,
+                    data: { failure }, support: { name: "recovery_attempted", operation: supportOperation, recoveryAction: "fallback_model" }
                 });
                 return { config: effectiveConfig, kind: "fallback" };
             }
@@ -592,11 +600,10 @@ export function createRecoveryOperation(
             notify(
                 `${getProviderName(attemptedConfig.type)} is temporarily unavailable. Retrying once.`
             );
-            recordSupportEvent({
-                name: "recovery_attempted",
-                operation: supportOperation,
-                provider: attemptedConfig.type as SupportProvider,
-                recoveryAction: "retry_same_model"
+            diagnosticLog({
+                subsystem: "recovery", event: "recovery.retry_attempted", functionName: "createRecoveryOperation",
+                operationId: dependencies.operationId, provider: attemptedConfig.type as SupportProvider,
+                data: { failure }, support: { name: "recovery_attempted", operation: supportOperation, recoveryAction: "retry_same_model" }
             });
             return { config: attemptedConfig, kind: "retry" };
         }
@@ -618,21 +625,17 @@ export function createRecoveryOperation(
             recoveryAttemptClaimed = true;
             try {
                 const result = await operation(decision.config);
-                recordSupportEvent({
-                    name: "recovery_completed",
-                    operation: supportOperation,
-                    provider: attemptedConfig.type as SupportProvider,
-                    outcome: "success",
-                    recoveryAction: decision.kind === "fallback" ? "fallback_model" : "retry_same_model"
+                diagnosticLog({
+                    subsystem: "recovery", event: "recovery.completed", functionName: "createRecoveryOperation",
+                    operationId: dependencies.operationId, provider: attemptedConfig.type as SupportProvider, outcome: "success",
+                    support: { name: "recovery_completed", operation: supportOperation, outcome: "success", recoveryAction: decision.kind === "fallback" ? "fallback_model" : "retry_same_model" }
                 });
                 return result;
             } catch {
-                recordSupportEvent({
-                    name: "recovery_completed",
-                    operation: supportOperation,
-                    provider: attemptedConfig.type as SupportProvider,
-                    outcome: "failure",
-                    recoveryAction: decision.kind === "fallback" ? "fallback_model" : "retry_same_model"
+                diagnosticLog({
+                    subsystem: "recovery", event: "recovery.failed", functionName: "createRecoveryOperation",
+                    operationId: dependencies.operationId, provider: attemptedConfig.type as SupportProvider, outcome: "failure",
+                    support: { name: "recovery_completed", operation: supportOperation, outcome: "failure", recoveryAction: decision.kind === "fallback" ? "fallback_model" : "retry_same_model" }
                 });
                 const action = decision.kind === "fallback" ? "configured fallback model" : "automatic retry";
                 throw new Error(
@@ -648,9 +651,11 @@ async function generateMessageWithRecovery(
     config: ApiConfig,
     diff: string,
     customContext: string,
-    recovery: RecoveryOperation = createRecoveryOperation(config)
+    recovery?: RecoveryOperation,
+    operationId?: string,
 ): Promise<string> {
-    return recovery(async (attemptConfig): Promise<string> => {
+    const operation = recovery ?? createRecoveryOperation(config, { operationId });
+    return operation(async (attemptConfig): Promise<string> => {
         let timeout: NodeJS.Timeout | undefined;
         try {
             return await Promise.race([
@@ -1000,10 +1005,11 @@ async function processLargeDiff(
     config: ApiConfig,
     diff: string,
     customContext: string,
-    settings: { chunkSize: number, maxChunks: number }
+    settings: { chunkSize: number, maxChunks: number },
+    operationId?: string,
 ): Promise<string> {
     const diffProcessor = DiffProcessor.getInstance();
-    const recovery = createRecoveryOperation(config);
+    const recovery = createRecoveryOperation(config, { operationId });
 
     // Show progress notification
     return vscode.window.withProgress(
