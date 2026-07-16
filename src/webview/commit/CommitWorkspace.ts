@@ -78,10 +78,15 @@ export class CommitWorkspace implements vscode.Disposable {
     }
     if (changeSet.atoms.length === 0) { void vscode.window.showInformationMessage("GitMind: No changes detected."); return; }
     const selection = defaultSelection(changeSet, config.get<string[]>("commit.excludeFiles", []), config.get("commit.noiseFiltering.enabled", false));
-    const apiConfig = await getApiConfig();
     const extensionConfig = getConfiguration();
-    const envelope = buildEnvelope(changeSet, selection, kind, { detailMode: "concise", style: extensionConfig.commit.style, targetLanguage: extensionConfig.commit.targetLanguage ?? "english" });
-    const preview = buildRequestPreview(apiConfig, changeSet, selection, envelope, 500);
+    let preview: RequestPreview | undefined;
+    try {
+      const apiConfig = await getApiConfig();
+      const envelope = buildEnvelope(changeSet, selection, kind, { detailMode: "concise", style: extensionConfig.commit.style, targetLanguage: extensionConfig.commit.targetLanguage ?? "english" });
+      preview = buildRequestPreview(apiConfig, changeSet, selection, envelope, 500);
+    } catch {
+      // Health remains local and usable even when the optional AI provider is not configured.
+    }
     const panel = vscode.window.createWebviewPanel("gitmind.commitWorkspace", `GitMind · ${kind}`, vscode.ViewColumn.Active, { enableScripts: true, retainContextWhenHidden: false, localResourceRoots: [extensionUri] });
     const health = scoreCommitHealth(changeSet, selection);
     recordHealthScan(repositoryRoot, health);
