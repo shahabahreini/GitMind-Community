@@ -243,6 +243,9 @@ export class SettingsManager {
 
         try {
             debugLog("Starting settings save process...");
+            if (settings.commitIntelligence?.healthEnabled && !isProUser() && !isLegacyProUser()) {
+                throw new Error("Commit Health requires GitMind Pro. Activate Pro before enabling it.");
+            }
             const config = vscode.workspace.getConfiguration(SettingsManager.CONFIG_PREFIX);
             const currentSettings = await SettingsManager.getCurrentSettings();
 

@@ -51,6 +51,7 @@ import { formatSafeProviderError } from "../utils/errorHandler";
 import { registerCommitIntelligenceCommands } from "./commitIntelligence";
 import { collectChangeSet } from "../commit-intelligence/git";
 import { scoreCommitHealth } from "../commit-intelligence/validation";
+import { recordHealthScan } from "../commit-intelligence/health";
 
 import { state } from "../extension";
 
@@ -264,6 +265,7 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
       const candidatesEnabled = gitmindConfig.get("commitIntelligence.enabled", false) && gitmindConfig.get("commit.candidates.enabled", false);
       const healthEnabled = gitmindConfig.get("commit.health.enabled", false) && await SubscriptionManager.getInstance().isProUser();
       const health = healthEnabled ? scoreCommitHealth(await collectChangeSet(repoRoot, false)) : undefined;
+      if (health) {recordHealthScan(repoRoot, health);}
       const healthSummary = health ? `Health ${health.overall}/100 · ${health.recommendations[0]}` : undefined;
 
       if (candidatesEnabled) {
