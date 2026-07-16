@@ -25,7 +25,7 @@ When `gitmind.commit.candidates.enabled` is active:
 
 ## Quality Review & Pre-Commit Code Review
 
-- **Commit Health Rating Gauge**: Displays a visual score meter (0–100) with line-item conventional compliance status checks.
+- **Commit Health**: A Pro, local staged-change report that scores scope, size, safety, test coverage, and staging—not the generated commit message. Open it from Settings or **GitMind: Open Commit Health Report**.
 - **Pre-Commit Code Review Panel**: When `gitmind.review.enabled` is active, GitMind automatically executes a pre-commit code review pass and renders findings with color-coded severity callouts (`ERROR`, `WARNING`, `INFO`), details, and impacted file atom tags right above the editable draft.
 
 ## Shape The Result

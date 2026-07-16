@@ -11,6 +11,7 @@ import { ChangeSet, CompositionPlan } from "../../commit-intelligence/models";
 import { importCommitlint, mergePolicy } from "../../commit-intelligence/policy";
 import { parseJsonObject, renderPortablePrompt } from "../../commit-intelligence/prompt";
 import { reviewBlocks, scoreCommitHealth, shouldIncludeBody, validateCandidate, validateReviewFindings } from "../../commit-intelligence/validation";
+import { analyzeHistoryHealth } from "../../commit-intelligence/health";
 import { ApiConfig, CommitStyle } from "../../config/types";
 import { FreeFeatureRenderer } from "../../webview/settings/components/renderers/FreeFeatureRenderer";
 import { ExtensionSettings } from "../../models/ExtensionSettings";
@@ -228,6 +229,14 @@ suite("GitMind 6 disposable repository collection", () => {
     const changeSet = await collectChangeSet(repositoryRoot, true);
     assert.deepStrictEqual(new Set(changeSet.atoms.map(atom => atom.origin)), new Set(["staged", "unstaged", "untracked"]));
     assert.strictEqual(await runGit(repositoryRoot, ["status", "--porcelain"]).then(value => value.includes("nope\n")), false);
+  });
+
+  test("analyzes history locally without using a provider", async () => {
+    const report = await analyzeHistoryHealth(repositoryRoot, { mode: "last-n", count: 10 });
+    assert.ok(report.analyzedCommits >= 1);
+    assert.ok(report.overall >= 0 && report.overall <= 100);
+    const source = await readFile(path.join(process.cwd(), "src", "commit-intelligence", "health.ts"), "utf8");
+    assert.doesNotMatch(source, /services\/api|generateWithRawPrompt/);
   });
 
   test("applies a reviewed commit locally without pushing", async () => {
