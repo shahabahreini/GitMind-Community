@@ -6,6 +6,7 @@ import { debugLog } from '../debug/logger';
 import { SecureKeyManager } from '../encryption/SecureKeyManager';
 import { SettingsWebview } from '../../webview/settings/SettingsWebview';
 import { isProUser as sharedIsProUser } from '../../utils/proHelpers';
+import { LegacyEntitlementService } from './LegacyEntitlementService';
 
 /** A user without a valid license key is Free. Pro is granted by the license, not by a
  *  subscription lookup — GitMind Pro is a one-time purchase, so there is nothing to poll. */
@@ -92,7 +93,11 @@ export class SubscriptionManager {
             return proStatus;
         }
 
-        if ((validationStatus === 'valid' && legacyOrderId) || legacySubscriptionStatus === 'active') {
+        // 'pro-legacy' exists only while the grandfathered entitlement itself is still
+        // active. Once it is migrated/retired, these stale config remnants must not
+        // resurrect the legacy plan — a migrated user is a plain Polar customer.
+        if (LegacyEntitlementService.getInstance().hasActiveEntitlement()
+            && ((validationStatus === 'valid' && legacyOrderId) || legacySubscriptionStatus === 'active')) {
             return { isActive: true, isPaused: false, isExpired: false, plan: 'pro-legacy' };
         }
 
@@ -240,6 +245,12 @@ export class SubscriptionManager {
         }
         const email = await vscode.window.showInputBox({ prompt: 'Email for your GitMind Pro license', value: await this.getUserEmail(true), validateInput: value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()) ? undefined : 'Enter a valid email address.' });
         if (!email) { return; }
+
+        // Affirmative terms consent before any money can move. The server refuses
+        // the checkout without it and records the acceptance with the session.
+        const { ProActivationService } = await import('./ProActivationService.js');
+        if (!(await ProActivationService.confirmPurchaseTerms())) { return; }
+
         const checkout = await GitMindLicenseService.getInstance().createCheckout(email);
         if (!checkout.ok) { vscode.window.showErrorMessage(`${checkout.error} Opening pricing details instead.`); await vscode.env.openExternal(vscode.Uri.parse(GitMindLicenseService.CHECKOUT_URL)); return; }
 

@@ -21,10 +21,14 @@ export interface LegacyEntitlement {
 const ENTITLEMENT_KEY = 'gitmind.pro.legacyEntitlement';
 const NOTICE_VERSION_KEY = 'gitmind.pro.lastMigrationNoticeVersion';
 const NOTICE_COUNT_KEY = 'gitmind.pro.migrationNoticeCount';
+const NOTICE_DISMISSED_KEY = 'gitmind.pro.migrationNoticeDismissed';
 
 /** Lemon Squeezy issues license keys as UUIDs. */
 const LEMON_SQUEEZY_KEY_PATTERN =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** GitMind (Polar-era) keys look like A7K2M-XR4PT-9WQND-3HJ5V. */
+const GITMIND_KEY_PATTERN = /^[A-Z0-9]{5}(-[A-Z0-9]{5}){3}$/i;
 
 export class LegacyEntitlementService {
     private static instance: LegacyEntitlementService;
@@ -79,7 +83,50 @@ export class LegacyEntitlementService {
         this.cached = undefined;
         await this.context.globalState.update(ENTITLEMENT_KEY, undefined);
         await this.context.globalState.update(NOTICE_COUNT_KEY, undefined);
+        await this.context.globalState.update(NOTICE_DISMISSED_KEY, undefined);
         debugLog('Legacy entitlement cleared');
+    }
+
+    /**
+     * The Lemon Squeezy chapter is over for this user: a live server has vouched for a
+     * real GitMind key. Archive the entitlement (kept with migrated:true as local
+     * evidence, per "remove or archive — just in case") and scrub every LS-era leftover,
+     * so from here on this user is indistinguishable from a fresh customer and no
+     * legacy branch ever fires for them again.
+     */
+    public async retireLegacyState(): Promise<void> {
+        if (!this.context) {
+            return;
+        }
+
+        const hadLegacyTraces = this.cached !== undefined;
+
+        if (this.cached && !this.cached.migrated) {
+            await this.markMigrated();
+        }
+
+        await this.context.globalState.update(NOTICE_COUNT_KEY, undefined);
+        await this.context.globalState.update(NOTICE_VERSION_KEY, undefined);
+        await this.context.globalState.update(NOTICE_DISMISSED_KEY, undefined);
+
+        // pro.orderId only ever held a Lemon Squeezy order id.
+        try {
+            const config = vscode.workspace.getConfiguration('gitmind');
+            if (config.get<string>('pro.orderId')) {
+                await config.update('pro.orderId', undefined, vscode.ConfigurationTarget.Global);
+            }
+        } catch (error) {
+            debugLog('Could not clear the legacy order id:', error);
+        }
+
+        if (hadLegacyTraces) {
+            debugLog('Legacy Lemon Squeezy state retired');
+        }
+    }
+
+    /** Stops the migration notice permanently without touching the entitlement. */
+    public async dismissMigrationNotice(): Promise<void> {
+        await this.context?.globalState.update(NOTICE_DISMISSED_KEY, true);
     }
 
     public getMigrationNoticeCount(): number {
@@ -93,11 +140,31 @@ export class LegacyEntitlementService {
     }
 
     /**
-     * Returns true whenever an un-migrated legacy entitlement is active so that
-     * the migration prompt can run on extension startup until claimed.
+     * True while there is genuinely something to migrate AND the user has not told us
+     * to stop asking. Notably false once a real GitMind key validates — the claim
+     * already happened through another door — and capped so the notice can never
+     * become the every-launch nag it once was.
      */
     public shouldShowMigrationNotice(_currentVersion?: string): boolean {
         if (!this.context || !this.hasActiveEntitlement()) {
+            return false;
+        }
+        if (this.context.globalState.get<boolean>(NOTICE_DISMISSED_KEY) === true) {
+            return false;
+        }
+        // A working REPLACEMENT license means migration is effectively done even if
+        // the record has not been flipped yet (it will be, on the next validation).
+        // The key shape matters: 'valid' alone is exactly the stale LS-era setting
+        // that grandfathering keys off, so it must not silence the notice by itself.
+        const config = vscode.workspace.getConfiguration('gitmind');
+        const storedKey = config.get<string>('pro.licenseKey');
+        if (config.get<string>('pro.validationStatus') === 'valid'
+            && !!storedKey && GITMIND_KEY_PATTERN.test(storedKey.trim())) {
+            return false;
+        }
+        // Three unanswered notices are enough; after that the claim stays available
+        // from the command palette and the settings view, silently.
+        if (this.getMigrationNoticeCount() >= 3) {
             return false;
         }
         return true;
