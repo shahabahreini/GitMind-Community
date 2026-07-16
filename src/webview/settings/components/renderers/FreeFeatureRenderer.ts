@@ -10,12 +10,48 @@ export class FreeFeatureRenderer extends BaseRenderer {
                     <div class="free-features-toggles">
                         ${this.renderToggleFeatures()}
                     </div>
+                    ${this.renderCommitHealth()}
                     ${this.renderCommitIntelligence()}
                     
                     ${this.renderUpgradePromptIfNeeded()}
                 </div>
             </div>
         `;
+    }
+
+    private renderCommitHealth(): string {
+        const intelligence = this.settings.commitIntelligence;
+        const enabled = intelligence?.healthEnabled ?? false;
+        const isPro = this.isProUser() || this.isDevModeEnabled();
+        const status = this.settings.health;
+        let toggle = FormUtils.createToggle('commitHealthEnabled', 'Enable Commit Health', 'Locally score staged changes for scope, size, safety, tests, and staging.', enabled, 'commit.health.enabled');
+        if (!isPro) {
+            toggle = toggle.replace('class="toggle-item"', 'class="toggle-item locked"')
+                .replace('id="commitHealthEnabled"', 'id="commitHealthEnabled" disabled aria-disabled="true"')
+                .replace('>Enable Commit Health</label>', '>Enable Commit Health <span class="pro-lock-badge" title="Requires GitMind Pro">Pro</span></label>');
+        }
+        return `
+            <section class="commit-intelligence-settings" aria-labelledby="commitHealthHeading">
+                <div class="commit-intelligence-banner">
+                    <div class="commit-intelligence-banner-header"><h3 id="commitHealthHeading" class="section-header" style="margin:0;">Commit Health</h3><span class="commit-intelligence-badge">Local</span></div>
+                    <p class="description" style="margin-bottom:12px;">A deterministic, local change-hygiene report. It evaluates staged content and metadata only—never AI output or commit-message wording.</p>
+                    ${toggle}
+                    ${isPro ? '<button type="button" class="button secondary" data-command="gitmind.openHealthReport">Open Health Report</button>' : '<p class="toggle-description">Commit Health is available with GitMind Pro. Activate Pro to enable local reports and history analysis.</p>'}
+                    <p class="toggle-description"><strong>Status:</strong> ${status?.currentChangeStatus ?? 'Checking workspace…'}${status?.lastScore !== undefined ? ` · Last local scan: ${status.lastScore}/100` : ''}${status?.lastScanAt ? ` (${new Date(status.lastScanAt).toLocaleString()})` : ''}</p>
+                </div>
+                <div class="intel-card-module settings-subsection" aria-labelledby="historyHealthHeading">
+                    <h4 id="historyHealthHeading" class="intel-card-title">History Health</h4>
+                    <p class="intel-card-desc">Analyze local commit change metadata without sending repository content to a provider.</p>
+                    <label for="historyHealthMode">Range</label>
+                    <select id="historyHealthMode"><option value="last-n">Last N commits</option><option value="date-range">Date range</option></select>
+                    <input id="historyHealthCount" type="number" min="1" max="500" value="25" aria-label="Number of commits" />
+                    <input id="historyHealthStart" type="date" aria-label="History start date" />
+                    <input id="historyHealthEnd" type="date" aria-label="History end date" />
+                    <button type="button" class="button secondary" id="analyzeHistoryHealth" ${isPro ? '' : 'disabled aria-disabled="true"'}>Analyze History</button>
+                    <button type="button" class="button secondary" id="getHistoryHealthGuidance" ${isPro ? '' : 'disabled aria-disabled="true"'}>Get AI Guidance</button>
+                    <div id="historyHealthResult" class="toggle-description" aria-live="polite"></div>
+                </div>
+            </section>`;
     }
 
     private renderCommitIntelligence(): string {
@@ -96,15 +132,6 @@ export class FreeFeatureRenderer extends BaseRenderer {
                             'commit.candidates.enabled',
                             true,
                             'Generates 2–3 alternate commit message choices side-by-side so you can pick or combine the best message.'
-                        )}
-                        ${toggle(
-                            'commitHealthEnabled',
-                            'Commit Health',
-                            'Scans your commits for common mistakes, missing details, or sensitive info before saving',
-                            intelligence?.healthEnabled ?? false,
-                            'commit.health.enabled',
-                            true,
-                            'Scans your staged changes for common mistakes, leftover debug statements, or missing details before committing.'
                         )}
                     </div>
 

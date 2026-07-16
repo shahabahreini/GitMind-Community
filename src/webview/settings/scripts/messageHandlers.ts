@@ -65,7 +65,19 @@ export function getMessageHandlersScript(): string {
         commitHistoryStatsReady: () => handleCommitHistoryStatsReady(message),
         commitHistoryStatsError: () => handleCommitHistoryStatsError(message),
         changelogStatsReady: () => handleChangelogStatsReady(message),
-        changelogStatsError: () => handleChangelogStatsError(message)
+        changelogStatsError: () => handleChangelogStatsError(message),
+        historyHealthReport: () => {
+          const target = document.getElementById('historyHealthResult');
+          if (target) target.textContent = message.report.analyzedCommits + ' commits analyzed · ' + message.report.overall + '/100. ' + (message.report.recommendations || []).join(' ');
+        },
+        historyHealthError: () => {
+          const target = document.getElementById('historyHealthResult');
+          if (target) target.textContent = message.error || 'Unable to analyze history.';
+        },
+        historyHealthGuidance: () => {
+          const target = document.getElementById('historyHealthResult');
+          if (target) target.textContent = message.guidance;
+        }
       };
       
       const handler = messageHandlers[message.command];

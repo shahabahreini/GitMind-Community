@@ -11,6 +11,12 @@ export interface ExtensionSettings {
         allowHunkSplitting: boolean;
         reviewEnabled: boolean;
     };
+    health?: {
+        currentChangeStatus: string;
+        stagedChanges: number;
+        lastScanAt?: number;
+        lastScore?: number;
+    };
     showDiagnostics?: boolean;
     gemini: {
         apiKey: string;

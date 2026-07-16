@@ -16,7 +16,7 @@ The editable plan supports grouping, ordering, exclusions, and group messages. A
 
 - `gitmind.commit.candidates.enabled` requests 3 distinct AI candidate archetypes (**Concise 1-liner**, **Detailed breakdown**, and **Intent focus**) in one provider request.
 - Interactive candidate selection (**GitMind: Draft Options & Commit Quality**) features a **live multiline preview in the top QuickPick placeholder bar**, displaying the full un-truncated commit message as you navigate choices with arrow keys.
-- **Commit Health Rating Gauge** displays a visual score meter (0–100) weighted 30% relevance, 25% atomicity, 25% rule compliance, 10% intent completeness, and 10% verbosity, with line-item conventional compliance status checks.
+- **Commit Health** is a deterministic local report for staged changes. Its score checks change scope, size, potential credentials/debug statements, test changes, and staging state; it never scores AI output or commit-message wording. Enable it from its own Settings card, then use **Open Health Report** or the Command Palette. History Health can analyze a last-N or date range locally; optional AI guidance receives only the aggregate score report.
 - `gitmind.review.enabled` enables opt-in findings tied to stable change IDs. When active, draft generation automatically renders a **Pre-Commit Code Review Panel** in the workspace panel with color-coded severity callouts (`ERROR`, `WARNING`, `INFO`), details, and impacted file atom tags. `gitmind.review.blockingThreshold` defaults to `off`; explicit `warning` or `error` thresholds block apply/insertion when severe findings exist.
 - Squash, pull-request, stash, release-note, explanation, and review commands create editable drafts only.
 
