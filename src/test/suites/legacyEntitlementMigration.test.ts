@@ -139,6 +139,64 @@ suite('Legacy Lemon Squeezy entitlement', () => {
 
             assert.strictEqual(service.hasActiveEntitlement(), false);
         });
+
+        test('does not grandfather a Polar customer (GitMind key in config)', async () => {
+            // 'valid' + 'active' are written by every legitimate GitMind activation
+            // too. A GitMind-format key is proof this is a Polar customer — fabricating
+            // a Lemon Squeezy record for them resurrects the migration nag forever.
+            settings['pro.validationStatus'] = 'valid';
+            settings['subscription.status'] = 'active';
+            settings['pro.licenseKey'] = 'AAAAA-BBBBB-CCCCC-DDDDD';
+
+            const service = await freshService();
+
+            assert.strictEqual(service.hasActiveEntitlement(), false);
+        });
+
+        test('does not grandfather a Polar customer whose key sits in secret storage', async () => {
+            // The portal deep-link activation stores the key in SecretStorage and
+            // leaves only the placeholder in config — the common case, not the edge.
+            settings['pro.validationStatus'] = 'valid';
+            settings['pro.licenseKey'] = '[ENCRYPTED]';
+            secretStore.set('gitmind.pro.licenseKey', 'AAAAA-BBBBB-CCCCC-DDDDD');
+
+            const service = await freshService();
+
+            assert.strictEqual(service.hasActiveEntitlement(), false);
+        });
+
+        test('does not fabricate an entitlement from an unreadable [ENCRYPTED] key', async () => {
+            // Settings roam via Settings Sync; SecretStorage does not. A synced second
+            // machine sees '[ENCRYPTED]' and 'valid' but holds no readable key — that
+            // is a real key we cannot see, not Lemon Squeezy evidence.
+            settings['pro.validationStatus'] = 'valid';
+            settings['pro.licenseKey'] = '[ENCRYPTED]';
+
+            const service = await freshService();
+
+            assert.strictEqual(service.hasActiveEntitlement(), false);
+        });
+
+        test('self-heals a stale un-migrated record once a GitMind key validates', async () => {
+            // The exact reported bug: valid Pro via a portal-issued key, yet an old
+            // un-migrated record keeps triggering "claim your free key" every launch.
+            // Startup must retire the record with no action from the user.
+            globalStateStore.set('gitmind.pro.legacyEntitlement', {
+                legacyKey: LS_KEY,
+                detectedAt: new Date().toISOString(),
+                source: 'lemonsqueezy',
+                migrated: false
+            });
+            settings['pro.validationStatus'] = 'valid';
+            settings['pro.licenseKey'] = '[ENCRYPTED]';
+            secretStore.set('gitmind.pro.licenseKey', 'AAAAA-BBBBB-CCCCC-DDDDD');
+
+            const service = await freshService();
+
+            assert.strictEqual(service.hasActiveEntitlement(), false);
+            assert.strictEqual(service.getEntitlement()?.migrated, true, 'record is archived, not deleted');
+            assert.strictEqual(await service.shouldShowMigrationNotice('6.1.0'), false);
+        });
     });
 
     suite('validation fails open', () => {
@@ -308,25 +366,48 @@ suite('Legacy Lemon Squeezy entitlement', () => {
             settings['pro.licenseKey'] = LS_KEY;
             const service = await freshService();
 
-            assert.strictEqual(service.shouldShowMigrationNotice('6.1.0'), true);
+            assert.strictEqual(await service.shouldShowMigrationNotice('6.1.0'), true);
             assert.strictEqual(service.getMigrationNoticeCount(), 0);
 
             const count1 = await service.incrementMigrationNoticeCount();
             assert.strictEqual(count1, 1);
-            assert.strictEqual(service.shouldShowMigrationNotice('6.1.0'), true);
+            assert.strictEqual(await service.shouldShowMigrationNotice('6.1.0'), true);
 
             const count2 = await service.incrementMigrationNoticeCount();
             assert.strictEqual(count2, 2);
 
             await service.markMigrated();
-            assert.strictEqual(service.shouldShowMigrationNotice('6.1.0'), false);
+            assert.strictEqual(await service.shouldShowMigrationNotice('6.1.0'), false);
             assert.strictEqual(service.getMigrationNoticeCount(), 0);
         });
 
         test('is never shown to someone without a legacy entitlement', async () => {
             const service = await freshService();
 
-            assert.strictEqual(service.shouldShowMigrationNotice('6.1.0'), false);
+            assert.strictEqual(await service.shouldShowMigrationNotice('6.1.0'), false);
+        });
+
+        test('is silenced permanently the moment a GitMind key is validated', async () => {
+            // Un-migrated record, but the user now holds a working replacement key in
+            // secret storage (config shows only the placeholder). The notice must not
+            // show, and the check itself retires the record so this is permanent.
+            settings['pro.validationStatus'] = 'valid';
+            settings['pro.licenseKey'] = '[ENCRYPTED]';
+            secretStore.set('gitmind.pro.licenseKey', 'AAAAA-BBBBB-CCCCC-DDDDD');
+            const service = await freshService();
+
+            // Seed the record AFTER initialize so the startup self-heal has not
+            // already retired it — this exercises the gate inside the notice check.
+            globalStateStore.set('gitmind.pro.legacyEntitlement', {
+                detectedAt: new Date().toISOString(),
+                source: 'lemonsqueezy',
+                migrated: false
+            });
+            (service as unknown as { cached: unknown }).cached =
+                globalStateStore.get('gitmind.pro.legacyEntitlement');
+
+            assert.strictEqual(await service.shouldShowMigrationNotice('6.1.0'), false);
+            assert.strictEqual(service.getEntitlement()?.migrated, true);
         });
     });
 });

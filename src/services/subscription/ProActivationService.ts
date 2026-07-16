@@ -554,16 +554,6 @@ export class ProActivationService {
      * Validate existing license (periodic check)
      */
     public async validateExistingLicense(): Promise<boolean> {
-        // Grandfathered Lemon Squeezy customers are not validated against the network:
-        // the old store is suspended, so its keys can only answer "invalid" — which
-        // says nothing about whether they paid. But ONLY while all they hold is the
-        // old key. Once a GitMind-format key is present (claimed or freshly bought),
-        // validate it normally; a success below retires the legacy record for good.
-        if (isLegacyProUser() && !this.looksLikeGitMindKey(getLicenseKey())) {
-            debugLog('Skipping validation for a grandfathered Lemon Squeezy license');
-            return true;
-        }
-
         if (this.validationInProgress) {
             debugLog('License validation already in progress, skipping');
             return isProUser();
@@ -574,7 +564,22 @@ export class ProActivationService {
             return isProUser();
         }
 
-        const licenseKey = getLicenseKey();
+        // The key usually lives in SecretStorage with only the '[ENCRYPTED]'
+        // placeholder in config — a sync config read here would silently disable
+        // periodic validation (and revocation awareness) for everyone who activated
+        // through the portal deep link.
+        const licenseKey = await this.resolveLicenseKey();
+
+        // Grandfathered Lemon Squeezy customers are not validated against the network:
+        // the old store is suspended, so its keys can only answer "invalid" — which
+        // says nothing about whether they paid. But ONLY while all they hold is the
+        // old key. Once a GitMind-format key is present (claimed or freshly bought),
+        // validate it normally; a success below retires the legacy record for good.
+        if (isLegacyProUser() && !this.looksLikeGitMindKey(licenseKey)) {
+            debugLog('Skipping validation for a grandfathered Lemon Squeezy license');
+            return true;
+        }
+
         if (!licenseKey) {
             debugLog('No license key to validate');
             return false;
