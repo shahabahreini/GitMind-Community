@@ -149,8 +149,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   updateProStatusBar();
   await updateCommitIntelligenceContext();
 
-  // Set up periodic license validation (every 24 hours)
-  const VALIDATION_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
+  // Set up periodic license validation (every 6 hours — matches the
+  // needsLicenseValidation() throttle, so a revocation reaches a machine that
+  // stays open for days within hours instead of a full day)
+  const VALIDATION_INTERVAL = 6 * 60 * 60 * 1000; // 6 hours
   const validationTimer = setInterval(async () => {
     try {
       await proActivationService.validateExistingLicense();

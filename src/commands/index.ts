@@ -184,6 +184,12 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
   try {
     debugLog("Command Started: generateCommitMessage");
 
+    // Opportunistic license validation on real usage, so a machine that never
+    // stays open long enough for the 6h timer still hears about a server-side
+    // revocation. Fire-and-forget: the feature must never wait on the network,
+    // and the call is internally throttled by needsLicenseValidation().
+    void ProActivationService.getInstance().validateExistingLicense().catch(() => { /* fail open */ });
+
     // Determine which repository to use
     let targetRepository: vscode.WorkspaceFolder | { uri: vscode.Uri, name: string, index: number };
 
@@ -1527,6 +1533,23 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
         // grandfathered entitlement is local and nothing here touched it. Say so plainly,
         // because the one thing a paying customer must never wonder is whether they just
         // lost what they bought.
+
+        // Some failures are FINAL: retrying next launch can never succeed, so asking
+        // again would only recreate the endless "Claim License" nag. Deliver the news
+        // once, silence the automatic notice for good, and leave Pro untouched.
+        if (result.code === 'window_closed' || result.code === 'claim_belongs_to_other_email') {
+          await LegacyEntitlementService.getInstance().dismissMigrationNotice();
+          const contact = 'Contact Support';
+          const selection = await vscode.window.showWarningMessage(
+            `${result.error} Your Pro features are unaffected and GitMind will stop asking you to claim.`,
+            contact
+          );
+          if (selection === contact) {
+            void vscode.env.openExternal(vscode.Uri.parse(`${GitMindLicenseService.SITE_URL}/contact`));
+          }
+          return;
+        }
+
         const openPage = 'Webpage Support';
         const openGithub = 'Report Issue on GitHub';
         const selection = await vscode.window.showWarningMessage(

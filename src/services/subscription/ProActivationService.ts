@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { GitMindLicenseService } from './GitMindLicenseService';
+import type { LicenseValidationResult, RemoteDeviceInfo } from './licenseTypes';
 import { debugLog } from '../debug/logger';
 import {
     isProUser,
@@ -137,8 +138,10 @@ export class ProActivationService {
         const cleanLicenseKey = licenseKey.trim();
 
         try {
-            // Activate the license key with Lemon Squeezy
-            const activation = await this.activateLicenseWithAPI(cleanLicenseKey); if (activation.activated && !activation.error) {
+            debugLog(`Activating license ${cleanLicenseKey.substring(0, 5)}… on machine ${this.licenseService.getMachineId()}`);
+            const raw = await this.licenseService.activate(cleanLicenseKey);
+            const activation = this.reshapeActivation(cleanLicenseKey, raw);
+            if (activation.activated && !activation.error) {
                 debugLog(`Storing instance ID from activation: ${activation.instance.id}`);
 
                 // Update pro configuration with activation data
@@ -175,9 +178,10 @@ export class ProActivationService {
                 });
 
                 // The migration is complete for this user: they now hold a real key that a
-                // live server can vouch for, so the grandfathered entitlement has done its job
-                // and the "claim your free key" notice must never appear again.
-                await LegacyEntitlementService.getInstance().markMigrated();
+                // live server can vouch for, so the grandfathered entitlement has done its
+                // job. Archive it and scrub every Lemon Squeezy leftover — from here on
+                // this user must be indistinguishable from a fresh customer.
+                await LegacyEntitlementService.getInstance().retireLegacyState();
 
                 debugLog('Pro activation successful');
 
@@ -225,6 +229,13 @@ export class ProActivationService {
                     validationStatus: 'invalid'
                 });
 
+                // The device limit is not a dead end: resolve it right here — free a
+                // slot or buy more — instead of sending the user to a browser. Old
+                // servers without the structured code fall through to the message map.
+                if (raw.errorCode === 'device_limit_reached') {
+                    return await this.handleDeviceLimitReached(cleanLicenseKey, raw);
+                }
+
                 const errorMessage = activation.error || 'License activation failed';
 
                 return {
@@ -253,20 +264,14 @@ export class ProActivationService {
     }
 
     /**
-     * Activates this machine against the GitMind licensing server.
+     * Reshapes a server answer into the response the rest of this class already
+     * expects, so the calling code did not have to change when the provider did.
      *
-     * The server is idempotent about it: re-activating a machine that is already active is a
-     * heartbeat, not an error, and it does not consume a second device slot. So there is
-     * nothing to "clean up" first — the old implementation deactivated the previous instance
-     * before activating, and could burn an activation in the process.
+     * (The server is idempotent about activation: re-activating a machine that is
+     * already active is a heartbeat, not an error, and does not consume a second
+     * device slot — so there is nothing to "clean up" first.)
      */
-    private async activateLicenseWithAPI(licenseKey: string): Promise<LicenseActivationResponse> {
-        debugLog(`Activating license ${licenseKey.substring(0, 5)}… on machine ${this.licenseService.getMachineId()}`);
-
-        const result = await this.licenseService.activate(licenseKey);
-
-        // Reshaped into the response the rest of this class already expects, so the calling
-        // code did not have to change when the provider did.
+    private reshapeActivation(licenseKey: string, result: LicenseValidationResult): LicenseActivationResponse {
         return {
             activated: result.isValid,
             error: result.isValid ? null : (result.error ?? 'Activation failed'),
@@ -301,13 +306,260 @@ export class ProActivationService {
     }
 
     /**
+     * Affirmative purchase consent, collected before ANY in-editor checkout is
+     * created. The server refuses checkouts without it and records the acceptance
+     * against the checkout session; nothing is persisted locally.
+     */
+    public static async confirmPurchaseTerms(): Promise<boolean> {
+        const agree = 'Agree and Continue';
+        const view = 'View Terms';
+        for (;;) {
+            const choice = await vscode.window.showInformationMessage(
+                'By purchasing you agree to the GitMind Pro Terms of Service, Privacy Policy and Refund Policy.',
+                { modal: true, detail: `Read them at ${GitMindLicenseService.SITE_URL}/terms` },
+                agree,
+                view
+            );
+            if (choice === agree) {
+                return true;
+            }
+            if (choice === view) {
+                await vscode.env.openExternal(vscode.Uri.parse(`${GitMindLicenseService.SITE_URL}/terms`));
+                continue; // Re-ask after they have had a look.
+            }
+            return false; // Cancelled.
+        }
+    }
+
+    /**
+     * The license has no free device slot for this machine. Resolve it in-editor:
+     * show the active devices, let the user retire one (then retry), buy the "+2
+     * devices" add-on (then retry), or fall back to the web portal.
+     */
+    private async handleDeviceLimitReached(
+        licenseKey: string,
+        result: LicenseValidationResult
+    ): Promise<ProActivationResult> {
+        const cancelled: ProActivationResult = {
+            success: false,
+            message: this.formatErrorMessage(result.error ?? 'activation limit exceeded')
+        };
+
+        // The activate error usually carries the device list; older servers need a
+        // second request, and if even that fails the classic message is still shown.
+        let devices = result.devices;
+        let maxDevices = result.activationsLimit;
+        if (!devices) {
+            const listed = await this.licenseService.listDevices(licenseKey);
+            devices = listed.devices;
+            maxDevices = maxDevices ?? listed.activationsLimit;
+        }
+        if (!devices || devices.length === 0) {
+            return cancelled;
+        }
+
+        const deactivatable = devices.filter(d => !d.isCurrent);
+
+        type LimitPick = vscode.QuickPickItem & { device?: RemoteDeviceInfo; action?: 'addon' | 'portal' };
+        const items: LimitPick[] = [
+            {
+                label: 'Deactivate a device to free a slot',
+                kind: vscode.QuickPickItemKind.Separator
+            },
+            ...deactivatable.map((device): LimitPick => ({
+                label: `$(device-desktop) ${device.name}`,
+                description: device.os,
+                detail: device.lastSeenAt
+                    ? `Last seen ${this.formatRelativeTime(device.lastSeenAt)}`
+                    : 'Last seen: unknown',
+                device
+            })),
+            { label: 'Other options', kind: vscode.QuickPickItemKind.Separator },
+            ...(result.addonAvailable
+                ? [{ label: '$(add) Buy +2 device slots', detail: 'One-time purchase — raises this license\'s device limit', action: 'addon' as const }]
+                : []),
+            { label: '$(globe) Open account portal', detail: 'Manage devices and purchases in the browser', action: 'portal' as const }
+        ];
+
+        const picked = await vscode.window.showQuickPick(items, {
+            title: `Device limit reached (${devices.length} of ${maxDevices ?? devices.length} devices in use)`,
+            placeHolder: 'Free a slot by deactivating a device you no longer use, or add more slots',
+            ignoreFocusOut: true
+        });
+
+        if (!picked) {
+            return cancelled;
+        }
+
+        if (picked.action === 'portal') {
+            await vscode.commands.executeCommand('gitmind.openAccountPortal');
+            return cancelled;
+        }
+
+        if (picked.action === 'addon') {
+            return await this.purchaseDeviceAddon(licenseKey);
+        }
+
+        if (picked.device) {
+            const confirmed = await vscode.window.showWarningMessage(
+                `Deactivate "${picked.device.name}"?`,
+                { modal: true, detail: 'That machine loses Pro until it is activated again. Its slot frees up immediately for this one.' },
+                'Deactivate'
+            );
+            if (confirmed !== 'Deactivate') {
+                return cancelled;
+            }
+
+            const freed = await this.licenseService.deactivateDeviceById(licenseKey, picked.device.id);
+            if (freed.status === 'error' && freed.error) {
+                return { success: false, message: `Could not deactivate "${picked.device.name}": ${freed.error}` };
+            }
+
+            // The slot is free — activate this machine on it.
+            return await this.activateWithLicenseKey(licenseKey);
+        }
+
+        return cancelled;
+    }
+
+    /**
+     * In-editor "+2 devices" purchase: consent → hosted Polar checkout in the
+     * browser → poll until paid → retry activation with the raised limit.
+     */
+    private async purchaseDeviceAddon(licenseKey: string): Promise<ProActivationResult> {
+        if (!(await ProActivationService.confirmPurchaseTerms())) {
+            return { success: false, message: 'Purchase cancelled.' };
+        }
+
+        const checkout = await this.licenseService.createDeviceAddonCheckout(licenseKey);
+        if (!checkout.ok) {
+            return { success: false, message: checkout.error };
+        }
+
+        await vscode.env.openExternal(vscode.Uri.parse(checkout.checkoutUrl));
+
+        const paid = await vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: 'Waiting for your add-on payment to complete…',
+                cancellable: true
+            },
+            async (progress, token): Promise<boolean> => {
+                const deadline = Date.now() + 15 * 60_000;
+                while (Date.now() < deadline && !token.isCancellationRequested) {
+                    await new Promise(resolve => setTimeout(resolve, 5_000));
+                    const status = await this.licenseService.pollCheckoutStatus(checkout.checkoutRef, checkout.pollToken);
+                    if (status.status === 'paid') {
+                        progress.report({ message: `Device limit raised to ${status.maxDevices ?? 'the new maximum'}.` });
+                        return true;
+                    }
+                    if (status.status === 'expired') {
+                        return false;
+                    }
+                    // 'pending' and transient 'error' both mean: keep waiting.
+                }
+                return false;
+            }
+        );
+
+        if (!paid) {
+            return {
+                success: false,
+                message: 'The add-on purchase was not completed. If you did pay, the new slots arrive '
+                    + `automatically — try activating again in a minute, or check ${GitMindLicenseService.PORTAL_URL}.`
+            };
+        }
+
+        return await this.activateWithLicenseKey(licenseKey);
+    }
+
+    /** GitMind keys look like A7K2M-XR4PT-9WQND-3HJ5V; Lemon Squeezy issued UUIDs. */
+    private looksLikeGitMindKey(key: string | undefined): boolean {
+        return !!key && /^[A-Z0-9]{5}(-[A-Z0-9]{5}){3}$/i.test(key.trim());
+    }
+
+    /**
+     * The server affirmatively ended this machine's entitlement. Say WHY, because
+     * the three causes have three different fixes: a portal-deactivated device can
+     * be reactivated right here; a blocked account or a revoked license needs the
+     * portal or support.
+     */
+    private async showRevocationNotice(validation: LicenseValidationResult): Promise<void> {
+        if (validation.appState === 'device_inactive') {
+            const reactivate = 'Reactivate this device';
+            const action = await vscode.window.showWarningMessage(
+                'This device was deactivated from your GitMind account, so Pro is off here. '
+                + 'Reactivate it to keep using Pro on this machine.',
+                reactivate,
+                'Open Portal'
+            );
+            if (action === reactivate) {
+                const key = await this.resolveLicenseKey();
+                if (key) {
+                    // Re-activating is idempotent server-side; at the device limit this
+                    // hands off to the in-editor limit resolution automatically.
+                    const result = await this.activateWithLicenseKey(key);
+                    if (!result.success) {
+                        void vscode.window.showErrorMessage(result.message);
+                    }
+                } else {
+                    void vscode.commands.executeCommand('gitmind.activateWithLicenseKey');
+                }
+            } else if (action === 'Open Portal') {
+                void vscode.commands.executeCommand('gitmind.openAccountPortal');
+            }
+            return;
+        }
+
+        if (validation.appState === 'account_blocked') {
+            const action = await vscode.window.showErrorMessage(
+                validation.error ?? 'Your GitMind account has been blocked. Contact support.',
+                'Open Portal'
+            );
+            if (action === 'Open Portal') {
+                void vscode.commands.executeCommand('gitmind.openAccountPortal');
+            }
+            return;
+        }
+
+        const action = await vscode.window.showWarningMessage(
+            validation.error
+                ?? 'GitMind Pro was deactivated for this device from your account. Reactivate it in the portal or re-activate this machine.',
+            'Open Portal',
+            'Re-activate'
+        );
+        if (action === 'Open Portal') {
+            void vscode.commands.executeCommand('gitmind.openAccountPortal');
+        } else if (action === 'Re-activate') {
+            void vscode.commands.executeCommand('gitmind.activateWithLicenseKey');
+        }
+    }
+
+    private formatRelativeTime(unixSeconds: number): string {
+        const days = Math.floor((Date.now() / 1000 - unixSeconds) / 86_400);
+        if (days <= 0) {
+            return 'today';
+        }
+        if (days === 1) {
+            return 'yesterday';
+        }
+        if (days < 30) {
+            return `${days} days ago`;
+        }
+        const months = Math.floor(days / 30);
+        return months === 1 ? 'a month ago' : `${months} months ago`;
+    }
+
+    /**
      * Validate existing license (periodic check)
      */
     public async validateExistingLicense(): Promise<boolean> {
-        // Grandfathered Lemon Squeezy customers are never validated against the network. The
-        // store is suspended, so the API can only answer "invalid" — which would say nothing
-        // about whether they paid, and everything about a provider that no longer exists.
-        if (isLegacyProUser()) {
+        // Grandfathered Lemon Squeezy customers are not validated against the network:
+        // the old store is suspended, so its keys can only answer "invalid" — which
+        // says nothing about whether they paid. But ONLY while all they hold is the
+        // old key. Once a GitMind-format key is present (claimed or freshly bought),
+        // validate it normally; a success below retires the legacy record for good.
+        if (isLegacyProUser() && !this.looksLikeGitMindKey(getLicenseKey())) {
             debugLog('Skipping validation for a grandfathered Lemon Squeezy license');
             return true;
         }
@@ -350,20 +602,16 @@ export class ProActivationService {
             if (validation.isValid) {
                 updateData.validationStatus = 'valid';
                 this.deactivationNoticeShown = false;
+
+                // A live server just vouched for a real key. If a grandfathered
+                // Lemon Squeezy record is still hanging around, its job is done —
+                // archive it so this user is indistinguishable from a fresh customer.
+                await LegacyEntitlementService.getInstance().retireLegacyState();
             } else if (validation.revoked) {
                 updateData.validationStatus = 'invalid';
                 if (!this.deactivationNoticeShown) {
                     this.deactivationNoticeShown = true;
-                    const action = await vscode.window.showWarningMessage(
-                    'GitMind Pro was deactivated for this device from your account. Reactivate it in the portal or re-activate this machine.',
-                    'Open Portal',
-                    'Re-activate'
-                    );
-                    if (action === 'Open Portal') {
-                        void vscode.commands.executeCommand('gitmind.openAccountPortal');
-                    } else if (action === 'Re-activate') {
-                        void vscode.commands.executeCommand('gitmind.activateWithLicenseKey');
-                    }
+                    void this.showRevocationNotice(validation);
                 }
             } else {
                 debugLog(

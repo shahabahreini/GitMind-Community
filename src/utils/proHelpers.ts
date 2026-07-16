@@ -98,8 +98,11 @@ export function needsLicenseValidation(): boolean {
     const timeDiff = now.getTime() - lastValidation.getTime();
     const hoursDiff = timeDiff / (1000 * 3600);
 
-    // Validate every 24 hours
-    return hoursDiff >= 24;
+    // Validate every 6 hours. The point of the cadence is how quickly a server-side
+    // decision (block, refund, portal deactivation) reaches this machine; 24h left
+    // revoked users with Pro for up to a day. Fail-open still applies — a failed
+    // check changes nothing — so a shorter interval costs the customer nothing.
+    return hoursDiff >= 6;
 }
 
 export async function updateProConfig(config: {
