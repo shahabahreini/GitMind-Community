@@ -46,6 +46,21 @@ export function registerCommitIntelligenceCommands(context: vscode.ExtensionCont
     );
     if (picked) { await vscode.commands.executeCommand(picked.command); }
   }));
+  registrations.push(vscode.commands.registerCommand("gitmind.openHealthReport", async (repository?: { rootUri?: vscode.Uri }) => {
+    const config = vscode.workspace.getConfiguration("gitmind");
+    if (!config.get("commit.health.enabled", false)) {
+      const action = await vscode.window.showInformationMessage("Enable Commit Health in GitMind Settings to open a local staged-change report.", "Open Settings");
+      if (action === "Open Settings") {await vscode.commands.executeCommand("gitmind.openSettings", "free-features-tab");}
+      return;
+    }
+    if (!await SubscriptionManager.getInstance().isProUser()) {
+      const action = await vscode.window.showInformationMessage("Commit Health requires GitMind Pro.", "Activate Pro");
+      if (action === "Activate Pro") {await vscode.commands.executeCommand("gitmind.showActivationQuickPick");}
+      return;
+    }
+    const root = repository?.rootUri?.fsPath ?? await validateGitRepository();
+    await CommitWorkspace.open(context.extensionUri, root, "commit");
+  }));
   return registrations;
 }
 

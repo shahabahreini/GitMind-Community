@@ -188,7 +188,7 @@
         "gitmind.commit.health.enabled": {
           "type": "boolean",
           "default": false,
-          "description": "Show advisory Commit Health subscores for reviewed drafts (Pro)."
+          "description": "Enable deterministic local Commit Health reports for staged changes (Pro)."
         },
         "gitmind.composer.allowHunkSplitting": {
           "type": "boolean",
@@ -1116,6 +1116,11 @@
         "category": "GitMind"
       },
       {
+        "command": "gitmind.openHealthReport",
+        "title": "Open Commit Health Report",
+        "category": "GitMind"
+      },
+      {
         "command": "gitmind.advancedCommitActions",
         "title": "Advanced Commit Actions…",
         "category": "GitMind"
@@ -1434,6 +1439,10 @@
         {
           "command": "gitmind.openCommitWorkspace",
           "when": "gitmind.commitIntelligenceEnabled"
+        },
+        {
+          "command": "gitmind.openHealthReport",
+          "when": "gitmind.commitHealthEnabled"
         },
         {
           "command": "gitmind.commitComposer",

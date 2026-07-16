@@ -70,21 +70,46 @@ export function shouldIncludeBody(mode: "auto" | "concise" | "detailed", changeS
 
 function clamp(value: number): number { return Math.max(0, Math.min(100, Math.round(value))); }
 
-export function scoreCommitHealth(message: string, validation: ValidationResult, changeSet: ChangeSet, selection: ContextSelection): HealthScore {
-  const selected = changeSet.atoms.filter(atom => selection.items.some(item => item.atomId === atom.id && item.decision !== "excluded"));
-  const subject = message.split("\n")[0] ?? "";
-  const words = new Set(subject.toLowerCase().match(/[a-z0-9]{3,}/g) ?? []);
-  const pathWords = new Set(selected.flatMap(atom => atom.path.toLowerCase().split(/[^a-z0-9]+/)).filter(word => word.length >= 3));
-  const overlap = [...words].filter(word => pathWords.has(word)).length;
-  const relevance = clamp(55 + overlap * 10 - (selected.length === 0 ? 55 : 0));
-  const concernRoots = new Set(selected.map(atom => atom.path.split("/")[0]));
-  const atomicity = clamp(100 - Math.max(0, concernRoots.size - 1) * 15 - Math.max(0, selected.length - 8) * 3);
-  const ruleCompliance = clamp(100 - validation.issues.filter(issue => issue.severity === "error").length * 25 - validation.issues.filter(issue => issue.severity === "warning").length * 8);
-  const intentCompleteness = clamp(selection.why ? (message.length > subject.length ? 100 : 70) : 60);
-  const verbosity = clamp(subject.length <= 72 ? (message.length < 1200 ? 100 : 65) : 50);
-  const subscores = { relevance, atomicity, ruleCompliance, intentCompleteness, verbosity };
-  return { overall: clamp(relevance * .30 + atomicity * .25 + ruleCompliance * .25 + intentCompleteness * .10 + verbosity * .10), subscores,
-    explanations: { relevance: "Subject terms compared with selected change paths", atomicity: "Breadth of selected files and top-level concerns", ruleCompliance: "Repository and style validation results", intentCompleteness: "Whether the draft explains supplied intent", verbosity: "Subject and body length balance" } };
+/**
+ * Deterministic, local hygiene score for staged changes. It deliberately never
+ * receives a generated commit message: health describes the change set, not
+ * the wording chosen by a provider.
+ */
+export function scoreCommitHealth(changeSet: ChangeSet, selection?: ContextSelection): HealthScore {
+  const decisions = new Map(selection?.items.map(item => [item.atomId, item.decision]) ?? []);
+  const staged = changeSet.atoms.filter(atom => atom.origin === "staged" && (decisions.size === 0 || decisions.get(atom.id) !== "excluded"));
+  const roots = new Set(staged.map(atom => atom.path.split("/")[0]));
+  const files = new Set(staged.map(atom => atom.path));
+  const changedLines = staged.reduce((total, atom) => total + atom.additions + atom.deletions, 0);
+  const secretFindings = staged.reduce((total, atom) => total + (/(?:private[_-]?key|api[_-]?key|secret|password)\s*[=:]/i.test(atom.patch) || /-----BEGIN [A-Z ]*PRIVATE KEY-----/.test(atom.patch) ? 1 : 0), 0);
+  const debugFindings = staged.reduce((total, atom) => total + ((atom.patch.match(/^\+.*(?:console\.log\(|debugger\b)/gm) ?? []).length), 0);
+  const sourceFiles = [...files].filter(file => /\.(?:[cm]?[jt]sx?|py|rb|go|rs|java|cs|php)$/i.test(file));
+  const hasTests = [...files].some(file => /(?:^|\/)(?:test|tests|__tests__)\/|\.(?:test|spec)\.[cm]?[jt]sx?$/i.test(file));
+  const scope = clamp(100 - Math.max(0, roots.size - 1) * 16 - Math.max(0, files.size - 10) * 3);
+  const changeSize = clamp(100 - Math.max(0, changedLines - 250) / 12 - Math.max(0, changedLines - 1000) / 8);
+  const safety = clamp(100 - secretFindings * 55 - debugFindings * 12);
+  const testCoverage = sourceFiles.length === 0 || hasTests ? 100 : 55;
+  const staging = staged.length ? 100 : 0;
+  const subscores = { scope, changeSize, safety, testCoverage, staging };
+  const recommendations: string[] = [];
+  if (!staged.length) {recommendations.push("Stage the changes you want to assess before committing.");}
+  if (scope < 80) {recommendations.push("Consider splitting unrelated areas into smaller commits.");}
+  if (changeSize < 80) {recommendations.push("Consider splitting this large change into reviewable pieces.");}
+  if (safety < 100) {recommendations.push("Remove credentials and temporary debug statements before committing.");}
+  if (testCoverage < 100) {recommendations.push("Add or update tests for the changed source files.");}
+  if (!recommendations.length) {recommendations.push("The staged change set is focused and ready for review.");}
+  return {
+    overall: clamp(scope * .25 + changeSize * .20 + safety * .35 + testCoverage * .15 + staging * .05),
+    subscores,
+    explanations: {
+      scope: "Number of files and top-level areas touched",
+      changeSize: "Changed lines kept within a reviewable range",
+      safety: "Potential credentials and added debug statements",
+      testCoverage: "Changed source files accompanied by test changes",
+      staging: "Only staged changes are eligible for this score"
+    },
+    recommendations
+  };
 }
 
 export function validateReviewFindings(findings: readonly ReviewFinding[], knownAtomIds: readonly string[]): ReviewFinding[] {
@@ -106,4 +131,3 @@ export function reviewBlocks(findings: readonly ReviewFinding[], threshold: Comm
   const rank = { info: 0, warning: 1, error: 2 };
   return findings.some(finding => rank[finding.severity] >= rank[threshold]);
 }
-

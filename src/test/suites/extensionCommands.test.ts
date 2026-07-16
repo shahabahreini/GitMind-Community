@@ -37,11 +37,14 @@ suite('Extension Commands Tests', () => {
     });
 
     test('Commit Intelligence context key follows the master opt-in', async () => {
-        let contextArgs: unknown[] = [];
-        (vscode.workspace as any).getConfiguration = () => ({ get: (key: string, fallback: unknown) => key === 'commitIntelligence.enabled' ? true : fallback });
-        (vscode.commands as any).executeCommand = async (...args: unknown[]) => { contextArgs = args; };
+        const contextArgs: unknown[][] = [];
+        (vscode.workspace as any).getConfiguration = () => ({ get: (key: string, fallback: unknown) => key === 'commitIntelligence.enabled' || key === 'commit.health.enabled' ? true : fallback });
+        (vscode.commands as any).executeCommand = async (...args: unknown[]) => { contextArgs.push(args); };
         await updateCommitIntelligenceContext();
-        assert.deepStrictEqual(contextArgs, ['setContext', 'gitmind.commitIntelligenceEnabled', true]);
+        assert.deepStrictEqual(contextArgs, [
+            ['setContext', 'gitmind.commitIntelligenceEnabled', true],
+            ['setContext', 'gitmind.commitHealthEnabled', true]
+        ]);
     });
 
     test('Open settings command should be registered', async () => {

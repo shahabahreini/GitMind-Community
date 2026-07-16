@@ -7,10 +7,18 @@ import { getOllamaModels } from "../../services/api/ollama";
 import { debugLog } from "../../services/debug/logger";
 import { SecureKeyManager } from "../../services/encryption/SecureKeyManager";
 import { GitHistoryAnalyzer } from "../../services/git/GitHistoryAnalyzer";
+import { analyzeHistoryHealth, HistoryHealthOptions } from "../../commit-intelligence/health";
+import { validateGitRepository } from "../../services/git/repository";
+import { SubscriptionManager } from "../../services/subscription/SubscriptionManager";
+import { updateCommitIntelligenceContext } from "../../config/settings";
+import { getApiConfig } from "../../config/settings";
+import { generateWithRawPrompt } from "../../services/api";
+import { HistoryHealthReport } from "../../commit-intelligence/models";
 
 export class MessageHandler {
     private _settingsManager: SettingsManager;
     private _updateLocks = new Map<string, boolean>();
+    private _lastHistoryHealthReport?: HistoryHealthReport;
 
     constructor(settingsManager: SettingsManager) {
         this._settingsManager = settingsManager;
@@ -45,6 +53,34 @@ export class MessageHandler {
                 break;
             case "executeCommand":
                 await vscode.commands.executeCommand(message.commandId);
+                break;
+            case 'analyzeHistoryHealth':
+                try {
+                    if (!await SubscriptionManager.getInstance().isProUser()) {throw new Error('Commit Health requires GitMind Pro.');}
+                    const root = await validateGitRepository();
+                    const options: HistoryHealthOptions = message.mode === 'date-range'
+                        ? { mode: 'date-range', start: String(message.start || '1970-01-01'), end: String(message.end || new Date().toISOString().slice(0, 10)) }
+                        : { mode: 'last-n', count: Math.max(1, Math.min(Number(message.count) || 25, 500)) };
+                    const report = await analyzeHistoryHealth(root, options);
+                    this._lastHistoryHealthReport = report;
+                    SettingsWebview.postMessageToWebview({ command: 'historyHealthReport', report });
+                } catch (error) {
+                    SettingsWebview.postMessageToWebview({ command: 'historyHealthError', error: error instanceof Error ? error.message : 'Failed to analyze local history.' });
+                }
+                break;
+            case 'getHistoryHealthGuidance':
+                if (!this._lastHistoryHealthReport) {
+                    SettingsWebview.postMessageToWebview({ command: 'historyHealthGuidance', guidance: 'Analyze history first. AI guidance receives only that aggregate report.' });
+                    break;
+                }
+                try {
+                    const report = this._lastHistoryHealthReport;
+                    const aggregate = { analyzedCommits: report.analyzedCommits, overall: report.overall, recommendations: report.recommendations };
+                    const guidance = await generateWithRawPrompt(await getApiConfig(), `Give three concise, practical Git hygiene suggestions based only on this sanitized aggregate report. Do not infer repository names, code, files, or commit messages.\n${JSON.stringify(aggregate)}`, 'commit_health_history_guidance', false, false);
+                    SettingsWebview.postMessageToWebview({ command: 'historyHealthGuidance', guidance });
+                } catch (error) {
+                    SettingsWebview.postMessageToWebview({ command: 'historyHealthGuidance', guidance: error instanceof Error ? error.message : 'Unable to get AI guidance.' });
+                }
                 break;
             case 'previewCommitHistoryStats':
                 try {
@@ -107,6 +143,18 @@ export class MessageHandler {
 
                 try {
                     const config = vscode.workspace.getConfiguration('gitmind');
+                    if (message.key === 'commit.health.enabled' && message.value) {
+                        if (!await SubscriptionManager.getInstance().isProUser()) {
+                            throw new Error('Commit Health requires GitMind Pro. Activate Pro in Settings to enable it.');
+                        }
+                        await Promise.all([
+                            config.update('commit.health.enabled', true, vscode.ConfigurationTarget.Global),
+                            config.update('commitIntelligence.enabled', true, vscode.ConfigurationTarget.Global)
+                        ]);
+                        await updateCommitIntelligenceContext();
+                        SettingsWebview.postMessageToWebview({ command: 'updateSettings', settings: await SettingsManager.getCurrentSettings() });
+                        return;
+                    }
                     const oldValue = config.get(message.key);
 
                     debugLog(`Updating setting ${message.key} from ${oldValue} to ${message.value}`);

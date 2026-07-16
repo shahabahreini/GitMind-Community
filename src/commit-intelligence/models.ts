@@ -112,17 +112,27 @@ export interface ValidationResult {
 }
 
 export interface HealthSubscores {
-  relevance: number;
-  atomicity: number;
-  ruleCompliance: number;
-  intentCompleteness: number;
-  verbosity: number;
+  scope: number;
+  changeSize: number;
+  safety: number;
+  testCoverage: number;
+  staging: number;
 }
 
 export interface HealthScore {
   overall: number;
   subscores: HealthSubscores;
   explanations: Record<keyof HealthSubscores, string>;
+  recommendations: string[];
+}
+
+export interface HistoryHealthReport {
+  mode: "last-n" | "date-range";
+  analyzedCommits: number;
+  overall: number;
+  latestCommitAt?: number;
+  recommendations: string[];
+  scores: Array<{ hash: string; timestamp: number; score: HealthScore }>;
 }
 
 export interface CompositionGroup {
@@ -144,4 +154,3 @@ export interface ReviewFinding {
   detail: string;
   atomIds: string[];
 }
-

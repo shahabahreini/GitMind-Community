@@ -7,7 +7,7 @@ import { getNonce } from "../../utils/getNonce";
 import { buildEnvelope, buildRequestPreview, defaultSelection, scanSecrets } from "../../commit-intelligence/context";
 import { applyCompositionPlan, buildRelationshipGraph, validateCompositionPlan } from "../../commit-intelligence/composer";
 import { captureSnapshot, collectChangeSet, runGit, unstagePaths } from "../../commit-intelligence/git";
-import { ChangeSet, CompositionPlan, ContextSelection, GenerationKind, RequestPreview, ReviewFinding, ValidationResult } from "../../commit-intelligence/models";
+import { ChangeSet, CompositionPlan, ContextSelection, GenerationKind, HealthScore, RequestPreview, ReviewFinding, ValidationResult } from "../../commit-intelligence/models";
 import { loadRepositoryPolicy } from "../../commit-intelligence/policy";
 import { parseJsonObject, renderPortablePrompt } from "../../commit-intelligence/prompt";
 import { reviewBlocks, scoreCommitHealth, shouldIncludeBody, validateCandidate, validateReviewFindings } from "../../commit-intelligence/validation";
@@ -20,6 +20,7 @@ interface WorkspaceState {
   validation?: ValidationResult;
   preview?: RequestPreview;
   draftSnapshot?: string;
+  health?: HealthScore;
 }
 
 type IncomingMessage =
@@ -81,7 +82,7 @@ export class CommitWorkspace implements vscode.Disposable {
     const envelope = buildEnvelope(changeSet, selection, kind, { detailMode: "concise", style: extensionConfig.commit.style, targetLanguage: extensionConfig.commit.targetLanguage ?? "english" });
     const preview = buildRequestPreview(apiConfig, changeSet, selection, envelope, 500);
     const panel = vscode.window.createWebviewPanel("gitmind.commitWorkspace", `GitMind · ${kind}`, vscode.ViewColumn.Active, { enableScripts: true, retainContextWhenHidden: false, localResourceRoots: [extensionUri] });
-    const workspace = new CommitWorkspace(panel, { changeSet, selection, kind, draft: "", preview });
+    const workspace = new CommitWorkspace(panel, { changeSet, selection, kind, draft: "", preview, health: scoreCommitHealth(changeSet, selection) });
     this.panels.set(key, workspace);
     if (kind === "review" || config.get<boolean>("review.enabled", false)) {
       void workspace.handleGenerate({
@@ -166,9 +167,9 @@ export class CommitWorkspace implements vscode.Disposable {
         const validation = requestKind === "composer" || requestKind === "review" || !["commit", "candidates", "repair"].includes(requestKind)
           ? { valid: true, normalized: draft.trim(), issues: [] }
           : validateCandidate(draft, policy, { conventional: extensionConfig.commit.style !== "basic", changedFiles: files });
-        return { draft: validation.normalized, validation, health: scoreCommitHealth(draft, validation, this.state.changeSet, this.state.selection) };
+        return { draft: validation.normalized, validation, health: scoreCommitHealth(this.state.changeSet, this.state.selection) };
       });
-      this.state.draft = results[0].draft; this.state.validation = results[0].validation;
+      this.state.draft = results[0].draft; this.state.validation = results[0].validation; this.state.health = results[0].health;
       this.state.draftSnapshot = this.snapshotKey(this.state.changeSet.snapshot);
       this.panel.webview.postMessage({ type: "result", results });
       if (setting.get<boolean>("review.enabled", false) || requestKind === "review") {
@@ -545,7 +546,7 @@ button:disabled { opacity: 0.5; cursor: default; }
 <p id="status" role="status" aria-live="polite"></p>
 <div id="secretReview" class="warning" tabindex="-1" hidden></div>
 <div id="reviewFindingsContainer" class="review-findings-container" hidden></div>
-<div id="healthMeter" class="health-meter-box" hidden></div>
+<div id="healthMeter" class="health-meter-box" ${healthEnabled ? '' : 'hidden'}></div>
 <div id="candidates"></div>
 
 <!-- Step 3: Editable Draft & Action -->
@@ -564,6 +565,7 @@ button:disabled { opacity: 0.5; cursor: default; }
 const vscode = acquireVsCodeApi();
 const q = s => document.querySelector(s);
 const healthEnabled = ${healthEnabled};
+const initialHealth = ${JSON.stringify(this.state.health ?? scoreCommitHealth(this.state.changeSet, this.state.selection))};
 const reviewEnabled = ${reviewEnabled};
 
 function selections() {
@@ -709,8 +711,10 @@ function updateHealthMeter(r) {
   box.hidden = false;
   const score = r.health.overall || 0;
   const color = score >= 80 ? 'var(--vscode-testing-iconPassed, #10b981)' : score >= 50 ? 'var(--vscode-inputValidation-warningBorder, #f59e0b)' : 'var(--vscode-inputValidation-errorBorder, #ef4444)';
-  box.innerHTML = '<div class="health-meter-head"><span>Commit Health Rating</span><span style="color:' + color + ';">' + score + '/100</span></div><div class="health-bar-track"><div class="health-bar-fill" style="width:' + score + '%;background:' + color + ';"></div></div>';
+  const tips = (r.health.recommendations || []).map(tip => '<li>' + tip.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])) + '</li>').join('');
+  box.innerHTML = '<div class="health-meter-head"><span>Commit Health · staged changes</span><span style="color:' + color + ';">' + score + '/100</span></div><div class="health-bar-track"><div class="health-bar-fill" style="width:' + score + '%;background:' + color + ';"></div></div><small>This local score checks scope, change size, safety, tests, and staging—not commit-message wording.</small><ul style="margin:6px 0 0;padding-left:18px;">' + tips + '</ul>';
 }
+if (healthEnabled) { updateHealthMeter({ health: initialHealth }); }
 </script></body></html>`;
   }
 

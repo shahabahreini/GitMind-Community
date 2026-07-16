@@ -49,6 +49,8 @@ import { recordSupportEvent, SupportErrorCategory, SupportProvider } from "../se
 import { classifyGenerationFailure } from "../services/api/recovery";
 import { formatSafeProviderError } from "../utils/errorHandler";
 import { registerCommitIntelligenceCommands } from "./commitIntelligence";
+import { collectChangeSet } from "../commit-intelligence/git";
+import { scoreCommitHealth } from "../commit-intelligence/validation";
 
 import { state } from "../extension";
 
@@ -260,6 +262,9 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
       let selectedMessage = message;
       const gitmindConfig = vscode.workspace.getConfiguration("gitmind");
       const candidatesEnabled = gitmindConfig.get("commitIntelligence.enabled", false) && gitmindConfig.get("commit.candidates.enabled", false);
+      const healthEnabled = gitmindConfig.get("commit.health.enabled", false) && await SubscriptionManager.getInstance().isProUser();
+      const health = healthEnabled ? scoreCommitHealth(await collectChangeSet(repoRoot, false)) : undefined;
+      const healthSummary = health ? `Health ${health.overall}/100 · ${health.recommendations[0]}` : undefined;
 
       if (candidatesEnabled) {
         const cleanBase = message.trim().replace(/^([a-z0-9-]+(?:\([^)]+\))?!?)(?:\s*:){2,}/gim, "$1:");
@@ -270,20 +275,20 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
         const candidateItems = [
           {
             label: `$(symbol-event) Candidate 1: Concise 1-Liner`,
-            description: `${prefix}: ${firstLine || "update codebase logic"}`,
-            detail: `Draft: ${prefix}: ${firstLine || "update codebase logic"}`,
+            description: `${prefix}: ${firstLine || "update codebase logic"}${healthSummary ? ` · ${healthSummary}` : ''}`,
+            detail: `Draft: ${prefix}: ${firstLine || "update codebase logic"}${healthSummary ? `\n${healthSummary}` : ''}`,
             draft: `${prefix}: ${firstLine || "update codebase logic"}`
           },
           {
             label: `$(text-size) Candidate 2: Detailed Breakdown`,
-            description: cleanBase.split('\n')[0],
-            detail: `Draft: ${cleanBase.replace(/\n/g, ' ↵ ')}`,
+            description: `${cleanBase.split('\n')[0]}${healthSummary ? ` · ${healthSummary}` : ''}`,
+            detail: `Draft: ${cleanBase.replace(/\n/g, ' ↵ ')}${healthSummary ? `\n${healthSummary}` : ''}`,
             draft: cleanBase.includes('\n\n') ? cleanBase : `${cleanBase}\n\n- Refactored implementation logic\n- Verified behavior with automated tests`
           },
           {
             label: `$(target) Candidate 3: Intent Focus`,
-            description: `${prefix}: resolve requirements and update logic`,
-            detail: `Draft: ${prefix}: resolve requirements and update logic ↵ ↵ Addressed codebase changes to enhance overall reliability and maintainability.`,
+            description: `${prefix}: resolve requirements and update logic${healthSummary ? ` · ${healthSummary}` : ''}`,
+            detail: `Draft: ${prefix}: resolve requirements and update logic ↵ ↵ Addressed codebase changes to enhance overall reliability and maintainability.${healthSummary ? `\n${healthSummary}` : ''}`,
             draft: `${prefix}: resolve requirements and update logic\n\nAddressed codebase changes to enhance overall reliability and maintainability.`
           },
           {
@@ -370,7 +375,8 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
         support: { name: "operation_completed", operation: "generate_commit", outcome: "success" }
       });
 
-      vscode.window.showInformationMessage("Commit message generated successfully!");
+      const action = await vscode.window.showInformationMessage(healthSummary ? `Commit message generated successfully! ${healthSummary}` : "Commit message generated successfully!", ...(healthSummary ? ["Open Health Report"] : []));
+      if (action === "Open Health Report") {await vscode.commands.executeCommand("gitmind.openHealthReport", { rootUri: vscode.Uri.file(repoRoot) });}
     } else {
       vscode.window.showWarningMessage(
         "No commit message was generated. This may be due to API limitations or configuration issues."

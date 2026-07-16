@@ -26,15 +26,18 @@ let configCache: { config: ExtensionConfig; timestamp: number } | null = null;
 const CONFIG_CACHE_TTL = 1000; // 1 second TTL
 
 export async function updateCommitIntelligenceContext(): Promise<void> {
-    const enabled = vscode.workspace.getConfiguration('gitmind').get('commitIntelligence.enabled', false);
+    const config = vscode.workspace.getConfiguration('gitmind');
+    const enabled = config.get('commitIntelligence.enabled', false);
+    const healthEnabled = config.get('commit.health.enabled', false);
     await vscode.commands.executeCommand('setContext', 'gitmind.commitIntelligenceEnabled', enabled);
+    await vscode.commands.executeCommand('setContext', 'gitmind.commitHealthEnabled', healthEnabled);
 }
 
 // Register configuration change listener to invalidate cache
 const configChangeDisposable = vscode.workspace.onDidChangeConfiguration((e) => {
     if (e.affectsConfiguration('gitmind')) {
         configCache = null;
-        if (e.affectsConfiguration('gitmind.commitIntelligence.enabled')) {
+        if (e.affectsConfiguration('gitmind.commitIntelligence.enabled') || e.affectsConfiguration('gitmind.commit.health.enabled')) {
             void updateCommitIntelligenceContext();
         }
     }

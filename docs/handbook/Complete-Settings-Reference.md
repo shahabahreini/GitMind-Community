@@ -16,7 +16,7 @@ Open **GitMind Setting** for the guided UI. The table below covers user-configur
 | `gitmind.commit.noiseFiltering.enabled` | `false` | Preview semantic-noise classifications |
 | `gitmind.commit.candidates.enabled` | `false` | Three distinct archetypes (Concise, Detailed, Intent) with QuickPick multiline preview; Pro |
 | `gitmind.commit.githubIssueContext.enabled` | `false` | Explicit GitHub issue fetch and authentication |
-| `gitmind.commit.health.enabled` | `false` | Advisory 0–100 Commit Health; Pro |
+| `gitmind.commit.health.enabled` | `false` | Deterministic staged-change hygiene report; Pro. Enabling it also enables the required Commit Intelligence workspace capability. |
 | `gitmind.composer.enabled` | `false` | Atomic Commit Composer; Pro |
 | `gitmind.composer.allowHunkSplitting` | `false` | Reassign divisible text hunks; Pro |
 | `gitmind.review.enabled` | `false` | Opt-in change review; Pro |

@@ -5,6 +5,9 @@ import { debugLog } from "../../services/debug/logger";
 import { SecureKeyManager } from '../../services/encryption/SecureKeyManager';
 import { getProviderDefaultModel } from '../../config/providerCatalog';
 import { isProUser, isLegacyProUser } from '../../utils/proHelpers';
+import { collectChangeSet } from '../../commit-intelligence/git';
+import { getLastHealthScan } from '../../commit-intelligence/health';
+import { updateCommitIntelligenceContext } from '../../config/settings';
 
 interface ProviderConfig {
     apiKey?: string;
@@ -62,6 +65,20 @@ export class SettingsManager {
     }
 
     private static async buildSettingsFromConfig(config: vscode.WorkspaceConfiguration): Promise<ExtensionSettings> {
+        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        let health = { currentChangeStatus: "No active workspace", stagedChanges: 0, lastScanAt: undefined as number | undefined, lastScore: undefined as number | undefined };
+        if (workspaceRoot) {
+            try {
+                const changeSet = await collectChangeSet(workspaceRoot, false);
+                const previous = getLastHealthScan(workspaceRoot);
+                health = {
+                    currentChangeStatus: changeSet.atoms.length ? `${changeSet.atoms.length} staged change${changeSet.atoms.length === 1 ? '' : 's'} available` : "No staged changes available",
+                    stagedChanges: changeSet.atoms.length,
+                    lastScanAt: previous?.scannedAt,
+                    lastScore: previous?.score.overall
+                };
+            } catch { health = { currentChangeStatus: "Open a Git workspace to scan changes", stagedChanges: 0, lastScanAt: undefined, lastScore: undefined }; }
+        }
         const settings = {
             apiProvider: config.get<string>("apiProvider") || "gemini",
             promptCustomization: {
@@ -89,6 +106,7 @@ export class SettingsManager {
                 allowHunkSplitting: config.get<boolean>("composer.allowHunkSplitting") ?? false,
                 reviewEnabled: config.get<boolean>("review.enabled") ?? false,
             },
+            health,
             commitStyle: {
                 style: config.get<string>("commitStyle.style") || "conventional",
             },
@@ -442,7 +460,7 @@ export class SettingsManager {
             SettingsManager.updateSingleSetting(config, "commit.targetLanguage", settings.commit?.targetLanguage ?? "english", target),
             SettingsManager.updateSingleSetting(config, "commitStyle.style", settings.commitStyle?.style || "conventional", target),
             SettingsManager.updateSingleSetting(config, "showDiagnostics", settings.showDiagnostics ?? false, target),
-            SettingsManager.updateSingleSetting(config, "commitIntelligence.enabled", settings.commitIntelligence?.enabled ?? false, target),
+            SettingsManager.updateSingleSetting(config, "commitIntelligence.enabled", (settings.commitIntelligence?.enabled ?? false) || (settings.commitIntelligence?.healthEnabled ?? false), target),
             SettingsManager.updateSingleSetting(config, "commit.noiseFiltering.enabled", settings.commitIntelligence?.noiseFilteringEnabled ?? false, target),
             SettingsManager.updateSingleSetting(config, "commit.candidates.enabled", settings.commitIntelligence?.candidatesEnabled ?? false, target),
             SettingsManager.updateSingleSetting(config, "commit.health.enabled", settings.commitIntelligence?.healthEnabled ?? false, target),
@@ -532,6 +550,7 @@ export class SettingsManager {
         });
 
         await Promise.all([...coreUpdates, ...providerUpdates]);
+        await updateCommitIntelligenceContext();
     }
 
     /**

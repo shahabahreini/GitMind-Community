@@ -50,7 +50,7 @@ suite("GitMind 6 commit intelligence", () => {
     assert.ok(palette.every((item: { when?: string }) => item.when === "gitmind.commitIntelligenceEnabled"));
   });
 
-  test("renders Commit Intelligence inside existing settings components with Pro locks", () => {
+  test("shows Commit Health independently of disabled Commit Intelligence and explains the Pro lock", () => {
     const settings = { apiProvider: "gemini", promptCustomization: { enabled: false, saveLastPrompt: false, lastPrompt: "" },
       commit: { verbose: true, detailMode: "auto" }, commitIntelligence: { enabled: false, noiseFilteringEnabled: false,
         candidatesEnabled: false, healthEnabled: false, githubIssueContextEnabled: false, composerEnabled: false,
@@ -61,6 +61,9 @@ suite("GitMind 6 commit intelligence", () => {
     assert.match(html, /data-setting="commitIntelligence\.enabled"/);
     assert.match(html, /id="commitIntelligenceOptions"[^>]*hidden/);
     assert.match(html, /pro-lock-badge/);
+    assert.match(html, /<h3 id="commitHealthHeading"[^>]*>Commit Health<\/h3>/);
+    assert.match(html, /Commit Health is available with GitMind Pro/);
+    assert.match(html, /History Health/);
   });
 
   test("uses theme tokens and actionable one-time secret warning controls", async () => {
@@ -174,14 +177,24 @@ suite("GitMind 6 commit intelligence", () => {
     assert.strictEqual(shouldIncludeBody("auto", changeSet, selection), true);
   });
 
-  test("computes weighted advisory health and review blocking", () => {
+  test("computes deterministic change hygiene without inspecting draft text", () => {
     const changeSet = sampleChangeSet(); const selection = defaultSelection(changeSet); selection.why = "add export";
-    const validation = validateCandidate("feat(src): add export", { version: 1 }, { conventional: true });
-    const health = scoreCommitHealth("feat(src): add export", validation, changeSet, selection);
+    const health = scoreCommitHealth(changeSet, selection);
     assert.ok(health.overall >= 0 && health.overall <= 100);
+    assert.ok(health.recommendations.length > 0);
+    assert.ok(!Object.values(health.explanations).join(" ").toLowerCase().includes("subject"));
     assert.strictEqual(reviewBlocks([{ id: "1", severity: "warning", title: "x", detail: "x", atomIds: [changeSet.atoms[0].id] }], "error"), false);
     assert.strictEqual(reviewBlocks([{ id: "1", severity: "error", title: "x", detail: "x", atomIds: [changeSet.atoms[0].id] }], "error"), true);
     assert.strictEqual(validateReviewFindings([{ id: "1", severity: "error", title: "x", detail: "x", atomIds: ["unknown"] }], [changeSet.atoms[0].id]).length, 0);
+  });
+
+  test("keeps Health Report discoverable only while the health capability is enabled", async () => {
+    const manifest = JSON.parse(await readFile(path.join(process.cwd(), "package.json"), "utf8"));
+    const palette = manifest.contributes.menus.commandPalette.find((item: { command: string }) => item.command === "gitmind.openHealthReport");
+    assert.strictEqual(palette.when, "gitmind.commitHealthEnabled");
+    const commandsSource = await readFile(path.join(process.cwd(), "src", "commands", "commitIntelligence.ts"), "utf8");
+    assert.match(commandsSource, /gitmind\.openHealthReport/);
+    assert.match(commandsSource, /Enable Commit Health in GitMind Settings/);
   });
 
   test("builds local relationship edges and rejects unknown Composer IDs", () => {
