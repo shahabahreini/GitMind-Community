@@ -116,7 +116,7 @@ export class ProNotificationService {
         const version =
             vscode.extensions.getExtension(EXTENSION_ID)?.packageJSON?.version ?? 'unknown';
 
-        if (!legacy.shouldShowMigrationNotice(version)) {
+        if (!(await legacy.shouldShowMigrationNotice(version))) {
             return;
         }
         await legacy.recordMigrationNotice(version);

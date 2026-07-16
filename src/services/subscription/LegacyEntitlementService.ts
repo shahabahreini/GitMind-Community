@@ -52,6 +52,18 @@ export class LegacyEntitlementService {
         this.context = context;
         this.cached = context.globalState.get<LegacyEntitlement>(ENTITLEMENT_KEY);
         await this.detectAndGrandfather();
+
+        // Self-heal: an UN-migrated record sitting next to a validated GitMind key is
+        // stale by definition — either fabricated by the old detection logic (which
+        // mistook a Polar activation for Lemon Squeezy evidence) or left behind when
+        // activation could not see the key through the [ENCRYPTED] placeholder.
+        // Retire it here so the affected user is fixed by simply updating, without
+        // ever seeing the "claim your free key" notice again.
+        if (this.hasActiveEntitlement()
+            && vscode.workspace.getConfiguration('gitmind').get<string>('pro.validationStatus') === 'valid'
+            && await this.findGitMindKey() !== undefined) {
+            await this.retireLegacyState();
+        }
     }
 
     /**
@@ -144,8 +156,12 @@ export class LegacyEntitlementService {
      * to stop asking. Notably false once a real GitMind key validates — the claim
      * already happened through another door — and capped so the notice can never
      * become the every-launch nag it once was.
+     *
+     * Async because the replacement key usually lives in SecretStorage with only the
+     * '[ENCRYPTED]' placeholder in config; a sync config read cannot see it and would
+     * keep nagging exactly the users who already activated.
      */
-    public shouldShowMigrationNotice(_currentVersion?: string): boolean {
+    public async shouldShowMigrationNotice(_currentVersion?: string): Promise<boolean> {
         if (!this.context || !this.hasActiveEntitlement()) {
             return false;
         }
@@ -153,13 +169,15 @@ export class LegacyEntitlementService {
             return false;
         }
         // A working REPLACEMENT license means migration is effectively done even if
-        // the record has not been flipped yet (it will be, on the next validation).
-        // The key shape matters: 'valid' alone is exactly the stale LS-era setting
-        // that grandfathering keys off, so it must not silence the notice by itself.
+        // the record has not been flipped yet. The key shape matters: 'valid' alone
+        // is exactly the stale LS-era setting that grandfathering keys off, so it
+        // must not silence the notice by itself.
         const config = vscode.workspace.getConfiguration('gitmind');
-        const storedKey = config.get<string>('pro.licenseKey');
         if (config.get<string>('pro.validationStatus') === 'valid'
-            && !!storedKey && GITMIND_KEY_PATTERN.test(storedKey.trim())) {
+            && await this.findGitMindKey() !== undefined) {
+            // Migration is over for this user; make that permanent instead of
+            // re-deriving it on every launch.
+            await this.retireLegacyState();
             return false;
         }
         // Three unanswered notices are enough; after that the claim stays available
@@ -182,6 +200,17 @@ export class LegacyEntitlementService {
      * Squeezy API before this update landed have *already* been demoted, and they are
      * precisely the people this exists to rescue. A key is only trusted if it matches the
      * Lemon Squeezy UUID shape, so stray text in the license field grants nothing.
+     *
+     * What this must NEVER do is grandfather a Polar customer. `validationStatus:
+     * 'valid'` and `subscription.status: 'active'` are written by every legitimate
+     * GitMind activation too (and they roam between machines via Settings Sync, while
+     * this record does not) — so status alone is only Lemon Squeezy evidence when no
+     * newer key material contradicts it:
+     *   • a GitMind-format key anywhere → Polar customer, nothing to grandfather;
+     *   • config holding the '[ENCRYPTED]' placeholder with no readable secret → a
+     *     real key exists that we cannot see (secrets do not sync) — unverifiable is
+     *     not evidence, and a genuine legacy user in this state still has the manual
+     *     claim command, which the server now answers idempotently.
      */
     private async detectAndGrandfather(): Promise<void> {
         if (!this.context || this.cached) {
@@ -193,7 +222,19 @@ export class LegacyEntitlementService {
         const subscriptionStatus = config.get<string>('subscription.status');
         const email = config.get<string>('subscription.email');
 
-        const legacyKey = await this.findStoredLicenseKey(config);
+        const candidates = await this.storedKeyCandidates(config);
+
+        if (candidates.some(key => GITMIND_KEY_PATTERN.test(key.trim()))) {
+            return; // Polar customer.
+        }
+
+        const legacyKey = candidates
+            .find(key => LEMON_SQUEEZY_KEY_PATTERN.test(key.trim()))?.trim();
+
+        if (!legacyKey && candidates.some(key => key === '[ENCRYPTED]')) {
+            return; // Unreadable key material — not evidence of anything.
+        }
+
         const hadWorkingLicense =
             validationStatus === 'valid' || subscriptionStatus === 'active';
 
@@ -218,10 +259,12 @@ export class LegacyEntitlementService {
         );
     }
 
-    private async findStoredLicenseKey(
-        config: vscode.WorkspaceConfiguration
-    ): Promise<string | undefined> {
-        const candidates: (string | undefined)[] = [config.get<string>('pro.licenseKey')];
+    /** Every stored key value, config first, then SecretStorage. */
+    private async storedKeyCandidates(
+        config?: vscode.WorkspaceConfiguration
+    ): Promise<string[]> {
+        const cfg = config ?? vscode.workspace.getConfiguration('gitmind');
+        const candidates: (string | undefined)[] = [cfg.get<string>('pro.licenseKey')];
 
         try {
             candidates.push(await this.context?.secrets.get('gitmind.pro.licenseKey'));
@@ -229,8 +272,12 @@ export class LegacyEntitlementService {
             debugLog('Could not read the license key from secret storage:', error);
         }
 
-        return candidates.find(
-            (key): key is string => !!key && LEMON_SQUEEZY_KEY_PATTERN.test(key.trim())
-        )?.trim();
+        return candidates.filter((key): key is string => !!key);
+    }
+
+    /** The GitMind (Polar-era) key, wherever it lives — config or SecretStorage. */
+    private async findGitMindKey(): Promise<string | undefined> {
+        const candidates = await this.storedKeyCandidates();
+        return candidates.find(key => GITMIND_KEY_PATTERN.test(key.trim()))?.trim();
     }
 }
