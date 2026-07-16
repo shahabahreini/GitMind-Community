@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI-Powered Commit Messages",
   "description": "Generate professional AI commit messages in VS Code with 18 provider options, searchable models, Conventional Commits, NVIDIA NIM, Ollama, Copilot, and Pro automatic recovery.",
-  "version": "6.0.0",
+  "version": "6.1.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -165,7 +165,11 @@
         },
         "gitmind.commit.detailMode": {
           "type": "string",
-          "enum": ["auto", "concise", "detailed"],
+          "enum": [
+            "auto",
+            "concise",
+            "detailed"
+          ],
           "default": "auto",
           "description": "Choose whether reviewed commit drafts include a body. Auto uses intent and change complexity.",
           "order": 10
@@ -207,7 +211,11 @@
         },
         "gitmind.review.blockingThreshold": {
           "type": "string",
-          "enum": ["off", "warning", "error"],
+          "enum": [
+            "off",
+            "warning",
+            "error"
+          ],
           "default": "off",
           "description": "Minimum review severity that blocks Composer apply. Off is advisory only."
         },
