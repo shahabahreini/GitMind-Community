@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "product": {
     "name": "GitMind",
-    "version": "6.1.0",
-    "auditDate": "2026-07-16",
+    "version": "6.1.1",
+    "auditDate": "2026-07-17",
     "source": "package.json",
     "minimumVSCode": "^1.101.0"
   },
@@ -11,9 +11,9 @@
     "providerChoices": 18,
     "builtInProviders": 17,
     "settingsRegistered": 106,
-    "settingsDocumented": 97,
+    "settingsDocumented": 96,
     "commandsRegistered": 55,
-    "publicCommands": 46,
+    "publicCommands": 44,
     "commitStyles": 12,
     "primarySettingsTabs": 5
   },
@@ -926,13 +926,6 @@
       "description": "Model name for custom API (Pro feature)"
     },
     {
-      "id": "gitmind.pro.orderId",
-      "type": "string",
-      "default": "",
-      "availability": "Pro",
-      "description": "Legacy order reference (internal use)"
-    },
-    {
       "id": "gitmind.pro.encryptionEnabled",
       "type": "boolean",
       "default": false,
@@ -1396,16 +1389,6 @@
       "shortcut": null
     },
     {
-      "id": "gitmind.claimFreeLicense",
-      "title": "Claim Free Replacement License (Lemon Squeezy customers)",
-      "shortcut": null
-    },
-    {
-      "id": "gitmind.openAccountPortal",
-      "title": "Open Account Portal (Manage Devices)",
-      "shortcut": null
-    },
-    {
       "id": "gitmind.deactivatePro",
       "title": "Deactivate Pro Features",
       "shortcut": null
@@ -1584,6 +1567,6 @@
       "subscription state",
       "developer environment settings"
     ],
-    "commands": "9 internal or implementation-only commands omitted"
+    "commands": "11 internal or implementation-only commands omitted"
   }
 }

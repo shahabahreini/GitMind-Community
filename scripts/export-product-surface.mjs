@@ -31,11 +31,11 @@ if (!providerSetting || !styleSetting) throw new Error("Source does not expose t
 
 const internalSettings = [
   /^gitmind\.promptCustomization\.lastPrompt$/,
-  /^gitmind\.pro\.(licenseKey|validationStatus|lastValidation|instanceId)$/,
+  /^gitmind\.pro\.(licenseKey|validationStatus|lastValidation|instanceId|orderId)$/,
   /^gitmind\.subscription\./,
   /^gitmind\.environment\./,
 ];
-const internalCommands = /^(Internal:|Debug:)|gitmind\.(acceptInput|loadingIndicator|loadingIndicatorPro|handleUserStatusChange|cleanupLegacySettings|forceDeactivatePro|checkApiConfig)$/;
+const internalCommands = /^(Internal:|Debug:)|gitmind\.(acceptInput|loadingIndicator|loadingIndicatorPro|handleUserStatusChange|cleanupLegacySettings|forceDeactivatePro|checkApiConfig|claimFreeLicense|openAccountPortal)$/;
 const providerNames = {
   gemini: "Google Gemini", huggingface: "Hugging Face", ollama: "Ollama", mistral: "Mistral AI",
   cohere: "Cohere", openai: "OpenAI", together: "Together AI", openrouter: "OpenRouter",

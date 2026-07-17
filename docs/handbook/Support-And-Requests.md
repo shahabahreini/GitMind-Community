@@ -1,6 +1,6 @@
 # Support And Requests
 
-> Verified against GitMind `6.0.0` on July 14, 2026.
+> Verified against GitMind `6.1.1` on July 17, 2026
 
 Use the issue form that matches the request:
 

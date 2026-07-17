@@ -1,8 +1,8 @@
 # Providers And Models
 
-> Verified against GitMind `6.0.0` on July 14, 2026.
+> Verified against GitMind `6.1.1` on July 17, 2026
 
-GitMind has 17 built-in providers plus the Pro-only Custom API provider. Cloud providers receive the selected diff and prompt. Provider catalogs change; use **Load Available Models** and the searchable model picker when available.
+GitMind has 17 built-in providers plus the Pro-only Custom API provider (18 total). Cloud providers receive the selected diff and prompt. Provider catalogs change; use **Load Available Models** and the searchable model picker when available.
 
 ![GitMind model settings and Automatic Recovery](assets/model-settings-and-recovery.png)
 
