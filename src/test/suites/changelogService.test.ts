@@ -333,7 +333,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
         assert.ok(formatted.includes('# Changelog'), 'Should add changelog header');
         assert.ok(formatted.includes('Keep a Changelog'), 'Should add Keep a Changelog reference');
+        assert.ok(formatted.includes('https://keepachangelog.com/en/1.1.0/'), 'Should reference Keep a Changelog 1.1.0');
         assert.ok(formatted.includes('Semantic Versioning'), 'Should add Semantic Versioning reference');
+    });
+
+    test('Changelog formatting should repair inline category headings and bullets', () => {
+        const changelogService = service as any;
+
+        const aiResponse = `## [v1.0.2] - 2026-07-16
+### Added - Initialized empty Topaz directories for each stream during extraction.
+### Fixed - Updated RGB and NIR directory-creation tests.`;
+
+        const formatted = changelogService.formatChangelog(aiResponse, null);
+
+        assert.ok(formatted.includes('### Added\n- Initialized empty Topaz directories for each stream during extraction.'),
+            'Should put Added heading and dash bullet on separate lines');
+        assert.ok(formatted.includes('### Fixed\n- Updated RGB and NIR directory-creation tests.'),
+            'Should put Fixed heading and dash bullet on separate lines');
+        assert.ok(!formatted.includes('### Added -'), 'Should not leave inline Added heading and bullet');
+        assert.ok(!formatted.includes('### Fixed -'), 'Should not leave inline Fixed heading and bullet');
     });
 
     test('Changelog formatting should not add header for existing files', () => {
@@ -391,11 +409,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
         const changelogService = service as any;
 
         const changelog = `# Changelog
-## v1.2.3 - 2025-01-15
+## [v1.2.3] - 2025-01-15
 ### Added
 - Feature A
 
-## v1.2.2 - 2024-12-01
+## [v1.2.2] - 2024-12-01
 ### Fixed
 - Bug B`;
 
@@ -411,6 +429,24 @@ Some text without versions`;
 
         const latestVersion = changelogService.extractLatestVersionFromChangelog(invalidChangelog);
         assert.strictEqual(latestVersion, null, 'Should return null for invalid changelog');
+    });
+
+    test('Changelog version extraction should preserve the standard Unreleased section', () => {
+        const changelogService = service as any;
+
+        const changelog = `# Changelog
+## [Unreleased]
+### Added
+- Pending feature
+
+## [v1.0.0] - 2025-01-15
+### Added
+- Released feature`;
+
+        const versions = changelogService.extractAllVersionsFromChangelog(changelog);
+
+        assert.ok(versions.has('Unreleased'), 'Should retain the standard Unreleased section');
+        assert.ok(versions.has('1.0.0'), 'Should parse bracketed semantic-version releases');
     });
 
     test('Policy instructions building should include all detected elements', () => {
@@ -445,7 +481,7 @@ Some text without versions`;
         assert.strictEqual(instructions, '', 'Should return empty string for null policy');
     });
 
-    test('Changelog prompt should include policy awareness when policy exists', () => {
+    test('Changelog prompt should enforce standards when a legacy policy exists', () => {
         const changelogService = service as any;
 
         const commitSummary = 'Version: 1.0.0\nCommit: abc123\nMessage: feat: test';
@@ -465,10 +501,14 @@ Some text without versions`;
 
         const prompt = changelogService.buildChangelogPrompt(commitSummary, existingChangelog, policy);
 
-        assert.ok(prompt.includes('EXISTING CHANGELOG POLICY'), 'Should include policy section');
-        assert.ok(prompt.includes('MUST FOLLOW EXACTLY'), 'Should emphasize policy adherence');
-        assert.ok(prompt.includes('v1.2.3'), 'Should include version format from policy');
-        assert.ok(prompt.includes('NO emojis'), 'Should include emoji policy');
+        assert.ok(prompt.includes('https://keepachangelog.com/en/1.1.0/'), 'Should reference Keep a Changelog 1.1.0');
+        assert.ok(prompt.includes('https://semver.org/spec/v2.0.0.html'), 'Should reference Semantic Versioning 2.0.0');
+        assert.ok(prompt.includes('## [version] - YYYY-MM-DD'), 'Should require bracketed release headers');
+        assert.ok(prompt.includes('### Added'), 'Should provide a valid category-heading example');
+        assert.ok(prompt.includes('Never produce inline headings and bullets'), 'Should prohibit malformed inline headings');
+        assert.ok(prompt.includes('impact or rationale clause'), 'Should allow concise, evidence-based why context');
+        assert.ok(prompt.includes('Retain the `v` prefix'), 'Should preserve a source v tag prefix');
+        assert.ok(!prompt.includes('MUST FOLLOW EXACTLY'), 'Should not let legacy policy override the standard');
     });
 
     test('Changelog prompt should use defaults when no policy exists', () => {
@@ -478,9 +518,11 @@ Some text without versions`;
 
         const prompt = changelogService.buildChangelogPrompt(commitSummary, null, null);
 
-        assert.ok(prompt.includes('DEFAULT FORMAT STRUCTURE'), 'Should include default structure');
+        assert.ok(prompt.includes('REQUIRED MARKDOWN GRAMMAR'), 'Should include explicit output grammar');
         assert.ok(prompt.includes('Keep a Changelog'), 'Should reference Keep a Changelog');
-        assert.ok(!prompt.includes('EXISTING CHANGELOG POLICY'), 'Should not include policy section');
+        assert.ok(prompt.includes('"Added", "Changed", "Deprecated", "Removed", "Fixed", and "Security"'),
+            'Should limit output to standard categories');
+        assert.ok(!prompt.includes('EXISTING CHANGELOG POLICY'), 'Should not include the removed legacy-policy contract');
     });
 
     test('Save changelog should handle create mode', async () => {
