@@ -17,14 +17,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 22
-          cache: npm
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
-        run: npm ci --no-audit --no-fund
+        run: pnpm install --frozen-lockfile
 
       - name: Extract version from tag
         id: version
@@ -41,13 +46,13 @@ jobs:
           echo "✅ Version match: $PKG_VERSION"
 
       - name: Build extension (production)
-        run: npm run package
+        run: pnpm run package
 
       - name: Package VSIX
-        run: npm run package:vsce -- --out "ai-commit-assistant-${{ steps.version.outputs.VERSION }}.vsix"
+        run: pnpm run package:vsce --out "ai-commit-assistant-${{ steps.version.outputs.VERSION }}.vsix"
 
       - name: Audit VSIX contents
-        run: npm run package:audit
+        run: pnpm run package:audit
 
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@v4

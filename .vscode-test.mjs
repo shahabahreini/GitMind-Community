@@ -7,7 +7,7 @@ export default defineConfig({
   workspaceFolder: "./test-workspace",
   extensionDevelopmentPath: "./",
   extensionTestsPath: "./out/test",
-  downloadVersion: "stable",
+  version: "1.101.0",
   launchArgs: [
     "--disable-extensions",
     "--skip-welcome",

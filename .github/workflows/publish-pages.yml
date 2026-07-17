@@ -13,7 +13,7 @@ on:
       - "scripts/sync-wiki.mjs"
       - "scripts/validate-docs.mjs"
       - "package.json"
-      - "package-lock.json"
+      - "pnpm-lock.yaml"
       - ".github/workflows/publish-pages.yml"
   workflow_dispatch:
 
@@ -32,13 +32,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-      - run: npm run docs:validate
-      - run: npm run docs:build
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run docs:validate
+      - run: pnpm run docs:build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
