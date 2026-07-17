@@ -1732,10 +1732,5 @@
       "supported": true,
       "description": "This extension requires API keys to be configured for full functionality."
     }
-  },
-  "overrides": {
-    "diff": ">=8.0.3",
-    "serialize-javascript": ">=7.0.5",
-    "vite": "6.4.3"
   }
 }

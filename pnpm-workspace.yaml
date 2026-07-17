@@ -4,3 +4,7 @@ allowBuilds:
   keytar: true
   protobufjs: true
 
+overrides:
+  diff: '>=8.0.3'
+  serialize-javascript: '>=7.0.5'
+  vite: 6.4.3
