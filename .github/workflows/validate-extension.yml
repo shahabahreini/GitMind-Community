@@ -14,11 +14,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
       - uses: actions/setup-node@v6
         with:
-          node-version: 22
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-      - run: npm run package
-      - run: npm run package:audit
-      - run: npm run package:vsce -- --out /tmp/gitmind-validation.vsix
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run package
+      - run: pnpm run package:audit
+      - run: pnpm run package:vsce --out /tmp/gitmind-validation.vsix

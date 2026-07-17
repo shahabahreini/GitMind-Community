@@ -1,4 +1,3 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { debugLog } from "../debug/logger";
 import { GeminiModel } from "../../config/types";
 import { BaseAIProvider, GenerationOptions } from "./base";
@@ -51,6 +50,11 @@ const MODEL_CONFIGS: Record<GeminiModel, GenerationConfig> = {
         maxOutputTokens: 8192,
     },
 };
+
+async function createGeminiClient(apiKey: string) {
+    const { GoogleGenAI } = await import("@google/genai");
+    return new GoogleGenAI({ apiKey });
+}
 
 type GeminiValidationResult = {
     success: boolean;
@@ -138,30 +142,20 @@ export class GeminiProvider extends BaseAIProvider {
             const topK = options?.topK ?? config.topK;
             const topP = options?.topP ?? config.topP;
 
-            // Initialize the API
-            const genAI = new GoogleGenerativeAI(this.apiKey);
-            const generativeModel = genAI.getGenerativeModel({
+            const ai = await createGeminiClient(this.apiKey);
+            const response = await ai.models.generateContent({
                 model: selectedModel,
-                generationConfig: {
+                contents: prompt,
+                config: {
                     temperature: temperature,
                     topK: topK,
                     topP: topP,
                     maxOutputTokens: maxOutputTokens,
+                    abortSignal: controller.signal,
                 },
             });
 
-            // Generate content with abort signal support
-            const result = await Promise.race([
-                generativeModel.generateContent(prompt),
-                new Promise((_, reject) => {
-                    controller.signal.addEventListener('abort', () => {
-                        reject(new Error('Request was cancelled'));
-                    });
-                })
-            ]);
-
-            const response = (result as any).response;
-            const text = response.text();
+            const text = response.text ?? '';
 
             debugLog("Gemini API response:", { text });
             return text;
@@ -303,16 +297,15 @@ export class GeminiProvider extends BaseAIProvider {
                 return { success: false, error: "API key not configured", troubleshooting: "Please enter your Gemini API key in the settings" };
             }
 
-            const genAI = new GoogleGenerativeAI(this.apiKey);
-
             const effectiveModel = getEffectiveGeminiModel(this.model);
-            const model = genAI.getGenerativeModel({ model: effectiveModel });
+            const ai = await createGeminiClient(this.apiKey);
+            const result = await ai.models.generateContent({
+                model: effectiveModel,
+                contents: "Test connection",
+            });
+            debugLog("Gemini API validation successful:", { hasText: typeof result.text === "string" });
 
-            // Simple validation request
-            const result = await model.generateContent("Test connection");
-            debugLog("Gemini API validation successful:", result);
-
-            if ((result as { response?: unknown }).response !== undefined) {
+            if (typeof result.text === "string") {
                 return { success: true };
             }
 

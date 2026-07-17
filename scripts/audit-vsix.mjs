@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 
 const files = execFileSync(
   process.execPath,
-  ["node_modules/@vscode/vsce/vsce", "ls", "--no-yarn"],
+  ["node_modules/@vscode/vsce/vsce", "ls", "--no-dependencies"],
   { encoding: "utf8" },
 )
   .split(/\r?\n/)
