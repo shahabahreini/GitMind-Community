@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v6.1.1 - 2026-07-16
+
+### Added
+
+- Added unit tests to verify version parsing, header formatting, and repairs for the ChangelogService.
+
+### Changed
+
+- Migrated dependency overrides from package.json to pnpm-workspace.yaml to ensure consistent resolution.
+- Replaced npm with pnpm for package management across all workflows.
+- Upgraded to @google/genai SDK and updated Gemini service implementation.
+- Updated Node.js runtime to v24 and refreshed development dependencies.
+- Updated ChangelogService to align with Keep a Changelog 1.1.0 specification.
+- Pin @types/vscode to an exact version to ensure build consistency.
+- Updated verification metadata and counts for v6.1.1 in handbook pages and manifests.
+
+### Removed
+
+- Removed temporary update script.
+- Removed package-lock=false from .npmrc.
 
 ## v6.1.0 - 2026-07-15
 
