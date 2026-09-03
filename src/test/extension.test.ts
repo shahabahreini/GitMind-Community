@@ -54,7 +54,7 @@ This test suite validates ALL main features of GitMind:
    ✓ Settings persistence
    ✓ Provider switching
 
-🤖 AI PROVIDERS TESTS (All 13):
+🤖 AI PROVIDERS TESTS (all registered providers):
    ✓ OpenAI, Anthropic, Gemini
    ✓ HuggingFace, Ollama, Mistral  
    ✓ Cohere, Together AI, OpenRouter

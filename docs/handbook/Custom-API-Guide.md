@@ -1,6 +1,6 @@
 # Custom API Guide
 
-> Verified against GitMind `6.1.1` on July 17, 2026
+> Verified against GitMind `6.1.1` on September 3, 2026
 
 Custom API is a GitMind Pro provider for compatible private or third-party text-generation endpoints.
 

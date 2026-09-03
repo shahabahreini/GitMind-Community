@@ -1,4 +1,4 @@
 # Google Gemini
-> Verified against GitMind `6.1.1` on July 17, 2026
+> Verified against GitMind `6.1.1` on September 3, 2026
 
 Use an API key from [Google AI Studio](https://aistudio.google.com/app/apikey). The default model is `gemini-3.5-flash`; use model discovery for the current account catalog. GitMind sends the selected diff and prompt to Google. Account/billing quota failures are not retried automatically, while an ordinary model rate limit may use the configured Pro fallback.

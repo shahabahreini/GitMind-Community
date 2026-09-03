@@ -63,7 +63,7 @@ npm run test:status
 ## Test Categories
 
 ### 1. AI Provider Tests (`aiProviders.test.ts`)
-Tests all 13 AI provider integrations:
+Tests all registered AI provider integrations:
 - Configuration validation
 - API key handling
 - Model selection

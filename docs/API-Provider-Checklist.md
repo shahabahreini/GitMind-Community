@@ -130,4 +130,4 @@ Also test manually:
 
 ## Current Provider Inventory
 
-GitMind currently exposes 18 provider options: 17 built-in providers plus the Pro Custom API provider.
+GitMind currently exposes 23 provider options: 22 built-in providers plus the Pro Custom API provider.

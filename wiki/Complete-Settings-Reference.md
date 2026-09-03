@@ -1,6 +1,6 @@
 # Complete Settings Reference
 
-> Verified against GitMind `6.1.1` on July 17, 2026
+> Verified against GitMind `6.1.1` on September 3, 2026
 
 Open **GitMind Setting** for the guided UI. The table below covers user-configurable settings. API keys and auth tokens have no default. Developer-only environment settings and automatically managed license/subscription state are intentionally omitted.
 
@@ -8,7 +8,7 @@ Open **GitMind Setting** for the guided UI. The table below covers user-configur
 
 | Setting | Default | Values / notes |
 | --- | --- | --- |
-| `gitmind.apiProvider` | `gemini` | 17 built-ins plus Pro `custom` (18 total) |
+| `gitmind.apiProvider` | `gemini` | 22 built-ins plus Pro `custom` (23 total) |
 | `gitmind.showOnboarding` | `true` | Show onboarding |
 | `gitmind.commit.verbose` | `true` | Include body |
 | `gitmind.commit.detailMode` | `auto` | `auto`, `concise`, `detailed`; legacy verbosity migrates |
@@ -51,6 +51,11 @@ Open **GitMind Setting** for the guided UI. The table below covers user-configur
 | Perplexity | `gitmind.perplexity.apiKey`, `gitmind.perplexity.model` | `sonar-pro` |
 | Z.ai | `gitmind.zai.apiKey`, `gitmind.zai.model`, `gitmind.zai.endpoint` | `glm-5.1`; `regular` or `coding` (default) |
 | NVIDIA | `gitmind.nvidia.apiKey`, `gitmind.nvidia.model` | `meta/llama-3.3-70b-instruct` |
+| LM Studio | `gitmind.lmstudio.url`, `gitmind.lmstudio.model` | `http://127.0.0.1:1234/v1`; user-loaded model |
+| Azure OpenAI | `gitmind.azureopenai.apiKey`, `.endpoint`, `.authMode`, `.model` | Account deployment name; API key or Entra |
+| Amazon Bedrock | `gitmind.bedrock.region`, `.profile`, `.model` | `us-east-1`; account/region model ID |
+| Vertex AI | `gitmind.vertexai.project`, `.location`, `.model` | `us-central1`; project/location model ID |
+| Cloudflare Workers AI | `gitmind.cloudflare.apiKey`, `.accountId`, `.gatewayId`, `.model` | Account-scoped model ID |
 
 ## Commit Style And Pro Output
 

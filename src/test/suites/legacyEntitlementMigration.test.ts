@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { LegacyEntitlementService } from '../../services/subscription/LegacyEntitlementService';
+import { VerifiedEntitlementService } from '../../services/subscription/VerifiedEntitlementService';
 import { GitMindLicenseService } from '../../services/subscription/GitMindLicenseService';
 import { ProActivationService } from '../../services/subscription/ProActivationService';
 import { isProUser, isLegacyProUser } from '../../utils/proHelpers';
@@ -56,8 +57,11 @@ suite('Legacy Lemon Squeezy entitlement', () => {
     /** The service is a singleton; each test needs a clean one. */
     const freshService = async (): Promise<LegacyEntitlementService> => {
         (LegacyEntitlementService as unknown as { instance?: unknown }).instance = undefined;
+        (VerifiedEntitlementService as unknown as { instance?: unknown }).instance = undefined;
         const service = LegacyEntitlementService.getInstance();
-        await service.initialize(createContext());
+        const context = createContext();
+        await service.initialize(context);
+        VerifiedEntitlementService.getInstance().initialize(context);
         return service;
     };
 
@@ -74,6 +78,7 @@ suite('Legacy Lemon Squeezy entitlement', () => {
         vscode.workspace.getConfiguration = originalGetConfiguration;
         globalThis.fetch = originalFetch;
         (LegacyEntitlementService as unknown as { instance?: unknown }).instance = undefined;
+        (VerifiedEntitlementService as unknown as { instance?: unknown }).instance = undefined;
         invalidateConfigCache();
     });
 
@@ -226,6 +231,7 @@ suite('Legacy Lemon Squeezy entitlement', () => {
             settings['pro.instanceId'] = 'instance-1';
             await freshService();
             await LegacyEntitlementService.getInstance().clearEntitlement();
+            await VerifiedEntitlementService.getInstance().grant('instance-1');
 
             globalThis.fetch = (async () => {
                 throw new Error('getaddrinfo ENOTFOUND api.lemonsqueezy.com');
@@ -247,6 +253,7 @@ suite('Legacy Lemon Squeezy entitlement', () => {
             settings['pro.instanceId'] = 'instance-1';
             await freshService();
             await LegacyEntitlementService.getInstance().clearEntitlement();
+            await VerifiedEntitlementService.getInstance().grant('instance-1');
 
             globalThis.fetch = (async () => ({
                 ok: false,
@@ -259,6 +266,15 @@ suite('Legacy Lemon Squeezy entitlement', () => {
 
             assert.notStrictEqual(settings['pro.validationStatus'], 'invalid');
             assert.strictEqual(isProUser(), true, 'a suspended storefront must not cost Pro');
+        });
+
+        test('a writable validation setting alone never grants Pro', async () => {
+            settings['pro.validationStatus'] = 'valid';
+            settings['pro.licenseKey'] = 'ARBITRARY-EDITABLE-VALUE';
+            await freshService();
+            await LegacyEntitlementService.getInstance().clearEntitlement();
+
+            assert.strictEqual(isProUser(), false);
         });
     });
 

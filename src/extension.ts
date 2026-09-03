@@ -48,6 +48,7 @@ export { state };
 
 import { registerCommands, SUPPORTED_PROVIDERS } from "./commands/index";
 import { LegacyEntitlementService } from "./services/subscription/LegacyEntitlementService";
+import { VerifiedEntitlementService } from "./services/subscription/VerifiedEntitlementService";
 import { isProUser, isLegacyProUser } from "./utils/proHelpers";
 import { configChangeDisposable, updateCommitIntelligenceContext } from "./config/settings";
 import { CommitWorkspace } from "./webview/commit/CommitWorkspace";
@@ -104,6 +105,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   // writes, so running late here would briefly present a paying customer as Free.
   await LegacyEntitlementService.getInstance().initialize(context);
   debugLog("LegacyEntitlementService initialized");
+  VerifiedEntitlementService.getInstance().initialize(context);
+  debugLog("VerifiedEntitlementService initialized");
 
   // Initialize SecureKeyManager
   const secureKeyManager = SecureKeyManager.getInstance();
@@ -124,15 +127,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const proActivationService = ProActivationService.getInstance();
   debugLog("ProActivationService initialized");
 
-  // Auto-migrate based on user status (handle free users with encryption enabled)
-  await secureKeyManager.autoMigrateBasedOnUserStatus();
-
   // Perform startup license validation
   try {
     await proActivationService.validateExistingLicense();
   } catch (error) {
     diagnosticLog({ subsystem: "subscription", event: "subscription.startup_validation_failed", functionName: "activate", operationId: diagnostics.id, outcome: "failure", data: { errorName: error instanceof Error ? error.name : "UnknownError" }, support: { name: "operation_progress", operation: "subscription", outcome: "failure", errorCategory: "unknown" } });
   }
+
+  // Migration must run after verified entitlement refresh; otherwise a valid user
+  // could briefly be treated as Free and have encrypted keys downgraded.
+  await secureKeyManager.autoMigrateBasedOnUserStatus();
 
   // If a Quick Checkout was paid after its "Waiting for payment…" notification was
   // cancelled or timed out, pick it up now: the server keeps the session (and the

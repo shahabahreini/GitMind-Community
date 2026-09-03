@@ -1,6 +1,6 @@
 **GitMind 5.x Handbook**
 
-Verified against GitMind `6.1.1` on July 17, 2026.
+Verified against GitMind `6.1.1` on September 3, 2026.
 
 - [Home](Home)
 - [Activation And License Management](Activation-And-License-Management)
@@ -23,6 +23,9 @@ Verified against GitMind `6.1.1` on July 17, 2026.
 - [Telemetry Retirement](Telemetry-Retirement)
 - [Troubleshooting And FAQ](Troubleshooting-And-FAQ)
 - [providers anthropic](providers-anthropic)
+- [providers azureopenai](providers-azureopenai)
+- [providers bedrock](providers-bedrock)
+- [providers cloudflare](providers-cloudflare)
 - [providers cohere](providers-cohere)
 - [providers copilot](providers-copilot)
 - [providers custom](providers-custom)
@@ -31,6 +34,7 @@ Verified against GitMind `6.1.1` on July 17, 2026.
 - [providers grok](providers-grok)
 - [providers groq](providers-groq)
 - [providers huggingface](providers-huggingface)
+- [providers lmstudio](providers-lmstudio)
 - [providers minimax](providers-minimax)
 - [providers mistral](providers-mistral)
 - [providers nvidia](providers-nvidia)
@@ -39,6 +43,7 @@ Verified against GitMind `6.1.1` on July 17, 2026.
 - [providers openrouter](providers-openrouter)
 - [providers perplexity](providers-perplexity)
 - [providers together](providers-together)
+- [providers vertexai](providers-vertexai)
 - [providers zai](providers-zai)
 - [Commands And Shortcuts](Commands-And-Shortcuts)
 - [Coverage Audit](Coverage-Audit)

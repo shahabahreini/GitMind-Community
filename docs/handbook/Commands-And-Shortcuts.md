@@ -1,6 +1,6 @@
 # Commands And Shortcuts
 
-> Verified against GitMind `6.1.1` on July 17, 2026
+> Verified against GitMind `6.1.1` on September 3, 2026
 
 GitMind registers public commands through the Command Palette, Source Control actions, settings UI, onboarding, and activation workflows. Internal status, migration, loading-indicator, and developer diagnostics commands are intentionally excluded.
 

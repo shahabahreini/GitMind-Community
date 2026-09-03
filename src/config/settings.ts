@@ -85,6 +85,31 @@ const PROVIDER_DEFAULTS: Record<string, ProviderDefaults> = {
         extras: { endpoint: "coding" }
     },
     nvidia: { model: "meta/llama-3.3-70b-instruct", enabled: false },
+    lmstudio: {
+        model: getProviderDefaultModel("lmstudio"),
+        enabled: false,
+        extras: { url: "http://127.0.0.1:1234/v1" }
+    },
+    azureopenai: {
+        model: getProviderDefaultModel("azureopenai"),
+        enabled: false,
+        extras: { endpoint: "", authMode: "apiKey" }
+    },
+    bedrock: {
+        model: getProviderDefaultModel("bedrock"),
+        enabled: false,
+        extras: { region: "us-east-1", profile: "" }
+    },
+    vertexai: {
+        model: getProviderDefaultModel("vertexai"),
+        enabled: false,
+        extras: { project: "", location: "us-central1" }
+    },
+    cloudflare: {
+        model: getProviderDefaultModel("cloudflare"),
+        enabled: false,
+        extras: { accountId: "", gatewayId: "" }
+    },
     custom: {
         model: "",
         enabled: false,
@@ -136,7 +161,7 @@ export function getConfiguration(): ExtensionConfig {
         };
 
         // Add API key for providers that need it
-        if (provider !== 'ollama' && provider !== 'copilot') {
+        if (provider !== 'ollama' && provider !== 'copilot' && provider !== 'lmstudio' && provider !== 'bedrock' && provider !== 'vertexai') {
             providerConfig.apiKey = config.get(`${provider}.apiKey`);
         }
 
@@ -176,7 +201,7 @@ export async function getApiConfig(): Promise<ApiConfig> {
     };
 
     // Add API key for providers that need it
-    if (provider !== 'ollama' && provider !== 'copilot' && provider !== 'custom') {
+    if (provider !== 'ollama' && provider !== 'copilot' && provider !== 'custom' && provider !== 'lmstudio' && provider !== 'bedrock' && provider !== 'vertexai') {
         const secureKeyManager = SecureKeyManager.getInstance();
         const secureApiKey = await secureKeyManager.getApiKey(provider, false);
         baseConfig.apiKey = secureApiKey || "";
@@ -208,6 +233,33 @@ export async function getApiConfig(): Promise<ApiConfig> {
     switch (provider) {
         case 'ollama':
             baseConfig.url = extras.url || "";
+            break;
+        case 'lmstudio':
+            baseConfig.url = extras.url || "http://127.0.0.1:1234/v1";
+            break;
+        case 'azureopenai':
+            baseConfig.endpoint = extras.endpoint || "";
+            baseConfig.authMode = extras.authMode === "entra" ? "entra" : "apiKey";
+            if (baseConfig.authMode === "entra") {
+                const session = await vscode.authentication.getSession(
+                    "microsoft",
+                    ["https://cognitiveservices.azure.com/.default"],
+                    { createIfNone: false }
+                );
+                baseConfig.accessToken = session?.accessToken || "";
+            }
+            break;
+        case 'bedrock':
+            baseConfig.region = extras.region || "us-east-1";
+            baseConfig.profile = extras.profile || "";
+            break;
+        case 'vertexai':
+            baseConfig.project = extras.project || "";
+            baseConfig.location = extras.location || "us-central1";
+            break;
+        case 'cloudflare':
+            baseConfig.accountId = extras.accountId || "";
+            baseConfig.gatewayId = extras.gatewayId || "";
             break;
         case 'huggingface':
             baseConfig.temperature = extras.temperature;
@@ -244,7 +296,7 @@ export function getApiConfigSync(): ApiConfig {
     };
 
     // Add API key for providers that need it (only from plain text settings)
-    if (provider !== 'ollama' && provider !== 'copilot') {
+    if (provider !== 'ollama' && provider !== 'copilot' && provider !== 'lmstudio' && provider !== 'bedrock' && provider !== 'vertexai') {
         baseConfig.apiKey = providerConfig.apiKey || "";
     }
 
@@ -253,6 +305,25 @@ export function getApiConfigSync(): ApiConfig {
     switch (provider) {
         case 'ollama':
             baseConfig.url = extras.url || "";
+            break;
+        case 'lmstudio':
+            baseConfig.url = extras.url || "http://127.0.0.1:1234/v1";
+            break;
+        case 'azureopenai':
+            baseConfig.endpoint = extras.endpoint || "";
+            baseConfig.authMode = extras.authMode === "entra" ? "entra" : "apiKey";
+            break;
+        case 'bedrock':
+            baseConfig.region = extras.region || "us-east-1";
+            baseConfig.profile = extras.profile || "";
+            break;
+        case 'vertexai':
+            baseConfig.project = extras.project || "";
+            baseConfig.location = extras.location || "us-central1";
+            break;
+        case 'cloudflare':
+            baseConfig.accountId = extras.accountId || "";
+            baseConfig.gatewayId = extras.gatewayId || "";
             break;
         case 'huggingface':
             baseConfig.temperature = extras.temperature;

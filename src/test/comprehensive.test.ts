@@ -17,6 +17,7 @@ import './suites/tokenCounter.test';
 import './suites/minimaxIntegrationChecklist.test';
 import './suites/minimaxApiSetupErrors.test';
 import './suites/integrationIntegrity.test';
+import './suites/providerExpansion.test';
 
 // Import core services for testing
 import { getApiConfig } from '../config/settings';
@@ -561,7 +562,7 @@ export function getTestSummary() {
         ],
         keyValidations: [
             'Settings save/load persistence',
-            'All 13 AI providers configuration',
+            'All registered AI providers configuration',
             'API key validation and error handling',
             'Git diff processing and commit message setting',
             'Webview creation and messaging',
@@ -578,7 +579,7 @@ console.log(`
 
 📋 TESTING SCOPE:
 • Settings UI - Save/load configurations, UI interactions
-• AI Providers - All 13 providers (OpenAI, Anthropic, Gemini, etc.)
+• AI Providers - All registered providers (OpenAI, Anthropic, Gemini, and more)
 • Core Commands - Generate messages, API setup checks, sanitized Pro support reports
 • Git Integration - Repository validation, diff processing
 • Webview Components - Settings panel, onboarding workflow

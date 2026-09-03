@@ -1,7 +1,7 @@
 {
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI-Powered Commit Messages",
-  "description": "Generate professional AI commit messages in VS Code with 18 provider options, searchable models, Conventional Commits, NVIDIA NIM, Ollama, Copilot, and Pro automatic recovery.",
+  "description": "Generate AI commit messages in VS Code with 23 providers, local and cloud models, Conventional Commits, GitHub Copilot, and Pro recovery tools.",
   "version": "6.1.1",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
@@ -52,6 +52,11 @@
             "perplexity",
             "zai",
             "nvidia",
+            "lmstudio",
+            "azureopenai",
+            "bedrock",
+            "vertexai",
+            "cloudflare",
             "custom"
           ],
           "enumDescriptions": [
@@ -72,6 +77,11 @@
             "Use Perplexity AI for generating commit messages",
             "Use Z.ai (GLM) for generating commit messages",
             "Use NVIDIA hosted NIM models for generating commit messages",
+            "Use a local LM Studio OpenAI-compatible server for generating commit messages",
+            "Use Azure OpenAI deployments for generating commit messages",
+            "Use Amazon Bedrock foundation models for generating commit messages",
+            "Use Google Cloud Vertex AI models for generating commit messages",
+            "Use Cloudflare Workers AI or AI Gateway for generating commit messages",
             "Use Custom API endpoint for generating commit messages (Pro feature)"
           ],
           "default": "gemini",
@@ -99,11 +109,6 @@
           "default": "mistralai/Mistral-7B-Instruct-v0.3",
           "description": "Model ID for Hugging Face",
           "markdownDescription": "Model ID for Hugging Face. [Learn more](https://huggingface.co/models)",
-          "examples": [
-            "mistralai/Mistral-7B-Instruct-v0.3",
-            "facebook/bart-large-cnn",
-            "microsoft/DialoGPT-medium"
-          ],
           "order": 6
         },
         "gitmind.ollama.url": {
@@ -117,13 +122,6 @@
           "default": "phi4",
           "description": "Model name for Ollama",
           "markdownDescription": "Model name for Ollama. [Available models](https://ollama.ai/library)",
-          "examples": [
-            "mistral",
-            "llama2",
-            "codellama",
-            "phi4",
-            "qwen2.5-coder"
-          ],
           "order": 7
         },
         "gitmind.mistral.apiKey": {
@@ -135,20 +133,6 @@
           "type": "string",
           "default": "mistral-small-4",
           "description": "Model name for Mistral AI",
-          "enum": [
-            "mistral-medium-3.5",
-            "mistral-large-3",
-            "mistral-small-4",
-            "devstral-2",
-            "ministral-3"
-          ],
-          "enumDescriptions": [
-            "Mistral Medium 3.5 - Primary flagship model",
-            "Mistral Large 3 - Heavyweight multimodal model",
-            "Mistral Small 4 - Efficient unified model",
-            "Devstral 2 - Coding agent optimized model",
-            "Ministral 3 - Edge and lightweight deployment"
-          ],
           "order": 9
         },
         "gitmind.commit.verbose": {
@@ -408,18 +392,8 @@
         },
         "gitmind.gemini.model": {
           "type": "string",
-          "enum": [
-            "gemini-3.5-flash",
-            "gemini-3.1-pro-preview",
-            "gemini-3.1-flash-lite"
-          ],
           "default": "gemini-3.5-flash",
-          "description": "Select which Gemini model to use",
-          "enumDescriptions": [
-            "Gemini 3.5 Flash - Stable coding and reasoning model",
-            "Gemini 3.1 Pro Preview - Advanced preview model",
-            "Gemini 3.1 Flash-Lite - Lightweight version for low-latency tasks"
-          ]
+          "description": "Select which Gemini model to use"
         },
         "gitmind.cohere.apiKey": {
           "type": "string",
@@ -428,16 +402,6 @@
         },
         "gitmind.cohere.model": {
           "type": "string",
-          "enum": [
-            "command-a-plus-05-2026",
-            "north-mini-code-1-0",
-            "command-a-reasoning-08-2025"
-          ],
-          "enumDescriptions": [
-            "Command A+ - Current general-purpose flagship",
-            "North Mini Code - Coding-specialized model",
-            "Command A Reasoning - Complex reasoning model"
-          ],
           "default": "command-a-plus-05-2026",
           "description": "Cohere model to use for generating commit messages"
         },
@@ -449,22 +413,8 @@
         },
         "gitmind.openai.model": {
           "type": "string",
-          "enum": [
-            "gpt-5.6-sol",
-            "gpt-5.6-terra",
-            "gpt-5.6-luna",
-            "gpt-5.5",
-            "gpt-5.4-mini"
-          ],
           "default": "gpt-5.6-terra",
           "description": "OpenAI model to use for generating commit messages",
-          "enumDescriptions": [
-            "GPT-5.6 Sol - Maximum quality",
-            "GPT-5.6 Terra - Balanced quality and cost",
-            "GPT-5.6 Luna - Cost-sensitive workloads",
-            "GPT-5.5 - Previous frontier model",
-            "GPT-5.4 Mini - Fast and economical"
-          ],
           "order": 13
         },
         "gitmind.promptCustomization.enabled": {
@@ -523,10 +473,6 @@
         },
         "gitmind.together.model": {
           "type": "string",
-          "enum": [
-            "meta-llama/Llama-3.3-70B-Instruct-Turbo",
-            "deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free"
-          ],
           "default": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
           "description": "Together AI model to use for generating commit messages"
         },
@@ -548,18 +494,6 @@
         },
         "gitmind.anthropic.model": {
           "type": "string",
-          "enum": [
-            "claude-sonnet-5",
-            "claude-opus-4-8",
-            "claude-fable-5",
-            "claude-haiku-4-5"
-          ],
-          "enumDescriptions": [
-            "Claude Sonnet 5 - Balanced daily driver",
-            "Claude Opus 4.8 - Advanced reasoning model",
-            "Claude Fable 5 - Highest capability",
-            "Claude Haiku 4.5 - Fast and cost-efficient"
-          ],
           "default": "claude-sonnet-5",
           "description": "Anthropic Claude model to use for generating commit messages"
         },
@@ -570,43 +504,11 @@
         },
         "gitmind.minimax.model": {
           "type": "string",
-          "enum": [
-            "MiniMax-M2.7",
-            "MiniMax-M2.5",
-            "MiniMax-M2",
-            "MiniMax-Text-01"
-          ],
-          "enumDescriptions": [
-            "MiniMax M2.7 - Self-evolving flagship model",
-            "MiniMax M2.5 - Cost-effective high-performance model",
-            "MiniMax M2 - Compact efficient coding model",
-            "MiniMax Text-01 - Base text generation model"
-          ],
           "default": "MiniMax-M2.7",
           "description": "MiniMax model to use for generating commit messages"
         },
         "gitmind.copilot.model": {
           "type": "string",
-          "enum": [
-            "auto",
-            "gpt-5.5",
-            "gpt-5.4-mini",
-            "gpt-5.3-codex",
-            "claude-opus-4.8",
-            "claude-sonnet-4.6",
-            "gemini-3.1-pro",
-            "gemini-3.5-flash"
-          ],
-          "enumDescriptions": [
-            "Auto - Let GitHub Copilot automatically choose the best model",
-            "GPT-5.5 - OpenAI frontier model",
-            "GPT-5.4 Mini - Fast coding model",
-            "GPT-5.3 Codex - Agentic coding model",
-            "Claude Opus 4.8 - Anthropic flagship model",
-            "Claude Sonnet 4.6 - Anthropic performance model",
-            "Gemini 3.1 Pro - Google advanced model",
-            "Gemini 3.5 Flash - Google stable model"
-          ],
           "default": "auto",
           "description": "GitHub Copilot model to use for generating commit messages"
         },
@@ -617,14 +519,6 @@
         },
         "gitmind.deepseek.model": {
           "type": "string",
-          "enum": [
-            "deepseek-v4-pro",
-            "deepseek-v4-flash"
-          ],
-          "enumDescriptions": [
-            "DeepSeek V4 Pro - Flagship model (1.6T parameters)",
-            "DeepSeek V4 Flash - Optimized, cost-efficient variant (284B parameters)"
-          ],
           "default": "deepseek-v4-flash",
           "description": "DeepSeek model to use for generating commit messages"
         },
@@ -635,12 +529,6 @@
         },
         "gitmind.grok.model": {
           "type": "string",
-          "enum": [
-            "grok-4.4"
-          ],
-          "enumDescriptions": [
-            "Grok 4.4 - Default bootstrap model; load account models for the live catalog"
-          ],
           "default": "grok-4.4",
           "description": "Grok model to use for generating commit messages"
         },
@@ -651,16 +539,6 @@
         },
         "gitmind.groq.model": {
           "type": "string",
-          "enum": [
-            "llama-3.3-70b-versatile",
-            "llama-3.1-8b-instant",
-            "meta-llama/llama-4-scout-17b-16e-instruct"
-          ],
-          "enumDescriptions": [
-            "Llama 3.3 70B Versatile",
-            "Llama 3.1 8B Instant",
-            "Llama 4 Scout 17B 16E - Efficient instruction model"
-          ],
           "default": "meta-llama/llama-4-scout-17b-16e-instruct",
           "description": "Groq model to use for generating commit messages"
         },
@@ -671,16 +549,6 @@
         },
         "gitmind.perplexity.model": {
           "type": "string",
-          "enum": [
-            "sonar-pro",
-            "sonar-reasoning-pro",
-            "sonar"
-          ],
-          "enumDescriptions": [
-            "Sonar Pro - Advanced search offering",
-            "Sonar Reasoning Pro - Precise reasoning with CoT",
-            "Sonar - Cost-effective search model"
-          ],
           "default": "sonar-pro",
           "description": "Perplexity model to use for generating commit messages"
         },
@@ -691,18 +559,6 @@
         },
         "gitmind.zai.model": {
           "type": "string",
-          "enum": [
-            "glm-5.1",
-            "glm-5v-turbo",
-            "glm-5",
-            "glm-5-turbo"
-          ],
-          "enumDescriptions": [
-            "GLM-5.1 - Flagship long-horizon agentic model",
-            "GLM-5V-Turbo - Multimodal agent model",
-            "GLM-5 - MoE architecture base model",
-            "GLM-5-Turbo - Fast tool use model"
-          ],
           "default": "glm-5.1",
           "description": "Z.ai model to use for generating commit messages"
         },
@@ -715,6 +571,90 @@
           "type": "string",
           "default": "meta/llama-3.3-70b-instruct",
           "markdownDescription": "NVIDIA hosted NIM model ID. [LLM API reference](https://docs.api.nvidia.com/nim/reference/llm-apis)"
+        },
+        "gitmind.lmstudio.url": {
+          "type": "string",
+          "default": "http://127.0.0.1:1234/v1",
+          "markdownDescription": "Local LM Studio server URL. [Start the local server](https://lmstudio.ai/docs/app)"
+        },
+        "gitmind.lmstudio.model": {
+          "type": "string",
+          "default": "",
+          "description": "LM Studio model ID. Load a model in LM Studio, then enter the ID exposed by its local server."
+        },
+        "gitmind.azureopenai.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Azure OpenAI API key. [Azure OpenAI v1 API](https://learn.microsoft.com/en-us/rest/api/microsoft-foundry/azureopenai/chat)"
+        },
+        "gitmind.azureopenai.endpoint": {
+          "type": "string",
+          "default": "",
+          "description": "Azure OpenAI resource endpoint, for example https://your-resource.openai.azure.com"
+        },
+        "gitmind.azureopenai.model": {
+          "type": "string",
+          "default": "",
+          "description": "Azure OpenAI deployment name."
+        },
+        "gitmind.azureopenai.authMode": {
+          "type": "string",
+          "enum": [
+            "apiKey",
+            "entra"
+          ],
+          "default": "apiKey",
+          "description": "Use an Azure API key or a Microsoft Entra access token supplied by VS Code."
+        },
+        "gitmind.bedrock.region": {
+          "type": "string",
+          "default": "us-east-1",
+          "description": "AWS region hosting the selected Amazon Bedrock model."
+        },
+        "gitmind.bedrock.profile": {
+          "type": "string",
+          "default": "",
+          "description": "Optional AWS shared-credentials profile. Leave blank to use the standard AWS credential chain."
+        },
+        "gitmind.bedrock.model": {
+          "type": "string",
+          "default": "",
+          "description": "Amazon Bedrock model ID available in the configured region."
+        },
+        "gitmind.vertexai.project": {
+          "type": "string",
+          "default": "",
+          "description": "Google Cloud project ID for Vertex AI."
+        },
+        "gitmind.vertexai.location": {
+          "type": "string",
+          "default": "us-central1",
+          "description": "Google Cloud region for Vertex AI."
+        },
+        "gitmind.vertexai.model": {
+          "type": "string",
+          "default": "",
+          "description": "Vertex AI Gemini model ID available to the project."
+        },
+        "gitmind.cloudflare.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Cloudflare API token with Workers AI permissions. [Workers AI REST API](https://developers.cloudflare.com/workers-ai/configuration/openai-compatibility/)"
+        },
+        "gitmind.cloudflare.accountId": {
+          "type": "string",
+          "default": "",
+          "description": "Cloudflare account ID."
+        },
+        "gitmind.cloudflare.gatewayId": {
+          "type": "string",
+          "default": "",
+          "description": "Optional AI Gateway ID. Leave blank to call Workers AI directly."
+        },
+        "gitmind.cloudflare.model": {
+          "type": "string",
+          "default": "",
+          "description": "Workers AI model ID, for example an @cf provider model available to the account."
         },
         "gitmind.zai.endpoint": {
           "type": "string",
@@ -1515,7 +1455,7 @@
           {
             "id": "gitmind.choose-provider",
             "title": "Choose your AI provider",
-            "description": "Choose from 17 built-in providers, including NVIDIA NIM, OpenAI, Anthropic, Gemini, Ollama, and Copilot.\n[Open Settings](command:gitmind.openSettings)",
+            "description": "Choose from 22 built-in providers, including local LM Studio and Ollama, OpenAI, Azure OpenAI, Bedrock, Vertex AI, Cloudflare Workers AI, NVIDIA NIM, and Copilot.\n[Open Settings](command:gitmind.openSettings)",
             "media": {
               "markdown": "media/walkthroughs/choose-provider.md"
             },
@@ -1574,7 +1514,7 @@
     "pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
     "check-types": "tsc --noEmit",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
-    "test": "vscode-test",
+    "test": "vscode-test --skip-extension-dependencies",
     "test:validate": "node scripts/test-validator.js",
     "validate:wiki": "node scripts/sync-wiki.mjs --check",
     "docs:export-product-surface": "node scripts/export-product-surface.mjs",
@@ -1593,22 +1533,24 @@
     "@types/node": "^24.13.3",
     "@types/sanitize-html": "^2.16.1",
     "@types/vscode": "1.101.0",
-    "@typescript-eslint/eslint-plugin": "^8.64.0",
-    "@typescript-eslint/parser": "^8.64.0",
+    "@typescript-eslint/eslint-plugin": "^8.69.0",
+    "@typescript-eslint/parser": "^8.69.0",
     "@vscode/test-cli": "^0.0.15",
-    "@vscode/test-electron": "^3.0.0",
+    "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "3.9.2",
-    "esbuild": "^0.28.1",
-    "eslint": "^10.7.0",
-    "npm-run-all2": "^9.0.2",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.9.1",
+    "npm-run-all2": "^9.0.3",
     "rimraf": "^6.1.3",
     "typescript": "~5.9.3",
     "vitepress": "^1.6.4"
   },
   "dependencies": {
-    "@google/genai": "^2.12.0",
-    "axios": "^1.18.1",
-    "sanitize-html": "^2.17.6"
+    "@aws-sdk/client-bedrock-runtime": "^3.985.0",
+    "@aws-sdk/credential-providers": "^3.985.0",
+    "@google/genai": "^2.21.0",
+    "axios": "^1.20.0",
+    "sanitize-html": "^2.17.7"
   },
   "repository": {
     "type": "git",
@@ -1621,54 +1563,29 @@
   "homepage": "https://gitmind-pro.com",
   "keywords": [
     "git",
-    "commit",
     "commit-message",
-    "ai",
-    "conventional-commits",
-    "commit-generator",
-    "git-automation",
-    "ai-assistant",
-    "developer-productivity",
-    "github-copilot",
-    "gemini",
+    "ai commit message",
+    "commit generator",
+    "conventional commits",
+    "source control",
+    "developer productivity",
+    "github copilot",
     "openai",
-    "claude",
     "anthropic",
-    "ai-commit-message-generator",
-    "automatic-retry",
-    "model-fallback",
-    "searchable-models",
-    "nvidia",
-    "nvidia-nim",
-    "deepseek",
-    "deepseek-chat",
-    "deepseek-reasoner",
-    "grok",
-    "groq",
-    "perplexity",
-    "z-ai",
-    "minimax",
-    "mistral",
-    "mistral-ai",
-    "cohere",
-    "huggingface",
+    "gemini",
     "ollama",
-    "local-ai",
-    "together-ai",
+    "lm studio",
+    "local ai",
+    "azure openai",
+    "amazon bedrock",
+    "vertex ai",
+    "cloudflare workers ai",
+    "nvidia nim",
     "openrouter",
-    "custom-api",
-    "free-tier",
-    "offline-ai",
-    "privacy",
-    "scm",
-    "source-control",
-    "vscode-git",
-    "multi-provider",
-    "changelog",
-    "semantic-release",
-    "angular-commits",
+    "multi provider ai",
     "gitmoji",
-    "code-quality"
+    "semantic release",
+    "changelog"
   ],
   "author": {
     "name": "Shahab Bahreini",
@@ -1702,7 +1619,7 @@
       "description": "GitHub Stars"
     },
     {
-      "url": "https://img.shields.io/badge/Provider_Options-18-purple?style=for-the-badge&logo=openai",
+      "url": "https://img.shields.io/badge/Provider_Options-23-purple?style=for-the-badge&logo=openai",
       "href": "https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant",
       "description": "Supported AI Providers"
     },

@@ -12,6 +12,7 @@ import {
     updateSubscriptionConfig
 } from '../../utils/proHelpers';
 import { LegacyEntitlementService } from './LegacyEntitlementService';
+import { VerifiedEntitlementService } from './VerifiedEntitlementService';
 
 export interface ProActivationResult {
     success: boolean;
@@ -151,6 +152,7 @@ export class ProActivationService {
                     validationStatus: 'valid',
                     instanceId: activation.instance.id
                 });
+                await VerifiedEntitlementService.getInstance().grant(activation.instance.id);
 
                 debugLog('Pro configuration updated with instance ID');
 
@@ -559,7 +561,7 @@ export class ProActivationService {
             return isProUser();
         }
 
-        if (!needsLicenseValidation()) {
+        if (!needsLicenseValidation() && (isLegacyProUser() || VerifiedEntitlementService.getInstance().hasActiveEntitlement())) {
             debugLog('License validation not needed yet');
             return isProUser();
         }
@@ -606,6 +608,7 @@ export class ProActivationService {
             // revocation from a server we trust may downgrade someone.
             if (validation.isValid) {
                 updateData.validationStatus = 'valid';
+                await VerifiedEntitlementService.getInstance().grant(validation.instanceId);
                 this.deactivationNoticeShown = false;
 
                 // A live server just vouched for a real key. If a grandfathered
@@ -614,6 +617,7 @@ export class ProActivationService {
                 await LegacyEntitlementService.getInstance().retireLegacyState();
             } else if (validation.revoked) {
                 updateData.validationStatus = 'invalid';
+                await VerifiedEntitlementService.getInstance().revoke();
                 if (!this.deactivationNoticeShown) {
                     this.deactivationNoticeShown = true;
                     void this.showRevocationNotice(validation);
@@ -709,6 +713,7 @@ export class ProActivationService {
         // grandfathered entitlement must go too — it outranks the settings below, so leaving it
         // in place would silently restore Pro on the next isProUser() call.
         await LegacyEntitlementService.getInstance().clearEntitlement();
+        await VerifiedEntitlementService.getInstance().revoke();
 
         await updateProConfig({
             licenseKey: '',

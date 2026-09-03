@@ -3,15 +3,15 @@
   "product": {
     "name": "GitMind",
     "version": "6.1.1",
-    "auditDate": "2026-07-17",
+    "auditDate": "2026-09-03",
     "source": "package.json",
     "minimumVSCode": "^1.101.0"
   },
   "counts": {
-    "providerChoices": 18,
-    "builtInProviders": 17,
-    "settingsRegistered": 106,
-    "settingsDocumented": 96,
+    "providerChoices": 23,
+    "builtInProviders": 22,
+    "settingsRegistered": 122,
+    "settingsDocumented": 112,
     "commandsRegistered": 55,
     "publicCommands": 44,
     "commitStyles": 12,
@@ -240,6 +240,77 @@
       "modelDiscovery": true
     },
     {
+      "id": "lmstudio",
+      "name": "LM Studio",
+      "availability": "Free",
+      "authentication": "Local server",
+      "setupUrl": "https://lmstudio.ai/docs/app",
+      "defaultModel": "",
+      "fields": [
+        "gitmind.lmstudio.url",
+        "gitmind.lmstudio.model"
+      ],
+      "modelDiscovery": true
+    },
+    {
+      "id": "azureopenai",
+      "name": "Azure OpenAI",
+      "availability": "Free",
+      "authentication": "API key or Microsoft Entra token",
+      "setupUrl": "https://learn.microsoft.com/en-us/rest/api/microsoft-foundry/azureopenai/chat",
+      "defaultModel": "",
+      "fields": [
+        "gitmind.azureopenai.apiKey",
+        "gitmind.azureopenai.endpoint",
+        "gitmind.azureopenai.model",
+        "gitmind.azureopenai.authMode"
+      ],
+      "modelDiscovery": false
+    },
+    {
+      "id": "bedrock",
+      "name": "Amazon Bedrock",
+      "availability": "Free",
+      "authentication": "AWS credential chain or profile",
+      "setupUrl": "https://docs.aws.amazon.com/bedrock/latest/userguide/apis.html",
+      "defaultModel": "",
+      "fields": [
+        "gitmind.bedrock.region",
+        "gitmind.bedrock.profile",
+        "gitmind.bedrock.model"
+      ],
+      "modelDiscovery": false
+    },
+    {
+      "id": "vertexai",
+      "name": "Vertex AI",
+      "availability": "Free",
+      "authentication": "Google Application Default Credentials",
+      "setupUrl": "https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstart",
+      "defaultModel": "",
+      "fields": [
+        "gitmind.vertexai.project",
+        "gitmind.vertexai.location",
+        "gitmind.vertexai.model"
+      ],
+      "modelDiscovery": false
+    },
+    {
+      "id": "cloudflare",
+      "name": "Cloudflare Workers AI",
+      "availability": "Free",
+      "authentication": "Cloudflare API token",
+      "setupUrl": "https://developers.cloudflare.com/workers-ai/configuration/openai-compatibility/",
+      "defaultModel": "",
+      "fields": [
+        "gitmind.cloudflare.apiKey",
+        "gitmind.cloudflare.accountId",
+        "gitmind.cloudflare.gatewayId",
+        "gitmind.cloudflare.model"
+      ],
+      "modelDiscovery": true
+    },
+    {
       "id": "custom",
       "name": "Custom API",
       "availability": "Pro",
@@ -285,6 +356,11 @@
         "perplexity",
         "zai",
         "nvidia",
+        "lmstudio",
+        "azureopenai",
+        "bedrock",
+        "vertexai",
+        "cloudflare",
         "custom"
       ]
     },
@@ -844,6 +920,122 @@
       "default": "meta/llama-3.3-70b-instruct",
       "availability": "Free",
       "description": "NVIDIA hosted NIM model ID. [LLM API reference](https://docs.api.nvidia.com/nim/reference/llm-apis)"
+    },
+    {
+      "id": "gitmind.lmstudio.url",
+      "type": "string",
+      "default": "http://127.0.0.1:1234/v1",
+      "availability": "Free",
+      "description": "Local LM Studio server URL. [Start the local server](https://lmstudio.ai/docs/app)"
+    },
+    {
+      "id": "gitmind.lmstudio.model",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "LM Studio model ID. Load a model in LM Studio, then enter the ID exposed by its local server."
+    },
+    {
+      "id": "gitmind.azureopenai.apiKey",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "Azure OpenAI API key. [Azure OpenAI v1 API](https://learn.microsoft.com/en-us/rest/api/microsoft-foundry/azureopenai/chat)"
+    },
+    {
+      "id": "gitmind.azureopenai.endpoint",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "Azure OpenAI resource endpoint, for example https://your-resource.openai.azure.com"
+    },
+    {
+      "id": "gitmind.azureopenai.model",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "Azure OpenAI deployment name."
+    },
+    {
+      "id": "gitmind.azureopenai.authMode",
+      "type": "string",
+      "default": "apiKey",
+      "availability": "Free",
+      "description": "Use an Azure API key or a Microsoft Entra access token supplied by VS Code.",
+      "values": [
+        "apiKey",
+        "entra"
+      ]
+    },
+    {
+      "id": "gitmind.bedrock.region",
+      "type": "string",
+      "default": "us-east-1",
+      "availability": "Free",
+      "description": "AWS region hosting the selected Amazon Bedrock model."
+    },
+    {
+      "id": "gitmind.bedrock.profile",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "Optional AWS shared-credentials profile. Leave blank to use the standard AWS credential chain."
+    },
+    {
+      "id": "gitmind.bedrock.model",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "Amazon Bedrock model ID available in the configured region."
+    },
+    {
+      "id": "gitmind.vertexai.project",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "Google Cloud project ID for Vertex AI."
+    },
+    {
+      "id": "gitmind.vertexai.location",
+      "type": "string",
+      "default": "us-central1",
+      "availability": "Free",
+      "description": "Google Cloud region for Vertex AI."
+    },
+    {
+      "id": "gitmind.vertexai.model",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "Vertex AI Gemini model ID available to the project."
+    },
+    {
+      "id": "gitmind.cloudflare.apiKey",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "Cloudflare API token with Workers AI permissions. [Workers AI REST API](https://developers.cloudflare.com/workers-ai/configuration/openai-compatibility/)"
+    },
+    {
+      "id": "gitmind.cloudflare.accountId",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "Cloudflare account ID."
+    },
+    {
+      "id": "gitmind.cloudflare.gatewayId",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "Optional AI Gateway ID. Leave blank to call Workers AI directly."
+    },
+    {
+      "id": "gitmind.cloudflare.model",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "Workers AI model ID, for example an @cf provider model available to the account."
     },
     {
       "id": "gitmind.zai.endpoint",
