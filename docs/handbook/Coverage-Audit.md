@@ -1,12 +1,12 @@
 # GitMind 6.x Documentation Coverage Audit
 
-> Verified against GitMind `6.1.1` on September 3, 2026
+> Verified against GitMind `6.1.2` on September 3, 2026
 
 This page records the public surface checked directly against the current `package.json`. `npm run docs:validate` compares the handbook and generated Wiki with the generated sanitized product manifest.
 
 ## Verified Counts
 
-| Surface | GitMind 6.1.1 |
+| Surface | GitMind 6.1.2 |
 | --- | ---: |
 | Provider choices | 23: 22 built-in plus Pro Custom API |
 | Registered settings | 122 |

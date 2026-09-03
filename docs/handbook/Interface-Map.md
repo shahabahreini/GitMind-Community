@@ -1,6 +1,6 @@
 # Interface Map
 
-> Verified against GitMind `6.1.1` on September 3, 2026
+> Verified against GitMind `6.1.2` on September 3, 2026
 
 GitMind Settings has **five primary settings tabs**. The extension also provides a status dashboard, diagnostics prompts, and onboarding walkthrough.
 

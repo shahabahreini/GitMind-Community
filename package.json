@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI-Powered Commit Messages",
   "description": "Generate AI commit messages in VS Code with 23 providers, local and cloud models, Conventional Commits, GitHub Copilot, and Pro recovery tools.",
-  "version": "6.1.1",
+  "version": "6.1.2",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",

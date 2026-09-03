@@ -1,6 +1,6 @@
 # Complete Settings Reference
 
-> Verified against GitMind `6.1.1` on September 3, 2026
+> Verified against GitMind `6.1.2` on September 3, 2026
 
 Open **GitMind Setting** for the guided UI. The table below covers user-configurable settings. API keys and auth tokens have no default. Developer-only environment settings and automatically managed license/subscription state are intentionally omitted.
 
