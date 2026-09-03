@@ -1,12 +1,12 @@
-# GitMind 5.0 Documentation Coverage Audit
+# GitMind 6.1.2 Documentation Coverage Audit
 
-> Verified against GitMind `5.0.0` on June 7, 2026.
+> Verified against GitMind `6.1.2` on September 3, 2026.
 
-This page records the public surface checked during the GitMind 5.0 Wiki refresh. `node scripts/validate-wiki.mjs` compares the Wiki with `package.json` and fails when a public setting is undocumented.
+This page records the public surface checked during the GitMind 6.1.2 Wiki refresh. `node scripts/validate-wiki.mjs` compares the Wiki with `package.json` and fails when a public setting is undocumented.
 
 ## User-Facing Settings
 
-- Model Settings: provider selection, all 17 built-in provider key/model/endpoint fields, Custom API, model loading, API checks, and rate-limit checks.
+- Model Settings: provider selection, all 22 built-in provider key/model/endpoint fields, Custom API, model loading, API checks, and rate-limit checks.
 - Free Features: verbose output, Capture All Changes, custom context/saved prompt behavior, diagnostics, onboarding, debug, and telemetry.
 - Commit Styles: all 12 styles and all Emoji Enhancement settings.
 - Pro Features: encryption, target language, summary/body limits, advanced model parameters, Automatic Recovery, history learning, and changelog settings.

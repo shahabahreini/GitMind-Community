@@ -1,5 +1,13 @@
 # Changelog
 
+## v6.1.2 - 2026-09-03
+
+### Community Documentation
+
+- Updated the community hub, provider matrix, settings reference, and Pro matrix for the 23-choice GitMind 6.1.2 product surface.
+- Documented LM Studio, Azure OpenAI, Amazon Bedrock, Vertex AI, and Cloudflare Workers AI/Gateway.
+- Clarified that archived source files are not the current closed-source distributable extension.
+
 ## v3.5.7 - 2025-06-30
 
 ### New Features
