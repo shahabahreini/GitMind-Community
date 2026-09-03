@@ -7,19 +7,20 @@
 
 **Documentation:** [GitMind Wiki](https://github.com/shahabahreini/AI-Commit-Assistant/wiki) · [Quick Start](https://github.com/shahabahreini/AI-Commit-Assistant/wiki/Installation-And-Quick-Start) · [Providers](https://github.com/shahabahreini/AI-Commit-Assistant/wiki/Providers-And-Models) · [Troubleshooting](https://github.com/shahabahreini/AI-Commit-Assistant/wiki/Troubleshooting-And-FAQ)
 
-Analyzes staged Git changes and generates commit messages using 17 built-in AI providers plus a Pro Custom API option.
+Analyzes staged Git changes and generates commit messages using 22 built-in AI providers plus a Pro Custom API option (23 choices total).
 
 ## This Repository
 
-GitMind was open-source through **v3.5.7**. Starting with v4.0, the source is closed due to the addition of enterprise features. This repository is the **official community hub** — it does not contain source code.
+GitMind was open-source through **v3.5.7**. Starting with v4.0, the source is closed due to the addition of enterprise features. This repository is the **official community hub**; the archived source files are not the current distributable extension. Community documentation tracks the current **v6.1.2** release surface.
 
 | Purpose                         | Link                                             |
 | ------------------------------- | ------------------------------------------------ |
 | Report a bug                    | [Open an issue](../../issues)                    |
 | Request a feature               | [Submit a request](../../issues/new)             |
+| Current release information     | [v6.1.2 changelog](CHANGELOG.md)                 |
 | Install without the marketplace | [Download latest `.vsix`](../../releases/latest) |
 
-Every [release](../../releases) mirrors the version published to the VS Code Marketplace and OpenVSX. The `.vsix` file can be installed directly in any compatible editor via **Extensions → Install from VSIX**.
+Published [releases](../../releases) mirror the version published to the VS Code Marketplace and OpenVSX. The `.vsix` file can be installed directly in any compatible editor via **Extensions → Install from VSIX**.
 
 ## Install
 
@@ -32,7 +33,7 @@ or Quick Open (`Ctrl+P` / `Cmd+P`): `ext install ShahabBahreiniJangjoo.ai-commit
 
 ## Highlights
 
-- **18 provider options:** OpenAI, Anthropic, NVIDIA NIM, Google Gemini, MiniMax, DeepSeek, xAI Grok, Groq, Perplexity, Z.ai, Mistral, Cohere, Hugging Face, Together AI, OpenRouter, Ollama, GitHub Copilot, and Custom API.
+- **23 provider choices:** OpenAI, Anthropic, NVIDIA NIM, Google Gemini, MiniMax, DeepSeek, xAI Grok, Groq, Perplexity, Z.ai, Mistral, Cohere, Hugging Face, Together AI, OpenRouter, Ollama, GitHub Copilot, LM Studio, Azure OpenAI, Amazon Bedrock, Vertex AI, Cloudflare Workers AI/Gateway, and Pro Custom API.
 - **Searchable, dynamic model selection:** Load current models from supported provider APIs and quickly filter large model catalogs.
 - **Professional commit standards:** Conventional Commits, Angular, Semantic Release, Gitmoji, Linux Kernel, jQuery, Ember.js, and more.
 - **Flexible Git workflow:** Generate from staged changes or enable Capture All Changes to include unstaged and untracked files.
@@ -86,7 +87,7 @@ or Quick Open (`Ctrl+P` / `Cmd+P`): `ext install ShahabBahreiniJangjoo.ai-commit
 
 | Feature                               | Free             | Pro                                                |
 | ------------------------------------- | ---------------- | -------------------------------------------------- |
-| Built-in AI providers                 | 17               | 17                                                 |
+| Built-in AI providers                 | 22               | 22                                                 |
 | Custom API provider                   | Locked           | Included                                           |
 | Searchable provider and model pickers | Included         | Included                                           |
 | Basic and Conventional commit styles  | Included         | Included                                           |
@@ -101,7 +102,7 @@ or Quick Open (`Ctrl+P` / `Cmd+P`): `ext install ShahabBahreiniJangjoo.ai-commit
 
 ## Supported AI Providers
 
-GitHub Copilot · OpenAI · Anthropic · Google Gemini · DeepSeek · Grok · Perplexity · Mistral · Ollama · Together AI · Hugging Face · Cohere · OpenRouter
+GitHub Copilot · OpenAI · Anthropic · Google Gemini · DeepSeek · Grok · Groq · Perplexity · Z.ai · Mistral · Ollama · Together AI · Hugging Face · Cohere · OpenRouter · MiniMax · NVIDIA NIM · LM Studio · Azure OpenAI · Amazon Bedrock · Vertex AI · Cloudflare Workers AI/Gateway · Pro Custom API
 
 ---
 

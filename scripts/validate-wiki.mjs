@@ -7,6 +7,11 @@ import process from "node:process";
 const root = process.cwd();
 const wikiDir = path.join(root, "wiki");
 const errors = [];
+// This repository is a community hub. Its package.json is an archived v3 source
+// snapshot, while the public wiki follows the current distributable release.
+const documentedRelease = "6.1.2";
+const documentedDate = "September 3, 2026";
+const verificationStatement = `Verified against GitMind \`${documentedRelease}\` on ${documentedDate}`;
 
 const fail = (message) => errors.push(message);
 const files = fs.readdirSync(wikiDir, { withFileTypes: true });
@@ -30,7 +35,7 @@ for (const page of pages) {
   }
 
   const text = fs.readFileSync(path.join(wikiDir, page), "utf8");
-  if (!text.includes("Verified against GitMind `5.0.0` on June 7, 2026")) {
+  if (!text.includes(verificationStatement)) {
     fail(`Missing verification statement: ${page}`);
   }
 
