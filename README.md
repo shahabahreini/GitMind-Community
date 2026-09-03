@@ -1,6 +1,6 @@
-# GitMind: AI Commit Message Generator for VS Code
+# GitMind — AI Commit Message Generator for VS Code
 
-GitMind analyzes your Git diff and generates clear, professional commit messages inside VS Code. Choose from 17 built-in AI providers, run locally with Ollama, reuse GitHub Copilot, or connect a custom OpenAI-compatible API with GitMind Pro.
+GitMind analyzes your Git diff and generates clear, professional commit messages inside VS Code. Choose from 22 built-in AI providers—including local Ollama and LM Studio, OpenAI, Azure OpenAI, Amazon Bedrock, Vertex AI, Cloudflare Workers AI, NVIDIA NIM, and GitHub Copilot—or connect a custom OpenAI-compatible API with GitMind Pro.
 
 **Website:** [gitmind-pro.com](https://gitmind-pro.com) · **Documentation:** [GitMind Handbook](https://shahabahreini.github.io/AI-Commit-Assistant/) · [Quick Start](https://shahabahreini.github.io/AI-Commit-Assistant/Installation-And-Quick-Start) · [Providers](https://shahabahreini.github.io/AI-Commit-Assistant/Providers-And-Models) · [Native Wiki mirror](https://github.com/shahabahreini/GitMind-Community/wiki)
 
@@ -28,7 +28,7 @@ GitMind analyzes your Git diff and generates clear, professional commit messages
 
 ## Highlights
 
-- **18 provider options:** OpenAI, Anthropic, NVIDIA NIM, Google Gemini, MiniMax, DeepSeek, xAI Grok, Groq, Perplexity, Z.ai, Mistral, Cohere, Hugging Face, Together AI, OpenRouter, Ollama, GitHub Copilot, and Custom API.
+- **23 provider options:** 22 built-in providers plus Pro Custom API, including local, hosted, enterprise-cloud, and gateway options.
 - **Searchable, dynamic model selection:** Load current models from supported provider APIs and quickly filter large model catalogs.
 - **Professional commit standards:** Conventional Commits, Angular, Semantic Release, Gitmoji, Linux Kernel, jQuery, Ember.js, and more.
 - **3-Candidate Choice QuickPick with Live Multiline Preview:** Compare 3 distinct AI candidate archetypes (Concise, Detailed, Intent) with full un-truncated multiline live preview as you navigate choices.
@@ -111,6 +111,11 @@ ext install ShahabBahreiniJangjoo.ai-commit-assistant
 | Perplexity        | API key                                                      | Curated Sonar models                 |
 | Z.ai              | API key                                                      | GLM model selection                  |
 | NVIDIA hosted NIM | API key from [NVIDIA Build](https://build.nvidia.com/models) | Dynamic NIM model discovery          |
+| LM Studio         | Local loopback server, no API key                         | Local OpenAI-compatible model discovery |
+| Azure OpenAI      | API key or Microsoft Entra token                           | Deployment name (account-specific)     |
+| Amazon Bedrock    | AWS credential chain or named profile                      | Model ID available in selected region  |
+| Vertex AI         | Google Application Default Credentials                     | Model ID available to project/location |
+| Cloudflare Workers AI | API token and account ID                               | Workers AI or AI Gateway model ID       |
 | Custom API        | GitMind Pro                                                  | OpenAI-compatible endpoint and model |
 
 Provider catalogs change frequently. GitMind loads current model lists where the provider supports discovery and falls back to known compatible models when necessary.
@@ -119,7 +124,7 @@ Provider catalogs change frequently. GitMind loads current model lists where the
 
 | Feature                               | Free             | Pro                                                |
 | ------------------------------------- | ---------------- | -------------------------------------------------- |
-| Built-in AI providers                 | 17               | 17                                                 |
+| Built-in AI providers                 | 22               | 22                                                 |
 | Custom API provider                   | Locked           | Included                                           |
 | Searchable provider and model pickers | Included         | Included                                           |
 | Basic and Conventional commit styles  | Included         | Included                                           |

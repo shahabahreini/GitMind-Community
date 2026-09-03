@@ -8,7 +8,8 @@ export const SUPPORT_REPORT_MAX_EVENTS = 1000;
 const PROVIDERS = [
   "anthropic", "cohere", "copilot", "custom", "deepseek", "gemini",
   "grok", "groq", "huggingface", "minimax", "mistral", "nvidia",
-  "ollama", "openai", "openrouter", "perplexity", "together", "zai"
+  "ollama", "openai", "openrouter", "perplexity", "together", "zai",
+  "lmstudio", "azureopenai", "bedrock", "vertexai", "cloudflare"
 ] as const;
 
 const OPERATIONS = [

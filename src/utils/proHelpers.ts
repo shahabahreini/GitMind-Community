@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { LegacyEntitlementService } from '../services/subscription/LegacyEntitlementService';
+import { VerifiedEntitlementService } from '../services/subscription/VerifiedEntitlementService';
 
 /**
  * Helper functions for Pro user validation and license management
@@ -17,9 +18,7 @@ export function isProUser(): boolean {
         return true;
     }
 
-    const config = vscode.workspace.getConfiguration('gitmind');
-    const validationStatus = config.get('pro.validationStatus');
-    return validationStatus === 'valid';
+    return VerifiedEntitlementService.getInstance().hasActiveEntitlement();
 }
 
 /**

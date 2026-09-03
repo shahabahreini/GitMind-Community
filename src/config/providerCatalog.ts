@@ -28,6 +28,11 @@ export const PROVIDER_CATALOG = {
   perplexity: { displayName: "Perplexity", defaultModel: "sonar-pro", liveDiscovery: false, curatedModels: ["sonar-pro", "sonar-reasoning-pro", "sonar"] },
   zai: { displayName: "Z.ai", defaultModel: "glm-5.1", liveDiscovery: false },
   nvidia: { displayName: "NVIDIA hosted NIM", defaultModel: "meta/llama-3.3-70b-instruct", liveDiscovery: true },
+  lmstudio: { displayName: "LM Studio", defaultModel: "", liveDiscovery: true },
+  azureopenai: { displayName: "Azure OpenAI", defaultModel: "", liveDiscovery: false },
+  bedrock: { displayName: "Amazon Bedrock", defaultModel: "", liveDiscovery: false },
+  vertexai: { displayName: "Vertex AI", defaultModel: "", liveDiscovery: false },
+  cloudflare: { displayName: "Cloudflare Workers AI", defaultModel: "", liveDiscovery: true },
   custom: { displayName: "Custom API", defaultModel: "", liveDiscovery: false },
 } satisfies Record<string, ProviderCatalogEntry>;
 

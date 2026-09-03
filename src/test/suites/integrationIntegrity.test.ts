@@ -443,7 +443,7 @@ suite('Integration Integrity - Provider Registration', () => {
         const props = packageJson.contributes.configuration.properties;
 
         // Providers that don't need API key settings
-        const noApiKeyProviders = ['ollama', 'copilot'];
+        const noApiKeyProviders = ['ollama', 'copilot', 'lmstudio', 'bedrock', 'vertexai'];
         // Custom uses authToken instead of apiKey
         const specialProviders = ['custom'];
 

@@ -1,6 +1,6 @@
 # Documentation Maintainer Guide
 
-> Verified against GitMind `6.1.1` on July 17, 2026
+> Verified against GitMind `6.1.1` on September 3, 2026
 
 `docs/handbook/` is the only manually edited documentation source. `wiki/` is generated and must not be edited directly. The sanitized contract at `docs/reference/gitmind-user-surface.json` contains user-facing metadata only.
 

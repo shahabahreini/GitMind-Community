@@ -171,3 +171,6 @@ storybook-static/
 .vscode/
 *.vsix
 .gitnexus
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+graft/

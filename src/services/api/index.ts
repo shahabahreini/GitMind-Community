@@ -17,6 +17,11 @@ import {
     PerplexityApiConfig,
     ZaiApiConfig,
     NvidiaApiConfig,
+    LMStudioApiConfig,
+    AzureOpenAIApiConfig,
+    BedrockApiConfig,
+    VertexAIApiConfig,
+    CloudflareApiConfig,
     CustomApiConfig,
 } from "../../config/types";
 // Lazy-loaded provider imports - loaded only when needed to reduce bundle size
@@ -54,7 +59,7 @@ const CIRCUIT_BREAKER_THRESHOLD = 3; // Max failures before opening circuit
 const CIRCUIT_BREAKER_RESET_TIME = 60000; // 1 minute cooldown
 
 
-type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter" | "Anthropic" | "MiniMax" | "GitHub Copilot" | "DeepSeek" | "Grok" | "Groq" | "Perplexity" | "Z.ai" | "NVIDIA" | "Custom API";
+type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter" | "Anthropic" | "MiniMax" | "GitHub Copilot" | "DeepSeek" | "Grok" | "Groq" | "Perplexity" | "Z.ai" | "NVIDIA" | "LM Studio" | "Azure OpenAI" | "Amazon Bedrock" | "Vertex AI" | "Cloudflare Workers AI" | "Custom API";
 
 // Type for lazy-loaded provider class
 type ProviderClass = new (...args: any[]) => BaseAIProvider;
@@ -157,6 +162,26 @@ async function loadProviderModule(provider: string): Promise<ProviderClass> {
             case 'nvidia':
                 const nvidiaModule = await import('./nvidia.js');
                 providerClass = nvidiaModule.NvidiaProvider;
+                break;
+            case 'lmstudio':
+                const lmStudioModule = await import('./lmstudio.js');
+                providerClass = lmStudioModule.LMStudioProvider;
+                break;
+            case 'azureopenai':
+                const azureOpenAIModule = await import('./azureopenai.js');
+                providerClass = azureOpenAIModule.AzureOpenAIProvider;
+                break;
+            case 'bedrock':
+                const bedrockModule = await import('./bedrock.js');
+                providerClass = bedrockModule.BedrockProvider;
+                break;
+            case 'vertexai':
+                const vertexAIModule = await import('./vertexai.js');
+                providerClass = vertexAIModule.VertexAIProvider;
+                break;
+            case 'cloudflare':
+                const cloudflareModule = await import('./cloudflare.js');
+                providerClass = cloudflareModule.CloudflareProvider;
                 break;
             case 'custom':
                 const customModule = await import('./custom.js');
@@ -304,6 +329,46 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         requiresApiKey: true,
         defaultModel: "meta/llama-3.3-70b-instruct",
         getProviderClass: async () => loadProviderModule('nvidia'),
+    },
+    lmstudio: {
+        name: "LM Studio",
+        displayName: "LM Studio",
+        settingPath: "lmstudio.url",
+        docsUrl: "https://lmstudio.ai/docs/app",
+        requiresApiKey: false,
+        getProviderClass: async () => loadProviderModule('lmstudio'),
+    },
+    azureopenai: {
+        name: "Azure OpenAI",
+        displayName: "Azure OpenAI",
+        settingPath: "azureopenai.apiKey",
+        docsUrl: "https://learn.microsoft.com/en-us/rest/api/microsoft-foundry/azureopenai/chat",
+        requiresApiKey: false,
+        getProviderClass: async () => loadProviderModule('azureopenai'),
+    },
+    bedrock: {
+        name: "Amazon Bedrock",
+        displayName: "Amazon Bedrock",
+        settingPath: "bedrock.region",
+        docsUrl: "https://docs.aws.amazon.com/bedrock/latest/userguide/apis.html",
+        requiresApiKey: false,
+        getProviderClass: async () => loadProviderModule('bedrock'),
+    },
+    vertexai: {
+        name: "Vertex AI",
+        displayName: "Vertex AI",
+        settingPath: "vertexai.project",
+        docsUrl: "https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstart",
+        requiresApiKey: false,
+        getProviderClass: async () => loadProviderModule('vertexai'),
+    },
+    cloudflare: {
+        name: "Cloudflare Workers AI",
+        displayName: "Cloudflare Workers AI",
+        settingPath: "cloudflare.apiKey",
+        docsUrl: "https://developers.cloudflare.com/workers-ai/configuration/openai-compatibility/",
+        requiresApiKey: true,
+        getProviderClass: async () => loadProviderModule('cloudflare'),
     },
     custom: {
         name: "Custom API",
@@ -700,6 +765,42 @@ async function getProviderInstance(config: ApiConfig): Promise<BaseAIProvider> {
     if (config.type === 'ollama') {
         const ollamaConfig = config as OllamaApiConfig;
         return new ProviderClass(ollamaConfig.url, ollamaConfig.model);
+    }
+
+    if (config.type === 'lmstudio') {
+        const lmStudioConfig = config as LMStudioApiConfig;
+        return new ProviderClass(lmStudioConfig.url, lmStudioConfig.model);
+    }
+
+    if (config.type === 'azureopenai') {
+        const azureConfig = config as AzureOpenAIApiConfig;
+        return new ProviderClass(
+            azureConfig.apiKey || "",
+            azureConfig.model,
+            azureConfig.endpoint,
+            azureConfig.authMode,
+            azureConfig.accessToken || "",
+        );
+    }
+
+    if (config.type === 'bedrock') {
+        const bedrockConfig = config as BedrockApiConfig;
+        return new ProviderClass(bedrockConfig.model, bedrockConfig.region, bedrockConfig.profile || "");
+    }
+
+    if (config.type === 'vertexai') {
+        const vertexConfig = config as VertexAIApiConfig;
+        return new ProviderClass(vertexConfig.model, vertexConfig.project, vertexConfig.location);
+    }
+
+    if (config.type === 'cloudflare') {
+        const cloudflareConfig = config as CloudflareApiConfig;
+        return new ProviderClass(
+            cloudflareConfig.apiKey || "",
+            cloudflareConfig.model,
+            cloudflareConfig.accountId,
+            cloudflareConfig.gatewayId || "",
+        );
     }
 
     if (config.type === 'copilot') {

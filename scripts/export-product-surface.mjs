@@ -41,6 +41,8 @@ const providerNames = {
   cohere: "Cohere", openai: "OpenAI", together: "Together AI", openrouter: "OpenRouter",
   anthropic: "Anthropic", minimax: "MiniMax", copilot: "GitHub Copilot", deepseek: "DeepSeek",
   grok: "xAI Grok", groq: "Groq", perplexity: "Perplexity", zai: "Z.ai", nvidia: "NVIDIA hosted NIM",
+  lmstudio: "LM Studio", azureopenai: "Azure OpenAI", bedrock: "Amazon Bedrock", vertexai: "Vertex AI",
+  cloudflare: "Cloudflare Workers AI",
   custom: "Custom API",
 };
 const setupLinks = {
@@ -50,7 +52,17 @@ const setupLinks = {
   openrouter: "https://openrouter.ai/keys", anthropic: "https://console.anthropic.com/", minimax: "https://platform.minimax.io/",
   deepseek: "https://platform.deepseek.com/api_keys", grok: "https://console.x.ai/", groq: "https://console.groq.com/keys",
   perplexity: "https://www.perplexity.ai/settings/api", zai: "https://z.ai/", nvidia: "https://build.nvidia.com/models",
+  lmstudio: "https://lmstudio.ai/docs/app", azureopenai: "https://learn.microsoft.com/en-us/rest/api/microsoft-foundry/azureopenai/chat",
+  bedrock: "https://docs.aws.amazon.com/bedrock/latest/userguide/apis.html",
+  vertexai: "https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstart",
+  cloudflare: "https://developers.cloudflare.com/workers-ai/configuration/openai-compatibility/",
 };
+const providerAuthentication = {
+  ollama: "Local server", copilot: "GitHub Copilot sign-in", custom: "Configurable", lmstudio: "Local server",
+  azureopenai: "API key or Microsoft Entra token", bedrock: "AWS credential chain or profile",
+  vertexai: "Google Application Default Credentials", cloudflare: "Cloudflare API token", 
+};
+const modelDiscoveryProviders = new Set(["gemini", "huggingface", "ollama", "mistral", "cohere", "openai", "together", "openrouter", "anthropic", "minimax", "copilot", "deepseek", "grok", "groq", "perplexity", "zai", "nvidia", "lmstudio", "cloudflare"]);
 
 function settingRecord([id, setting]) {
   const record = {
@@ -73,11 +85,11 @@ const providers = providerSetting.enum.map((id) => ({
   id,
   name: providerNames[id],
   availability: id === "custom" ? "Pro" : "Free",
-  authentication: id === "ollama" ? "Local server" : id === "copilot" ? "GitHub Copilot sign-in" : id === "custom" ? "Configurable" : "API key",
+  authentication: providerAuthentication[id] || "API key",
   setupUrl: setupLinks[id] || null,
   defaultModel: properties[`gitmind.${id}.model`]?.default ?? null,
   fields: settings.filter((setting) => setting.id.startsWith(`gitmind.${id}.`)).map((setting) => setting.id),
-  modelDiscovery: id !== "custom",
+  modelDiscovery: modelDiscoveryProviders.has(id),
 }));
 const registeredCommands = pkg.contributes?.commands || [];
 const commands = registeredCommands.map((command) => ({

@@ -1,6 +1,6 @@
 # GitMind 6.x Documentation Coverage Audit
 
-> Verified against GitMind `6.1.1` on July 17, 2026
+> Verified against GitMind `6.1.1` on September 3, 2026
 
 This page records the public surface checked directly against the current `package.json`. `npm run docs:validate` compares the handbook and generated Wiki with the generated sanitized product manifest.
 
@@ -8,8 +8,8 @@ This page records the public surface checked directly against the current `packa
 
 | Surface | GitMind 6.1.1 |
 | --- | ---: |
-| Provider choices | 18: 17 built-in plus Pro Custom API |
-| Registered settings | 106 |
+| Provider choices | 23: 22 built-in plus Pro Custom API |
+| Registered settings | 122 |
 | User-documentable settings | 96 |
 | Registered commands | 55 |
 | Supported public commands | 44 |
@@ -18,7 +18,7 @@ This page records the public surface checked directly against the current `packa
 
 ## User-Facing Settings
 
-- Model Settings: provider selection, all 17 built-in provider key/model/endpoint fields, Custom API, model loading, API checks, and rate-limit checks.
+- Model Settings: provider selection, all 22 built-in provider key/model/endpoint fields, Custom API, model loading, API checks, and rate-limit checks.
 - Free Features: verbose output, Capture All Changes, custom context/saved prompt behavior, diagnostics, onboarding, and the default-off Commit Intelligence (Preview) controls.
 - Commit Styles: all 12 styles and all Emoji Enhancement settings.
 - Pro Features: encryption, target language, summary/body limits, advanced model parameters, Automatic Recovery, history learning, changelog settings, and sanitized Support Reports.
@@ -47,4 +47,4 @@ Internal status, migration, test, and debug-state commands are intentionally not
 - Sanitized contract: `docs/reference/gitmind-user-surface.json`
 - Screenshots: current files under `images/screenshots/`
 
-The provider selector exposes 18 choices: 17 built-in providers plus the Pro-only Custom API provider.
+The provider selector exposes 23 choices: 22 built-in providers plus the Pro-only Custom API provider.

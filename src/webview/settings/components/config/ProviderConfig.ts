@@ -624,6 +624,173 @@ export class ProviderConfig {
             ]
         },
         {
+            id: 'lmstudio',
+            name: 'LM Studio (Local)',
+            fields: [
+                {
+                    id: 'lmstudioUrl',
+                    key: 'url',
+                    label: 'Local Server URL',
+                    type: 'text',
+                    tooltip: 'LM Studio only accepts a loopback URL for this provider.',
+                    placeholder: 'http://127.0.0.1:1234/v1',
+                    defaultValue: 'http://127.0.0.1:1234/v1',
+                    link: { url: 'https://lmstudio.ai/docs/app', text: 'Start LM Studio server' }
+                },
+                {
+                    id: 'lmstudioModel',
+                    key: 'model',
+                    label: 'Loaded Model ID',
+                    type: 'text',
+                    tooltip: 'Enter the model ID exposed by LM Studio after loading a local model.',
+                    placeholder: 'local-model'
+                }
+            ]
+        },
+        {
+            id: 'azureopenai',
+            name: 'Azure OpenAI',
+            fields: [
+                {
+                    id: 'azureopenaiEndpoint',
+                    key: 'endpoint',
+                    label: 'Resource Endpoint',
+                    type: 'text',
+                    tooltip: 'Azure OpenAI resource URL without an API path.',
+                    placeholder: 'https://your-resource.openai.azure.com'
+                },
+                {
+                    id: 'azureopenaiAuthMode',
+                    key: 'authMode',
+                    label: 'Authentication',
+                    type: 'select',
+                    tooltip: 'Use an API key or an existing Microsoft sign-in from VS Code.',
+                    options: [
+                        { value: 'apiKey', label: 'API key' },
+                        { value: 'entra', label: 'Microsoft Entra token' }
+                    ]
+                },
+                {
+                    id: 'azureopenaiApiKey',
+                    key: 'apiKey',
+                    label: 'API Key',
+                    type: 'password',
+                    tooltip: 'Needed only when API-key authentication is selected.',
+                    link: { url: 'https://learn.microsoft.com/en-us/rest/api/microsoft-foundry/azureopenai/chat', text: 'Azure OpenAI API reference' }
+                },
+                {
+                    id: 'azureopenaiModel',
+                    key: 'model',
+                    label: 'Deployment Name',
+                    type: 'text',
+                    tooltip: 'Azure deployments are account-specific and are never bundled as a static list.',
+                    placeholder: 'your-deployment-name'
+                }
+            ]
+        },
+        {
+            id: 'bedrock',
+            name: 'Amazon Bedrock',
+            fields: [
+                {
+                    id: 'bedrockRegion',
+                    key: 'region',
+                    label: 'AWS Region',
+                    type: 'text',
+                    tooltip: 'The region where the selected model is enabled.',
+                    defaultValue: 'us-east-1',
+                    placeholder: 'us-east-1'
+                },
+                {
+                    id: 'bedrockProfile',
+                    key: 'profile',
+                    label: 'AWS Profile (optional)',
+                    type: 'text',
+                    tooltip: 'Leave empty to use the normal AWS credential chain.',
+                    placeholder: 'default'
+                },
+                {
+                    id: 'bedrockModel',
+                    key: 'model',
+                    label: 'Model ID',
+                    type: 'text',
+                    tooltip: 'Model availability varies by AWS account and region.',
+                    placeholder: 'provider.model-version',
+                    link: { url: 'https://docs.aws.amazon.com/bedrock/latest/userguide/apis.html', text: 'Bedrock API reference' }
+                }
+            ]
+        },
+        {
+            id: 'vertexai',
+            name: 'Vertex AI',
+            fields: [
+                {
+                    id: 'vertexaiProject',
+                    key: 'project',
+                    label: 'Google Cloud Project',
+                    type: 'text',
+                    tooltip: 'Authentication uses Application Default Credentials.',
+                    placeholder: 'your-google-cloud-project'
+                },
+                {
+                    id: 'vertexaiLocation',
+                    key: 'location',
+                    label: 'Location',
+                    type: 'text',
+                    tooltip: 'Vertex AI location for the selected model.',
+                    defaultValue: 'us-central1',
+                    placeholder: 'us-central1'
+                },
+                {
+                    id: 'vertexaiModel',
+                    key: 'model',
+                    label: 'Model ID',
+                    type: 'text',
+                    tooltip: 'Enter a model available to the configured project and location.',
+                    placeholder: 'gemini-model-id',
+                    link: { url: 'https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstart', text: 'Vertex AI quickstart' }
+                }
+            ]
+        },
+        {
+            id: 'cloudflare',
+            name: 'Cloudflare Workers AI',
+            fields: [
+                {
+                    id: 'cloudflareApiKey',
+                    key: 'apiKey',
+                    label: 'API Token',
+                    type: 'password',
+                    tooltip: 'Cloudflare API token with Workers AI permission.',
+                    link: { url: 'https://developers.cloudflare.com/workers-ai/configuration/openai-compatibility/', text: 'Workers AI API reference' }
+                },
+                {
+                    id: 'cloudflareAccountId',
+                    key: 'accountId',
+                    label: 'Account ID',
+                    type: 'text',
+                    tooltip: 'Cloudflare account identifier for Workers AI.',
+                    placeholder: 'your-account-id'
+                },
+                {
+                    id: 'cloudflareGatewayId',
+                    key: 'gatewayId',
+                    label: 'AI Gateway ID (optional)',
+                    type: 'text',
+                    tooltip: 'Leave blank to call Workers AI directly.',
+                    placeholder: 'your-gateway-id'
+                },
+                {
+                    id: 'cloudflareModel',
+                    key: 'model',
+                    label: 'Model ID',
+                    type: 'text',
+                    tooltip: 'Use a Workers AI model ID available to this account; no stale bundled model list is used.',
+                    placeholder: '@cf/provider/model'
+                }
+            ]
+        },
+        {
             id: 'custom',
             name: 'Custom API',
             isPro: true,
@@ -769,11 +936,17 @@ export class ProviderConfig {
 
     private static withCatalogModels(provider: Provider): Provider {
         const curated = getCuratedModels(provider.id);
-        if (curated.length === 0) { return provider; }
         return {
             ...provider,
             fields: provider.fields.map(field => field.key === 'model'
-                ? { ...field, options: curated.map(model => ({ value: model, label: model })) }
+                ? {
+                    ...field,
+                    // The catalog is the only bootstrap authority. Account-specific
+                    // discovery replaces this list; the old per-form options never
+                    // reach Free users or override a saved selection.
+                    options: curated.map(model => ({ value: model, label: model })),
+                    defaultOptions: [],
+                }
                 : field)
         };
     }

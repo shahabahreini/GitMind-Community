@@ -1,6 +1,6 @@
 # Product Roadmap
 
-> Verified against GitMind `6.1.1` on July 17, 2026
+> Verified against GitMind `6.1.1` on September 3, 2026
 
 This roadmap distinguishes the stable v6 implementation from deliberately deferred work. GitMind continues to offer Free and Pro.
 

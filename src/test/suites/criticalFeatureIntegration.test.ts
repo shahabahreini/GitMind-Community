@@ -7,7 +7,7 @@
  * Coverage:
  * 1. UI Settings Structure & Rendering
  * 2. Save Button Functionality & Data Persistence
- * 3. API Provider Integration Checkpoints (All 16 providers)
+ * 3. API Provider Integration Checkpoints (all registered providers)
  * 4. End-to-End User Workflows
  * 5. Error Recovery & Edge Cases
  */
@@ -19,6 +19,7 @@ import { SettingsManager } from '../../webview/settings/SettingsManager';
 import { MessageHandler } from '../../webview/settings/MessageHandler';
 import { checkApiSetup, checkRateLimits } from '../../services/api/validation';
 import { getApiConfig, invalidateConfigCache } from '../../config/settings';
+import { PROVIDER_CATALOG } from '../../config/providerCatalog';
 import { debugLog } from '../../services/debug/logger';
 
 suite('🔥 Critical Feature Integration Tests', () => {
@@ -334,12 +335,8 @@ suite('🔥 Critical Feature Integration Tests', () => {
     });
 
     suite('3️⃣ API Provider Integration Checkpoints', () => {
-        test('All 16 Providers Are Configured', async () => {
-            const allProviders = [
-                'gemini', 'openai', 'anthropic', 'minimax', 'huggingface',
-                'ollama', 'mistral', 'cohere', 'together', 'openrouter',
-                'copilot', 'deepseek', 'grok', 'perplexity', 'zai', 'custom'
-            ];
+        test('All registered providers are configured', async () => {
+            const allProviders = Object.keys(PROVIDER_CATALOG);
 
             for (const provider of allProviders) {
                 const mockConfig = {
@@ -782,7 +779,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
         console.log('');
         console.log('✅ UI Settings Structure:        VALIDATED');
         console.log('✅ Save Button Functionality:    VALIDATED');
-        console.log('✅ API Provider Integration:     VALIDATED (16 providers)');
+        console.log('✅ API Provider Integration:     VALIDATED (registered providers)');
         console.log('✅ End-to-End Workflows:         VALIDATED');
         console.log('✅ Error Recovery:               VALIDATED');
         console.log('');

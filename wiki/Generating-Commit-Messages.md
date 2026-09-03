@@ -1,6 +1,6 @@
 # Generating Commit Messages
 
-> Verified against GitMind `6.1.1` on July 17, 2026
+> Verified against GitMind `6.1.1` on September 3, 2026
 
 ## Generate
 
@@ -45,7 +45,7 @@ Custom context should explain intent that is not obvious from the diff, such as 
 
 ## Validation And Repair
 
-GitMind validates empty output, subject/body structure, style, type, scope, length, whitespace, repeated file inventories, boilerplate, trailers, ticket rules, and repository policy. It also automatically cleans and deduplicates trailing colons across all 16 providers to prevent invalid formatting like `feat(commit)::`. Invalid drafts stay editable but cannot be inserted into Source Control. **Repair edited draft** creates a separate request with a new provider preview and confirmation.
+GitMind validates empty output, subject/body structure, style, type, scope, length, whitespace, repeated file inventories, boilerplate, trailers, ticket rules, and repository policy. It also automatically cleans and deduplicates trailing colons across all built-in providers to prevent invalid formatting like `feat(commit)::`. Invalid drafts stay editable but cannot be inserted into Source Control. **Repair edited draft** creates a separate request with a new provider preview and confirmation.
 
 Only a valid draft that you explicitly choose is inserted into the selected repository's SCM input. Normal generation never stages, commits, pushes, rewrites history, creates remote objects, or adds AI attribution.
 

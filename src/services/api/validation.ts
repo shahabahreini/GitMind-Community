@@ -8,6 +8,11 @@ import { validatePerplexityAPIKey } from "./perplexity";
 import { validateZaiAPIKey } from "./zai";
 import { validateMiniMaxAPIKey } from "./minimax";
 import { validateNvidiaAPIKey } from "./nvidia";
+import { LMStudioProvider } from "./lmstudio";
+import { AzureOpenAIProvider } from "./azureopenai";
+import { BedrockProvider } from "./bedrock";
+import { VertexAIProvider } from "./vertexai";
+import { CloudflareProvider } from "./cloudflare";
 import { getApiConfig } from "../../config/settings";
 import { ApiConfig, MistralRateLimit, ApiProvider, CustomApiConfig } from "../../config/types";
 import { getProviderDefaultModel } from "../../config/providerCatalog";
@@ -338,6 +343,36 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
             notes: "NVIDIA hosted NIM limits depend on the selected model and account."
         }
     },
+    lmstudio: {
+        requiresApiKey: false,
+        defaultModel: "",
+        responseTime: 200,
+        rateLimits: { limit: 0, remaining: 0, notes: "LM Studio runs locally and has no provider rate limits." }
+    },
+    azureopenai: {
+        requiresApiKey: false,
+        defaultModel: "",
+        responseTime: 700,
+        rateLimits: { limit: 0, remaining: 0, notes: "Azure OpenAI limits vary by resource, deployment, and quota." }
+    },
+    bedrock: {
+        requiresApiKey: false,
+        defaultModel: "",
+        responseTime: 800,
+        rateLimits: { limit: 0, remaining: 0, notes: "Amazon Bedrock limits vary by model, region, and account." }
+    },
+    vertexai: {
+        requiresApiKey: false,
+        defaultModel: "",
+        responseTime: 800,
+        rateLimits: { limit: 0, remaining: 0, notes: "Vertex AI limits vary by project, region, and model." }
+    },
+    cloudflare: {
+        requiresApiKey: true,
+        defaultModel: "",
+        responseTime: 500,
+        rateLimits: { limit: 0, remaining: 0, notes: "Cloudflare Workers AI limits vary by account and model." }
+    },
     custom: {
         requiresApiKey: false,
         validator: async () => {
@@ -420,6 +455,30 @@ export async function checkApiSetup(): Promise<ApiCheckResult> {
                 result.error = setup.error || "Connection test failed";
                 result.troubleshooting = setup.troubleshooting || "Please check your Ollama configuration";
                 result.details = setup.details;
+            }
+            return result;
+        }
+
+        if (config.type === "lmstudio" || config.type === "azureopenai" || config.type === "bedrock" || config.type === "vertexai" || config.type === "cloudflare") {
+            const provider = config.type === "lmstudio"
+                ? new LMStudioProvider(config.url, config.model)
+                : config.type === "azureopenai"
+                    ? new AzureOpenAIProvider(config.apiKey || "", config.model, config.endpoint, config.authMode, config.accessToken || "")
+                    : config.type === "bedrock"
+                        ? new BedrockProvider(config.model, config.region, config.profile || "")
+                        : config.type === "vertexai"
+                            ? new VertexAIProvider(config.model, config.project, config.location)
+                            : new CloudflareProvider(config.apiKey, config.model, config.accountId, config.gatewayId || "");
+            const validation = await provider.validateApiKey();
+            result.success = typeof validation === "boolean" ? validation : validation.success;
+            if (result.success) {
+                result.model = config.model || undefined;
+                result.responseTime = validatorConfig.responseTime;
+                result.details = "Connection test successful";
+            } else {
+                const detail = typeof validation === "boolean" ? undefined : validation;
+                result.error = detail?.error || "Connection test failed";
+                result.troubleshooting = detail?.troubleshooting || `Please check your ${config.type} configuration.`;
             }
             return result;
         }

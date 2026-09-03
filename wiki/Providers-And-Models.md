@@ -1,8 +1,8 @@
 # Providers And Models
 
-> Verified against GitMind `6.1.1` on July 17, 2026
+> Verified against GitMind `6.1.1` on September 3, 2026
 
-GitMind has 17 built-in providers plus the Pro-only Custom API provider (18 total). Cloud providers receive the selected diff and prompt. Provider catalogs change; use **Load Available Models** and the searchable model picker when available.
+GitMind has 22 built-in providers plus the Pro-only Custom API provider (23 total). Cloud providers receive the selected diff and prompt. Provider catalogs change; use **Load Available Models** and the searchable model picker when available. Account- and region-scoped providers intentionally use manual model IDs rather than a stale bundled list.
 
 ![GitMind model settings and Automatic Recovery](assets/model-settings-and-recovery.png)
 
@@ -25,6 +25,11 @@ GitMind has 17 built-in providers plus the Pro-only Custom API provider (18 tota
 | [Perplexity](https://www.perplexity.ai/settings/api) | API key | `sonar-pro` | Curated Sonar choices |
 | [Z.ai](https://z.ai/) | API key; regular or coding endpoint | `glm-5.1`, coding endpoint | Yes |
 | [NVIDIA hosted NIM](https://build.nvidia.com/models) | NVIDIA Build API key | `meta/llama-3.3-70b-instruct` | Yes |
+| [LM Studio](https://lmstudio.ai/docs/app) | Local loopback server; no key | User-loaded local model | Yes |
+| [Azure OpenAI](https://learn.microsoft.com/en-us/rest/api/microsoft-foundry/azureopenai/chat) | API key or Microsoft Entra token | Deployment name | Account-specific |
+| [Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/apis.html) | AWS credential chain or profile | Model ID | Region/account-specific |
+| [Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstart) | Application Default Credentials | Model ID | Project/location-specific |
+| [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/configuration/openai-compatibility/) | API token and account ID | Model ID | Account-specific |
 | Custom API | Pro; endpoint-specific auth | None | User configured |
 
 ## Setup And Checks
