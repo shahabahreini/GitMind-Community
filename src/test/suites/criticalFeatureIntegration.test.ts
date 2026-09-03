@@ -102,11 +102,7 @@ suite('🔥 Critical Feature Integration Tests', () => {
         });
 
         test('✅ All Provider Settings Components Are Defined', async () => {
-            const requiredProviders = [
-                'gemini', 'openai', 'anthropic', 'minimax', 'huggingface',
-                'ollama', 'mistral', 'cohere', 'together', 'openrouter',
-                'copilot', 'deepseek', 'grok', 'perplexity', 'zai', 'custom'
-            ];
+            const requiredProviders = Object.keys(PROVIDER_CATALOG);
 
             const settingsManager = new SettingsManager();
             const settings = await settingsManager.getSettings();

@@ -14,6 +14,13 @@ interface ProviderConfig {
     model: string;
     url?: string;
     endpoint?: string;
+    authMode?: string;
+    region?: string;
+    profile?: string;
+    project?: string;
+    location?: string;
+    accountId?: string;
+    gatewayId?: string;
 }
 
 interface ProviderDefaults {
@@ -43,15 +50,20 @@ export class SettingsManager {
         perplexity: { model: getProviderDefaultModel("perplexity") },
         zai: { model: "glm-5.1", endpoint: "coding" },
         nvidia: { model: "meta/llama-3.3-70b-instruct" },
+        lmstudio: { model: "", url: "" },
+        azureopenai: { model: "", endpoint: "", authMode: "apiKey" },
+        bedrock: { model: "", region: "us-east-1", profile: "" },
+        vertexai: { model: "", project: "", location: "us-central1" },
+        cloudflare: { model: "", accountId: "", gatewayId: "" },
         custom: { model: "" }
     };
 
     private static readonly API_KEY_PROVIDERS = [
         'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-        'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'groq', 'perplexity', 'zai', 'nvidia'
+        'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'groq', 'perplexity', 'zai', 'nvidia', 'azureopenai', 'cloudflare'
     ];
 
-    private static readonly NO_API_KEY_PROVIDERS = ['ollama', 'copilot', 'custom'];
+    private static readonly NO_API_KEY_PROVIDERS = ['ollama', 'copilot', 'lmstudio', 'bedrock', 'vertexai', 'custom'];
 
     public async getSettings(): Promise<ExtensionSettings> {
         const config = vscode.workspace.getConfiguration(SettingsManager.CONFIG_PREFIX);
@@ -195,6 +207,30 @@ export class SettingsManager {
 
             if (provider === 'ollama') {
                 providerConfig.url = config.get<string>(`${provider}.url`) || "";
+            }
+
+            if (provider === 'lmstudio') {
+                providerConfig.url = config.get<string>('lmstudio.url') || defaults.url || "";
+            }
+
+            if (provider === 'azureopenai') {
+                providerConfig.endpoint = config.get<string>('azureopenai.endpoint') || "";
+                providerConfig.authMode = config.get<string>('azureopenai.authMode') || defaults.authMode || 'apiKey';
+            }
+
+            if (provider === 'bedrock') {
+                providerConfig.region = config.get<string>('bedrock.region') || defaults.region || 'us-east-1';
+                providerConfig.profile = config.get<string>('bedrock.profile') || "";
+            }
+
+            if (provider === 'vertexai') {
+                providerConfig.project = config.get<string>('vertexai.project') || "";
+                providerConfig.location = config.get<string>('vertexai.location') || defaults.location || 'us-central1';
+            }
+
+            if (provider === 'cloudflare') {
+                providerConfig.accountId = config.get<string>('cloudflare.accountId') || "";
+                providerConfig.gatewayId = config.get<string>('cloudflare.gatewayId') || "";
             }
 
             // Read z.ai specific configuration
@@ -519,6 +555,30 @@ export class SettingsManager {
 
             if (provider === "ollama" && providerSettings.url !== undefined) {
                 providerUpdates.push(SettingsManager.updateSingleSetting(config, `${provider}.url`, providerSettings.url, target));
+            }
+
+            if (provider === "lmstudio" && providerSettings.url !== undefined) {
+                providerUpdates.push(SettingsManager.updateSingleSetting(config, "lmstudio.url", providerSettings.url, target));
+            }
+
+            if (provider === "azureopenai") {
+                providerUpdates.push(SettingsManager.updateSingleSetting(config, "azureopenai.endpoint", providerSettings.endpoint, target));
+                providerUpdates.push(SettingsManager.updateSingleSetting(config, "azureopenai.authMode", providerSettings.authMode, target));
+            }
+
+            if (provider === "bedrock") {
+                providerUpdates.push(SettingsManager.updateSingleSetting(config, "bedrock.region", providerSettings.region, target));
+                providerUpdates.push(SettingsManager.updateSingleSetting(config, "bedrock.profile", providerSettings.profile, target));
+            }
+
+            if (provider === "vertexai") {
+                providerUpdates.push(SettingsManager.updateSingleSetting(config, "vertexai.project", providerSettings.project, target));
+                providerUpdates.push(SettingsManager.updateSingleSetting(config, "vertexai.location", providerSettings.location, target));
+            }
+
+            if (provider === "cloudflare") {
+                providerUpdates.push(SettingsManager.updateSingleSetting(config, "cloudflare.accountId", providerSettings.accountId, target));
+                providerUpdates.push(SettingsManager.updateSingleSetting(config, "cloudflare.gatewayId", providerSettings.gatewayId, target));
             }
 
             if (provider === "zai" && providerSettings.endpoint !== undefined) {

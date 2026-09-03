@@ -26,15 +26,20 @@ export const PROVIDER_DEFAULTS: ProviderDefaults = {
   perplexity: { model: getProviderDefaultModel("perplexity") },
   zai: { model: "glm-5.1" },
   nvidia: { model: "meta/llama-3.3-70b-instruct" },
+  lmstudio: { model: "", url: "" },
+  azureopenai: { model: "" },
+  bedrock: { model: "" },
+  vertexai: { model: "" },
+  cloudflare: { model: "" },
   custom: { model: "" }
 };
 
 export const API_KEY_PROVIDERS = [
   'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-  'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'groq', 'perplexity', 'zai', 'nvidia'
+  'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'groq', 'perplexity', 'zai', 'nvidia', 'azureopenai', 'cloudflare'
 ];
 
-export const NO_API_KEY_PROVIDERS = ['ollama', 'copilot', 'custom'];
+export const NO_API_KEY_PROVIDERS = ['ollama', 'copilot', 'lmstudio', 'bedrock', 'vertexai', 'custom'];
 
 export const DEFAULT_MODELS = {
   mistral: [

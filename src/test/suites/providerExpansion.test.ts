@@ -2,7 +2,9 @@ import * as assert from "assert";
 import { AzureOpenAIProvider } from "../../services/api/azureopenai";
 import { CloudflareProvider } from "../../services/api/cloudflare";
 import { LMStudioProvider } from "../../services/api/lmstudio";
+import { ProviderIcon } from "../../webview/settings/components/ProviderIcon";
 import { ProviderConfig } from "../../webview/settings/components/config/ProviderConfig";
+import { getUiManagerScript } from "../../webview/settings/scripts/uiManager";
 
 type FetchCall = { input: RequestInfo | URL; init?: RequestInit };
 
@@ -54,6 +56,16 @@ suite("Expanded provider contracts", () => {
             const model = provider.fields.find(field => field.key === "model");
             if (!model) { continue; }
             assert.deepStrictEqual(model.defaultOptions ?? [], [], `${provider.id} exposes stale default model options`);
+        }
+    });
+
+    test("new provider marks render in both Settings UI paths", () => {
+        const settingsScript = getUiManagerScript();
+        for (const provider of ["lmstudio", "azureopenai", "bedrock", "vertexai", "cloudflare"]) {
+            const icon = ProviderIcon.renderIcon(provider);
+            assert.match(icon, new RegExp(`provider-icon ${provider}`));
+            assert.doesNotMatch(icon, /provider-icon-placeholder/);
+            assert.match(settingsScript, new RegExp(`"${provider}":`));
         }
     });
 });
