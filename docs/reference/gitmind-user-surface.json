@@ -418,14 +418,7 @@
       "type": "string",
       "default": "mistral-small-4",
       "availability": "Free",
-      "description": "Model name for Mistral AI",
-      "values": [
-        "mistral-medium-3.5",
-        "mistral-large-3",
-        "mistral-small-4",
-        "devstral-2",
-        "ministral-3"
-      ]
+      "description": "Model name for Mistral AI"
     },
     {
       "id": "gitmind.commit.verbose",
@@ -643,12 +636,7 @@
       "type": "string",
       "default": "gemini-3.5-flash",
       "availability": "Free",
-      "description": "Select which Gemini model to use",
-      "values": [
-        "gemini-3.5-flash",
-        "gemini-3.1-pro-preview",
-        "gemini-3.1-flash-lite"
-      ]
+      "description": "Select which Gemini model to use"
     },
     {
       "id": "gitmind.cohere.apiKey",
@@ -662,12 +650,7 @@
       "type": "string",
       "default": "command-a-plus-05-2026",
       "availability": "Free",
-      "description": "Cohere model to use for generating commit messages",
-      "values": [
-        "command-a-plus-05-2026",
-        "north-mini-code-1-0",
-        "command-a-reasoning-08-2025"
-      ]
+      "description": "Cohere model to use for generating commit messages"
     },
     {
       "id": "gitmind.openai.apiKey",
@@ -681,14 +664,7 @@
       "type": "string",
       "default": "gpt-5.6-terra",
       "availability": "Free",
-      "description": "OpenAI model to use for generating commit messages",
-      "values": [
-        "gpt-5.6-sol",
-        "gpt-5.6-terra",
-        "gpt-5.6-luna",
-        "gpt-5.5",
-        "gpt-5.4-mini"
-      ]
+      "description": "OpenAI model to use for generating commit messages"
     },
     {
       "id": "gitmind.promptCustomization.enabled",
@@ -737,11 +713,7 @@
       "type": "string",
       "default": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
       "availability": "Free",
-      "description": "Together AI model to use for generating commit messages",
-      "values": [
-        "meta-llama/Llama-3.3-70B-Instruct-Turbo",
-        "deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free"
-      ]
+      "description": "Together AI model to use for generating commit messages"
     },
     {
       "id": "gitmind.openrouter.apiKey",
@@ -769,13 +741,7 @@
       "type": "string",
       "default": "claude-sonnet-5",
       "availability": "Free",
-      "description": "Anthropic Claude model to use for generating commit messages",
-      "values": [
-        "claude-sonnet-5",
-        "claude-opus-4-8",
-        "claude-fable-5",
-        "claude-haiku-4-5"
-      ]
+      "description": "Anthropic Claude model to use for generating commit messages"
     },
     {
       "id": "gitmind.minimax.apiKey",
@@ -789,30 +755,14 @@
       "type": "string",
       "default": "MiniMax-M2.7",
       "availability": "Free",
-      "description": "MiniMax model to use for generating commit messages",
-      "values": [
-        "MiniMax-M2.7",
-        "MiniMax-M2.5",
-        "MiniMax-M2",
-        "MiniMax-Text-01"
-      ]
+      "description": "MiniMax model to use for generating commit messages"
     },
     {
       "id": "gitmind.copilot.model",
       "type": "string",
       "default": "auto",
       "availability": "Free",
-      "description": "GitHub Copilot model to use for generating commit messages",
-      "values": [
-        "auto",
-        "gpt-5.5",
-        "gpt-5.4-mini",
-        "gpt-5.3-codex",
-        "claude-opus-4.8",
-        "claude-sonnet-4.6",
-        "gemini-3.1-pro",
-        "gemini-3.5-flash"
-      ]
+      "description": "GitHub Copilot model to use for generating commit messages"
     },
     {
       "id": "gitmind.deepseek.apiKey",
@@ -826,11 +776,7 @@
       "type": "string",
       "default": "deepseek-v4-flash",
       "availability": "Free",
-      "description": "DeepSeek model to use for generating commit messages",
-      "values": [
-        "deepseek-v4-pro",
-        "deepseek-v4-flash"
-      ]
+      "description": "DeepSeek model to use for generating commit messages"
     },
     {
       "id": "gitmind.grok.apiKey",
@@ -844,10 +790,7 @@
       "type": "string",
       "default": "grok-4.4",
       "availability": "Free",
-      "description": "Grok model to use for generating commit messages",
-      "values": [
-        "grok-4.4"
-      ]
+      "description": "Grok model to use for generating commit messages"
     },
     {
       "id": "gitmind.groq.apiKey",
@@ -861,12 +804,7 @@
       "type": "string",
       "default": "meta-llama/llama-4-scout-17b-16e-instruct",
       "availability": "Free",
-      "description": "Groq model to use for generating commit messages",
-      "values": [
-        "llama-3.3-70b-versatile",
-        "llama-3.1-8b-instant",
-        "meta-llama/llama-4-scout-17b-16e-instruct"
-      ]
+      "description": "Groq model to use for generating commit messages"
     },
     {
       "id": "gitmind.perplexity.apiKey",
@@ -880,12 +818,7 @@
       "type": "string",
       "default": "sonar-pro",
       "availability": "Free",
-      "description": "Perplexity model to use for generating commit messages",
-      "values": [
-        "sonar-pro",
-        "sonar-reasoning-pro",
-        "sonar"
-      ]
+      "description": "Perplexity model to use for generating commit messages"
     },
     {
       "id": "gitmind.zai.apiKey",
@@ -899,13 +832,7 @@
       "type": "string",
       "default": "glm-5.1",
       "availability": "Free",
-      "description": "Z.ai model to use for generating commit messages",
-      "values": [
-        "glm-5.1",
-        "glm-5v-turbo",
-        "glm-5",
-        "glm-5-turbo"
-      ]
+      "description": "Z.ai model to use for generating commit messages"
     },
     {
       "id": "gitmind.nvidia.apiKey",

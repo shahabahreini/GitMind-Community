@@ -21,6 +21,7 @@ import './suites/providerExpansion.test';
 
 // Import core services for testing
 import { getApiConfig } from '../config/settings';
+import { PROVIDER_CATALOG } from '../config/providerCatalog';
 import { SettingsWebview } from '../webview/settings/SettingsWebview';
 import { OnboardingWebview } from '../webview/onboarding/OnboardingWebview';
 import { SubscriptionManager } from '../services/subscription/SubscriptionManager';
@@ -268,11 +269,7 @@ suite('GitMind Extension Integration Tests', () => {
     });
 
     test('Comprehensive AI Provider Configuration and API Setup', async () => {
-        const supportedProviders = [
-            'gemini', 'huggingface', 'ollama', 'mistral', 'cohere',
-            'openai', 'together', 'openrouter', 'anthropic', 'minimax', 'copilot',
-            'deepseek', 'grok', 'perplexity', 'zai', 'custom'
-        ];
+        const supportedProviders = Object.keys(PROVIDER_CATALOG);
 
         // Test provider configuration structure
         for (const provider of supportedProviders) {

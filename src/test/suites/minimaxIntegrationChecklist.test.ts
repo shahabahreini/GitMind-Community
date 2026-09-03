@@ -23,11 +23,10 @@ suite('MiniMax Integration Checklist', () => {
         assert.ok(props?.['gitmind.minimax.apiKey'], 'gitmind.minimax.apiKey should exist in configuration schema');
         assert.ok(props?.['gitmind.minimax.model'], 'gitmind.minimax.model should exist in configuration schema');
 
-        const minimaxModelEnum: unknown = props?.['gitmind.minimax.model']?.enum;
-        assert.deepStrictEqual(
-            minimaxModelEnum,
-            ["MiniMax-M2.7", "MiniMax-M2.5", "MiniMax-M2", "MiniMax-Text-01"],
-            'MiniMax model enum should be restricted to text-generation models'
+        assert.strictEqual(
+            props?.['gitmind.minimax.model']?.enum,
+            undefined,
+            'MiniMax must not duplicate the centralized model list in the editable VS Code settings schema'
         );
     });
 
