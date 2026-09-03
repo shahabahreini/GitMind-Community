@@ -1,6 +1,6 @@
 # Azure OpenAI
 
-> Verified against GitMind `6.1.1` on September 3, 2026
+> Verified against GitMind `6.1.2` on September 3, 2026
 
 Azure OpenAI uses the current v1 Chat Completions endpoint. Deployments are unique to an Azure resource, so GitMind intentionally requires an explicit deployment name rather than showing a stale public model list.
 

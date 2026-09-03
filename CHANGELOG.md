@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v6.1.2 - 2026-09-03
+
+### Added
+
+- Added LM Studio, Azure OpenAI, Amazon Bedrock, Vertex AI, and Cloudflare Workers AI/Gateway provider support.
+- Added Settings UI marks for the newly supported providers and coverage that prevents icon fallbacks.
+
+### Changed
+
+- Centralized provider model choices, removed duplicate stale manifest model lists, and refreshed Marketplace/provider documentation.
+- Hardened Pro entitlement verification so editable settings cannot grant Pro access.
+
 ## v6.1.1 - 2026-07-16
 
 ### Added

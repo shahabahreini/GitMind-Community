@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "product": {
     "name": "GitMind",
-    "version": "6.1.1",
+    "version": "6.1.2",
     "auditDate": "2026-09-03",
     "source": "package.json",
     "minimumVSCode": "^1.101.0"
