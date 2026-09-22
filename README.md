@@ -5,9 +5,27 @@
 [![Rating](https://img.shields.io/visual-studio-marketplace/r/ShahabBahreiniJangjoo.ai-commit-assistant?color=yellow)](https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant)
 [![OpenVSX](https://img.shields.io/open-vsx/v/ShahabBahreiniJangjoo/ai-commit-assistant?label=OpenVSX&color=9b59b6)](https://open-vsx.org/extension/ShahabBahreiniJangjoo/ai-commit-assistant)
 
-**Documentation:** [GitMind Wiki](https://github.com/shahabahreini/AI-Commit-Assistant/wiki) · [Quick Start](https://github.com/shahabahreini/AI-Commit-Assistant/wiki/Installation-And-Quick-Start) · [Providers](https://github.com/shahabahreini/AI-Commit-Assistant/wiki/Providers-And-Models) · [Troubleshooting](https://github.com/shahabahreini/AI-Commit-Assistant/wiki/Troubleshooting-And-FAQ)
+**Documentation:** [GitMind Wiki](https://github.com/shahabahreini/GitMind-Community/wiki) · [Quick Start](https://github.com/shahabahreini/GitMind-Community/wiki/Installation-And-Quick-Start) · [Providers](https://github.com/shahabahreini/GitMind-Community/wiki/Providers-And-Models) · [Troubleshooting](https://github.com/shahabahreini/GitMind-Community/wiki/Troubleshooting-And-FAQ)
 
-Analyzes staged Git changes and generates commit messages using 22 built-in AI providers plus a Pro Custom API option (23 choices total).
+GitMind turns your Git changes into clear commit messages, right inside VS Code. Choose from **22 built-in AI providers**, use local models, and review the result before you commit. Custom API is available with Pro.
+
+[![GitMind advertisement: turn code changes into clear commits, choose your AI provider, and build readable Git history](images/screenshots/hero-generate.gif)](images/GitMind-Animation.mp4)
+
+[Watch the 22-second video](images/GitMind-Animation.mp4) · [View the static preview](images/screenshots/hero-generate.png) · [Media downloads and sources](media/README.md)
+
+*An illustrated product overview. Code and commit examples are illustrative.*
+
+## Contents
+
+- [This Repository](#this-repository)
+- [Install](#install)
+- [Highlights](#highlights)
+- [Explore GitMind](#explore-gitmind)
+- [Free And Pro](#free-and-pro)
+- [Supported AI Providers](#supported-ai-providers)
+- [Privacy](#privacy)
+- [Requirements](#requirements)
+- [Support](#support)
 
 ## This Repository
 
@@ -102,6 +120,8 @@ or Quick Open (`Ctrl+P` / `Cmd+P`): `ext install ShahabBahreiniJangjoo.ai-commit
 
 ## Supported AI Providers
 
+![GitMind supports 22 built-in AI providers including GitHub Copilot, local Ollama and LM Studio, cloud APIs and platforms, plus Custom API with Pro](images/all_providers.png)
+
 GitHub Copilot · OpenAI · Anthropic · Google Gemini · DeepSeek · Grok · Groq · Perplexity · Z.ai · Mistral · Ollama · Together AI · Hugging Face · Cohere · OpenRouter · MiniMax · NVIDIA NIM · LM Studio · Azure OpenAI · Amazon Bedrock · Vertex AI · Cloudflare Workers AI/Gateway · Pro Custom API
 
 ---
@@ -122,9 +142,9 @@ GitHub Copilot · OpenAI · Anthropic · Google Gemini · DeepSeek · Grok · Gr
 
 ## Support
 
-- [Read the Wiki](https://github.com/shahabahreini/AI-Commit-Assistant/wiki)
-- [Report an issue or request](https://github.com/shahabahreini/AI-Commit-Assistant/issues/new/choose)
-- [View releases](https://github.com/shahabahreini/AI-Commit-Assistant/releases)
+- [Read the Wiki](https://github.com/shahabahreini/GitMind-Community/wiki)
+- [Report an issue or request](https://github.com/shahabahreini/GitMind-Community/issues/new/choose)
+- [View releases](https://github.com/shahabahreini/GitMind-Community/releases)
 - [Sponsor development](https://github.com/sponsors/shahabahreini)
 
 Never post API keys, license keys, full order IDs, purchase emails, source code, diffs, prompts, or private repository data in a public issue.

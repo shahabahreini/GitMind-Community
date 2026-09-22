@@ -1,0 +1,12 @@
+{
+  "name": "gitmind-community-media",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node src/build.mjs",
+    "verify": "node src/verify.mjs"
+  },
+  "devDependencies": {
+    "sharp": "0.34.5"
+  }
+}
