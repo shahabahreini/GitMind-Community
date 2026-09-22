@@ -1,5 +1,17 @@
 # Changelog
 
+## v6.2.1 - 2026-09-22
+
+- New Marketplace and Open VSX listing: **GitMind: AI Commit Message Generator**, listed in the AI and SCM Providers categories, with a square icon, a real demo, and a Free vs Pro table that labels every Pro feature.
+- The published package no longer includes internal development files.
+
+## v6.2.0 - 2026-09-22
+
+- GitHub Copilot no longer asks for an API key. When Copilot cannot be used, GitMind says why and offers an action (Find GitHub Copilot, Retry, or Choose Another Provider).
+- Perplexity uses the Agent API ahead of the Sonar Chat Completions shutdown on September 27, 2026. Hugging Face uses the Inference Providers router.
+- Updated default models: Gemini `gemini-3.8-flash`, OpenAI `gpt-6-sol`, MiniMax `MiniMax-M3`, Z.ai `glm-5.3`.
+- Documentation in the [wiki](https://github.com/shahabahreini/GitMind-Community/wiki) is verified against this release.
+
 ## v6.1.2 - 2026-09-03
 
 ### Community Documentation
