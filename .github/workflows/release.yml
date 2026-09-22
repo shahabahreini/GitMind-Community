@@ -68,8 +68,11 @@ jobs:
       - name: Lint store listing (with network checks)
         run: pnpm run lint:listing --network --vsix "ai-commit-assistant-${{ steps.version.outputs.VERSION }}.vsix"
 
+      # Convenience copy only; the GitHub Release below attaches the VSIX. Artifact storage
+      # quota errors must not block publishing.
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: vsix-${{ steps.version.outputs.VERSION }}
           path: "*.vsix"
