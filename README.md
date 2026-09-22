@@ -1,192 +1,149 @@
 # GitMind — AI Commit Message Generator for VS Code
 
-GitMind analyzes your Git diff and generates clear, professional commit messages inside VS Code. Choose from 22 built-in AI providers—including local Ollama and LM Studio, OpenAI, Azure OpenAI, Amazon Bedrock, Vertex AI, Cloudflare Workers AI, NVIDIA NIM, and GitHub Copilot—or connect a custom OpenAI-compatible API with GitMind Pro.
-
-**Website:** [gitmind-pro.com](https://gitmind-pro.com) · **Documentation:** [GitMind Handbook](https://shahabahreini.github.io/AI-Commit-Assistant/) · [Quick Start](https://shahabahreini.github.io/AI-Commit-Assistant/Installation-And-Quick-Start) · [Providers](https://shahabahreini.github.io/AI-Commit-Assistant/Providers-And-Models) · [Native Wiki mirror](https://github.com/shahabahreini/GitMind-Community/wiki)
+GitMind reads your Git diff and writes a clear, well-formatted commit message for you. Use GitHub Copilot, a local model in Ollama or LM Studio, or any of 22 built-in AI providers, and get Conventional Commits, Gitmoji, or your team's style in one click.
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/shahabahreini/AI-Commit-Assistant/main/images/logo.png" alt="GitMind logo" width="140"/>
-  <br/><br/>
-  <a href="https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant">Install from the VS Code Marketplace</a>
-</div>
-
-<br/>
-
-<div align="center">
-  <video src="https://gitmind-pro.com/assets/videos/Gitmind-pro-Demo.mp4" width="100%" controls autoplay loop muted></video>
+  <img src="https://raw.githubusercontent.com/shahabahreini/GitMind-Community/main/images/screenshots/hero-generate.gif" alt="GitMind AI commit message generator: staging changes, clicking the GitMind button in Source Control, and getting a Conventional Commit message" width="100%"/>
   <br/>
-  <sub><strong>GitMind Pro in action — AI-powered commit generation and workflow features.</strong></sub>
+  <sub><strong>Stage your changes, click GitMind in Source Control, and review the generated commit message.</strong></sub>
 </div>
 
-<br/>
+## Install
 
-<div align="center">
-  <img src="https://raw.githubusercontent.com/shahabahreini/AI-Commit-Assistant/main/images/screenshots/current-configuration-dashboard.png" alt="GitMind current configuration dashboard showing NVIDIA model and feature status" width="100%"/>
-  <br/>
-  <sub><strong>See your provider, model, commit preferences, security, and API status at a glance.</strong></sub>
-</div>
+- **VS Code:** [Install from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant)
+- **VSCodium and other editors that use Open VSX:** [Install from Open VSX](https://open-vsx.org/extension/ShahabBahreiniJangjoo/ai-commit-assistant), or search for **GitMind** in the Extensions view
+- **Manual:** Download the `.vsix` from [GitHub Releases](https://github.com/shahabahreini/GitMind-Community/releases) and run **Extensions: Install from VSIX…**
 
-## Highlights
+## Quick Start
 
-- **23 provider options:** 22 built-in providers plus Pro Custom API, including local, hosted, enterprise-cloud, and gateway options.
-- **Searchable, dynamic model selection:** Load current models from supported provider APIs and quickly filter large model catalogs.
-- **Professional commit standards:** Conventional Commits, Angular, Semantic Release, Gitmoji, Linux Kernel, jQuery, Ember.js, and more.
-- **3-Candidate Choice QuickPick with Live Multiline Preview:** Compare 3 distinct AI candidate archetypes (Concise, Detailed, Intent) with full un-truncated multiline live preview as you navigate choices.
-- **Guided Reviewed Commit Workspace:** Interactive 3-step dashboard with branch badges, file line change stats (`+24/-10`), noise classification, bulk context controls, and Commit Health rating meter (0–100).
-- **Pre-Commit Code Review Panel:** Real-time pre-commit code review findings with color-coded severity callouts (`ERROR`, `WARNING`, `INFO`).
-- **Flexible Git workflow:** Generate from staged changes or enable Capture All Changes to include unstaged and untracked files.
-- **Local and key-free options:** Use Ollama locally or an existing GitHub Copilot subscription.
-- **Large diff support:** Token-aware processing keeps generation useful on substantial changes.
+1. Open **GitMind Settings** and choose a provider. GitHub Copilot, Ollama, and LM Studio need no API key.
+2. Add an API key if your provider needs one, then pick a model from the searchable list.
+3. Stage your changes and click the GitMind icon in Source Control, or run **Generate GitMind Commit Message**.
+
+## Why GitMind
+
+- **Works with the AI you already have:** GitHub Copilot, local Ollama or LM Studio, OpenAI, Anthropic Claude, Gemini, DeepSeek, OpenRouter, Azure OpenAI, Amazon Bedrock, Vertex AI, and more.
+- **Keeps code on your machine when you want it:** Local models generate commit messages without sending your diff anywhere.
+- **Follows your commit convention:** Conventional Commits and Basic are free. Angular, Semantic Release, Gitmoji, Linux Kernel, and other styles come with Pro.
+- **Handles real-world diffs:** Token-aware processing keeps large changes useful, and **Capture All Changes** includes unstaged and untracked files.
+- **Always shows the current models:** GitMind loads live model lists from providers that support discovery, and the pickers are searchable.
+- **Grows with your workflow (Pro):** Compare three draft messages, check Commit Health, run a pre-commit AI review, plan atomic commits, and generate changelogs.
 
 ## Explore GitMind
 
 <table>
   <tr>
     <td width="50%" valign="top">
-      <img src="https://raw.githubusercontent.com/shahabahreini/AI-Commit-Assistant/main/images/screenshots/nvidia-model-settings-automatic-recovery.png" alt="NVIDIA model settings and GitMind Pro Automatic Recovery"/>
-      <h3 align="center">Models And Automatic Recovery</h3>
-      <p align="center">Configure NVIDIA NIM and other providers, load searchable models, retry eligible temporary failures, and select a provider-scoped fallback model.</p>
+      <img src="https://raw.githubusercontent.com/shahabahreini/GitMind-Community/main/images/screenshots/current-configuration-dashboard.png" alt="GitMind dashboard showing the selected AI provider, model, commit preferences, and API status"/>
+      <h3 align="center">Everything At A Glance</h3>
+      <p align="center">See your provider, model, commit preferences, security, and API status in one place.</p>
     </td>
     <td width="50%" valign="top">
-      <img src="https://raw.githubusercontent.com/shahabahreini/AI-Commit-Assistant/main/images/screenshots/commit-style-selection.png" alt="GitMind professional commit style selection"/>
+      <img src="https://raw.githubusercontent.com/shahabahreini/GitMind-Community/main/images/screenshots/commit-style-selection.png" alt="Choosing a commit message style such as Conventional Commits, Angular, or Gitmoji in GitMind"/>
       <h3 align="center">Professional Commit Styles</h3>
-      <p align="center">Choose Conventional Commits, Angular, Gitmoji, Semantic Release, Ember.js, and other structured formats.</p>
+      <p align="center">Choose Conventional Commits, Angular, Gitmoji, Semantic Release, and other structured formats.</p>
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <img src="https://raw.githubusercontent.com/shahabahreini/AI-Commit-Assistant/main/images/screenshots/pro-security-large-diff-model-configuration.png" alt="GitMind Pro encrypted key storage, large diff handling, and advanced model configuration"/>
-      <h3 align="center">Security And Model Control</h3>
-      <p align="center">Encrypt API keys, process large diffs, and tune advanced generation parameters when you need precise control.</p>
-    </td>
-    <td width="50%" valign="top">
-      <img src="https://raw.githubusercontent.com/shahabahreini/AI-Commit-Assistant/main/images/screenshots/commit-language-history-learning.png" alt="GitMind target commit language and commit history learning settings"/>
-      <h3 align="center">Match Your Team</h3>
-      <p align="center">Generate in your target language, control message length, and learn from existing commit history.</p>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
+      <img src="https://raw.githubusercontent.com/shahabahreini/GitMind-Community/main/images/screenshots/free-features-settings.png" alt="GitMind free features: verbose messages, capture all changes, custom context, and generation diagnostics"/>
       <h3 align="center">Useful Free Features</h3>
-      <p align="center">Control verbose messages, capture all changes, custom context, and generation diagnostics.</p>
+      <p align="center">Control message detail, capture all changes, add custom context, and see generation diagnostics.</p>
     </td>
     <td width="50%" valign="top">
-      <img src="https://raw.githubusercontent.com/shahabahreini/AI-Commit-Assistant/main/images/screenshots/changelog-generation.png" alt="GitMind AI changelog generation settings"/>
-      <h3 align="center">AI Changelog Generation</h3>
-      <p align="center">Generate professional changelogs from Git history with version grouping and configurable commit ranges.</p>
+      <img src="https://raw.githubusercontent.com/shahabahreini/GitMind-Community/main/images/screenshots/nvidia-model-settings-automatic-recovery.png" alt="Searchable AI model picker with GitMind Pro Automatic Recovery settings"/>
+      <h3 align="center">Models And Automatic Recovery</h3>
+      <p align="center">Load and search provider models. Pro retries temporary failures and can switch to a fallback model.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="https://raw.githubusercontent.com/shahabahreini/GitMind-Community/main/images/screenshots/commit-language-history-learning.png" alt="GitMind Pro commit language selection and commit history learning settings"/>
+      <h3 align="center">Match Your Team (Pro)</h3>
+      <p align="center">Write commit messages in your team's language and learn from your existing commit history.</p>
+    </td>
+    <td width="50%" valign="top">
+      <img src="https://raw.githubusercontent.com/shahabahreini/GitMind-Community/main/images/screenshots/changelog-generation.png" alt="GitMind Pro AI changelog generation from Git history"/>
+      <h3 align="center">AI Changelog Generation (Pro)</h3>
+      <p align="center">Generate changelogs from Git history with version grouping and configurable commit ranges.</p>
     </td>
   </tr>
 </table>
 
-## Quick Start
-
-1. Install GitMind from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant).
-2. Open **GitMind Settings** and select an AI provider.
-3. Add the provider API key when required, then load or search for a model.
-4. Stage changes, or enable **Capture All Changes**.
-5. Click the GitMind icon in Source Control or run **Generate GitMind Commit Message**.
-
-```bash
-ext install ShahabBahreiniJangjoo.ai-commit-assistant
-```
-
 ## Supported Providers
 
-| Provider          | Setup                                                        | Model selection                      |
-| ----------------- | ------------------------------------------------------------ | ------------------------------------ |
-| Google Gemini     | API key                                                      | Searchable Gemini models             |
-| Hugging Face      | Access token                                                 | Hosted model ID                      |
-| Ollama            | Local server, no API key                                     | Local model discovery                |
-| Mistral AI        | API key                                                      | Dynamic model discovery              |
-| Cohere            | API key                                                      | Dynamic model discovery              |
-| OpenAI            | API key                                                      | Dynamic model discovery              |
-| Together AI       | API key                                                      | Dynamic model discovery              |
-| OpenRouter        | API key                                                      | Dynamic multi-provider catalog       |
-| Anthropic         | API key                                                      | Dynamic model discovery              |
-| MiniMax           | API key                                                      | Dynamic model discovery              |
-| GitHub Copilot    | Active Copilot subscription                                  | Available Copilot models             |
-| DeepSeek          | API key                                                      | Chat and reasoning models            |
-| xAI Grok          | API key                                                      | Dynamic model discovery              |
-| Groq              | API key                                                      | Dynamic model discovery              |
-| Perplexity        | API key                                                      | Curated Sonar models                 |
-| Z.ai              | API key                                                      | GLM model selection                  |
-| NVIDIA hosted NIM | API key from [NVIDIA Build](https://build.nvidia.com/models) | Dynamic NIM model discovery          |
-| LM Studio         | Local loopback server, no API key                         | Local OpenAI-compatible model discovery |
-| Azure OpenAI      | API key or Microsoft Entra token                           | Deployment name (account-specific)     |
-| Amazon Bedrock    | AWS credential chain or named profile                      | Model ID available in selected region  |
-| Vertex AI         | Google Application Default Credentials                     | Model ID available to project/location |
-| Cloudflare Workers AI | API token and account ID                               | Workers AI or AI Gateway model ID       |
-| Custom API        | GitMind Pro                                                  | OpenAI-compatible endpoint and model |
+| Provider              | Setup                                  | Model selection                          |
+| --------------------- | -------------------------------------- | ---------------------------------------- |
+| GitHub Copilot        | Active Copilot subscription            | Available Copilot models                 |
+| Ollama                | Local server, no API key               | Local model discovery                    |
+| LM Studio             | Local loopback server, no API key      | Local OpenAI-compatible model discovery  |
+| OpenAI                | API key                                | Dynamic model discovery                  |
+| Anthropic Claude      | API key                                | Dynamic model discovery                  |
+| Google Gemini         | API key                                | Searchable Gemini models                 |
+| DeepSeek              | API key                                | Chat and reasoning models                |
+| OpenRouter            | API key                                | Dynamic multi-provider catalog           |
+| Mistral AI            | API key                                | Dynamic model discovery                  |
+| xAI Grok              | API key                                | Dynamic model discovery                  |
+| Groq                  | API key                                | Dynamic model discovery                  |
+| Cohere                | API key                                | Dynamic model discovery                  |
+| Together AI           | API key                                | Dynamic model discovery                  |
+| Perplexity            | API key                                | Curated Sonar models                     |
+| Hugging Face          | Access token                           | Hosted model ID                          |
+| MiniMax               | API key                                | Dynamic model discovery                  |
+| Z.ai                  | API key                                | GLM model selection                      |
+| NVIDIA hosted NIM     | API key from NVIDIA Build              | Dynamic NIM model discovery              |
+| Azure OpenAI          | API key or Microsoft Entra token       | Deployment name (account-specific)       |
+| Amazon Bedrock        | AWS credential chain or named profile  | Model ID available in selected region    |
+| Vertex AI             | Google Application Default Credentials | Model ID available to project/location   |
+| Cloudflare Workers AI | API token and account ID               | Workers AI or AI Gateway model ID        |
+| Custom API (Pro)      | Any OpenAI-compatible endpoint         | Your endpoint and model                  |
 
-Provider catalogs change frequently. GitMind loads current model lists where the provider supports discovery and falls back to known compatible models when necessary.
+Provider catalogs change often. GitMind loads current model lists where the provider supports discovery and falls back to known compatible models when it can't. Setup guides for each provider are in [Providers and Models](https://github.com/shahabahreini/GitMind-Community/wiki/Providers-And-Models).
 
 ## Free And Pro
 
-| Feature                               | Free             | Pro                                                |
-| ------------------------------------- | ---------------- | -------------------------------------------------- |
-| Built-in AI providers                 | 22               | 22                                                 |
-| Custom API provider                   | Locked           | Included                                           |
-| Searchable provider and model pickers | Included         | Included                                           |
-| Basic and Conventional commit styles  | Included         | Included                                           |
-| Professional commit styles            | Limited          | Included                                           |
-| Emoji Enhancement                     | Visible, locked  | Included                                           |
-| Automatic Recovery                    | Locked           | Retry once and optionally switch models once       |
-| API key storage                       | VS Code settings | Encrypted SecretStorage                            |
-| Target commit language                | Default          | Searchable language selection                      |
-| Advanced model parameters             | Automatic        | Custom temperature, top-p, top-k, and token limits |
-| Commit history learning               | Locked           | Included                                           |
-| Changelog generation                  | Locked           | Included                                           |
-| Sanitized support report              | Locked           | Local, review-before-share JSON report             |
+| Feature                                  | Free             | Pro                                                |
+| ---------------------------------------- | ---------------- | -------------------------------------------------- |
+| Built-in AI providers                    | 22               | 22                                                 |
+| Custom API provider                      | Locked           | Included                                           |
+| Searchable provider and model pickers    | Included         | Included                                           |
+| Basic and Conventional commit styles     | Included         | Included                                           |
+| Professional commit styles               | Limited          | Included                                           |
+| Emoji Enhancement                        | Visible, locked  | Included                                           |
+| Draft choices, Commit Health, pre-commit review, commit composer | Locked | Included                            |
+| Automatic Recovery                       | Locked           | Retry once and optionally switch models once       |
+| API key storage                          | VS Code settings | Encrypted SecretStorage                            |
+| Target commit language                   | Default          | Searchable language selection                      |
+| Advanced model parameters                | Automatic        | Custom temperature, top-p, top-k, and token limits |
+| Commit history learning                  | Locked           | Included                                           |
+| Changelog generation                     | Locked           | Included                                           |
+| Sanitized support report                 | Locked           | Local, review-before-share JSON report             |
 
-### Automatic Recovery
+GitMind Pro is a **one-time lifetime purchase**, with no subscription. [See Pro pricing](https://gitmind-pro.com/pricing?utm_source=extension-listing&utm_medium=readme&utm_campaign=free-vs-pro). To activate, open **GitMind Settings > Pro** and paste the license key from your purchase email. Manage licenses and devices in the [account portal](https://gitmind-pro.com/portal?utm_source=extension-listing&utm_medium=readme&utm_campaign=activation). Details on Automatic Recovery and the other Pro features are in the [GitMind Pro guide](https://github.com/shahabahreini/GitMind-Community/wiki/GitMind-Pro).
 
-GitMind Pro can recover from selected generation failures without creating retry loops:
-
-- Retries once for network failures, timeouts, and temporary provider failures.
-- Can switch once to a configured fallback model for model-specific limits and ordinary HTTP 429 rate limits.
-- Does not retry invalid API keys, billing/account quota exhaustion, permission errors, malformed requests, or content-policy failures.
-- Shows a clear notification explaining the failure, recovery action, and final result.
-
-The fallback model picker is searchable and scoped to the currently selected provider.
-
-## NVIDIA NIM
-
-GitMind supports NVIDIA hosted NIM through its OpenAI-compatible LLM API.
-
-1. Create an API key at [NVIDIA Build](https://build.nvidia.com/models).
-2. Select **NVIDIA** in Model Settings.
-3. Add the key and load the available hosted NIM models.
-4. Search for a model and save your settings.
-
-See the [NVIDIA NIM LLM API reference](https://docs.api.nvidia.com/nim/reference/llm-apis) for provider details.
-
-## GitMind Pro Activation
-
-Open **GitMind Settings > Pro** and paste the license key from your purchase email.
-
-GitMind Pro is a one-time lifetime purchase available at [gitmind-pro.com/pricing](https://gitmind-pro.com/pricing). You can manage your licenses and active devices at [gitmind-pro.com/portal](https://gitmind-pro.com/portal). Activation, deactivation, and current Pro status are also available directly in the settings panel.
-
-If your key does not work, or you cannot find it, open an issue at [GitMind-Community Issues](https://github.com/shahabahreini/GitMind-Community/issues) and we will sort it out — you will not lose access while we do.
+If your key does not work, or you cannot find it, open an issue at [GitMind-Community Issues](https://github.com/shahabahreini/GitMind-Community/issues) and we will sort it out. You will not lose access while we do.
 
 ## Privacy And Security
 
-- GitMind sends the selected Git diff and prompt to the provider you configure.
-- Ollama can keep generation local.
+- GitMind sends the selected Git diff and prompt only to the provider you configure.
+- Ollama and LM Studio keep generation on your machine.
 - GitMind Pro can store provider keys in VS Code SecretStorage.
 - GitMind does not collect or transmit product telemetry.
 - Pro users can capture a bounded, local support report containing only allowlisted operational metadata. It excludes source, diffs, prompts, paths, URLs, credentials, request/response bodies, raw errors, email, and license/customer data.
 
+More in [Security and Privacy](https://github.com/shahabahreini/GitMind-Community/wiki/Security-And-Privacy).
+
 ## Requirements
 
-- VS Code 1.101.0 or newer
-- Git repository
-- API key for the selected cloud provider, unless using GitHub Copilot (editor sign-in), Ollama or LM Studio (local), or Amazon Bedrock or Vertex AI (cloud credentials)
+- VS Code 1.101.0 or newer, or a compatible editor
+- A Git repository
+- An API key for your cloud provider, unless you use GitHub Copilot (editor sign-in), Ollama or LM Studio (local), or Amazon Bedrock or Vertex AI (cloud credentials)
 
 ## Support
 
-- [Official Website](https://gitmind-pro.com)
-- [Read the GitMind Handbook](https://shahabahreini.github.io/AI-Commit-Assistant/)
-- For serious debugging, Pro users can open **GitMind Settings > Pro > Support Report**, start a session, reproduce the issue, stop and review it, then save and manually attach the JSON report.
-- [Use the native GitHub Wiki mirror](https://github.com/shahabahreini/GitMind-Community/wiki)
+- [Official website](https://gitmind-pro.com?utm_source=extension-listing&utm_medium=readme&utm_campaign=support)
+- [GitMind documentation (wiki)](https://github.com/shahabahreini/GitMind-Community/wiki)
 - [Report an issue](https://github.com/shahabahreini/GitMind-Community/issues)
-- [Sponsor development](https://github.com/sponsors/shahabahreini)
+- For hard-to-reproduce problems, Pro users can open **GitMind Settings > Pro > Support Report**, start a session, reproduce the issue, stop and review it, then save and attach the JSON report.
+
+If GitMind saves you time, a rating helps other developers find it: [rate on the VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant&ssr=false#review-details) or [on Open VSX](https://open-vsx.org/extension/ShahabBahreiniJangjoo/ai-commit-assistant/reviews).

@@ -4,12 +4,12 @@ const repo = "https://github.com/shahabahreini/GitMind-Community";
 
 export default defineConfig({
   title: "GitMind Handbook",
-  description: "Complete user documentation for GitMind 5.x",
-  base: "/AI-Commit-Assistant/",
+  description: "Documentation for GitMind, the AI commit message generator for VS Code",
+  base: "/GitMind-Community/",
   cleanUrls: true,
   lastUpdated: true,
   ignoreDeadLinks: false,
-  head: [["link", { rel: "icon", href: "/AI-Commit-Assistant/assets/logo.png" }]],
+  head: [["link", { rel: "icon", href: "/GitMind-Community/assets/logo.png" }]],
   themeConfig: {
     logo: "/assets/logo.png",
     siteTitle: "GitMind",

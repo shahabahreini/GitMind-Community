@@ -1,11 +1,12 @@
 {
   "name": "ai-commit-assistant",
-  "displayName": "GitMind: AI-Powered Commit Messages",
-  "description": "Generate AI commit messages in VS Code with 23 providers, local and cloud models, Conventional Commits, GitHub Copilot, and Pro recovery tools.",
+  "displayName": "GitMind: AI Commit Message Generator",
+  "description": "AI commit message generator for VS Code. Write clear Conventional Commits from your diff with GitHub Copilot, local Ollama, or 22 built-in AI providers.",
   "version": "6.2.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
+  "qna": false,
   "engines": {
     "vscode": "^1.101.0",
     "node": ">=24.15.0"
@@ -16,9 +17,9 @@
     "yarn": false
   },
   "categories": [
+    "AI",
     "SCM Providers",
-    "Machine Learning",
-    "Formatters"
+    "Machine Learning"
   ],
   "extensionDependencies": [
     "vscode.git"
@@ -1509,6 +1510,7 @@
     "package": "pnpm run clean && pnpm run check-types && pnpm run lint && node esbuild.js --production",
     "package:vsce": "vsce package --no-dependencies",
     "package:audit": "node scripts/audit-vsix.mjs",
+    "lint:listing": "node scripts/lint-listing.mjs",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
@@ -1541,6 +1543,7 @@
     "esbuild": "^0.28.2",
     "eslint": "^10.11.0",
     "npm-run-all2": "^9.0.3",
+    "ovsx": "1.2.0",
     "rimraf": "^6.1.3",
     "typescript": "~5.9.3",
     "vitepress": "^1.6.4"
@@ -1562,30 +1565,35 @@
   },
   "homepage": "https://gitmind-pro.com",
   "keywords": [
-    "git",
-    "commit-message",
+    "ai commit",
+    "commit message",
+    "commit message generator",
     "ai commit message",
-    "commit generator",
+    "git commit",
+    "git",
+    "ai",
+    "git ai",
     "conventional commits",
+    "gitmoji",
+    "semantic release",
+    "changelog",
+    "changelog generator",
     "source control",
-    "developer productivity",
+    "copilot",
     "github copilot",
-    "openai",
-    "anthropic",
-    "gemini",
     "ollama",
     "lm studio",
     "local ai",
+    "llm",
+    "openai",
+    "claude",
+    "anthropic",
+    "gemini",
+    "deepseek",
+    "openrouter",
     "azure openai",
     "amazon bedrock",
-    "vertex ai",
-    "cloudflare workers ai",
-    "nvidia nim",
-    "openrouter",
-    "multi provider ai",
-    "gitmoji",
-    "semantic release",
-    "changelog"
+    "vertex ai"
   ],
   "author": {
     "name": "Shahab Bahreini",

@@ -14,9 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      # pnpm version comes from package.json "packageManager".
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10.15.0
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -25,4 +24,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run package
       - run: pnpm run package:audit
+      - run: pnpm run lint:listing
       - run: pnpm run package:vsce --out /tmp/gitmind-validation.vsix
+      - run: pnpm run lint:listing --vsix /tmp/gitmind-validation.vsix

@@ -1,3 +1,12 @@
+# Builds, audits, and publishes the VSIX to the VS Code Marketplace and OpenVSX.
+#
+# Required repository secrets (a publish step is skipped with a warning when its secret is missing):
+#   VSCE_PAT  Azure DevOps PAT with the Marketplace (Manage) scope. Global ("All accessible
+#             organizations") PATs stop working on 2026-12-01; use an organization-scoped PAT or
+#             switch the step to `--azure-credential` (Microsoft Entra). Record the expiry date.
+#   OVSX_PAT  Access token from https://open-vsx.org/user-settings/tokens. Record the expiry date.
+#
+# Both publish steps use --skip-duplicate, so re-running after a partial failure is safe.
 name: Release VSIX
 
 on:
@@ -8,18 +17,20 @@ on:
 permissions:
   contents: write
 
+env:
+  EXTENSION_ID: ShahabBahreiniJangjoo.ai-commit-assistant
+
 jobs:
   release:
     name: Build & Publish Release
-    if: github.repository == 'shahabahreini/AI-Commit-Assistant'
+    if: github.repository == 'shahabahreini/GitMind-Pro'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      # pnpm version comes from package.json "packageManager".
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10.15.0
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -54,11 +65,66 @@ jobs:
       - name: Audit VSIX contents
         run: pnpm run package:audit
 
+      - name: Lint store listing (with network checks)
+        run: pnpm run lint:listing --network --vsix "ai-commit-assistant-${{ steps.version.outputs.VERSION }}.vsix"
+
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@v4
         with:
           name: vsix-${{ steps.version.outputs.VERSION }}
           path: "*.vsix"
+
+      - name: Publish to VS Code Marketplace
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          if [ -z "$VSCE_PAT" ]; then
+            echo "::warning::VSCE_PAT is not set; skipping VS Code Marketplace publish."
+            exit 0
+          fi
+          pnpm exec vsce publish --packagePath "ai-commit-assistant-${{ steps.version.outputs.VERSION }}.vsix" --skip-duplicate
+
+      - name: Publish to OpenVSX
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: |
+          if [ -z "$OVSX_PAT" ]; then
+            echo "::warning::OVSX_PAT is not set; skipping OpenVSX publish."
+            exit 0
+          fi
+          pnpm exec ovsx publish --packagePath "ai-commit-assistant-${{ steps.version.outputs.VERSION }}.vsix" --skip-duplicate
+
+      - name: Check store version parity
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          marketplace_version() {
+            curl -s -X POST 'https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery' \
+              -H 'Content-Type: application/json' -H 'Accept: application/json;api-version=7.2-preview.1' \
+              -d "{\"filters\":[{\"criteria\":[{\"filterType\":7,\"value\":\"$EXTENSION_ID\"}]}],\"flags\":1}" \
+              | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).results[0].extensions[0].versions[0].version)}catch{console.log("unknown")}})'
+          }
+          openvsx_version() {
+            curl -s "https://open-vsx.org/api/${EXTENSION_ID/.//}" \
+              | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).version)}catch{console.log("unknown")}})'
+          }
+          for attempt in $(seq 1 10); do
+            MP=$(marketplace_version); OV=$(openvsx_version)
+            echo "Attempt $attempt: Marketplace=$MP OpenVSX=$OV tag=$VERSION"
+            if [ "$MP" = "$VERSION" ] && [ "$OV" = "$VERSION" ]; then break; fi
+            sleep 60
+          done
+          {
+            echo "### Store version parity"
+            echo "| Store | Version |"
+            echo "|---|---|"
+            echo "| Tag | $VERSION |"
+            echo "| VS Code Marketplace | $MP |"
+            echo "| OpenVSX | $OV |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$MP" != "$VERSION" ] || [ "$OV" != "$VERSION" ]; then
+            echo "::warning::Store versions do not match tag $VERSION (Marketplace=$MP, OpenVSX=$OV)."
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -73,9 +139,9 @@ jobs:
             ```
             code --install-extension ai-commit-assistant-${{ steps.version.outputs.VERSION }}.vsix
             ```
-            Or install directly from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant).
+            Or install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant) or [Open VSX](https://open-vsx.org/extension/ShahabBahreiniJangjoo/ai-commit-assistant).
 
-            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for full release notes.
+            See [CHANGELOG.md](https://github.com/shahabahreini/GitMind-Community/blob/main/CHANGELOG.md) for full release notes.
           files: "*.vsix"
           draft: false
           prerelease: false
