@@ -25,7 +25,6 @@ import { fetchGeminiModels } from "./services/api/gemini";
 import { fetchAnthropicModels } from "./services/api/anthropic";
 import { fetchMiniMaxModels } from "./services/api/minimax";
 import { fetchOpenRouterModels } from "./services/api/openrouter";
-import { fetchCopilotModels } from "./services/api/copilot";
 import { fetchOpenAIModels } from "./services/api/openai";
 import { fetchZaiModels } from "./services/api/zai";
 import { PromptManager } from "./services/promptManager";
@@ -252,6 +251,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     uriHandler,
     ...commands
   );
+
+  // Copilot models can change (sign-in, plan, extension enable/disable). Only notify the settings UI:
+  // re-selecting models stays a user action (Load Models), per the language model API consent guidance.
+  const lmApi = (vscode as { lm?: typeof vscode.lm }).lm;
+  if (typeof lmApi?.onDidChangeChatModels === "function") {
+    context.subscriptions.push(lmApi.onDidChangeChatModels(() => {
+      if (SettingsWebview.isWebviewOpen()) {
+        SettingsWebview.postMessageToWebview({ command: "copilotModelsChanged" });
+      }
+    }));
+  }
 
   const shouldShowOnboarding = await OnboardingManager.shouldShowOnboarding(context);
 

@@ -2,6 +2,7 @@
 import * as vscode from "vscode";
 import { getOnboardingStyles } from "./styles/onboarding.css";
 import { ProviderIcon } from "../settings/components/ProviderIcon";
+import { PROVIDER_CATALOG, PROVIDER_IDS, ProviderCatalogId } from "../../config/providerCatalog";
 
 export class OnboardingTemplateGenerator {
     private _extensionUri: vscode.Uri;
@@ -103,33 +104,44 @@ export class OnboardingTemplateGenerator {
     }
 
     private generateProviderSelection(): string {
-        const providers = [
+        // Card copy only; provider identity and names come from the provider catalog.
+        const cards: Array<{ id: ProviderCatalogId; category: string; tier: string; desc: string }> = [
             // Cloud Providers - Popular
-            { id: 'openai', name: 'OpenAI', category: 'Popular', tier: 'Paid', desc: 'GPT-4 and GPT-3.5 models with excellent text generation' },
-            { id: 'anthropic', name: 'Anthropic Claude', category: 'Popular', tier: 'Paid', desc: 'Claude Sonnet and Opus models with superior reasoning' },
-            { id: 'gemini', name: 'Google Gemini', category: 'Popular', tier: 'Free Tier', desc: 'Advanced AI with excellent code understanding' },
+            { id: 'openai', category: 'Popular', tier: 'Paid', desc: 'GPT models with excellent text generation' },
+            { id: 'anthropic', category: 'Popular', tier: 'Paid', desc: 'Claude models with strong reasoning' },
+            { id: 'gemini', category: 'Popular', tier: 'Free Tier', desc: 'Gemini models with excellent code understanding' },
 
             // Cloud Providers - Alternative
-            { id: 'deepseek', name: 'DeepSeek', category: 'Alternative', tier: 'Paid', desc: 'Cost-effective reasoning models' },
-            { id: 'grok', name: 'xAI Grok', category: 'Alternative', tier: 'Premium', desc: 'Latest Grok models from xAI' },
-            { id: 'perplexity', name: 'Perplexity', category: 'Alternative', tier: 'Free Tier', desc: 'Sonar models with online knowledge' },
-            { id: 'mistral', name: 'Mistral AI', category: 'Alternative', tier: 'Paid', desc: 'European AI with strong performance' },
-            { id: 'cohere', name: 'Cohere', category: 'Alternative', tier: 'Free Tier', desc: 'Command models for text generation' },
+            { id: 'deepseek', category: 'Alternative', tier: 'Paid', desc: 'Cost-effective reasoning models' },
+            { id: 'grok', category: 'Alternative', tier: 'Paid', desc: 'Grok models from xAI' },
+            { id: 'perplexity', category: 'Alternative', tier: 'Paid', desc: 'Sonar models with online knowledge' },
+            { id: 'mistral', category: 'Alternative', tier: 'Paid', desc: 'European AI with strong performance' },
+            { id: 'cohere', category: 'Alternative', tier: 'Free Tier', desc: 'Command models for text generation' },
+            { id: 'minimax', category: 'Alternative', tier: 'Paid', desc: 'MiniMax text models' },
+            { id: 'zai', category: 'Alternative', tier: 'Paid', desc: 'GLM models from Z.ai' },
+            { id: 'groq', category: 'Alternative', tier: 'Free Tier', desc: 'Fast inference for open models' },
+            { id: 'nvidia', category: 'Alternative', tier: 'Free Tier', desc: 'Hosted NVIDIA NIM models' },
 
             // Aggregators
-            { id: 'together', name: 'Together AI', category: 'Aggregator', tier: 'Paid', desc: 'Access multiple open-source models' },
-            { id: 'openrouter', name: 'OpenRouter', category: 'Aggregator', tier: 'Paid', desc: 'Unified API for many providers' },
-            { id: 'huggingface', name: 'Hugging Face', category: 'Aggregator', tier: 'Free Tier', desc: 'Thousands of open-source models' },
+            { id: 'together', category: 'Aggregator', tier: 'Paid', desc: 'Access multiple open-source models' },
+            { id: 'openrouter', category: 'Aggregator', tier: 'Paid', desc: 'Unified API for many providers' },
+            { id: 'huggingface', category: 'Aggregator', tier: 'Free Tier', desc: 'Thousands of open-source models' },
+
+            // Enterprise cloud
+            { id: 'azureopenai', category: 'Enterprise', tier: 'Paid', desc: 'Your Azure OpenAI deployments' },
+            { id: 'bedrock', category: 'Enterprise', tier: 'Paid', desc: 'Foundation models through your AWS account' },
+            { id: 'vertexai', category: 'Enterprise', tier: 'Paid', desc: 'Gemini and partner models through Google Cloud' },
+            { id: 'cloudflare', category: 'Enterprise', tier: 'Free Tier', desc: 'Workers AI models on your Cloudflare account' },
 
             // Local & Integrated
-            { id: 'ollama', name: 'Ollama', category: 'Local', tier: 'Free', desc: 'Run models locally on your machine' },
-            { id: 'copilot', name: 'GitHub Copilot', category: 'Integrated', tier: 'Subscription', desc: 'Uses existing Copilot subscription' },
-            { id: 'minimax', name: 'MiniMax', category: 'Alternative', tier: 'Paid', desc: 'Advanced Chinese AI models' },
-            { id: 'nvidia', name: 'NVIDIA', category: 'Cloud', tier: 'Free', desc: 'Use hosted NVIDIA NIM models' },
-            { id: 'custom', name: 'Custom API', category: 'Advanced', tier: 'Pro', desc: 'Connect to any custom API endpoint' }
+            { id: 'ollama', category: 'Local', tier: 'Free', desc: 'Run models locally on your machine' },
+            { id: 'lmstudio', category: 'Local', tier: 'Free', desc: 'Local models served by LM Studio' },
+            { id: 'copilot', category: 'Integrated', tier: 'Subscription', desc: 'Uses your GitHub Copilot sign-in; no API key' },
+            { id: 'custom', category: 'Advanced', tier: 'Pro', desc: 'Connect to any custom API endpoint' }
         ];
+        const providers = cards.map(card => ({ ...card, name: PROVIDER_CATALOG[card.id].displayName }));
 
-        const categories = ['Popular', 'Alternative', 'Aggregator', 'Local', 'Integrated', 'Advanced'];
+        const categories = ['Popular', 'Alternative', 'Aggregator', 'Enterprise', 'Local', 'Integrated', 'Advanced'];
 
         const providersByCategory = categories.map(category => {
             const categoryProviders = providers.filter(p => p.category === category);
@@ -245,23 +257,7 @@ export class OnboardingTemplateGenerator {
     };
 
     // Provider API key links
-    const providerLinks = {
-        gemini: 'https://aistudio.google.com/app/apikey',
-        openai: 'https://platform.openai.com/api-keys',
-        anthropic: 'https://console.anthropic.com/',
-        ollama: 'https://ollama.ai/download',
-        huggingface: 'https://huggingface.co/settings/tokens',
-        copilot: 'https://github.com/features/copilot',
-        mistral: 'https://console.mistral.ai/api-keys/',
-        cohere: 'https://dashboard.cohere.com/api-keys',
-        together: 'https://api.together.xyz/settings/api-keys',
-        openrouter: 'https://openrouter.ai/keys',
-        deepseek: 'https://platform.deepseek.com/',
-        grok: 'https://x.com/i/grok',
-        perplexity: 'https://www.perplexity.ai/settings/api',
-        minimax: 'https://platform.minimaxi.com/',
-        custom: ''
-    };
+    const providerLinks = ${JSON.stringify(Object.fromEntries(PROVIDER_IDS.map(id => [id, PROVIDER_CATALOG[id].docsUrl])))};
 
     // Initialize
     init();

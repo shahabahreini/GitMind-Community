@@ -4,6 +4,12 @@ allowBuilds:
   keytar: true
   protobufjs: true
 
+minimumReleaseAgeExclude:
+  - '@aws-sdk/client-bedrock-runtime@3.1137.0'
+  - '@aws-sdk/credential-providers@3.1137.0'
+  - '@aws-sdk/token-providers@3.1137.0'
+  - '@google/genai@2.24.0'
+
 overrides:
   diff: '>=8.0.3'
   serialize-javascript: '>=7.0.5'

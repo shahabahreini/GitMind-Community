@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
+import { API_KEY_PROVIDER_IDS, PROVIDER_CATALOG } from '../../config/providerCatalog';
 
 import { DEFAULT_MODELS, PROVIDER_DEFAULTS } from '../../webview/settings/scripts/constants';
 import { ProviderConfig } from '../../webview/settings/components/config/ProviderConfig';
@@ -33,8 +34,8 @@ suite('MiniMax Integration Checklist', () => {
     test('Backend provider registry and validation are wired', () => {
         const apiIndex = readRepoFile('src/services/api/index.ts');
         assert.ok(apiIndex.includes("case 'minimax':"), 'API lazy loader should include minimax case');
-        assert.ok(apiIndex.includes('minimax:'), 'API provider registry should include minimax entry');
-        assert.ok(apiIndex.includes('MiniMax'), 'API provider registry should include MiniMax display name');
+        assert.ok(PROVIDER_CATALOG.minimax, 'Provider catalog should include minimax entry');
+        assert.strictEqual(PROVIDER_CATALOG.minimax.name, 'MiniMax', 'Provider catalog should name MiniMax');
 
         const validation = readRepoFile('src/services/api/validation.ts');
         assert.ok(validation.includes('validateMiniMaxAPIKey'), 'Validation should reference validateMiniMaxAPIKey');
@@ -54,13 +55,13 @@ suite('MiniMax Integration Checklist', () => {
         assert.ok(PROVIDER_DEFAULTS.minimax, 'Webview PROVIDER_DEFAULTS should include minimax');
         assert.strictEqual(
             PROVIDER_DEFAULTS.minimax.model,
-            "MiniMax-M2.7",
-            'Webview default model for minimax should be MiniMax-M2.5'
+            PROVIDER_CATALOG.minimax.defaultModel,
+            'Webview default model for minimax should come from the provider catalog'
         );
 
         assert.deepStrictEqual(
             DEFAULT_MODELS.minimax,
-            ["MiniMax-M2.7", "MiniMax-M2.5"],
+            [...PROVIDER_CATALOG.minimax.curatedModels],
             'Webview DEFAULT_MODELS.minimax should match the curated current models'
         );
 
@@ -85,13 +86,13 @@ suite('MiniMax Integration Checklist', () => {
         const settingsManager = readRepoFile('src/webview/settings/SettingsManager.ts');
 
         assert.ok(
-            settingsManager.includes('minimax: { model: getProviderDefaultModel("minimax") }'),
-            'SettingsManager defaults should come from the centralized provider catalog'
+            settingsManager.includes('getProviderDefaultModel(id)') && settingsManager.includes('PROVIDER_IDS'),
+            'SettingsManager defaults should be derived from the centralized provider catalog'
         );
 
         assert.ok(
-            settingsManager.includes("'minimax'"),
-            'SettingsManager API_KEY_PROVIDERS should include minimax'
+            (API_KEY_PROVIDER_IDS as readonly string[]).includes('minimax'),
+            'The catalog API-key provider list (used by SettingsManager) should include minimax'
         );
     });
 });

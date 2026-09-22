@@ -1,4 +1,5 @@
 import { debugLog } from "../debug/logger";
+import { getProviderDefaultModel } from "../../config/providerCatalog";
 import { RequestManager } from "../../utils/requestManager";
 import { APIErrorHandler } from "../../utils/errorHandler";
 import { generateCommitPrompt, getPromptConfig } from "./prompts";
@@ -408,7 +409,7 @@ export async function validateGrokAPIKey(
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    model: "grok-4.4",
+                    model: getProviderDefaultModel("grok"),
                     input: [
                         {
                             role: "user",

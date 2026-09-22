@@ -2,6 +2,7 @@
 import * as vscode from 'vscode';
 import { debugLog } from '../debug/logger';
 import { isProUser } from '../../utils/proHelpers';
+import { SECRET_PROVIDER_IDS } from "../../config/providerCatalog";
 
 // Placeholder text to display in settings when a key is encrypted
 export const ENCRYPTED_KEY_PLACEHOLDER = "[ENCRYPTED]";
@@ -479,10 +480,7 @@ export class SecureKeyManager {
             const results: string[] = [];
             const config = vscode.workspace.getConfiguration('gitmind');
 
-            const providers = [
-                'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-                'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'groq', 'perplexity', 'zai', 'nvidia', 'custom'
-            ];
+            const providers: string[] = [...SECRET_PROVIDER_IDS];
 
             // Get all encrypted keys and move them back to plain text
             for (const provider of providers) {
@@ -562,10 +560,7 @@ export class SecureKeyManager {
         }
 
         try {
-            const providers = [
-                'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-                'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'groq', 'perplexity', 'zai', 'nvidia', 'custom'
-            ];
+            const providers: string[] = [...SECRET_PROVIDER_IDS];
 
             const isProUser = this.isProUser();
             const devModeEnabled = process.env.GITMIND_ENCRYPTION_DEV_MODE === 'true';
@@ -651,10 +646,7 @@ export class SecureKeyManager {
         }
 
         try {
-            const providers = [
-                'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-                'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'groq', 'perplexity', 'zai', 'nvidia', 'custom'
-            ];
+            const providers: string[] = [...SECRET_PROVIDER_IDS];
 
             let migratedCount = 0;
             const results: string[] = [];
@@ -744,10 +736,7 @@ export class SecureKeyManager {
      * Lists all providers that have stored API keys
      */
     public async getProvidersWithKeys(): Promise<string[]> {
-        const providers = [
-            'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-            'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'groq', 'perplexity', 'zai', 'nvidia', 'custom'
-        ];
+        const providers: string[] = [...SECRET_PROVIDER_IDS];
 
         const providersWithKeys: string[] = [];
 
@@ -825,10 +814,7 @@ export class SecureKeyManager {
         // Get basic encryption status
         const basicStatus = this.getEncryptionStatus();
 
-        const providers = [
-            'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-            'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'groq', 'perplexity', 'nvidia', 'custom'
-        ];
+        const providers: string[] = [...SECRET_PROVIDER_IDS];
 
         const encryptedProviders: string[] = [];
         const plainTextProviders: string[] = [];
@@ -983,10 +969,7 @@ export class SecureKeyManager {
             const results: string[] = [];
             const config = vscode.workspace.getConfiguration('gitmind');
 
-            const providers = [
-                'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-                'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'groq', 'perplexity', 'zai', 'nvidia', 'custom'
-            ];
+            const providers: string[] = [...SECRET_PROVIDER_IDS];
 
             // Check each provider and restore if it has [ENCRYPTED] placeholder
             for (const provider of providers) {

@@ -1,16 +1,12 @@
 import { randomUUID } from "crypto";
+import { PROVIDER_IDS, ProviderCatalogId } from "../../config/providerCatalog";
 
 export const SUPPORT_REPORT_SCHEMA_VERSION = 2;
 export const SUPPORT_SESSION_DURATION_MS = 30 * 60 * 1000;
 export const SUPPORT_REPORT_MAX_BYTES = 512 * 1024;
 export const SUPPORT_REPORT_MAX_EVENTS = 1000;
 
-const PROVIDERS = [
-  "anthropic", "cohere", "copilot", "custom", "deepseek", "gemini",
-  "grok", "groq", "huggingface", "minimax", "mistral", "nvidia",
-  "ollama", "openai", "openrouter", "perplexity", "together", "zai",
-  "lmstudio", "azureopenai", "bedrock", "vertexai", "cloudflare"
-] as const;
+const PROVIDERS: readonly ProviderCatalogId[] = PROVIDER_IDS;
 
 const OPERATIONS = [
   "api_validation", "generate_changelog", "generate_commit", "learn_history",
@@ -49,7 +45,7 @@ const EVENT_KEYS = [
   "operation", "outcome", "provider", "recoveryAction", "sequence", "subsystem"
 ] as const;
 
-export type SupportProvider = typeof PROVIDERS[number];
+export type SupportProvider = ProviderCatalogId;
 export type SupportOperation = typeof OPERATIONS[number];
 export type SupportEventName = typeof EVENT_NAMES[number];
 export type SupportErrorCategory = typeof ERROR_CATEGORIES[number];

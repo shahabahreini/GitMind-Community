@@ -13,7 +13,11 @@ import {
 } from "./types";
 import { SecureKeyManager } from "../services/encryption/SecureKeyManager";
 import { debugLog } from "../services/debug/logger";
-import { getProviderDefaultModel } from "./providerCatalog";
+import { API_KEY_PROVIDER_IDS, getProviderDefaultModel, KEYLESS_PROVIDER_IDS, ProviderCatalogId } from "./providerCatalog";
+
+function isKeylessProvider(provider: string): boolean {
+    return KEYLESS_PROVIDER_IDS.includes(provider as ProviderCatalogId);
+}
 
 interface ProviderDefaults {
     model: string;
@@ -58,33 +62,33 @@ export function invalidateConfigCache(): void {
 const PROVIDER_DEFAULTS: Record<string, ProviderDefaults> = {
     gemini: { model: getProviderDefaultModel("gemini"), enabled: false },
     huggingface: {
-        model: "mistralai/Mistral-7B-Instruct-v0.3",
+        model: getProviderDefaultModel("huggingface"),
         enabled: true,
         extras: { temperature: 0.2 }
     },
     ollama: {
-        model: "phi4",
+        model: getProviderDefaultModel("ollama"),
         enabled: false,
         extras: { url: "http://localhost:11434" }
     },
     mistral: { model: getProviderDefaultModel("mistral"), enabled: false },
     cohere: { model: getProviderDefaultModel("cohere"), enabled: false },
     openai: { model: getProviderDefaultModel("openai"), enabled: false },
-    together: { model: "meta-llama/Llama-3.3-70B-Instruct-Turbo", enabled: false },
-    openrouter: { model: "google/gemma-3-27b-it:free", enabled: false },
+    together: { model: getProviderDefaultModel("together"), enabled: false },
+    openrouter: { model: getProviderDefaultModel("openrouter"), enabled: false },
     anthropic: { model: getProviderDefaultModel("anthropic"), enabled: false },
     minimax: { model: getProviderDefaultModel("minimax"), enabled: false },
     copilot: { model: getProviderDefaultModel("copilot"), enabled: false },
     deepseek: { model: getProviderDefaultModel("deepseek"), enabled: false },
     grok: { model: getProviderDefaultModel("grok"), enabled: false },
-    groq: { model: "meta-llama/llama-4-scout-17b-16e-instruct", enabled: false },
+    groq: { model: getProviderDefaultModel("groq"), enabled: false },
     perplexity: { model: getProviderDefaultModel("perplexity"), enabled: false },
     zai: {
-        model: "glm-5.1",
+        model: getProviderDefaultModel("zai"),
         enabled: false,
         extras: { endpoint: "coding" }
     },
-    nvidia: { model: "meta/llama-3.3-70b-instruct", enabled: false },
+    nvidia: { model: getProviderDefaultModel("nvidia"), enabled: false },
     lmstudio: {
         model: getProviderDefaultModel("lmstudio"),
         enabled: false,
@@ -111,7 +115,7 @@ const PROVIDER_DEFAULTS: Record<string, ProviderDefaults> = {
         extras: { accountId: "", gatewayId: "" }
     },
     custom: {
-        model: "",
+        model: getProviderDefaultModel("custom"),
         enabled: false,
         extras: {
             baseUrl: "",
@@ -161,7 +165,7 @@ export function getConfiguration(): ExtensionConfig {
         };
 
         // Add API key for providers that need it
-        if (provider !== 'ollama' && provider !== 'copilot' && provider !== 'lmstudio' && provider !== 'bedrock' && provider !== 'vertexai') {
+        if (!isKeylessProvider(provider)) {
             providerConfig.apiKey = config.get(`${provider}.apiKey`);
         }
 
@@ -201,7 +205,7 @@ export async function getApiConfig(): Promise<ApiConfig> {
     };
 
     // Add API key for providers that need it
-    if (provider !== 'ollama' && provider !== 'copilot' && provider !== 'custom' && provider !== 'lmstudio' && provider !== 'bedrock' && provider !== 'vertexai') {
+    if (API_KEY_PROVIDER_IDS.includes(provider as ProviderCatalogId)) {
         const secureKeyManager = SecureKeyManager.getInstance();
         const secureApiKey = await secureKeyManager.getApiKey(provider, false);
         baseConfig.apiKey = secureApiKey || "";
@@ -296,7 +300,7 @@ export function getApiConfigSync(): ApiConfig {
     };
 
     // Add API key for providers that need it (only from plain text settings)
-    if (provider !== 'ollama' && provider !== 'copilot' && provider !== 'lmstudio' && provider !== 'bedrock' && provider !== 'vertexai') {
+    if (!isKeylessProvider(provider)) {
         baseConfig.apiKey = providerConfig.apiKey || "";
     }
 

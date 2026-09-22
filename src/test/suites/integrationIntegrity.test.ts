@@ -13,6 +13,7 @@
 import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
+import { KEYLESS_PROVIDER_IDS, PROVIDER_IDS } from '../../config/providerCatalog';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Helpers: extract data from actual source files (the REAL source of truth)
@@ -339,7 +340,8 @@ suite('Integration Integrity - Provider Registration', () => {
     // ── Cross-reference: PROVIDER_CONFIGS in api/index.ts ────────────────
 
     test('PROVIDER_CONFIGS must have an entry for every ApiProvider', () => {
-        const configKeys = extractObjectKeys(apiIndexSource, 'PROVIDER_CONFIGS');
+        // PROVIDER_CONFIGS is derived from the provider catalog (one entry per catalog id).
+        const configKeys: string[] = [...PROVIDER_IDS];
 
         const missingInConfigs = apiProviders.filter(p => !configKeys.includes(p));
         const extraInConfigs = configKeys.filter(k => !apiProviders.includes(k));
@@ -934,40 +936,13 @@ suite('Integration Integrity - Type Definitions', () => {
 suite('Integration Integrity - Provider Feature Matrix', () => {
 
     test('Providers not requiring API keys should be consistently identified', () => {
-        const apiIndexSrc = readSource('src/services/api/index.ts');
+        // Keyless providers come from one place: the provider catalog's auth metadata.
+        for (const p of ['ollama', 'copilot', 'lmstudio', 'bedrock', 'vertexai']) {
+            assert.ok((KEYLESS_PROVIDER_IDS as readonly string[]).includes(p), `${p} should be keyless in the provider catalog`);
+        }
         const settingsSrc = readSource('src/config/settings.ts');
-
-        // Find providers marked as not requiring API key in PROVIDER_CONFIGS
-        const noKeyInConfigs: string[] = [];
-        const configEntries = apiIndexSrc.match(/(\w+):\s*\{[^}]*requiresApiKey:\s*false[^}]*\}/gs) || [];
-        for (const entry of configEntries) {
-            const nameMatch = entry.match(/^(\w+):/);
-            if (nameMatch) {
-                noKeyInConfigs.push(nameMatch[1]);
-            }
-        }
-
-        // Find providers excluded from API key in settings.ts getApiConfig()
-        // These are referenced with provider !== 'xxx' checks
-        const settingsExclusions: string[] = [];
-        const exclusionRegex = /provider\s*!==\s*['"](\w+)['"]/g;
-        let m: RegExpExecArray | null;
-        while ((m = exclusionRegex.exec(settingsSrc)) !== null) {
-            if (!settingsExclusions.includes(m[1])) {
-                settingsExclusions.push(m[1]);
-            }
-        }
-
-        // Providers that don't need API keys should appear consistently
-        // This is informational - exact matching depends on the codebase logic
-        console.log(`  No-API-key providers in PROVIDER_CONFIGS: ${noKeyInConfigs.join(', ')}`);
-        console.log(`  Providers excluded from API key check in settings.ts: ${settingsExclusions.join(', ')}`);
-
-        // At minimum, ollama and copilot should be in both
-        for (const p of ['ollama', 'copilot']) {
-            assert.ok(noKeyInConfigs.includes(p),
-                `${p} should be marked as requiresApiKey: false in PROVIDER_CONFIGS`);
-        }
+        assert.ok(!/provider\s*!==\s*['"](ollama|copilot)['"]/.test(settingsSrc),
+            'settings.ts must use catalog helpers instead of inline keyless provider checks');
     });
 });
 
@@ -1018,8 +993,7 @@ suite('Integration Integrity - Scalability Checks', () => {
         const settingsSrc = readSource('src/config/settings.ts');
         const defaultsCount = extractObjectKeys(settingsSrc, 'PROVIDER_DEFAULTS').length;
 
-        const apiSrc = readSource('src/services/api/index.ts');
-        const configsCount = extractObjectKeys(apiSrc, 'PROVIDER_CONFIGS').length;
+        const configsCount = PROVIDER_IDS.length; // PROVIDER_CONFIGS is derived from the catalog
 
         const validationSrc = readSource('src/services/api/validation.ts');
         const validatorCount = extractObjectKeys(validationSrc, 'VALIDATOR_CONFIGS').length;

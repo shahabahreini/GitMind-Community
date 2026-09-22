@@ -4,6 +4,14 @@ import { debugLog } from '../debug/logger';
 import { generateCommitPrompt, getPromptConfig } from './prompts';
 import { BaseAIProvider, GenerationOptions } from './base';
 import { loggedFetch } from "./loggedFetch";
+import { getProviderDefaultModel, PROVIDER_CATALOG, PROVIDER_IDS } from "../../config/providerCatalog";
+
+/**
+ * Hugging Face Inference Providers router (OpenAI-compatible). Replaces the legacy
+ * serverless Inference API (api-inference.huggingface.co).
+ * https://huggingface.co/docs/inference-providers/index
+ */
+export const HUGGINGFACE_ROUTER_URL = "https://router.huggingface.co/v1";
 
 export interface HuggingFaceModel {
     id: string;
@@ -31,18 +39,18 @@ export class HuggingFaceProvider extends BaseAIProvider {
         const suggestion = suggestCorrectProvider(this.model);
         if (suggestion.provider !== "Hugging Face") {
             debugLog(`Warning: Model ${this.model} appears to be from ${suggestion.provider}, not Hugging Face`);
-            throw new Error(`Model '${this.model}' appears to be a ${suggestion.provider} model. Please switch to the ${suggestion.provider} provider and use model '${suggestion.model}', or select a Hugging Face model like 'microsoft/DialoGPT-medium'.`);
+            throw new Error(`Model '${this.model}' appears to be a ${suggestion.provider} model. Please switch to the ${suggestion.provider} provider and use model '${suggestion.model}', or select a Hugging Face model like '${getProviderDefaultModel("huggingface")}'.`);
         }
 
         // Check if model contains slash (indicating it's a proper model path)
         if (!this.model.includes('/')) {
             debugLog("Warning: Model name doesn't contain '/', might be invalid:", this.model);
-            throw new Error(`Invalid model format: '${this.model}'. Hugging Face models should be in format 'organization/model-name' like 'microsoft/DialoGPT-medium'.`);
+            throw new Error(`Invalid model format: '${this.model}'. Hugging Face models should be in format 'organization/model-name' like '${getProviderDefaultModel("huggingface")}'.`);
         }
 
         try {
             const response = await loggedFetch(
-                `https://api-inference.huggingface.co/models/${this.model}`,
+                `${HUGGINGFACE_ROUTER_URL}/chat/completions`,
                 {
                     headers: {
                         Authorization: `Bearer ${this.apiKey}`,
@@ -50,16 +58,14 @@ export class HuggingFaceProvider extends BaseAIProvider {
                     },
                     method: "POST",
                     body: JSON.stringify({
-                        inputs: prompt,
-                        parameters: {
-                            max_length: options?.maxTokens ?? 500,
-                            return_full_text: false,
-                            do_sample: true,
-                            temperature: options?.temperature,
-                        },
+                        model: this.model,
+                        messages: [{ role: "user", content: prompt }],
+                        max_tokens: options?.maxTokens ?? 500,
+                        ...(options?.temperature === undefined ? {} : { temperature: options.temperature }),
+                        stream: false,
                     }),
                 },
-                { provider: "huggingface", operation: "inference" },
+                { provider: "huggingface", operation: "chat.completions" },
             );
 
             if (!response.ok) {
@@ -114,7 +120,13 @@ export class HuggingFaceProvider extends BaseAIProvider {
                 }
             }
 
-            const result = await response.json() as HuggingFaceResponse | HuggingFaceResponse[];
+            const data = await response.json() as any;
+            const chatText = data?.choices?.[0]?.message?.content;
+            if (typeof chatText === "string" && chatText.trim()) {
+                return chatText.trim();
+            }
+            // Some providers may still return the legacy text-generation shape.
+            const result = data as HuggingFaceResponse | HuggingFaceResponse[];
 
             if (!result) {
                 throw new Error("Empty response from Hugging Face API");
@@ -179,45 +191,32 @@ export class HuggingFaceProvider extends BaseAIProvider {
         }
     }
 
+    /** Chat models currently served by at least one Inference Provider. */
     async getModels(): Promise<string[]> {
         try {
-            debugLog('Fetching all Hugging Face models...');
-
-            const response = await axios.get('https://huggingface.co/api/models', {
-                headers: {
-                    'Authorization': `Bearer ${this.apiKey}`,
-                    'Content-Type': 'application/json'
-                },
-                params: {
-                    limit: 10000, // Fetch a large number of models
-                    sort: 'downloads', // Sort by popularity
-                    direction: -1 // Descending order
-                },
-                timeout: 30000 // 30 second timeout
+            debugLog('Fetching Hugging Face Inference Providers models...');
+            const response = await axios.get(`${HUGGINGFACE_ROUTER_URL}/models`, {
+                headers: this.apiKey ? { 'Authorization': `Bearer ${this.apiKey}` } : {},
+                timeout: 30000
             });
-
-            if (response.data && Array.isArray(response.data)) {
-                const models = response.data
-                    .filter((model: HuggingFaceModel) => model.id && typeof model.id === 'string')
-                    .map((model: HuggingFaceModel) => model.id)
-                    .slice(0, 5000); // Limit to first 5000 models for performance
-
-                debugLog(`Successfully fetched ${models.length} Hugging Face models`);
-                return models;
-            } else {
+            const models = Array.isArray(response.data?.data) ? response.data.data : [];
+            const ids: string[] = models
+                .map((model: { id?: unknown }) => model?.id)
+                .filter((id: unknown): id is string => typeof id === 'string' && id.includes('/'));
+            if (ids.length === 0) {
                 throw new Error('Invalid response format from Hugging Face API');
             }
+            debugLog(`Successfully fetched ${ids.length} Hugging Face models`);
+            return Array.from(new Set(ids)).sort((a, b) => a.localeCompare(b));
         } catch (error) {
             debugLog('Error fetching Hugging Face models:', error);
             if (axios.isAxiosError(error)) {
                 if (error.response?.status === 401) {
-                    throw new Error('Invalid Hugging Face API key. Please verify your API key at https://huggingface.co/settings/tokens');
+                    throw new Error('Invalid Hugging Face access token. Please verify your token at https://huggingface.co/settings/tokens');
                 } else if (error.response?.status === 403) {
-                    throw new Error('Access forbidden. Your Hugging Face API key may not have permission to fetch models.');
-                } else if (error.response?.status === 410) {
-                    throw new Error('Hugging Face API endpoint has been deprecated. Please update your API integration. See https://huggingface.co/docs/api-inference for migration details.');
+                    throw new Error('Access forbidden. Your Hugging Face token needs the "Make calls to Inference Providers" permission.');
                 } else if (error.response?.status === 429) {
-                    throw new Error('Rate limit exceeded. Please wait before trying to fetch models again. Check https://huggingface.co/settings/billing for your usage limits.');
+                    throw new Error('Rate limit exceeded. Please wait before trying to fetch models again. Check https://huggingface.co/settings/billing for your usage.');
                 } else {
                     throw new Error(`Failed to fetch models (${error.response?.status}): ${error.response?.statusText || 'Unknown error'}`);
                 }
@@ -227,7 +226,7 @@ export class HuggingFaceProvider extends BaseAIProvider {
     }
 
     async validateApiKey(): Promise<boolean> {
-        return checkHuggingFaceModel(this.apiKey, this.model || "microsoft/DialoGPT-medium");
+        return checkHuggingFaceModel(this.apiKey, this.model || getProviderDefaultModel("huggingface"));
     }
 }
 
@@ -259,44 +258,26 @@ export async function checkHuggingFaceModel(apiKey: string, model: string): Prom
  * @returns Suggested provider and model combination
  */
 function suggestCorrectProvider(model: string): { provider: string; model: string } {
-    const lowerModel = model.toLowerCase();
-
-    if (lowerModel.includes('deepseek')) {
-        return {
-            provider: "DeepSeek",
-            model: lowerModel.includes('chat') ? "deepseek-v4-flash" : "deepseek-v4-pro"
-        };
-    } else if (lowerModel.includes('claude') || lowerModel.includes('anthropic')) {
-        return {
-            provider: "Anthropic",
-            model: 'claude-3-5-sonnet-20241022'
-        };
-    } else if (lowerModel.includes('gpt-') || lowerModel.includes('openai')) {
-        return {
-            provider: "OpenAI",
-            model: "gpt-5.6-terra"
-        };
-    } else if (lowerModel.includes('gemini') || lowerModel.includes('google')) {
-        return {
-            provider: "Gemini",
-            model: "gemini-3.5-flash"
-        };
-    } else if (lowerModel.includes('mistral')) {
-        return {
-            provider: "Mistral",
-            model: "mistral-small-4"
-        };
-    } else if (lowerModel.includes('grok')) {
-        return {
-            provider: "Grok",
-            model: 'grok-beta'
-        };
+    // Hugging Face IDs are "organization/model" (e.g. "openai/gpt-oss-120b"); only bare IDs can belong elsewhere.
+    if (model.includes('/')) {
+        return { provider: "Hugging Face", model };
     }
-
-    return {
-        provider: "Hugging Face",
-        model: 'microsoft/DialoGPT-medium'
-    };
+    const lowerModel = model.toLowerCase();
+    const hints: Array<[string, string[]]> = [
+        ["deepseek", ["deepseek"]],
+        ["anthropic", ["claude"]],
+        ["openai", ["gpt-", "o3", "o4"]],
+        ["gemini", ["gemini"]],
+        ["mistral", ["mistral", "ministral", "codestral"]],
+        ["grok", ["grok"]],
+    ];
+    for (const [id, needles] of hints) {
+        if (needles.some(needle => lowerModel.startsWith(needle)) && (PROVIDER_IDS as readonly string[]).includes(id)) {
+            const entry = PROVIDER_CATALOG[id as keyof typeof PROVIDER_CATALOG];
+            return { provider: entry.name, model: entry.defaultModel };
+        }
+    }
+    return { provider: "Hugging Face", model: getProviderDefaultModel("huggingface") };
 }
 
 export async function fetchHuggingFaceModels(apiKey: string): Promise<string[]> {

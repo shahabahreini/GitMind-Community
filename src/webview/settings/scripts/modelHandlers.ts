@@ -142,6 +142,9 @@ export function getModelHandlingScript(): string {
           if (provider === 'huggingface') {
             // For Hugging Face, just show error
             showToast('Failed to load Hugging Face models: ' + (message.error || 'Unknown error'), 'error');
+          } else if (provider === 'copilot') {
+            // Copilot reports its detected state (not detected, no access, no models); keep the saved choice.
+            showToast(message.error || 'GitHub Copilot is not available in this editor.', 'error');
           } else {
             // For other providers, add default models
             // Set flag to prevent auto-save during model population

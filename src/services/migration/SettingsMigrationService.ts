@@ -1,5 +1,25 @@
 import * as vscode from 'vscode';
 import { debugLog } from '../debug/logger';
+import { getProviderDefaultModel, ProviderCatalogId } from '../../config/providerCatalog';
+
+/**
+ * Model IDs GitMind once shipped as defaults that the provider has since retired or stopped serving
+ * (verified 2026-09-22, see docs/research/provider-contracts-2026-09.md). A saved value equal to one of
+ * these is moved to the current catalog default; any other saved value is the user's choice and is kept.
+ */
+export const RETIRED_SHIPPED_MODEL_DEFAULTS: Partial<Record<ProviderCatalogId, readonly string[]>> = {
+    huggingface: ['mistralai/Mistral-7B-Instruct-v0.3'],
+    mistral: ['mistral-small-4'],
+    openrouter: ['google/gemma-3-27b-it:free'],
+    deepseek: ['deepseek-v4-flash'],
+    grok: ['grok-4.4'],
+    groq: ['meta-llama/llama-4-scout-17b-16e-instruct'],
+    nvidia: ['meta/llama-3.3-70b-instruct'],
+};
+
+/** globalState key holding the values replaced by the retired-model migration, so it can be undone. */
+export const RETIRED_MODEL_PREVIOUS_KEY = 'gitmind.migration.retiredModelPrevious';
+
 
 /**
  * Service to handle migration and cleanup of legacy extension settings
@@ -15,6 +35,52 @@ export class SettingsMigrationService {
     }
 
     /**
+     * Moves saved models that equal a retired shipped default to the current catalog default.
+     * The replaced values are kept in globalState (RETIRED_MODEL_PREVIOUS_KEY) so the change can be undone.
+     */
+    public async migrateRetiredModelDefaults(context?: vscode.ExtensionContext): Promise<string[]> {
+        const config = vscode.workspace.getConfiguration('gitmind');
+        const targets: Array<['globalValue' | 'workspaceValue' | 'workspaceFolderValue', vscode.ConfigurationTarget]> = [
+            ['globalValue', vscode.ConfigurationTarget.Global],
+            ['workspaceValue', vscode.ConfigurationTarget.Workspace],
+            ['workspaceFolderValue', vscode.ConfigurationTarget.WorkspaceFolder],
+        ];
+        const previous: Record<string, Array<{ target: string; value: string }>> =
+            { ...(context?.globalState.get<Record<string, Array<{ target: string; value: string }>>>(RETIRED_MODEL_PREVIOUS_KEY) ?? {}) };
+        const migrated: string[] = [];
+
+        for (const [provider, retired] of Object.entries(RETIRED_SHIPPED_MODEL_DEFAULTS) as Array<[ProviderCatalogId, readonly string[]]>) {
+            const replacement = getProviderDefaultModel(provider);
+            const inspected = config.inspect<string>(`${provider}.model`);
+            if (!inspected || !replacement) {
+                continue;
+            }
+            for (const [scope, target] of targets) {
+                const value = inspected[scope];
+                if (typeof value === 'string' && retired.includes(value) && value !== replacement) {
+                    try {
+                        await config.update(`${provider}.model`, replacement, target);
+                        previous[provider] = [...(previous[provider] ?? []), { target: scope, value }];
+                        migrated.push(provider);
+                        debugLog(`Migrated retired ${provider} model default ${value} -> ${replacement} (${scope})`);
+                    } catch (error) {
+                        debugLog(`Could not migrate retired ${provider} model at ${scope}:`, error);
+                    }
+                }
+            }
+        }
+
+        if (migrated.length > 0) {
+            await context?.globalState.update(RETIRED_MODEL_PREVIOUS_KEY, previous);
+            const names = Array.from(new Set(migrated)).join(', ');
+            void vscode.window.showInformationMessage(
+                `GitMind updated retired default models for: ${names}. Your other model choices were not changed.`
+            );
+        }
+        return Array.from(new Set(migrated));
+    }
+
+    /**
      * Perform migration from old aiCommitAssistant settings to new gitmind settings
      * and cleanup old settings to prevent conflicts
      */
@@ -24,6 +90,7 @@ export class SettingsMigrationService {
         try {
             await this.cleanupRetiredTelemetry(context);
             await this.migrateCommitDetailMode();
+            await this.migrateRetiredModelDefaults(context);
 
             const workspaceConfig = vscode.workspace.getConfiguration();
             const hasOldSettings = await this.checkForLegacySettings(workspaceConfig);

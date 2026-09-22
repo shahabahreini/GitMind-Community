@@ -24,7 +24,7 @@
       "availability": "Free",
       "authentication": "API key",
       "setupUrl": "https://aistudio.google.com/app/apikey",
-      "defaultModel": "gemini-3.5-flash",
+      "defaultModel": "gemini-3.8-flash",
       "fields": [
         "gitmind.gemini.apiKey",
         "gitmind.gemini.model"
@@ -37,7 +37,7 @@
       "availability": "Free",
       "authentication": "API key",
       "setupUrl": "https://huggingface.co/settings/tokens",
-      "defaultModel": "mistralai/Mistral-7B-Instruct-v0.3",
+      "defaultModel": "meta-llama/Llama-3.3-70B-Instruct",
       "fields": [
         "gitmind.huggingface.apiKey",
         "gitmind.huggingface.model"
@@ -63,7 +63,7 @@
       "availability": "Free",
       "authentication": "API key",
       "setupUrl": "https://console.mistral.ai/",
-      "defaultModel": "mistral-small-4",
+      "defaultModel": "mistral-small-2603",
       "fields": [
         "gitmind.mistral.apiKey",
         "gitmind.mistral.model"
@@ -89,7 +89,7 @@
       "availability": "Free",
       "authentication": "API key",
       "setupUrl": "https://platform.openai.com/api-keys",
-      "defaultModel": "gpt-5.6-terra",
+      "defaultModel": "gpt-6-sol",
       "fields": [
         "gitmind.openai.apiKey",
         "gitmind.openai.model"
@@ -115,7 +115,7 @@
       "availability": "Free",
       "authentication": "API key",
       "setupUrl": "https://openrouter.ai/keys",
-      "defaultModel": "google/gemma-3-27b-it:free",
+      "defaultModel": "openrouter/free",
       "fields": [
         "gitmind.openrouter.apiKey",
         "gitmind.openrouter.model"
@@ -141,7 +141,7 @@
       "availability": "Free",
       "authentication": "API key",
       "setupUrl": "https://platform.minimax.io/",
-      "defaultModel": "MiniMax-M2.7",
+      "defaultModel": "MiniMax-M3",
       "fields": [
         "gitmind.minimax.apiKey",
         "gitmind.minimax.model"
@@ -166,7 +166,7 @@
       "availability": "Free",
       "authentication": "API key",
       "setupUrl": "https://platform.deepseek.com/api_keys",
-      "defaultModel": "deepseek-v4-flash",
+      "defaultModel": "deepseek-flash",
       "fields": [
         "gitmind.deepseek.apiKey",
         "gitmind.deepseek.model"
@@ -179,7 +179,7 @@
       "availability": "Free",
       "authentication": "API key",
       "setupUrl": "https://console.x.ai/",
-      "defaultModel": "grok-4.4",
+      "defaultModel": "grok-4.7",
       "fields": [
         "gitmind.grok.apiKey",
         "gitmind.grok.model"
@@ -192,7 +192,7 @@
       "availability": "Free",
       "authentication": "API key",
       "setupUrl": "https://console.groq.com/keys",
-      "defaultModel": "meta-llama/llama-4-scout-17b-16e-instruct",
+      "defaultModel": "llama-3.3-70b-versatile",
       "fields": [
         "gitmind.groq.apiKey",
         "gitmind.groq.model"
@@ -218,7 +218,7 @@
       "availability": "Free",
       "authentication": "API key",
       "setupUrl": "https://z.ai/",
-      "defaultModel": "glm-5.1",
+      "defaultModel": "glm-5.3",
       "fields": [
         "gitmind.zai.apiKey",
         "gitmind.zai.model",
@@ -232,7 +232,7 @@
       "availability": "Free",
       "authentication": "API key",
       "setupUrl": "https://build.nvidia.com/models",
-      "defaultModel": "meta/llama-3.3-70b-instruct",
+      "defaultModel": "nvidia/nemotron-3-super-120b-a12b",
       "fields": [
         "gitmind.nvidia.apiKey",
         "gitmind.nvidia.model"
@@ -388,7 +388,7 @@
     {
       "id": "gitmind.huggingface.model",
       "type": "string",
-      "default": "mistralai/Mistral-7B-Instruct-v0.3",
+      "default": "meta-llama/Llama-3.3-70B-Instruct",
       "availability": "Free",
       "description": "Model ID for Hugging Face"
     },
@@ -416,7 +416,7 @@
     {
       "id": "gitmind.mistral.model",
       "type": "string",
-      "default": "mistral-small-4",
+      "default": "mistral-small-2603",
       "availability": "Free",
       "description": "Model name for Mistral AI"
     },
@@ -634,7 +634,7 @@
     {
       "id": "gitmind.gemini.model",
       "type": "string",
-      "default": "gemini-3.5-flash",
+      "default": "gemini-3.8-flash",
       "availability": "Free",
       "description": "Select which Gemini model to use"
     },
@@ -662,7 +662,7 @@
     {
       "id": "gitmind.openai.model",
       "type": "string",
-      "default": "gpt-5.6-terra",
+      "default": "gpt-6-sol",
       "availability": "Free",
       "description": "OpenAI model to use for generating commit messages"
     },
@@ -725,7 +725,7 @@
     {
       "id": "gitmind.openrouter.model",
       "type": "string",
-      "default": "google/gemma-3-27b-it:free",
+      "default": "openrouter/free",
       "availability": "Free",
       "description": "OpenRouter model to use for generating commit messages"
     },
@@ -753,7 +753,7 @@
     {
       "id": "gitmind.minimax.model",
       "type": "string",
-      "default": "MiniMax-M2.7",
+      "default": "MiniMax-M3",
       "availability": "Free",
       "description": "MiniMax model to use for generating commit messages"
     },
@@ -774,7 +774,7 @@
     {
       "id": "gitmind.deepseek.model",
       "type": "string",
-      "default": "deepseek-v4-flash",
+      "default": "deepseek-flash",
       "availability": "Free",
       "description": "DeepSeek model to use for generating commit messages"
     },
@@ -788,7 +788,7 @@
     {
       "id": "gitmind.grok.model",
       "type": "string",
-      "default": "grok-4.4",
+      "default": "grok-4.7",
       "availability": "Free",
       "description": "Grok model to use for generating commit messages"
     },
@@ -802,7 +802,7 @@
     {
       "id": "gitmind.groq.model",
       "type": "string",
-      "default": "meta-llama/llama-4-scout-17b-16e-instruct",
+      "default": "llama-3.3-70b-versatile",
       "availability": "Free",
       "description": "Groq model to use for generating commit messages"
     },
@@ -830,7 +830,7 @@
     {
       "id": "gitmind.zai.model",
       "type": "string",
-      "default": "glm-5.1",
+      "default": "glm-5.3",
       "availability": "Free",
       "description": "Z.ai model to use for generating commit messages"
     },
@@ -844,7 +844,7 @@
     {
       "id": "gitmind.nvidia.model",
       "type": "string",
-      "default": "meta/llama-3.3-70b-instruct",
+      "default": "nvidia/nemotron-3-super-120b-a12b",
       "availability": "Free",
       "description": "NVIDIA hosted NIM model ID. [LLM API reference](https://docs.api.nvidia.com/nim/reference/llm-apis)"
     },

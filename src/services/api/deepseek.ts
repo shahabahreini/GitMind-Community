@@ -10,6 +10,10 @@ interface GenerationConfig {
 }
 
 const MODEL_CONFIGS: Record<DeepSeekModel, GenerationConfig> = {
+    "deepseek-flash": {
+        max_tokens: 350,
+        temperature: 0.2
+    },
     "deepseek-v4-flash": {
         max_tokens: 350,
         temperature: 0.2
@@ -33,11 +37,13 @@ export class DeepSeekProvider extends BaseAIProvider {
             throw new Error("DeepSeek API key is required but not configured");
         }
 
-        // Validate model
-        const validModels: DeepSeekModel[] = ["deepseek-v4-flash", "deepseek-v4-pro"];
-        if (!validModels.includes(this.model as DeepSeekModel)) {
-            debugLog("Error: Invalid DeepSeek model specified", { model: this.model });
-            throw new Error(`Invalid DeepSeek model specified: ${this.model}`);
+        // Live discovery is authoritative; unknown IDs are sent as-is and rejected by the API if invalid.
+        const knownModels: DeepSeekModel[] = ["deepseek-flash", "deepseek-v4-pro", "deepseek-v4-flash"];
+        if (!this.model || !this.model.trim()) {
+            throw new Error("Please select a DeepSeek model in the settings.");
+        }
+        if (!knownModels.includes(this.model as DeepSeekModel)) {
+            debugLog("DeepSeek model not in the known list; using as model ID", { model: this.model });
         }
 
         try {
@@ -46,7 +52,7 @@ export class DeepSeekProvider extends BaseAIProvider {
             debugLog("Prompt:", prompt);
 
             // Get model-specific configuration
-            const config = MODEL_CONFIGS[this.model as DeepSeekModel];
+            const config = MODEL_CONFIGS[this.model as DeepSeekModel] ?? MODEL_CONFIGS["deepseek-flash"];
             if (!config) {
                 throw new Error(`Configuration not found for model: ${this.model}`);
             }

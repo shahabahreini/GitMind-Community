@@ -63,6 +63,16 @@ function parseError(status: number, text: string): ProviderApiError {
     return new ProviderApiError(`NVIDIA API error (${status}): ${detail}`, status, code, "nvidia");
 }
 
+/** Nemotron 3 models enable reasoning by default (NVIDIA NIM docs); thinking can be turned off per request. */
+export function isNemotronReasoningModel(model: string): boolean {
+    return /^nvidia\/nemotron-3/i.test(model);
+}
+
+/** Removes <think>…</think> traces some hosted models emit in `content`. */
+export function stripThinking(text: string): string {
+    return text.replace(/<think>[\s\S]*?<\/think>/gi, "").replace(/^[\s\S]*?<\/think>/i, "");
+}
+
 export class NvidiaProvider extends BaseAIProvider {
     constructor(apiKey: string, model: string) {
         super(apiKey, model);
@@ -82,6 +92,8 @@ export class NvidiaProvider extends BaseAIProvider {
                     temperature: options?.temperature ?? 0.2,
                     max_tokens: options?.maxTokens ?? 1000,
                     ...(options?.topP !== undefined ? { top_p: options.topP } : {}),
+                    // Nemotron reasons by default and returns the trace inside `content`; commit messages need only the answer.
+                    ...(isNemotronReasoningModel(this.model) ? { chat_template_kwargs: { enable_thinking: false } } : {}),
                 }),
                 signal: this.getAbortController().signal,
             }, { provider: "nvidia", operation: "chat.completions" });
@@ -95,7 +107,7 @@ export class NvidiaProvider extends BaseAIProvider {
             if (!content) {
                 throw new ProviderApiError("NVIDIA returned an invalid chat completion response.", undefined, undefined, "nvidia");
             }
-            return this.enforceCommitMessageFormat(content.trim());
+            return this.enforceCommitMessageFormat(stripThinking(content).trim());
         } catch (error) {
             if (error instanceof Error && error.name === "AbortError") {
                 throw new Error("Request was cancelled");

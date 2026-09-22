@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Fixed
+
+- GitHub Copilot no longer reports a missing or invalid API key. GitMind detects Copilot through the editor's language model API. When Copilot cannot be used, GitMind says why: not detected in this editor, not installed, access not allowed, or no models available. Each message comes with an action (Find GitHub Copilot, Retry, or Choose Another Provider).
+- Copilot errors are identified by `LanguageModelError.code`, so permission, content-filter, and model-not-found failures show their own messages.
+- Copilot requests no longer switch silently to another model after a failure. Model fallback follows the Pro Automatic Recovery setting, as for other providers.
+- Provider errors are formatted once. Credential guidance matches how the provider signs in, so keyless providers (Copilot, Ollama, LM Studio, Bedrock, Vertex AI) never show API-key advice.
+- Azure OpenAI and Cloudflare keys are now included in secure-storage migration and encryption status.
+- Hugging Face accepts `organization/model` IDs from every organization (such as `openai/...` and `mistralai/...`).
+
+### Changed
+
+- Perplexity uses the Agent API (`/v1/agent`) ahead of the Sonar Chat Completions shutdown on September 27, 2026.
+- Hugging Face uses the Inference Providers router (`router.huggingface.co/v1`) for chat and model discovery.
+- Copilot Test Connection sends one short request to the selected model instead of trying every model. Requests include a consent justification. The settings view is told when Copilot models change.
+- Defaults now use each provider's latest recommended model:
+  - Gemini `gemini-3.8-flash`
+  - OpenAI `gpt-6-sol`
+  - MiniMax `MiniMax-M3`
+  - Z.ai `glm-5.3`
+- Known-model tables were updated for Gemini 3.x, Claude Opus 5.5 / Fable 5.1, GPT-6, MiniMax M3, Grok 4.7, and GLM 5.3. Retired Gemini 2.x names map to current models.
+- Claude Opus 5.5 and Fable 5.1 get room for their always-on thinking. NVIDIA Nemotron requests turn thinking off, and reasoning traces are removed from commit messages.
+- Anthropic key validation no longer calls a retired model.
+- Updated retired default models:
+  - Mistral `mistral-small-2603`
+  - Hugging Face `meta-llama/Llama-3.3-70B-Instruct`
+  - OpenRouter `openrouter/free`
+  - DeepSeek `deepseek-flash`
+  - xAI `grok-4.7`
+  - Groq `llama-3.3-70b-versatile`
+  - NVIDIA `nvidia/nemotron-3-super-120b-a12b`
+
+  A saved model equal to a retired default moves to the new default. Other saved choices are kept.
+- Refreshed fallback model lists for all providers from current provider documentation.
+- Provider names, sign-in types, default models, and model lists now come from a single provider catalog. Onboarding offers all 23 providers.
+
 ## v6.1.2 - 2026-09-03
 
 ### Added

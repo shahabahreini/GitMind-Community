@@ -9,30 +9,16 @@ interface GenerationConfig {
     temperature: number;
     top_p: number;
     top_k?: number;
+    /** Model always uses adaptive thinking; sampling parameters are not sent. */
+    alwaysThinks?: boolean;
 }
 
 const MODEL_CONFIGS: Record<AnthropicModel, GenerationConfig> = {
-    "claude-sonnet-5": {
-        max_tokens: 350,
-        temperature: 0.2,
-        top_p: 0.8
-    },
-    "claude-opus-4-8": {
-        max_tokens: 350,
-        temperature: 0.2,
-        top_p: 0.8
-    },
-    "claude-fable-5": {
-        max_tokens: 350,
-        temperature: 0.2,
-        top_p: 0.8
-    },
-    "claude-haiku-4-5": {
-        max_tokens: 350,
-        temperature: 0.2,
-        top_p: 0.8
-    },
-
+    "claude-sonnet-5": { max_tokens: 350, temperature: 0.2, top_p: 0.8 },
+    "claude-haiku-4-5": { max_tokens: 350, temperature: 0.2, top_p: 0.8 },
+    // Adaptive thinking is always on for these models: leave room for thinking and use default sampling.
+    "claude-opus-5-5": { max_tokens: 8000, temperature: 0.2, top_p: 0.8, alwaysThinks: true },
+    "claude-fable-5-1": { max_tokens: 8000, temperature: 0.2, top_p: 0.8, alwaysThinks: true },
 };
 
 export class AnthropicProvider extends BaseAIProvider {
@@ -49,12 +35,7 @@ export class AnthropicProvider extends BaseAIProvider {
         }
 
         // Validate model
-        const validModels: AnthropicModel[] = [
-            "claude-sonnet-5",
-            "claude-opus-4-8",
-            "claude-fable-5",
-            "claude-haiku-4-5"
-        ];
+        const validModels = Object.keys(MODEL_CONFIGS) as AnthropicModel[];
 
         // Use type assertion to check if model is in validModels, but proceed even if not perfectly matching
         // to allow for newer models not yet in the list
@@ -78,7 +59,7 @@ export class AnthropicProvider extends BaseAIProvider {
             // Anthropic constraint: don't send both temperature and top_p.
             // If the caller explicitly sets temperature, prefer it and drop top_p.
             // If top_p is provided (and temperature isn't explicitly overridden), omit temperature.
-            const shouldSendTemperature = topP === undefined;
+            const shouldSendTemperature = topP === undefined && !config.alwaysThinks;
             const temperature = shouldSendTemperature ? (temperatureOverride ?? config.temperature) : undefined;
 
             // Using the Messages API
@@ -93,8 +74,8 @@ export class AnthropicProvider extends BaseAIProvider {
                     model: this.model,
                     max_tokens: maxTokens,
                     ...(temperature !== undefined ? { temperature } : {}),
-                    ...(topP !== undefined ? { top_p: topP } : {}),
-                    ...(topK !== undefined ? { top_k: topK } : {}),
+                    ...(topP !== undefined && !config.alwaysThinks ? { top_p: topP } : {}),
+                    ...(topK !== undefined && !config.alwaysThinks ? { top_k: topK } : {}),
                     messages: [
                         {
                             role: "user",
@@ -324,7 +305,7 @@ export class AnthropicProvider extends BaseAIProvider {
                     'anthropic-version': '2023-06-01'
                 },
                 body: JSON.stringify({
-                    model: "claude-3-5-haiku-20241022",
+                    model: "claude-haiku-4-5", // fastest current model; the key check needs only a tiny reply
                     max_tokens: 10,
                     messages: [
                         {

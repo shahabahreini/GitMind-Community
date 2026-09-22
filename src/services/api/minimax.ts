@@ -13,26 +13,12 @@ interface GenerationConfig {
 }
 
 const MODEL_CONFIGS: Record<MiniMaxModel, GenerationConfig> = {
-    "MiniMax-M2.7": {
-        max_tokens: 350,
-        temperature: 0.2,
-        top_p: 0.8,
-    },
-    "MiniMax-M2.5": {
-        max_tokens: 350,
-        temperature: 0.2,
-        top_p: 0.8,
-    },
-    "MiniMax-M2": {
-        max_tokens: 350,
-        temperature: 0.2,
-        top_p: 0.8,
-    },
-    "MiniMax-Text-01": {
-        max_tokens: 350,
-        temperature: 0.2,
-        top_p: 0.8,
-    },
+    "MiniMax-M3": { max_tokens: 2000, temperature: 0.2, top_p: 0.8 },
+    "MiniMax-M2.7": { max_tokens: 350, temperature: 0.2, top_p: 0.8 },
+    "MiniMax-M2.7-highspeed": { max_tokens: 350, temperature: 0.2, top_p: 0.8 },
+    "MiniMax-M2.5": { max_tokens: 350, temperature: 0.2, top_p: 0.8 },
+    "MiniMax-M2.5-highspeed": { max_tokens: 350, temperature: 0.2, top_p: 0.8 },
+    "MiniMax-M2": { max_tokens: 350, temperature: 0.2, top_p: 0.8 },
 };
 
 function extractTextFromAnthropicContent(content: unknown): string {
@@ -71,13 +57,14 @@ export class MiniMaxProvider extends BaseAIProvider {
         }
 
         const selectedModel = this.model as MiniMaxModel;
-        const validModels: MiniMaxModel[] = ["MiniMax-M2", "MiniMax-M2.5", "MiniMax-M2.7", "MiniMax-Text-01"];
-        if (!validModels.includes(selectedModel)) {
-            debugLog("Error: Invalid MiniMax model specified", { model: this.model });
-            throw new Error(`Invalid MiniMax model specified: ${this.model}`);
+        if (!selectedModel || !selectedModel.trim()) {
+            throw new Error("Please select a MiniMax model in the settings.");
+        }
+        if (!(selectedModel in MODEL_CONFIGS)) {
+            debugLog("MiniMax model not in the known list; using as model ID", { model: this.model });
         }
 
-        const config = MODEL_CONFIGS[selectedModel];
+        const config = MODEL_CONFIGS[selectedModel] ?? MODEL_CONFIGS["MiniMax-M2.7"];
 
         try {
             debugLog(`Calling MiniMax (Anthropic-compatible) API with model: ${selectedModel}`);

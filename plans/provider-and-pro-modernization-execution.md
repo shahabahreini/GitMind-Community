@@ -30,6 +30,13 @@
 
 ## Deviations
 
+- 2026-09-22 — **Correction to task 2.1** (added by `plans/copilot-detection-and-provider-refresh.md`, task 3.4): the claim "one typed provider authority; no independent default lists" was inaccurate. Code inspection on 2026-09-22 found about 30 independent provider lists or tables, for example:
+  - key-required flags in `settings.ts`, `commands/index.ts`, `onboardingManager.ts`, and the webview constants
+  - 8 secret-provider lists in `SecureKeyManager.ts` and `encryptionHelper.ts`, missing Azure OpenAI and Cloudflare
+  - stale default models in `validation.ts`, `StatusBanner.ts`, and `uiManager.ts`
+
+  These are now resolved by deriving every consumer from `src/config/providerCatalog.ts`. The guard is `src/test/suites/providerCatalog.test.ts` › *Provider registry parity guard*. Historical rows are left unchanged.
+
 - 2026-09-02 — User explicitly expanded the approved provider shortlist from staged admissions to all five candidates and added Marketplace SEO. Accepted; SEO-1 was added and all five providers are in scope. No provider outside the prior shortlist is authorized.
 
 ## QC Results

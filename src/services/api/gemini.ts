@@ -2,6 +2,7 @@ import { debugLog } from "../debug/logger";
 import { GeminiModel } from "../../config/types";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
+import { getProviderDefaultModel } from "../../config/providerCatalog";
 
 // Define generation configuration for different models
 interface GenerationConfig {
@@ -12,43 +13,15 @@ interface GenerationConfig {
 }
 
 const MODEL_CONFIGS: Record<GeminiModel, GenerationConfig> = {
-    // Gemini Series - Max output: 65,536 tokens
-    "gemini-3.1-pro-preview": {
-        temperature: 0.2,
-        topK: 40,
-        topP: 0.9,
-        maxOutputTokens: 65536,
-    },
-    "gemini-3.5-flash": {
-        temperature: 0.2,
-        topK: 40,
-        topP: 0.9,
-        maxOutputTokens: 65536,
-    },
-    "gemini-3.1-flash-lite": {
-        temperature: 0.2,
-        topK: 40,
-        topP: 0.9,
-        maxOutputTokens: 65536,
-    },
-    "gemini-2.5-pro": {
-        temperature: 0.2,
-        topK: 40,
-        topP: 0.9,
-        maxOutputTokens: 8192,
-    },
-    "gemini-2.5-flash": {
-        temperature: 0.2,
-        topK: 40,
-        topP: 0.9,
-        maxOutputTokens: 8192,
-    },
-    "gemini-2.5-flash-lite": {
-        temperature: 0.2,
-        topK: 40,
-        topP: 0.9,
-        maxOutputTokens: 8192,
-    },
+    // Gemini 3.x series - max output: 65,536 tokens
+    "gemini-3.8-flash": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536 },
+    "gemini-3.7-flash": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536 },
+    "gemini-3.6-flash": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536 },
+    "gemini-3.5-flash": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536 },
+    "gemini-3.5-flash-lite": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536 },
+    "gemini-3.1-flash-lite": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536 },
+    "gemini-3.1-pro-preview": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536 },
+    "gemini-3-flash-preview": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536 },
 };
 
 async function createGeminiClient(apiKey: string) {
@@ -63,17 +36,24 @@ type GeminiValidationResult = {
     troubleshooting?: string;
 };
 
+/** Shut-down Gemini 2.x IDs (Gemini API models page, 2026-09-22) mapped to current stable models. */
+const GEMINI_MODEL_ALIASES: Record<string, GeminiModel> = {
+    "gemini-2.0-flash": "gemini-3.5-flash",
+    "gemini-2.0-flash-001": "gemini-3.5-flash",
+    "gemini-2.0-flash-lite": "gemini-3.5-flash-lite",
+    "gemini-2.0-flash-lite-001": "gemini-3.5-flash-lite",
+    "gemini-2.5-flash-preview": "gemini-3.5-flash",
+    "gemini-2.5-flash": "gemini-3.5-flash",
+    "gemini-2.5-flash-lite-preview": "gemini-3.5-flash-lite",
+    "gemini-2.5-flash-lite": "gemini-3.5-flash-lite",
+    "gemini-2.5-pro": "gemini-3.1-pro-preview",
+    "gemini-3-pro-preview": "gemini-3.1-pro-preview",
+    "gemini-3.1-flash-lite-preview": "gemini-3.1-flash-lite",
+};
+
 export function getEffectiveGeminiModel(rawModel: string): string {
     const trimmed = rawModel.trim();
-    const modelAliases: Record<string, GeminiModel> = {
-        "gemini-2.5-flash-preview": "gemini-2.5-flash",
-        "gemini-2.5-flash-lite-preview": "gemini-2.5-flash-lite",
-        "gemini-2.0-flash-001": "gemini-2.5-flash",
-        "gemini-2.0-flash-lite": "gemini-2.5-flash-lite",
-        "gemini-2.0-flash-lite-001": "gemini-2.5-flash-lite",
-    };
-
-    const normalizedModel = modelAliases[trimmed] ?? trimmed;
+    const normalizedModel = GEMINI_MODEL_ALIASES[trimmed] ?? trimmed;
     const validModels = Object.keys(MODEL_CONFIGS) as GeminiModel[];
 
     if (validModels.includes(normalizedModel as GeminiModel)) {
@@ -84,7 +64,7 @@ export function getEffectiveGeminiModel(rawModel: string): string {
         return normalizedModel;
     }
 
-    return "gemini-3.5-flash";
+    return getProviderDefaultModel("gemini");
 }
 
 export class GeminiProvider extends BaseAIProvider {
@@ -105,15 +85,7 @@ export class GeminiProvider extends BaseAIProvider {
 
             // Improved model validation and fallback logic
             const rawModel = this.model;
-            const modelAliases: Record<string, GeminiModel> = {
-                "gemini-2.5-flash-preview": "gemini-2.5-flash",
-                "gemini-2.5-flash-lite-preview": "gemini-2.5-flash-lite",
-                "gemini-2.0-flash-001": "gemini-2.5-flash",
-                "gemini-2.0-flash-lite": "gemini-2.5-flash-lite",
-                "gemini-2.0-flash-lite-001": "gemini-2.5-flash-lite",
-            };
-
-            const normalizedModel = modelAliases[rawModel] ?? rawModel;
+            const normalizedModel = GEMINI_MODEL_ALIASES[rawModel] ?? rawModel;
 
             let selectedModel = normalizedModel as GeminiModel;
             const validModels = Object.keys(MODEL_CONFIGS) as GeminiModel[];
@@ -124,8 +96,9 @@ export class GeminiProvider extends BaseAIProvider {
                     selectedModel = normalizedModel as GeminiModel;
                 } else {
                     // Fall back to a stable model as last resort
-                    debugLog("Falling back to default model", { defaultModel: "gemini-3.5-flash" });
-                    selectedModel = "gemini-3.5-flash";
+                    const defaultModel = getProviderDefaultModel("gemini") as GeminiModel;
+                    debugLog("Falling back to default model", { defaultModel });
+                    selectedModel = defaultModel;
                 }
             }
 

@@ -4,8 +4,31 @@ import { generateCommitPrompt, getPromptConfig } from './prompts';
 import { PerplexityModel } from "../../config/types";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
+import { getCuratedModels } from "../../config/providerCatalog";
 
 const PERPLEXITY_BASE_URL = "https://api.perplexity.ai";
+/**
+ * Perplexity Agent API (replaces Sonar Chat Completions, supported only until 2026-09-27).
+ * https://docs.perplexity.ai/docs/agent-api/migrate-from-sonar/how-to
+ */
+const PERPLEXITY_AGENT_URL = `${PERPLEXITY_BASE_URL}/v1/agent`;
+const COMMIT_INSTRUCTIONS = "You are an expert at creating concise, informative git commit messages. Focus on the most important changes and use conventional commit format when appropriate.";
+
+/** Extracts the generated text from an Agent API response. */
+export function extractPerplexityAgentText(data: any): string | undefined {
+    if (typeof data?.output_text === "string" && data.output_text.trim()) {
+        return data.output_text;
+    }
+    const parts: string[] = [];
+    for (const item of Array.isArray(data?.output) ? data.output : []) {
+        for (const content of Array.isArray(item?.content) ? item.content : []) {
+            if (typeof content?.text === "string") {
+                parts.push(content.text);
+            }
+        }
+    }
+    return parts.length > 0 ? parts.join("") : undefined;
+}
 
 // Configuration for different Perplexity models
 interface GenerationConfig {
@@ -44,51 +67,35 @@ export class PerplexityProvider extends BaseAIProvider {
             throw new Error("Perplexity API key is required but not configured");
         }
 
-        // Validate model
-        const validModels = Object.keys(MODEL_CONFIGS) as PerplexityModel[];
-        if (!validModels.includes(this.model as PerplexityModel)) {
-            debugLog("Error: Invalid Perplexity model specified", { model: this.model });
-            throw new Error(`Invalid Perplexity model specified: ${this.model}`);
+        // The Agent API accepts Sonar models and provider-prefixed models; unknown IDs use default limits.
+        if (!this.model || !this.model.trim()) {
+            throw new Error("Please select a Perplexity model in the settings.");
         }
 
         try {
             debugLog("Sending prompt to Perplexity API");
 
             // Get model-specific configuration
-            const config = MODEL_CONFIGS[this.model as PerplexityModel];
-            if (!config) {
-                throw new Error(`Configuration not found for model: ${this.model}`);
-            }
+            const config = MODEL_CONFIGS[this.model as PerplexityModel] ?? MODEL_CONFIGS["sonar-pro"];
 
             const headers = {
                 Authorization: `Bearer ${this.apiKey}`,
                 "Content-Type": "application/json",
             };
 
-            const messages = [
-                {
-                    role: "system",
-                    content: "You are an expert at creating concise, informative git commit messages. Focus on the most important changes and use conventional commit format when appropriate."
-                },
-                {
-                    role: "user",
-                    content: prompt,
-                },
-            ];
-
             const body = {
                 model: this.model,
-                messages: messages,
-                max_tokens: options?.maxTokens ?? config.max_tokens,
-                temperature: options?.temperature ?? config.temperature,
+                instructions: COMMIT_INSTRUCTIONS,
+                input: prompt,
+                max_output_tokens: options?.maxTokens ?? config.max_tokens,
             };
 
-            const response = await loggedFetch(`${PERPLEXITY_BASE_URL}/chat/completions`, {
+            const response = await loggedFetch(PERPLEXITY_AGENT_URL, {
                 method: "POST",
                 headers,
                 body: JSON.stringify(body),
                 signal: controller.signal,
-            }, { provider: "perplexity", operation: "chat.completions" });
+            }, { provider: "perplexity", operation: "agent.create" });
 
             if (!response.ok) {
                 let errorText = "";
@@ -153,8 +160,7 @@ export class PerplexityProvider extends BaseAIProvider {
             }
 
             const data = await response.json();
-            const message =
-                data.choices?.[0]?.message?.content || data.message?.content;
+            const message = extractPerplexityAgentText(data);
 
             if (!message) {
                 throw new Error("No valid response from Perplexity API");
@@ -198,48 +204,9 @@ export class PerplexityProvider extends BaseAIProvider {
         }
     }
 
+    /** The Agent API has no model-list endpoint; offer the catalog's documented Sonar models. */
     async getModels(): Promise<string[]> {
-        try {
-            debugLog("Fetching Perplexity models from API (GET /v1/models)...");
-
-            const response = await loggedFetch(`${PERPLEXITY_BASE_URL}/v1/models`, {
-                method: "GET",
-                headers: {
-                    "Authorization": `Bearer ${this.apiKey}`,
-                    "Accept": "application/json"
-                }
-            }, { provider: "perplexity", operation: "models.list" });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                debugLog(`Perplexity models API error: ${response.status} - ${errorText}`);
-                throw new Error(`Failed to fetch Perplexity models (${response.status})`);
-            }
-
-            const data = await response.json();
-            debugLog("Perplexity models API response:", data);
-
-            // Response follows OpenAI list format: { object: 'list', data: [{ id, ... }] }
-            if (!data.data || !Array.isArray(data.data)) {
-                debugLog("Invalid Perplexity models response structure");
-                throw new Error("Invalid response format from Perplexity models API");
-            }
-
-            const modelIds: string[] = data.data
-                .map((model: any) => model?.id)
-                .filter((id: any) => id && typeof id === "string");
-
-            if (modelIds.length === 0) {
-                throw new Error("No models returned from Perplexity models API");
-            }
-
-            debugLog(`Successfully fetched ${modelIds.length} Perplexity models:`, modelIds);
-            return modelIds;
-        } catch (error) {
-            debugLog("Error fetching Perplexity models, falling back to defaults:", error);
-            // Graceful fallback to known good models
-            return Object.keys(MODEL_CONFIGS);
-        }
+        return [...getCuratedModels("perplexity")];
     }
 
     async validateApiKey(): Promise<boolean | { success: boolean; error?: string; warning?: string; troubleshooting?: string }> {
@@ -257,22 +224,16 @@ export async function validatePerplexityAPIKey(apiKey: string): Promise<{ succes
     const controller = requestManager.getController();
 
     try {
-        const response = await loggedFetch(`${PERPLEXITY_BASE_URL}/chat/completions`, {
+        const response = await loggedFetch(PERPLEXITY_AGENT_URL, {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${apiKey}`,
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                model: "sonar-pro",
-                messages: [
-                    {
-                        role: "user",
-                        content: "Hi"
-                    }
-                ],
-                max_tokens: 1,
-                temperature: 0.2
+                model: "sonar",
+                input: "Hi",
+                max_output_tokens: 16
             }),
             signal: controller.signal,
         }, { provider: "perplexity", operation: "validate" });

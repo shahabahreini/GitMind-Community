@@ -172,7 +172,7 @@ export class MistralProvider extends BaseAIProvider {
 
             case 422:
                 if (errorData?.message?.includes("context_length")) {
-                    return "The git diff is too large for the selected model. Try:\n• Staging fewer files\n• Using mistral-large-latest for larger context\n• Breaking changes into smaller commits";
+                    return "The git diff is too large for the selected model. Try:\n• Staging fewer files\n• Using Mistral Large 3 (mistral-large-2512) for larger context\n• Breaking changes into smaller commits";
                 }
                 return `Mistral request validation failed: ${errorData?.message || 'Invalid request'}`;
 

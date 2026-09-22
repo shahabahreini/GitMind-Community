@@ -2,6 +2,13 @@
 
 import * as vscode from 'vscode';
 import { debugLog } from "../services/debug/logger";
+import { getProviderEntry, KEYLESS_PROVIDER_IDS, PROVIDER_IDS, ProviderCatalogId, resolveProviderId } from "../config/providerCatalog";
+
+/** True for providers that need no user-supplied credential (by id or name). */
+function isKeylessProvider(provider: string): boolean {
+    const id = resolveProviderId(provider);
+    return id !== undefined && KEYLESS_PROVIDER_IDS.includes(id);
+}
 
 export interface OnboardingStep {
     title: string;
@@ -15,20 +22,10 @@ export class OnboardingManager {
     private static readonly FIRST_ACTIVATION_KEY = 'gitmind.firstActivation';
     private static readonly ONBOARDING_DISABLED_PERMANENTLY_KEY = 'gitmind.onboardingDisabledPermanently';
 
-    private static readonly PROVIDER_DOCS: Record<string, string> = {
-        'Gemini': 'https://aistudio.google.com/app/apikey',
-        'Hugging Face': 'https://huggingface.co/settings/tokens',
-        'Ollama': 'https://ollama.ai/download',
-        'Mistral': 'https://console.mistral.ai/api-keys/',
-        'Cohere': 'https://dashboard.cohere.com/api-keys',
-        'OpenAI': 'https://platform.openai.com/api-keys',
-        'Together AI': 'https://api.together.xyz/settings/api-keys',
-        'OpenRouter': 'https://openrouter.ai/keys',
-        'Anthropic': 'https://console.anthropic.com/',
-        'DeepSeek': 'https://platform.deepseek.com/api_keys',
-        'Grok': 'https://console.x.ai/',
-        'Perplexity': 'https://www.perplexity.ai/settings/api'
-    };
+    /** Credential or setup page for a provider id or name, from the provider catalog. */
+    private static getProviderDocsUrl(provider: string): string | undefined {
+        return getProviderEntry(provider)?.docsUrl || undefined;
+    }
 
     private static steps: OnboardingStep[] = [];
 
@@ -104,7 +101,7 @@ export class OnboardingManager {
                     }
                 }
             } else if (result === 'Get API Key') {
-                const providerUrl = this.PROVIDER_DOCS && this.PROVIDER_DOCS[provider];
+                const providerUrl = this.getProviderDocsUrl(provider);
                 if (providerUrl) {
                     await vscode.env.openExternal(vscode.Uri.parse(providerUrl));
                     // After opening the website, prompt for API key input
@@ -153,49 +150,19 @@ export class OnboardingManager {
         return undefined;
     }
 
+    /** Setting that stores the provider's secret (API key or Custom API token); empty for keyless providers. */
     private static getProviderSettingPath(provider: string): string {
-        const paths: Record<string, string> = {
-            'gemini': 'gemini.apiKey',
-            'Gemini': 'gemini.apiKey',
-            'huggingface': 'huggingface.apiKey',
-            'Hugging Face': 'huggingface.apiKey',
-            'mistral': 'mistral.apiKey',
-            'Mistral': 'mistral.apiKey',
-            'cohere': 'cohere.apiKey',
-            'Cohere': 'cohere.apiKey',
-            'openai': 'openai.apiKey',
-            'OpenAI': 'openai.apiKey',
-            'together': 'together.apiKey',
-            'Together AI': 'together.apiKey',
-            'openrouter': 'openrouter.apiKey',
-            'OpenRouter': 'openrouter.apiKey',
-            'anthropic': 'anthropic.apiKey',
-            'Anthropic': 'anthropic.apiKey',
-            'deepseek': 'deepseek.apiKey',
-            'DeepSeek': 'deepseek.apiKey',
-            'grok': 'grok.apiKey',
-            'Grok': 'grok.apiKey',
-            'perplexity': 'perplexity.apiKey',
-            'Perplexity': 'perplexity.apiKey',
-            'minimax': 'minimax.apiKey',
-            'MiniMax': 'minimax.apiKey',
-            'zai': 'zai.apiKey',
-            'Z.ai': 'zai.apiKey',
-            'nvidia': 'nvidia.apiKey',
-            'NVIDIA': 'nvidia.apiKey',
-            'custom': 'custom.authToken',
-            'Custom API': 'custom.authToken'
-        };
-        const result = paths[provider];
+        const entry = getProviderEntry(provider);
+        const result = entry && !isKeylessProvider(provider) ? entry.settingPath : '';
         if (!result) {
-            debugLog(`Warning: No setting path found for provider: ${provider}`);
+            debugLog(`Warning: No credential setting path for provider: ${provider}`);
         }
-        return result || '';
+        return result;
     }
 
     public static async validateConfiguration(provider: string): Promise<boolean> {
-        if (provider === 'Ollama') {
-            return true; // Ollama doesn't require API key
+        if (isKeylessProvider(provider)) {
+            return true; // Keyless providers (Copilot, Ollama, LM Studio, Bedrock, Vertex AI) need no API key
         }
 
         const config = vscode.workspace.getConfiguration('gitmind');
@@ -219,7 +186,7 @@ export class OnboardingManager {
                 const newApiKey = await this.promptForApiKey(provider);
                 return !!newApiKey;
             } else if (result === 'Get API Key') {
-                const providerUrl = this.PROVIDER_DOCS && this.PROVIDER_DOCS[provider];
+                const providerUrl = this.getProviderDocsUrl(provider);
                 if (providerUrl) {
                     await vscode.env.openExternal(vscode.Uri.parse(providerUrl));
                 } else {
@@ -337,27 +304,21 @@ export class OnboardingManager {
         }
 
         // Check if the provider has required configuration
-        switch (provider) {
-            case 'ollama':
-                // Ollama doesn't require API key, but check if it's actually working
-                debugLog('Ollama provider detected, considering as configured');
-                return true;
-            case 'copilot':
-                // Copilot is integrated, consider it configured if selected
-                debugLog('Copilot provider detected, considering as configured');
-                return true;
-            default:
-                // For other providers, check if API key exists and is not empty
-                const apiKeyPath = this.getProviderSettingPath(provider);
-                if (apiKeyPath) {
-                    const apiKey = config.get<string>(apiKeyPath);
-                    const hasValidKey = !!(apiKey && apiKey.trim().length > 0);
-                    debugLog(`API key check for ${provider}: ${hasValidKey ? 'configured' : 'missing'}`);
-                    return hasValidKey;
-                }
-                debugLog(`No API key path found for provider: ${provider}`);
-                return false;
+        if (isKeylessProvider(provider)) {
+            debugLog(`${provider} needs no API key, considering as configured`);
+            return true;
         }
+
+        // For other providers, check if API key exists and is not empty
+        const apiKeyPath = this.getProviderSettingPath(provider);
+        if (apiKeyPath) {
+            const apiKey = config.get<string>(apiKeyPath);
+            const hasValidKey = !!(apiKey && apiKey.trim().length > 0);
+            debugLog(`API key check for ${provider}: ${hasValidKey ? 'configured' : 'missing'}`);
+            return hasValidKey;
+        }
+        debugLog(`No API key path found for provider: ${provider}`);
+        return false;
     }
 
     /**
@@ -367,13 +328,13 @@ export class OnboardingManager {
         const config = vscode.workspace.getConfiguration('gitmind');
 
         // List of all providers that could be configured
-        const providers = ['gemini', 'huggingface', 'ollama', 'mistral', 'cohere', 'openai', 'together', 'openrouter', 'anthropic', 'minimax', 'copilot', 'deepseek', 'grok', 'perplexity', 'zai', 'nvidia', 'custom'];
+        const providers: readonly ProviderCatalogId[] = PROVIDER_IDS;
 
         debugLog('Checking API configuration for all providers...');
 
         for (const provider of providers) {
             // Check if this provider has configuration
-            if (provider === 'ollama' || provider === 'copilot') {
+            if (isKeylessProvider(provider)) {
                 // These don't require API keys, check if they're the current provider
                 const currentProvider = config.get<string>('apiProvider');
                 if (currentProvider === provider) {

@@ -34,23 +34,23 @@ Open **GitMind Setting** for the guided UI. The table below covers user-configur
 
 | Provider | Settings | Defaults / values |
 | --- | --- | --- |
-| Gemini | `gitmind.gemini.apiKey`, `gitmind.gemini.model` | `gemini-3.5-flash` |
-| Hugging Face | `gitmind.huggingface.apiKey`, `gitmind.huggingface.model` | `mistralai/Mistral-7B-Instruct-v0.3` |
+| Gemini | `gitmind.gemini.apiKey`, `gitmind.gemini.model` | `gemini-3.8-flash` |
+| Hugging Face | `gitmind.huggingface.apiKey`, `gitmind.huggingface.model` | `meta-llama/Llama-3.3-70B-Instruct` |
 | Ollama | `gitmind.ollama.url`, `gitmind.ollama.model` | `http://localhost:11434`, `phi4` |
-| Mistral | `gitmind.mistral.apiKey`, `gitmind.mistral.model` | `mistral-small-4` |
+| Mistral | `gitmind.mistral.apiKey`, `gitmind.mistral.model` | `mistral-small-2603` |
 | Cohere | `gitmind.cohere.apiKey`, `gitmind.cohere.model` | `command-a-plus-05-2026` |
-| OpenAI | `gitmind.openai.apiKey`, `gitmind.openai.model` | `gpt-5.6-terra` |
+| OpenAI | `gitmind.openai.apiKey`, `gitmind.openai.model` | `gpt-6-sol` |
 | Together AI | `gitmind.together.apiKey`, `gitmind.together.model` | `meta-llama/Llama-3.3-70B-Instruct-Turbo` |
-| OpenRouter | `gitmind.openrouter.apiKey`, `gitmind.openrouter.model` | `google/gemma-3-27b-it:free` |
+| OpenRouter | `gitmind.openrouter.apiKey`, `gitmind.openrouter.model` | `openrouter/free` |
 | Anthropic | `gitmind.anthropic.apiKey`, `gitmind.anthropic.model` | `claude-sonnet-5` |
-| MiniMax | `gitmind.minimax.apiKey`, `gitmind.minimax.model` | `MiniMax-M2.7` |
+| MiniMax | `gitmind.minimax.apiKey`, `gitmind.minimax.model` | `MiniMax-M3` |
 | Copilot | `gitmind.copilot.model` | `auto` |
-| DeepSeek | `gitmind.deepseek.apiKey`, `gitmind.deepseek.model` | `deepseek-v4-flash` |
-| Grok | `gitmind.grok.apiKey`, `gitmind.grok.model` | `grok-4.4` |
-| Groq | `gitmind.groq.apiKey`, `gitmind.groq.model` | `meta-llama/llama-4-scout-17b-16e-instruct` |
+| DeepSeek | `gitmind.deepseek.apiKey`, `gitmind.deepseek.model` | `deepseek-flash` |
+| Grok | `gitmind.grok.apiKey`, `gitmind.grok.model` | `grok-4.7` |
+| Groq | `gitmind.groq.apiKey`, `gitmind.groq.model` | `llama-3.3-70b-versatile` |
 | Perplexity | `gitmind.perplexity.apiKey`, `gitmind.perplexity.model` | `sonar-pro` |
-| Z.ai | `gitmind.zai.apiKey`, `gitmind.zai.model`, `gitmind.zai.endpoint` | `glm-5.1`; `regular` or `coding` (default) |
-| NVIDIA | `gitmind.nvidia.apiKey`, `gitmind.nvidia.model` | `meta/llama-3.3-70b-instruct` |
+| Z.ai | `gitmind.zai.apiKey`, `gitmind.zai.model`, `gitmind.zai.endpoint` | `glm-5.3`; `regular` or `coding` (default) |
+| NVIDIA | `gitmind.nvidia.apiKey`, `gitmind.nvidia.model` | `nvidia/nemotron-3-super-120b-a12b` |
 | LM Studio | `gitmind.lmstudio.url`, `gitmind.lmstudio.model` | `http://127.0.0.1:1234/v1`; user-loaded model |
 | Azure OpenAI | `gitmind.azureopenai.apiKey`, `.endpoint`, `.authMode`, `.model` | Account deployment name; API key or Entra |
 | Amazon Bedrock | `gitmind.bedrock.region`, `.profile`, `.model` | `us-east-1`; account/region model ID |

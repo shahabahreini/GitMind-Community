@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 import { ExtensionSettings } from "../../models/ExtensionSettings";
 import { debugLog } from "../../services/debug/logger";
 import { SecureKeyManager } from '../../services/encryption/SecureKeyManager';
-import { getProviderDefaultModel } from '../../config/providerCatalog';
+import { API_KEY_PROVIDER_IDS, getProviderDefaultModel, PROVIDER_IDS } from '../../config/providerCatalog';
 import { isProUser, isLegacyProUser } from '../../utils/proHelpers';
 import { collectChangeSet } from '../../commit-intelligence/git';
 import { getLastHealthScan } from '../../commit-intelligence/health';
@@ -32,38 +32,23 @@ export class SettingsManager {
     private static _saveInProgress = false;
     private static _saveTimeout: NodeJS.Timeout | undefined;
 
-    private static readonly PROVIDER_DEFAULTS: ProviderDefaults = {
-        gemini: { model: getProviderDefaultModel("gemini") },
-        huggingface: { model: "" },
-        ollama: { model: "", url: "" },
-        mistral: { model: getProviderDefaultModel("mistral") },
-        cohere: { model: getProviderDefaultModel("cohere") },
-        openai: { model: getProviderDefaultModel("openai") },
-        together: { model: "meta-llama/Llama-3.3-70B-Instruct-Turbo" },
-        openrouter: { model: "google/gemma-3-27b-it:free" },
-        anthropic: { model: getProviderDefaultModel("anthropic") },
-        minimax: { model: getProviderDefaultModel("minimax") },
-        copilot: { model: getProviderDefaultModel("copilot") },
-        deepseek: { model: getProviderDefaultModel("deepseek") },
-        grok: { model: getProviderDefaultModel("grok") },
-        groq: { model: "meta-llama/llama-4-scout-17b-16e-instruct" },
-        perplexity: { model: getProviderDefaultModel("perplexity") },
-        zai: { model: "glm-5.1", endpoint: "coding" },
-        nvidia: { model: "meta/llama-3.3-70b-instruct" },
-        lmstudio: { model: "", url: "" },
-        azureopenai: { model: "", endpoint: "", authMode: "apiKey" },
-        bedrock: { model: "", region: "us-east-1", profile: "" },
-        vertexai: { model: "", project: "", location: "us-central1" },
-        cloudflare: { model: "", accountId: "", gatewayId: "" },
-        custom: { model: "" }
+    /** Provider-specific connection settings; identity, auth, and default models come from the provider catalog. */
+    private static readonly PROVIDER_EXTRAS: Record<string, Omit<ProviderConfig, 'model'>> = {
+        ollama: { url: "" },
+        lmstudio: { url: "" },
+        zai: { endpoint: "coding" },
+        azureopenai: { endpoint: "", authMode: "apiKey" },
+        bedrock: { region: "us-east-1", profile: "" },
+        vertexai: { project: "", location: "us-central1" },
+        cloudflare: { accountId: "", gatewayId: "" },
     };
 
-    private static readonly API_KEY_PROVIDERS = [
-        'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-        'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'groq', 'perplexity', 'zai', 'nvidia', 'azureopenai', 'cloudflare'
-    ];
+    private static readonly PROVIDER_DEFAULTS: ProviderDefaults = Object.fromEntries(PROVIDER_IDS.map(id => [
+        id,
+        { model: getProviderDefaultModel(id), ...(SettingsManager.PROVIDER_EXTRAS[id] ?? {}) },
+    ]));
 
-    private static readonly NO_API_KEY_PROVIDERS = ['ollama', 'copilot', 'lmstudio', 'bedrock', 'vertexai', 'custom'];
+    private static readonly API_KEY_PROVIDERS: string[] = [...API_KEY_PROVIDER_IDS];
 
     public async getSettings(): Promise<ExtensionSettings> {
         const config = vscode.workspace.getConfiguration(SettingsManager.CONFIG_PREFIX);

@@ -78,41 +78,37 @@ export type TargetCommitLanguage =
     | 'azerbaijani';
 
 // Model types
+// Known models (verified 2026-09-22 against provider docs); live discovery may return others.
 export type GeminiModel =
-    | "gemini-3.5-flash" | "gemini-3.1-pro-preview" | "gemini-3.1-flash-lite"
-    | "gemini-2.5-pro" | "gemini-2.5-flash" | "gemini-2.5-flash-lite";
+    | "gemini-3.8-flash" | "gemini-3.7-flash" | "gemini-3.6-flash" | "gemini-3.5-flash"
+    | "gemini-3.5-flash-lite" | "gemini-3.1-flash-lite" | "gemini-3.1-pro-preview" | "gemini-3-flash-preview";
 
 export type AnthropicModel =
-    | "claude-sonnet-5" | "claude-opus-4-8" | "claude-fable-5" | "claude-haiku-4-5";
+    | "claude-sonnet-5" | "claude-opus-5-5" | "claude-fable-5-1" | "claude-haiku-4-5";
 
-export type MiniMaxModel = "MiniMax-M2.7" | "MiniMax-M2.5" | "MiniMax-M2" | "MiniMax-Text-01";
+export type MiniMaxModel = "MiniMax-M3" | "MiniMax-M2.7" | "MiniMax-M2.7-highspeed" | "MiniMax-M2.5" | "MiniMax-M2.5-highspeed" | "MiniMax-M2";
 
-export type KnownCopilotModel =
-    | "auto"
-    // OpenAI Models
-    | "gpt-5.5" | "gpt-5.4" | "gpt-5.4-mini" | "gpt-5.3-codex"
-    // Other Models
-    | "raptor-mini"
-    // Anthropic Models
-    | "claude-opus-4.8" | "claude-sonnet-4.6"
-    // Google Models
-    | "gemini-3.1-pro" | "gemini-3.5-flash";
+/** Copilot models are discovered live from the editor; "auto" lets Copilot choose. */
+export type KnownCopilotModel = "auto";
 
 export type CopilotModel = KnownCopilotModel | string;
 
-export type DeepSeekModel = "deepseek-v4-pro" | "deepseek-v4-flash";
+/** "deepseek-v4-flash" is a legacy name DeepSeek still accepts (served by V4.1 Flash). */
+export type DeepSeekModel = "deepseek-flash" | "deepseek-v4-pro" | "deepseek-v4-flash";
 
 export type GrokModel =
-    | "grok-4.3" | "grok-4.20-0309-reasoning" | "grok-4.20-0309-non-reasoning" | "grok-4.20-multi-agent-0309";
+    | "grok-4.7" | "grok-4.6" | "grok-4.5" | "grok-4.3"
+    | "grok-4.20-0309-reasoning" | "grok-4.20-0309-non-reasoning" | "grok-4.20-multi-agent-0309";
 
 export type GroqModel =
-    | "llama-3.1-8b-instant" | "llama-3.3-70b-versatile"
-    | "meta-llama/llama-4-scout-17b-16e-instruct";
+    | "llama-3.3-70b-versatile" | "llama-3.1-8b-instant"
+    | "openai/gpt-oss-120b" | "openai/gpt-oss-20b";
 
 export type PerplexityModel =
     | "sonar-pro" | "sonar-reasoning-pro" | "sonar";
 
 export type ZaiModel =
+    | "glm-5.3" | "glm-5.3-flash" | "glm-5.3-flashx" | "glm-5.2"
     | "glm-5.1" | "glm-5" | "glm-5-turbo"
     | "glm-4.7" | "glm-4.7-flashx" | "glm-4.6" | "glm-4.5"
     | "glm-4.5-x" | "glm-4.5-air" | "glm-4.5-airx"

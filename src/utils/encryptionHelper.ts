@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { debugLog } from '../services/debug/logger';
+import { SECRET_PROVIDER_IDS } from "../config/providerCatalog";
 
 // Placeholder text to display in settings when a key is encrypted
 const ENCRYPTED_KEY_PLACEHOLDER = "[ENCRYPTED]";
@@ -114,10 +115,7 @@ export class EncryptionHelper {
             const results: string[] = [];
             const config = vscode.workspace.getConfiguration('gitmind');
 
-            const providers = [
-                'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-                'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'perplexity', 'zai', 'nvidia', 'custom'
-            ];
+            const providers: string[] = [...SECRET_PROVIDER_IDS];
 
             // Migrate API keys to secure storage
             for (const provider of providers) {
@@ -162,10 +160,7 @@ export class EncryptionHelper {
             const results: string[] = [];
             const config = vscode.workspace.getConfiguration('gitmind');
 
-            const providers = [
-                'gemini', 'huggingface', 'mistral', 'cohere', 'openai',
-                'together', 'openrouter', 'anthropic', 'minimax', 'deepseek', 'grok', 'perplexity', 'zai', 'nvidia', 'custom'
-            ];
+            const providers: string[] = [...SECRET_PROVIDER_IDS];
 
             // Get all encrypted keys and move them back to plain text
             for (const provider of providers) {

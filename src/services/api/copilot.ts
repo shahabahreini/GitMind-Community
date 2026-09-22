@@ -1,8 +1,172 @@
 import * as vscode from 'vscode';
-import { debugLog } from "../debug/logger";
-import { generateCommitPrompt, getPromptConfig } from './prompts';
-import { CopilotModel, KnownCopilotModel } from "../../config/types";
+import { debugLog, diagnosticLog } from "../debug/logger";
 import { BaseAIProvider, GenerationOptions } from './base';
+import { ProviderApiError, ProviderErrorCategory } from './recovery';
+
+/** Shown in the Copilot consent dialog so users know why GitMind asks for access. */
+export const COPILOT_REQUEST_JUSTIFICATION = "GitMind uses GitHub Copilot to write commit messages from your staged changes.";
+
+/** Extension IDs that provide Copilot chat models. Presence is only a hint; the language model API is authoritative. */
+const COPILOT_EXTENSION_IDS = ['GitHub.copilot-chat', 'GitHub.copilot'];
+
+const TEST_CONNECTION_TIMEOUT_MS = 10_000;
+
+/** Minimal surface of the VS Code language model API, injectable for tests. */
+export interface CopilotLmAccess {
+    hasLanguageModelApi(): boolean;
+    selectChatModels(): Thenable<readonly vscode.LanguageModelChat[]>;
+    isCopilotExtensionInstalled(): boolean;
+    appName(): string;
+}
+
+const defaultLmAccess: CopilotLmAccess = {
+    hasLanguageModelApi: () => typeof (vscode as { lm?: typeof vscode.lm }).lm?.selectChatModels === 'function',
+    selectChatModels: () => vscode.lm.selectChatModels({ vendor: 'copilot' }),
+    isCopilotExtensionInstalled: () => COPILOT_EXTENSION_IDS.some(id => vscode.extensions.getExtension(id) !== undefined),
+    appName: () => vscode.env.appName || 'this editor',
+};
+
+let lmAccess: CopilotLmAccess = defaultLmAccess;
+
+/** Test seam: replaces the language model access; call with no argument to restore the default. */
+export function setCopilotLmAccessForTesting(access?: CopilotLmAccess): void {
+    lmAccess = access ?? defaultLmAccess;
+}
+
+export type CopilotState =
+    | { kind: 'unsupported-host'; appName: string }
+    | { kind: 'not-installed'; appName: string }
+    | { kind: 'no-access'; appName: string }
+    | { kind: 'no-models'; appName: string }
+    | { kind: 'ready'; appName: string; models: readonly vscode.LanguageModelChat[] };
+
+export type CopilotUnavailableState = Exclude<CopilotState, { kind: 'ready' }>;
+
+/** User-facing text for each unavailable state. Never mentions API keys: Copilot uses the editor's sign-in. */
+export function describeCopilotState(state: CopilotUnavailableState): string {
+    switch (state.kind) {
+        case 'unsupported-host':
+            return `GitHub Copilot not detected: ${state.appName} does not provide the language model API that GitHub Copilot needs. Choose another provider in Model Settings.`;
+        case 'not-installed':
+            return `GitHub Copilot not detected in ${state.appName}. Install GitHub Copilot, sign in, and try again.`;
+        case 'no-access':
+            return `GitMind does not have permission to use GitHub Copilot in ${state.appName}. Run the command again and choose Allow, and make sure you are signed in to GitHub Copilot.`;
+        case 'no-models':
+            return `No GitHub Copilot models are available in ${state.appName}. Sign in to GitHub Copilot and check that your plan includes chat models.`;
+    }
+}
+
+function copilotError(message: string, category: ProviderErrorCategory, code?: string, cause?: unknown): ProviderApiError {
+    return new ProviderApiError(message, { provider: 'copilot', category, code, cause, userFacing: true });
+}
+
+/** Error raised when Copilot cannot be used; carries the detected state for callers that offer actions. */
+export class CopilotUnavailableError extends ProviderApiError {
+    constructor(public readonly state: CopilotUnavailableState) {
+        super(describeCopilotState(state), {
+            provider: 'copilot',
+            category: state.kind === 'no-access' ? 'permission' : 'configuration',
+            code: `copilot-${state.kind}`,
+            userFacing: true,
+        });
+        this.name = 'CopilotUnavailableError';
+    }
+}
+
+function hasLanguageModelErrorCode(error: unknown, factory: (message?: string) => vscode.LanguageModelError): boolean {
+    return error instanceof vscode.LanguageModelError && error.code === factory().code;
+}
+
+/**
+ * Maps a language model failure to a Copilot-specific, user-facing error.
+ * Uses LanguageModelError.code, as documented; constructor names are not stable after bundling.
+ */
+export function mapCopilotRequestError(error: unknown, modelId?: string): ProviderApiError {
+    if (error instanceof ProviderApiError) {
+        return error;
+    }
+    if (error instanceof Error && (error.message === 'Request was cancelled' || error.name === 'AbortError' || error.name === 'Canceled')) {
+        return new ProviderApiError('Request was cancelled', { provider: 'copilot', category: 'cancelled', cause: error });
+    }
+    if (hasLanguageModelErrorCode(error, vscode.LanguageModelError.NoPermissions)) {
+        return copilotError(
+            "GitMind needs permission to use GitHub Copilot models. Run the command again and choose Allow, and make sure you are signed in to GitHub Copilot.",
+            'permission', 'NoPermissions', error
+        );
+    }
+    if (hasLanguageModelErrorCode(error, vscode.LanguageModelError.Blocked)) {
+        return copilotError(
+            "GitHub Copilot blocked this request (content filter or request limit). Review the staged changes or try again later.",
+            'content-filter', 'Blocked', error
+        );
+    }
+    if (hasLanguageModelErrorCode(error, vscode.LanguageModelError.NotFound)) {
+        return copilotError(
+            `The GitHub Copilot model${modelId ? ` "${modelId}"` : ''} is not available to your account. Choose another model in Model Settings or select "auto".`,
+            'configuration', 'NotFound', error
+        );
+    }
+    if (error instanceof vscode.LanguageModelError) {
+        // Code is typically "Unknown"; details live in `cause` and are never echoed to the user.
+        debugLog(`Copilot language model error code: ${error.code}`, error.cause);
+        return copilotError(
+            "GitHub Copilot could not complete the request. Try again, or choose another Copilot model in Model Settings.",
+            'temporary-service', error.code, error
+        );
+    }
+    return copilotError(
+        "GitHub Copilot could not complete the request. Try again, or choose another Copilot model in Model Settings.",
+        'unknown', undefined, error
+    );
+}
+
+/**
+ * Detects whether Copilot chat models are usable in this editor.
+ * Call only from user-initiated actions: selecting models can show a consent dialog.
+ */
+export async function detectCopilot(): Promise<CopilotState> {
+    const appName = lmAccess.appName();
+    let state: CopilotState;
+
+    if (!lmAccess.hasLanguageModelApi()) {
+        state = { kind: 'unsupported-host', appName };
+    } else {
+        try {
+            const models = await lmAccess.selectChatModels();
+            if (models.length > 0) {
+                state = { kind: 'ready', appName, models };
+            } else {
+                state = lmAccess.isCopilotExtensionInstalled()
+                    ? { kind: 'no-models', appName }
+                    : { kind: 'not-installed', appName };
+            }
+        } catch (error) {
+            debugLog("Copilot model selection failed:", error);
+            state = hasLanguageModelErrorCode(error, vscode.LanguageModelError.NoPermissions)
+                ? { kind: 'no-access', appName }
+                : { kind: lmAccess.isCopilotExtensionInstalled() ? 'no-models' : 'not-installed', appName };
+        }
+    }
+
+    diagnosticLog({
+        subsystem: "provider",
+        event: "provider.copilot_state",
+        functionName: "detectCopilot",
+        provider: "copilot",
+        outcome: state.kind === 'ready' ? "success" : "failure",
+        data: { kind: state.kind, appName, modelCount: state.kind === 'ready' ? state.models.length : 0 },
+    });
+    return state;
+}
+
+/** Returns the usable Copilot models, or throws CopilotUnavailableError describing why there are none. */
+async function requireCopilotModels(): Promise<readonly vscode.LanguageModelChat[]> {
+    const state = await detectCopilot();
+    if (state.kind !== 'ready') {
+        throw new CopilotUnavailableError(state);
+    }
+    return state.models;
+}
 
 function getPreferredCopilotModelIds(model: string): string[] {
     switch (model) {
@@ -13,79 +177,48 @@ function getPreferredCopilotModelIds(model: string): string[] {
     }
 }
 
-function resolveCopilotChatModel(
+/**
+ * Resolves the configured model to an available Copilot model.
+ * "auto" uses a model with id "auto" when the editor offers one, else the first available model.
+ * An explicit model that is not available is an error: GitMind never switches models silently.
+ */
+export function resolveCopilotChatModel(
     configuredModel: string,
     available: readonly vscode.LanguageModelChat[]
 ): vscode.LanguageModelChat {
     if (available.length === 0) {
-        throw new Error('No Copilot models found');
+        throw new CopilotUnavailableError({ kind: 'no-models', appName: lmAccess.appName() });
     }
 
-    if (configuredModel === 'auto') {
-        return available[0];
+    const requested = configuredModel.trim() || 'auto';
+    if (requested === 'auto') {
+        return available.find(m => m.id === 'auto') ?? available[0];
     }
 
-    const preferredIds = getPreferredCopilotModelIds(configuredModel);
-    if (preferredIds.length > 0) {
-        const preferred = available.find(m => preferredIds.includes(m.id));
-        if (preferred) {
-            return preferred;
-        }
+    const preferredIds = getPreferredCopilotModelIds(requested);
+    const preferred = available.find(m => preferredIds.includes(m.id));
+    if (preferred) {
+        return preferred;
     }
 
-    const exact = available.find(m => m.id === configuredModel);
+    const exact = available.find(m => m.id === requested || m.family === requested);
     if (exact) {
         return exact;
     }
 
-    return available[0];
-}
-
-// Configuration for different Copilot models
-interface GenerationConfig {
-    maxTokens: number;
-    temperature: number;
-}
-
-const DEFAULT_MODEL_CONFIG: GenerationConfig = {
-    maxTokens: 350,
-    temperature: 0.2
-};
-
-const MODEL_CONFIGS: Record<KnownCopilotModel, GenerationConfig> = {
-    // Auto
-    "auto": DEFAULT_MODEL_CONFIG,
-    // OpenAI Models (Legacy)
-    "gpt-5.5": DEFAULT_MODEL_CONFIG,
-    "gpt-5.4": {
-        maxTokens: 300,
-        temperature: 0.2
-    },
-    "gpt-5.4-mini": DEFAULT_MODEL_CONFIG,
-    "gpt-5.3-codex": DEFAULT_MODEL_CONFIG,
-    "claude-opus-4.8": {
-        maxTokens: 400,
-        temperature: 0.2
-    },
-    "claude-sonnet-4.6": {
-        maxTokens: 400,
-        temperature: 0.2
-    },
-    // Google Models
-    "gemini-3.1-pro": {
-        maxTokens: 400,
-        temperature: 0.2
-    },
-    "gemini-3.5-flash": {
-        maxTokens: 400,
-        temperature: 0.2
-    },
-    // Other Models
-    "raptor-mini": {
-        maxTokens: 300,
-        temperature: 0.2
+    // Tolerate case and separator differences between saved names and editor IDs (e.g. "claude-sonnet-4.6" vs "claude-sonnet-4-6").
+    const normalize = (value: string) => value.toLowerCase().replace(/[\s._]+/g, '-');
+    const wanted = normalize(requested);
+    const normalized = available.find(m => [m.id, m.family, m.name].some(v => v && normalize(v) === wanted));
+    if (normalized) {
+        return normalized;
     }
-};
+
+    throw copilotError(
+        `The GitHub Copilot model "${requested}" is not available to your account. Choose another model in Model Settings or select "auto".`,
+        'configuration', 'NotFound'
+    );
+}
 
 export class CopilotProvider extends BaseAIProvider {
     constructor(_apiKey: string, model: string) {
@@ -95,57 +228,36 @@ export class CopilotProvider extends BaseAIProvider {
 
     protected async generateResponse(prompt: string, _options?: GenerationOptions): Promise<string> {
         const controller = this.getAbortController();
-
+        const token = new vscode.CancellationTokenSource();
+        const onAbort = () => token.cancel();
+        controller.signal.addEventListener('abort', onAbort);
+        let resolvedModelId: string | undefined;
 
         try {
-            debugLog(`Calling GitHub Copilot API with model: ${this.model}`);
-            debugLog("Sending prompt to Copilot API");
-            debugLog("Prompt:", prompt);
+            debugLog(`Calling GitHub Copilot with model: ${this.model}`);
 
-
-            // Check if Copilot is available
-            const isAvailable = await isCopilotAvailable();
-            if (!isAvailable) {
-                throw new Error("GitHub Copilot is not available. Please ensure GitHub Copilot extension is installed and you have access to Copilot Chat.");
-            }
-
-            const models = await vscode.lm.selectChatModels({
-                vendor: 'copilot',
-            });
-
-            if (models.length === 0) {
-                throw new Error('No Copilot models found');
-            }
-
+            const models = await requireCopilotModels();
             const resolvedModel = resolveCopilotChatModel(this.model, models);
+            resolvedModelId = resolvedModel.id;
             debugLog(`Selected Copilot model: ${resolvedModel.id}`);
 
-            // Create chat messages
-            const messages = [
-                vscode.LanguageModelChatMessage.User(prompt)
-            ];
+            const message = vscode.LanguageModelChatMessage.User(prompt);
 
-            // Create cancellation token from controller
-            const token = new vscode.CancellationTokenSource();
-            controller.signal.addEventListener('abort', () => {
-                token.cancel();
-            });
-
-            // Send request to Copilot
-            let response: vscode.LanguageModelChatResponse;
-            try {
-                response = await resolvedModel.sendRequest(messages, {}, token.token);
-            } catch (requestError) {
-                const fallbackModel = models.find(m => m.id !== resolvedModel.id);
-                if (!fallbackModel) {
-                    throw requestError;
-                }
-
-                debugLog(`Primary Copilot model failed, retrying with: ${fallbackModel.id}`);
-                response = await fallbackModel.sendRequest(messages, {}, token.token);
+            const inputTokens = await resolvedModel.countTokens(message, token.token);
+            if (resolvedModel.maxInputTokens > 0 && inputTokens > resolvedModel.maxInputTokens) {
+                throw new ProviderApiError(
+                    `Content is too large for the GitHub Copilot model "${resolvedModel.name || resolvedModel.id}" (${inputTokens.toLocaleString()} of ${resolvedModel.maxInputTokens.toLocaleString()} input tokens).`,
+                    { provider: 'copilot', category: 'input-limit', code: 'input-limit' }
+                );
             }
 
-            // Collect the response
+            // One request to the selected model only. Model fallback is the Pro modelFallback policy's job.
+            const response = await resolvedModel.sendRequest(
+                [message],
+                { justification: COPILOT_REQUEST_JUSTIFICATION },
+                token.token
+            );
+
             let fullText = "";
             for await (const fragment of response.text) {
                 if (token.token.isCancellationRequested) {
@@ -154,45 +266,15 @@ export class CopilotProvider extends BaseAIProvider {
                 fullText += fragment;
             }
 
-            debugLog(`Processing Response:\n${fullText}`);
-
-            // Process the full text into a formatted commit message
             const formattedMessage = this.enforceCommitMessageFormat(fullText);
-            debugLog("Copilot API Response:", formattedMessage);
+            debugLog("Copilot response received");
             return formattedMessage;
-
         } catch (error) {
-            debugLog("Copilot API Call Failed:", error);
-
-            // Handle abort error specifically
-            if (error instanceof Error && (error.message === 'Request was cancelled' || error.name === 'AbortError')) {
-                throw new Error('Request was cancelled');
-            }
-
-            // Handle VS Code Language Model specific errors
-            if (error instanceof vscode.LanguageModelError) {
-                debugLog(`Language Model Error - Message: ${error.message}`);
-                const errorName = error.constructor.name;
-
-                if (errorName === 'NoPermissions') {
-                    throw new Error("No permission to use GitHub Copilot. Please ensure you have access to Copilot Chat.");
-                } else if (errorName === 'Blocked') {
-                    throw new Error("Request was blocked by GitHub Copilot content filters.");
-                } else if (errorName === 'NotFound') {
-                    throw new Error("GitHub Copilot model not found. Please check your Copilot subscription.");
-                } else if (errorName === 'RequestFailed') {
-                    throw new Error("GitHub Copilot request failed. Please try again.");
-                } else {
-                    throw new Error(`GitHub Copilot error: ${error.message}`);
-                }
-            }
-
-            // Handle other errors
-            if (error instanceof Error) {
-                throw new Error(`GitHub Copilot API call failed: ${error.message}`);
-            }
-
-            throw new Error(`Unexpected error during GitHub Copilot API call: ${String(error)}`);
+            debugLog("Copilot request failed:", error);
+            throw mapCopilotRequestError(error, resolvedModelId);
+        } finally {
+            controller.signal.removeEventListener('abort', onAbort);
+            token.dispose();
         }
     }
 
@@ -201,149 +283,92 @@ export class CopilotProvider extends BaseAIProvider {
     }
 
     async validateApiKey(): Promise<boolean | { success: boolean; error?: string; warning?: string; troubleshooting?: string }> {
-        return validateCopilotAccess();
+        return validateCopilotAccess(this.model);
     }
-
 }
 
 /**
- * Checks if GitHub Copilot Chat models are available
- * @returns Boolean indicating if Copilot models are available
+ * Test Connection: detects Copilot, then sends one minimal request to the selected model only,
+ * so it never spends requests on models the user did not choose.
  */
-export async function isCopilotAvailable(): Promise<boolean> {
+export async function validateCopilotAccess(model = 'auto'): Promise<{ success: boolean; error?: string; troubleshooting?: string }> {
+    const state = await detectCopilot();
+    if (state.kind !== 'ready') {
+        return { success: false, error: describeCopilotState(state) };
+    }
+
+    const token = new vscode.CancellationTokenSource();
+    const timer = setTimeout(() => token.cancel(), TEST_CONNECTION_TIMEOUT_MS);
+    let modelId: string | undefined;
     try {
-        const models = await vscode.lm.selectChatModels({
-            vendor: 'copilot'
-        });
-        return models.length > 0;
+        const selected = resolveCopilotChatModel(model, state.models);
+        modelId = selected.id;
+        const response = await selected.sendRequest(
+            [vscode.LanguageModelChatMessage.User("ping")],
+            { justification: COPILOT_REQUEST_JUSTIFICATION },
+            token.token
+        );
+        for await (const fragment of response.text) {
+            void fragment;
+            break;
+        }
+        return { success: true };
     } catch (error) {
-        debugLog("Copilot availability check failed:", error);
-        return false;
+        debugLog(`Copilot test request failed for model: ${modelId ?? model}`, error);
+        return { success: false, error: mapCopilotRequestError(error, modelId).message };
+    } finally {
+        clearTimeout(timer);
+        token.cancel();
+        token.dispose();
     }
 }
 
-/**
- * Validates GitHub Copilot availability by checking for available models
- * @returns Object with success status and optional error message
- */
-export async function validateCopilotAccess(): Promise<{ success: boolean, error?: string }> {
-    try {
-        const isAvailable = await isCopilotAvailable();
-        if (!isAvailable) {
-            return { success: false, error: "GitHub Copilot models not available" };
-        }
+/** Details of a detected Copilot model, for the settings UI. */
+export interface CopilotModelInfo {
+    id: string;
+    name: string;
+    family: string;
+    maxInputTokens: number;
+}
 
-        // Try to select a model to verify access
-        const models = await vscode.lm.selectChatModels({
-            vendor: 'copilot'
-        });
-
-        if (models.length === 0) {
-            return { success: false, error: "No Copilot models found" };
-        }
-
-        const token = new vscode.CancellationTokenSource();
-        setTimeout(() => token.cancel(), 5000); // 5 second timeout
-
-        const messages = [vscode.LanguageModelChatMessage.User("Test")];
-
-        const orderedModels = [
-            ...models.filter(m => m.id === 'copilot-fast'),
-            ...models.filter(m => m.id === "gpt-5.5"),
-            ...models.filter(m => m.id === 'oswe-vscode-secondary' || m.id === 'oswe-vscode-prime'),
-            ...models.filter(m => m.id !== 'copilot-fast' && m.id !== 'oswe-vscode-secondary' && m.id !== 'oswe-vscode-prime'),
-        ];
-
-        for (const model of orderedModels) {
-            try {
-                const response = await model.sendRequest(messages, {}, token.token);
-                for await (const fragment of response.text) {
-                    void fragment;
-                    break;
-                }
-                return { success: true };
-            } catch (testError) {
-                debugLog(`Copilot test request failed for model: ${model.id}`, testError);
-
-                if (testError instanceof vscode.LanguageModelError) {
-                    const errorName = testError.constructor.name;
-                    if (errorName === 'NoPermissions') {
-                        return { success: false, error: "No permission to use GitHub Copilot" };
-                    }
-                    if (errorName === 'Blocked') {
-                        return { success: false, error: "Request blocked by GitHub Copilot" };
-                    }
-                }
-            }
-        }
-
-        return { success: false, error: "Failed to validate Copilot access" };
-
-    } catch (error) {
-        debugLog("Copilot validation failed:", error);
-        return { success: false, error: "Unexpected error during Copilot validation" };
+/** Detects Copilot and returns its state with model details; never throws for unavailable states. */
+export async function discoverCopilotModels(): Promise<{ state: CopilotState['kind']; message?: string; models: CopilotModelInfo[] }> {
+    const state = await detectCopilot();
+    if (state.kind !== 'ready') {
+        return { state: state.kind, message: describeCopilotState(state), models: [] };
     }
+    return {
+        state: state.kind,
+        models: state.models.map(m => ({ id: m.id, name: m.name, family: m.family, maxInputTokens: m.maxInputTokens })),
+    };
 }
 
 /**
- * Fetches available GitHub Copilot models
- * @returns Array of available model IDs
+ * Fetches available GitHub Copilot model IDs, with "auto" first.
+ * Throws CopilotUnavailableError when Copilot cannot be used.
  */
 export async function fetchCopilotModels(): Promise<string[]> {
-    try {
-        debugLog("Fetching available Copilot models");
+    debugLog("Fetching available Copilot models");
+    const models = await requireCopilotModels();
 
-        const isAvailable = await isCopilotAvailable();
-        if (!isAvailable) {
-            throw new Error("GitHub Copilot is not available");
-        }
-
-        const models = await vscode.lm.selectChatModels({
-            vendor: 'copilot'
+    const detectedModels = new Set<string>();
+    for (const model of models) {
+        debugLog("Detected Copilot model:", {
+            id: model.id,
+            name: model.name,
+            family: model.family,
+            vendor: model.vendor,
+            version: model.version
         });
+        detectedModels.add(model.id);
 
-        if (models.length === 0) {
-            throw new Error("No Copilot models found");
+        // Friendly alias so users can pick the user-facing name
+        if (model.id === 'oswe-vscode-secondary' || model.id === 'oswe-vscode-prime') {
+            detectedModels.add('raptor-mini');
         }
-
-        const detectedModels = new Set<string>();
-
-        for (const model of models) {
-            // Log full model details for debugging
-            debugLog("Detected Copilot model:", {
-                id: model.id,
-                name: model.name,
-                family: model.family,
-                vendor: model.vendor,
-                version: model.version
-            });
-
-            const modelId = model.id;
-            detectedModels.add(modelId);
-
-            // Also add friendly mappings so users can select the user-facing names
-            if (modelId === 'oswe-vscode-secondary' || modelId === 'oswe-vscode-prime') {
-                // Both oswe-vscode-secondary and oswe-vscode-prime map to raptor-mini
-                detectedModels.add('raptor-mini');
-            }
-            if (modelId === 'gpt-4-0125-preview') {
-                detectedModels.add('gpt-4-turbo');
-            }
-            if (modelId === 'gemini-3-pro-preview') {
-                detectedModels.add('gemini-3-pro');
-            }
-        }
-
-        // Always include 'auto' at the beginning, then sort remaining models for stable UI
-        const modelsList = Array.from(detectedModels).filter(id => id !== 'auto');
-        modelsList.sort((a, b) => a.localeCompare(b));
-        const result = ['auto', ...modelsList];
-
-        debugLog(`Detected ${detectedModels.size} unique Copilot models:`, result);
-
-        return result;
-    } catch (error) {
-        debugLog("Error fetching Copilot models:", error);
-        throw error;
     }
+
+    const modelsList = Array.from(detectedModels).filter(id => id !== 'auto');
+    modelsList.sort((a, b) => a.localeCompare(b));
+    return ['auto', ...modelsList];
 }

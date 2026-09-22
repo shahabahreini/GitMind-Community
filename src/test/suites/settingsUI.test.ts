@@ -6,6 +6,7 @@ import { MessageHandler } from '../../webview/settings/MessageHandler';
 import { FormUtils } from '../../webview/settings/components/utils/FormUtils';
 import { StyleManager } from '../../webview/settings/components/managers/StyleManager';
 import { invalidateConfigCache } from '../../config/settings';
+import { getProviderDefaultModel } from "../../config/providerCatalog";
 
 suite('Settings UI Tests', () => {
     let mockContext: vscode.ExtensionContext;
@@ -407,8 +408,8 @@ suite('Settings UI Tests', () => {
             // Should use default values when no configuration exists
             // Check what the actual default is from package.json
             assert.strictEqual(settings.apiProvider, 'gemini'); // Default provider from package.json
-            assert.strictEqual(settings.gemini.model, "gemini-3.5-flash");
-            assert.strictEqual(settings.openai.model, "gpt-5.6-terra");
+            assert.strictEqual(settings.gemini.model, getProviderDefaultModel("gemini"));
+            assert.strictEqual(settings.openai.model, getProviderDefaultModel("openai"));
         } finally {
             vscode.workspace.getConfiguration = originalGetConfiguration;
             invalidateConfigCache();

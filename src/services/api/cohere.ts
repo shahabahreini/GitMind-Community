@@ -87,11 +87,12 @@ export class CohereProvider extends BaseAIProvider {
             throw new Error("Cohere API key is required but not configured");
         }
 
-        // Validate model
-        const validModels = Object.values(CohereModel);
-        if (!validModels.includes(this.model as CohereModel)) {
-            debugLog("Error: Invalid Cohere model specified", { model: this.model });
-            throw new Error(`Invalid Cohere model specified: ${this.model}`);
+        // Live discovery is authoritative; unknown IDs are sent as-is and rejected by the API if invalid.
+        if (!this.model || !this.model.trim()) {
+            throw new Error("Please select a Cohere model in the settings.");
+        }
+        if (!(Object.values(CohereModel) as string[]).includes(this.model)) {
+            debugLog("Cohere model not in the known list; using as model ID", { model: this.model });
         }
 
         try {
@@ -100,10 +101,7 @@ export class CohereProvider extends BaseAIProvider {
             debugLog("Prompt:", prompt);
 
             // Get model-specific configuration
-            const config = MODEL_CONFIGS[this.model];
-            if (!config) {
-                throw new Error(`Configuration not found for model: ${this.model}`);
-            }
+            const config = MODEL_CONFIGS[this.model] ?? DEFAULT_CONFIG;
 
             const temperature = options?.temperature ?? config.temperature;
             const maxOutputTokens = options?.maxTokens ?? config.maxOutputTokens;

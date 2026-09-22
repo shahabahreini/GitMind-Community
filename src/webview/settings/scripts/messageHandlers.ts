@@ -25,6 +25,7 @@ export function getMessageHandlersScript(): string {
         openaiModelsLoaded: () => handleModelsLoaded('openai', message, ${JSON.stringify(DEFAULT_MODELS.openai)}),
         minimaxModelsLoaded: () => handleModelsLoaded('minimax', message, ${JSON.stringify(DEFAULT_MODELS.minimax)}),
         copilotModelsLoaded: () => handleModelsLoaded('copilot', message, ${JSON.stringify(DEFAULT_MODELS.copilot)}),
+        copilotModelsChanged: () => { if (document.getElementById('apiProvider')?.value === 'copilot') { showToast('GitHub Copilot models changed. Use Load Models to refresh the list.', 'info'); } },
         zaiModelsLoaded: () => handleModelsLoaded('zai', message, ${JSON.stringify(DEFAULT_MODELS.zai)}),
         perplexityModelsLoaded: () => handleModelsLoaded('perplexity', message, ${JSON.stringify(DEFAULT_MODELS.perplexity)}),
         nvidiaModelsLoaded: () => handleAdvancedModelsLoaded('nvidia', message, ${JSON.stringify(DEFAULT_MODELS.nvidia)}, 100),

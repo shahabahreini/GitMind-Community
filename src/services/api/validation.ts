@@ -15,9 +15,9 @@ import { VertexAIProvider } from "./vertexai";
 import { CloudflareProvider } from "./cloudflare";
 import { getApiConfig } from "../../config/settings";
 import { ApiConfig, MistralRateLimit, ApiProvider, CustomApiConfig } from "../../config/types";
-import { getProviderDefaultModel } from "../../config/providerCatalog";
+import { getProviderDefaultModel, requiresApiKey } from "../../config/providerCatalog";
 import { RequestManager } from "../../utils/requestManager";
-import { isCopilotAvailable, validateCopilotAccess } from "./copilot";
+import { validateCopilotAccess } from "./copilot";
 import { validateCustomAPI } from "./custom";
 import { loggedFetch } from "./loggedFetch";
 
@@ -167,9 +167,9 @@ async function validateOllamaSetup(
 
 const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
     gemini: {
-        requiresApiKey: true,
+        requiresApiKey: requiresApiKey("gemini"),
         validator: validateGeminiAPIKey,
-        defaultModel: "gemini-2.5-flash-preview-04-17",
+        defaultModel: getProviderDefaultModel("gemini"),
         responseTime: 500,
         rateLimits: {
             limit: 60,
@@ -178,9 +178,9 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
         }
     },
     huggingface: {
-        requiresApiKey: true,
+        requiresApiKey: requiresApiKey("huggingface"),
         validator: validateHuggingFaceApiKey,
-        defaultModel: "microsoft/DialoGPT-medium",
+        defaultModel: getProviderDefaultModel("huggingface"),
         responseTime: 600,
         rateLimits: {
             limit: 30000,
@@ -189,22 +189,22 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
         }
     },
     ollama: {
-        requiresApiKey: false,
+        requiresApiKey: requiresApiKey("ollama"),
         validator: async (url: string) => checkOllamaAvailability(url || "http://localhost:11434"),
-        defaultModel: "",
+        defaultModel: getProviderDefaultModel("ollama"),
         responseTime: 200,
         rateLimits: { limit: 0, remaining: 0, notes: "Ollama is a local service with no API rate limits" }
     },
     mistral: {
-        requiresApiKey: true,
+        requiresApiKey: requiresApiKey("mistral"),
         validator: async (apiKey: string) => !!(await checkMistralRateLimits(apiKey)),
-        defaultModel: "mistral-small-4",
+        defaultModel: getProviderDefaultModel("mistral"),
         responseTime: 500
     },
     cohere: {
-        requiresApiKey: true,
+        requiresApiKey: requiresApiKey("cohere"),
         validator: validateCohereApiKey,
-        defaultModel: "command",
+        defaultModel: getProviderDefaultModel("cohere"),
         responseTime: 550,
         rateLimits: {
             limit: 100,
@@ -213,7 +213,7 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
         }
     },
     openai: {
-        requiresApiKey: true,
+        requiresApiKey: requiresApiKey("openai"),
         validator: validateOpenAIApiKey,
         defaultModel: getProviderDefaultModel("openai"),
         responseTime: 550,
@@ -224,9 +224,9 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
         }
     },
     together: {
-        requiresApiKey: true,
+        requiresApiKey: requiresApiKey("together"),
         validator: validateTogetherApiKey,
-        defaultModel: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+        defaultModel: getProviderDefaultModel("together"),
         responseTime: 550,
         rateLimits: {
             limit: 100,
@@ -235,9 +235,9 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
         }
     },
     openrouter: {
-        requiresApiKey: true,
+        requiresApiKey: requiresApiKey("openrouter"),
         validator: validateOpenRouterApiKey,
-        defaultModel: "google/gemma-3-27b-it:free",
+        defaultModel: getProviderDefaultModel("openrouter"),
         responseTime: 550,
         rateLimits: {
             limit: 100,
@@ -246,7 +246,7 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
         }
     },
     anthropic: {
-        requiresApiKey: true,
+        requiresApiKey: requiresApiKey("anthropic"),
         validator: validateAnthropicApiKey,
         defaultModel: getProviderDefaultModel("anthropic"),
         responseTime: 800,
@@ -257,7 +257,7 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
         }
     },
     minimax: {
-        requiresApiKey: true,
+        requiresApiKey: requiresApiKey("minimax"),
         validator: validateMiniMaxAPIKey,
         defaultModel: getProviderDefaultModel("minimax"),
         responseTime: 800,
@@ -268,19 +268,17 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
         }
     },
     copilot: {
-        requiresApiKey: false,
-        validator: async () => {
-            const available = await isCopilotAvailable();
-            return available ? await validateCopilotAccess() : { success: false, error: "GitHub Copilot not available" };
-        },
+        requiresApiKey: requiresApiKey("copilot"),
+        // Model-aware Copilot validation runs in checkApiSetup; this fallback tests "auto".
+        validator: async () => validateCopilotAccess(),
         defaultModel: getProviderDefaultModel("copilot"),
         responseTime: 400,
         rateLimits: { limit: 0, remaining: 0, notes: "GitHub Copilot uses VS Code's built-in rate limiting" }
     },
     deepseek: {
-        requiresApiKey: true,
+        requiresApiKey: requiresApiKey("deepseek"),
         validator: validateDeepSeekAPIKey,
-        defaultModel: "deepseek-v4-flash",
+        defaultModel: getProviderDefaultModel("deepseek"),
         responseTime: 600,
         rateLimits: {
             limit: 10000,
@@ -289,9 +287,9 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
         }
     },
     grok: {
-        requiresApiKey: true,
+        requiresApiKey: requiresApiKey("grok"),
         validator: validateGrokAPIKey,
-        defaultModel: "grok-4.4",
+        defaultModel: getProviderDefaultModel("grok"),
         responseTime: 550,
         rateLimits: {
             limit: 5000,
@@ -300,9 +298,9 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
         }
     },
     groq: {
-        requiresApiKey: true,
+        requiresApiKey: requiresApiKey("groq"),
         validator: validateGroqAPIKey,
-        defaultModel: "meta-llama/llama-4-scout-17b-16e-instruct",
+        defaultModel: getProviderDefaultModel("groq"),
         responseTime: 300,
         rateLimits: {
             limit: 30,
@@ -311,7 +309,7 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
         }
     },
     perplexity: {
-        requiresApiKey: true,
+        requiresApiKey: requiresApiKey("perplexity"),
         validator: validatePerplexityAPIKey,
         defaultModel: getProviderDefaultModel("perplexity"),
         responseTime: 400,
@@ -322,9 +320,9 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
         }
     },
     zai: {
-        requiresApiKey: true,
+        requiresApiKey: requiresApiKey("zai"),
         validator: validateZaiAPIKey,
-        defaultModel: "glm-5.1",
+        defaultModel: getProviderDefaultModel("zai"),
         responseTime: 600,
         rateLimits: {
             limit: 0,
@@ -333,9 +331,9 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
         }
     },
     nvidia: {
-        requiresApiKey: true,
+        requiresApiKey: requiresApiKey("nvidia"),
         validator: validateNvidiaAPIKey,
-        defaultModel: "meta/llama-3.3-70b-instruct",
+        defaultModel: getProviderDefaultModel("nvidia"),
         responseTime: 700,
         rateLimits: {
             limit: 0,
@@ -344,43 +342,43 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
         }
     },
     lmstudio: {
-        requiresApiKey: false,
-        defaultModel: "",
+        requiresApiKey: requiresApiKey("lmstudio"),
+        defaultModel: getProviderDefaultModel("lmstudio"),
         responseTime: 200,
         rateLimits: { limit: 0, remaining: 0, notes: "LM Studio runs locally and has no provider rate limits." }
     },
     azureopenai: {
-        requiresApiKey: false,
-        defaultModel: "",
+        requiresApiKey: requiresApiKey("azureopenai"),
+        defaultModel: getProviderDefaultModel("azureopenai"),
         responseTime: 700,
         rateLimits: { limit: 0, remaining: 0, notes: "Azure OpenAI limits vary by resource, deployment, and quota." }
     },
     bedrock: {
-        requiresApiKey: false,
-        defaultModel: "",
+        requiresApiKey: requiresApiKey("bedrock"),
+        defaultModel: getProviderDefaultModel("bedrock"),
         responseTime: 800,
         rateLimits: { limit: 0, remaining: 0, notes: "Amazon Bedrock limits vary by model, region, and account." }
     },
     vertexai: {
-        requiresApiKey: false,
-        defaultModel: "",
+        requiresApiKey: requiresApiKey("vertexai"),
+        defaultModel: getProviderDefaultModel("vertexai"),
         responseTime: 800,
         rateLimits: { limit: 0, remaining: 0, notes: "Vertex AI limits vary by project, region, and model." }
     },
     cloudflare: {
-        requiresApiKey: true,
-        defaultModel: "",
+        requiresApiKey: requiresApiKey("cloudflare"),
+        defaultModel: getProviderDefaultModel("cloudflare"),
         responseTime: 500,
         rateLimits: { limit: 0, remaining: 0, notes: "Cloudflare Workers AI limits vary by account and model." }
     },
     custom: {
-        requiresApiKey: false,
+        requiresApiKey: requiresApiKey("custom"),
         validator: async () => {
             // Custom API validation is handled separately in checkApiSetup
             // because it requires multiple config parameters
             return { success: true };
         },
-        defaultModel: "",
+        defaultModel: getProviderDefaultModel("custom"),
         responseTime: 500,
         rateLimits: {
             limit: 0,
@@ -455,6 +453,21 @@ export async function checkApiSetup(): Promise<ApiCheckResult> {
                 result.error = setup.error || "Connection test failed";
                 result.troubleshooting = setup.troubleshooting || "Please check your Ollama configuration";
                 result.details = setup.details;
+            }
+            return result;
+        }
+
+        if (config.type === "copilot") {
+            // One request to the selected model only (never loops over models).
+            const validation = await validateCopilotAccess(config.model || "auto");
+            result.success = validation.success;
+            if (validation.success) {
+                result.model = config.model || validatorConfig.defaultModel;
+                result.responseTime = validatorConfig.responseTime;
+                result.details = "Connection test successful";
+            } else {
+                result.error = validation.error || "GitHub Copilot is not available";
+                result.troubleshooting = "GitHub Copilot uses your editor sign-in; no API key is needed.";
             }
             return result;
         }
@@ -658,7 +671,7 @@ async function checkMistralRateLimits(apiKey: string): Promise<RateLimitComparis
                 "Authorization": `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                model: "mistral-small-4",
+                model: getProviderDefaultModel("mistral"),
                 messages: [{ role: "user", content: "Hi" }],
                 max_tokens: 1
             }),
@@ -784,7 +797,7 @@ async function validateAnthropicApiKey(apiKey: string): Promise<{ success: boole
                 "anthropic-beta": "messages-2023-12-15"
             },
             body: JSON.stringify({
-                model: "claude-3-5-haiku-20241022",
+                model: "claude-haiku-4-5",
                 max_tokens: 10,
                 messages: [{ role: "user", content: "Test" }]
             })

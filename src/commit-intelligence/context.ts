@@ -73,9 +73,9 @@ export function defaultSelection(changeSet: ChangeSet, exclusions: readonly stri
 
 function providerDestination(config: ApiConfig): string {
   const fixed: Record<string, string> = {
-    gemini: "generativelanguage.googleapis.com", huggingface: "api-inference.huggingface.co", mistral: "api.mistral.ai",
+    gemini: "generativelanguage.googleapis.com", huggingface: "router.huggingface.co", mistral: "api.mistral.ai",
     cohere: "api.cohere.com", openai: "api.openai.com", together: "api.together.xyz", openrouter: "openrouter.ai",
-    anthropic: "api.anthropic.com", minimax: "api.minimax.chat", copilot: "GitHub Copilot language model service",
+    anthropic: "api.anthropic.com", minimax: "api.minimax.io", copilot: "GitHub Copilot language model service",
     deepseek: "api.deepseek.com", grok: "api.x.ai", groq: "api.groq.com", perplexity: "api.perplexity.ai",
     zai: "api.z.ai", nvidia: "integrate.api.nvidia.com"
   };

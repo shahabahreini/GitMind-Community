@@ -26,7 +26,8 @@ import { fetchGeminiModels } from "../services/api/gemini";
 import { fetchAnthropicModels } from "../services/api/anthropic";
 import { fetchMiniMaxModels } from "../services/api/minimax";
 import { fetchOpenRouterModels } from "../services/api/openrouter";
-import { fetchCopilotModels } from "../services/api/copilot";
+import { CopilotUnavailableError, discoverCopilotModels } from "../services/api/copilot";
+import { PROVIDER_CATALOG, PROVIDER_IDS, requiresApiKey } from "../config/providerCatalog";
 import { fetchOpenAIModels } from "../services/api/openai";
 import { fetchZaiModels } from "../services/api/zai";
 import { fetchPerplexityModels } from "../services/api/perplexity";
@@ -58,15 +59,8 @@ import { state } from "../extension";
 // Constants
 const TIMEOUT_DURATION = 120000;
 const API_CHECK_TIMEOUT = 15000;
-export const SUPPORTED_PROVIDERS = [
-  "Gemini", "Hugging Face", "Ollama", "Mistral", "Cohere", "OpenAI",
-  "Together AI", "OpenRouter", "Anthropic", "MiniMax", "GitHub Copilot", "DeepSeek", "Grok", "Groq", "Perplexity", "Z.ai", "NVIDIA", "Custom API"
-];
-
-const API_KEY_PROVIDERS = [
-  'gemini', 'openai', 'mistral', 'cohere', 'huggingface', 'anthropic',
-  'minimax', 'together', 'openrouter', 'deepseek', 'grok', 'groq', 'perplexity', 'zai', 'nvidia'
-];
+/** Runtime labels of every supported provider, from the canonical provider catalog. */
+export const SUPPORTED_PROVIDERS = PROVIDER_IDS.map(id => PROVIDER_CATALOG[id].name);
 
 const HEALTH_READY_RECOMMENDATION = "The staged change set is focused and ready for review.";
 
@@ -74,9 +68,27 @@ const HEALTH_READY_RECOMMENDATION = "The staged change set is focused and ready 
 // Export state for access by other modules
 
 // Helper Functions
+/** True when the provider is usable without a missing credential: keyless providers, or a key is present. */
 function hasApiKey(apiConfig: any): boolean {
-  return apiConfig.type === "ollama" || apiConfig.type === "copilot" ||
-    (API_KEY_PROVIDERS.includes(apiConfig.type) && 'apiKey' in apiConfig && !!apiConfig.apiKey);
+  return !requiresApiKey(apiConfig.type) || ('apiKey' in apiConfig && !!apiConfig.apiKey);
+}
+
+/** Shows why Copilot cannot be used, with the one action that fits the detected state. */
+async function showCopilotUnavailable(error: CopilotUnavailableError, command: string): Promise<void> {
+  const OPEN_SETTINGS = "Choose Another Provider";
+  const action =
+    error.state.kind === "not-installed" ? "Find GitHub Copilot"
+      : error.state.kind === "no-access" && command === "generateCommit" ? "Retry"
+        : OPEN_SETTINGS;
+
+  const selection = await vscode.window.showErrorMessage(error.message, { modal: true }, action);
+  if (selection === "Find GitHub Copilot") {
+    await vscode.commands.executeCommand("workbench.extensions.search", "GitHub Copilot");
+  } else if (selection === "Retry") {
+    await vscode.commands.executeCommand("gitmind.generateCommitMessage");
+  } else if (selection === OPEN_SETTINGS) {
+    await vscode.commands.executeCommand("gitmind.openSettings");
+  }
 }
 
 async function handleError(
@@ -89,6 +101,11 @@ async function handleError(
   if (error instanceof Error && classifyGenerationFailure(error, provider) === "cancelled") {
       vscode.window.showInformationMessage(`${command} cancelled`);
       return;
+  }
+
+  if (error instanceof CopilotUnavailableError) {
+    await showCopilotUnavailable(error, command);
+    return;
   }
 
   const message = formatSafeProviderError(error, provider);
@@ -779,14 +796,14 @@ async function handleLoadCopilotModels(): Promise<void> {
   try {
     await withProgress(`Loading ${modelType} models...`, async () => {
       try {
-        const models = await fetchCopilotModels();
+        const discovery = await discoverCopilotModels();
+        const ids = Array.from(new Set(discovery.models.map(m => m.id).filter(id => id !== 'auto')))
+          .sort((a, b) => a.localeCompare(b));
 
         if (SettingsWebview.isWebviewOpen()) {
-          SettingsWebview.postMessageToWebview({
-            command: 'copilotModelsLoaded',
-            success: true,
-            models
-          });
+          SettingsWebview.postMessageToWebview(discovery.state === 'ready'
+            ? { command: 'copilotModelsLoaded', success: true, state: discovery.state, models: ['auto', ...ids], modelDetails: discovery.models }
+            : { command: 'copilotModelsLoaded', success: false, state: discovery.state, error: discovery.message });
         }
       } catch (error) {
         debugLog(`Load ${modelType} Models Error:`, error);

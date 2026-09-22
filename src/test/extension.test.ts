@@ -3,7 +3,7 @@ import * as assert from 'assert';
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 import * as vscode from 'vscode';
-import { isCopilotAvailable, validateCopilotAccess } from '../services/api/copilot';
+import { detectCopilot, validateCopilotAccess } from '../services/api/copilot';
 
 // Import comprehensive test suite
 import './comprehensive.test';
@@ -17,18 +17,15 @@ suite('Extension Test Suite', () => {
 	});
 
 	test('Copilot API integration', async () => {
-		// Test that the Copilot API functions are properly exported
-		assert.ok(typeof isCopilotAvailable === 'function', 'isCopilotAvailable should be exported');
+		assert.ok(typeof detectCopilot === 'function', 'detectCopilot should be exported');
 		assert.ok(typeof validateCopilotAccess === 'function', 'validateCopilotAccess should be exported');
 
-		// Test that the functions can be called (though actual functionality depends on VS Code environment)
-		try {
-			const isAvailable = await isCopilotAvailable();
-			assert.ok(typeof isAvailable === 'boolean', 'isCopilotAvailable should return a boolean');
-		} catch (error) {
-			// Expected in test environment where language models may not be available
-			console.log('Copilot availability check failed in test environment (expected)', error);
-		}
+		// The test host runs with extensions disabled, so Copilot is expected to be unavailable.
+		const state = await detectCopilot();
+		assert.ok(
+			['unsupported-host', 'not-installed', 'no-access', 'no-models', 'ready'].includes(state.kind),
+			`detectCopilot returned an unknown state: ${state.kind}`
+		);
 	});
 
 	test('Extension should load without errors', () => {

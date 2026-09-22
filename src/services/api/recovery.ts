@@ -25,6 +25,8 @@ export interface ProviderApiErrorOptions {
     category?: ProviderErrorCategory;
     retryAfterMs?: number;
     cause?: unknown;
+    /** The message is final, safe, user-facing text; formatters must show it unchanged. */
+    userFacing?: boolean;
 }
 
 /** A provider-neutral error that retains recovery metadata without response bodies. */
@@ -34,6 +36,7 @@ export class ProviderApiError extends Error {
     public readonly provider?: string;
     public readonly category?: ProviderErrorCategory;
     public readonly retryAfterMs?: number;
+    public readonly userFacing: boolean;
 
     constructor(message: string, options?: ProviderApiErrorOptions);
     /** @deprecated Prefer the options-object overload. */
@@ -54,6 +57,7 @@ export class ProviderApiError extends Error {
         this.provider = options.provider;
         this.category = options.category;
         this.retryAfterMs = options.retryAfterMs;
+        this.userFacing = options.userFacing === true;
     }
 }
 

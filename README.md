@@ -180,7 +180,7 @@ If your key does not work, or you cannot find it, open an issue at [GitMind-Comm
 
 - VS Code 1.101.0 or newer
 - Git repository
-- API key for the selected cloud provider, unless using Ollama or GitHub Copilot
+- API key for the selected cloud provider, unless using GitHub Copilot (editor sign-in), Ollama or LM Studio (local), or Amazon Bedrock or Vertex AI (cloud credentials)
 
 ## Support
 

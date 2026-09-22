@@ -1,33 +1,27 @@
 // src/webview/settings/scripts/apiManager.ts
 
+import { PROVIDER_CATALOG, PROVIDER_IDS, requiresApiKey } from '../../../config/providerCatalog';
+
 interface ProviderConfig {
   apiKey?: boolean;
   url?: boolean;
   model?: boolean;
-  endpoint?: boolean;
   displayName: string;
 }
 
-const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
-  gemini: { apiKey: true, model: false, displayName: 'Gemini' },
-  huggingface: { apiKey: true, model: true, displayName: 'Hugging Face' },
-  ollama: { url: true, model: true, displayName: 'Ollama' },
-  mistral: { apiKey: true, model: false, displayName: 'Mistral' },
-  cohere: { apiKey: true, model: false, displayName: 'Cohere' },
-  openai: { apiKey: true, model: false, displayName: 'OpenAI' },
-  together: { apiKey: true, model: false, displayName: 'Together AI' },
-  openrouter: { apiKey: true, model: false, displayName: 'OpenRouter' },
-  anthropic: { apiKey: true, model: false, displayName: 'Anthropic' },
-  minimax: { apiKey: true, model: false, displayName: 'MiniMax' },
-  copilot: { model: true, displayName: 'GitHub Copilot' },
-  deepseek: { apiKey: true, model: false, displayName: 'DeepSeek' },
-  grok: { apiKey: true, model: false, displayName: 'Grok' },
-  groq: { apiKey: true, model: false, displayName: 'Groq' },
-  perplexity: { apiKey: true, model: false, displayName: 'Perplexity' },
-  zai: { apiKey: true, model: true, endpoint: true, displayName: 'Z.ai' },
-  nvidia: { apiKey: true, model: true, displayName: 'NVIDIA' },
-  custom: { model: true, displayName: 'Custom API' }
-};
+/**
+ * Fields the settings form must fill before a connection check, derived from the provider catalog:
+ * a required API key, a local server URL, and a model when the provider has no default.
+ */
+const PROVIDER_CONFIGS: Record<string, ProviderConfig> = Object.fromEntries(PROVIDER_IDS.map(id => {
+  const entry = PROVIDER_CATALOG[id];
+  return [id, {
+    apiKey: requiresApiKey(id),
+    url: entry.auth.kind === 'local',
+    model: entry.defaultModel.length === 0,
+    displayName: entry.name,
+  }];
+}));
 
 export function getApiManagerScript(): string {
   return `

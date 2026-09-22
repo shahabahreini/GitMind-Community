@@ -1,5 +1,63 @@
 import { debugLog } from "../services/debug/logger";
 import { classifyGenerationFailure, normalizeProviderError, ProviderApiError } from "../services/api/recovery";
+import { getProviderAuth, ProviderAuth } from "../config/providerCatalog";
+
+/** Credential guidance that matches how the provider authenticates; never mentions API keys for keyless providers. */
+function getCredentialGuidance(provider: string): { problem: string; suggestions: string[]; permissionSuggestion: string } {
+    const auth: ProviderAuth = getProviderAuth(provider) ?? { kind: "apiKey", credentialLabel: "API key" };
+    switch (auth.kind) {
+        case "ide-session":
+            return {
+                problem: `${provider} access was not granted.`,
+                suggestions: [
+                    "Sign in to GitHub Copilot in your editor",
+                    "Run the command again and choose Allow when asked to let GitMind use Copilot models",
+                    "Check that your Copilot plan includes chat models",
+                ],
+                permissionSuggestion: "Check that your GitHub Copilot plan includes the selected model",
+            };
+        case "local":
+            return {
+                problem: `${provider} rejected the request.`,
+                suggestions: [
+                    `Check the ${auth.credentialLabel} in Model Settings`,
+                    `Make sure ${provider} is running and allows local connections`,
+                ],
+                permissionSuggestion: `Check the access settings of your local ${provider} server`,
+            };
+        case "cloud-credentials":
+            return {
+                problem: `${provider} rejected the ${auth.credentialLabel}.`,
+                suggestions: [
+                    `Refresh or re-authenticate your ${auth.credentialLabel}`,
+                    "Check the configured project, region, or location in Model Settings",
+                    "Verify the identity has permission to invoke the selected model",
+                ],
+                permissionSuggestion: `Verify the ${auth.credentialLabel} can invoke the selected model`,
+            };
+        case "custom":
+            return {
+                problem: `${provider} authentication failed.`,
+                suggestions: [
+                    "Check the Custom API authentication type, header, and token in Pro Settings",
+                    "Verify the endpoint accepts the configured credentials",
+                ],
+                permissionSuggestion: "Check the permissions of the configured Custom API credentials",
+            };
+        case "apiKey":
+        default:
+            return {
+                problem: `${provider} ${auth.credentialLabel} is invalid or missing.`,
+                suggestions: [
+                    `Check your ${auth.credentialLabel} in extension settings`,
+                    `Verify the ${auth.credentialLabel} has correct permissions`,
+                    `Generate a new ${auth.credentialLabel} if needed`,
+                    "Ensure it is for the correct service/provider"
+                ],
+                permissionSuggestion: `Check the ${auth.credentialLabel} permissions`,
+            };
+    }
+}
 
 export interface ErrorInfo {
     provider: string;
@@ -79,6 +137,10 @@ export class APIErrorHandler {
             technicalDetails: context
         };
 
+        if (error instanceof ProviderApiError && error.userFacing) {
+            return errorInfo;
+        }
+
         // Prefer structured status metadata. Message parsing is retained only for
         // legacy providers and is never echoed to the user.
         const statusMatch = error.message.match(/(?:http|api error|error|status)?\s*[:( -]?\s*([45]\d{2})(?:\b|\))/i);
@@ -99,7 +161,7 @@ export class APIErrorHandler {
             case "network": return this.handleNetworkError(error, errorInfo, provider);
             case "permission":
                 errorInfo.userMessage = `${provider} denied access to this model or operation.`;
-                errorInfo.suggestions = ["Check the API key permissions", "Verify that your plan includes the selected model", "Select a model available to this account"];
+                errorInfo.suggestions = [getCredentialGuidance(provider).permissionSuggestion, "Verify that your plan includes the selected model", "Select a model available to this account"];
                 return errorInfo;
             case "configuration": return this.handleContentFilterError(error, errorInfo, provider);
             case "content-filter":
@@ -178,13 +240,9 @@ export class APIErrorHandler {
     }
 
     private static handleAuthenticationError(_error: Error, errorInfo: ErrorInfo, provider: string): ErrorInfo {
-        errorInfo.userMessage = `${provider} API key is invalid or missing.`;
-        errorInfo.suggestions = [
-            "Check your API key in extension settings",
-            "Verify the key has correct permissions",
-            "Generate a new API key if needed",
-            "Ensure the key is for the correct service/provider"
-        ];
+        const guidance = getCredentialGuidance(provider);
+        errorInfo.userMessage = guidance.problem;
+        errorInfo.suggestions = guidance.suggestions;
         return errorInfo;
     }
 
@@ -221,37 +279,6 @@ export class APIErrorHandler {
         return errorInfo;
     }
 
-    private static handleCopilotError(error: Error, errorInfo: ErrorInfo, provider: string, _context?: any): ErrorInfo {
-        const message = error.message.toLowerCase();
-
-        if (message.includes("service") || message.includes("502") || message.includes("503")) {
-            errorInfo.userMessage = `${provider} service is temporarily unavailable.`;
-            errorInfo.suggestions = [
-                "The service may be experiencing issues",
-                "Try again in a few minutes",
-                "Check the service status page",
-                "Consider using a different provider temporarily"
-            ];
-        } else if (message.includes("model") && message.includes("not found")) {
-            errorInfo.userMessage = `Selected model is not available in ${provider}.`;
-            errorInfo.suggestions = [
-                "Check if the model name is correct",
-                "Select a different model from the settings",
-                "Verify the model is supported by your plan"
-            ];
-        } else {
-            errorInfo.userMessage = `${provider} API error occurred.`;
-            errorInfo.suggestions = [
-                "Check your configuration and try again",
-                "Create a sanitized Support Report from Pro Settings if the issue persists",
-                "Verify your API key and permissions",
-                "Consider trying a different provider"
-            ];
-        }
-
-        return errorInfo;
-    }
-
     private static handleGenericError(error: Error, errorInfo: ErrorInfo, provider: string): ErrorInfo {
         const message = error.message.toLowerCase();
 
@@ -275,7 +302,9 @@ export class APIErrorHandler {
         } else {
             errorInfo.userMessage = `${provider} could not complete the request.`;
             errorInfo.suggestions = [
-                "Check your configuration and API key",
+                getProviderAuth(provider)?.kind === "apiKey" || !getProviderAuth(provider)
+                    ? "Check your configuration and API key"
+                    : "Check your provider configuration in Model Settings",
                 "Verify your internet connection",
                 "Try again or select a different provider"
             ];
@@ -341,5 +370,8 @@ export function formatSafeProviderError(
     context?: { diffSize?: number; estimatedTokens?: number; filesChanged?: number }
 ): string {
     const normalized = normalizeProviderError(error, provider);
+    if (normalized.userFacing) {
+        return normalized.message;
+    }
     return APIErrorHandler.formatUserMessage(APIErrorHandler.handleAPIError(normalized, provider, context));
 }

@@ -1,5 +1,11 @@
 // src/webview/settings/components/config/ProviderConfig.ts
-import { getCuratedModels } from '../../../../config/providerCatalog';
+import { getCuratedModels, getProviderEntry } from '../../../../config/providerCatalog';
+
+/** Bootstrap model choices from the provider catalog; Load Models replaces them with live results. */
+function modelOptions(provider: string): Array<{ value: string; label: string }> {
+    return getCuratedModels(provider).map(model => ({ value: model, label: model }));
+}
+
 
 interface ProviderField {
     id: string;
@@ -28,10 +34,10 @@ interface Provider {
 }
 
 export class ProviderConfig {
-    private static readonly providers: Provider[] = [
+    /** Form definitions; provider names come from the provider catalog. */
+    private static readonly providers: Omit<Provider, 'name'>[] = [
         {
             id: 'gemini',
-            name: 'Gemini',
             fields: [
                 {
                     id: 'geminiApiKey',
@@ -50,20 +56,12 @@ export class ProviderConfig {
                     loadButtonText: 'Load Available Models',
                     loadButtonId: 'loadGeminiModels',
                     loadCommand: 'gitmind.loadGeminiModels',
-                    options: [
-                        { value: 'gemini-3.1-pro', label: 'Gemini 3.1 Pro' },
-                        { value: 'gemini-3-flash', label: 'Gemini 3 Flash' },
-                        { value: 'gemini-3.1-flash-lite', label: 'Gemini 3.1 Flash-Lite' },
-                        { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
-                        { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-                        { value: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite' }
-                    ]
+                    options: modelOptions('gemini')
                 }
             ]
         },
         {
             id: 'openai',
-            name: 'OpenAI',
             fields: [
                 {
                     id: 'openaiApiKey',
@@ -82,40 +80,12 @@ export class ProviderConfig {
                     loadButtonText: 'Load Available Models',
                     loadButtonId: 'loadOpenAIModels',
                     loadCommand: 'gitmind.loadOpenAIModels',
-                    options: [
-                        { value: 'gpt-5.5', label: 'GPT-5.5' },
-                        { value: 'gpt-5.5-pro', label: 'GPT-5.5 Pro' },
-                        { value: 'gpt-5.4', label: 'GPT-5.4' },
-                        { value: 'gpt-5.4-pro', label: 'GPT-5.4 Pro' },
-                        { value: 'gpt-5.4-mini', label: 'GPT-5.4 Mini' },
-                        { value: 'gpt-5.4-nano', label: 'GPT-5.4 Nano' },
-                        { value: 'gpt-5-mini', label: 'GPT-5 Mini' },
-                        { value: 'gpt-5-nano', label: 'GPT-5 Nano' },
-                        { value: 'gpt-5', label: 'GPT-5' },
-                        { value: 'gpt-4.1', label: 'GPT-4.1' },
-                        { value: 'gpt-4.1-mini', label: 'GPT-4.1 Mini' },
-                        { value: 'gpt-5.3-codex', label: 'GPT-5.3 Codex' },
-                        { value: 'gpt-oss-120b', label: 'GPT-OSS 120B' },
-                        { value: 'gpt-oss-20b', label: 'GPT-OSS 20B' },
-                        { value: 'gpt-5.2', label: 'GPT-5.2' },
-                        { value: 'gpt-5.1', label: 'GPT-5.1' },
-                        { value: 'gpt-5.2-pro', label: 'GPT-5.2 Pro' },
-                        { value: 'gpt-5-pro', label: 'GPT-5 Pro' },
-                        { value: 'o3-pro', label: 'o3 Pro' },
-                        { value: 'o3', label: 'o3' },
-                        { value: 'gpt-4o', label: 'GPT-4o' },
-                        { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
-                        { value: 'gpt-4', label: 'GPT-4' },
-                        { value: 'gpt-5.3-chat-latest', label: 'GPT-5.3 Chat Latest' },
-                        { value: 'gpt-5.2-chat-latest', label: 'GPT-5.2 Chat Latest' },
-                        { value: 'chat-latest', label: 'Chat Latest' }
-                    ]
+                    options: modelOptions('openai')
                 }
             ]
         },
         {
             id: 'anthropic',
-            name: 'Anthropic',
             fields: [
                 {
                     id: 'anthropicApiKey',
@@ -134,17 +104,12 @@ export class ProviderConfig {
                     loadButtonText: 'Load Available Models',
                     loadButtonId: 'loadAnthropicModels',
                     loadCommand: 'gitmind.loadAnthropicModels',
-                    options: [
-                        { value: 'claude-opus-4.7', label: 'Claude Opus 4.7' },
-                        { value: 'claude-sonnet-4.6', label: 'Claude Sonnet 4.6' },
-                        { value: 'claude-haiku-4.5', label: 'Claude Haiku 4.5' }
-                    ]
+                    options: modelOptions('anthropic')
                 }
             ]
         },
         {
             id: 'minimax',
-            name: 'MiniMax',
             fields: [
                 {
                     id: 'minimaxApiKey',
@@ -165,18 +130,12 @@ export class ProviderConfig {
                     loadCommand: 'gitmind.loadMiniMaxModels',
                     loadButtonDisabled: true,
                     loadButtonDisabledTooltip: "MiniMax won't support model fetch yet!",
-                    options: [
-                        { value: 'MiniMax-M2.7', label: 'MiniMax M2.7' },
-                        { value: 'MiniMax-M2.5', label: 'MiniMax M2.5' },
-                        { value: 'MiniMax-M2', label: 'MiniMax M2' },
-                        { value: 'MiniMax-Text-01', label: 'MiniMax Text-01' }
-                    ]
+                    options: modelOptions('minimax')
                 }
             ]
         },
         {
             id: 'copilot',
-            name: 'GitHub Copilot',
             fields: [
                 {
                     id: 'copilotInfo',
@@ -186,8 +145,8 @@ export class ProviderConfig {
                     tooltip: '',
                     content: `
                         <strong>No API Key Required</strong>
-                        <p>GitHub Copilot uses your existing VS Code authentication.</p>
-                        <p>Make sure you have the GitHub Copilot extension installed and are signed in.</p>
+                        <p>GitHub Copilot uses your editor's GitHub Copilot sign-in through the language model API.</p>
+                        <p>Install GitHub Copilot and sign in, then use Load Models. The first request asks you to allow GitMind to use Copilot models.</p>
                     `
                 },
                 {
@@ -199,22 +158,12 @@ export class ProviderConfig {
                     loadButtonText: 'Detect Available Models',
                     loadButtonId: 'loadCopilotModels',
                     loadCommand: 'gitmind.loadCopilotModels',
-                    options: [
-                        { value: 'auto', label: 'Auto (Let Copilot choose)' },
-                        { value: 'gpt-5.5', label: 'GPT-5.5' },
-                        { value: 'gpt-5.4', label: 'GPT-5.4' },
-                        { value: 'o3-pro', label: 'o3 Pro' },
-                        { value: 'claude-opus-4.7', label: 'Claude Opus 4.7' },
-                        { value: 'claude-sonnet-4.6', label: 'Claude Sonnet 4.6' },
-                        { value: 'gemini-3.1-pro', label: 'Gemini 3.1 Pro' },
-                        { value: 'gemini-3.1-flash', label: 'Gemini 3.1 Flash' }
-                    ]
+                    options: modelOptions('copilot')
                 }
             ]
         },
         {
             id: 'huggingface',
-            name: 'Hugging Face',
             fields: [
                 {
                     id: 'huggingfaceApiKey',
@@ -233,21 +182,12 @@ export class ProviderConfig {
                     loadButtonText: 'Load All Available Models',
                     loadButtonId: 'loadHuggingFaceModels',
                     loadCommand: 'gitmind.loadHuggingFaceModels',
-                    defaultOptions: [
-                        'mistralai/Mistral-7B-Instruct-v0.3',
-                        'microsoft/DialoGPT-medium',
-                        'facebook/bart-large-cnn',
-                        'microsoft/DialoGPT-large',
-                        'HuggingFaceH4/zephyr-7b-beta',
-                        'teknium/OpenHermes-2.5-Mistral-7B',
-                        'NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO'
-                    ]
+                    defaultOptions: []
                 }
             ]
         },
         {
             id: 'ollama',
-            name: 'Ollama',
             fields: [
                 {
                     id: 'ollamaUrl',
@@ -266,22 +206,12 @@ export class ProviderConfig {
                     loadButtonText: 'Load Available Models',
                     loadButtonId: 'loadOllamaModels',
                     loadCommand: 'gitmind.loadOllamaModels',
-                    defaultOptions: [
-                        'llama3.2',
-                        'llama3.1',
-                        'llama3',
-                        'codellama',
-                        'mistral',
-                        'deepseek-coder',
-                        'phi4',
-                        'qwen2.5-coder'
-                    ]
+                    defaultOptions: []
                 }
             ]
         },
         {
             id: 'mistral',
-            name: 'Mistral',
             fields: [
                 {
                     id: 'mistralApiKey',
@@ -300,28 +230,12 @@ export class ProviderConfig {
                     loadButtonText: 'Load Available Models',
                     loadButtonId: 'loadMistralModels',
                     loadCommand: 'gitmind.loadMistralModels',
-                    options: [
-                        { value: 'mistral-large-3', label: 'Mistral Large 3' },
-                        { value: 'mistral-medium-3.5', label: 'Mistral Medium 3.5' },
-                        { value: 'mistral-small-4', label: 'Mistral Small 4' },
-                        { value: 'mistral-medium-3.1', label: 'Mistral Medium 3.1' },
-                        { value: 'ministral-3-14b', label: 'Ministral 3 14B' },
-                        { value: 'ministral-3-8b', label: 'Ministral 3 8B' },
-                        { value: 'ministral-3-3b', label: 'Ministral 3 3B' },
-                        { value: 'magistral-medium-1.2', label: 'Magistral Medium 1.2' },
-                        { value: 'leanstral', label: 'Leanstral' },
-                        { value: 'codestral', label: 'Codestral' },
-                        { value: 'devstral-2', label: 'Devstral 2' },
-                        { value: 'mistral-moderation-2', label: 'Mistral Moderation 2' },
-                        { value: 'mistral-medium-3', label: 'Mistral Medium 3' },
-                        { value: 'mistral-nemo-12b', label: 'Mistral Nemo 12B' }
-                    ]
+                    options: modelOptions('mistral')
                 }
             ]
         },
         {
             id: 'cohere',
-            name: 'Cohere',
             fields: [
                 {
                     id: 'cohereApiKey',
@@ -340,24 +254,12 @@ export class ProviderConfig {
                     loadButtonText: 'Load Available Models',
                     loadButtonId: 'loadCohereModels',
                     loadCommand: 'gitmind.loadCohereModels',
-                    options: [
-                        { value: 'command-a-03-2025', label: 'Command A (03-2025)' },
-                        { value: 'command-a-reasoning-08-2025', label: 'Command A Reasoning (08-2025)' },
-                        { value: 'command-a-translate-08-2025', label: 'Command A Translate (08-2025)' },
-                        { value: 'command-a-vision-07-2025', label: 'Command A Vision (07-2025)' },
-                        { value: 'command-r7b-12-2024', label: 'Command R7B (12-2024)' },
-                        { value: 'command-r-plus-08-2024', label: 'Command R+ (08-2024)' },
-                        { value: 'command-r-08-2024', label: 'Command R (08-2024)' },
-                        { value: 'c4ai-aya-expanse-32b', label: 'Aya Expanse 32B' },
-                        { value: 'c4ai-aya-vision-32b', label: 'Aya Vision 32B' },
-                        { value: 'c4ai-aya-expanse-8b', label: 'Aya Expanse 8B' }
-                    ]
+                    options: modelOptions('cohere')
                 }
             ]
         },
         {
             id: 'together',
-            name: 'Together AI',
             fields: [
                 {
                     id: 'togetherApiKey',
@@ -376,19 +278,12 @@ export class ProviderConfig {
                     loadButtonText: 'Load Available Models',
                     loadButtonId: 'loadTogetherModels',
                     loadCommand: 'gitmind.loadTogetherModels',
-                    options: [
-                        { value: 'meta-llama/Llama-3.3-70B-Instruct-Turbo', label: 'Llama 3.3 70B Instruct Turbo' },
-                        { value: 'meta-llama/Llama-3.1-8B-Instruct-Turbo', label: 'Llama 3.1 8B Instruct Turbo' },
-                        { value: 'meta-llama/Llama-3.1-70B-Instruct-Turbo', label: 'Llama 3.1 70B Instruct Turbo' },
-                        { value: 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free', label: 'DeepSeek R1 Distill 70B' },
-                        { value: 'Qwen/Qwen2.5-72B-Instruct-Turbo', label: 'Qwen 2.5 72B Instruct Turbo' }
-                    ]
+                    options: modelOptions('together')
                 }
             ]
         },
         {
             id: 'openrouter',
-            name: 'OpenRouter',
             fields: [
                 {
                     id: 'openrouterApiKey',
@@ -407,19 +302,12 @@ export class ProviderConfig {
                     loadButtonText: 'Load Available Models',
                     loadButtonId: 'loadOpenRouterModels',
                     loadCommand: 'gitmind.loadOpenRouterModels',
-                    defaultOptions: [
-                        'google/gemma-3-27b-it:free',
-                        'openai/gpt-5.5-instant',
-                        'openai/o3-mini',
-                        'anthropic/claude-sonnet-4.6',
-                        'meta-llama/llama-3.3-70b-instruct'
-                    ]
+                    defaultOptions: []
                 }
             ]
         },
         {
             id: 'deepseek',
-            name: 'DeepSeek',
             fields: [
                 {
                     id: 'deepseekApiKey',
@@ -438,16 +326,12 @@ export class ProviderConfig {
                     loadButtonText: 'Load Available Models',
                     loadButtonId: 'loadDeepSeekModels',
                     loadCommand: 'gitmind.loadDeepSeekModels',
-                    options: [
-                        { value: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash' },
-                        { value: 'deepseek-v4-pro', label: 'DeepSeek V4 Pro' }
-                    ]
+                    options: modelOptions('deepseek')
                 }
             ]
         },
         {
             id: 'grok',
-            name: 'Grok',
             fields: [
                 {
                     id: 'grokApiKey',
@@ -466,18 +350,12 @@ export class ProviderConfig {
                     loadButtonText: 'Load Available Models',
                     loadButtonId: 'loadGrokModels',
                     loadCommand: 'gitmind.loadGrokModels',
-                    options: [
-                        { value: 'grok-4.3', label: 'Grok 4.3' },
-                        { value: 'grok-4.20-0309-reasoning', label: 'Grok 4.20 Reasoning (0309)' },
-                        { value: 'grok-4.20-0309-non-reasoning', label: 'Grok 4.20 Non-Reasoning (0309)' },
-                        { value: 'grok-4.20-multi-agent-0309', label: 'Grok 4.20 Multi-Agent (0309)' }
-                    ]
+                    options: modelOptions('grok')
                 }
             ]
         },
         {
             id: 'groq',
-            name: 'Groq',
             fields: [
                 {
                     id: 'groqApiKey',
@@ -496,17 +374,12 @@ export class ProviderConfig {
                     loadButtonText: 'Load Available Models',
                     loadButtonId: 'loadGroqModels',
                     loadCommand: 'gitmind.loadGroqModels',
-                    options: [
-                        { value: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B Versatile' },
-                        { value: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B Instant' },
-                        { value: 'meta-llama/llama-4-scout-17b-16e-instruct', label: 'Llama 4 Scout 17B 16E' }
-                    ]
+                    options: modelOptions('groq')
                 }
             ]
         },
         {
             id: 'perplexity',
-            name: 'Perplexity',
             fields: [
                 {
                     id: 'perplexityApiKey',
@@ -525,19 +398,12 @@ export class ProviderConfig {
                     loadButtonText: 'Load Available Models',
                     loadButtonId: 'loadPerplexityModels',
                     loadCommand: 'gitmind.loadPerplexityModels',
-                    options: [
-                        { value: 'sonar-pro', label: 'Sonar Pro' },
-                        { value: 'sonar-reasoning-pro', label: 'Sonar Reasoning Pro' },
-                        { value: 'sonar', label: 'Sonar' },
-                        { value: 'sonar-reasoning', label: 'Sonar Reasoning' },
-                        { value: 'r1-1776', label: 'R1-1776' }
-                    ]
+                    options: modelOptions('perplexity')
                 }
             ]
         },
         {
             id: 'zai',
-            name: 'Z.ai (GLM)',
             fields: [
                 {
                     id: 'zaiApiKey',
@@ -567,27 +433,12 @@ export class ProviderConfig {
                     loadButtonText: 'Load Available Models',
                     loadButtonId: 'loadZaiModels',
                     loadCommand: 'gitmind.loadZaiModels',
-                    options: [
-                        { value: 'glm-5.1', label: 'GLM 5.1' },
-                        { value: 'glm-5', label: 'GLM 5' },
-                        { value: 'glm-5-turbo', label: 'GLM 5 Turbo' },
-                        { value: 'glm-4.7', label: 'GLM 4.7' },
-                        { value: 'glm-4.7-flashx', label: 'GLM 4.7 FlashX' },
-                        { value: 'glm-4.6', label: 'GLM 4.6' },
-                        { value: 'glm-4.5', label: 'GLM 4.5' },
-                        { value: 'glm-4.5-x', label: 'GLM 4.5 X' },
-                        { value: 'glm-4.5-air', label: 'GLM 4.5 Air' },
-                        { value: 'glm-4.5-airx', label: 'GLM 4.5 AirX' },
-                        { value: 'glm-4-32b-0414-128k', label: 'GLM 4 32B (0414-128K)' },
-                        { value: 'glm-4.7-flash', label: 'GLM 4.7 Flash' },
-                        { value: 'glm-4.5-flash', label: 'GLM 4.5 Flash' }
-                    ]
+                    options: modelOptions('zai')
                 }
             ]
         },
         {
             id: 'nvidia',
-            name: 'NVIDIA',
             fields: [
                 {
                     id: 'nvidiaApiKey',
@@ -606,12 +457,7 @@ export class ProviderConfig {
                     loadButtonText: 'Load Available Models',
                     loadButtonId: 'loadNvidiaModels',
                     loadCommand: 'gitmind.loadNvidiaModels',
-                    defaultOptions: [
-                        'meta/llama-3.3-70b-instruct',
-                        'nvidia/nemotron-3-super-120b-a12b',
-                        'mistralai/mistral-large-3-675b-instruct-2512',
-                        'qwen/qwen3-coder-480b-a35b-instruct'
-                    ]
+                    defaultOptions: []
                 },
                 {
                     id: 'nvidiaInfo',
@@ -625,7 +471,6 @@ export class ProviderConfig {
         },
         {
             id: 'lmstudio',
-            name: 'LM Studio (Local)',
             fields: [
                 {
                     id: 'lmstudioUrl',
@@ -649,7 +494,6 @@ export class ProviderConfig {
         },
         {
             id: 'azureopenai',
-            name: 'Azure OpenAI',
             fields: [
                 {
                     id: 'azureopenaiEndpoint',
@@ -690,7 +534,6 @@ export class ProviderConfig {
         },
         {
             id: 'bedrock',
-            name: 'Amazon Bedrock',
             fields: [
                 {
                     id: 'bedrockRegion',
@@ -722,7 +565,6 @@ export class ProviderConfig {
         },
         {
             id: 'vertexai',
-            name: 'Vertex AI',
             fields: [
                 {
                     id: 'vertexaiProject',
@@ -754,7 +596,6 @@ export class ProviderConfig {
         },
         {
             id: 'cloudflare',
-            name: 'Cloudflare Workers AI',
             fields: [
                 {
                     id: 'cloudflareApiKey',
@@ -792,7 +633,6 @@ export class ProviderConfig {
         },
         {
             id: 'custom',
-            name: 'Custom API',
             isPro: true,
             fields: [
                 {
@@ -934,10 +774,11 @@ export class ProviderConfig {
         return provider ? this.withCatalogModels(provider) : undefined;
     }
 
-    private static withCatalogModels(provider: Provider): Provider {
+    private static withCatalogModels(provider: Omit<Provider, 'name'>): Provider {
         const curated = getCuratedModels(provider.id);
         return {
             ...provider,
+            name: getProviderEntry(provider.id)?.name ?? provider.id,
             fields: provider.fields.map(field => field.key === 'model'
                 ? {
                     ...field,
@@ -952,7 +793,7 @@ export class ProviderConfig {
     }
 
     public static getProviderNames(): Array<{ value: string; label: string }> {
-        return this.providers.map(provider => ({
+        return this.getAllProviders().map(provider => ({
             value: provider.id,
             label: provider.name
         }));

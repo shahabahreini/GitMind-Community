@@ -1,3 +1,5 @@
+import { API_KEY_PROVIDER_IDS, PROVIDER_IDS } from '../../../config/providerCatalog';
+
 export function getEventHandlersScript(): string {
   return `
     // Track unsaved changes
@@ -527,8 +529,8 @@ export function getEventHandlersScript(): string {
     // Setup provider field event listeners automatically
     function setupProviderEventListeners() {
       // Provider field patterns - API keys, models, and URLs
-      const apiKeyProviders = ['gemini', 'huggingface', 'mistral', 'cohere', 'openai', 'together', 'openrouter', 'anthropic', 'deepseek', 'grok', 'perplexity'];
-      const allProviders = ['gemini', 'huggingface', 'ollama', 'mistral', 'cohere', 'openai', 'together', 'openrouter', 'anthropic', 'copilot', 'deepseek', 'grok', 'perplexity', 'custom'];
+      const apiKeyProviders = ${JSON.stringify(API_KEY_PROVIDER_IDS)};
+      const allProviders = ${JSON.stringify(PROVIDER_IDS)};
       
       allProviders.forEach(provider => {
         // Set up API key listener with debouncing

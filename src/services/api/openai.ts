@@ -24,6 +24,9 @@ interface ModelConfig {
 }
 
 const MODEL_CONFIGS: Record<string, ModelConfig> = {
+    "gpt-6-astra": { maxTokens: 4000, temperature: 0.2, supportsReasoning: true },
+    "gpt-6-sol": { maxTokens: 3000, temperature: 0.2, supportsReasoning: true },
+    "gpt-6-luna": { maxTokens: 2000, temperature: 0.2, supportsReasoning: true },
     "gpt-5.6-sol": { maxTokens: 4000, temperature: 0.2, supportsReasoning: true },
     "gpt-5.6-terra": { maxTokens: 3000, temperature: 0.2, supportsReasoning: true },
     "gpt-5.6-luna": { maxTokens: 2000, temperature: 0.2, supportsReasoning: true },

@@ -38,9 +38,9 @@ import { SubscriptionManager } from "../subscription/SubscriptionManager";
 import { DiffProcessor } from "../diffProcessor";
 import { generateCommitHistoryAnalysisPrompt, validatePromptLength, generateCommitPrompt, getPromptConfig } from './prompts';
 import { BaseAIProvider, GenerationOptions } from "./base";
-import { classifyGenerationFailure, normalizeProviderError, withModel } from "./recovery";
+import { classifyGenerationFailure, normalizeProviderError, ProviderApiError, withModel } from "./recovery";
 import { recordSupportEvent, SupportOperation, SupportProvider } from "../support/SupportSessionService";
-import { getProviderDefaultModel } from "../../config/providerCatalog";
+import { getProviderDefaultModel, PROVIDER_CATALOG, PROVIDER_IDS, ProviderCatalogEntry, requiresApiKey } from "../../config/providerCatalog";
 
 // Timeout configurations
 const STANDARD_REQUEST_TIMEOUT = 10000; // 10 seconds for regular API requests
@@ -59,7 +59,8 @@ const CIRCUIT_BREAKER_THRESHOLD = 3; // Max failures before opening circuit
 const CIRCUIT_BREAKER_RESET_TIME = 60000; // 1 minute cooldown
 
 
-type ApiProvider = "Gemini" | "Hugging Face" | "Ollama" | "Mistral" | "Cohere" | "OpenAI" | "Together AI" | "OpenRouter" | "Anthropic" | "MiniMax" | "GitHub Copilot" | "DeepSeek" | "Grok" | "Groq" | "Perplexity" | "Z.ai" | "NVIDIA" | "LM Studio" | "Azure OpenAI" | "Amazon Bedrock" | "Vertex AI" | "Cloudflare Workers AI" | "Custom API";
+/** Runtime provider label from the catalog, e.g. "GitHub Copilot". */
+type ApiProvider = string;
 
 // Type for lazy-loaded provider class
 type ProviderClass = new (...args: any[]) => BaseAIProvider;
@@ -202,200 +203,21 @@ async function loadProviderModule(provider: string): Promise<ProviderClass> {
     }
 }
 
-// Provider configurations with lazy-loaded API call functions
-const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
-    gemini: {
-        name: "Gemini",
-        displayName: "Gemini",
-        settingPath: "gemini.apiKey",
-        docsUrl: "https://aistudio.google.com/app/apikey",
-        requiresApiKey: true,
-        defaultModel: getProviderDefaultModel("gemini"),
-        getProviderClass: async () => loadProviderModule('gemini'),
-    },
-    huggingface: {
-        name: "Hugging Face",
-        displayName: "Hugging Face",
-        settingPath: "huggingface.apiKey",
-        docsUrl: "https://huggingface.co/settings/tokens",
-        requiresApiKey: true,
-        getProviderClass: async () => loadProviderModule('huggingface'),
-    },
-    mistral: {
-        name: "Mistral",
-        displayName: "Mistral AI",
-        settingPath: "mistral.apiKey",
-        docsUrl: "https://console.mistral.ai/api-keys/",
-        requiresApiKey: true,
-        getProviderClass: async () => loadProviderModule('mistral'),
-    },
-    cohere: {
-        name: "Cohere",
-        displayName: "Cohere",
-        settingPath: "cohere.apiKey",
-        docsUrl: "https://dashboard.cohere.com/api-keys",
-        requiresApiKey: true,
-        getProviderClass: async () => loadProviderModule('cohere'),
-    },
-    openai: {
-        name: "OpenAI",
-        displayName: "OpenAI",
-        settingPath: "openai.apiKey",
-        docsUrl: "https://platform.openai.com/api-keys",
-        requiresApiKey: true,
-        getProviderClass: async () => loadProviderModule('openai'),
-    },
-    together: {
-        name: "Together AI",
-        displayName: "Together AI",
-        settingPath: "together.apiKey",
-        docsUrl: "https://api.together.xyz/settings/api-keys",
-        requiresApiKey: true,
-        getProviderClass: async () => loadProviderModule('together'),
-    },
-    openrouter: {
-        name: "OpenRouter",
-        displayName: "OpenRouter",
-        settingPath: "openrouter.apiKey",
-        docsUrl: "https://openrouter.ai/keys",
-        requiresApiKey: true,
-        getProviderClass: async () => loadProviderModule('openrouter'),
-    },
-    anthropic: {
-        name: "Anthropic",
-        displayName: "Anthropic",
-        settingPath: "anthropic.apiKey",
-        docsUrl: "https://console.anthropic.com/",
-        requiresApiKey: true,
-        defaultModel: getProviderDefaultModel("anthropic"),
-        getProviderClass: async () => loadProviderModule('anthropic'),
-    },
-    minimax: {
-        name: "MiniMax",
-        displayName: "MiniMax",
-        settingPath: "minimax.apiKey",
-        docsUrl: "https://platform.minimax.io/docs/api-reference/text-anthropic-api",
-        requiresApiKey: true,
-        defaultModel: getProviderDefaultModel("minimax"),
-        getProviderClass: async () => loadProviderModule('minimax'),
-    },
-    deepseek: {
-        name: "DeepSeek",
-        displayName: "DeepSeek",
-        settingPath: "deepseek.apiKey",
-        docsUrl: "https://platform.deepseek.com/api_keys",
-        requiresApiKey: true,
-        getProviderClass: async () => loadProviderModule('deepseek'),
-    },
-    grok: {
-        name: "Grok",
-        displayName: "Grok",
-        settingPath: "grok.apiKey",
-        docsUrl: "https://console.x.ai/",
-        requiresApiKey: true,
-        getProviderClass: async () => loadProviderModule('grok'),
-    },
-    groq: {
-        name: "Groq",
-        displayName: "Groq",
-        settingPath: "groq.apiKey",
-        docsUrl: "https://console.groq.com/keys",
-        requiresApiKey: true,
-        defaultModel: "meta-llama/llama-4-scout-17b-16e-instruct",
-        getProviderClass: async () => loadProviderModule('groq'),
-    },
-    perplexity: {
-        name: "Perplexity",
-        displayName: "Perplexity",
-        settingPath: "perplexity.apiKey",
-        docsUrl: "https://www.perplexity.ai/settings/api",
-        requiresApiKey: true,
-        getProviderClass: async () => loadProviderModule('perplexity'),
-    },
-    zai: {
-        name: "Z.ai",
-        displayName: "Z.ai (GLM)",
-        settingPath: "zai.apiKey",
-        docsUrl: "https://api.z.ai/",
-        requiresApiKey: true,
-        defaultModel: "glm-5.1",
-        getProviderClass: async () => loadProviderModule('zai'),
-    },
-    nvidia: {
-        name: "NVIDIA",
-        displayName: "NVIDIA",
-        settingPath: "nvidia.apiKey",
-        docsUrl: "https://build.nvidia.com/models",
-        requiresApiKey: true,
-        defaultModel: "meta/llama-3.3-70b-instruct",
-        getProviderClass: async () => loadProviderModule('nvidia'),
-    },
-    lmstudio: {
-        name: "LM Studio",
-        displayName: "LM Studio",
-        settingPath: "lmstudio.url",
-        docsUrl: "https://lmstudio.ai/docs/app",
-        requiresApiKey: false,
-        getProviderClass: async () => loadProviderModule('lmstudio'),
-    },
-    azureopenai: {
-        name: "Azure OpenAI",
-        displayName: "Azure OpenAI",
-        settingPath: "azureopenai.apiKey",
-        docsUrl: "https://learn.microsoft.com/en-us/rest/api/microsoft-foundry/azureopenai/chat",
-        requiresApiKey: false,
-        getProviderClass: async () => loadProviderModule('azureopenai'),
-    },
-    bedrock: {
-        name: "Amazon Bedrock",
-        displayName: "Amazon Bedrock",
-        settingPath: "bedrock.region",
-        docsUrl: "https://docs.aws.amazon.com/bedrock/latest/userguide/apis.html",
-        requiresApiKey: false,
-        getProviderClass: async () => loadProviderModule('bedrock'),
-    },
-    vertexai: {
-        name: "Vertex AI",
-        displayName: "Vertex AI",
-        settingPath: "vertexai.project",
-        docsUrl: "https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstart",
-        requiresApiKey: false,
-        getProviderClass: async () => loadProviderModule('vertexai'),
-    },
-    cloudflare: {
-        name: "Cloudflare Workers AI",
-        displayName: "Cloudflare Workers AI",
-        settingPath: "cloudflare.apiKey",
-        docsUrl: "https://developers.cloudflare.com/workers-ai/configuration/openai-compatibility/",
-        requiresApiKey: true,
-        getProviderClass: async () => loadProviderModule('cloudflare'),
-    },
-    custom: {
-        name: "Custom API",
-        displayName: "Custom API",
-        settingPath: "custom.authToken",
-        docsUrl: "",
-        requiresApiKey: false, // Handled separately
-        getProviderClass: async () => loadProviderModule('custom'),
-    },
-    ollama: {
-        name: "Ollama",
-        displayName: "Ollama",
-        settingPath: "",
-        docsUrl: "",
-        requiresApiKey: false,
-        getProviderClass: async () => loadProviderModule('ollama'),
-    },
-    copilot: {
-        name: "GitHub Copilot",
-        displayName: "GitHub Copilot",
-        settingPath: "",
-        docsUrl: "",
-        requiresApiKey: false,
-        defaultModel: getProviderDefaultModel("copilot"),
-        getProviderClass: async () => loadProviderModule('copilot'),
-    },
-};
+// Provider configurations derived from the canonical provider catalog, plus lazy-loaded provider classes
+const PROVIDER_CONFIGS: Record<string, ProviderConfig> = Object.fromEntries(
+    PROVIDER_IDS.map((id): [string, ProviderConfig] => {
+        const entry = PROVIDER_CATALOG[id] as ProviderCatalogEntry;
+        return [id, {
+            name: entry.name,
+            displayName: entry.displayName,
+            settingPath: entry.settingPath,
+            docsUrl: entry.docsUrl,
+            requiresApiKey: requiresApiKey(id),
+            defaultModel: entry.defaultModel || undefined,
+            getProviderClass: async () => loadProviderModule(id),
+        }];
+    })
+);
 
 // Request management
 const activeRequests = new Map<string, AbortController>();
@@ -502,9 +324,21 @@ async function handleApiError(
         return new Error("Ollama is not configured or running. Open Model Settings and verify the local service URL.");
     }
 
+    if (normalizedError.userFacing) {
+        return normalizedError;
+    }
+
     const errorInfo = APIErrorHandler.handleAPIError(normalizedError, provider, context);
     const formattedMessage = APIErrorHandler.formatUserMessage(errorInfo);
-    return new Error(formattedMessage);
+    // Already formatted: mark it so callers show it unchanged instead of re-classifying the text.
+    return new ProviderApiError(formattedMessage, {
+        status: normalizedError.status,
+        code: normalizedError.code,
+        provider: config.type,
+        category: classifyGenerationFailure(normalizedError, config.type),
+        retryAfterMs: normalizedError.retryAfterMs,
+        userFacing: true,
+    });
 }
 
 export async function generateCommitMessage(

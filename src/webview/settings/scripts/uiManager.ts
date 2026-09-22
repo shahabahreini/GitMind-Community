@@ -1,107 +1,11 @@
 // src/webview/settings/scripts/uiManager.ts
 import { ProviderIcon } from '../components/ProviderIcon';
-import { getProviderDefaultModel } from '../../../config/providerCatalog';
+import { serializeProvidersForWebview } from '../../../config/providerCatalog';
 
-interface ProviderDisplayConfig {
-  displayName: string;
-  model: string;
-  apiConfigured: (settings: any) => boolean;
-}
+/** Provider metadata from the canonical catalog, serialized for the webview script. */
+const WEBVIEW_PROVIDERS = serializeProvidersForWebview();
 
-const PROVIDER_DISPLAY_CONFIG: Record<string, ProviderDisplayConfig> = {
-  gemini: {
-    displayName: "Gemini",
-    model: getProviderDefaultModel("gemini"),
-    apiConfigured: (s) => !!s.gemini?.apiKey
-  },
-  huggingface: {
-    displayName: "Hugging Face",
-    model: "Not configured",
-    apiConfigured: (s) => !!s.huggingface?.apiKey
-  },
-  ollama: {
-    displayName: "Ollama",
-    model: "Not configured",
-    apiConfigured: (s) => !!s.ollama?.url
-  },
-  mistral: {
-    displayName: "Mistral",
-    model: getProviderDefaultModel("mistral"),
-    apiConfigured: (s) => !!s.mistral?.apiKey
-  },
-  cohere: {
-    displayName: "Cohere",
-    model: getProviderDefaultModel("cohere"),
-    apiConfigured: (s) => !!s.cohere?.apiKey
-  },
-  openai: {
-    displayName: "OpenAI",
-    model: getProviderDefaultModel("openai"),
-    apiConfigured: (s) => !!s.openai?.apiKey
-  },
-  together: {
-    displayName: "Together AI",
-    model: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
-    apiConfigured: (s) => !!s.together?.apiKey
-  },
-  openrouter: {
-    displayName: "OpenRouter",
-    model: "google/gemma-3-27b-it:free",
-    apiConfigured: (s) => !!s.openrouter?.apiKey
-  },
-  anthropic: {
-    displayName: "Anthropic",
-    model: getProviderDefaultModel("anthropic"),
-    apiConfigured: (s) => !!s.anthropic?.apiKey
-  },
-  minimax: {
-    displayName: "MiniMax",
-    model: getProviderDefaultModel("minimax"),
-    apiConfigured: (s) => !!s.minimax?.apiKey
-  },
-  copilot: {
-    displayName: "GitHub Copilot",
-    model: getProviderDefaultModel("copilot"),
-    apiConfigured: () => true
-  },
-  deepseek: {
-    displayName: "DeepSeek",
-    model: getProviderDefaultModel("deepseek"),
-    apiConfigured: (s) => !!s.deepseek?.apiKey
-  },
-  grok: {
-    displayName: "Grok",
-    model: getProviderDefaultModel("grok"),
-    apiConfigured: (s) => !!s.grok?.apiKey
-  },
-  groq: {
-    displayName: "Groq",
-    model: "meta-llama/llama-4-scout-17b-16e-instruct",
-    apiConfigured: (s) => !!s.groq?.apiKey
-  },
-  perplexity: {
-    displayName: "Perplexity",
-    model: getProviderDefaultModel("perplexity"),
-    apiConfigured: (s) => !!s.perplexity?.apiKey
-  },
-  zai: {
-    displayName: "Z.ai",
-    model: "glm-4.5-flash",
-    apiConfigured: (s) => !!s.zai?.apiKey
-  },
-  nvidia: {
-    displayName: "NVIDIA",
-    model: "meta/llama-3.3-70b-instruct",
-    apiConfigured: (s) => !!s.nvidia?.apiKey
-  },
-  custom: {
-    displayName: "Custom API",
-    model: "Not configured",
-    apiConfigured: (s) => !!(s.custom?.baseUrl && s.custom?.endpoint)
-  }
-};
-
-const PROVIDERS = Object.keys(PROVIDER_DISPLAY_CONFIG);
+const PROVIDERS = Object.keys(WEBVIEW_PROVIDERS);
 
 export function getUiManagerScript(): string {
   const providerIconString = `
@@ -125,8 +29,27 @@ export function getUiManagerScript(): string {
   return `
     ${providerIconString}
     
-    const PROVIDER_DISPLAY_CONFIG = ${JSON.stringify(PROVIDER_DISPLAY_CONFIG)};
+    const WEBVIEW_PROVIDERS = ${JSON.stringify(WEBVIEW_PROVIDERS)};
     const PROVIDERS = ${JSON.stringify(PROVIDERS)};
+
+    // Whether the provider's required connection value is present, from catalog auth metadata.
+    function isProviderApiConfigured(provider, settings) {
+      const meta = WEBVIEW_PROVIDERS[provider];
+      const providerSettings = (settings && settings[provider]) || {};
+      if (!meta) return false;
+      switch (meta.authKind) {
+        case 'apiKey': return !!providerSettings.apiKey || (!meta.requiresApiKey && providerSettings.authMode === 'entra');
+        case 'local': return !!providerSettings.url;
+        case 'custom': return !!(providerSettings.baseUrl && providerSettings.endpoint);
+        default: return true; // ide-session and cloud-credentials need no stored secret
+      }
+    }
+
+    function getProviderDefaultModelLabel(provider) {
+      const meta = WEBVIEW_PROVIDERS[provider];
+      if (!meta) return 'Unknown';
+      return meta.defaultModel || (meta.authKind === 'custom' ? 'Custom' : 'Not configured');
+    }
     
     function updateVisibleSettings() {
       const selectedProvider = document.getElementById('apiProvider').value;
@@ -173,15 +96,15 @@ export function getUiManagerScript(): string {
     }
     
     function getProviderInfo(provider, settings) {
-      const config = PROVIDER_DISPLAY_CONFIG[provider];
-      if (!config) return { displayName: provider, model: '', apiConfigured: false };
+      const meta = WEBVIEW_PROVIDERS[provider];
+      if (!meta) return { displayName: provider, model: '', apiConfigured: false };
       
       const providerSettings = settings[provider];
-      const model = providerSettings?.model || config.model;
-      const apiConfigured = config.apiConfigured(settings);
+      const model = providerSettings?.model || getProviderDefaultModelLabel(provider);
+      const apiConfigured = isProviderApiConfigured(provider, settings);
       
       return {
-        displayName: config.displayName,
+        displayName: meta.name,
         model: model,
         apiConfigured: apiConfigured
       };
@@ -191,40 +114,20 @@ export function getUiManagerScript(): string {
     window.StatusBanner = function(settings) {
       this._settings = settings;
       
-      const PROVIDER_CONFIGS = {
-        gemini: { displayName: "Gemini", defaultModel: "gemini-3.5-flash", getApiConfigured: (s) => !!s.gemini?.apiKey },
-        huggingface: { displayName: "Hugging Face", defaultModel: "Not configured", getApiConfigured: (s) => !!s.huggingface?.apiKey },
-        ollama: { displayName: "Ollama", defaultModel: "Not configured", getApiConfigured: (s) => !!s.ollama?.url },
-        mistral: { displayName: "Mistral", defaultModel: "mistral-small-4", getApiConfigured: (s) => !!s.mistral?.apiKey },
-        cohere: { displayName: "Cohere", defaultModel: "command-a-plus-05-2026", getApiConfigured: (s) => !!s.cohere?.apiKey },
-        openai: { displayName: "OpenAI", defaultModel: "gpt-5.6-terra", getApiConfigured: (s) => !!s.openai?.apiKey },
-        together: { displayName: "Together AI", defaultModel: "meta-llama/Llama-3.3-70B-Instruct-Turbo", getApiConfigured: (s) => !!s.together?.apiKey },
-        openrouter: { displayName: "OpenRouter", defaultModel: "google/gemma-3-27b-it:free", getApiConfigured: (s) => !!s.openrouter?.apiKey },
-        anthropic: { displayName: "Anthropic", defaultModel: "claude-sonnet-5", getApiConfigured: (s) => !!s.anthropic?.apiKey },
-        minimax: { displayName: "MiniMax", defaultModel: "MiniMax-M2.7", getApiConfigured: (s) => !!s.minimax?.apiKey },
-        copilot: { displayName: "GitHub Copilot", defaultModel: "auto", getApiConfigured: () => true },
-        deepseek: { displayName: "DeepSeek", defaultModel: "deepseek-v4-flash", getApiConfigured: (s) => !!s.deepseek?.apiKey },
-        grok: { displayName: "Grok", defaultModel: "grok-4.4", getApiConfigured: (s) => !!s.grok?.apiKey },
-        groq: { displayName: "Groq", defaultModel: "meta-llama/llama-4-scout-17b-16e-instruct", getApiConfigured: (s) => !!s.groq?.apiKey },
-        perplexity: { displayName: "Perplexity", defaultModel: "sonar-pro", getApiConfigured: (s) => !!s.perplexity?.apiKey },
-        zai: { displayName: "Z.ai", defaultModel: "glm-4.5-flash", getApiConfigured: (s) => !!s.zai?.apiKey },
-        nvidia: { displayName: "NVIDIA", defaultModel: "meta/llama-3.3-70b-instruct", getApiConfigured: (s) => !!s.nvidia?.apiKey },
-        custom: { displayName: "Custom API", defaultModel: "Not configured", getApiConfigured: (s) => !!(s.custom?.baseUrl && s.custom?.endpoint) }
-      };
       
       this.getProviderInfo = function() {
         const provider = this._settings.apiProvider;
-        const config = PROVIDER_CONFIGS[provider];
+        const meta = WEBVIEW_PROVIDERS[provider];
 
-        if (!config) {
+        if (!meta) {
           return { displayName: provider, model: "Unknown", apiConfigured: false };
         }
 
         const providerSettings = this._settings[provider];
-        const model = providerSettings?.model || config.defaultModel;
-        const apiConfigured = config.getApiConfigured(this._settings);
+        const model = providerSettings?.model || getProviderDefaultModelLabel(provider);
+        const apiConfigured = isProviderApiConfigured(provider, this._settings);
 
-        return { displayName: config.displayName, model, apiConfigured };
+        return { displayName: meta.name, model, apiConfigured };
       };
       
       this.renderChip = function(label, value, dot, isDisabled) {

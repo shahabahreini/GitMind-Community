@@ -10,7 +10,7 @@
 - **Model not found/access denied:** load current models and select one available to your account.
 - **Models will not load:** verify the key and provider network access; some providers may fall back to a known model list.
 - **Ollama unavailable:** start Ollama, verify `http://localhost:11434`, pull the selected model, and load models again.
-- **Copilot unavailable:** install GitHub Copilot, sign in, confirm the subscription, and detect models again.
+- **Copilot unavailable:** GitHub Copilot never needs an API key. Follow the message: install GitHub Copilot (**Find GitHub Copilot**), sign in, allow GitMind access when asked (**Retry**), or choose another provider if your editor has no language model API. See [GitHub Copilot](providers-copilot.md).
 
 ## Git And Generation
 

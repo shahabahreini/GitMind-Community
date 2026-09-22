@@ -1,5 +1,6 @@
 // src/webview/settings/components/renderers/ModelSettingsRenderer.ts
 import { ExtensionSettings } from "../../../../models/ExtensionSettings";
+import { getProviderDefaultModel } from '../../../../config/providerCatalog';
 import { BaseRenderer } from "./BaseRenderer";
 import { FormUtils } from "../utils/FormUtils";
 import { ProviderConfig } from "../config/ProviderConfig";
@@ -324,11 +325,11 @@ export class ModelSettingsRenderer extends BaseRenderer {
             if (isHuggingFace) {
                 providerName = 'Hugging Face';
                 dropdownId = 'huggingfaceModelDropdown';
-                placeholder = 'Type or select a model (e.g., mistralai/Mistral-7B-Instruct-v0.3)';
+                placeholder = `Type or select a model (e.g., ${getProviderDefaultModel('huggingface')})`;
             } else if (isOpenRouter) {
                 providerName = 'OpenRouter';
                 dropdownId = 'openrouterModelDropdown';
-                placeholder = 'Type or select a model (e.g., google/gemma-3-27b-it:free)';
+                placeholder = `Type or select a model (e.g., ${getProviderDefaultModel('openrouter')})`;
             } else if (isOllama) {
                 providerName = 'Ollama';
                 dropdownId = 'ollamaModelDropdown';
@@ -336,7 +337,7 @@ export class ModelSettingsRenderer extends BaseRenderer {
             } else if (isNvidia) {
                 providerName = 'NVIDIA';
                 dropdownId = 'nvidiaModelDropdown';
-                placeholder = 'Type or select a model (e.g., meta/llama-3.3-70b-instruct)';
+                placeholder = `Type or select a model (e.g., ${getProviderDefaultModel('nvidia')})`;
             }
 
             return FormUtils.createFormGroup(

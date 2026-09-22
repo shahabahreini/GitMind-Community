@@ -2,7 +2,7 @@
 import { ExtensionSettings } from "../../../models/ExtensionSettings";
 import { getStatusBannerStyles } from "../styles/statusBanner.css";
 import { ProviderIcon } from "./ProviderIcon";
-import { getProviderDefaultModel } from "../../../config/providerCatalog";
+import { getProviderAuth, getProviderEntry } from "../../../config/providerCatalog";
 
 interface ProviderConfig {
   displayName: string;
@@ -13,98 +13,36 @@ interface ProviderConfig {
 export class StatusBanner {
   private _settings: ExtensionSettings;
 
-  private static readonly PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
-    gemini: {
-      displayName: "Gemini",
-      defaultModel: getProviderDefaultModel("gemini"),
-      getApiConfigured: (s) => !!s.gemini?.apiKey
-    },
-    huggingface: {
-      displayName: "Hugging Face",
-      defaultModel: "Not configured",
-      getApiConfigured: (s) => !!s.huggingface?.apiKey
-    },
-    ollama: {
-      displayName: "Ollama",
-      defaultModel: "Not configured",
-      getApiConfigured: (s) => !!s.ollama?.url
-    },
-    mistral: {
-      displayName: "Mistral",
-      defaultModel: getProviderDefaultModel("mistral"),
-      getApiConfigured: (s) => !!s.mistral?.apiKey
-    },
-    cohere: {
-      displayName: "Cohere",
-      defaultModel: getProviderDefaultModel("cohere"),
-      getApiConfigured: (s) => !!s.cohere?.apiKey
-    },
-    openai: {
-      displayName: "OpenAI",
-      defaultModel: getProviderDefaultModel("openai"),
-      getApiConfigured: (s) => !!s.openai?.apiKey
-    },
-    together: {
-      displayName: "Together AI",
-      defaultModel: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
-      getApiConfigured: (s) => !!s.together?.apiKey
-    },
-    openrouter: {
-      displayName: "OpenRouter",
-      defaultModel: "google/gemma-3-27b-it:free",
-      getApiConfigured: (s) => !!s.openrouter?.apiKey
-    },
-    anthropic: {
-      displayName: "Anthropic",
-      defaultModel: getProviderDefaultModel("anthropic"),
-      getApiConfigured: (s) => !!s.anthropic?.apiKey
-    },
-    minimax: {
-      displayName: "MiniMax",
-      defaultModel: getProviderDefaultModel("minimax"),
-      getApiConfigured: (s) => !!(s as any).minimax?.apiKey
-    },
-    copilot: {
-      displayName: "GitHub Copilot",
-      defaultModel: getProviderDefaultModel("copilot"),
-      getApiConfigured: () => true
-    },
-    deepseek: {
-      displayName: "DeepSeek",
-      defaultModel: getProviderDefaultModel("deepseek"),
-      getApiConfigured: (s) => !!s.deepseek?.apiKey
-    },
-    grok: {
-      displayName: "Grok",
-      defaultModel: getProviderDefaultModel("grok"),
-      getApiConfigured: (s) => !!s.grok?.apiKey
-    },
-    groq: {
-      displayName: "Groq",
-      defaultModel: getProviderDefaultModel("groq"),
-      getApiConfigured: (s) => !!s.groq?.apiKey
-    },
-    perplexity: {
-      displayName: "Perplexity",
-      defaultModel: getProviderDefaultModel("perplexity"),
-      getApiConfigured: (s) => !!s.perplexity?.apiKey
-    },
-    zai: {
-      displayName: "Z.ai",
-      defaultModel: "glm-4.5-flash",
-      getApiConfigured: (s) => !!(s as any).zai?.apiKey
-    },
-    nvidia: {
-      displayName: "NVIDIA",
-      defaultModel: "meta/llama-3.3-70b-instruct",
-      getApiConfigured: (s) => !!s.nvidia?.apiKey
-    },
-    custom: {
-      displayName: "Custom API",
-      defaultModel: "Custom",
-      getApiConfigured: (s) => !!(s.custom?.baseUrl && s.custom?.endpoint)
+  /** Whether the provider's required connection value is present; derived from catalog auth metadata. */
+  private static isApiConfigured(provider: string, settings: ExtensionSettings): boolean {
+    const providerSettings = (settings as any)[provider] ?? {};
+    const auth = getProviderAuth(provider);
+    switch (auth?.kind) {
+      case "apiKey":
+        return !!providerSettings.apiKey || (auth.optional === true && providerSettings.authMode === "entra");
+      case "local":
+        return !!providerSettings.url;
+      case "custom":
+        return !!(providerSettings.baseUrl && providerSettings.endpoint);
+      case "ide-session":
+      case "cloud-credentials":
+        return true;
+      default:
+        return false;
     }
-  };
+  }
+
+  private static getProviderConfig(provider: string): ProviderConfig | undefined {
+    const entry = getProviderEntry(provider);
+    if (!entry) {
+      return undefined;
+    }
+    return {
+      displayName: entry.name,
+      defaultModel: entry.defaultModel || (entry.auth.kind === "custom" ? "Custom" : "Not configured"),
+      getApiConfigured: (settings) => StatusBanner.isApiConfigured(provider, settings),
+    };
+  }
 
   constructor(settings: ExtensionSettings) {
     this._settings = settings;
@@ -112,7 +50,7 @@ export class StatusBanner {
 
   private getProviderInfo(): { displayName: string; model: string; apiConfigured: boolean } {
     const provider = this._settings.apiProvider;
-    const config = StatusBanner.PROVIDER_CONFIGS[provider];
+    const config = StatusBanner.getProviderConfig(provider);
 
     if (!config) {
       return {
