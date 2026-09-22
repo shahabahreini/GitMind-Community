@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v6.2.1 - 2026-09-22
+
+### Highlights
+
+- A clearer Marketplace and Open VSX listing: a new name, description, square icon, and README with a real demo, install steps for VS Code and editors that use Open VSX, and a Free vs Pro comparison that labels every Pro feature.
+- The published package no longer includes internal development files.
+
+### Changed
+
+- The extension is now listed as **GitMind: AI Commit Message Generator**, in the AI and SCM Providers categories.
+- Documentation links point to the GitMind wiki.
+
+### Fixed
+
+- Internal build artifacts (`graphify-out/`, `plans/`, `wiki/`) are excluded from the package, and the package audit rejects them.
+
 ## v6.2.0 - 2026-09-22
 
 ### Fixed

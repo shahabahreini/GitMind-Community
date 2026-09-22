@@ -1,1 +1,1 @@
-GitMind Wiki | Generated from `docs/handbook/` | Verified against GitMind `6.2.0` on September 22, 2026 | [Website](https://gitmind-pro.com) | [Pages handbook](https://shahabahreini.github.io/GitMind-Community/) | [Support](https://github.com/shahabahreini/GitMind-Community/issues)
+GitMind Wiki | Generated from `docs/handbook/` | Verified against GitMind `6.2.1` on September 22, 2026 | [Website](https://gitmind-pro.com) | [Pages handbook](https://shahabahreini.github.io/GitMind-Community/) | [Support](https://github.com/shahabahreini/GitMind-Community/issues)
