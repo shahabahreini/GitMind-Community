@@ -11,8 +11,8 @@
 
 | ID | Task | Priority | Acceptance check | Status | Evidence |
 |---|---|---|---|---|---|
-| 0.5 | Confirm 6.2.0 is live | must | Both store APIs report 6.2.0 | in progress | OpenVSX API reports 6.2.0 (published 2026-09-22T20:27Z, 12,252 downloads). Marketplace still reports 6.1.2 while Microsoft verifies the upload (checked 2026-09-22 14:31 MDT). |
-| 0.1 | Record baseline metrics | must | Two dated pre-release rows plus reproducible commands; A7 confirmed | blocked | Needs 0.5 + 7 days, a Marketplace publisher-hub export and web-host access-log access. All three are owner actions. |
+| 0.5 | Confirm 6.2.0 is live | must | Both store APIs report 6.2.0 | done (verified) | OpenVSX 6.2.0 (2026-09-22T20:27Z), Marketplace 6.2.0 (2026-09-22T20:32Z); both confirmed via the store APIs. |
+| 0.1 | Record baseline metrics | must | Two dated pre-release rows plus reproducible commands; A7 confirmed | in progress | `docs/research/listing-metrics.md` plus `listing-snapshot.sh` created with a day-0 reference row (2026-09-22). First baseline row due 2026-09-29. Still needs a Marketplace publisher-hub export and web-host access-log access. All three are owner actions. |
 | 0.2 | Keyword & competitor research | must | Rank per term on both stores, A4 note, chosen terms, keep/drop list, runnable script | done (verified) | `docs/research/listing-keywords-2026-09.md`, `docs/research/listing-rank.py` (ran successfully). GitMind ranks >50 for `ai commit`, `commit message` and `commit message generator` on both stores. |
 | 0.3 | Confirm platform constraints | must | A1–A3 and A8 confirmed or corrected with source; visible limits; displayName and trademark rules | blocked (partial) | Confirmed: A1 (AI category exists: 4,159 extensions on the MP API, 1,176 on OpenVSX), A2 (30-tag limit), A8 (VSCodium 1.135 OK; Cursor/Windsurf unverified, so not named), displayName uniqueness. **A3 (`<video>` stripping) and the visible search-card length need a browser check.** Carried to Task 5.1. |
 | 0.4 | Listing "before" screenshots | should | Two images | blocked | Needs 0.5 plus a browser capture (owner). |
@@ -29,7 +29,7 @@
 | 2.4 | README restructure | must | Section order, hero GIF first, no `<video>`, UTM on site links, moved pages live, no broken images | blocked (partial) | Done: section order, no `<video>`, UTM on all 4 gitmind-pro.com links, Pro features labelled, empty cell filled, NVIDIA/Recovery detail replaced by live wiki links (200). **Hero GIF URL returns 404 until 3.1 is uploaded.** |
 | 2.5 | CHANGELOG highlights | could | Released CHANGELOG starts with a version heading and highlights | pending | Done at release time (5.1), with the 6.2.1 bump. |
 | 2.6 | Rating link in README | should | Both links open the review area | done (verified) | Marketplace `#review-details` and Open VSX `/reviews` both return 200. |
-| 3.1 | Hero GIF | must | Public URL 200, ≤ 5 MB, owner-approved | blocked | Owner records and approves it, then commits to both repos at `images/screenshots/hero-generate.gif`. |
+| 3.1 | Hero GIF | must | Public URL 200, ≤ 5 MB, owner-approved | in progress | Owner chose **both** (2026-09-22): the illustrated advertisement stays `hero-generate.gif` (made outside this session), plus a real demo cut `demo-generate.gif` (0–6.5 s of `Gitmind-pro-Demo.mp4`, last frame held 1.5 s, 1000×563, 4.0 MB, no license or email visible) under "See It In Action", linking the full MP4. Both files are in both repos, **not yet pushed to GitMind-Community**, so `--network` lint still fails until then. |
 | 3.2 | Screenshot refresh | should | Screenshots match the current UI and funnel order | pending | Owner capture. The README grid is already in funnel order using existing images. |
 | 3.3 | Gallery banner contrast | should | Owner approves a post-release header screenshot | pending | Post-release (5.1). |
 | 4.1 | Dual-store publishing | must | `--skip-duplicate` dry run; 6.2.1 publishes to both stores from one run; rerun succeeds | blocked (partial) | `release.yml`: repo check changed to `GitMind-Pro`, pnpm pin removed, `vsce publish --packagePath --skip-duplicate` and `ovsx publish --packagePath --skip-duplicate`, each skipped with a warning when its secret is missing. Secrets documented in the header. `ovsx@1.2.0` devDependency added. Flags confirmed with `--help`. YAML valid. Secrets `OVSX_PAT` and `VSCE_PAT` (org-scoped, Marketplace Manage) set on `GitMind-Pro` 2026-09-22 (`gh secret list`). **Remaining: the first real release run (6.2.1) proves the publish path.** |
@@ -83,6 +83,9 @@
 - **F4 Name collision:** another Marketplace extension is named just "GitMind". — proven
 - **F5 Style gating mismatch:** `conventional` is `isPro: true` in `src/config/commitStyles.ts` and `src/services/commitStyleManager.ts`, while the UI, the defaults and generation treat it as free. `setCommitStyle('conventional')` would refuse free users. `validateAndResetStyleIfNeeded()` is never called. — proven (code read), user impact possible
 - **F6 The old README listed Pro-only features as free highlights** (draft choices, Commit Health, pre-commit review). Fixed in the new README. — proven
+
+- **F7 Private data in the published 6.2.0 VSIX:** the OpenVSX 6.2.0 package contains 34 `graphify-out/` files (a knowledge graph of the private source), included because 6.2.0 was packaged locally and `graphify-out/` was gitignored but not in `.vscodeignore`. Fixed for future builds: `.vscodeignore` now excludes `graphify-out/**`, `plans/**` and `wiki/**`, and `audit-vsix.mjs` fails on them (audit back to 33 files). The 6.2.1 release supersedes 6.2.0. — proven
+- **F8 `.env.azure` in public GitMind-Community:** deleted with `git rm` and added to `.gitignore` (owner request, 2026-09-22); not yet pushed. The file remains in git history, so any real credential in it must be rotated. — proven
 
 ## 6. Pre-release manifest (rollback source for 5.1)
 

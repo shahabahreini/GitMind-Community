@@ -3,10 +3,37 @@
 GitMind reads your Git diff and writes a clear, well-formatted commit message for you. Use GitHub Copilot, a local model in Ollama or LM Studio, or any of 22 built-in AI providers, and get Conventional Commits, Gitmoji, or your team's style in one click.
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/shahabahreini/GitMind-Community/main/images/screenshots/hero-generate.gif" alt="GitMind AI commit message generator: staging changes, clicking the GitMind button in Source Control, and getting a Conventional Commit message" width="100%"/>
+  <img src="https://raw.githubusercontent.com/shahabahreini/GitMind-Community/main/images/screenshots/hero-generate.gif" alt="GitMind product advertisement: turn code changes into clear commits, choose your AI provider, and build readable Git history" width="100%"/>
   <br/>
-  <sub><strong>Stage your changes, click GitMind in Source Control, and review the generated commit message.</strong></sub>
+  <sub><strong>From code changes to clear commits. Your AI, your commit style, inside VS Code.</strong></sub>
 </div>
+
+[Watch the 22-second advertisement](https://raw.githubusercontent.com/shahabahreini/GitMind-Community/main/images/GitMind-Animation.mp4) · [Static preview](https://raw.githubusercontent.com/shahabahreini/GitMind-Community/main/images/screenshots/hero-generate.png)
+
+*Illustrated product overview; code and commit examples are illustrative.*
+
+## See It In Action
+
+<div align="center">
+  <img src="https://raw.githubusercontent.com/shahabahreini/GitMind-Community/main/images/screenshots/demo-generate.gif" alt="Real GitMind demo in VS Code: clicking Generate GitMind Commit Message in Source Control writes a Conventional Commit message from staged changes" width="100%"/>
+  <br/>
+  <sub><strong>Real recording: click GitMind in Source Control and get a commit message from your staged changes.</strong></sub>
+  <br/>
+  <a href="https://gitmind-pro.com/assets/videos/Gitmind-pro-Demo.mp4">▶ Watch the full 70-second demo</a>
+</div>
+
+## Contents
+
+- [See It In Action](#see-it-in-action)
+- [Install](#install)
+- [Quick Start](#quick-start)
+- [Why GitMind](#why-gitmind)
+- [Explore GitMind](#explore-gitmind)
+- [Supported Providers](#supported-providers)
+- [Free And Pro](#free-and-pro)
+- [Privacy And Security](#privacy-and-security)
+- [Requirements](#requirements)
+- [Support](#support)
 
 ## Install
 
@@ -71,6 +98,8 @@ GitMind reads your Git diff and writes a clear, well-formatted commit message fo
 </table>
 
 ## Supported Providers
+
+<img src="https://raw.githubusercontent.com/shahabahreini/GitMind-Community/main/images/all_providers.png" alt="GitMind: 22 built-in AI providers, including local Ollama and LM Studio, plus Custom API with Pro" width="100%"/>
 
 | Provider              | Setup                                  | Model selection                          |
 | --------------------- | -------------------------------------- | ---------------------------------------- |
