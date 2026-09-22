@@ -1,5 +1,5 @@
 # GitHub Copilot
-> Verified against GitMind `6.1.2` on September 3, 2026
+> Verified against GitMind `6.2.0` on September 22, 2026
 
 GitHub Copilot uses your editor's GitHub Copilot sign-in through the VS Code language model API. **It needs no API key.** The default is `auto`; **Load GitHub Copilot Models** lists the models your Copilot plan offers in this editor. The first request asks you to allow GitMind to use Copilot models. The dialog explains that GitMind writes commit messages from your staged changes. Data handling follows the active Copilot account and organization policy.
 
