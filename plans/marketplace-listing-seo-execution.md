@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Plan | `plans/marketplace-listing-seo.md` (v1.1, reviewed and ready to execute) |
-| Worktree / branch | `~/Documents/Hobby/GitMind-Pro-listing` on `feat/listing-seo` (branched from `main` @ `5227d9b`). Nothing committed yet. |
+| Worktree / branch | Work done on `feat/listing-seo`, committed as `b89b01b`, merged to local `main`; worktree removed (2026-09-22). **Not pushed** (`main` is 1 ahead of `origin/main`). |
 | Why a worktree | `v6.2.0` is tagged but not packaged. Keeping listing edits out of the main checkout means a 6.2.0 build cannot pick them up (sequencing decision 4). |
 | Last updated | 2026-09-22 |
 
@@ -11,7 +11,7 @@
 
 | ID | Task | Priority | Acceptance check | Status | Evidence |
 |---|---|---|---|---|---|
-| 0.5 | Confirm 6.2.0 is live | must | Both store APIs report 6.2.0 | blocked | Owner must publish `v6.2.0` before 2026-09-27. Both APIs still report 6.1.2 (checked 2026-09-22). |
+| 0.5 | Confirm 6.2.0 is live | must | Both store APIs report 6.2.0 | in progress | OpenVSX API reports 6.2.0 (published 2026-09-22T20:27Z, 12,252 downloads). Marketplace still reports 6.1.2 while Microsoft verifies the upload (checked 2026-09-22 14:31 MDT). |
 | 0.1 | Record baseline metrics | must | Two dated pre-release rows plus reproducible commands; A7 confirmed | blocked | Needs 0.5 + 7 days, a Marketplace publisher-hub export and web-host access-log access. All three are owner actions. |
 | 0.2 | Keyword & competitor research | must | Rank per term on both stores, A4 note, chosen terms, keep/drop list, runnable script | done (verified) | `docs/research/listing-keywords-2026-09.md`, `docs/research/listing-rank.py` (ran successfully). GitMind ranks >50 for `ai commit`, `commit message` and `commit message generator` on both stores. |
 | 0.3 | Confirm platform constraints | must | A1–A3 and A8 confirmed or corrected with source; visible limits; displayName and trademark rules | blocked (partial) | Confirmed: A1 (AI category exists: 4,159 extensions on the MP API, 1,176 on OpenVSX), A2 (30-tag limit), A8 (VSCodium 1.135 OK; Cursor/Windsurf unverified, so not named), displayName uniqueness. **A3 (`<video>` stripping) and the visible search-card length need a browser check.** Carried to Task 5.1. |
@@ -32,7 +32,7 @@
 | 3.1 | Hero GIF | must | Public URL 200, ≤ 5 MB, owner-approved | blocked | Owner records and approves it, then commits to both repos at `images/screenshots/hero-generate.gif`. |
 | 3.2 | Screenshot refresh | should | Screenshots match the current UI and funnel order | pending | Owner capture. The README grid is already in funnel order using existing images. |
 | 3.3 | Gallery banner contrast | should | Owner approves a post-release header screenshot | pending | Post-release (5.1). |
-| 4.1 | Dual-store publishing | must | `--skip-duplicate` dry run; 6.2.1 publishes to both stores from one run; rerun succeeds | blocked (partial) | `release.yml`: repo check changed to `GitMind-Pro`, pnpm pin removed, `vsce publish --packagePath --skip-duplicate` and `ovsx publish --packagePath --skip-duplicate`, each skipped with a warning when its secret is missing. Secrets documented in the header. `ovsx@1.2.0` devDependency added. Flags confirmed with `--help`. YAML valid. **Needs `VSCE_PAT` (org-scoped or Entra) and `OVSX_PAT` secrets for the dry run.** |
+| 4.1 | Dual-store publishing | must | `--skip-duplicate` dry run; 6.2.1 publishes to both stores from one run; rerun succeeds | blocked (partial) | `release.yml`: repo check changed to `GitMind-Pro`, pnpm pin removed, `vsce publish --packagePath --skip-duplicate` and `ovsx publish --packagePath --skip-duplicate`, each skipped with a warning when its secret is missing. Secrets documented in the header. `ovsx@1.2.0` devDependency added. Flags confirmed with `--help`. YAML valid. Secrets `OVSX_PAT` and `VSCE_PAT` (org-scoped, Marketplace Manage) set on `GitMind-Pro` 2026-09-22 (`gh secret list`). **Remaining: the first real release run (6.2.1) proves the publish path.** |
 | 4.2 | Listing lint | must | Passes on the fixed tree; fails on each reintroduced defect | done (verified) | `scripts/lint-listing.mjs` plus `pnpm run lint:listing`, wired into `validate-extension.yml` (offline and `--vsix`) and `release.yml` (`--network --vsix`). Negative tests: stale URL, "23 providers", 31st keyword and `<video>` all exit 1; a Pro-qualified count passes. |
 | 4.3 | Post-publish parity check | should | Workflow summary shows both versions matching the tag | in progress | Step added to `release.yml`. Both queries run locally and return `MP 6.1.2 / OV 6.1.2`. Needs a release run. |
 | 4.4 | Fix Handbook Pages deployment (added; owner-approved) | should | Handbook live at `shahabahreini.github.io/GitMind-Community/` with working sub-pages | blocked (partial) | VitePress `base` is `/GitMind-Community/`; the build succeeds and assets resolve under the new base. `publish-pages.yml` now builds in `GitMind-Pro` and pushes to `GitMind-Community` `gh-pages`. **Blocked by:** (a) 45 pre-existing `docs:validate` errors ("lacks required verification metadata") after the 6.2.0 bump, which need a real docs re-verification; (b) the `COMMUNITY_PAGES_TOKEN` secret; (c) switching the GitMind-Community Pages source to `gh-pages`. |
@@ -50,7 +50,7 @@
 | D3 | The Phase 0 checkpoint held copy until the baseline existed. | Copy drafted now on the unpublished branch; the release stays held until the baseline exists. | Owner, 2026-09-22 |
 | D4 | The dead GitHub Sponsors link was not in the plan. | Removed from the README. | Owner, 2026-09-22 |
 | D5 | The plan assumed 30 keywords fit the limit (A2). vsce adds a derived `keybindings` tag, making 31 manifest tags. | 29 keywords; the lint gained a `--vsix` tag count. Within Task 2.3/4.2 intent. | Within plan (fix to meet the acceptance check) |
-| D6 | CI on `main` fails with "Multiple versions of pnpm specified" (run 35776933858), so Task 4.2's CI gate could never run. | Removed the `version: 10.15.0` pin in the three workflows this plan edits (`release.yml`, `validate-extension.yml`, `publish-pages.yml`); pnpm now comes from `packageManager`. **`publish-wiki.yml` and `validate-documentation.yml` still carry the pin and will keep failing.** | Within plan (needed for 4.1/4.2 checks); remaining workflows left for the owner |
+| D6 | CI on `main` fails with "Multiple versions of pnpm specified" (run 35776933858), so Task 4.2's CI gate could never run. | Removed the `version: 10.15.0` pin in the three workflows this plan edits (`release.yml`, `validate-extension.yml`, `publish-pages.yml`); pnpm now comes from `packageManager`. Follow-up 2026-09-22: pin also removed from `publish-wiki.yml` and `validate-documentation.yml` (owner asked to proceed). No pins remain. | Within plan; follow-up requested by owner |
 | D7 | The A4 in-editor spot check needs a GUI. | Verified via endpoint equivalence: VS Code queries the same `extensionquery` API, and OpenVSX's editor-facing gallery endpoint gives the same ranks. A manual spot check is added to 5.1. | Recorded; no scope change |
 
 ## 3. QC results
@@ -71,7 +71,7 @@
 
 ## 4. Unfinished items
 
-- **Owner actions (blocking release):** 0.5 publish 6.2.0 by 2026-09-27 · 0.1 baseline at 6.2.0 + 7 days (publisher-hub export, access logs) · 1.3 OpenVSX namespace claim · 3.1 record the hero GIF and push it to both repos · 4.1 add the `VSCE_PAT` (org-scoped or Entra) and `OVSX_PAT` secrets · A3 and visible-length browser check.
+- **Owner actions (blocking release):** 0.5 publish 6.2.0 by 2026-09-27 · 0.1 baseline at 6.2.0 + 7 days (publisher-hub export, access logs) · 1.3 OpenVSX namespace claim · 3.1 record the hero GIF and push it to both repos · 4.1 A3 and visible-length browser check.
 - **Owner actions (non-blocking):** 4.4 re-verify the 45 Handbook pages for 6.2.0, add `COMMUNITY_PAGES_TOKEN`, switch Pages to `gh-pages` · 3.2 recapture screenshots · fix the pnpm pin in `publish-wiki.yml` and `validate-documentation.yml`.
 - **At release (5.1):** 2.5 CHANGELOG highlights, the 6.2.1 bump, commit/merge `feat/listing-seo`, sync `images/logo.png` and the GIF to `GitMind-Community`, post-release checks for 1.4, 1.7, 3.3 and 4.3.
 
