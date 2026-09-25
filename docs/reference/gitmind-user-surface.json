@@ -192,7 +192,7 @@
       "availability": "Free",
       "authentication": "API key",
       "setupUrl": "https://console.groq.com/keys",
-      "defaultModel": "llama-3.3-70b-versatile",
+      "defaultModel": "openai/gpt-oss-120b",
       "fields": [
         "gitmind.groq.apiKey",
         "gitmind.groq.model"
@@ -802,7 +802,7 @@
     {
       "id": "gitmind.groq.model",
       "type": "string",
-      "default": "llama-3.3-70b-versatile",
+      "default": "openai/gpt-oss-120b",
       "availability": "Free",
       "description": "Groq model to use for generating commit messages"
     },

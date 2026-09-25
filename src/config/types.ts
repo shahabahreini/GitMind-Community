@@ -101,8 +101,8 @@ export type GrokModel =
     | "grok-4.20-0309-reasoning" | "grok-4.20-0309-non-reasoning" | "grok-4.20-multi-agent-0309";
 
 export type GroqModel =
-    | "llama-3.3-70b-versatile" | "llama-3.1-8b-instant"
-    | "openai/gpt-oss-120b" | "openai/gpt-oss-20b";
+    | "openai/gpt-oss-120b" | "openai/gpt-oss-20b" | "qwen/qwen3.8-27b"
+    | "llama-3.3-70b-versatile" | "llama-3.1-8b-instant";
 
 export type PerplexityModel =
     | "sonar-pro" | "sonar-reasoning-pro" | "sonar";

@@ -21,7 +21,7 @@ GitMind has 22 built-in providers plus the Pro-only Custom API provider (23 tota
 | GitHub Copilot | Signed-in Copilot extension/subscription | `auto` | Detects available models |
 | [DeepSeek](https://platform.deepseek.com/api_keys) | API key | `deepseek-flash` | Yes |
 | [xAI Grok](https://console.x.ai/) | API key | `grok-4.7` | Yes |
-| [Groq](https://console.groq.com/keys) | API key | `llama-3.3-70b-versatile` | Yes |
+| [Groq](https://console.groq.com/keys) | API key | `openai/gpt-oss-120b` | Yes |
 | [Perplexity](https://www.perplexity.ai/settings/api) | API key | `sonar-pro` | Curated Sonar choices |
 | [Z.ai](https://z.ai/) | API key; regular or coding endpoint | `glm-5.3`, coding endpoint | Yes |
 | [NVIDIA hosted NIM](https://build.nvidia.com/models) | NVIDIA Build API key | `nvidia/nemotron-3-super-120b-a12b` | Yes |

@@ -3,8 +3,85 @@ import { RequestManager } from "../../utils/requestManager";
 import { APIErrorHandler } from "../../utils/errorHandler";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
+import { ProviderApiError } from "./recovery";
+import { stripThinking } from "./nvidia";
+import { PROVIDER_CATALOG } from "../../config/providerCatalog";
 
 const GROQ_BASE_URL = "https://api.groq.com/openai/v1";
+
+const NON_CHAT_MARKERS = [
+    "whisper", "orpheus", "tts", "guard", "safeguard", "rerank", "reranker",
+    "embed", "embedding", "clip", "vision", "moderation",
+];
+
+export function filterGroqChatModels(models: unknown): string[] {
+    if (!Array.isArray(models)) {
+        return [];
+    }
+
+    return [...new Set(models
+        .filter(model => typeof model === "object" && model !== null && (model as { active?: unknown }).active !== false)
+        .map(model => typeof model === "object" && model !== null && "id" in model ? (model as { id?: unknown }).id : undefined)
+        .filter((id): id is string => typeof id === "string" && id.trim().length > 0)
+        .map(id => id.trim())
+        .filter(id => !NON_CHAT_MARKERS.some(marker => id.toLowerCase().includes(marker))))]
+        .sort((a, b) => a.localeCompare(b));
+}
+
+export function parseGroqError(status: number, text: string): ProviderApiError {
+    let errorMessage = "Unknown error";
+    let code: string | undefined;
+    try {
+        const errorData = JSON.parse(text);
+        errorMessage = errorData.error?.message || errorData.error || errorData.code || "Unknown error";
+        code = errorData.error?.code || errorData.code;
+    } catch {
+        if (text && text.trim()) {
+            errorMessage = text.trim();
+        }
+    }
+
+    if (status === 401) {
+        return new ProviderApiError(
+            "Invalid API key. Please check your Groq API key configuration at https://console.groq.com/keys.",
+            { status, code, provider: "groq", category: "authentication", userFacing: true }
+        );
+    }
+    if (status === 403) {
+        return new ProviderApiError(
+            `Groq access forbidden: ${errorMessage}. Check your Groq API key permissions at https://console.groq.com.`,
+            { status, code, provider: "groq", category: "permission", userFacing: true }
+        );
+    }
+    if (status === 404) {
+        return new ProviderApiError(
+            `Groq model not found: ${errorMessage}. The selected model may have been decommissioned or renamed. Check your model selection or use Load Models to refresh.`,
+            { status, code, provider: "groq", category: "model-limit", userFacing: true }
+        );
+    }
+    if (status === 429) {
+        return new ProviderApiError(
+            `Groq rate limit exceeded: ${errorMessage}. Please wait and try again.`,
+            { status, code, provider: "groq", category: "rate-limit", userFacing: true }
+        );
+    }
+    if (status === 400) {
+        return new ProviderApiError(
+            `Groq bad request: ${errorMessage}. Please verify your model selection and parameters.`,
+            { status, code, provider: "groq", category: "configuration", userFacing: true }
+        );
+    }
+    if (status >= 500) {
+        return new ProviderApiError(
+            `Groq server error (${status}): ${errorMessage}. Please try again later.`,
+            { status, code, provider: "groq", category: "temporary-service", userFacing: true }
+        );
+    }
+    return new ProviderApiError(
+        `Groq API error (${status}): ${errorMessage}`,
+        { status, code, provider: "groq", userFacing: true }
+    );
+}
 
 export class GroqProvider extends BaseAIProvider {
     constructor(apiKey: string, model: string) {
@@ -31,7 +108,7 @@ export class GroqProvider extends BaseAIProvider {
                             content: prompt,
                         },
                     ],
-                    max_completion_tokens: options?.maxTokens ?? 150,
+                    max_completion_tokens: options?.maxTokens ?? 1000,
                     temperature: options?.temperature ?? 0.2,
                 }),
                 signal: controller.signal,
@@ -40,58 +117,27 @@ export class GroqProvider extends BaseAIProvider {
             if (!response.ok) {
                 const errorText = await response.text();
                 debugLog(`Groq API error: ${response.status} - ${errorText}`);
-
-                try {
-                    const errorData = JSON.parse(errorText);
-                    const errorMessage = errorData.error?.message || errorData.error || errorData.code || "Unknown error";
-
-                    if (response.status === 401) {
-                        throw new Error("Invalid API key. Please check your Groq API key configuration.");
-                    } else if (response.status === 403) {
-                        throw new Error(`Access forbidden: ${errorMessage}. Check your Groq API key permissions.`);
-                    } else if (response.status === 404) {
-                        throw new Error(`Model not found: ${errorMessage}. Please check your model selection.`);
-                    } else if (response.status === 429) {
-                        throw new Error("Rate limit exceeded. Groq free-tier has strict rate limits. Please wait and try again.");
-                    } else if (response.status === 400) {
-                        throw new Error(`Bad request: ${errorMessage}. Please check your request parameters.`);
-                    } else if (response.status >= 500) {
-                        throw new Error(`Groq server error (${response.status}): ${errorMessage}. Please try again later.`);
-                    } else {
-                        throw new Error(`Groq API error (${response.status}): ${errorMessage}`);
-                    }
-                } catch (parseError) {
-                    if (parseError instanceof Error && parseError.message.includes('Groq')) {
-                        throw parseError;
-                    }
-
-                    if (response.status === 401) {
-                        throw new Error("Invalid API key. Please check your Groq API key configuration.");
-                    } else if (response.status === 429) {
-                        throw new Error("Rate limit exceeded. Groq free-tier has strict rate limits. Please wait and try again.");
-                    } else if (response.status >= 500) {
-                        throw new Error(`Groq server error (${response.status}). Please try again later.`);
-                    }
-                }
-
-                throw new Error(`Groq API error: ${response.status} - ${errorText}`);
+                throw parseGroqError(response.status, errorText);
             }
 
-            const data = await response.json();
+            const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
 
             // OpenAI-compatible response format
             const message = data.choices?.[0]?.message?.content;
             if (!message) {
                 debugLog("Unexpected Groq API response shape:", data);
-                throw new Error("No valid response from Groq API");
+                throw new ProviderApiError("No valid response from Groq API", { status: response.status, provider: "groq", category: "invalid-response" });
             }
 
             debugLog(`Groq API response received successfully`);
-            return message.trim();
+            return this.enforceCommitMessageFormat(stripThinking(message).trim());
         } catch (error) {
             debugLog(`Groq API call failed: ${error}`);
             if (error instanceof Error && error.name === 'AbortError') {
                 throw new Error('Request was cancelled');
+            }
+            if (error instanceof ProviderApiError) {
+                throw error;
             }
             const errorInfo = APIErrorHandler.handleAPIError(error as Error, "groq");
             throw new Error(errorInfo.userMessage);
@@ -99,6 +145,10 @@ export class GroqProvider extends BaseAIProvider {
     }
 
     async getModels(): Promise<string[]> {
+        const curatedFallback = PROVIDER_CATALOG.groq?.curatedModels
+            ? [...PROVIDER_CATALOG.groq.curatedModels]
+            : ["openai/gpt-oss-120b", "openai/gpt-oss-20b", "qwen/qwen3.8-27b"];
+
         try {
             debugLog("Fetching Groq models from API...");
 
@@ -113,80 +163,27 @@ export class GroqProvider extends BaseAIProvider {
             if (!response.ok) {
                 const errorText = await response.text();
                 debugLog(`Groq models API error: ${response.status} - ${errorText}`);
-
-                try {
-                    const errorData = JSON.parse(errorText);
-                    const errorMessage = errorData.error?.message || errorData.error || errorData.code || "Unknown error";
-
-                    if (response.status === 401) {
-                        throw new Error("Invalid API key. Please check your Groq API key configuration.");
-                    } else if (response.status === 403) {
-                        throw new Error(`Access forbidden: ${errorMessage}. Check your Groq API key permissions.`);
-                    } else if (response.status === 429) {
-                        throw new Error("Rate limit exceeded. Please wait and try again.");
-                    } else if (response.status >= 500) {
-                        throw new Error(`Groq server error (${response.status}): ${errorMessage}. Please try again later.`);
-                    } else {
-                        throw new Error(`Groq API error (${response.status}): ${errorMessage}`);
-                    }
-                } catch (parseError) {
-                    if (parseError instanceof Error && parseError.message.includes('Groq')) {
-                        throw parseError;
-                    }
-
-                    if (response.status === 401) {
-                        throw new Error("Invalid API key. Please check your Groq API key configuration.");
-                    } else if (response.status === 429) {
-                        throw new Error("Rate limit exceeded. Please wait and try again.");
-                    } else if (response.status >= 500) {
-                        throw new Error(`Groq server error (${response.status}). Please try again later.`);
-                    }
-                }
-
-                throw new Error(`Groq API error: ${response.status} - ${errorText}`);
+                throw parseGroqError(response.status, errorText);
             }
 
-            const data = await response.json();
+            const data = await response.json() as { data?: unknown };
             debugLog("Groq API response:", data);
 
-            // OpenAI-compatible models list format
             if (!data.data || !Array.isArray(data.data)) {
                 debugLog("Invalid response structure - missing or invalid 'data' array");
-                throw new Error("Invalid response format from Groq API");
+                return curatedFallback;
             }
 
-            const modelIds = data.data
-                .map((model: any) => {
-                    if (!model || typeof model !== 'object') {
-                        debugLog("Invalid model object:", model);
-                        return null;
-                    }
-                    return model.id;
-                })
-                .filter((id: string) => id && typeof id === 'string');
+            const chatModels = filterGroqChatModels(data.data);
+            debugLog(`Successfully filtered ${chatModels.length} Groq chat models:`, chatModels);
 
-            debugLog(`Successfully fetched ${modelIds.length} Groq models:`, modelIds);
-
-            if (modelIds.length === 0) {
-                throw new Error("No valid models found in Groq API response");
-            }
-
-            return modelIds;
+            return chatModels.length > 0 ? chatModels : curatedFallback;
         } catch (error) {
-            debugLog("Error fetching Groq models:", error);
-
-            if (error instanceof Error) {
-                if (error.message.includes("HTTP") ||
-                    error.message.includes("Invalid response") ||
-                    error.message.includes("No valid models") ||
-                    error.message.includes("Invalid API key") ||
-                    error.message.includes("Rate limit") ||
-                    error.message.includes("Access forbidden")) {
-                    throw error;
-                }
+            debugLog("Error fetching Groq models, using curated fallback:", error);
+            if (error instanceof ProviderApiError && error.category === "authentication") {
+                throw error;
             }
-
-            throw new Error("Failed to load Groq models. Please check your internet connection and API key, then try again.");
+            return curatedFallback;
         }
     }
 

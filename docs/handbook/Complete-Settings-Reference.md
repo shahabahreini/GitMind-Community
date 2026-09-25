@@ -47,7 +47,7 @@ Open **GitMind Setting** for the guided UI. The table below covers user-configur
 | Copilot | `gitmind.copilot.model` | `auto` |
 | DeepSeek | `gitmind.deepseek.apiKey`, `gitmind.deepseek.model` | `deepseek-flash` |
 | Grok | `gitmind.grok.apiKey`, `gitmind.grok.model` | `grok-4.7` |
-| Groq | `gitmind.groq.apiKey`, `gitmind.groq.model` | `llama-3.3-70b-versatile` |
+| Groq | `gitmind.groq.apiKey`, `gitmind.groq.model` | `openai/gpt-oss-120b` |
 | Perplexity | `gitmind.perplexity.apiKey`, `gitmind.perplexity.model` | `sonar-pro` |
 | Z.ai | `gitmind.zai.apiKey`, `gitmind.zai.model`, `gitmind.zai.endpoint` | `glm-5.3`; `regular` or `coding` (default) |
 | NVIDIA | `gitmind.nvidia.apiKey`, `gitmind.nvidia.model` | `nvidia/nemotron-3-super-120b-a12b` |

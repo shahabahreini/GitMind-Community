@@ -6,6 +6,7 @@ import { CohereProvider } from "../../services/api/cohere";
 import { NvidiaProvider } from "../../services/api/nvidia";
 import { DeepSeekProvider } from "../../services/api/deepseek";
 import { HUGGINGFACE_ROUTER_URL, HuggingFaceProvider } from "../../services/api/huggingface";
+import { filterGroqChatModels, parseGroqError } from "../../services/api/groq";
 import { extractPerplexityAgentText, PerplexityProvider, validatePerplexityAPIKey } from "../../services/api/perplexity";
 import {
     RETIRED_MODEL_PREVIOUS_KEY,
@@ -124,6 +125,45 @@ suite("Provider refresh 2026-09 (API migrations and model defaults)", () => {
         await new CohereProvider("test-key", "command-a-reasoning-08-2025").generateWithRawPrompt("diff").catch(() => undefined);
         assert.strictEqual(captured[0]?.body?.model, "command-a-reasoning-08-2025");
     });
+
+    test("Groq filters out non-chat models (audio, tts, guardrails, inactive) and retains active chat models", () => {
+        const rawModels = [
+            { id: "llama-3.3-70b-versatile", active: true },
+            { id: "whisper-large-v3", active: true },
+            { id: "whisper-large-v3-turbo", active: true },
+            { id: "meta-llama/llama-prompt-guard-2-22m", active: true },
+            { id: "meta-llama/llama-guard-4-12b", active: true },
+            { id: "canopylabs/orpheus-v1-english", active: true },
+            { id: "openai/gpt-oss-120b", active: true },
+            { id: "openai/gpt-oss-20b", active: true },
+            { id: "openai/gpt-oss-safeguard-20b", active: true },
+            { id: "qwen/qwen3.8-27b", active: true },
+            { id: "qwen3-reranker-4b", active: true },
+            { id: "deprecated-chat-model", active: false },
+        ];
+        const filtered = filterGroqChatModels(rawModels);
+        assert.deepStrictEqual(filtered, [
+            "llama-3.3-70b-versatile",
+            "openai/gpt-oss-120b",
+            "openai/gpt-oss-20b",
+            "qwen/qwen3.8-27b",
+        ]);
+    });
+
+    test("Groq parses HTTP error into ProviderApiError with category and status", () => {
+        const error404 = parseGroqError(404, JSON.stringify({ error: { message: "Model decommissioned", code: "model_decommissioned" } }));
+        assert.strictEqual(error404.status, 404);
+        assert.strictEqual(error404.category, "model-limit");
+        assert.strictEqual(error404.provider, "groq");
+
+        const error403 = parseGroqError(403, JSON.stringify({ error: { message: "Enterprise only", code: "permission_denied" } }));
+        assert.strictEqual(error403.status, 403);
+        assert.strictEqual(error403.category, "permission");
+
+        const error429 = parseGroqError(429, JSON.stringify({ error: { message: "Rate limit reached" } }));
+        assert.strictEqual(error429.status, 429);
+        assert.strictEqual(error429.category, "rate-limit");
+    });
 });
 
 suite("Retired default model migration", () => {
@@ -151,6 +191,16 @@ suite("Retired default model migration", () => {
         assert.ok(migrated.includes("grok"));
         assert.strictEqual(config().inspect<string>("grok.model")?.globalValue, getProviderDefaultModel("grok"));
         assert.deepStrictEqual((state.get(RETIRED_MODEL_PREVIOUS_KEY) as any).grok, [{ target: "globalValue", value: retired }]);
+    });
+
+    test("migrates retired Groq models to catalog default", async () => {
+        await config().update("groq.model", "llama-3.3-70b-versatile", vscode.ConfigurationTarget.Global);
+
+        const migrated = await SettingsMigrationService.getInstance().migrateRetiredModelDefaults(context);
+
+        assert.ok(migrated.includes("groq"));
+        assert.strictEqual(config().inspect<string>("groq.model")?.globalValue, "openai/gpt-oss-120b");
+        assert.deepStrictEqual((state.get(RETIRED_MODEL_PREVIOUS_KEY) as any).groq, [{ target: "globalValue", value: "llama-3.3-70b-versatile" }]);
     });
 
     test("keeps a user-chosen model that is not a retired shipped default", async () => {

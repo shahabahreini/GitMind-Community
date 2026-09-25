@@ -540,7 +540,7 @@
         },
         "gitmind.groq.model": {
           "type": "string",
-          "default": "llama-3.3-70b-versatile",
+          "default": "openai/gpt-oss-120b",
           "description": "Groq model to use for generating commit messages"
         },
         "gitmind.perplexity.apiKey": {
@@ -1549,8 +1549,8 @@
     "vitepress": "^1.6.4"
   },
   "dependencies": {
-    "@aws-sdk/client-bedrock-runtime": "^3.1137.0",
-    "@aws-sdk/credential-providers": "^3.1137.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.1140.0",
+    "@aws-sdk/credential-providers": "^3.1140.0",
     "@google/genai": "^2.24.0",
     "axios": "^1.20.0",
     "sanitize-html": "^2.17.7"

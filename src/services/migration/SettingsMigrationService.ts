@@ -13,7 +13,7 @@ export const RETIRED_SHIPPED_MODEL_DEFAULTS: Partial<Record<ProviderCatalogId, r
     openrouter: ['google/gemma-3-27b-it:free'],
     deepseek: ['deepseek-v4-flash'],
     grok: ['grok-4.4'],
-    groq: ['meta-llama/llama-4-scout-17b-16e-instruct'],
+    groq: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'meta-llama/llama-4-scout-17b-16e-instruct'],
     nvidia: ['meta/llama-3.3-70b-instruct'],
 };
 
