@@ -19,11 +19,12 @@ permissions:
 
 env:
   EXTENSION_ID: ShahabBahreiniJangjoo.ai-commit-assistant
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   release:
     name: Build & Publish Release
-    if: github.repository == 'shahabahreini/GitMind-Pro'
+    if: github.repository == 'shahabahreini/GitMind-Pro' || github.repository == 'shahabahreini/Shahab'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

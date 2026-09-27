@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v6.3.0 - 2026-09-27
+
+### Highlights
+
+- Comprehensive AI provider API modernization across all 23 providers, keeping all models, endpoints, protocols, and discovery aligned with late 2026 specifications.
+- Restored Groq dynamic model discovery via the `/models` endpoint with text/chat filtering and modern default `openai/gpt-oss-120b`.
+- Hardened key validation, error reporting, and model fallbacks for NVIDIA NIM, MiniMax, Z.ai, DeepSeek, OpenAI, and Cohere.
+
+### Changed
+
+- Updated default Groq model to `openai/gpt-oss-120b` with max 1,000 token limit to match Groq free-tier rate boundaries.
+- Replaced decommissioned `meta/llama-3.3-70b-instruct` in NVIDIA NIM validation and default configs with `nvidia/nemotron-3-super-120b-a12b`.
+- Modernized MiniMax fallback and key validation to `MiniMax-M3`.
+- Modernized Z.ai (GLM) fallback catalog and key validation probe to `glm-5.3`.
+- OpenAI model discovery now sorts GPT-6 models (`gpt-6-sol`, `gpt-6`) at top priority, and default generation fallback is set to `gpt-6-sol`.
+
+### Fixed
+
+- Cohere key validation now queries the v2 Chat API on `https://api.cohere.com/v2/chat`, eliminating deprecated calls to `api.cohere.ai/v1/tokenize`.
+- DeepSeek key validation probes canonical `deepseek-flash` instead of `deepseek-v4-flash`.
+- OpenAI-compatible endpoints (including LM Studio and Cloudflare Workers AI) and OpenRouter now parse structured JSON error payloads, displaying clear error messages instead of raw JSON strings.
+
 ## v6.2.1 - 2026-09-22
 
 ### Highlights

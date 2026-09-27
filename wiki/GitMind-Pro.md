@@ -1,6 +1,6 @@
 # GitMind Pro
 
-> Verified against GitMind `6.2.1` on September 22, 2026
+> Verified against GitMind `6.3.0` on September 27, 2026
 
 GitMind Pro is a one-time lifetime purchase. It unlocks advanced controls while keeping all 22 built-in providers available to Free users.
 

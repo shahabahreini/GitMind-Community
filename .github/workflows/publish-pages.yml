@@ -35,13 +35,13 @@ concurrency:
 
 jobs:
   publish:
-    if: github.repository == 'shahabahreini/GitMind-Pro'
+    if: github.repository == 'shahabahreini/GitMind-Pro' || github.repository == 'shahabahreini/Shahab'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       # pnpm version comes from package.json "packageManager".
       - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: pnpm

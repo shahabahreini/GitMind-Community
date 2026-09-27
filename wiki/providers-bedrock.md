@@ -1,6 +1,6 @@
 # Amazon Bedrock
 
-> Verified against GitMind `6.2.1` on September 22, 2026
+> Verified against GitMind `6.3.0` on September 27, 2026
 
 GitMind calls Amazon Bedrock's Converse API through the official AWS SDK. It uses the standard AWS credential chain unless you choose a named shared-credentials profile.
 

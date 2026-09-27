@@ -1,6 +1,6 @@
 **GitMind 5.x Handbook**
 
-Verified against GitMind `6.2.1` on September 22, 2026.
+Verified against GitMind `6.3.0` on September 27, 2026.
 
 - [Home](Home)
 - [Activation And License Management](Activation-And-License-Management)

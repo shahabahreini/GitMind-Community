@@ -28,17 +28,17 @@ permissions:
 
 concurrency:
   group: publish-wiki
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   validate:
     name: Validate Wiki
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       # pnpm version comes from package.json "packageManager".
       - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: pnpm
@@ -52,19 +52,35 @@ jobs:
   publish:
     name: Publish Wiki
     needs: validate
-    if: github.repository == 'shahabahreini/AI-Commit-Assistant' && (github.event_name == 'push' || inputs.publish)
+    if: (github.repository == 'shahabahreini/GitMind-Pro' || github.repository == 'shahabahreini/GitMind-Community' || github.repository == 'shahabahreini/AI-Commit-Assistant') && (github.event_name == 'push' || inputs.publish)
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - name: Clone initialized Wiki repository
+      - uses: actions/checkout@v6
+      - name: Check wiki push token
+        id: token
         env:
-          WIKI_PUSH_TOKEN: ${{ secrets.WIKI_PUSH_TOKEN || secrets.GITHUB_TOKEN }}
-        run: git clone "https://x-access-token:${WIKI_PUSH_TOKEN}@github.com/${{ github.repository }}.wiki.git" wiki-repository
+          WIKI_PUSH_TOKEN: ${{ secrets.WIKI_PUSH_TOKEN }}
+        run: |
+          if [ -z "$WIKI_PUSH_TOKEN" ]; then
+            echo "::warning::WIKI_PUSH_TOKEN is not set; skipping Wiki deployment."
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Clone initialized Wiki repository
+        if: steps.token.outputs.present == 'true'
+        env:
+          WIKI_PUSH_TOKEN: ${{ secrets.WIKI_PUSH_TOKEN }}
+        run: |
+          TARGET_REPO="${{ (github.repository == 'shahabahreini/GitMind-Pro' || github.repository == 'shahabahreini/Shahab') && 'shahabahreini/GitMind-Community' || github.repository }}"
+          git clone "https://x-access-token:${WIKI_PUSH_TOKEN}@github.com/${TARGET_REPO}.wiki.git" wiki-repository
       - name: Synchronize Wiki source
+        if: steps.token.outputs.present == 'true'
         run: rsync -av --delete --exclude=.git/ wiki/ wiki-repository/
       - name: Commit and push changed Wiki content
+        if: steps.token.outputs.present == 'true'
         working-directory: wiki-repository
         run: |
           if git diff --quiet && git diff --cached --quiet && test -z "$(git ls-files --others --exclude-standard)"; then

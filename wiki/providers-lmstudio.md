@@ -1,6 +1,6 @@
 # LM Studio
 
-> Verified against GitMind `6.2.1` on September 22, 2026
+> Verified against GitMind `6.3.0` on September 27, 2026
 
 LM Studio is a local, OpenAI-compatible provider. GitMind accepts only a loopback server URL for this provider, so model prompts and diffs remain on the local machine.
 
