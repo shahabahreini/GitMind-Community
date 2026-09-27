@@ -8,6 +8,22 @@ function normalizeBaseUrl(url: string): string {
     return url.trim().replace(/\/+$/, "");
 }
 
+async function extractErrorDetail(response: Response): Promise<string> {
+    try {
+        const text = await response.text();
+        const parsed = JSON.parse(text);
+        if (parsed?.error?.message) {
+            return parsed.error.message;
+        }
+        if (parsed?.message) {
+            return parsed.message;
+        }
+        return text;
+    } catch {
+        return "";
+    }
+}
+
 export abstract class OpenAICompatibleProvider extends BaseAIProvider {
     protected constructor(
         apiKey: string,
@@ -48,8 +64,9 @@ export abstract class OpenAICompatibleProvider extends BaseAIProvider {
         }, { provider: this.provider, operation: "chat.completions" });
 
         if (!response.ok) {
+            const detail = await extractErrorDetail(response);
             throw new ProviderApiError(
-                `${this.provider} chat completion failed (${response.status}).`,
+                `${this.provider} chat completion failed (${response.status})${detail ? `: ${detail}` : "."}`,
                 response.status,
                 undefined,
                 this.provider,
@@ -72,7 +89,13 @@ export abstract class OpenAICompatibleProvider extends BaseAIProvider {
             headers: { Accept: "application/json", ...this.headers },
         }, { provider: this.provider, operation: "models.list" });
         if (!response.ok) {
-            throw new ProviderApiError(`${this.provider} model discovery failed (${response.status}).`, response.status, undefined, this.provider);
+            const detail = await extractErrorDetail(response);
+            throw new ProviderApiError(
+                `${this.provider} model discovery failed (${response.status})${detail ? `: ${detail}` : "."}`,
+                response.status,
+                undefined,
+                this.provider,
+            );
         }
         const body = await response.json() as { data?: Array<{ id?: unknown }> };
         return [...new Set((body.data ?? [])

@@ -70,7 +70,7 @@ export class OpenAIProvider extends BaseAIProvider {
             debugLog(`Calling OpenAI API with model: ${this.model}`);
 
             // Get model-specific configuration or use provided options
-            const modelConfig = MODEL_CONFIGS[this.model] || MODEL_CONFIGS["gpt-5.6-terra"];
+            const modelConfig = MODEL_CONFIGS[this.model] || MODEL_CONFIGS["gpt-6-sol"] || MODEL_CONFIGS["gpt-5.6-terra"];
             const temperature = options?.temperature ?? modelConfig.temperature;
             const maxTokens = options?.maxTokens ?? modelConfig.maxTokens;
             const topP = options?.topP;
@@ -198,28 +198,31 @@ export class OpenAIProvider extends BaseAIProvider {
                 .sort((a: string, b: string) => {
                     // Sort by model series priority
                     const getPriority = (id: string): number => {
-                        if (id.startsWith('gpt-5')) {
+                        if (id.startsWith('gpt-6')) {
                             return 0;
                         }
-                        if (id.startsWith('gpt-4.1')) {
+                        if (id.startsWith('gpt-5')) {
                             return 1;
                         }
-                        if (id.startsWith('o4')) {
+                        if (id.startsWith('gpt-4.1')) {
                             return 2;
                         }
-                        if (id.startsWith('o3')) {
+                        if (id.startsWith('o4')) {
                             return 3;
                         }
-                        if (id.startsWith('o1')) {
+                        if (id.startsWith('o3')) {
                             return 4;
                         }
-                        if (id.startsWith('gpt-4-turbo')) {
+                        if (id.startsWith('o1')) {
                             return 5;
                         }
-                        if (id.startsWith('gpt-4')) {
+                        if (id.startsWith('gpt-4-turbo')) {
                             return 6;
                         }
-                        return 7;
+                        if (id.startsWith('gpt-4')) {
+                            return 7;
+                        }
+                        return 8;
                     };
 
                     const priorityA = getPriority(a);

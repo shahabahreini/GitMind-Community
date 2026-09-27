@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { debugLog } from "../debug/logger";
+import { validateCohereAPIKey } from "./cohere";
 import { validateGeminiAPIKey } from "./gemini";
 import { validateDeepSeekAPIKey } from "./deepseek";
 import { validateGrokAPIKey } from "./grok";
@@ -203,7 +204,7 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
     },
     cohere: {
         requiresApiKey: requiresApiKey("cohere"),
-        validator: validateCohereApiKey,
+        validator: validateCohereAPIKey,
         defaultModel: getProviderDefaultModel("cohere"),
         responseTime: 550,
         rateLimits: {
@@ -738,22 +739,6 @@ async function checkOllamaAvailability(url: string): Promise<boolean> {
     }
 }
 
-async function validateCohereApiKey(apiKey: string): Promise<boolean> {
-    try {
-        const response = await loggedFetch("https://api.cohere.ai/v1/tokenize", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${apiKey}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ text: "test" })
-        }, { provider: "cohere", operation: "validate" });
-        return response.ok;
-    } catch (error) {
-        debugLog("Cohere API validation error:", error);
-        return false;
-    }
-}
 
 async function validateTogetherApiKey(apiKey: string): Promise<boolean> {
     try {

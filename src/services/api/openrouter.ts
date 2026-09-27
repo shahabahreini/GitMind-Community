@@ -38,7 +38,14 @@ export class OpenRouterProvider extends BaseAIProvider {
             if (!response.ok) {
                 const errorText = await response.text();
                 debugLog(`OpenRouter API error: ${response.status} ${errorText}`);
-                throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
+                let errorDetails = errorText;
+                try {
+                    const parsed = JSON.parse(errorText);
+                    errorDetails = parsed.error?.message || parsed.message || errorText;
+                } catch {
+                    // Keep raw text fallback
+                }
+                throw new Error(`OpenRouter API error: ${response.status} - ${errorDetails}`);
             }
 
             const data = await response.json();

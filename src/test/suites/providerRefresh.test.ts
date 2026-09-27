@@ -3,8 +3,11 @@ import * as vscode from "vscode";
 import { getProviderDefaultModel } from "../../config/providerCatalog";
 import { AnthropicProvider } from "../../services/api/anthropic";
 import { CohereProvider } from "../../services/api/cohere";
-import { NvidiaProvider } from "../../services/api/nvidia";
-import { DeepSeekProvider } from "../../services/api/deepseek";
+import { NvidiaProvider, validateNvidiaAPIKey } from "../../services/api/nvidia";
+import { DeepSeekProvider, validateDeepSeekAPIKey } from "../../services/api/deepseek";
+import { MiniMaxProvider, validateMiniMaxAPIKey } from "../../services/api/minimax";
+import { ZaiProvider, validateZaiAPIKey } from "../../services/api/zai";
+import { OpenAIProvider } from "../../services/api/openai";
 import { HUGGINGFACE_ROUTER_URL, HuggingFaceProvider } from "../../services/api/huggingface";
 import { filterGroqChatModels, parseGroqError } from "../../services/api/groq";
 import { extractPerplexityAgentText, PerplexityProvider, validatePerplexityAPIKey } from "../../services/api/perplexity";
@@ -163,6 +166,71 @@ suite("Provider refresh 2026-09 (API migrations and model defaults)", () => {
         const error429 = parseGroqError(429, JSON.stringify({ error: { message: "Rate limit reached" } }));
         assert.strictEqual(error429.status, 429);
         assert.strictEqual(error429.category, "rate-limit");
+    });
+
+    test("NVIDIA key validation uses active nemotron-3-super-120b-a12b model", async () => {
+        const captured: CapturedRequest[] = [];
+        globalThis.fetch = stubFetch({ choices: [{ message: { content: "OK" } }] }, captured);
+
+        const result = await validateNvidiaAPIKey("test-key");
+        assert.strictEqual(result, true);
+        assert.strictEqual(captured[0].body.model, "nvidia/nemotron-3-super-120b-a12b");
+    });
+
+    test("MiniMax validation and fallback use MiniMax-M3", async () => {
+        const captured: CapturedRequest[] = [];
+        globalThis.fetch = stubFetch({ content: [{ type: "text", text: "OK" }] }, captured);
+
+        const result = await validateMiniMaxAPIKey("test-key");
+        assert.strictEqual(result, true);
+        assert.strictEqual(captured[0].body.model, "MiniMax-M3");
+
+        const provider = new MiniMaxProvider("test-key", "");
+        // If API fails, getModels returns fallback list containing MiniMax-M3
+        globalThis.fetch = (async () => new Response("error", { status: 500 })) as typeof globalThis.fetch;
+        const models = await provider.getModels();
+        assert.ok(models.includes("MiniMax-M3"));
+        assert.ok(!models.includes("MiniMax-M2.5"));
+    });
+
+    test("Z.ai getModels and validation use glm-5.3", async () => {
+        const captured: CapturedRequest[] = [];
+        globalThis.fetch = stubFetch({ choices: [{ message: { content: "OK" } }] }, captured);
+
+        const result = await validateZaiAPIKey("test-key");
+        assert.strictEqual(result.success, true);
+        assert.strictEqual(captured[0].body.model, "glm-5.3");
+
+        const provider = new ZaiProvider("test-key", "");
+        const models = await provider.getModels();
+        assert.ok(models.includes("glm-5.3"));
+    });
+
+    test("DeepSeek validation uses deepseek-flash", async () => {
+        const captured: CapturedRequest[] = [];
+        globalThis.fetch = stubFetch({ choices: [{ message: { content: "OK" } }] }, captured);
+
+        const result = await validateDeepSeekAPIKey("test-key");
+        assert.strictEqual(result, true);
+        assert.strictEqual(captured[0].body.model, "deepseek-flash");
+    });
+
+    test("OpenAI getModels sorts gpt-6 models ahead of older generations", async () => {
+        globalThis.fetch = stubFetch({
+            data: [
+                { id: "gpt-4o" },
+                { id: "gpt-5.6-terra" },
+                { id: "gpt-6-sol" },
+                { id: "gpt-6-luna" },
+                { id: "o3" },
+            ]
+        }, []);
+
+        const provider = new OpenAIProvider("test-key", "");
+        const models = await provider.getModels();
+        assert.strictEqual(models[0], "gpt-6-luna");
+        assert.strictEqual(models[1], "gpt-6-sol");
+        assert.strictEqual(models[2], "gpt-5.6-terra");
     });
 });
 

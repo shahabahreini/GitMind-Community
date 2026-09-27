@@ -1,6 +1,7 @@
 import { debugLog } from "../debug/logger";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
+import { getProviderDefaultModel, getCuratedModels } from "../../config/providerCatalog";
 
 /**
  * Z.ai API error types
@@ -95,11 +96,7 @@ export class ZaiProvider extends BaseAIProvider {
     }
 
     async getModels(): Promise<string[]> {
-        return [
-            'glm-5.1', 'glm-5', 'glm-5-turbo', 'glm-4.7', 'glm-4.7-flashx',
-            'glm-4.6', 'glm-4.5', 'glm-4.5-x', 'glm-4.5-air', 'glm-4.5-airx',
-            'glm-4-32b-0414-128k', 'glm-4.7-flash', 'glm-4.5-flash'
-        ];
+        return [...getCuratedModels("zai")];
     }
 
     async validateApiKey(): Promise<boolean> {
@@ -112,7 +109,7 @@ export class ZaiProvider extends BaseAIProvider {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    model: "glm-5.1",
+                    model: getProviderDefaultModel("zai", "glm-5.3"),
                     messages: [
                         { role: "user", content: "Hi" }
                     ],
@@ -216,7 +213,7 @@ export async function validateZaiAPIKey(apiKey: string, endpointType: 'regular' 
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: "glm-5.1",
+                model: getProviderDefaultModel("zai", "glm-5.3"),
                 messages: [
                     { role: "user", content: "Hi" }
                 ],

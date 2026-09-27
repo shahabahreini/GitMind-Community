@@ -2,13 +2,15 @@ import { debugLog } from "../debug/logger";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
 import { ProviderApiError } from "./recovery";
+import { getProviderDefaultModel, getCuratedModels } from "../../config/providerCatalog";
 
 const NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1";
 const DEFAULT_MODELS = [
-    "meta/llama-3.3-70b-instruct",
     "nvidia/nemotron-3-super-120b-a12b",
-    "mistralai/mistral-large-3-675b-instruct-2512",
-    "qwen/qwen3-coder-480b-a35b-instruct",
+    "openai/gpt-oss-20b",
+    "deepseek-ai/deepseek-v4.1-flash",
+    "z-ai/glm-5.3-flash",
+    "moonshotai/kimi-k3",
 ];
 
 const NON_CHAT_MARKERS = [
@@ -153,9 +155,9 @@ export class NvidiaProvider extends BaseAIProvider {
 }
 
 export async function fetchNvidiaModels(apiKey: string = ""): Promise<string[]> {
-    return new NvidiaProvider(apiKey, "meta/llama-3.3-70b-instruct").getModels();
+    return new NvidiaProvider(apiKey, getProviderDefaultModel("nvidia", "nvidia/nemotron-3-super-120b-a12b")).getModels();
 }
 
 export async function validateNvidiaAPIKey(apiKey: string): Promise<boolean | { success: boolean; error?: string; troubleshooting?: string }> {
-    return new NvidiaProvider(apiKey, "meta/llama-3.3-70b-instruct").validateApiKey();
+    return new NvidiaProvider(apiKey, getProviderDefaultModel("nvidia", "nvidia/nemotron-3-super-120b-a12b")).validateApiKey();
 }

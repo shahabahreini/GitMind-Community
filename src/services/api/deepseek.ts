@@ -2,6 +2,7 @@ import { debugLog } from "../debug/logger";
 import { DeepSeekModel } from "../../config/types";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
+import { getProviderDefaultModel } from "../../config/providerCatalog";
 
 // Configuration for different DeepSeek models
 interface GenerationConfig {
@@ -250,7 +251,7 @@ export class DeepSeekProvider extends BaseAIProvider {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    model: "deepseek-v4-flash",
+                    model: getProviderDefaultModel("deepseek", "deepseek-flash"),
                     messages: [
                         {
                             role: "user",
