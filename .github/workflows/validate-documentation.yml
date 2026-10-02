@@ -1,7 +1,8 @@
 name: Validate Documentation
 
 on:
-  pull_request:
+  push:
+    branches: [main]
     paths:
       - "docs/**"
       - "wiki/**"
@@ -10,6 +11,7 @@ on:
       - "scripts/validate-docs.mjs"
       - "package.json"
       - "pnpm-lock.yaml"
+  workflow_dispatch:
 
 permissions:
   contents: read
