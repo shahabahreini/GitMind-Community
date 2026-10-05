@@ -1,3 +1,4 @@
+import { MEDIA_FILE } from "../services/git/media";
 import * as path from "path";
 import { createHash } from "crypto";
 import { ApiConfig } from "../config/types";
@@ -14,6 +15,7 @@ function globToRegex(glob: string): RegExp {
 }
 
 export function classifyNoise(atom: ChangeAtom, exclusions: readonly string[] = []): { noise: NoiseKind; reason?: string } {
+  if (MEDIA_FILE.test(atom.path) || MEDIA_FILE.test(atom.oldPath ?? "")) {return { noise: "binary", reason: "Audio/video content is omitted from AI input" };}
   if (atom.kind === "binary") {return { noise: "binary", reason: "Binary content is summarized without bytes" };}
   if (exclusions.some(pattern => globToRegex(pattern).test(atom.path))) {return { noise: "configured", reason: "Matches a configured exclusion" };}
   if (LOCK_NAMES.test(atom.path)) {return { noise: "lockfile", reason: "Dependency lockfile" };}
@@ -58,7 +60,7 @@ export function scanSecrets(atom: ChangeAtom, maxCharacters = 120_000): SecretFi
 
 export function defaultSelection(changeSet: ChangeSet, exclusions: readonly string[] = [], noiseFiltering = true): ContextSelection {
   return { items: changeSet.atoms.map(atom => {
-    if (!noiseFiltering) {
+    if (!noiseFiltering && !MEDIA_FILE.test(atom.path) && !MEDIA_FILE.test(atom.oldPath ?? "")) {
       atom.noise = "none";
       atom.noiseReason = undefined;
       return { atomId: atom.id, decision: "included" as const };
@@ -98,6 +100,12 @@ export function buildEnvelope(changeSet: ChangeSet, selection: ContextSelection,
   const included = changeSet.atoms.filter(atom => ["included", "summarized"].includes(decisions.get(atom.id)?.decision ?? "excluded"));
   const context = included.map(atom => {
     const item = decisions.get(atom.id);
+    if (MEDIA_FILE.test(atom.path) || MEDIA_FILE.test(atom.oldPath ?? "")) {
+      const status = atom.kind === "binary"
+        ? /^new file mode /m.test(atom.patch) ? "added" : /^deleted file mode /m.test(atom.patch) ? "deleted" : "modified"
+        : atom.kind;
+      return JSON.stringify({ id: atom.id, path: atom.path, oldPath: atom.oldPath, origin: atom.origin, status, content: "audio/video content omitted" });
+    }
     return item?.decision === "summarized"
       ? `<change id="${atom.id}" path="${atom.path}" mode="summary">${atom.kind}; +${atom.additions}/-${atom.deletions}</change>`
       : `<change id="${atom.id}" path="${atom.path}" origin="${atom.origin}">\n${atom.patch}\n</change>`;

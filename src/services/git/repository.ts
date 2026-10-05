@@ -1,3 +1,4 @@
+import { MEDIA_FILE } from "./media";
 import { createDiffSpool, DiffSpool } from "./diffSpool";
 import { RequestContext } from "../api/requestContext";
 import * as vscode from "vscode";
@@ -20,7 +21,6 @@ const lstat = promisify(fs.lstat);
 // Media is represented by filename only. Exceptionally large source files are
 // also represented by filename so minified/generated bodies do not consume
 // requests or the provider's token-per-minute quota.
-const MEDIA_FILE = /\.(?:aac|aiff?|flac|m4a|mid|midi|mp3|oga|ogg|opus|wav|wma|3gp|avi|flv|m4v|mkv|mov|mp4|mpeg|mpg|mts|webm|wmv)$/i;
 const SOURCE_FILE = /\.(?:c|cc|cpp|cs|css|dart|go|h|hpp|html?|java|js|jsx|json|kt|kts|lua|m|mm|php|py|rb|rs|scala|scss|sh|sql|svelte|swift|ts|tsx|vue|xml|ya?ml)$/i;
 const LARGE_SOURCE_BYTES = 1024 * 1024;
 
@@ -36,14 +36,26 @@ async function omittedContentReason(repoRoot: string, file: string): Promise<str
 async function omittedFiles(repoRoot: string, args: string[], signal?: AbortSignal): Promise<{ excludes: string[]; notes: string[] }> {
     const excludes: string[] = [];
     const notes: string[] = [];
-    for await (const file of gitNames(args, repoRoot, signal)) {
-        signal?.throwIfAborted();
-        const reason = await omittedContentReason(repoRoot, file);
-        if (reason) {
-            excludes.push(`:(exclude,literal)${file}`);
-            notes.push(`Changed file ${JSON.stringify(file)}: ${reason} omitted from AI input by default.\n`);
+    const fields = gitNames(args, repoRoot, signal)[Symbol.asyncIterator]();
+    try {
+        for (let next = await fields.next(); !next.done; next = await fields.next()) {
+            signal?.throwIfAborted();
+            const status = next.value;
+            const first = await fields.next();
+            if (first.done) { throw new Error("Git returned an incomplete change record."); }
+            const renamed = /^[RC]/.test(status);
+            const second = renamed ? await fields.next() : first;
+            if (second.done) { throw new Error("Git returned an incomplete rename record."); }
+            const file = second.value;
+            const reason = await omittedContentReason(repoRoot, first.value) || await omittedContentReason(repoRoot, file);
+            if (reason) {
+                excludes.push(...[...new Set([first.value, file])].map(name => `:(exclude,literal)${name}`));
+                const kind = ({ A: "added", D: "deleted", M: "modified", R: "renamed", C: "copied", T: "type changed" } as Record<string, string>)[status[0]] ?? status;
+                const names = renamed ? `${JSON.stringify(first.value)} -> ${JSON.stringify(file)}` : JSON.stringify(file);
+                notes.push(`Changed file ${names} (${kind}): ${reason} omitted from AI input.\n`);
+            }
         }
-    }
+    } finally { await fields.return(undefined); }
     return { excludes, notes };
 }
 
@@ -228,7 +240,7 @@ export async function getDiffInput(workspaceFolder: vscode.WorkspaceFolder, repo
     const spool = await createDiffSpool();
     try {
         const stagedUserExcludes = onlyLockFiles ? [] : excludePatterns;
-        const staged = await omittedFiles(repoRoot, ["diff", "--staged", "--name-only", "-z", ...diffPathspec(stagedUserExcludes, [])], signal);
+        const staged = await omittedFiles(repoRoot, ["diff", "--staged", "--name-status", "--find-renames", "-z", ...diffPathspec(stagedUserExcludes, [])], signal);
         await spool.append(["diff", "--no-ext-diff", "--no-textconv", "--unified=0", "--staged", ...diffPathspec(stagedUserExcludes, staged.excludes)], repoRoot, signal);
         if (staged.notes.length) { await spool.appendText(staged.notes.join(""), signal); }
         if (captureAllChanges || !spool.size) {
@@ -237,14 +249,14 @@ export async function getDiffInput(workspaceFolder: vscode.WorkspaceFolder, repo
                 signal?.throwIfAborted();
                 if (answer !== "Yes") { throw new Error("Operation cancelled"); }
             }
-            const unstaged = await omittedFiles(repoRoot, ["diff", "--name-only", "-z", ...excludeArgs], signal);
+            const unstaged = await omittedFiles(repoRoot, ["diff", "--name-status", "--find-renames", "-z", ...excludeArgs], signal);
             await spool.append(["diff", "--no-ext-diff", "--no-textconv", "--unified=0", ...diffPathspec(excludePatterns, unstaged.excludes)], repoRoot, signal);
             if (unstaged.notes.length) { await spool.appendText(unstaged.notes.join(""), signal); }
         }
         if (captureAllChanges) {
             for await (const file of gitNames(["ls-files", "--others", "--exclude-standard", "-z", ...excludeArgs], repoRoot, signal)) {
                 const reason = await omittedContentReason(repoRoot, file);
-                if (reason) { await spool.appendText(`Changed file ${JSON.stringify(file)}: ${reason} omitted from AI input by default.\n`, signal); }
+                if (reason) { await spool.appendText(`Changed file ${JSON.stringify(file)} (added, untracked): ${reason} omitted from AI input.\n`, signal); }
                 else { await spool.append(["diff", "--no-ext-diff", "--no-textconv", "--unified=0", "--no-index", "--", "/dev/null", file], repoRoot, signal, true); }
             }
         }

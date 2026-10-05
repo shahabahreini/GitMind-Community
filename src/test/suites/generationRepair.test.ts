@@ -1,3 +1,6 @@
+import { buildEnvelope, defaultSelection } from "../../commit-intelligence/context";
+import { parseUnifiedDiff } from "../../commit-intelligence/git";
+import { ChangeSet } from "../../commit-intelligence/models";
 import * as assert from "node:assert";
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
@@ -639,6 +642,64 @@ suite("Generation repair", () => {
                 assert.doesNotMatch(diff, /unchanged after/);
             } finally { await spool.dispose(); }
         } finally { await rm(directory, { recursive: true, force: true }); }
+    });
+
+    test("media context retains statuses without text bodies, including renamed and untracked files", async () => {
+        const directory = await mkdtemp(join(tmpdir(), "gitmind-media-"));
+        const run = async (...args: string[]) => { await promisify(execFile)("git", args, { cwd: directory }); };
+        const settings = (globalThis as any).__generationSettings;
+        try {
+            (globalThis as any).__generationSettings = { "commit.captureAllChanges": true };
+            await run("init", "-q");
+            await run("config", "user.name", "Test");
+            await run("config", "user.email", "test@example.invalid");
+            await run("config", "commit.gpgsign", "false");
+            for (const file of ["edit.MP3", "delete.ogv", "old.wav"]) {
+                await writeFile(join(directory, file), `PRIVATE_MEDIA_ORIGINAL_${file}\n`);
+            }
+            await run("add", ".");
+            await run("commit", "-qm", "baseline");
+            await writeFile(join(directory, "edit.MP3"), "PRIVATE_MEDIA_EDIT\n");
+            await rm(join(directory, "delete.ogv"));
+            await run("mv", "old.wav", "renamed.txt");
+            await run("add", ".");
+            await writeFile(join(directory, "edit.MP3"), "PRIVATE_MEDIA_UNSTAGED\n");
+            await writeFile(join(directory, "new.webm"), "PRIVATE_MEDIA_UNTRACKED\n");
+            await writeFile(join(directory, "normal.ts"), "export const keep = true;\n");
+            const spool = await getDiffInput({ uri: vscode.Uri.file(directory), name: "test", index: 0 }, directory);
+            try {
+                let diff = "";
+                for await (const block of spool) { diff += block; }
+                assert.match(diff, /edit.MP3" \(modified\)/);
+                assert.match(diff, /delete.ogv" \(deleted\)/);
+                assert.match(diff, /old.wav" -> "renamed.txt" \(renamed\)/);
+                assert.match(diff, /new.webm" \(added, untracked\)/);
+                assert.match(diff, /export const keep/);
+                assert.doesNotMatch(diff, /PRIVATE_MEDIA/);
+            } finally { await spool.dispose(); }
+        } finally {
+            (globalThis as any).__generationSettings = settings;
+            await rm(directory, { recursive: true, force: true });
+        }
+    });
+
+    test("advanced AI envelopes always omit media bodies even with filtering disabled or inclusion forced", () => {
+        const atoms = parseUnifiedDiff("diff --git a/voice.MP3 b/voice.MP3\nnew file mode 100644\n--- /dev/null\n+++ b/voice.MP3\n@@ -0,0 +1 @@\n+PRIVATE_MEDIA_PAYLOAD\n", "staged");
+        const changes = { atoms } as ChangeSet;
+        const selection = defaultSelection(changes, [], false);
+        assert.strictEqual(selection.items[0].decision, "summarized");
+        selection.items[0].decision = "included";
+        const envelope = buildEnvelope(changes, selection, "commit", { detailMode: "auto", style: "conventional", targetLanguage: "english" } as any);
+        assert.match(envelope.context, /voice.MP3/);
+        assert.match(envelope.context, /added/);
+        assert.doesNotMatch(envelope.context, /PRIVATE_MEDIA_PAYLOAD/);
+        atoms[0].oldPath = "old.mp4";
+        atoms[0].path = "renamed.txt";
+        atoms[0].kind = "renamed";
+        const renamed = buildEnvelope(changes, selection, "commit", { detailMode: "auto" } as any);
+        assert.match(renamed.context, /old.mp4/);
+        assert.match(renamed.context, /renamed.txt/);
+        assert.doesNotMatch(renamed.context, /PRIVATE_MEDIA_PAYLOAD/);
     });
 
     test("media and exceptionally large source content is omitted while ordinary TypeScript edits remain", async () => {
