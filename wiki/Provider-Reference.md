@@ -1,6 +1,6 @@
 # Provider Reference
 
-> Verified against GitMind `6.3.0` on September 27, 2026
+> Verified against GitMind `6.4.0` on October 5, 2026
 
 GitMind exposes **23 provider choices**: 22 built-in providers and the Pro Custom API. Each page documents authentication, defaults, model discovery, privacy boundaries, and first-line troubleshooting.
 

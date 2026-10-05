@@ -2,16 +2,16 @@
   "schemaVersion": 1,
   "product": {
     "name": "GitMind",
-    "version": "6.3.0",
-    "auditDate": "2026-09-27",
+    "version": "6.4.0",
+    "auditDate": "2026-10-05",
     "source": "package.json",
     "minimumVSCode": "^1.101.0"
   },
   "counts": {
     "providerChoices": 23,
     "builtInProviders": 22,
-    "settingsRegistered": 122,
-    "settingsDocumented": 112,
+    "settingsRegistered": 127,
+    "settingsDocumented": 117,
     "commandsRegistered": 55,
     "publicCommands": 44,
     "commitStyles": 12,
@@ -1284,6 +1284,49 @@
       "default": {},
       "availability": "Pro",
       "description": "Custom emoji mappings for commit types (Pro feature)"
+    },
+    {
+      "id": "gitmind.pro.largeDiffHandling.enabled",
+      "type": "boolean",
+      "default": false,
+      "availability": "Pro",
+      "description": "Process included text changes in large diffs proactively (Pro). Audio, video, and source files over 1 MiB are represented by filename only by default; provider rate limits still apply."
+    },
+    {
+      "id": "gitmind.pro.largeDiffHandling.chunkSize",
+      "type": "integer",
+      "default": 1000,
+      "availability": "Pro",
+      "description": "Preferred source lines per chunk; model budgets may require smaller chunks.",
+      "minimum": 10,
+      "maximum": 10000
+    },
+    {
+      "id": "gitmind.pro.largeDiffHandling.batchSize",
+      "type": "integer",
+      "default": null,
+      "availability": "Pro",
+      "description": "Chunks per batch. Defaults to five; legacy maxChunks is used when unset. Subsequent batches run automatically.",
+      "minimum": 1,
+      "maximum": 100
+    },
+    {
+      "id": "gitmind.pro.largeDiffHandling.concurrency",
+      "type": "integer",
+      "default": 3,
+      "availability": "Pro",
+      "description": "Concurrent requests within each large-diff batch.",
+      "minimum": 1,
+      "maximum": 8
+    },
+    {
+      "id": "gitmind.pro.largeDiffHandling.maxChunks",
+      "type": "integer",
+      "default": null,
+      "availability": "Pro",
+      "description": "",
+      "minimum": 1,
+      "maximum": 100
     }
   ],
   "commands": [
@@ -1676,6 +1719,42 @@
       "description": "Maximum number of versions to process at once (limits token usage)",
       "minimum": 1,
       "maximum": 25
+    },
+    {
+      "id": "gitmind.pro.largeDiffHandling.chunkSize",
+      "type": "integer",
+      "default": 1000,
+      "availability": "Pro",
+      "description": "Preferred source lines per chunk; model budgets may require smaller chunks.",
+      "minimum": 10,
+      "maximum": 10000
+    },
+    {
+      "id": "gitmind.pro.largeDiffHandling.batchSize",
+      "type": "integer",
+      "default": null,
+      "availability": "Pro",
+      "description": "Chunks per batch. Defaults to five; legacy maxChunks is used when unset. Subsequent batches run automatically.",
+      "minimum": 1,
+      "maximum": 100
+    },
+    {
+      "id": "gitmind.pro.largeDiffHandling.concurrency",
+      "type": "integer",
+      "default": 3,
+      "availability": "Pro",
+      "description": "Concurrent requests within each large-diff batch.",
+      "minimum": 1,
+      "maximum": 8
+    },
+    {
+      "id": "gitmind.pro.largeDiffHandling.maxChunks",
+      "type": "integer",
+      "default": null,
+      "availability": "Pro",
+      "description": "",
+      "minimum": 1,
+      "maximum": 100
     }
   ],
   "excluded": {

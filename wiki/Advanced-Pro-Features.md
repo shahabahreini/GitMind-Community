@@ -1,10 +1,10 @@
 # Advanced Pro Features
 
-> Verified against GitMind `6.3.0` on September 27, 2026
+> Verified against GitMind `6.4.0` on October 5, 2026
 
 ## Large Diff Processing
 
-GitMind Pro estimates available model context and splits substantial diffs into manageable chunks. Chunk summaries are combined into the final commit message. Large diffs still cost more, take longer, and may omit low-priority detail; review the result.
+GitMind Pro estimates available model context and splits substantial diffs into manageable chunks. Chunk summaries are combined into the final commit message. Large diffs still cost more, take longer, and may omit low-priority detail; review the result. Pro users can configure large diff handling via `gitmind.pro.largeDiffHandling.enabled`, `gitmind.pro.largeDiffHandling.chunkSize`, `gitmind.pro.largeDiffHandling.batchSize`, `gitmind.pro.largeDiffHandling.concurrency`, and `gitmind.pro.largeDiffHandling.maxChunks`. Audio, video, and source files over 1 MiB are represented by filename only to protect model context.
 
 ## Commit Composer
 

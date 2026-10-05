@@ -1,6 +1,6 @@
 # Complete Settings Reference
 
-> Verified against GitMind `6.3.0` on September 27, 2026
+> Verified against GitMind `6.4.0` on October 5, 2026
 
 Open **GitMind Setting** for the guided UI. The table below covers user-configurable settings. API keys and auth tokens have no default. Developer-only environment settings and automatically managed license/subscription state are intentionally omitted.
 
@@ -94,6 +94,11 @@ Open **GitMind Setting** for the guided UI. The table below covers user-configur
 | `gitmind.pro.changelog.maxVersions` | `10` | 1-25 |
 | `gitmind.pro.changelog.versionOrder` | `newest-first` | `newest-first`, `oldest-first` |
 | `gitmind.pro.changelog.overwriteExisting` | `false` | Preserve existing entries by default |
+| `gitmind.pro.largeDiffHandling.enabled` | `false` | Enable proactive large-diff handling; Pro |
+| `gitmind.pro.largeDiffHandling.chunkSize` | `1000` | 10-10000 source lines per chunk; Pro |
+| `gitmind.pro.largeDiffHandling.batchSize` | `5` | 1-100 chunks per batch; Pro |
+| `gitmind.pro.largeDiffHandling.concurrency` | `3` | 1-8 concurrent requests; Pro |
+| `gitmind.pro.largeDiffHandling.maxChunks` | `null` | Legacy alias for batchSize; Pro |
 
 ## Custom API (Pro)
 

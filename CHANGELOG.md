@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v6.4.0 - 2026-10-05
+
+### Highlights
+
+- Pro Large Diff Processing: Intelligent budgeted generation and ordered batching for oversized diffs, analyzing every source span without capping chunks or dropping diff headers.
+- Media File Handling: Automatic detection for audio, video, and oversized source files (>1 MiB), representing them by filename in change context to avoid prompt token exhaustion while preserving change tracking.
+- Model Metadata Discovery: Dynamic context discovery and model capability introspection for OpenRouter, Together AI, and NVIDIA NIM providers, with bounded trials for unknown models.
+- Hardened Reliability & Security: Refined HTTP 429 quota classification vs. payment limits, isolated cancellation and timeouts per generation attempt, and applied a verified depth limit patch for `braces` (GHSA-vfj7-8cjw-p6xm).
+
+### Added
+
+- Pro large-diff settings (`gitmind.pro.largeDiffHandling.enabled`, `.chunkSize`, `.batchSize`, `.concurrency`, and backward-compatible `.maxChunks`).
+- Audio and video media detection to exclude multimedia content from AI prompts while preserving git status in change context.
+- Model metadata discovery and context limit lookup for OpenRouter, Together AI, and NVIDIA NIM providers.
+- Bounded direct trial execution for newly configured or unknown provider models.
+
+### Changed
+
+- Intermediate large-diff analysis and compression prompts are capped at 120 words with bounded token limits, leaving final generation prompts uncapped.
+- Token diagnostics are converted into non-blocking informational notices based on approximate prompt token counts.
+- Applied verified braces depth limit patch for GHSA-vfj7-8cjw-p6xm.
+
+### Fixed
+
+- Large diff coverage no longer drops chunks past legacy ceilings; diffs are partitioned into ordered batches that run with managed concurrency.
+- HTTP 429 error messages now distinguish quota limits (rate limits) from billing or payment failures.
+- Provider errors now preserve structured response bodies and HTTP status codes for rejected requests on OpenRouter and Together AI.
+- Cancellation and timeout signals now isolate per-attempt resources so aborted operations do not pollute subsequent requests.
+
 ## v6.3.0 - 2026-09-27
 
 ### Highlights

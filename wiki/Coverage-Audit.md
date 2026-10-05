@@ -1,16 +1,16 @@
 # GitMind 6.x Documentation Coverage Audit
 
-> Verified against GitMind `6.3.0` on September 27, 2026
+> Verified against GitMind `6.4.0` on October 5, 2026
 
 This page records the public surface checked directly against the current `package.json`. `npm run docs:validate` compares the handbook and generated Wiki with the generated sanitized product manifest.
 
 ## Verified Counts
 
-| Surface | GitMind 6.1.2 |
+| Surface | GitMind 6.4.0 |
 | --- | ---: |
 | Provider choices | 23: 22 built-in plus Pro Custom API |
-| Registered settings | 122 |
-| User-documentable settings | 96 |
+| Registered settings | 127 |
+| User-documentable settings | 101 |
 | Registered commands | 55 |
 | Supported public commands | 44 |
 | Commit styles | 12 |
@@ -21,7 +21,7 @@ This page records the public surface checked directly against the current `packa
 - Model Settings: provider selection, all 22 built-in provider key/model/endpoint fields, Custom API, model loading, API checks, and rate-limit checks.
 - Free Features: verbose output, Capture All Changes, custom context/saved prompt behavior, diagnostics, onboarding, and the default-off Commit Intelligence (Preview) controls.
 - Commit Styles: all 12 styles and all Emoji Enhancement settings.
-- Pro Features: encryption, target language, summary/body limits, advanced model parameters, Automatic Recovery, history learning, changelog settings, and sanitized Support Reports.
+- Pro Features: encryption, target language, summary/body limits, advanced model parameters, Automatic Recovery, history learning, changelog settings, large-diff handling, and sanitized Support Reports.
 - Pro Activation: license-key activation, validation, deactivation, device slots, legacy-access migration, and troubleshooting.
 
 Automatically managed values such as the saved last prompt, validation timestamps/status, instance IDs, and subscription state are documented as behavior but are not presented as user-editable settings.

@@ -1,6 +1,6 @@
 # Cloudflare Workers AI
 
-> Verified against GitMind `6.3.0` on September 27, 2026
+> Verified against GitMind `6.4.0` on October 5, 2026
 
 Cloudflare Workers AI can be called directly or through an optional AI Gateway. GitMind uses the OpenAI-compatible Chat Completions route and does not bundle an account-independent model list.
 
