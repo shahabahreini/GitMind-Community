@@ -31,8 +31,10 @@ export function conservativeTokenCount(text: string): number {
 // Verified 2026-10-04: https://platform.claude.com/docs/en/models/overview
 // https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash
 // https://docs.mistral.ai/models/mistral-small-4-0-26-03
+// https://docs.cohere.com/docs/command-a
 // Output values below are generation reservations, not advertised output maxima.
 const VERIFIED_LIMITS: Record<string, [number, number]> = {
+    "command-a-03-2025": [256000, 1024],
     "gemini-3.8-flash": [1048576, 4096],
     "mistral-small-2603": [256000, 1024],
     "claude-fable-5-1": [1000000, 8000],

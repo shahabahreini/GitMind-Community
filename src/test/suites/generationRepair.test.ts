@@ -18,6 +18,7 @@ import { beginGenerationOperation, cancelCurrentRequest, createRecoveryOperation
 import { PROVIDER_IDS, PROVIDER_CATALOG } from "../../config/providerCatalog";
 import { resolveLargeDiffSettings } from "../../config/largeDiffSettings";
 import { createDiffSpool } from "../../services/git/diffSpool";
+import { describeStructuredData } from "../../services/git/structuredData";
 import { SupportSessionService } from "../../services/support/SupportSessionService";
 import { NvidiaProvider } from "../../services/api/nvidia";
 import { OpenRouterProvider } from "../../services/api/openrouter";
@@ -119,6 +120,23 @@ suite("Generation repair", () => {
         });
         assert.strictEqual(result, "fix: change a.ts behavior");
         assert.deepStrictEqual(budgets, [768, undefined]);
+    });
+
+    test("Cohere Command A plans a large text diff against its verified context", async () => {
+        const capabilities = modelCapabilities("command-a-03-2025");
+        assert.strictEqual(capabilities.contextTokens, 256000);
+        assert.strictEqual(capabilities.isUnknown, false);
+        let estimate = 0;
+        let sent = 0;
+        await assert.rejects(() => generateBudgeted("x".repeat(810000), "", settings, {
+            signal: new AbortController().signal,
+            capabilities: () => capabilities,
+            renderFinal: async text => text,
+            approve: async total => { estimate = total; throw new ProviderApiError("declined", { category: "cancelled" }); },
+            send: async () => { sent++; return "unexpected"; },
+        }), (error: any) => error.category === "cancelled");
+        assert.strictEqual(estimate, 5, "the 810 KB source needs four spans and one final call");
+        assert.strictEqual(sent, 0);
     });
 
     if ((globalThis as any).__generationSdkMock) { test("declining a planned batch sends no batched requests", async () => {
@@ -726,6 +744,41 @@ suite("Generation repair", () => {
         } finally { await spool.dispose(); await rm(directory, { recursive: true, force: true }); }
     });
 
+    test("large staged JSON, CSV, and lockfiles use bounded structural notes from the index", async () => {
+        assert.strictEqual(describeStructuredData("settings.json", JSON.stringify({ description: "important-config-value".repeat(5000) })), undefined);
+        const directory = await mkdtemp(join(tmpdir(), "gitmind-structured-test-"));
+        const run = async (...args: string[]) => { await promisify(execFile)("git", args, { cwd: directory }); };
+        try {
+            await run("init", "-q");
+            await run("config", "user.name", "GitMind Test");
+            await run("config", "user.email", "test@example.invalid");
+            await run("config", "commit.gpgsign", "false");
+            await writeFile(join(directory, "config.json"), '{"feature":true}\n');
+            await run("add", "config.json");
+            await run("commit", "-qm", "baseline");
+            const records = Array.from({ length: 3000 }, (_, id) => ({ id, label: "bulk-json-value", score: 1 }));
+            await writeFile(join(directory, "records.json"), JSON.stringify(records, null, 2));
+            await writeFile(join(directory, "records.csv"), "id,label\n" + Array.from({ length: 7000 }, (_, id) => `${id},bulk-csv-value`).join("\n"));
+            await writeFile(join(directory, "Cargo.lock"), "[[package]]\nname = \"bulk-lock-value\"\n".repeat(1200));
+            await writeFile(join(directory, "icon.svg"), '<svg><text>image-secret-value</text></svg>\n');
+            await writeFile(join(directory, "config.json"), '{"feature":false}\n');
+            await run("add", ".");
+            await writeFile(join(directory, "records.json"), "[]\n"); // Staged snapshot must win over the working tree.
+            const spool = await getDiffInput({ uri: vscode.Uri.file(directory), name: "test", index: 0 }, directory);
+            try {
+                let diff = "";
+                for await (const block of spool) { diff += block; }
+                assert.match(diff, /records\.json.*JSON array with 3000 records/);
+                assert.match(diff, /records\.csv.*CSV with 7000 data rows/);
+                assert.match(diff, /Cargo\.lock.*generated dependency lockfile/);
+                assert.match(diff, /icon\.svg.*media content/);
+                assert.match(diff, /-\{"feature":true\}/);
+                assert.doesNotMatch(diff, /bulk-json-value|bulk-csv-value|bulk-lock-value|image-secret-value/);
+                assert.ok(Buffer.byteLength(diff) < 3000);
+            } finally { await spool.dispose(); }
+        } finally { await rm(directory, { recursive: true, force: true }); }
+    });
+
     test("collected diff includes changed lines without unrelated source context", async () => {
         const directory = await mkdtemp(join(tmpdir(), "gitmind-zero-context-"));
         const run = async (...args: string[]) => { await promisify(execFile)("git", args, { cwd: directory }); };
@@ -823,8 +876,8 @@ suite("Generation repair", () => {
             try {
                 let diff = "";
                 for await (const block of spool) { diff += block; }
-                assert.match(diff, /voice\.mp3.*audio\/video content omitted/s);
-                assert.match(diff, /movie\.mp4.*audio\/video content omitted/s);
+                assert.match(diff, /voice\.mp3.*media content omitted/s);
+                assert.match(diff, /movie\.mp4.*media content omitted/s);
                 assert.match(diff, /giant\.ts.*source file over 1 MiB omitted/s);
                 assert.match(diff, /\+export const usefulChange = true/);
                 assert.doesNotMatch(diff, /X{100}/);
