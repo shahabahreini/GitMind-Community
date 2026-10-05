@@ -2,6 +2,7 @@
 import { debugLog } from "../debug/logger";
 import { generateCommitPrompt, getPromptConfig } from './prompts';
 import { BaseAIProvider, GenerationOptions } from "./base";
+import { RequestContext } from "./requestContext";
 import { loggedFetch } from "./loggedFetch";
 
 // Define Cohere model types
@@ -227,10 +228,15 @@ export class CohereProvider extends BaseAIProvider {
         }
     }
 
-    async getModels(): Promise<string[]> {
+    override async prepareCapabilities(context?: RequestContext): Promise<void> {
+        await this.discoverLargeModel(context, signal => this.getModels(signal));
+    }
+
+    async getModels(signal?: AbortSignal): Promise<string[]> {
         try {
             const response = await loggedFetch("https://api.cohere.com/v1/models", {
                 method: "GET",
+                signal,
                 headers: {
                     "Authorization": `Bearer ${this.apiKey}`,
                     "Accept": "application/json"
@@ -287,6 +293,9 @@ export class CohereProvider extends BaseAIProvider {
 
             const data = await response.json();
 
+            for (const model of Array.isArray(data.models) ? data.models : []) {
+                if (typeof model?.name === "string") { this.rememberModelLimits(model.name, model.context_length, undefined); }
+            }
             // Filter models that support chat endpoint and are not deprecated
             const chatModels = data.models
                 .filter((model: any) =>

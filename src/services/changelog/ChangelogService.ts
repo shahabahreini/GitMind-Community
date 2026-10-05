@@ -747,7 +747,8 @@ export class ChangelogService {
     private estimateChangelogTokens(
         commitSummary: string,
         existingChangelog: string | null,
-        policyInstructions: string
+        policyInstructions: string,
+        modelInputBudget?: number
     ): {
         commitTokens: number;
         changelogTokens: number;
@@ -769,9 +770,9 @@ export class ChangelogService {
         const responseReserve = 2500;
         const totalTokens = promptTokens + responseReserve;
 
-        // Most models have context limits between 8k-200k tokens
-        // Use conservative limit of 100k for safety with all providers
-        const maxTokenLimit = 100000;
+        // Stay within 100k for consistent output quality, and within the
+        // selected model's discovered input budget when it is smaller.
+        const maxTokenLimit = Math.min(100000, modelInputBudget ? modelInputBudget + responseReserve : 100000);
         const isWithinLimit = totalTokens <= maxTokenLimit;
 
         // Calculate recommended max commits if over limit
@@ -800,13 +801,14 @@ export class ChangelogService {
     private async validateTokenLimits(
         versionGroups: VersionInfo[],
         existingChangelog: string | null,
-        policyInstructions: string
+        policyInstructions: string,
+        modelInputBudget?: number
     ): Promise<{ adjustedGroups: VersionInfo[]; warnings: string[]; finalEstimation: ReturnType<ChangelogService['estimateChangelogTokens']> }> {
         const warnings: string[] = [];
 
         // Prepare initial summary
         let commitSummary = this.prepareCommitSummary(versionGroups);
-        let estimation = this.estimateChangelogTokens(commitSummary, existingChangelog, policyInstructions);
+        let estimation = this.estimateChangelogTokens(commitSummary, existingChangelog, policyInstructions, modelInputBudget);
 
         debugLog('Token estimation:', estimation);
 
@@ -840,7 +842,7 @@ export class ChangelogService {
 
             // Re-validate
             commitSummary = this.prepareCommitSummary(adjustedGroups);
-            estimation = this.estimateChangelogTokens(commitSummary, existingChangelog, policyInstructions);
+            estimation = this.estimateChangelogTokens(commitSummary, existingChangelog, policyInstructions, modelInputBudget);
             debugLog('Adjusted token estimation:', estimation);
 
             return { adjustedGroups, warnings, finalEstimation: estimation };
@@ -910,10 +912,13 @@ export class ChangelogService {
         const policyInstructions = this.buildPolicyInstructions(changelogPolicy);
 
         // Validate token limits and adjust if needed
+        const apiConfig = await getApiConfig();
+        const { getModelInputBudget } = await import('../api/index.js');
         const { adjustedGroups, warnings, finalEstimation } = await this.validateTokenLimits(
             versionGroups,
             existingChangelog,
-            policyInstructions
+            policyInstructions,
+            await getModelInputBudget(apiConfig)
         );
 
         // Show warnings to user if any adjustments were made
@@ -952,7 +957,6 @@ export class ChangelogService {
         const commitSummary = this.prepareCommitSummary(versionGroups);
 
         // Generate changelog using AI
-        const apiConfig = await getApiConfig();
         const prompt = this.buildChangelogPrompt(commitSummary, existingChangelog, changelogPolicy, versionOrder);
 
         debugLog('Final token estimation before API call:', finalEstimation);
@@ -1038,6 +1042,7 @@ export class ChangelogService {
 
 **WRITING RULES**
 - Base every entry only on the supplied commits. Do not invent features, causes, metrics, compatibility claims, or migration steps.
+- The source is commit messages and bodies, not file contents. For media, structured data, and lockfile changes, describe only the purpose established by those commits; do not infer records or behavior from filenames.
 - Write one concrete, concise sentence per user-meaningful change. Name the affected command, option, API, component, or behavior when the commits establish it.
 - State the result first. Add one short impact or rationale clause only when the commits make it clear, for example: "- Added --rgb filtering so extraction can run without processing NIR data."
 - Group duplicate or related commits into one entry; omit purely mechanical changes unless they affect users, compatibility, security, or release operations.

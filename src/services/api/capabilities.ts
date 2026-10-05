@@ -23,6 +23,17 @@ export function effectiveInputBudget(capabilities: ModelCapabilities): number {
     return capabilities.maxInputTokens ?? Math.max(0, capabilities.contextTokens - capabilities.outputTokens - 256);
 }
 
+/** Batched requests probe unknown models with bounded windows; provider input-limit errors still split them. */
+export function batchInputBudget(capabilities: ModelCapabilities): number {
+    return capabilities.isUnknown ? Math.max(directProbeBudget(capabilities), effectiveInputBudget(capabilities)) : effectiveInputBudget(capabilities);
+}
+
+export async function assertBatchPromptFits(prompt: string, capabilities: ModelCapabilities): Promise<void> {
+    if (await countPromptTokens(prompt, capabilities) > batchInputBudget(capabilities)) {
+        throw new ProviderApiError("Prompt exceeds the model input budget. Shorten custom context or choose a larger-context model.", { category: "input-limit" });
+    }
+}
+
 /** UTF-8 bytes bound token usage conservatively for unknown tokenizers. */
 export function conservativeTokenCount(text: string): number {
     return Buffer.byteLength(text, "utf8");

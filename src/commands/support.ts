@@ -7,6 +7,9 @@ import {
 } from "../services/support/SupportSessionService";
 
 const ISSUE_URL = "https://github.com/shahabahreini/GitMind-Community/issues/new";
+const PRIVACY_SUMMARY = "The JSON report includes versions, platform family, operation/provider enums, HTTP status, relative timing, and recovery outcomes. It excludes source, diffs, prompts, commits, paths, URLs, credentials, request/response data, raw errors, emails, and license/customer identifiers.";
+// One save flow at a time, so repeated clicks cannot open several dialogs or write several files.
+let saving: Promise<void> | undefined;
 
 async function requirePro(): Promise<boolean> {
   if (await SubscriptionManager.getInstance().isProUser(undefined, true)) {
@@ -50,21 +53,28 @@ async function stopAndReviewSupportSession(): Promise<void> {
     return;
   }
   const status = supportSessionService.stop("user");
+  // The privacy review is part of this single prompt; saving goes straight to the file dialog.
   const choice = await vscode.window.showInformationMessage(
-    `Support session stopped with ${status.eventCount} allowlisted events (${status.droppedEvents} dropped by privacy/size checks). Review the privacy summary before saving.`,
+    `Support session stopped with ${status.eventCount} allowlisted events (${status.droppedEvents} dropped by privacy/size checks).\n\nPrivacy review: ${PRIVACY_SUMMARY}`,
     { modal: true },
-    "Review & Save",
+    "Choose Save Location",
     "Delete"
   );
-  if (choice === "Review & Save") {
-    await vscode.commands.executeCommand("gitmind.saveSupportReport");
+  if (choice === "Choose Save Location") {
+    await saveSupportReport(true);
   } else if (choice === "Delete") {
     supportSessionService.delete();
   }
 }
 
-async function saveSupportReport(): Promise<void> {
-  if (!await requirePro()) { return; }
+async function saveSupportReport(reviewed = false): Promise<void> {
+  if (saving) { return saving; }
+  saving = saveReport(reviewed === true);
+  try { await saving; } finally { saving = undefined; }
+}
+
+async function saveReport(reviewed: boolean): Promise<void> {
+  if (!reviewed && !await requirePro()) { return; }
   const status = supportSessionService.getStatus();
   if (status.active) { supportSessionService.stop("exported"); }
   if (status.eventCount === 0 && !status.active) {
@@ -72,17 +82,19 @@ async function saveSupportReport(): Promise<void> {
     return;
   }
 
-  const confirmation = await vscode.window.showInformationMessage(
-    "Privacy review: the JSON report includes versions, platform family, operation/provider enums, HTTP status, relative timing, and recovery outcomes. It excludes source, diffs, prompts, commits, paths, URLs, credentials, request/response data, raw errors, emails, and license/customer identifiers.",
-    { modal: true },
-    "Choose Save Location",
-    "Delete"
-  );
-  if (confirmation === "Delete") {
-    supportSessionService.delete();
-    return;
+  if (!reviewed) {
+    const confirmation = await vscode.window.showInformationMessage(
+      `Privacy review: ${PRIVACY_SUMMARY}`,
+      { modal: true },
+      "Choose Save Location",
+      "Delete"
+    );
+    if (confirmation === "Delete") {
+      supportSessionService.delete();
+      return;
+    }
+    if (confirmation !== "Choose Save Location") { return; }
   }
-  if (confirmation !== "Choose Save Location") { return; }
 
   let serialized: string;
   try {
@@ -129,7 +141,7 @@ export function registerSupportCommands(context: vscode.ExtensionContext): vscod
   return [
     vscode.commands.registerCommand("gitmind.startSupportSession", () => startSupportSession(context)),
     vscode.commands.registerCommand("gitmind.stopSupportSession", stopAndReviewSupportSession),
-    vscode.commands.registerCommand("gitmind.saveSupportReport", saveSupportReport),
+    vscode.commands.registerCommand("gitmind.saveSupportReport", () => saveSupportReport()),
     vscode.commands.registerCommand("gitmind.deleteSupportSession", deleteSupportSession)
   ];
 }

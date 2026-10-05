@@ -20,12 +20,16 @@ import { resolveLargeDiffSettings } from "../../config/largeDiffSettings";
 import { createDiffSpool } from "../../services/git/diffSpool";
 import { describeStructuredData } from "../../services/git/structuredData";
 import { SupportSessionService } from "../../services/support/SupportSessionService";
+import { ChangelogService } from "../../services/changelog/ChangelogService";
 import { NvidiaProvider } from "../../services/api/nvidia";
 import { OpenRouterProvider } from "../../services/api/openrouter";
 import { TogetherAIProvider } from "../../services/api/together";
 import { LMStudioProvider } from "../../services/api/lmstudio";
 import { CustomProvider } from "../../services/api/custom";
 import { MistralProvider } from "../../services/api/mistral";
+import { GeminiProvider } from "../../services/api/gemini";
+import { CohereProvider } from "../../services/api/cohere";
+import { SupportRenderer } from "../../webview/settings/components/renderers/SupportRenderer";
 import { formatSafeProviderError } from "../../utils/errorHandler";
 import * as vscode from "vscode";
 import { getDiffInput, setCommitMessage } from "../../services/git/repository";
@@ -122,6 +126,96 @@ suite("Generation repair", () => {
         assert.deepStrictEqual(budgets, [768, undefined]);
     });
 
+    test("unlisted models plan probe-sized batches instead of the 4K fallback", async () => {
+        // About 190 KB of source left after media, data, and lockfiles are omitted.
+        const source = ("diff --git a/src/a.ts b/src/a.ts\n@@ -0,0 +1,40 @@\n" + "+const value = compute(input);\n".repeat(40)).repeat(150);
+        const capabilities = modelCapabilities("mistral-unlisted-model");
+        assert.strictEqual(capabilities.isUnknown, true);
+        let approved = 0;
+        let end = 0;
+        const result = await generateBudgeted(source, "", settings, {
+            signal: new AbortController().signal, capabilities: () => capabilities,
+            approve: async total => { approved = total; },
+            renderFinal: async text => "FINAL " + text,
+            send: async render => {
+                const prompt = await render(capabilities);
+                if (prompt.startsWith("FINAL")) { return "feat: covered"; }
+                const [, first, last] = /offsets (\d+)\.\.(\d+):/.exec(prompt)!;
+                assert.strictEqual(Number(first), end);
+                end = Number(last);
+                return "fact";
+            },
+        });
+        assert.strictEqual(result, "feat: covered");
+        assert.strictEqual(end, source.length);
+        assert.ok(approved > 1 && approved <= 5, `expected at most 5 planned calls, got ${approved}`);
+    });
+
+    test("unlisted models that reject a probe-sized batch split it and stay covered", async () => {
+        const source = "y".repeat(150000);
+        const capabilities = modelCapabilities("unlisted-small-model");
+        let end = 0;
+        await generateBudgeted(source, "", settings, {
+            signal: new AbortController().signal, capabilities: () => capabilities,
+            renderFinal: async text => "FINAL " + text,
+            send: async render => {
+                const prompt = await render(capabilities);
+                if (prompt.startsWith("FINAL")) { return "feat: covered"; }
+                const [, first, last] = /offsets (\d+)\.\.(\d+):/.exec(prompt)!;
+                if (Number(last) - Number(first) > 20000) { throw new ProviderApiError("Prompt exceeds the model context window.", { category: "input-limit" }); }
+                assert.strictEqual(Number(first), end);
+                end = Number(last);
+                return "fact";
+            },
+        });
+        assert.strictEqual(end, source.length);
+    });
+
+    test("Mistral, Gemini, and Cohere discover the selected model's limits for large diffs", async () => {
+        const originalFetch = globalThis.fetch;
+        let lookups = 0;
+        globalThis.fetch = (async input => {
+            const url = String(input);
+            lookups++;
+            const body = url.includes("mistral") ? { data: [{ id: "mistral-new", max_context_length: 131072, capabilities: { completion_chat: true } }] }
+                : url.includes("generativelanguage") ? { models: [{ name: "models/gemini-new", inputTokenLimit: 1048576, outputTokenLimit: 8192, supportedGenerationMethods: ["generateContent"] }] }
+                : { models: [{ name: "command-new", context_length: 128000, endpoints: ["chat"] }] };
+            return new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
+        }) as typeof fetch;
+        try {
+            const cases: Array<[{ prepareCapabilities: (context?: any) => Promise<void>; getCapabilities: () => any }, number]> = [
+                [new MistralProvider("discovery-key", "mistral-new"), 131072],
+                [new GeminiProvider("discovery-key", "gemini-new"), 1048576],
+                [new CohereProvider("discovery-key", "command-new"), 128000],
+            ];
+            for (const [provider, contextTokens] of cases) {
+                assert.strictEqual(provider.getCapabilities().isUnknown, true);
+                await provider.prepareCapabilities({ diffByteSize: 1024 });
+                assert.strictEqual(provider.getCapabilities().isUnknown, true, "small diffs skip the metadata lookup");
+                await provider.prepareCapabilities({ diffByteSize: 200 * 1024 });
+                assert.strictEqual(provider.getCapabilities().isUnknown, false);
+                assert.strictEqual(provider.getCapabilities().contextTokens, contextTokens);
+            }
+            assert.strictEqual(lookups, 3);
+        } finally { globalThis.fetch = originalFetch; }
+    });
+
+    test("changelog commit trimming follows the selected model's input budget", () => {
+        const service = ChangelogService.getInstance() as any;
+        const summary = "### Commit: abc1234\nMessage: feat: add things\n".repeat(4000);
+        const unlimited = service.estimateChangelogTokens(summary, null, "");
+        const limited = service.estimateChangelogTokens(summary, null, "", 16000);
+        assert.ok(unlimited.totalTokens < 100000 || !unlimited.isWithinLimit);
+        assert.strictEqual(limited.isWithinLimit, false);
+        assert.ok(limited.recommendedMaxCommits > 0 && limited.recommendedMaxCommits < 4000);
+    });
+
+    test("support report buttons rely on the shared command binding only", () => {
+        const html = new SupportRenderer({ subscription: {} } as any).render();
+        assert.ok(html.includes('data-command="gitmind.saveSupportReport"'));
+        assert.ok(!html.includes("addEventListener"), "an extra listener would run each command twice");
+    });
+
     test("Cohere Command A plans a large text diff against its verified context", async () => {
         const capabilities = modelCapabilities("command-a-03-2025");
         assert.strictEqual(capabilities.contextTokens, 256000);
@@ -137,6 +231,18 @@ suite("Generation repair", () => {
         }), (error: any) => error.category === "cancelled");
         assert.strictEqual(estimate, 5, "the 810 KB source needs four spans and one final call");
         assert.strictEqual(sent, 0);
+    });
+
+    test("changelog prompts use commit text without staged data or media bodies", () => {
+        const service = ChangelogService.getInstance() as any;
+        const summary = service.prepareCommitSummary([{ version: "1.0.0", date: "2026-10-05", commits: [{
+            hash: "abcdef123456", author: "Test", date: "2026-10-05", message: "feat: add outline demo", body: "Adds a labelled sample dataset",
+            fileBody: "huge-json-and-video-body-must-not-enter",
+        }] }]);
+        const prompt = service.buildChangelogPrompt(summary, null, null);
+        assert.match(prompt, /Adds a labelled sample dataset/);
+        assert.match(prompt, /commit messages and bodies, not file contents/);
+        assert.doesNotMatch(prompt, /huge-json-and-video-body-must-not-enter/);
     });
 
     if ((globalThis as any).__generationSdkMock) { test("declining a planned batch sends no batched requests", async () => {
@@ -502,7 +608,8 @@ suite("Generation repair", () => {
     });
 
     test("ordered reduction is budgeted, preserves coverage, and requires measurable progress", async () => {
-        const capabilities = modelCapabilities("unknown");
+        // A verified small-context model; unlisted models are probed with larger batches.
+        const capabilities = { ...modelCapabilities("unknown"), isUnknown: false };
         let reductions = 0;
         let final = "";
         const analyzedStarts: number[] = [];
@@ -589,7 +696,7 @@ suite("Generation repair", () => {
     test("analysis continuations retain file and hunk context for oversized hunks", async () => {
         const source = "diff --git a/file b/file\nindex abc..def 100644\n--- a/file\n+++ b/file\n@@ -1 +1 @@\n" + "+line\n".repeat(2000);
         let continuations = 0;
-        const capabilities = { ...modelCapabilities("context-test"), contextTokens: 4000 };
+        const capabilities = { ...modelCapabilities("context-test"), contextTokens: 4000, isUnknown: false };
         await generateBudgeted(source, "", settings, {
             signal: new AbortController().signal, capabilities: () => capabilities,
             renderFinal: async text => "FINAL " + text,

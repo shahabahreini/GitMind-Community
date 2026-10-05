@@ -32,15 +32,6 @@ export class SupportRenderer extends BaseRenderer {
           ${isPro ? "" : '<div class="pro-upsell"><p>Activate GitMind Pro to create sanitized support reports.</p></div>'}
         </div>
       </div>
-      <script>
-        document.querySelectorAll('.support-report-command').forEach(function(button) {
-          button.addEventListener('click', function() {
-            if (typeof vscode !== 'undefined') {
-              vscode.postMessage({ command: 'executeCommand', commandId: button.dataset.command });
-            }
-          });
-        });
-      </script>
     `;
   }
 }

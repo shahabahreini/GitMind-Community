@@ -11,6 +11,8 @@ export interface RequestContext {
     largeDiffEnabled?: boolean;
     allowPromptProbe?: boolean;
     diffByteSize?: number;
+    /** Smallest prompt an unlisted model rejected as too large during this operation. */
+    rejectedPromptBytes?: number;
     metadataDiscovery?: Map<string, Promise<void>>;
     capabilitiesPrepared?: boolean;
     diagnosticBudget?: { estimatedTokens: number; modelLimit: number };

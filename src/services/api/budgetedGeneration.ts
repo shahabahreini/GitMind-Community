@@ -1,6 +1,6 @@
 import { CoverageStore } from "./coverageStore";
 import { LargeDiffSettings } from "../../config/largeDiffSettings";
-import { ModelCapabilities, assertPromptFitsAsync, countPromptTokens, effectiveInputBudget } from "./capabilities";
+import { ModelCapabilities, assertBatchPromptFits, batchInputBudget, countPromptTokens } from "./capabilities";
 import { ProviderApiError, classifyGenerationFailure } from "./recovery";
 
 export interface CoveredText { text: string; start: number; end: number; metadata?: string; }
@@ -73,11 +73,11 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
         "\nSource UTF-16 offsets " + part.start + ".." + part.end + ":\n" + part.text;
     const fitToCurrentBudget = async function* (part: CoveredText, metadata: string): AsyncGenerator<{ part: CoveredText; metadata: string }> {
         deps.signal.throwIfAborted();
-        if (await countPromptTokens(analysisPrompt(part, metadata), deps.capabilities()) <= effectiveInputBudget(deps.capabilities())) {
+        if (await countPromptTokens(analysisPrompt(part, metadata), deps.capabilities()) <= batchInputBudget(deps.capabilities())) {
             yield { part, metadata };
             return;
         }
-        try { await assertPromptFitsAsync(analysisPrompt({ ...part, text: "" }, metadata), deps.capabilities()); }
+        try { await assertBatchPromptFits(analysisPrompt({ ...part, text: "" }, metadata), deps.capabilities()); }
         catch { throw new ProviderApiError("Prompt overhead cannot fit the model budget. Shorten custom context or choose a larger-context model.", { category: "input-limit" }); }
         const [left, right] = splitCovered(part);
         yield* fitToCurrentBudget(left, metadata);
@@ -88,14 +88,14 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
         try {
             const text = await deps.send(async capabilities => {
                 const prompt = analysisPrompt(part, metadata);
-                await assertPromptFitsAsync(prompt, capabilities);
+                await assertBatchPromptFits(prompt, capabilities);
                 return prompt;
             }, signal, 768);
             deps.progress?.("requests", ++completed);
             return [{ ...part, text }];
         } catch (error) {
             if (classifyGenerationFailure(error, "") !== "input-limit" && !isOutputTruncation(error)) { throw error; }
-            try { await assertPromptFitsAsync(analysisPrompt({ ...part, text: "" }, metadata), deps.capabilities()); }
+            try { await assertBatchPromptFits(analysisPrompt({ ...part, text: "" }, metadata), deps.capabilities()); }
             catch { throw new ProviderApiError("Prompt overhead cannot fit the model budget. Shorten custom context or choose a larger-context model.", { category: "input-limit" }); }
             const [left, right] = splitCovered(part);
             const rightContext = continuationContext(left.text, metadata);
@@ -114,7 +114,7 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
     };
     const initialCapabilities = deps.capabilities();
     const emptyPromptCost = initialCapabilities.countTokens(analysisPrompt({ text: "", start: 0, end: 0 }, ""));
-    const windowUnits = Math.max(2, Math.min(512 * 1024, (initialCapabilities.countTokensAsync ? effectiveInputBudget(initialCapabilities) * 4 : effectiveInputBudget(initialCapabilities)) - emptyPromptCost - 64));
+    const windowUnits = Math.max(2, Math.min(512 * 1024, (initialCapabilities.countTokensAsync ? batchInputBudget(initialCapabilities) * 4 : batchInputBudget(initialCapabilities)) - emptyPromptCost - 64));
     try {
     for await (const part of sourceWindows(input, Number.MAX_SAFE_INTEGER, windowUnits)) {
         deps.signal.throwIfAborted();
@@ -136,12 +136,12 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
             const capabilities = deps.capabilities();
             const framing = capabilities.countTokens(analysisPrompt({ text: "", start: pending.part.start, end: part.end }, pending.metadata));
             // Bounded memory while using most of the effective input budget.
-            const available = Math.min(512 * 1024, effectiveInputBudget(capabilities) - framing - 64);
+            const available = Math.min(512 * 1024, batchInputBudget(capabilities) - framing - 64);
             if (pending.bytes + bytes > 512 * 1024) { await queuePending(); }
             else {
                 const candidate = pending.part.text + part.text;
                 if (capabilities.countTokensAsync
-                    ? await countPromptTokens(analysisPrompt({ ...pending.part, text: candidate, end: part.end }, pending.metadata), capabilities) > effectiveInputBudget(capabilities) - 64
+                    ? await countPromptTokens(analysisPrompt({ ...pending.part, text: candidate, end: part.end }, pending.metadata), capabilities) > batchInputBudget(capabilities) - 64
                     : pending.bytes + bytes > available) { await queuePending(); }
             }
         }
@@ -155,7 +155,7 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
     if (!planned) { throw new ProviderApiError("Diff coverage is incomplete.", { category: "invalid-response" }); }
     // Each analysis asks for at most 120 words. Include likely reduction rounds
     // and the final generation in the count shown before any provider call.
-    const summariesPerCall = Math.max(2, Math.floor((effectiveInputBudget(deps.capabilities()) - 320) / 768));
+    const summariesPerCall = Math.max(2, Math.floor((batchInputBudget(deps.capabilities()) - 320) / 768));
     let remaining = planned;
     let reductions = 0;
     while (remaining > summariesPerCall && reductions < 1000000) {
@@ -179,14 +179,14 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
     for (let round = 0; round < 32; round++) {
         deps.signal.throwIfAborted();
         const capabilities = deps.capabilities();
-        if (store.textSize < (capabilities.countTokensAsync ? effectiveInputBudget(capabilities) * 4 : capabilities.contextTokens)) {
+        if (store.textSize < (capabilities.countTokensAsync ? batchInputBudget(capabilities) * 4 : Math.max(capabilities.contextTokens, batchInputBudget(capabilities)))) {
             const parts: string[] = [];
             for await (const part of store.read()) { parts.push("[" + part.start + ".." + part.end + "] " + part.text); }
             const joined = parts.join("\n");
             try {
                 return await deps.send(async current => {
                     const prompt = await deps.renderFinal(joined, current);
-                    await assertPromptFitsAsync(prompt, current);
+                    await assertBatchPromptFits(prompt, current);
                     return prompt;
                 }, deps.signal);
             } catch (error) {
@@ -206,7 +206,7 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
                 try {
                     return await deps.send(async capabilities => {
                         const prompt = "Compress these ordered factual change summaries to at most 120 words. Keep behavior, interfaces, data, security and distinct change intent. Group repeated mechanical changes and use fewer words. Do not invent changes.\n" + customContext + "\n" + text;
-                        await assertPromptFitsAsync(prompt, capabilities);
+                        await assertBatchPromptFits(prompt, capabilities);
                         return prompt;
                     }, deps.signal, 768);
                 } catch (error) {
@@ -219,7 +219,7 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
             await reduced.append({ text: result, start, end });
             group = [];
         };
-        const limit = effectiveInputBudget(deps.capabilities());
+        const limit = batchInputBudget(deps.capabilities());
         for await (const part of store.read()) {
             const prospective = [...group, part].map(value => value.text).join("\n");
             if (await countPromptTokens(customContext + prospective, deps.capabilities()) + 160 > limit) { await reduceGroup(); }

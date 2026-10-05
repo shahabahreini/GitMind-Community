@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { RequestContext } from "./requestContext";
-import { modelCapabilities, assertPromptFitsAsync, countPromptTokens, directProbeBudget, effectiveInputBudget, ModelCapabilities } from "./capabilities";
+import { modelCapabilities, assertPromptFitsAsync, batchInputBudget, countPromptTokens, directProbeBudget, effectiveInputBudget, ModelCapabilities } from "./capabilities";
 import { generateBudgeted, DiffInput, isOutputTruncation } from "./budgetedGeneration";
 import { DiffSpool } from "./diffSpool";
 import { GenerationAttempts } from "./generationAttempts";
@@ -378,12 +378,15 @@ export async function generateCommitMessage(
         const largeDiffSettings = readLargeDiffSettings(settings);
         context.largeDiffEnabled = largeDiffSettings.enabled;
         const initialProvider = await getProviderInstance(validatedConfig);
-        await initialProvider.prepareCapabilities(context);
         context.generationOptions ??= initialProvider.getDefaultGenerationOptions() ?? {};
         const recovery = createRecoveryOperation(validatedConfig, { operationId: context.operationId });
         if (typeof diff !== "string") {
             spool = await DiffSpool.create(diff, context.signal);
             context.diffByteSize = spool.bytes;
+        }
+        // Discovery is size-gated, so it runs only once the diff size is known.
+        await initialProvider.prepareCapabilities(context);
+        if (spool) {
             const capabilities = initialProvider.getCapabilities();
             const directBound = capabilities.isUnknown ? 1024 * 1024 : Math.min(16 * 1024 * 1024, Math.max(1024 * 1024, effectiveInputBudget(capabilities) * 4));
             diff = await spool.boundedString(directBound) ?? spool.asInput();
@@ -420,6 +423,7 @@ export async function generateCommitMessage(
                 } catch (error) {
                     // Runtime input limits or a smaller fallback can require a new plan.
                     if (classifyGenerationFailure(error, validatedConfig.type) !== "input-limit" && !isOutputTruncation(error)) { throw error; }
+                    if (capabilities.isUnknown && classifyGenerationFailure(error, validatedConfig.type) === "input-limit") { rememberRejectedPrompt(context, prompt); }
                     requiresChunking = true;
                 } finally { context.allowPromptProbe = false; }
             }
@@ -923,6 +927,18 @@ function getModelName(config: ApiConfig): string {
  * @param customContext Custom context for the commit message
  * @param settings Settings for large diff handling
  */
+function rememberRejectedPrompt(context: RequestContext, prompt: string): void {
+    const bytes = Buffer.byteLength(prompt, "utf8");
+    context.rejectedPromptBytes = Math.min(context.rejectedPromptBytes ?? bytes, bytes);
+}
+
+/** An unlisted model that rejected a prompt is planned below half of that size. */
+function observedCapabilities(capabilities: ModelCapabilities, context: RequestContext): ModelCapabilities {
+    if (!capabilities.isUnknown || !context.rejectedPromptBytes) { return capabilities; }
+    const ceiling = Math.max(1024, Math.floor(context.rejectedPromptBytes / 2));
+    return { ...capabilities, isUnknown: false, maxInputTokens: Math.min(batchInputBudget(capabilities), ceiling) };
+}
+
 async function processLargeDiff(
     config: ApiConfig,
     diff: DiffInput,
@@ -943,7 +959,7 @@ async function processLargeDiff(
         try {
             return await generateBudgeted(diff, customContext, settings, {
                 signal,
-                capabilities: () => capabilities,
+                capabilities: () => observedCapabilities(capabilities, context),
                 approve: async estimated => {
                     await attempts.approveBatch(estimated + attempts.actual);
                     signal.throwIfAborted();
@@ -951,7 +967,7 @@ async function processLargeDiff(
                 },
                 renderFinal: async (text, current) => {
                     const full = await generateCommitPrompt(text, promptConfig, customContext);
-                    if (current.countTokens(full) <= effectiveInputBudget(current)) { return full; }
+                    if (current.countTokens(full) <= batchInputBudget(current)) { return full; }
                     return generateCompactCommitPrompt(text, promptConfig, customContext);
                 },
                 send: (render, requestSignal, summaryOutputTokens) => recovery(async attemptConfig => {
@@ -973,7 +989,13 @@ async function processLargeDiff(
                     const prompt = await render(capabilities);
                     await attempts.beforeAttempt(true);
                     progress.report({ message: `Generation calls: ${attempts.actual} of ${attempts.planned} planned` });
-                    return provider.generateWithRawPrompt(prompt, { ...requestContext, capabilitiesPrepared: true });
+                    try {
+                        return await provider.generateWithRawPrompt(prompt, { ...requestContext, capabilitiesPrepared: true, allowPromptProbe: capabilities.isUnknown === true });
+                    } catch (error) {
+                        // Later spans then fit below what this model actually accepts.
+                        if (capabilities.isUnknown && classifyGenerationFailure(error, attemptConfig.type) === "input-limit") { rememberRejectedPrompt(context, prompt); }
+                        throw error;
+                    }
                 }),
                 progress: (stage, completed) => {
                     progress.report({ message: stage === "requests" ? `Analyzed ${completed} source spans; ${attempts.actual}/${attempts.planned} calls` : stage === "reduction" ? `Reducing summaries; ${attempts.actual}/${attempts.planned} calls` : `Planning source spans: ${completed}` });
@@ -1089,6 +1111,13 @@ export async function generateWithRawPrompt(
 
         debugLog(`[${featureName}] Calling ${provider} with prompt length: ${prompt.length}`);
 
+        // Raw prompts (changelog, history analysis) use discovered model limits;
+        // an unlisted model gets the bounded probe instead of the 4K fallback.
+        owned.context.diffByteSize = Buffer.byteLength(prompt, "utf8");
+        const initialProvider = await getProviderInstance(validatedConfig);
+        await initialProvider.prepareCapabilities(owned.context);
+        owned.context.allowPromptProbe = initialProvider.getCapabilities().isUnknown === true;
+
         // Generate the content using the raw prompt
         const supportOperation: SupportOperation = featureName === "changelog"
             ? "generate_changelog"
@@ -1117,6 +1146,23 @@ export async function generateWithRawPrompt(
     } finally {
         // Clean up request tracking
         owned.dispose();
+    }
+}
+
+/** Effective input budget of the selected model, or undefined when no trustworthy limit is known. */
+export async function getModelInputBudget(config: ApiConfig): Promise<number | undefined> {
+    try {
+        const provider = await getProviderInstance(config);
+        const { context, dispose } = beginGenerationOperation("global");
+        try {
+            // Any size above the probe threshold enables the one bounded metadata lookup.
+            await provider.prepareCapabilities({ ...context, diffByteSize: Number.MAX_SAFE_INTEGER });
+        } finally { dispose(); }
+        const capabilities = provider.getCapabilities();
+        return capabilities.isUnknown ? undefined : effectiveInputBudget(capabilities);
+    } catch (error) {
+        debugLog("Model input budget lookup failed:", error);
+        return undefined;
     }
 }
 
