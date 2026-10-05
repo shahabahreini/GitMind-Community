@@ -1,7 +1,8 @@
+import { RequestContext, runRequest } from "./requestContext";
 import * as vscode from 'vscode';
 import { debugLog, diagnosticLog } from "../debug/logger";
 import { BaseAIProvider, GenerationOptions } from './base';
-import { ProviderApiError, ProviderErrorCategory } from './recovery';
+import { normalizeProviderError, ProviderApiError, ProviderErrorCategory } from './recovery';
 
 /** Shown in the Copilot consent dialog so users know why GitMind asks for access. */
 export const COPILOT_REQUEST_JUSTIFICATION = "GitMind uses GitHub Copilot to write commit messages from your staged changes.";
@@ -114,6 +115,8 @@ export function mapCopilotRequestError(error: unknown, modelId?: string): Provid
             'temporary-service', error.code, error
         );
     }
+    const normalized = normalizeProviderError(error, "copilot");
+    if (normalized.category !== "unknown") { return normalized; }
     return copilotError(
         "GitHub Copilot could not complete the request. Try again, or choose another Copilot model in Model Settings.",
         'unknown', undefined, error
@@ -221,6 +224,13 @@ export function resolveCopilotChatModel(
 }
 
 export class CopilotProvider extends BaseAIProvider {
+    override async prepareCapabilities(context?: RequestContext): Promise<void> {
+        await runRequest(context, async () => {
+            const model = resolveCopilotChatModel(this.model, await requireCopilotModels());
+            this.rememberModelLimits(this.model, model.maxInputTokens, 1024);
+        });
+    }
+
     constructor(_apiKey: string, model: string) {
         // Copilot does not use API key, so we pass empty string
         super("", model);
@@ -231,6 +241,7 @@ export class CopilotProvider extends BaseAIProvider {
         const token = new vscode.CancellationTokenSource();
         const onAbort = () => token.cancel();
         controller.signal.addEventListener('abort', onAbort);
+        if (controller.signal.aborted) { token.cancel(); }
         let resolvedModelId: string | undefined;
 
         try {
@@ -241,6 +252,8 @@ export class CopilotProvider extends BaseAIProvider {
             resolvedModelId = resolvedModel.id;
             debugLog(`Selected Copilot model: ${resolvedModel.id}`);
 
+            this.rememberModelLimits(this.model, resolvedModel.maxInputTokens, 1024);
+            controller.signal.throwIfAborted();
             const message = vscode.LanguageModelChatMessage.User(prompt);
 
             const inputTokens = await resolvedModel.countTokens(message, token.token);

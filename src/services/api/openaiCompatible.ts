@@ -39,6 +39,8 @@ export abstract class OpenAICompatibleProvider extends BaseAIProvider {
         return normalizeBaseUrl(this.baseUrl);
     }
 
+    protected override capabilityScope(): string { return super.capabilityScope() + "\n" + this.endpoint; }
+
     protected assertConfigured(): void {
         if (!this.model.trim()) {
             throw new Error(`Choose a ${this.provider} model before generating a commit message.`);
@@ -98,6 +100,10 @@ export abstract class OpenAICompatibleProvider extends BaseAIProvider {
             );
         }
         const body = await response.json() as { data?: Array<{ id?: unknown }> };
+        for (const model of body.data ?? []) {
+            const metadata = model as { id?: unknown; context_length?: unknown; max_output_tokens?: unknown };
+            if (typeof metadata.id === "string") { this.rememberModelLimits(metadata.id, metadata.context_length, metadata.max_output_tokens); }
+        }
         return [...new Set((body.data ?? [])
             .map(model => typeof model.id === "string" ? model.id.trim() : "")
             .filter((id): id is string => id.length > 0))]

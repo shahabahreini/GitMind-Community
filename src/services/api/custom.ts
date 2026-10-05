@@ -1,3 +1,6 @@
+import { answerText } from "./capabilities";
+import { ModelCapabilities } from "./capabilities";
+import { normalizeProviderError, ProviderApiError } from "./recovery";
 import { debugLog } from "../debug/logger";
 import { RequestManager } from "../../utils/requestManager";
 import { BaseAIProvider, GenerationOptions } from "./base";
@@ -15,6 +18,11 @@ export class CustomProvider extends BaseAIProvider {
         model: string
     ) {
         super(apiKey, model);
+    }
+
+    override getCapabilities(): ModelCapabilities {
+        const capabilities = super.getCapabilities();
+        return { ...capabilities, countTokens: prompt => capabilities.countTokens(JSON.stringify(this.buildRequestBody(this.requestFormat, prompt, this.model))) };
     }
 
     protected async generateResponse(prompt: string, _options?: GenerationOptions): Promise<string> {
@@ -42,6 +50,9 @@ export class CustomProvider extends BaseAIProvider {
 
             // Build request body using the template
             const requestBody = this.buildRequestBody(this.requestFormat, prompt, this.model);
+            if (this.requestFormat === "openai") { requestBody.max_tokens = _options?.maxTokens ?? 1024; }
+            if (this.requestFormat === "anthropic") { requestBody.max_tokens = _options?.maxTokens ?? 1024; }
+            if (this.requestFormat === "gemini") { requestBody.generationConfig = { ...requestBody.generationConfig, maxOutputTokens: _options?.maxTokens ?? 1024 }; }
 
             const response = await loggedFetch(`${this.baseUrl}${this.endpoint}`, {
                 method: 'POST',
@@ -61,7 +72,7 @@ export class CustomProvider extends BaseAIProvider {
 
             // Extract response based on the response format
             const result = this.extractResponse(data, this.responseFormat);
-            return this.formatCommitMessage(result);
+            return this.enforceCommitMessageFormat(result);
         } catch (error) {
             debugLog('Error in CustomProvider:', error);
 
@@ -70,7 +81,7 @@ export class CustomProvider extends BaseAIProvider {
                 throw new Error('Request was cancelled');
             }
 
-            throw new Error(`Failed to generate commit message: ${error instanceof Error ? error.message : String(error)}`);
+            throw normalizeProviderError(error, "custom");
         }
     }
 
@@ -101,40 +112,37 @@ export class CustomProvider extends BaseAIProvider {
                 return {
                     model: model,
                     messages: [
-                        { role: 'system', content: 'You are a helpful assistant that generates git commit messages.' },
+                        { role: 'system', content: 'You analyze source changes and follow the requested output format.' },
                         { role: 'user', content: prompt }
                     ]
                 };
             }
 
-            // Replace placeholders in the template
-            let formatted = requestFormat
-                // Uppercase placeholders
-                .replace(/\{\{MODEL\}\}/g, model)
-                .replace(/\{\{PROMPT\}\}/g, prompt)
-                // Lowercase placeholders (as shown in UI examples)
-                .replace(/\{\{model\}\}/g, model)
-                .replace(/\{\{prompt\}\}/g, prompt);
-
-            // Also support {{MESSAGES}} placeholder for OpenAI-style APIs
-            if (formatted.includes('{{MESSAGES}}') || formatted.includes('{{messages}}')) {
-                const messagesArray = [
-                    { role: 'system', content: 'You are a helpful assistant that generates git commit messages.' },
-                    { role: 'user', content: prompt }
-                ];
-                formatted = formatted
-                    .replace('{{MESSAGES}}', JSON.stringify(messagesArray))
-                    .replace('{{messages}}', JSON.stringify(messagesArray));
-            }
-
-            return JSON.parse(formatted);
+            const messagesArray = [
+                { role: 'system', content: 'You analyze source changes and follow the requested output format.' },
+                { role: 'user', content: prompt }
+            ];
+            // Parse string placeholders before substitution: quotes, newlines and
+            // replacement-string metacharacters in source must remain literal.
+            const formatted = requestFormat
+                .replace(/(?<!")\{\{messages\}\}(?!")/gi, () => '"{{messages}}"');
+            const replace = (value: any): any => {
+                if (typeof value === "string") {
+                    if (/^\{\{messages\}\}$/i.test(value)) { return messagesArray; }
+                    return value.replace(/\{\{(model|prompt)\}\}/gi, (_match, name: string) => name.toLowerCase() === "model" ? model : prompt);
+                }
+                if (Array.isArray(value)) { return value.map(replace); }
+                if (value && typeof value === "object") { return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, replace(item)])); }
+                return value;
+            };
+            return replace(JSON.parse(formatted));
         } catch (error) {
             debugLog('Error parsing request format:', error);
             // Fallback to OpenAI-compatible format with messages array
             return {
                 model: model,
                 messages: [
-                    { role: 'system', content: 'You are a helpful assistant that generates git commit messages.' },
+                    { role: 'system', content: 'You analyze source changes and follow the requested output format.' },
                     { role: 'user', content: prompt }
                 ]
             };
@@ -157,15 +165,13 @@ export class CustomProvider extends BaseAIProvider {
                 }
             } else if (fmt === 'anthropic') {
                 // Claude streaming or messages API often returns content as array of blocks
-                const text = data?.content?.[0]?.text ?? data?.content;
+                const text = answerText(data?.content);
                 if (typeof text === 'string' && text.length > 0) {
                     return text;
                 }
             } else if (fmt === 'gemini') {
                 // Gemini style (Vertex/Generative Language) typical path
-                const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
-                    ?? data?.candidates?.[0]?.content?.parts?.find?.((p: any) => typeof p?.text === 'string')?.text
-                    ?? data?.output_text;
+                const text = answerText(data?.candidates?.[0]?.content?.parts ?? data?.output_text);
                 if (typeof text === 'string' && text.length > 0) {
                     return text;
                 }
@@ -193,7 +199,7 @@ export class CustomProvider extends BaseAIProvider {
                 if (typeof result === 'string') {
                     return result;
                 }
-                return JSON.stringify(result);
+                return answerText(result);
             }
 
             // Heuristics/fallbacks
@@ -204,13 +210,14 @@ export class CustomProvider extends BaseAIProvider {
             }
 
             // Anthropic-like
-            const claudeFallback = data?.content?.[0]?.text ?? data?.content;
+            const claudeFallback = data?.content === undefined ? "" : answerText(data.content);
             if (typeof claudeFallback === 'string' && claudeFallback.length > 0) {
                 return claudeFallback;
             }
 
             // Gemini-like
-            const geminiFallback = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? data?.output_text;
+            const geminiContent = data?.candidates?.[0]?.content?.parts ?? data?.output_text;
+            const geminiFallback = geminiContent === undefined ? "" : answerText(geminiContent);
             if (typeof geminiFallback === 'string' && geminiFallback.length > 0) {
                 return geminiFallback;
             }
@@ -229,7 +236,7 @@ export class CustomProvider extends BaseAIProvider {
                 return data.output;
             }
 
-            return JSON.stringify(data);
+            throw new ProviderApiError("Custom API returned an invalid response shape.", { category: "invalid-response" });
         } catch (error) {
             debugLog('Error extracting response:', error);
             // Final fallback attempts
@@ -237,7 +244,7 @@ export class CustomProvider extends BaseAIProvider {
             if (typeof openai === 'string' && openai.length > 0) {
                 return openai;
             }
-            return JSON.stringify(data);
+            throw new ProviderApiError("Custom API returned an invalid response shape.", { category: "invalid-response" });
         }
     }
 
@@ -427,4 +434,3 @@ export async function validateCustomAPI(
         };
     }
 }
-

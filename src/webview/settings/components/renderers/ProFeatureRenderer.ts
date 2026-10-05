@@ -1,3 +1,4 @@
+import { resolveLargeDiffSettings } from "../../../../config/largeDiffSettings";
 // src/webview/settings/components/renderers/ProFeatureRenderer.ts
 import { BaseRenderer } from "./BaseRenderer";
 import { FormUtils } from "../utils/FormUtils";
@@ -677,7 +678,7 @@ export class ProFeatureRenderer extends BaseRenderer {
     }
 
     private renderLargeDiffHandlingSection(): string {
-        const largeDiffHandling = this.settings.pro?.largeDiffHandling || { enabled: false, chunkSize: 1000, maxChunks: 5 };
+        const largeDiffHandling = resolveLargeDiffSettings(this.settings.pro?.largeDiffHandling);
         const isPro = this.isProUser() || this.isDevModeEnabled();
         const disabledState = !isPro;
         const lockBadge = this.renderLockBadge(disabledState);
@@ -690,7 +691,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                 <div class="setting-row ${disabledState ? 'locked' : ''}">
                     <div class="setting-info">
                         <div class="setting-label">Enable Large Diff Processing</div>
-                        <div class="setting-desc">Break large diffs into smaller chunks and intelligently combine results</div>
+                        <div class="setting-desc">Analyze every change in budgeted groups and combine the most impactful results. Provider request and token rate limits still apply.</div>
                     </div>
                     <div class="setting-control">
                         <div class="switch-container ${disabledState ? 'disabled' : ''}">
@@ -707,25 +708,29 @@ export class ProFeatureRenderer extends BaseRenderer {
                 
                 <div class="compact-settings">
                     <div class="compact-setting ${disabledState ? 'locked' : ''}">
-                        <span>Chunk Size (lines)</span>
+                        <span>Preferred Source Window (lines)</span>
                         <input type="number" id="chunkSize" 
                             class="input-field" 
                             value="${largeDiffHandling.chunkSize}" 
-                            min="500" max="2000" step="100"
+                            min="10" max="10000" step="10"
                             ${disabledState ? 'disabled' : ''} 
                             data-setting="pro.largeDiffHandling.chunkSize" />
                     </div>
                     <div class="compact-setting ${disabledState ? 'locked' : ''}">
-                        <span>Max Chunks</span>
-                        <input type="number" id="maxChunks" 
+                        <span>Batch Size (all batches run automatically)</span>
+                        <input type="number" id="batchSize"
                             class="input-field" 
-                            value="${largeDiffHandling.maxChunks}" 
-                            min="1" max="10" step="1"
+                            value="${largeDiffHandling.batchSize}"
+                            min="1" max="100" step="1"
                             ${disabledState ? 'disabled' : ''} 
-                            data-setting="pro.largeDiffHandling.maxChunks" />
+                            data-setting="pro.largeDiffHandling.batchSize" />
                     </div>
                 </div>
                 
+                <div class="compact-setting">
+                        <span>Concurrent Requests (lower this if rate limited)</span>
+                    <input type="number" id="largeDiffConcurrency" value="${largeDiffHandling.concurrency}" min="1" max="8" step="1" data-setting="pro.largeDiffHandling.concurrency" ${disabledState ? 'disabled' : ''}/>
+                </div>
                 ${!isPro ? `
                 <div class="pro-upsell">
                     <p>Upgrade to GitMind Pro to enable large diff processing.</p>

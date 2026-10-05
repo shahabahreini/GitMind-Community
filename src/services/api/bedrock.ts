@@ -1,3 +1,5 @@
+import { answerText } from "./capabilities";
+import { ProviderApiError } from "./recovery";
 import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
 import { fromIni } from "@aws-sdk/credential-providers";
 import { BaseAIProvider, GenerationOptions } from "./base";
@@ -27,7 +29,9 @@ export class BedrockProvider extends BaseAIProvider {
                 ...(options?.topP === undefined ? {} : { topP: options.topP }),
             },
         }), { abortSignal: this.getAbortController().signal });
-        const content = response.output?.message?.content?.find(part => typeof part.text === "string")?.text;
+        if (response.stopReason === "max_tokens") { throw new ProviderApiError("Provider output was truncated.", { category: "invalid-response" }); }
+        if (response.stopReason === "guardrail_intervened" || response.stopReason === "content_filtered") { throw new ProviderApiError("Provider blocked the answer.", { category: "content-filter" }); }
+        const content = answerText(response.output?.message?.content);
         if (!content) {
             throw new Error("Amazon Bedrock returned an empty Converse response.");
         }

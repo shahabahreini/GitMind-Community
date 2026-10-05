@@ -1,22 +1,25 @@
+import { RequestContext } from "./requestContext";
+import { ModelCapabilities } from "./capabilities";
 
 /**
  * Interface for AI providers
  */
 export interface AIProvider {
+    getCapabilities(): ModelCapabilities;
     /**
      * Generate a commit message based on the diff
      * @param diff The git diff
      * @param customContext Optional custom context
      * @returns The generated commit message
      */
-    generateCommitMessage(diff: string, customContext?: string): Promise<string>;
+    generateCommitMessage(diff: string, customContext?: string, context?: RequestContext): Promise<string>;
 
     /**
      * Generate content using a raw prompt
      * @param prompt The prompt to send
      * @returns The generated content
      */
-    generateWithRawPrompt(prompt: string): Promise<string>;
+    generateWithRawPrompt(prompt: string, context?: RequestContext): Promise<string>;
 
     /**
      * Generate commit history analysis
@@ -25,7 +28,7 @@ export interface AIProvider {
      * @param includeAuthorInfo Whether to include author info
      * @returns The analysis result
      */
-    generateCommitHistoryAnalysis(commitHistory: string, maxCommits: number, includeAuthorInfo: boolean): Promise<string>;
+    generateCommitHistoryAnalysis(commitHistory: string, maxCommits: number, includeAuthorInfo: boolean, context?: RequestContext): Promise<string>;
 
     /**
      * Fetch available models

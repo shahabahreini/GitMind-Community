@@ -1,3 +1,4 @@
+import { normalizeProviderError } from "./recovery";
 import { debugLog } from "../debug/logger";
 import { getProviderDefaultModel } from "../../config/providerCatalog";
 import { RequestManager } from "../../utils/requestManager";
@@ -208,12 +209,7 @@ export class GrokProvider extends BaseAIProvider {
             debugLog(`Grok API response received successfully`);
             return message.trim();
         } catch (error) {
-            debugLog(`Grok API call failed: ${error}`);
-            if (error instanceof Error && error.name === 'AbortError') {
-                throw new Error('Request was cancelled');
-            }
-            const errorInfo = APIErrorHandler.handleAPIError(error as Error, "grok");
-            throw new Error(errorInfo.userMessage);
+            throw normalizeProviderError(error, "grok");
         }
     }
 

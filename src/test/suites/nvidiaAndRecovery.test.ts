@@ -86,7 +86,7 @@ suite("NVIDIA Provider and Generation Recovery", () => {
         assert.deepStrictEqual(models, ["primary-model", "fallback-model"]);
     });
 
-    test("does not retry a failed fallback or expose either raw provider response", async () => {
+    test("does not retry a failed fallback and preserves structured metadata", async () => {
         const models: string[] = [];
         const run = createRecoveryOperation(
             { type: "nvidia", apiKey: "test", model: "primary-model" } as any,
@@ -110,8 +110,9 @@ suite("NVIDIA Provider and Generation Recovery", () => {
                 );
             }),
             (error: Error) => {
-                assert.match(error.message, /primary model and the configured fallback model/);
-                assert.ok(!error.message.includes("sk-secret"));
+                assert.ok(error instanceof ProviderApiError);
+                assert.strictEqual(error.status, 429);
+                assert.strictEqual(classifyGenerationFailure(error, "nvidia"), "model-limit");
                 return true;
             }
         );

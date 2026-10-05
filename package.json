@@ -1017,6 +1017,37 @@
           "type": "string",
           "default": "",
           "description": "Last time license status was checked (internal use)"
+        },
+        "gitmind.pro.largeDiffHandling.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Analyze every source span in large diffs (Pro)."
+        },
+        "gitmind.pro.largeDiffHandling.chunkSize": {
+          "type": "integer",
+          "default": 1000,
+          "minimum": 10,
+          "maximum": 10000,
+          "description": "Preferred source lines per chunk; model budgets may require smaller chunks."
+        },
+        "gitmind.pro.largeDiffHandling.batchSize": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Chunks per batch. Defaults to five; legacy maxChunks is used when unset. Subsequent batches run automatically."
+        },
+        "gitmind.pro.largeDiffHandling.concurrency": {
+          "type": "integer",
+          "default": 3,
+          "minimum": 1,
+          "maximum": 8,
+          "description": "Concurrent requests within each large-diff batch."
+        },
+        "gitmind.pro.largeDiffHandling.maxChunks": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "deprecationMessage": "Use batchSize instead. All chunks are now processed."
         }
       }
     },
@@ -1528,20 +1559,21 @@
     "test:status": "node scripts/test-status.js",
     "clean": "rimraf dist out",
     "prepare": "pnpm run compile",
-    "version": "echo 'Version updated to %s'"
+    "version": "echo 'Version updated to %s'",
+    "test:generation": "node scripts/test-generation.mjs"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
-    "@types/node": "^24.13.6",
-    "@types/sanitize-html": "^2.16.1",
+    "@types/node": "^24.19.1",
+    "@types/sanitize-html": "^2.16.2",
     "@types/vscode": "1.101.0",
-    "@typescript-eslint/eslint-plugin": "^8.70.1",
-    "@typescript-eslint/parser": "^8.70.1",
+    "@typescript-eslint/eslint-plugin": "^8.71.0",
+    "@typescript-eslint/parser": "^8.71.0",
     "@vscode/test-cli": "^0.0.15",
     "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "3.9.2",
     "esbuild": "^0.28.2",
-    "eslint": "^10.11.0",
+    "eslint": "^10.12.0",
     "npm-run-all2": "^9.0.3",
     "ovsx": "1.2.0",
     "rimraf": "^6.1.3",
@@ -1549,11 +1581,11 @@
     "vitepress": "^1.6.4"
   },
   "dependencies": {
-    "@aws-sdk/client-bedrock-runtime": "^3.1140.0",
-    "@aws-sdk/credential-providers": "^3.1140.0",
-    "@google/genai": "^2.24.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.1146.0",
+    "@aws-sdk/credential-providers": "^3.1146.0",
+    "@google/genai": "^2.27.0",
     "axios": "^1.20.0",
-    "sanitize-html": "^2.17.7"
+    "sanitize-html": "^2.18.0"
   },
   "repository": {
     "type": "git",

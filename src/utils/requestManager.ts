@@ -12,10 +12,6 @@ export class RequestManager {
     }
 
     public getController(): AbortController {
-        // If there's an existing controller, abort it
-        if (this.currentController) {
-            this.currentController.abort();
-        }
         // Create new controller
         this.currentController = new AbortController();
         return this.currentController;

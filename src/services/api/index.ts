@@ -1,3 +1,8 @@
+import { randomUUID } from "node:crypto";
+import { RequestContext } from "./requestContext";
+import { modelCapabilities, assertPromptFits } from "./capabilities";
+import { generateBudgeted, DiffInput, isOutputTruncation } from "./budgetedGeneration";
+import { readLargeDiffSettings, LargeDiffSettings } from "../../config/largeDiffSettings";
 // src/services/api/index.ts
 import * as vscode from "vscode";
 import {
@@ -221,27 +226,19 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = Object.fromEntries(
 
 // Request management
 const activeRequests = new Map<string, AbortController>();
+const operationRepositories = new Map<string, string>();
 
 export function cancelCurrentRequest(requestId?: string): void {
-    if (requestId) {
-        const controller = activeRequests.get(requestId);
-        if (controller) {
-            controller.abort();
-            activeRequests.delete(requestId);
-            debugLog(`Request cancelled for ${requestId}`);
+    for (const [key, controller] of activeRequests) {
+        if (!requestId || key === requestId || operationRepositories.get(key) === requestId) {
+            controller.abort(new ProviderApiError("Request was cancelled", { category: "cancelled" }));
         }
-    } else {
-        for (const controller of activeRequests.values()) {
-            controller.abort();
-        }
-        activeRequests.clear();
-        debugLog("All current requests cancelled");
     }
 }
 
 export function isRequestActive(requestId?: string): boolean {
     if (requestId) {
-        return activeRequests.has(requestId);
+        return activeRequests.has(requestId) || [...operationRepositories.values()].includes(requestId);
     }
     return activeRequests.size > 0;
 }
@@ -341,101 +338,100 @@ async function handleApiError(
     });
 }
 
+export function beginGenerationOperation(requestId: string, operationId?: string): { context: RequestContext; dispose: () => void } {
+    const controller = new AbortController();
+    const key = operationId ?? randomUUID();
+    activeRequests.set(key, controller);
+    const context = { operationId: key, signal: controller.signal };
+    operationRepositories.set(key, requestId);
+    return { context, dispose: () => {
+        if (activeRequests.get(key) === controller) { activeRequests.delete(key); operationRepositories.delete(key); }
+    } };
+}
+
 export async function generateCommitMessage(
     config: ApiConfig,
-    diff: string,
+    diff: DiffInput,
     customContext: string = "",
     repositoryRoot?: string,
     operationId?: string,
+    context?: RequestContext,
 ): Promise<string> {
-    const startTime = Date.now();
-    const diagnostics = operationId ?? startDiagnosticOperation("provider", "generate_commit").id;
-    diagnosticLog({
-        subsystem: "provider", event: "provider.generation_started", functionName: "generateCommitMessage",
-        operationId: diagnostics, provider: config.type as SupportProvider,
-        data: { diffSizeBucket: Math.ceil(diff.length / 10_000) * 10_000, hasCustomContext: Boolean(customContext) },
-        support: { name: "operation_progress", operation: "generate_commit", outcome: "success" },
-    });
-
+    const owned = context ? undefined : beginGenerationOperation(repositoryRoot ?? "global", operationId);
+    context ??= owned!.context;
+    const promptConfig = context.promptConfig ?? getPromptConfig();
+    let inputIterator: AsyncIterator<string> | undefined;
     try {
-        // Set up request tracking
-        const controller = new AbortController();
-        const requestId = repositoryRoot || 'global';
-        activeRequests.set(requestId, controller);
-
-        // First validate and potentially update the configuration
+        context.signal?.throwIfAborted();
         const validatedConfig = await validateAndUpdateConfig(config);
-        if (!validatedConfig) {
-            diagnosticLog({ subsystem: "configuration", event: "configuration.invalid", functionName: "generateCommitMessage", operationId: diagnostics, provider: config.type as SupportProvider, outcome: "failure", support: { name: "operation_progress", operation: "generate_commit", outcome: "failure", errorCategory: "configuration" } });
-            throw new Error(`${getProviderName(config.type)} configuration is invalid. Please check your API key and settings.`);
+        if (!validatedConfig) { throw new ProviderApiError("Provider configuration is invalid.", { category: "configuration" }); }
+        context.signal?.throwIfAborted();
+        showModelInfo(validatedConfig);
+        const settings = vscode.workspace.getConfiguration("gitmind");
+        const largeDiffSettings = readLargeDiffSettings(settings);
+        context.largeDiffEnabled = largeDiffSettings.enabled;
+        const initialProvider = await getProviderInstance(validatedConfig);
+        await initialProvider.prepareCapabilities(context);
+        context.generationOptions ??= initialProvider.getDefaultGenerationOptions() ?? {};
+        const recovery = createRecoveryOperation(validatedConfig, { operationId: context.operationId });
+        if (typeof diff !== "string") {
+            const iterator = diff[Symbol.asyncIterator]();
+            inputIterator = iterator;
+            let prefix = "";
+            let exhausted = false;
+            const budget = initialProvider.getCapabilities().contextTokens;
+            while (prefix.length < budget) {
+                context.signal?.throwIfAborted();
+                const next = await iterator.next();
+                if (next.done) { exhausted = true; break; }
+                prefix += next.value;
+                if (largeDiffSettings.enabled && prefix.split("\n").length > largeDiffSettings.chunkSize) { break; }
+            }
+            diff = exhausted ? prefix : (async function* () {
+                try {
+                    yield prefix;
+                    while (true) {
+                        const next = await iterator.next();
+                        if (next.done) { break; }
+                        yield next.value;
+                    }
+                } finally { await iterator.return?.(); }
+            })();
         }
-
-        // Log estimated token usage
-        const tokenEstimate = estimateTokens(diff);
-        diagnosticLog({ subsystem: "provider", event: "provider.token_estimated", functionName: "generateCommitMessage", operationId: diagnostics, provider: config.type as SupportProvider, data: { tokenEstimate } });
-
-        // Get repository name for diagnostics
-        let repositoryName: string | undefined;
-        if (repositoryRoot) {
-            // Extract repository name from path
-            repositoryName = repositoryRoot.split('/').pop() || 'Unknown Repository';
-        } else {
-            // Fallback to old behavior for backward compatibility
-            try {
-                const workspaceFolders = vscode.workspace.workspaceFolders;
-                if (workspaceFolders) {
-                    const { validateGitRepository } = await import('../git/repository.js');
-                    const repoPath = await validateGitRepository(workspaceFolders[0]);
-                    repositoryName = repoPath.split('/').pop() || 'Unknown Repository';
+        let requiresChunking = typeof diff !== "string";
+        if (typeof diff === "string") {
+            await showDiagnosticsInfo(validatedConfig, diff);
+            const prompt = await generateCommitPrompt(diff, promptConfig, customContext);
+            const capabilities = initialProvider.getCapabilities();
+            context.diagnosticBudget = {
+                estimatedTokens: capabilities.countTokens(prompt),
+                modelLimit: Math.max(0, capabilities.contextTokens - capabilities.outputTokens - 256),
+            };
+            try { assertPromptFits(prompt, initialProvider.getCapabilities()); }
+            catch { requiresChunking = true; }
+            requiresChunking ||= largeDiffSettings.enabled && diff.split("\n").length > largeDiffSettings.chunkSize;
+            if (!requiresChunking) {
+                try {
+                    return await recovery(async attemptConfig => {
+                        const provider = await getProviderInstance(attemptConfig);
+                        return provider.generateWithRawPrompt(prompt, context);
+                    });
+                } catch (error) {
+                    // Runtime input limits or a smaller fallback can require a new plan.
+                    if (classifyGenerationFailure(error, validatedConfig.type) !== "input-limit" && !isOutputTruncation(error)) { throw error; }
+                    requiresChunking = true;
                 }
-            } catch (error) {
-                debugLog('Could not get repository name for diagnostics:', error);
             }
         }
-
-        // Show diagnostics if enabled
-        await showDiagnosticsInfo(validatedConfig, diff, repositoryName);
-
-        // Show model info if enabled
-        showModelInfo(validatedConfig);
-
-        // Check if this is a large diff and if the Pro feature is enabled
-        const subscriptionManager = SubscriptionManager.getInstance();
-        const settings = vscode.workspace.getConfiguration("gitmind");
-        const proSettings = settings.get("pro") as any || {};
-        const largeDiffSettings = proSettings.largeDiffHandling || { enabled: false, chunkSize: 1000, maxChunks: 5 };
-
-        const diffProcessor = DiffProcessor.getInstance();
-        const isLargeDiff = diffProcessor.isLargeDiff(diff, { threshold: largeDiffSettings.chunkSize });
-
-        // If it's a large diff and the Pro feature is enabled, use chunked processing
-        if (isLargeDiff && largeDiffSettings.enabled && await subscriptionManager.isProUser()) {
-            diagnosticLog({ subsystem: "provider", event: "provider.large_diff_processing", functionName: "generateCommitMessage", operationId: diagnostics, provider: config.type as SupportProvider, data: { tokenEstimate }, support: { name: "operation_progress", operation: "generate_commit", outcome: "success" } });
-            return await processLargeDiff(validatedConfig, diff, customContext, largeDiffSettings, diagnostics);
+        if (!largeDiffSettings.enabled || !await SubscriptionManager.getInstance().isProUser()) {
+            throw new ProviderApiError("This diff requires large-diff handling. Enable it with Pro, or stage a smaller change.", { category: "input-limit" });
         }
-
-        // Generate the commit message, with at most one Pro recovery attempt.
-        const result = await generateMessageWithRecovery(validatedConfig, diff, customContext, undefined, diagnostics);
-
-        return result;
-    } catch (unknownError) {
-        const duration = Date.now() - startTime;
-        const error = unknownError instanceof Error ? unknownError : new Error(String(unknownError));
-        diagnosticLog({ subsystem: "provider", event: "provider.generation_failed", functionName: "generateCommitMessage", operationId: diagnostics, provider: config.type as SupportProvider, outcome: "failure", durationMs: duration, data: { errorName: error.name }, support: { name: "operation_progress", operation: "generate_commit", outcome: "failure", errorCategory: "unknown" } });
-
-        // Handle cancellation specifically
-        if (error.message === 'Request was cancelled' || error.message === 'User cancelled token count confirmation') {
-            debugLog("Request was cancelled by user");
-            return "";
-        }
-
-        // Handle API errors with context
-        const errorContext = { diffSize: diff.length };
-        throw await handleApiError(error, config, errorContext);
+        return await processLargeDiff(validatedConfig, diff, customContext, largeDiffSettings, context, promptConfig, recovery);
+    } catch (error) {
+        throw normalizeProviderError(error, config.type);
     } finally {
-        // Clean up request tracking
-        const requestId = repositoryRoot || 'global';
-        activeRequests.delete(requestId);
+        try { await inputIterator?.return?.(); }
+        finally { owned?.dispose(); }
     }
 }
 
@@ -455,8 +451,15 @@ export function createRecoveryOperation(
 ): RecoveryOperation {
     let effectiveConfig = config;
     let recoveryDecision: Promise<{ config: ApiConfig; kind: "fallback" | "retry" } | null> | undefined;
-    let recoveryAttemptClaimed = false;
+    let transitioned = false;
     const supportOperation = dependencies.supportOperation ?? "generate_commit";
+    const recoverySettings = vscode.workspace.getConfiguration("gitmind");
+    const readSetting = dependencies.getSetting ?? (<T>(key: string, fallback: T): T => recoverySettings.get<T>(key, fallback));
+    const policy = {
+        retry: readSetting("pro.automaticRetry.enabled", false),
+        fallback: readSetting("pro.modelFallback.enabled", false),
+        models: { ...readSetting<Record<string, string>>("pro.modelFallback.models", {}) },
+    };
 
     const decideRecovery = async (
         error: unknown,
@@ -469,20 +472,18 @@ export function createRecoveryOperation(
             return null;
         }
 
-        const settings = vscode.workspace.getConfiguration("gitmind");
-        const getSetting = dependencies.getSetting
-            ?? (<T>(key: string, defaultValue: T): T => settings.get<T>(key, defaultValue));
         const notify = dependencies.notify
             ?? ((message: string): void => { void vscode.window.showInformationMessage(message); });
-        const retryEnabled = getSetting("pro.automaticRetry.enabled", false);
-        const fallbackEnabled = getSetting("pro.modelFallback.enabled", false);
-        const fallbackModels = getSetting<Record<string, string>>("pro.modelFallback.models", {});
+        const retryEnabled = policy.retry;
+        const fallbackEnabled = policy.fallback;
+        const fallbackModels = policy.models;
         const failure = classifyGenerationFailure(normalizedError, attemptedConfig.type);
 
         if (fallbackEnabled && (failure === "model-limit" || failure === "rate-limit")) {
             const fallbackModel = fallbackModels[attemptedConfig.type]?.trim();
             if (fallbackModel && fallbackModel !== attemptedConfig.model) {
                 effectiveConfig = withModel(attemptedConfig, fallbackModel);
+                transitioned = true;
                 notify(
                     `${getProviderName(attemptedConfig.type)} reached a request limit. Trying fallback model '${fallbackModel}' once.`
                 );
@@ -496,6 +497,7 @@ export function createRecoveryOperation(
         }
 
         if (retryEnabled && (failure === "timeout" || failure === "temporary-service" || failure === "network")) {
+            transitioned = true;
             notify(
                 `${getProviderName(attemptedConfig.type)} is temporarily unavailable. Retrying once.`
             );
@@ -511,17 +513,23 @@ export function createRecoveryOperation(
     };
 
     return async <T>(operation: (attemptConfig: ApiConfig) => Promise<T>): Promise<T> => {
+        if (recoveryDecision) { await recoveryDecision; }
         const attemptedConfig = effectiveConfig;
+        const beforeTransition = !transitioned;
         try {
             return await operation(attemptedConfig);
         } catch (error) {
+            const failure = classifyGenerationFailure(error, attemptedConfig.type);
+            if (!["model-limit", "rate-limit", "timeout", "temporary-service", "network"].includes(failure)) {
+                throw normalizeProviderError(error, attemptedConfig.type);
+            }
             // A shared promise makes model switching atomic for concurrent large-diff chunks.
             recoveryDecision ??= decideRecovery(error, attemptedConfig);
             const decision = await recoveryDecision;
-            if (!decision || recoveryAttemptClaimed) {
+            if (!decision || !beforeTransition) {
                 throw normalizeProviderError(error, attemptedConfig.type);
             }
-            recoveryAttemptClaimed = true;
+            transitioned = true;
             try {
                 const result = await operation(decision.config);
                 diagnosticLog({
@@ -530,17 +538,13 @@ export function createRecoveryOperation(
                     support: { name: "recovery_completed", operation: supportOperation, outcome: "success", recoveryAction: decision.kind === "fallback" ? "fallback_model" : "retry_same_model" }
                 });
                 return result;
-            } catch {
+            } catch (retryError) {
                 diagnosticLog({
                     subsystem: "recovery", event: "recovery.failed", functionName: "createRecoveryOperation",
                     operationId: dependencies.operationId, provider: attemptedConfig.type as SupportProvider, outcome: "failure",
                     support: { name: "recovery_completed", operation: supportOperation, outcome: "failure", recoveryAction: decision.kind === "fallback" ? "fallback_model" : "retry_same_model" }
                 });
-                const action = decision.kind === "fallback" ? "configured fallback model" : "automatic retry";
-                throw new Error(
-                    `${getProviderName(attemptedConfig.type)} request failed using the primary model and the ${action}. ` +
-                    "Check the provider's usage limits and model availability, then try again."
-                );
+                throw normalizeProviderError(retryError, decision.config.type);
             }
         }
     };
@@ -555,26 +559,20 @@ async function generateMessageWithRecovery(
 ): Promise<string> {
     const operation = recovery ?? createRecoveryOperation(config, { operationId });
     return operation(async (attemptConfig): Promise<string> => {
-        let timeout: NodeJS.Timeout | undefined;
-        try {
-            return await Promise.race([
-                generateMessageWithConfig(attemptConfig, diff, customContext),
-                new Promise<string>((_, reject) => {
-                    timeout = setTimeout(() => reject(new Error("Request timed out during generation")), 55000);
-                }),
-            ]);
-        } finally {
-            if (timeout) {
-                clearTimeout(timeout);
-            }
-        }
+        return generateMessageWithConfig(attemptConfig, diff, customContext);
     });
 }
 
 /**
  * Helper to instantiate the correct provider class
  */
-async function getProviderInstance(config: ApiConfig): Promise<BaseAIProvider> {
+export async function getProviderInstance(config: ApiConfig): Promise<BaseAIProvider> {
+    const provider = await instantiateProvider(config);
+    await applyAdvancedModelConfigDefaults(provider);
+    return provider;
+}
+
+async function instantiateProvider(config: ApiConfig): Promise<BaseAIProvider> {
     const providerConfig = PROVIDER_CONFIGS[config.type];
     if (!providerConfig) {
         throw new Error(`Unsupported API provider: ${config.type}`);
@@ -938,186 +936,38 @@ function getModelName(config: ApiConfig): string {
  */
 async function processLargeDiff(
     config: ApiConfig,
-    diff: string,
+    diff: DiffInput,
     customContext: string,
-    settings: { chunkSize: number, maxChunks: number },
-    operationId?: string,
+    settings: LargeDiffSettings,
+    context: RequestContext,
+    promptConfig: ReturnType<typeof getPromptConfig>,
+    recovery: RecoveryOperation = createRecoveryOperation(config, { operationId: context.operationId }),
 ): Promise<string> {
-    const diffProcessor = DiffProcessor.getInstance();
-    const recovery = createRecoveryOperation(config, { operationId });
-
-    // Show progress notification
-    return vscode.window.withProgress(
-        {
-            location: vscode.ProgressLocation.Notification,
-            title: "Processing large diff",
-            cancellable: true
-        },
-        async (progress, token) => {
-            // Initial hunk-aware split
-            const initialChunks = diffProcessor.splitDiffIntoChunks(diff, settings.chunkSize);
-            debugLog(`[LargeDiff] Initial chunks: ${initialChunks.length} (requested chunkSize=${settings.chunkSize})`);
-
-            // Provider + prompt config
-            const providerKey = config.type.toLowerCase();
-            const promptConfig = getPromptConfig();
-
-            // Helper: validate full prompt length for a chunk
-            const validateChunkPrompt = async (chunk: string, context: string): Promise<{ valid: boolean; length: number; recommendation?: string }> => {
-                const prompt = await generateCommitPrompt(chunk, promptConfig, context);
-                const res = validatePromptLength(prompt, providerKey);
-                debugLog(`[LargeDiff] Prompt validation (len=${res.length}) valid=${res.valid}${res.recommendation ? `, reason=${res.recommendation}` : ''}`);
-                return res;
-            };
-
-            // Helper: adaptively split a chunk until its prompt fits provider limits
-            const adaptChunkToFit = async (chunk: string): Promise<string[]> => {
-                // Start with base context only (exclude part counters to keep check conservative)
-                const baseContext = customContext || "";
-                let validation = await validateChunkPrompt(chunk, baseContext);
-                if (validation.valid) {
-                    return [chunk];
-                }
-
-                // Iteratively shrink by reducing line budget and re-using DiffProcessor splitting
-                let budget = Math.max(50, Math.floor(chunk.split('\n').length * 0.6));
-                const minBudget = 40; // lower bound safeguard
-                let guard = 0;
-                let worklist: string[] = [chunk];
-
-                while (guard++ < 7) {
-                    if (token.isCancellationRequested) {
-                        throw new Error("Request was cancelled");
-                    }
-
-                    const nextRound: string[] = [];
-                    for (const part of worklist) {
-                        const pieces = diffProcessor.splitDiffIntoChunks(part, Math.max(minBudget, budget));
-                        for (const p of pieces) {
-                            const val = await validateChunkPrompt(p, baseContext);
-                            if (val.valid) {
-                                nextRound.push(p);
-                            } else {
-                                // keep for further splitting in the next iteration
-                                nextRound.push(p);
-                            }
-                        }
-                    }
-
-                    // Check if all are valid now
-                    let allValid = true;
-                    for (const p of nextRound) {
-                        const val = await validateChunkPrompt(p, baseContext);
-                        if (!val.valid) {
-                            allValid = false;
-                            break;
-                        }
-                    }
-                    if (allValid) {
-                        debugLog(`[LargeDiff] Adapted chunk into ${nextRound.length} sub-chunks (budget=${budget})`);
-                        return nextRound;
-                    }
-
-                    budget = Math.max(minBudget, Math.floor(budget * 0.7));
-                    worklist = nextRound;
-                    debugLog(`[LargeDiff] Reducing budget to ${budget} and retrying split`);
-                }
-
-                // Fallback to minimal budget split
-                const fallbackPieces = diffProcessor.splitDiffIntoChunks(chunk, minBudget);
-                debugLog(`[LargeDiff] Fallback split produced ${fallbackPieces.length} pieces`);
-                return fallbackPieces;
-            };
-
-            // Build adaptive chunk list
-            const adaptiveChunks: string[] = [];
-            for (const ch of initialChunks) {
-                const parts = await adaptChunkToFit(ch);
-                adaptiveChunks.push(...parts);
-            }
-
-            // Enforce maxChunks budget
-            const totalChunks = Math.min(adaptiveChunks.length, Math.max(1, settings.maxChunks));
-            if (adaptiveChunks.length > totalChunks) {
-                debugLog(`[LargeDiff] Truncating chunks from ${adaptiveChunks.length} to maxChunks=${totalChunks}`);
-            }
-            const chunks = adaptiveChunks.slice(0, totalChunks);
-
-            // Concurrency setting. Recovery state is shared by every chunk.
-            const proSettings = vscode.workspace.getConfiguration('gitmind').get('pro') as any || {};
-            const ldSettings = (proSettings.largeDiffHandling || {}) as any;
-            const maxConcurrency: number = Math.max(1, Math.min(8, Number(ldSettings.concurrency) || 3));
-
-            debugLog(`[LargeDiff] Final chunks to process: ${chunks.length}, concurrency=${maxConcurrency}`);
-            chunks.forEach((c, idx) => {
-                const lines = c.split('\n').length;
-                const tokens = estimateTokens(c);
-                debugLog(`[LargeDiff] Chunk ${idx + 1}/${chunks.length}: ${lines} lines, ~${tokens} tokens`);
+    let capabilities = (await getProviderInstance(config)).getCapabilities();
+    return vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: "Processing large diff", cancellable: true }, async (progress, token) => {
+        const controller = new AbortController();
+        const subscription = token.onCancellationRequested(() => controller.abort(new ProviderApiError("Request was cancelled", { category: "cancelled" })));
+        if (token.isCancellationRequested) { controller.abort(new ProviderApiError("Request was cancelled", { category: "cancelled" })); }
+        const signal = context.signal ? AbortSignal.any([context.signal, controller.signal]) : controller.signal;
+        try {
+            return await generateBudgeted(diff, customContext, settings, {
+                signal,
+                capabilities: () => capabilities,
+                renderFinal: text => generateCommitPrompt(text, promptConfig, customContext),
+                send: (render, requestSignal) => recovery(async attemptConfig => {
+                    requestSignal.throwIfAborted();
+                    const provider = await getProviderInstance(attemptConfig);
+                    await provider.prepareCapabilities({ ...context, signal: requestSignal });
+                    capabilities = provider.getCapabilities();
+                    return provider.generateWithRawPrompt(await render(capabilities), { ...context, signal: requestSignal });
+                }),
+                progress: (stage, completed) => {
+                    progress.report({ message: stage === "requests" ? `Analyzed ${completed} source spans` : stage === "reduction" ? `Reducing summaries (round ${completed})` : "Planning source spans" });
+                    diagnosticLog({ subsystem: "provider", event: `generation.${stage}`, functionName: "processLargeDiff", operationId: context.operationId, data: { stage, completed: Math.min(completed, 1000000) }, support: { name: "operation_progress", operation: "generate_commit", stage, completed: Math.min(completed, 1000000) } });
+                },
             });
-
-            const results: string[] = new Array(chunks.length);
-            let completed = 0;
-            const increment = 100 / Math.max(1, chunks.length);
-
-            // Process a single chunk through operation-wide recovery.
-            const processChunkWithRetries = async (index: number): Promise<void> => {
-                const chunk = chunks[index];
-                const ctx = `${customContext ? customContext + "\n" : ""}This is part ${index + 1} of ${chunks.length} from a large change.`;
-                if (token.isCancellationRequested) {
-                    throw new Error("Request was cancelled");
-                }
-
-                const val = await validateChunkPrompt(chunk, ctx);
-                let chunkToSend = chunk;
-                if (!val.valid) {
-                    debugLog(`[LargeDiff] Warning: chunk ${index + 1} prompt still too long at send time; attempting last-mile split`);
-                    chunkToSend = (await adaptChunkToFit(chunk))[0];
-                }
-
-                results[index] = await generateMessageWithRecovery(config, chunkToSend, ctx, recovery);
-                completed++;
-                progress.report({ message: `Processed ${completed}/${chunks.length} chunks`, increment });
-            };
-
-            // Worker pool
-            let nextIndex = 0;
-            const worker = async () => {
-                while (true) {
-                    if (token.isCancellationRequested) {
-                        throw new Error("Request was cancelled");
-                    }
-                    const current = nextIndex++;
-                    if (current >= chunks.length) {
-                        return;
-                    }
-                    await processChunkWithRetries(current);
-                }
-            };
-
-            const workers: Promise<void>[] = [];
-            const poolSize = Math.min(maxConcurrency, chunks.length);
-            for (let i = 0; i < poolSize; i++) {
-                workers.push(worker());
-            }
-
-            await Promise.all(workers);
-
-            // If processing was cancelled, stop here
-            if (token.isCancellationRequested) {
-                throw new Error("Request was cancelled");
-            }
-
-            // If we only have one chunk result, return it directly
-            if (results.length === 1) {
-                return results[0];
-            }
-
-            // Merge deterministically (original order)
-            progress.report({ message: "Creating final summary", increment: 0 });
-            const mergedPrompt = diffProcessor.mergeChunkResults(results);
-            return await generateMessageWithRecovery(config, mergedPrompt, customContext, recovery);
-        }
-    );
+        } finally { subscription.dispose(); }
+    });
 }
 
 async function validateAndUpdateConfig(config: ApiConfig): Promise<ApiConfig | null> {
@@ -1184,11 +1034,9 @@ export async function generateWithRawPrompt(
     allowRecovery: boolean = true
 ): Promise<string> {
     const startTime = Date.now();
+    const owned = beginGenerationOperation("global", startDiagnosticOperation("provider", "generate_commit").id);
 
     try {
-        // Set up request tracking
-        const controller = new AbortController();
-        activeRequests.set('global', controller);
 
         // First validate and potentially update the configuration
         const validatedConfig = await validateAndUpdateConfig(config);
@@ -1227,8 +1075,8 @@ export async function generateWithRawPrompt(
                 ? "learn_history"
                 : "generate_commit";
         const result = allowRecovery
-            ? await createRecoveryOperation(validatedConfig, { supportOperation })((attemptConfig) => generateWithRawPromptInternal(attemptConfig, prompt))
-            : await generateWithRawPromptInternal(validatedConfig, prompt);
+            ? await createRecoveryOperation(validatedConfig, { supportOperation })((attemptConfig) => generateWithRawPromptInternal(attemptConfig, prompt, owned.context))
+            : await generateWithRawPromptInternal(validatedConfig, prompt, owned.context);
 
         return result;
     } catch (unknownError) {
@@ -1247,16 +1095,17 @@ export async function generateWithRawPrompt(
         throw await handleApiError(error, config, errorContext);
     } finally {
         // Clean up request tracking
-        activeRequests.delete('global');
+        owned.dispose();
     }
 }
 
 async function generateWithRawPromptInternal(
     config: ApiConfig,
-    prompt: string
+    prompt: string,
+    context?: RequestContext,
 ): Promise<string> {
     const provider = await getProviderInstance(config);
-    return provider.generateWithRawPrompt(prompt);
+    return provider.generateWithRawPrompt(prompt, context);
 }
 
 export async function generateCommitHistoryAnalysis(
@@ -1266,11 +1115,9 @@ export async function generateCommitHistoryAnalysis(
     includeAuthorInfo: boolean = true
 ): Promise<string> {
     const startTime = Date.now();
+    const owned = beginGenerationOperation("global", startDiagnosticOperation("provider", "generate_commit").id);
 
     try {
-        // Set up request tracking
-        const controller = new AbortController();
-        activeRequests.set('global', controller);
 
         // First validate and potentially update the configuration
         const validatedConfig = await validateAndUpdateConfig(config);
@@ -1285,7 +1132,7 @@ export async function generateCommitHistoryAnalysis(
         // Generate the analysis using the dedicated function
         const recovery = createRecoveryOperation(validatedConfig, { supportOperation: "learn_history" });
         const result = await recovery((attemptConfig) =>
-            generateAnalysisWithConfig(attemptConfig, commitHistory, maxCommits, includeAuthorInfo)
+            generateAnalysisWithConfig(attemptConfig, commitHistory, maxCommits, includeAuthorInfo, owned.context)
         );
 
         return result;
@@ -1305,7 +1152,7 @@ export async function generateCommitHistoryAnalysis(
         throw await handleApiError(error, config, errorContext);
     } finally {
         // Clean up request tracking
-        activeRequests.delete('global');
+        owned.dispose();
     }
 }
 
@@ -1313,7 +1160,8 @@ async function generateAnalysisWithConfig(
     config: ApiConfig,
     commitHistory: string,
     maxCommits: number,
-    includeAuthorInfo: boolean
+    includeAuthorInfo: boolean,
+    context?: RequestContext,
 ): Promise<string> {
     const providerConfig = PROVIDER_CONFIGS[config.type];
     if (!providerConfig) {
@@ -1327,5 +1175,5 @@ async function generateAnalysisWithConfig(
     }
 
     const provider = await getProviderInstance(config);
-    return provider.generateCommitHistoryAnalysis(commitHistory, maxCommits, includeAuthorInfo);
+    return provider.generateCommitHistoryAnalysis(commitHistory, maxCommits, includeAuthorInfo, context);
 }

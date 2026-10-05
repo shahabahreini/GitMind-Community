@@ -140,7 +140,9 @@ export interface ExtensionSettings {
         largeDiffHandling?: {
             enabled: boolean;
             chunkSize: number;  // Size of each chunk in lines
-            maxChunks: number;  // Maximum number of chunks to process
+            batchSize?: number;
+            maxChunks?: number; // Legacy batch-size fallback
+            concurrency?: number;
         };
         commitBodyOptions?: {
             enabled: boolean;

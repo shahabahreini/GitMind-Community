@@ -118,7 +118,7 @@ export class TogetherAIProvider extends BaseAIProvider {
                 const content = data.choices[0].message.content;
                 debugLog(`Processing Response:\n${content}`);
 
-                return this.formatCommitMessage(content);
+                return this.enforceCommitMessageFormat(content);
             } else {
                 debugLog('Invalid response format from Together AI API');
                 throw new Error('Invalid response format from Together AI API');

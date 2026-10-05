@@ -79,6 +79,7 @@ function extractStatus(error: unknown, message: string): number | undefined {
     return readNumber(record?.status)
         ?? readNumber(record?.statusCode)
         ?? readNumber(response?.status)
+        ?? readNumber(getRecord(record?.$metadata)?.httpStatusCode)
         ?? (() => {
             const match = message.match(/(?:http|api error|error|status)?\s*[:( -]?\s*([45]\d{2})(?:\b|\))/i);
             return match ? Number(match[1]) : undefined;
@@ -90,7 +91,7 @@ function extractCode(error: unknown): string | undefined {
     const response = getRecord(record?.response);
     const responseData = getRecord(response?.data);
     const responseError = getRecord(responseData?.error);
-    return readString(record?.code) ?? readString(responseError?.code);
+    return readString(record?.code) ?? readString(responseError?.code) ?? readString(getRecord(record?.error)?.status) ?? readString(record?.name);
 }
 
 export function classifyGenerationFailure(error: unknown, _provider: string): GenerationFailureKind {
@@ -102,34 +103,18 @@ export function classifyGenerationFailure(error: unknown, _provider: string): Ge
     const status = error instanceof ProviderApiError ? error.status : extractStatus(error, message);
     const code = (error instanceof ProviderApiError ? error.code : extractCode(error))?.toLowerCase();
 
-    if (message.includes("request was cancelled") || message.includes("user cancelled") || code === "abort_err") {
+    if (message.includes("request was cancelled") || message.includes("user cancelled") || code === "abort_err" || code === "aborterror" || code === "err_canceled" || message.includes("operation cancelled")) {
         return "cancelled";
     }
     if (message.includes("timed out") || message.includes("timeout") || message.includes("etimedout")) {
         return "timeout";
     }
-    if (status === 401 || message.includes("invalid api key") || message.includes("authentication failed") || message.includes("unauthorized")) {
+    if (code?.includes("invalid_api_key") || code?.includes("unrecognizedclient") || code?.includes("invalidsignature") || status === 401 || message.includes("invalid api key") || message.includes("authentication failed") || message.includes("unauthorized")) {
         return "authentication";
-    }
-    if (status === 403 || message.includes("permission") || message.includes("access denied") || message.includes("forbidden")) {
-        return "permission";
-    }
-    if (message.includes("content filter") || message.includes("content policy") || message.includes("safety filter")) {
-        return "content-filter";
-    }
-    if (
-        status === 413 ||
-        message.includes("context length") ||
-        message.includes("context_length") ||
-        message.includes("input token") ||
-        message.includes("prompt too long") ||
-        message.includes("too large") ||
-        message.includes("maximum token")
-    ) {
-        return "input-limit";
     }
     if (
         status === 402 ||
+        code?.includes("insufficient_quota") ||
         message.includes("billing") ||
         message.includes("insufficient balance") ||
         message.includes("insufficient quota") ||
@@ -140,7 +125,26 @@ export function classifyGenerationFailure(error: unknown, _provider: string): Ge
     ) {
         return "account-limit";
     }
-    if (status === 429 || message.includes("rate limit") || message.includes("too many requests") || message.includes("limit reached")) {
+    if (code?.includes("accessdenied") || status === 403 || message.includes("permission") || message.includes("access denied") || message.includes("forbidden")) {
+        return "permission";
+    }
+    if (message.includes("content filter") || message.includes("content policy") || message.includes("safety filter")) {
+        return "content-filter";
+    }
+    if (
+        status === 413 ||
+        code?.includes("context_length") ||
+        code?.includes("input_token") ||
+        message.includes("context length") ||
+        message.includes("context_length") ||
+        message.includes("input token") ||
+        message.includes("prompt too long") ||
+        message.includes("too large") ||
+        message.includes("maximum token")
+    ) {
+        return "input-limit";
+    }
+    if (code?.includes("throttl") || code === "resource_exhausted" || status === 429 || message.includes("rate limit") || message.includes("too many requests") || message.includes("limit reached")) {
         return message.includes("model") || code?.includes("model") ? "model-limit" : "rate-limit";
     }
     if (status === 404 || message.includes("model not found") || message.includes("invalid model") || message.includes("configuration is invalid")) {
@@ -150,21 +154,33 @@ export function classifyGenerationFailure(error: unknown, _provider: string): Ge
         return "network";
     }
     if (
-        [500, 502, 503, 504].includes(status ?? 0) ||
+        [500, 502, 503, 504, 529].includes(status ?? 0) ||
         message.includes("service unavailable") ||
         message.includes("temporarily unavailable") ||
         message.includes("overloaded")
     ) {
         return "temporary-service";
     }
-    if (message.includes("invalid response") || message.includes("empty response") || message.includes("no valid response")) {
+    if (/invalid.*response/.test(message) || message.includes("empty response") || message.includes("no valid response") || message.includes("no generated text") || message.includes("no text content") || message.includes("malformed") || message.includes("empty generation")) {
         return "invalid-response";
     }
     return "unknown";
 }
 
+function extractRetryAfter(error: unknown): number | undefined {
+    const record = getRecord(error);
+    const explicit = readNumber(record?.retryAfterMs);
+    if (explicit !== undefined && explicit >= 0) { return explicit; }
+    const details = getRecord(record?.error)?.details ?? record?.details;
+    for (const detail of Array.isArray(details) ? details : []) {
+        const delay = readString(getRecord(detail)?.retryDelay);
+        if (delay && /^\d+(?:\.\d+)?s$/.test(delay)) { return Number(delay.slice(0, -1)) * 1000; }
+    }
+    return undefined;
+}
+
 export function normalizeProviderError(error: unknown, provider: string): ProviderApiError {
-    if (error instanceof ProviderApiError) {
+    if (error instanceof ProviderApiError && error.category) {
         return error;
     }
     const message = error instanceof Error ? error.message : String(error);
@@ -175,6 +191,8 @@ export function normalizeProviderError(error: unknown, provider: string): Provid
         code,
         provider,
         category: classifyGenerationFailure(error, provider),
+        retryAfterMs: error instanceof ProviderApiError ? error.retryAfterMs : extractRetryAfter(error),
+        userFacing: error instanceof ProviderApiError ? error.userFacing : false,
         cause: error,
     });
 }

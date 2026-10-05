@@ -1,3 +1,4 @@
+import { readLargeDiffSettings, resolveLargeDiffSettings } from "../../config/largeDiffSettings";
 // src/webview/settings/SettingsManager.ts
 import * as vscode from "vscode";
 import { ExtensionSettings } from "../../models/ExtensionSettings";
@@ -131,6 +132,7 @@ export class SettingsManager {
                     maxTokensEnabled: config.get<boolean>("pro.advancedModelConfig.maxTokensEnabled") ?? false,
                     maxTokens: config.get<number>("pro.advancedModelConfig.maxTokens") ?? 350,
                 },
+                largeDiffHandling: readLargeDiffSettings(config),
                 automaticRetry: {
                     enabled: config.get<boolean>("pro.automaticRetry.enabled") ?? false,
                 },
@@ -502,6 +504,10 @@ export class SettingsManager {
             SettingsManager.updateSingleSetting(config, "pro.advancedModelConfig.topK", settings.pro?.advancedModelConfig?.topK ?? 40, target),
             SettingsManager.updateSingleSetting(config, "pro.advancedModelConfig.maxTokensEnabled", settings.pro?.advancedModelConfig?.maxTokensEnabled ?? false, target),
             SettingsManager.updateSingleSetting(config, "pro.advancedModelConfig.maxTokens", settings.pro?.advancedModelConfig?.maxTokens ?? 350, target),
+            SettingsManager.updateSingleSetting(config, "pro.largeDiffHandling.enabled", resolveLargeDiffSettings(settings.pro?.largeDiffHandling).enabled, target),
+            SettingsManager.updateSingleSetting(config, "pro.largeDiffHandling.chunkSize", resolveLargeDiffSettings(settings.pro?.largeDiffHandling).chunkSize, target),
+            SettingsManager.updateSingleSetting(config, "pro.largeDiffHandling.batchSize", resolveLargeDiffSettings(settings.pro?.largeDiffHandling).batchSize, target),
+            SettingsManager.updateSingleSetting(config, "pro.largeDiffHandling.concurrency", resolveLargeDiffSettings(settings.pro?.largeDiffHandling).concurrency, target),
             SettingsManager.updateSingleSetting(config, "pro.automaticRetry.enabled", settings.pro?.automaticRetry?.enabled ?? false, target),
             SettingsManager.updateSingleSetting(config, "pro.modelFallback.enabled", settings.pro?.modelFallback?.enabled ?? false, target),
             SettingsManager.updateSingleSetting(config, "pro.modelFallback.models", settings.pro?.modelFallback?.models ?? {}, target),

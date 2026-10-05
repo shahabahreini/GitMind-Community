@@ -1,3 +1,4 @@
+import { ProviderApiError } from "./recovery";
 import { BaseAIProvider, GenerationOptions } from "./base";
 
 export class VertexAIProvider extends BaseAIProvider {
@@ -24,6 +25,8 @@ export class VertexAIProvider extends BaseAIProvider {
                 abortSignal: this.getAbortController().signal,
             },
         });
+        if (response.candidates?.[0]?.finishReason === "MAX_TOKENS") { throw new ProviderApiError("Provider output was truncated.", { category: "invalid-response" }); }
+        if (response.promptFeedback?.blockReason || (response.candidates?.[0]?.finishReason && response.candidates[0].finishReason !== "STOP")) { throw new ProviderApiError("Provider blocked the answer.", { category: "content-filter" }); }
         if (!response.text) {
             throw new Error("Vertex AI returned an empty generation response.");
         }

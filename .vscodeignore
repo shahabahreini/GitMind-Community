@@ -43,6 +43,7 @@ wiki/**
 resources/.claude
 build.sh
 scripts/**
+patches/**
 pnpm-lock.yaml
 pnpm-workspace.yaml
 yarn.lock

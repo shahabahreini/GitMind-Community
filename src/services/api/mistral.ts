@@ -40,6 +40,7 @@ export class MistralProvider extends BaseAIProvider {
                     messages: [
                         { role: "user", content: prompt }
                     ],
+                    max_tokens: options?.maxTokens ?? 1024,
                     temperature: options?.temperature
                 }),
                 signal: controller.signal
@@ -82,7 +83,7 @@ export class MistralProvider extends BaseAIProvider {
             }
 
             const result = await response.json() as MistralResponse;
-            const generatedText = result.choices[0]?.message?.content;
+            const generatedText = result?.choices?.[0]?.message?.content;
 
             if (!generatedText) {
                 throw new Error("No generated text in response");
@@ -132,6 +133,9 @@ export class MistralProvider extends BaseAIProvider {
 
             const data = await response.json();
 
+            for (const model of Array.isArray(data.data) ? data.data : []) {
+                this.rememberModelLimits(model.id, model.max_context_length, undefined);
+            }
             // Filter models that have completion_chat capability set to true
             const chatModels = data.data
                 .filter((model: any) => model.capabilities?.completion_chat === true)

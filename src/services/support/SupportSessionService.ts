@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { PROVIDER_IDS, ProviderCatalogId } from "../../config/providerCatalog";
 
-export const SUPPORT_REPORT_SCHEMA_VERSION = 2;
+export const SUPPORT_REPORT_SCHEMA_VERSION = 3;
 export const SUPPORT_SESSION_DURATION_MS = 30 * 60 * 1000;
 export const SUPPORT_REPORT_MAX_BYTES = 512 * 1024;
 export const SUPPORT_REPORT_MAX_EVENTS = 1000;
@@ -40,7 +40,9 @@ const SAFE_PLATFORMS: readonly NodeJS.Platform[] = [
 const SAFE_ARCHITECTURES = [
   "arm", "arm64", "ia32", "loong64", "mips", "mipsel", "ppc", "ppc64", "riscv64", "s390", "s390x", "x64", "unknown"
 ] as const;
+const GENERATION_STAGES = ["collection", "planning", "requests", "parsing", "reduction", "formatting", "scm_insertion"] as const;
 const EVENT_KEYS = [
+  "stage", "completed",
   "correlationId", "durationMs", "elapsedMs", "errorCategory", "httpStatus", "modelKind", "name",
   "operation", "outcome", "provider", "recoveryAction", "sequence", "subsystem"
 ] as const;
@@ -63,6 +65,8 @@ export interface SupportEnvironment {
 }
 
 export interface SupportEventInput {
+  stage?: typeof GENERATION_STAGES[number];
+  completed?: number;
   name: SupportEventName;
   operation: SupportOperation;
   provider?: SupportProvider;
@@ -119,7 +123,7 @@ export interface SupportSessionStatus {
 const INCLUDED_FIELDS = Object.freeze([
   "Extension, VS Code, operating-system family, and architecture versions",
   "Operation, subsystem, provider, model classification, result, and recovery enums",
-  "Ephemeral operation correlation IDs, HTTP status codes, and relative timing"
+  "Ephemeral operation correlation IDs, HTTP status codes, relative timing, generation stages, and bounded counters"
 ]);
 
 const EXCLUDED_FIELDS = Object.freeze([
@@ -163,6 +167,14 @@ function sanitizeEvent(input: SupportEventInput, sequence: number, elapsedMs: nu
     operation: input.operation
   };
 
+  if (input.stage !== undefined) {
+    if (!isOneOf(input.stage, GENERATION_STAGES)) { return undefined; }
+    event.stage = input.stage;
+  }
+  if (input.completed !== undefined) {
+    if (!Number.isInteger(input.completed) || input.completed < 0 || input.completed > 1000000) { return undefined; }
+    event.completed = input.completed;
+  }
   if (input.provider !== undefined) {
     if (!isOneOf(input.provider, PROVIDERS)) { return undefined; }
     event.provider = input.provider;

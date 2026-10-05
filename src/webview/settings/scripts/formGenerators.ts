@@ -332,6 +332,12 @@ export function generateSettingsCollection(): string {
           ? parseInt(String(document.getElementById('advancedModelConfigMaxTokens')?.value), 10)
           : (currentSettings.pro?.advancedModelConfig?.maxTokens ?? undefined),
       },
+      largeDiffHandling: {
+        enabled: document.getElementById('largeDiffEnabled')?.checked ?? currentSettings.pro?.largeDiffHandling?.enabled ?? false,
+        chunkSize: Number(document.getElementById('chunkSize')?.value ?? currentSettings.pro?.largeDiffHandling?.chunkSize ?? 1000),
+        batchSize: Number(document.getElementById('batchSize')?.value ?? currentSettings.pro?.largeDiffHandling?.batchSize ?? currentSettings.pro?.largeDiffHandling?.maxChunks ?? 5),
+        concurrency: Number(document.getElementById('largeDiffConcurrency')?.value ?? currentSettings.pro?.largeDiffHandling?.concurrency ?? 3)
+      },
       automaticRetry: {
         enabled: (window.currentFormValues || currentFormValues).automaticRetryEnabled
       },

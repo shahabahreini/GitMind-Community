@@ -124,8 +124,8 @@ export class CohereProvider extends BaseAIProvider {
                     ],
                     temperature: temperature,
                     max_tokens: maxOutputTokens,
-                    p: config.topP,
-                    k: config.topK
+                    p: options?.topP ?? config.topP,
+                    k: options?.topK ?? config.topK
                 }),
                 signal: controller.signal
             }, { provider: "cohere", operation: "chat" });

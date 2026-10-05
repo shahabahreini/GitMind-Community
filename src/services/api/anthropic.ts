@@ -272,6 +272,10 @@ export class AnthropicProvider extends BaseAIProvider {
                 throw new Error('Invalid response format: missing data array');
             }
 
+            for (const model of data.data) {
+                const metadata = model as typeof model & { max_input_tokens?: number; max_tokens?: number };
+                this.rememberModelLimits(metadata.id, metadata.max_input_tokens, metadata.max_tokens);
+            }
             // Extract model IDs from the response
             const modelIds = data.data
                 .filter(model => model.type === 'model' && model.id) // Only include actual models with valid IDs

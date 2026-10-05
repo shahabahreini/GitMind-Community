@@ -46,8 +46,9 @@ export class OllamaProvider extends BaseAIProvider {
                     prompt: prompt,
                     stream: false,
                     options: {
-                        system: "You are a Git commit message generator that creates clear, concise, and informative Git commit messages based on Git diff output.",
+                        system: "You analyze source changes and follow the requested output format.",
                         temperature: options?.temperature,
+                        num_predict: options?.maxTokens ?? 1024,
                     },
                 }),
             }, { provider: "ollama", operation: "generate" });

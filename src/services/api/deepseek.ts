@@ -321,59 +321,7 @@ export class DeepSeekProvider extends BaseAIProvider {
     }
 
     protected override enforceCommitMessageFormat(message: string): string {
-        // Remove any markdown formatting
-        let cleanMessage = message.replace(/```[^`]*```/g, '');
-        cleanMessage = cleanMessage.replace(/`([^`]+)`/g, '$1');
-        cleanMessage = cleanMessage.replace(/\*\*([^*]+)\*\*/g, '$1');
-        cleanMessage = cleanMessage.replace(/\*([^*]+)\*/g, '$1');
-
-        // Remove quotes if the entire message is wrapped in them
-        cleanMessage = cleanMessage.replace(/^["'](.*)["']$/s, '$1');
-
-        // Split into lines and process
-        const lines = cleanMessage.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-
-        if (lines.length === 0) {
-            return "chore: update code";
-        }
-
-        // Get the first line as the main commit message
-        let commitMessage = lines[0];
-
-        // Remove any prefixes like "Commit message:" or similar
-        commitMessage = commitMessage.replace(/^(commit message|message|commit):\s*/i, '');
-
-        // Ensure the commit message starts with a conventional commit type if not already
-        const conventionalTypes = ['feat', 'fix', 'docs', 'style', 'refactor', 'test', 'chore', 'perf', 'ci', 'build', 'revert'];
-        const hasConventionalType = conventionalTypes.some(type =>
-            commitMessage.toLowerCase().startsWith(type + ':') ||
-            commitMessage.toLowerCase().startsWith(type + '(')
-        );
-
-        if (!hasConventionalType) {
-            // Try to infer the type based on content
-            if (commitMessage.toLowerCase().includes('add') || commitMessage.toLowerCase().includes('new')) {
-                commitMessage = `feat: ${commitMessage}`;
-            } else if (commitMessage.toLowerCase().includes('fix') || commitMessage.toLowerCase().includes('bug')) {
-                commitMessage = `fix: ${commitMessage}`;
-            } else if (commitMessage.toLowerCase().includes('update') || commitMessage.toLowerCase().includes('change')) {
-                commitMessage = `chore: ${commitMessage}`;
-            } else {
-                commitMessage = `chore: ${commitMessage}`;
-            }
-        }
-
-        // Ensure proper capitalization
-        const colonIndex = commitMessage.indexOf(':');
-        if (colonIndex !== -1 && colonIndex < commitMessage.length - 1) {
-            const prefix = commitMessage.substring(0, colonIndex + 1);
-            const suffix = commitMessage.substring(colonIndex + 1).trim();
-            if (suffix.length > 0) {
-                commitMessage = prefix + ' ' + suffix.charAt(0).toLowerCase() + suffix.slice(1);
-            }
-        }
-
-        return commitMessage;
+        return super.enforceCommitMessageFormat(message);
     }
 }
 

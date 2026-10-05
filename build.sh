@@ -15,7 +15,11 @@ echo "Installing dependencies from pnpm-lock.yaml..."
 pnpm install --frozen-lockfile
 
 echo "Auditing production and development dependencies..."
-pnpm audit
+# No upstream braces release fixes GHSA-vfj7-8cjw-p6xm yet. Only permit
+# this advisory after verifying our installed, lockfile-pinned depth patch.
+# All other findings and registry failures still stop the build.
+node scripts/verify-braces-patch.mjs
+node scripts/audit-dependencies.mjs
 
 echo "Building the extension and packaging the VSIX..."
 pnpm run package:vsce

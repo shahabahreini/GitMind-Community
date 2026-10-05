@@ -1,3 +1,4 @@
+import { normalizeProviderError, ProviderApiError } from "./recovery";
 import { debugLog } from "../debug/logger";
 import { GeminiModel } from "../../config/types";
 import { BaseAIProvider, GenerationOptions } from "./base";
@@ -68,6 +69,7 @@ export function getEffectiveGeminiModel(rawModel: string): string {
 }
 
 export class GeminiProvider extends BaseAIProvider {
+    private static readonly supportsTopK = new Map<string, boolean>();
     constructor(apiKey: string, model: string) {
         super(apiKey, model);
     }
@@ -121,13 +123,16 @@ export class GeminiProvider extends BaseAIProvider {
                 contents: prompt,
                 config: {
                     temperature: temperature,
-                    topK: topK,
+                    ...(GeminiProvider.supportsTopK.get(selectedModel) === true ? { topK } : {}),
                     topP: topP,
                     maxOutputTokens: maxOutputTokens,
                     abortSignal: controller.signal,
                 },
             });
 
+            const finish = response.candidates?.[0]?.finishReason;
+            if (finish === "MAX_TOKENS") { throw new ProviderApiError("Provider output was truncated.", { category: "invalid-response" }); }
+            if (response.promptFeedback?.blockReason || (finish && finish !== "STOP")) { throw new ProviderApiError("Provider blocked the answer.", { category: "content-filter" }); }
             const text = response.text ?? '';
 
             debugLog("Gemini API response:", { text });
@@ -140,41 +145,7 @@ export class GeminiProvider extends BaseAIProvider {
                 throw new Error('Request was cancelled');
             }
 
-            const status =
-                typeof error === "object" &&
-                    error !== null &&
-                    "status" in error &&
-                    typeof (error as { status?: unknown }).status === "number"
-                    ? (error as { status: number }).status
-                    : undefined;
-
-            if (status === 429) {
-                const retryDelay = this.getRetryDelaySeconds(error);
-                const retryMessage = retryDelay ? ` Please retry in ${retryDelay}.` : " Please retry shortly.";
-                throw new Error(
-                    `Gemini rate limit / quota exceeded.${retryMessage} You can check quotas at https://ai.google.dev/gemini-api/docs/rate-limits and usage at https://ai.dev/rate-limit.`
-                );
-            }
-
-            const errorMessage = error instanceof Error ? error.message : String(error);
-
-            if (status === 401 || errorMessage.includes("API key not valid")) {
-                throw new Error("Authentication failed. Please verify your Gemini API key in settings.");
-            }
-
-            if (status === 403) {
-                throw new Error(
-                    `Access forbidden. Your Gemini API key may not have access to model '${this.model}' or you may have billing/quota restrictions.`
-                );
-            }
-
-            if (errorMessage.includes("not found") || errorMessage.includes("invalid model")) {
-                throw new Error(`Model '${this.model}' not available or not supported. Please check if you have access to this model or try a different model.`);
-            } else if (errorMessage.includes("permission") || errorMessage.includes("access")) {
-                throw new Error(`Access denied to model '${this.model}'. Please verify your API key has access to this model.`);
-            } else {
-                throw new Error(`Failed to generate commit message: ${errorMessage}`);
-            }
+            throw normalizeProviderError(error, "gemini");
         }
     }
 
@@ -237,6 +208,10 @@ export class GeminiProvider extends BaseAIProvider {
                 throw new Error('Invalid response format: missing models array');
             }
 
+            for (const model of data.models) {
+                this.rememberModelLimits(model.name.replace('models/', ''), model.inputTokenLimit, model.outputTokenLimit);
+                GeminiProvider.supportsTopK.set(model.name.replace('models/', ''), typeof model.topK === "number");
+            }
             // Filter models that support generateContent and are not legacy/experimental
             const supportedModels = data.models.filter(model =>
                 model.supportedGenerationMethods?.includes('generateContent') &&

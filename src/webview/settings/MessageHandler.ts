@@ -1,3 +1,4 @@
+import { readLargeDiffSettings, resolveLargeDiffSettings } from "../../config/largeDiffSettings";
 // src/webview/settings/MessageHandler.ts
 import * as vscode from "vscode";
 import { SettingsManager } from "./SettingsManager";
@@ -154,6 +155,13 @@ export class MessageHandler {
                         await updateCommitIntelligenceContext();
                         SettingsWebview.postMessageToWebview({ command: 'updateSettings', settings: await SettingsManager.getCurrentSettings() });
                         return;
+                    }
+                    if (message.key.startsWith("pro.largeDiffHandling.")) {
+                        const field = message.key.slice("pro.largeDiffHandling.".length);
+                        const values = resolveLargeDiffSettings({ ...readLargeDiffSettings(config), [field]: message.value });
+                        if (["enabled", "chunkSize", "batchSize", "concurrency"].includes(field)) {
+                            message.value = values[field as keyof typeof values];
+                        }
                     }
                     const oldValue = config.get(message.key);
 

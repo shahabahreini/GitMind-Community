@@ -1,3 +1,4 @@
+import { AnthropicProvider } from "../../services/api/anthropic";
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { checkApiSetup } from '../../services/api/validation';
@@ -122,6 +123,7 @@ suite('AI Providers Tests', () => {
         (vscode.workspace as any).getConfiguration = () => mockConfig;
 
         const config = await getApiConfig();
+        (new AnthropicProvider("test-anthropic-key", config.model!) as any).rememberModelLimits(config.model, 200000, 8192);
         await generateCommitMessage(config, 'diff');
 
         assert.ok(capturedBodies.length >= 1, 'Should capture at least one Anthropic request');
@@ -185,6 +187,7 @@ suite('AI Providers Tests', () => {
         (vscode.workspace as any).getConfiguration = () => mockConfig;
 
         const config = await getApiConfig();
+        (new AnthropicProvider("test-anthropic-key", config.model!) as any).rememberModelLimits(config.model, 200000, 8192);
         await generateCommitMessage(config, 'diff');
 
         assert.ok(capturedBodies.length >= 1, 'Should capture at least one Anthropic request');
@@ -249,6 +252,7 @@ suite('AI Providers Tests', () => {
         (vscode.workspace as any).getConfiguration = () => mockConfig;
 
         const config = await getApiConfig();
+        (new AnthropicProvider("test-anthropic-key", config.model!) as any).rememberModelLimits(config.model, 200000, 8192);
         await generateCommitMessage(config, 'diff');
 
         assert.ok(capturedBodies.length >= 1, 'Should capture at least one Anthropic request');

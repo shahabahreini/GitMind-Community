@@ -774,6 +774,10 @@ export function getEventHandlersScript(): string {
         ['showDiagnostics', 'showDiagnostics', (el) => el.checked],
         ['promptCustomizationEnabled', 'promptCustomization.enabled', (el) => el.checked],
         ['saveLastPrompt', 'promptCustomization.saveLastPrompt', (el) => el.checked],
+        ['largeDiffEnabled', 'pro.largeDiffHandling.enabled', (el) => el.checked],
+        ['chunkSize', 'pro.largeDiffHandling.chunkSize', (el) => Number(el.value)],
+        ['batchSize', 'pro.largeDiffHandling.batchSize', (el) => Number(el.value)],
+        ['largeDiffConcurrency', 'pro.largeDiffHandling.concurrency', (el) => Number(el.value)],
         ['automaticRetryEnabled', 'pro.automaticRetry.enabled', (el) => el.checked],
         ['modelFallbackEnabled', 'pro.modelFallback.enabled', (el) => el.checked],
         ['changelogMaxCommitsEnabled', 'pro.changelog.maxCommitsEnabled', (el) => el.checked]

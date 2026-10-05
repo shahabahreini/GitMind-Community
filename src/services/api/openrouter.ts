@@ -52,7 +52,7 @@ export class OpenRouterProvider extends BaseAIProvider {
             debugLog(`OpenRouter API response received`);
 
             if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-                return this.formatCommitMessage(data.choices[0].message.content);
+                return this.enforceCommitMessageFormat(data.choices[0].message.content);
             } else {
                 throw new Error('Invalid response format from OpenRouter API');
             }

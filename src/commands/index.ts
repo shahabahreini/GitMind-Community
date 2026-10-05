@@ -1,3 +1,6 @@
+import { beginGenerationOperation } from "../services/api";
+import { DiffSpool } from "../services/git/diffSpool";
+import { getDiffInput } from "../services/git/repository";
 import * as vscode from "vscode";
 import { CommitStyle, ExtensionState } from "../config/types";
 import { getApiConfig } from "../config/settings";
@@ -57,7 +60,6 @@ import { recordHealthScan } from "../commit-intelligence/health";
 import { state } from "../extension";
 
 // Constants
-const TIMEOUT_DURATION = 120000;
 const API_CHECK_TIMEOUT = 15000;
 /** Runtime labels of every supported provider, from the canonical provider catalog. */
 export const SUPPORTED_PROVIDERS = PROVIDER_IDS.map(id => PROVIDER_CATALOG[id].name);
@@ -94,7 +96,8 @@ async function showCopilotUnavailable(error: CopilotUnavailableError, command: s
 async function handleError(
   error: unknown,
   command: string,
-  provider = "GitMind"
+  provider = "GitMind",
+  context?: { diffSize?: number; estimatedTokens?: number; modelLimit?: number; largeDiffEnabled?: boolean }
 ): Promise<void> {
   debugLog(`${command} Error:`, error);
 
@@ -108,7 +111,7 @@ async function handleError(
     return;
   }
 
-  const message = formatSafeProviderError(error, provider);
+  const message = formatSafeProviderError(error, provider, context);
   const isInputLimit = classifyGenerationFailure(error, provider) === "input-limit";
   const showMethod = isInputLimit ? vscode.window.showWarningMessage : vscode.window.showErrorMessage;
   showMethod(message, { modal: true });
@@ -195,6 +198,9 @@ const activeGenerations = new Map<string, vscode.StatusBarItem>();
 async function handleGenerateCommit(repository?: any): Promise<void> {
   const apiConfig = await getApiConfig();
   let repoRoot = "";
+  let generationOperation: ReturnType<typeof beginGenerationOperation> | undefined;
+  let diffSpool: DiffSpool | undefined;
+  let generationStatus: vscode.StatusBarItem | undefined;
   const diagnostics = startDiagnosticOperation("command", "generate_commit");
   diagnosticLog({
     subsystem: "command", event: "command.generate_commit_started", functionName: "handleGenerateCommit",
@@ -258,9 +264,13 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
     };
     loadingItem.show();
     activeGenerations.set(repoRoot, loadingItem);
+    generationStatus = loadingItem;
+    generationOperation = beginGenerationOperation(repoRoot, diagnostics.id);
+    generationOperation.context.promptConfig = getPromptConfig();
 
-    const diff = await getDiff(targetRepository as vscode.WorkspaceFolder, repoRoot);
-    if (!diff?.trim()) {
+    diagnosticLog({ subsystem: "git", event: "generation.collection", operationId: diagnostics.id, support: { name: "operation_progress", operation: "generate_commit", stage: "collection" } });
+    diffSpool = await getDiffInput(targetRepository as vscode.WorkspaceFolder, repoRoot, generationOperation.context);
+    if (!diffSpool.size) {
       diagnosticLog({ subsystem: "git", event: "git.diff_empty", functionName: "handleGenerateCommit", operationId: diagnostics.id, outcome: "skipped", support: { name: "operation_progress", operation: "git_operation", outcome: "success" } });
       vscode.window.showInformationMessage("No changes detected to generate a commit message for.");
       return;
@@ -271,12 +281,14 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
     // Note: Style validation moved to extension activation only
     // to prevent interfering with user style choices during commit generation
 
-    const message = await Promise.race([
-      generateCommitMessage(apiConfig, diff, customContext, repoRoot, diagnostics.id),
-      new Promise<string>((_, reject) =>
-        setTimeout(() => reject(new Error("Request timed out after 60 seconds")), TIMEOUT_DURATION)
-      )
-    ]);
+    // Small input keeps free-tier string callers compatible; large input stays on disk.
+    let input: string | DiffSpool = diffSpool;
+    if (diffSpool.size <= 2048) {
+      let text = "";
+      for await (const block of diffSpool) { text += block; }
+      input = text;
+    }
+    const message = await generateCommitMessage(apiConfig, input, customContext, repoRoot, diagnostics.id, generationOperation.context);
 
     if (message?.trim()) {
       let selectedMessage = message;
@@ -373,7 +385,8 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
         }
       }
 
-      const promptConfig = getPromptConfig();
+      diagnosticLog({ subsystem: "command", event: "generation.formatting", operationId: diagnostics.id, support: { name: "operation_progress", operation: "generate_commit", stage: "formatting" } });
+      const promptConfig = generationOperation.context.promptConfig!;
       let formattedMessage = processCommitMessage(selectedMessage, promptConfig);
 
       // Branch name for issue tracking
@@ -395,6 +408,8 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
         promptConfig.maxBodyLines
       ); // Skip empty line after summary
 
+      generationOperation.context.signal?.throwIfAborted();
+      diagnosticLog({ subsystem: "git", event: "generation.scm_insertion", operationId: diagnostics.id, support: { name: "operation_progress", operation: "generate_commit", stage: "scm_insertion" } });
       await setCommitMessage({ summary, description }, repoRoot);
 
       diagnosticLog({
@@ -430,11 +445,16 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
     if (error instanceof Error && error.message.includes("timed out") && repoRoot) {
         cancelCurrentRequest(repoRoot);
     }
-    await handleError(error, 'generateCommit', apiConfig.type);
+    await handleError(error, 'generateCommit', apiConfig.type, {
+      diffSize: diffSpool?.size,
+      ...generationOperation?.context.diagnosticBudget,
+      largeDiffEnabled: generationOperation?.context.largeDiffEnabled,
+    });
   } finally {
-    if (repoRoot) {
-        const item = activeGenerations.get(repoRoot);
-        item?.dispose();
+    generationOperation?.dispose();
+    await diffSpool?.dispose();
+    generationStatus?.dispose();
+    if (repoRoot && activeGenerations.get(repoRoot) === generationStatus) {
         activeGenerations.delete(repoRoot);
     }
     if (activeGenerations.size === 0) {

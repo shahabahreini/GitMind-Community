@@ -17,6 +17,7 @@ const forbidden = [
   /^src(?:\/|$)/,
   /(?:^|\/)test(?:\/|$)/,
   /^scripts(?:\/|$)/,
+  /^patches(?:\/|$)/,
   /^(?:graphify-out|plans|wiki|docs)(?:\/|$)/,
   /^(?:pnpm-lock\.yaml|pnpm-workspace\.yaml|yarn\.lock)$/,
 ];

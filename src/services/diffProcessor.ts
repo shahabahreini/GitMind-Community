@@ -26,7 +26,7 @@ export class DiffProcessor {
     public isLargeDiff(diff: string, settings: { threshold: number }): boolean {
         const lineCount = diff.split('\n').length;
         debugLog(`Diff line count: ${lineCount}, threshold: ${settings.threshold}`);
-        return lineCount > settings.threshold;
+        return lineCount > settings.threshold || Buffer.byteLength(diff, "utf8") > 2816;
     }
 
     /**
@@ -79,6 +79,7 @@ export class DiffProcessor {
         }
 
         const files: string[] = [];
+        if ((matches[0].index ?? 0) > 0) { files.push(diff.slice(0, matches[0].index)); }
         for (let i = 0; i < matches.length; i++) {
             const start = matches[i].index ?? 0;
             const end = i + 1 < matches.length ? (matches[i + 1].index ?? diff.length) : diff.length;
@@ -139,7 +140,6 @@ export class DiffProcessor {
      */
     private splitIntoHunkSegments(lines: string[], headerEnd: number): string[][] {
         const segments: string[][] = [];
-        let i = headerEnd;
 
         // Find positions of all hunks
         const hunkIdxs: number[] = [];
@@ -157,6 +157,7 @@ export class DiffProcessor {
             return segments;
         }
 
+        if (hunkIdxs[0] > headerEnd) { segments.push(lines.slice(headerEnd, hunkIdxs[0])); }
         for (let h = 0; h < hunkIdxs.length; h++) {
             const start = hunkIdxs[h];
             const end = h + 1 < hunkIdxs.length ? hunkIdxs[h + 1] : lines.length;
@@ -171,57 +172,24 @@ export class DiffProcessor {
      */
     private packSegmentsIntoChunks(minimalHeader: string, segments: string[][], chunkSize: number): string[] {
         const chunks: string[] = [];
-        const headerLinesCount = minimalHeader.split('\n').length;
-
-        let current: string[] = [];
-        let currentLines = 0;
-
-        const pushCurrent = () => {
-            if (current.length > 0) {
-                chunks.push([minimalHeader, ...current].join('\n'));
-                current = [];
-                currentLines = 0;
-            }
+        const headers = minimalHeader ? minimalHeader.split('\n') : [];
+        const limit = Math.max(1, Math.floor(chunkSize));
+        let current = [...headers];
+        let hunk = "";
+        const flush = () => {
+            if (current.length) { chunks.push(current.join('\n')); }
+            current = [...headers];
+            if (hunk) { current.push(hunk); }
         };
-
-        for (const seg of segments) {
-            const segLen = seg.length;
-            const withHeader = (currentLines === 0 ? headerLinesCount : 0) + currentLines + segLen;
-
-            if (withHeader <= chunkSize) {
-                // Safe to add segment
-                current.push(...seg);
-                currentLines += segLen;
-                continue;
-            }
-
-            // If current is empty and a single segment is too large, split the segment itself
-            if (currentLines === 0 && headerLinesCount + segLen > chunkSize) {
-                const budget = Math.max(1, chunkSize - headerLinesCount);
-                for (let i = 0; i < seg.length; i += budget) {
-                    const piece = seg.slice(i, i + budget);
-                    chunks.push([minimalHeader, ...piece].join('\n'));
-                }
-                continue;
-            }
-
-            // Otherwise, flush current and start a new chunk with this segment
-            pushCurrent();
-            // If still too big, handle like above
-            if (headerLinesCount + segLen > chunkSize) {
-                const budget = Math.max(1, chunkSize - headerLinesCount);
-                for (let i = 0; i < seg.length; i += budget) {
-                    const piece = seg.slice(i, i + budget);
-                    chunks.push([minimalHeader, ...piece].join('\n'));
-                }
-            } else {
-                current.push(...seg);
-                currentLines += segLen;
+        for (const segment of segments) {
+            for (const line of segment) {
+                if (line.startsWith('@@')) { hunk = line; }
+                if (current.length >= limit) { flush(); }
+                // When metadata alone exceeds the preferred budget retain it intact.
+                current.push(line);
             }
         }
-
-        // Flush remainder
-        pushCurrent();
+        if (current.length > headers.length + (hunk ? 1 : 0)) { chunks.push(current.join('\n')); }
         return chunks;
     }
 

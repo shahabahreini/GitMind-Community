@@ -1,3 +1,5 @@
+import { createDiffSpool, DiffSpool } from "./diffSpool";
+import { RequestContext } from "../api/requestContext";
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
@@ -164,116 +166,63 @@ export async function validateGitRepository(workspaceFolder?: vscode.WorkspaceFo
     }
 }
 
-export async function getDiff(workspaceFolder: vscode.WorkspaceFolder, repositoryRoot?: string): Promise<string> {
-    // Use provided repository root or find it
-    const repoRoot = repositoryRoot || await validateGitRepository(workspaceFolder);
+export async function getDiff(workspaceFolder: vscode.WorkspaceFolder, repositoryRoot?: string, context?: RequestContext): Promise<string> {
+    const spool = await getDiffInput(workspaceFolder, repositoryRoot, context);
+    try {
+        let diff = "";
+        for await (const block of spool) { diff += block; }
+        return diff;
+    } finally { await spool.dispose(); }
+}
 
+export async function getDiffInput(workspaceFolder: vscode.WorkspaceFolder, repositoryRoot?: string, context?: RequestContext): Promise<DiffSpool> {
+    const repoRoot = repositoryRoot || await validateGitRepository(workspaceFolder);
     const config = vscode.workspace.getConfiguration("gitmind");
     const captureAllChanges = config.get<boolean>("commit.captureAllChanges", false);
-    
-    // Build pathspec exclusions
     const excludePatterns = config.get<string[]>("commit.excludeFiles", []);
-    const excludeArgs = excludePatterns && excludePatterns.length > 0
-        ? ["--", ".", ...excludePatterns.map(pattern => `:(exclude)${pattern}`)]
-        : [];
-
-    // Check if there are only lock files in the staging area
-    let onlyLockFilesStaged = false;
-    try {
-        const { stdout: nameOnlyStdout } = await execGit(["diff", "--staged", "--name-only"], repoRoot);
-        const stagedFiles = nameOnlyStdout
-            .split("\n")
-            .map((f) => f.trim())
-            .filter((f) => f.length > 0);
-
-        if (stagedFiles.length > 0) {
-            onlyLockFilesStaged = stagedFiles.every((file) => {
-                const lower = file.toLowerCase();
-                return (
-                    lower.endsWith(".lock") ||
-                    lower.endsWith("-lock.json") ||
-                    lower.endsWith("lock.yaml") ||
-                    lower.endsWith("lock.json") ||
-                    lower.endsWith("bun.lockb")
-                );
-            });
-        }
-    } catch (error) {
-        debugLog("Error checking staged files for lock files:", error);
+    const excludeArgs = excludePatterns.length ? ["--", ".", ...excludePatterns.map(pattern => `:(exclude)${pattern}`)] : [];
+    const signal = context?.signal;
+    signal?.throwIfAborted();
+    let onlyLockFiles = true;
+    let stagedCount = 0;
+    for await (const file of gitNames(["diff", "--staged", "--name-only", "-z"], repoRoot, signal)) {
+        stagedCount++;
+        onlyLockFiles &&= /(?:\.lock|-lock\.json|lock\.ya?ml|lock\.json|bun\.lockb)$/i.test(file);
     }
-
-    const stagedDiffArgs = ["diff", "--staged", ...(onlyLockFilesStaged ? [] : excludeArgs)];
-
-    if (captureAllChanges) {
-        const diffParts: string[] = [];
-
-        const { stdout: stagedDiff } = await execGit(stagedDiffArgs, repoRoot, 10 * 1024 * 1024);
-
-        const { stdout: unstagedDiff } = await execGit(["diff", ...excludeArgs], repoRoot, 10 * 1024 * 1024);
-
-        const { stdout: untrackedFilesStdout } = await execGit(["ls-files", "--others", "--exclude-standard", "-z"], repoRoot);
-
-        const untrackedFiles = untrackedFilesStdout
-            .split("\0")
-            .map((f) => f.trim())
-            .filter((f) => f.length > 0);
-
-        if (stagedDiff?.trim()) {
-            diffParts.push(stagedDiff);
+    onlyLockFiles &&= stagedCount > 0;
+    const spool = await createDiffSpool();
+    try {
+        await spool.append(["diff", "--no-ext-diff", "--no-textconv", "--staged", ...(onlyLockFiles ? [] : excludeArgs)], repoRoot, signal);
+        if (captureAllChanges || !spool.size) {
+            if (!captureAllChanges) {
+                const answer = await vscode.window.showWarningMessage("No staged changes found. Would you like to generate a commit message for unstaged changes?", "Yes", "No");
+                signal?.throwIfAborted();
+                if (answer !== "Yes") { throw new Error("Operation cancelled"); }
+            }
+            await spool.append(["diff", "--no-ext-diff", "--no-textconv", ...excludeArgs], repoRoot, signal);
         }
-
-        if (unstagedDiff?.trim()) {
-            diffParts.push(unstagedDiff);
-        }
-
-        for (const filePath of untrackedFiles) {
-            try {
-                const { stdout: filePatch } = await execGit(["diff", "--no-index", "--", "/dev/null", filePath], repoRoot, 10 * 1024 * 1024);
-                if (filePatch?.trim()) {
-                    diffParts.push(filePatch);
-                }
-            } catch (error: unknown) {
-                // git diff --no-index exits with code 1 when there are differences; capture stdout anyway
-                const stdout: unknown = (error as { stdout?: unknown } | null)?.stdout;
-                if (typeof stdout === "string" && stdout.trim().length > 0) {
-                    diffParts.push(stdout);
-                } else {
-                    debugLog(`Failed to include untracked file diff for ${filePath}:`, error);
-                }
+        if (captureAllChanges) {
+            for await (const file of gitNames(["ls-files", "--others", "--exclude-standard", "-z", ...excludeArgs], repoRoot, signal)) {
+                await spool.append(["diff", "--no-ext-diff", "--no-textconv", "--no-index", "--", "/dev/null", file], repoRoot, signal, true);
             }
         }
+        return spool;
+    } catch (error) { await spool.dispose(); throw error; }
+}
 
-        const combinedDiff = diffParts.join("\n\n").trim();
-        if (!combinedDiff) {
-            throw new Error("No changes detected");
+async function* gitNames(args: readonly string[], cwd: string, signal?: AbortSignal): AsyncGenerator<string> {
+    const spool = await createDiffSpool();
+    try {
+        await spool.append(args, cwd, signal);
+        let pending = "";
+        for await (const block of spool) {
+            signal?.throwIfAborted();
+            const names = (pending + block).split("\0");
+            pending = names.pop() ?? "";
+            for (const name of names) { if (name) { yield name; } }
         }
-
-        return combinedDiff;
-    }
-
-    const { stdout: stagedDiff } = await execGit(stagedDiffArgs, repoRoot, 10 * 1024 * 1024);
-
-    if (!stagedDiff) {
-        const { stdout: unstagedDiff } = await execGit(["diff", ...excludeArgs], repoRoot, 10 * 1024 * 1024);
-
-        if (!unstagedDiff) {
-            throw new Error("No changes detected");
-        }
-
-        const answer = await vscode.window.showWarningMessage(
-            "No staged changes found. Would you like to generate a commit message for unstaged changes?",
-            "Yes",
-            "No"
-        );
-
-        if (answer !== "Yes") {
-            throw new Error("Operation cancelled");
-        }
-
-        return unstagedDiff;
-    }
-
-    return stagedDiff;
+        if (pending) { throw new Error("Git returned an incomplete filename list."); }
+    } finally { await spool.dispose(); }
 }
 
 export async function getBranchName(repositoryRoot: string): Promise<string | undefined> {
@@ -314,7 +263,7 @@ export async function setCommitMessage(message: CommitMessage, repositoryRoot?: 
             targetRepository = matchingRepo;
             debugLog(`Using specific repository: ${repositoryRoot}`);
         } else {
-            debugLog(`Repository not found for root ${repositoryRoot}, using first available`);
+            throw new Error("The requested repository is unavailable in Source Control. Reopen it and generate again.");
         }
     } else {
         // Legacy behavior - find the repository that matches our workspace

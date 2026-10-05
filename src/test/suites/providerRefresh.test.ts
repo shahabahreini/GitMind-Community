@@ -118,7 +118,7 @@ suite("Provider refresh 2026-09 (API migrations and model defaults)", () => {
             const result = await new AnthropicProvider("test-key", model).generateWithRawPrompt("diff");
             assert.strictEqual(result.trim(), "feat: ok", model);
             assert.strictEqual(captured[0].body.temperature === undefined, alwaysThinks, `${model} temperature`);
-            assert.ok(alwaysThinks ? captured[0].body.max_tokens >= 4000 : captured[0].body.max_tokens <= 1000, `${model} max_tokens`);
+            assert.ok(alwaysThinks ? captured[0].body.max_tokens >= 4000 : captured[0].body.max_tokens <= 1024, `${model} max_tokens`);
         }
     });
 

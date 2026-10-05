@@ -190,39 +190,27 @@ export class APIErrorHandler {
     }
 
     private static handleTokenLimitError(_error: Error, errorInfo: ErrorInfo, provider: string, context?: any): ErrorInfo {
-        // Prioritize context data over parsing error message
-        const estimatedTokens = context?.estimatedTokens || 'Unknown';
-        const diffSize = context?.diffSize;
-        const filesChanged = context?.filesChanged;
+        const estimatedTokens = Number.isSafeInteger(context?.estimatedTokens) && context.estimatedTokens > 0 ? context.estimatedTokens : undefined;
+        const diffSize = Number.isSafeInteger(context?.diffSize) && context.diffSize > 0 ? context.diffSize : undefined;
+        const modelLimit = Number.isSafeInteger(context?.modelLimit) && context.modelLimit > 0 ? context.modelLimit : undefined;
+        const filesChanged = Number.isSafeInteger(context?.filesChanged) && context.filesChanged > 0 ? context.filesChanged : undefined;
 
-        // Don't try to parse token limits from error messages for now
-        // as this often leads to incorrect very low limits being extracted
-        let maxTokens: number | undefined;
-
-        errorInfo.userMessage = `Content is too large for the selected model.`;
+        errorInfo.userMessage = "Content exceeds the selected model's input limit.";
         errorInfo.technicalDetails = {
             diffSize,
             estimatedTokens,
-            modelLimit: maxTokens,
+            modelLimit,
             filesChanged
         };
-
-        const limitText = maxTokens ? ` (limit: ${maxTokens.toLocaleString()})` : '';
         const modelSuggestion = (this.PROVIDER_SUGGESTIONS && this.PROVIDER_SUGGESTIONS[provider]) || this.PROVIDER_SUGGESTIONS?.default || 'Check available models with larger limits';
-
         errorInfo.suggestions = [
-            "Technical Details:",
-            ...(diffSize ? [`• Diff size: ${(diffSize / 1024).toFixed(1)} KB`] : []),
-            ...(estimatedTokens !== 'Unknown' ? [`• Estimated tokens: ${typeof estimatedTokens === 'number' ? estimatedTokens.toLocaleString() : estimatedTokens}`] : []),
-            ...(filesChanged ? [`• Files changed: ${filesChanged}`] : []),
-            "",
-            `Current: ~${typeof estimatedTokens === 'number' ? estimatedTokens.toLocaleString() : estimatedTokens} tokens`,
-            "Solutions:",
-            `• Stage fewer files${filesChanged ? ` (currently: ${filesChanged} files)` : ''}`,
-            "• Use 'git add -p' to stage specific chunks",
-            "• Commit changes in smaller, logical groups",
-            `• Switch to a model with larger context window: ${modelSuggestion}`,
-            "• Remove unnecessary whitespace/formatting changes"
+            ...(context?.largeDiffEnabled === false
+                ? ["GitMind Pro can analyze large changes in budgeted batches. Enable Large Diff Processing in Pro Settings."]
+                : context?.largeDiffEnabled === true
+                    ? ["Large Diff Processing is enabled; shorten custom instructions or choose a larger-context model if a single analysis prompt still cannot fit."]
+                    : []),
+            `Choose a model with a larger context window: ${modelSuggestion}`,
+            "Stage fewer files or commit changes in smaller logical groups."
         ];
 
         return errorInfo;
@@ -234,6 +222,7 @@ export class APIErrorHandler {
             "Wait a few minutes before trying again",
             "Check your API usage dashboard",
             "Consider upgrading your plan for higher limits",
+            "For Pro large diffs, lower Concurrent Requests in Large Diff Processing; provider request and token quotas still apply",
             `Current provider: ${provider} - Consider switching to a different provider temporarily`
         ];
         return errorInfo;
@@ -367,7 +356,7 @@ export class APIErrorHandler {
 export function formatSafeProviderError(
     error: unknown,
     provider: string,
-    context?: { diffSize?: number; estimatedTokens?: number; filesChanged?: number }
+    context?: { diffSize?: number; estimatedTokens?: number; modelLimit?: number; filesChanged?: number; largeDiffEnabled?: boolean }
 ): string {
     const normalized = normalizeProviderError(error, provider);
     if (normalized.userFacing) {
