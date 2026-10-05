@@ -1,6 +1,6 @@
 import { CoverageStore } from "./coverageStore";
 import { LargeDiffSettings } from "../../config/largeDiffSettings";
-import { ModelCapabilities, assertPromptFits } from "./capabilities";
+import { ModelCapabilities, assertPromptFitsAsync, countPromptTokens, effectiveInputBudget } from "./capabilities";
 import { ProviderApiError, classifyGenerationFailure } from "./recovery";
 
 export interface CoveredText { text: string; start: number; end: number; }
@@ -47,7 +47,7 @@ export function splitCovered(part: CoveredText): [CoveredText, CoveredText] {
 
 export interface BudgetedDependencies {
     capabilities: () => ModelCapabilities;
-    renderFinal: (text: string) => Promise<string>;
+    renderFinal: (text: string, capabilities: ModelCapabilities) => Promise<string>;
     send: (render: (capabilities: ModelCapabilities) => Promise<string>, signal: AbortSignal) => Promise<string>;
     signal: AbortSignal;
     progress?: (stage: "planning" | "requests" | "reduction", completed: number) => void;
@@ -75,14 +75,14 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
         try {
             const text = await deps.send(async capabilities => {
                 const prompt = analysisPrompt(part, metadata);
-                assertPromptFits(prompt, capabilities);
+                await assertPromptFitsAsync(prompt, capabilities);
                 return prompt;
             }, signal);
             deps.progress?.("requests", ++completed);
             return [{ ...part, text }];
         } catch (error) {
             if (classifyGenerationFailure(error, "") !== "input-limit" && !isOutputTruncation(error)) { throw error; }
-            try { assertPromptFits(analysisPrompt({ ...part, text: "" }, metadata), deps.capabilities()); }
+            try { await assertPromptFitsAsync(analysisPrompt({ ...part, text: "" }, metadata), deps.capabilities()); }
             catch { throw new ProviderApiError("Prompt overhead cannot fit the model budget. Shorten custom context or choose a larger-context model.", { category: "input-limit" }); }
             const [left, right] = splitCovered(part);
             const rightContext = continuationContext(left.text, metadata);
@@ -124,7 +124,7 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
     };
     const initialCapabilities = deps.capabilities();
     const emptyPromptCost = initialCapabilities.countTokens(analysisPrompt({ text: "", start: 0, end: 0 }, ""));
-    const windowUnits = Math.max(256, Math.min(8192, initialCapabilities.contextTokens - initialCapabilities.outputTokens - 256 - emptyPromptCost - 64));
+    const windowUnits = Math.max(256, Math.min(8192, (initialCapabilities.countTokensAsync ? effectiveInputBudget(initialCapabilities) * 4 : effectiveInputBudget(initialCapabilities)) - emptyPromptCost - 64));
     for await (const part of sourceWindows(input, settings.chunkSize, windowUnits)) {
         deps.signal.throwIfAborted();
         const metadata = context;
@@ -132,9 +132,6 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
         const lines = (pendingLine + part.text).split("\n");
         const tail = lines.pop() ?? "";
         pendingLine = tail.slice(0, 8192);
-        if (/^(diff --git |index |--- |\+\+\+ |@@|rename )/.test(tail) && tail.length > 8192) {
-            throw new ProviderApiError("Diff metadata exceeds the planning budget. Choose a larger-context model or stage a smaller change.", { category: "input-limit" });
-        }
         for (const line of lines) {
             if (line.startsWith("diff --git ")) { context = line; }
             else if (/^(index |--- |\+\+\+ |(?:new|deleted) file mode |(?:old|new) mode |rename |similarity )/.test(line)) { context += "\n" + line; }
@@ -148,8 +145,11 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
             const capabilities = deps.capabilities();
             const framing = capabilities.countTokens(analysisPrompt({ text: "", start: pending.part.start, end: part.end }, pending.metadata));
             // Bounded memory while using most of the effective input budget.
-            const available = Math.min(512 * 1024, capabilities.contextTokens - capabilities.outputTokens - 256 - framing - 64);
-            if (pending.bytes + bytes > available) { await queuePending(); }
+            const available = Math.min(512 * 1024, effectiveInputBudget(capabilities) - framing - 64);
+            const candidate = pending.part.text + part.text;
+            if (pending.bytes + bytes > 512 * 1024 || (capabilities.countTokensAsync
+                ? await countPromptTokens(analysisPrompt({ ...pending.part, text: candidate, end: part.end }, pending.metadata), capabilities) > effectiveInputBudget(capabilities) - 64
+                : pending.bytes + bytes > available)) { await queuePending(); }
         }
         if (pending) {
             pending.part.text += part.text;
@@ -164,14 +164,14 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
     for (let round = 0; round < 32; round++) {
         deps.signal.throwIfAborted();
         const capabilities = deps.capabilities();
-        if (store.textSize < capabilities.contextTokens) {
+        if (store.textSize < (capabilities.countTokensAsync ? effectiveInputBudget(capabilities) * 4 : capabilities.contextTokens)) {
             const parts: string[] = [];
             for await (const part of store.read()) { parts.push("[" + part.start + ".." + part.end + "] " + part.text); }
             const joined = parts.join("\n");
             try {
                 return await deps.send(async current => {
-                    const prompt = await deps.renderFinal(joined);
-                    assertPromptFits(prompt, current);
+                    const prompt = await deps.renderFinal(joined, current);
+                    await assertPromptFitsAsync(prompt, current);
                     return prompt;
                 }, deps.signal);
             } catch (error) {
@@ -191,7 +191,7 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
                 try {
                     return await deps.send(async capabilities => {
                         const prompt = "Compress these ordered factual change summaries. Keep behavior, interfaces, data, security and distinct change intent. Group repeated mechanical changes and use fewer words. Do not invent changes.\n" + customContext + "\n" + text;
-                        assertPromptFits(prompt, capabilities);
+                        await assertPromptFitsAsync(prompt, capabilities);
                         return prompt;
                     }, deps.signal);
                 } catch (error) {
@@ -204,10 +204,10 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
             await reduced.append({ text: result, start, end });
             group = [];
         };
-        const limit = deps.capabilities().contextTokens - deps.capabilities().outputTokens - 256;
+        const limit = effectiveInputBudget(deps.capabilities());
         for await (const part of store.read()) {
             const prospective = [...group, part].map(value => value.text).join("\n");
-            if (deps.capabilities().countTokens(customContext + prospective) + 160 > limit) { await reduceGroup(); }
+            if (await countPromptTokens(customContext + prospective, deps.capabilities()) + 160 > limit) { await reduceGroup(); }
             group.push(part);
         }
         await reduceGroup();

@@ -205,11 +205,11 @@ export class APIErrorHandler {
         const modelSuggestion = (this.PROVIDER_SUGGESTIONS && this.PROVIDER_SUGGESTIONS[provider]) || this.PROVIDER_SUGGESTIONS?.default || 'Check available models with larger limits';
         errorInfo.suggestions = [
             ...(context?.largeDiffEnabled === false
-                ? ["GitMind Pro can analyze large changes in budgeted batches. Enable Large Diff Processing in Pro Settings."]
+                ? ["GitMind Pro automatically analyzes oversized changes in budgeted batches. Provider rate limits may still apply."]
                 : context?.largeDiffEnabled === true
                     ? ["Large Diff Processing is enabled; shorten custom instructions or choose a larger-context model if a single analysis prompt still cannot fit."]
                     : []),
-            `Choose a model with a larger context window: ${modelSuggestion}`,
+            modelSuggestion,
             "Stage fewer files or commit changes in smaller logical groups."
         ];
 
@@ -219,11 +219,9 @@ export class APIErrorHandler {
     private static handleRateLimitError(_error: Error, errorInfo: ErrorInfo, provider: string): ErrorInfo {
         errorInfo.userMessage = `${provider} rate limit exceeded.`;
         errorInfo.suggestions = [
-            "Wait a few minutes before trying again",
-            "Check your API usage dashboard",
-            "Consider upgrading your plan for higher limits",
-            "For Pro large diffs, lower Concurrent Requests in Large Diff Processing; provider request and token quotas still apply",
-            `Current provider: ${provider} - Consider switching to a different provider temporarily`
+            "Wait for your provider's request or token quota to reset, then try again",
+            "GitMind already packs large changes to reduce requests; provider rate limits can still stop generation",
+            "If this repeats, choose another available provider or check your account quota",
         ];
         return errorInfo;
     }

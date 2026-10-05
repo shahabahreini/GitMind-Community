@@ -1,10 +1,16 @@
 import { debugLog } from "../debug/logger";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
+import { ProviderApiError, normalizeProviderError } from "./recovery";
+import { RequestContext } from "./requestContext";
 
 export class OpenRouterProvider extends BaseAIProvider {
     constructor(apiKey: string, model: string) {
         super(apiKey, model);
+    }
+
+    override async prepareCapabilities(context?: RequestContext): Promise<void> {
+        await this.discoverLargeModel(context, signal => this.getModels(signal));
     }
 
     protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
@@ -39,13 +45,15 @@ export class OpenRouterProvider extends BaseAIProvider {
                 const errorText = await response.text();
                 debugLog(`OpenRouter API error: ${response.status} ${errorText}`);
                 let errorDetails = errorText;
+                let code: string | undefined;
                 try {
                     const parsed = JSON.parse(errorText);
                     errorDetails = parsed.error?.message || parsed.message || errorText;
+                    code = parsed.error?.code;
                 } catch {
                     // Keep raw text fallback
                 }
-                throw new Error(`OpenRouter API error: ${response.status} - ${errorDetails}`);
+                throw new ProviderApiError(`OpenRouter API error: ${response.status} - ${errorDetails}`, { status: response.status, code, provider: "openrouter" });
             }
 
             const data = await response.json();
@@ -60,18 +68,15 @@ export class OpenRouterProvider extends BaseAIProvider {
             debugLog('Error in OpenRouterProvider:', error);
 
             // Handle abort error specifically
-            if (error instanceof Error && error.name === 'AbortError') {
-                throw new Error('Request was cancelled');
-            }
-
-            throw new Error(`Failed to generate commit message: ${error instanceof Error ? error.message : String(error)}`);
+            throw normalizeProviderError(error, "openrouter");
         }
     }
 
-    async getModels(): Promise<string[]> {
+    async getModels(signal?: AbortSignal): Promise<string[]> {
         try {
             const response = await loggedFetch("https://openrouter.ai/api/v1/models", {
                 method: "GET",
+                signal,
                 headers: {
                     "Authorization": `Bearer ${this.apiKey}`,
                     "Accept": "application/json",
@@ -125,6 +130,12 @@ export class OpenRouterProvider extends BaseAIProvider {
             if (!data.data || !Array.isArray(data.data)) {
                 debugLog("Unexpected OpenRouter models response format:", data);
                 throw new Error("Expected data.data array from OpenRouter models API");
+            }
+
+            for (const model of data.data) {
+                if (typeof model?.id === "string") {
+                    this.rememberModelLimits(model.id, model.context_length, model.top_provider?.max_completion_tokens);
+                }
             }
 
             // Filter models that are available and have reasonable pricing

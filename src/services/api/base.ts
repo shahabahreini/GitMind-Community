@@ -2,8 +2,8 @@ import { AIProvider } from "./provider";
 import { generateCommitPrompt, getPromptConfig, generateCommitHistoryAnalysisPrompt } from "./prompts";
 import { debugLog, diagnosticLog } from "../debug/logger";
 import { RequestContext, requestScope, runRequest } from "./requestContext";
-import { normalizeProviderError } from "./recovery";
-import { answerText, assertPromptFits, modelCapabilities, ModelCapabilities } from "./capabilities";
+import { classifyGenerationFailure, normalizeProviderError, ProviderApiError } from "./recovery";
+import { answerText, countPromptTokens, directProbeBudget, effectiveInputBudget, modelCapabilities, ModelCapabilities, UNKNOWN_MODEL_PROBE_BYTES } from "./capabilities";
 import { createHash } from "node:crypto";
 
 export interface GenerationOptions {
@@ -57,26 +57,47 @@ export abstract class BaseAIProvider implements AIProvider {
         return createHash("sha256").update(this.capabilityScope()).digest("hex") + ":" + model;
     }
 
-    protected rememberModelLimits(model: string, inputTokens: unknown, outputTokens: unknown): void {
+    protected rememberModelLimits(model: string, inputTokens: unknown, outputTokens: unknown, inputOnly = false): void {
         if (typeof inputTokens !== "number" || !Number.isSafeInteger(inputTokens) || inputTokens < 512) { return; }
         const reserved = typeof outputTokens === "number" && Number.isSafeInteger(outputTokens) && outputTokens > 0 ? Math.min(modelCapabilities(model).outputTokens, outputTokens) : 1024;
         let registry = BaseAIProvider.runtimeCapabilities.get(this.constructor);
         if (!registry) { registry = new Map(); BaseAIProvider.runtimeCapabilities.set(this.constructor, registry); }
-        registry.set(this.capabilityKey(model), { ...modelCapabilities(model), contextTokens: inputTokens, outputTokens: reserved });
+        registry.set(this.capabilityKey(model), { ...modelCapabilities(model), contextTokens: inputOnly ? inputTokens + reserved + 256 : inputTokens, outputTokens: reserved, isUnknown: false, ...(inputOnly ? { maxInputTokens: inputTokens } : {}) });
     }
 
     async prepareCapabilities(_context?: RequestContext): Promise<void> {}
 
+    /** One bounded metadata lookup per selected model and operation, shared by workers. */
+    protected async discoverLargeModel(context: RequestContext | undefined, load: (signal: AbortSignal) => Promise<unknown>): Promise<void> {
+        if (!context || (context.diffByteSize ?? 0) <= UNKNOWN_MODEL_PROBE_BYTES || !this.getCapabilities().isUnknown) { return; }
+        const pending = context.metadataDiscovery ??= new Map<string, Promise<void>>();
+        const key = `${this.constructor.name}:${this.model}`;
+        if (!pending.has(key)) {
+            const signal = context.signal ? AbortSignal.any([context.signal, AbortSignal.timeout(5000)]) : AbortSignal.timeout(5000);
+            pending.set(key, load(signal).then(() => {}).catch(error => {
+                if (context.signal?.aborted) { throw error; }
+                if (["rate-limit", "account-limit", "authentication", "permission"].includes(classifyGenerationFailure(error, ""))) {
+                    throw normalizeProviderError(error, "");
+                }
+                // Metadata is optional; retain the conservative unknown-model budget.
+            }));
+        }
+        await pending.get(key);
+    }
+
     async generateWithRawPrompt(prompt: string, context?: RequestContext): Promise<string> {
         await this.prepareCapabilities(context);
         const capabilities = this.getCapabilities();
+        const estimatedTokens = await countPromptTokens(prompt, capabilities);
         if (context) {
             context.diagnosticBudget = {
-                estimatedTokens: capabilities.countTokens(prompt),
-                modelLimit: Math.max(0, capabilities.contextTokens - capabilities.outputTokens - 256),
+                estimatedTokens,
+                modelLimit: capabilities.isUnknown && context.allowPromptProbe ? 0 : effectiveInputBudget(capabilities),
             };
         }
-        assertPromptFits(prompt, capabilities);
+        if (estimatedTokens > effectiveInputBudget(capabilities) && !(context?.allowPromptProbe && !capabilities.countTokensAsync && capabilities.countTokens(prompt) <= directProbeBudget(capabilities))) {
+            throw new ProviderApiError("Prompt exceeds the model input budget. Shorten custom context or choose a larger-context model.", { category: "input-limit" });
+        }
         const merged = context?.generationOptions ?? this.getMergedGenerationOptions();
         const options = {
             ...merged,

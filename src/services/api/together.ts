@@ -1,6 +1,8 @@
 import { debugLog } from "../debug/logger";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
+import { ProviderApiError, normalizeProviderError } from "./recovery";
+import { RequestContext } from "./requestContext";
 
 /**
  * Together AI API error interface
@@ -15,20 +17,13 @@ interface TogetherAIError {
     };
 }
 
-/**
- * Helper function to format bytes in human-readable format
- */
-function formatBytes(bytes: number): string {
-    if (bytes === 0) { return '0 B'; }
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-}
-
 export class TogetherAIProvider extends BaseAIProvider {
     constructor(apiKey: string, model: string) {
         super(apiKey, model);
+    }
+
+    override async prepareCapabilities(context?: RequestContext): Promise<void> {
+        await this.discoverLargeModel(context, signal => this.getModels(signal));
     }
 
     protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
@@ -40,8 +35,6 @@ export class TogetherAIProvider extends BaseAIProvider {
             // Note: diff size analysis was done in callTogetherAPI, but here we only have the prompt.
             // We can approximate.
             const promptSize = prompt.length;
-            const estimatedTokens = Math.ceil(promptSize / 4);
-
             if (promptSize > 20000) { // ~5000 tokens approximation
                 debugLog(`Warning: Large prompt detected (${promptSize} characters). May exceed model limits.`);
             }
@@ -78,37 +71,10 @@ export class TogetherAIProvider extends BaseAIProvider {
                     debugLog('Failed to parse Together AI error response');
                 }
 
-                // Enhanced error handling with context
-                if (parsedError?.error && response.status === 422) {
-                    const { message } = parsedError.error;
-                    if (message.includes("tokens") && message.includes("must be <=")) {
-                        // Extract specific token information from the error
-                        const tokenMatch = message.match(/(\d+) `inputs` tokens and (\d+) `max_new_tokens`/);
-                        const inputTokens = tokenMatch ? parseInt(tokenMatch[1]) : estimatedTokens;
-                        const maxNewTokens = tokenMatch ? parseInt(tokenMatch[2]) : 0;
-
-                        // Extract model limit
-                        const limitMatch = message.match(/must be <= (\d+)/);
-                        const modelLimit = limitMatch ? parseInt(limitMatch[1]) : 0;
-
-                        throw new Error(
-                            `Together AI API error: 422 - Content exceeds model limits.\n\n` +
-                            `Details:\n` +
-                            `• Input tokens: ${inputTokens.toLocaleString()}\n` +
-                            `• Max output tokens requested: ${maxNewTokens.toLocaleString()}\n` +
-                            `• Model limit: ${modelLimit.toLocaleString()} tokens\n` +
-                            `• Prompt size: ${formatBytes(promptSize)}\n\n` +
-                            `Solutions:\n` +
-                            `• Stage fewer files (try 'git add -p' for selective staging)\n` +
-                            `• Break this into ${Math.ceil(inputTokens / (modelLimit * 0.7))} smaller commits\n` +
-                            `• Use a model with larger context window\n` +
-                            `• Remove formatting-only changes to reduce size`
-                        );
-                    }
-                }
-
-                const userFriendlyError = this.getUserFriendlyErrorMessage(response.status, parsedError);
-                throw new Error(userFriendlyError);
+                const detail = parsedError?.error?.message || errorText || "Unknown Together AI error";
+                throw new ProviderApiError(`Together AI API error: ${response.status} - ${detail}`, {
+                    status: response.status, code: parsedError?.error?.code, provider: "together",
+                });
             }
 
             const data = await response.json();
@@ -126,29 +92,15 @@ export class TogetherAIProvider extends BaseAIProvider {
         } catch (error: unknown) {
             debugLog(`Error in TogetherAIProvider: ${error}`);
 
-            // Handle abort error specifically
-            if (error instanceof Error && error.name === 'AbortError') {
-                throw new Error('Request was cancelled');
-            }
-
-            // Re-throw enhanced errors as-is
-            if (error instanceof Error && error.message.includes('Together AI API error: 422')) {
-                throw error;
-            }
-
-            // Re-throw our custom errors as-is
-            if (error instanceof Error && error.message.includes('Together AI')) {
-                throw error;
-            }
-
-            throw new Error(`Failed to generate commit message: ${error instanceof Error ? error.message : String(error)}`);
+            throw normalizeProviderError(error, "together");
         }
     }
 
-    async getModels(): Promise<string[]> {
+    async getModels(signal?: AbortSignal): Promise<string[]> {
         try {
             const response = await loggedFetch("https://api.together.xyz/v1/models", {
                 method: "GET",
+                signal,
                 headers: {
                     "Authorization": `Bearer ${this.apiKey}`,
                     "Accept": "application/json"
@@ -188,6 +140,12 @@ export class TogetherAIProvider extends BaseAIProvider {
             if (!Array.isArray(data)) {
                 debugLog("Unexpected Together AI models response format:", data);
                 throw new Error("Expected array of models from Together AI API");
+            }
+
+            for (const model of data) {
+                if (typeof model?.id === "string") {
+                    this.rememberModelLimits(model.id, model.context_length, model.max_output_tokens);
+                }
             }
 
             // Filter models that are available for chat/text generation

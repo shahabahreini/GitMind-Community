@@ -2,7 +2,8 @@ import { debugLog } from "../debug/logger";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
 import { ProviderApiError } from "./recovery";
-import { getProviderDefaultModel, getCuratedModels } from "../../config/providerCatalog";
+import { getProviderDefaultModel } from "../../config/providerCatalog";
+import { RequestContext } from "./requestContext";
 
 const NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1";
 const DEFAULT_MODELS = [
@@ -80,6 +81,10 @@ export class NvidiaProvider extends BaseAIProvider {
         super(apiKey, model);
     }
 
+    override async prepareCapabilities(context?: RequestContext): Promise<void> {
+        await this.discoverLargeModel(context, signal => this.getModels(signal));
+    }
+
     protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
         try {
             const response = await loggedFetch(`${NVIDIA_BASE_URL}/chat/completions`, {
@@ -118,20 +123,28 @@ export class NvidiaProvider extends BaseAIProvider {
         }
     }
 
-    async getModels(): Promise<string[]> {
+    async getModels(signal?: AbortSignal): Promise<string[]> {
         try {
             const headers: Record<string, string> = { "Accept": "application/json" };
             if (this.apiKey) {
                 headers.Authorization = `Bearer ${this.apiKey}`;
             }
-            const response = await loggedFetch(`${NVIDIA_BASE_URL}/models`, { headers }, { provider: "nvidia", operation: "models.list" });
+            const response = await loggedFetch(`${NVIDIA_BASE_URL}/models`, { headers, signal }, { provider: "nvidia", operation: "models.list" });
             if (!response.ok) {
                 throw parseError(response.status, await response.text());
             }
             const data = await response.json() as { data?: unknown };
+            if (Array.isArray(data.data)) {
+                for (const model of data.data) {
+                    if (typeof model?.id === "string") {
+                        this.rememberModelLimits(model.id, model.context_length ?? model.max_model_len, model.max_output_tokens);
+                    }
+                }
+            }
             const models = filterNvidiaChatModels(data.data);
             return models.length > 0 ? models : DEFAULT_MODELS;
         } catch (error) {
+            if (signal) { throw error; }
             debugLog("Failed to fetch NVIDIA models; using curated defaults:", error);
             return DEFAULT_MODELS;
         }

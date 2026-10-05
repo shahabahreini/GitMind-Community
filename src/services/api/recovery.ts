@@ -133,6 +133,7 @@ export function classifyGenerationFailure(error: unknown, _provider: string): Ge
     }
     if (
         status === 413 ||
+        ((status === 400 || status === 422) && /(?:prompt|input|context|tokens)/.test(message) && /(?:exceed|too long|too large|must be <=)/.test(message)) ||
         code?.includes("context_length") ||
         code?.includes("input_token") ||
         message.includes("context length") ||

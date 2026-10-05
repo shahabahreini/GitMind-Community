@@ -3,8 +3,24 @@ import { ProviderApiError } from "./recovery";
 export interface ModelCapabilities {
     contextTokens: number;
     outputTokens: number;
+    /** No trustworthy selected-model limit was available. */
+    isUnknown?: boolean;
+    /** Runtime input-only limit, when the provider reports it separately. */
+    maxInputTokens?: number;
     supportedOptions: readonly string[];
     countTokens: (text: string) => number;
+    countTokensAsync?: (text: string) => PromiseLike<number>;
+}
+
+/** Bounds a direct request when conservative byte counting may overestimate tokens. */
+export const UNKNOWN_MODEL_PROBE_BYTES = 64 * 1024;
+export function directProbeBudget(capabilities: ModelCapabilities): number {
+    return capabilities.isUnknown ? UNKNOWN_MODEL_PROBE_BYTES
+        : Math.min(512 * 1024, Math.max(UNKNOWN_MODEL_PROBE_BYTES, effectiveInputBudget(capabilities) * 4));
+}
+
+export function effectiveInputBudget(capabilities: ModelCapabilities): number {
+    return capabilities.maxInputTokens ?? Math.max(0, capabilities.contextTokens - capabilities.outputTokens - 256);
 }
 
 /** UTF-8 bytes bound token usage conservatively for unknown tokenizers. */
@@ -29,6 +45,7 @@ export function modelCapabilities(model: string): ModelCapabilities {
     return {
         contextTokens: VERIFIED_LIMITS[model]?.[0] ?? 4096,
         outputTokens: VERIFIED_LIMITS[model]?.[1] ?? 1024,
+        isUnknown: !VERIFIED_LIMITS[model],
         supportedOptions: ["maxTokens"],
         countTokens: conservativeTokenCount,
     };
@@ -36,8 +53,22 @@ export function modelCapabilities(model: string): ModelCapabilities {
 
 export function assertPromptFits(prompt: string, capabilities: ModelCapabilities): void {
     // Reserve framing for adapters that wrap the user text in a chat envelope.
-    if (capabilities.countTokens(prompt) + capabilities.outputTokens + 256 > capabilities.contextTokens) {
-        throw new ProviderApiError("Prompt exceeds the model input budget. Enable large-diff handling or reduce custom context.", { category: "input-limit" });
+    if (capabilities.countTokens(prompt) > effectiveInputBudget(capabilities)) {
+        throw new ProviderApiError("Prompt exceeds the model input budget. Shorten custom context or choose a larger-context model.", { category: "input-limit" });
+    }
+}
+
+export async function countPromptTokens(prompt: string, capabilities: ModelCapabilities): Promise<number> {
+    const count = capabilities.countTokensAsync ? await capabilities.countTokensAsync(prompt) : capabilities.countTokens(prompt);
+    if (!Number.isSafeInteger(count) || count < 0) {
+        throw new ProviderApiError("Model tokenizer returned an invalid token count.", { category: "invalid-response" });
+    }
+    return count;
+}
+
+export async function assertPromptFitsAsync(prompt: string, capabilities: ModelCapabilities): Promise<void> {
+    if (await countPromptTokens(prompt, capabilities) > effectiveInputBudget(capabilities)) {
+        throw new ProviderApiError("Prompt exceeds the model input budget. Shorten custom context or choose a larger-context model.", { category: "input-limit" });
     }
 }
 

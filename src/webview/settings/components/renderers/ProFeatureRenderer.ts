@@ -688,10 +688,11 @@ export class ProFeatureRenderer extends BaseRenderer {
                 <div class="section-header">
                     <h3 class="section-title">Large Diff Handling ${lockBadge}</h3>
                 </div>
+                <p class="setting-desc">GitMind Pro handles changes that exceed the selected model automatically. It keeps every source span in the analysis and compacts repeated details to fit the available model budget. Provider request and token rate limits may still slow or stop generation.</p>
                 <div class="setting-row ${disabledState ? 'locked' : ''}">
                     <div class="setting-info">
-                        <div class="setting-label">Enable Large Diff Processing</div>
-                        <div class="setting-desc">Analyze every change in budgeted groups and combine the most impactful results. Provider request and token rate limits still apply.</div>
+                        <div class="setting-label">Process large changes proactively</div>
+                        <div class="setting-desc">Optional: start batching at the preferred source window size, before reaching the model limit.</div>
                     </div>
                     <div class="setting-control">
                         <div class="switch-container ${disabledState ? 'disabled' : ''}">
@@ -706,6 +707,8 @@ export class ProFeatureRenderer extends BaseRenderer {
                     </div>
                 </div>
                 
+                <details class="large-diff-advanced">
+                    <summary>Advanced controls (optional)</summary>
                 <div class="compact-settings">
                     <div class="compact-setting ${disabledState ? 'locked' : ''}">
                         <span>Preferred Source Window (lines)</span>
@@ -731,6 +734,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                         <span>Concurrent Requests (lower this if rate limited)</span>
                     <input type="number" id="largeDiffConcurrency" value="${largeDiffHandling.concurrency}" min="1" max="8" step="1" data-setting="pro.largeDiffHandling.concurrency" ${disabledState ? 'disabled' : ''}/>
                 </div>
+                </details>
                 ${!isPro ? `
                 <div class="pro-upsell">
                     <p>Upgrade to GitMind Pro to enable large diff processing.</p>

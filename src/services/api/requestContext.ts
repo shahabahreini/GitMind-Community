@@ -9,6 +9,9 @@ export interface RequestContext {
     generationOptions?: GenerationOptions;
     signal?: AbortSignal;
     largeDiffEnabled?: boolean;
+    allowPromptProbe?: boolean;
+    diffByteSize?: number;
+    metadataDiscovery?: Map<string, Promise<void>>;
     diagnosticBudget?: { estimatedTokens: number; modelLimit: number };
 }
 interface AttemptContext extends RequestContext {

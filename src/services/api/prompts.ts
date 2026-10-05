@@ -1432,6 +1432,28 @@ Generate the commit message now following the exact format specified above:`;
   return prompt;
 }
 
+/** Compact final framing for models whose input limit cannot hold the full style template. */
+export function generateCompactCommitPrompt(summary: string, config: PromptConfig, customContext = ""): string {
+  const styles: Record<CommitStyle, string> = {
+    basic: "A clear imperative subject",
+    conventional: "Conventional Commit: type(scope): imperative subject",
+    'conventional-no-scope': "Conventional Commit: type: imperative subject, without scope",
+    angular: "Angular commit: type(scope): imperative subject",
+    ember: "Ember commit: type(scope): imperative subject",
+    emojigit: "Emoji followed by an imperative subject",
+    gitmoji: "Gitmoji followed by an imperative subject",
+    semantic: "Semantic release commit: type(scope): imperative subject",
+    commitizen: "Commitizen commit: type(scope): imperative subject",
+    karma: "Karma commit: type(scope): imperative subject",
+    linux: "Linux kernel commit: subsystem: imperative subject",
+    jquery: "jQuery commit: imperative subject",
+  };
+  const style = styles[config.style ?? "basic"];
+  const scope = config.includeScope === false ? "Omit a scope. " : "";
+  const language = config.targetLanguage && config.targetLanguage !== "english" ? `Write in ${config.targetLanguage}. ` : "";
+  return `Write one accurate git commit message from these ordered change summaries. ${style}. ${scope}${language}Keep the subject within ${config.maxLength ?? 72} characters. Use at most ${config.maxBodyLines ?? 5} body lines when useful. Prioritize behavior and user impact; do not invent changes.\n${customContext}\nChanges:\n${summary}`;
+}
+
 /**
  * Generate prompt for analyzing commit history messages with length validation
  */

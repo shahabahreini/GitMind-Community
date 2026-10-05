@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { debugLog, diagnosticLog } from "../debug/logger";
 import { BaseAIProvider, GenerationOptions } from './base';
 import { normalizeProviderError, ProviderApiError, ProviderErrorCategory } from './recovery';
+import { ModelCapabilities } from './capabilities';
 
 /** Shown in the Copilot consent dialog so users know why GitMind asks for access. */
 export const COPILOT_REQUEST_JUSTIFICATION = "GitMind uses GitHub Copilot to write commit messages from your staged changes.";
@@ -224,11 +225,23 @@ export function resolveCopilotChatModel(
 }
 
 export class CopilotProvider extends BaseAIProvider {
+    private selectedModel?: vscode.LanguageModelChat;
+
     override async prepareCapabilities(context?: RequestContext): Promise<void> {
         await runRequest(context, async () => {
             const model = resolveCopilotChatModel(this.model, await requireCopilotModels());
-            this.rememberModelLimits(this.model, model.maxInputTokens, 1024);
+            this.selectedModel = model;
+            this.rememberModelLimits(this.model, model.maxInputTokens, 1024, true);
         });
+    }
+
+    override getCapabilities(): ModelCapabilities {
+        const capabilities = super.getCapabilities();
+        const model = this.selectedModel;
+        return model ? {
+            ...capabilities,
+            countTokensAsync: text => model.countTokens(vscode.LanguageModelChatMessage.User(text)),
+        } : capabilities;
     }
 
     constructor(_apiKey: string, model: string) {
@@ -252,7 +265,7 @@ export class CopilotProvider extends BaseAIProvider {
             resolvedModelId = resolvedModel.id;
             debugLog(`Selected Copilot model: ${resolvedModel.id}`);
 
-            this.rememberModelLimits(this.model, resolvedModel.maxInputTokens, 1024);
+            this.rememberModelLimits(this.model, resolvedModel.maxInputTokens, 1024, true);
             controller.signal.throwIfAborted();
             const message = vscode.LanguageModelChatMessage.User(prompt);
 

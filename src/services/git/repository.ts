@@ -192,18 +192,18 @@ export async function getDiffInput(workspaceFolder: vscode.WorkspaceFolder, repo
     onlyLockFiles &&= stagedCount > 0;
     const spool = await createDiffSpool();
     try {
-        await spool.append(["diff", "--no-ext-diff", "--no-textconv", "--staged", ...(onlyLockFiles ? [] : excludeArgs)], repoRoot, signal);
+        await spool.append(["diff", "--no-ext-diff", "--no-textconv", "--unified=0", "--staged", ...(onlyLockFiles ? [] : excludeArgs)], repoRoot, signal);
         if (captureAllChanges || !spool.size) {
             if (!captureAllChanges) {
                 const answer = await vscode.window.showWarningMessage("No staged changes found. Would you like to generate a commit message for unstaged changes?", "Yes", "No");
                 signal?.throwIfAborted();
                 if (answer !== "Yes") { throw new Error("Operation cancelled"); }
             }
-            await spool.append(["diff", "--no-ext-diff", "--no-textconv", ...excludeArgs], repoRoot, signal);
+            await spool.append(["diff", "--no-ext-diff", "--no-textconv", "--unified=0", ...excludeArgs], repoRoot, signal);
         }
         if (captureAllChanges) {
             for await (const file of gitNames(["ls-files", "--others", "--exclude-standard", "-z", ...excludeArgs], repoRoot, signal)) {
-                await spool.append(["diff", "--no-ext-diff", "--no-textconv", "--no-index", "--", "/dev/null", file], repoRoot, signal, true);
+                await spool.append(["diff", "--no-ext-diff", "--no-textconv", "--unified=0", "--no-index", "--", "/dev/null", file], repoRoot, signal, true);
             }
         }
         return spool;

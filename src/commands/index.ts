@@ -270,6 +270,7 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
 
     diagnosticLog({ subsystem: "git", event: "generation.collection", operationId: diagnostics.id, support: { name: "operation_progress", operation: "generate_commit", stage: "collection" } });
     diffSpool = await getDiffInput(targetRepository as vscode.WorkspaceFolder, repoRoot, generationOperation.context);
+    generationOperation.context.diffByteSize = diffSpool.size;
     if (!diffSpool.size) {
       diagnosticLog({ subsystem: "git", event: "git.diff_empty", functionName: "handleGenerateCommit", operationId: diagnostics.id, outcome: "skipped", support: { name: "operation_progress", operation: "git_operation", outcome: "success" } });
       vscode.window.showInformationMessage("No changes detected to generate a commit message for.");

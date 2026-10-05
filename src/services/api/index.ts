@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { RequestContext } from "./requestContext";
-import { modelCapabilities, assertPromptFits } from "./capabilities";
+import { modelCapabilities, assertPromptFitsAsync, countPromptTokens, directProbeBudget, effectiveInputBudget, ModelCapabilities } from "./capabilities";
 import { generateBudgeted, DiffInput, isOutputTruncation } from "./budgetedGeneration";
 import { readLargeDiffSettings, LargeDiffSettings } from "../../config/largeDiffSettings";
 // src/services/api/index.ts
@@ -41,7 +41,7 @@ import { workspace } from "vscode";
 import { APIErrorHandler } from "../../utils/errorHandler";
 import { SubscriptionManager } from "../subscription/SubscriptionManager";
 import { DiffProcessor } from "../diffProcessor";
-import { generateCommitHistoryAnalysisPrompt, validatePromptLength, generateCommitPrompt, getPromptConfig } from './prompts';
+import { generateCommitHistoryAnalysisPrompt, validatePromptLength, generateCommitPrompt, generateCompactCommitPrompt, getPromptConfig } from './prompts';
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { classifyGenerationFailure, normalizeProviderError, ProviderApiError, withModel } from "./recovery";
 import { recordSupportEvent, SupportOperation, SupportProvider } from "../support/SupportSessionService";
@@ -359,6 +359,7 @@ export async function generateCommitMessage(
 ): Promise<string> {
     const owned = context ? undefined : beginGenerationOperation(repositoryRoot ?? "global", operationId);
     context ??= owned!.context;
+    context.diffByteSize ??= typeof diff === "string" ? Buffer.byteLength(diff, "utf8") : undefined;
     const promptConfig = context.promptConfig ?? getPromptConfig();
     let inputIterator: AsyncIterator<string> | undefined;
     try {
@@ -379,7 +380,9 @@ export async function generateCommitMessage(
             inputIterator = iterator;
             let prefix = "";
             let exhausted = false;
-            const budget = initialProvider.getCapabilities().contextTokens;
+            let nextBlock: string | undefined;
+            const capabilities = initialProvider.getCapabilities();
+            const budget = Math.min(1024 * 1024, Math.max(effectiveInputBudget(capabilities), directProbeBudget(capabilities)));
             while (prefix.length < budget) {
                 context.signal?.throwIfAborted();
                 const next = await iterator.next();
@@ -387,9 +390,15 @@ export async function generateCommitMessage(
                 prefix += next.value;
                 if (largeDiffSettings.enabled && prefix.split("\n").length > largeDiffSettings.chunkSize) { break; }
             }
+            if (!exhausted && prefix.length >= budget) {
+                const next = await iterator.next();
+                if (next.done) { exhausted = true; }
+                else { nextBlock = next.value; }
+            }
             diff = exhausted ? prefix : (async function* () {
                 try {
                     yield prefix;
+                    if (nextBlock !== undefined) { yield nextBlock; }
                     while (true) {
                         const next = await iterator.next();
                         if (next.done) { break; }
@@ -404,11 +413,16 @@ export async function generateCommitMessage(
             const prompt = await generateCommitPrompt(diff, promptConfig, customContext);
             const capabilities = initialProvider.getCapabilities();
             context.diagnosticBudget = {
-                estimatedTokens: capabilities.countTokens(prompt),
-                modelLimit: Math.max(0, capabilities.contextTokens - capabilities.outputTokens - 256),
+                estimatedTokens: await countPromptTokens(prompt, capabilities),
+                modelLimit: capabilities.isUnknown ? 0 : effectiveInputBudget(capabilities),
             };
-            try { assertPromptFits(prompt, initialProvider.getCapabilities()); }
-            catch { requiresChunking = true; }
+            try { await assertPromptFitsAsync(prompt, capabilities); }
+            catch (error) {
+                if (classifyGenerationFailure(error, validatedConfig.type) !== "input-limit") { throw error; }
+                if (capabilities.countTokens(prompt) <= directProbeBudget(capabilities)) {
+                    context.allowPromptProbe = true;
+                } else { requiresChunking = true; }
+            }
             requiresChunking ||= largeDiffSettings.enabled && diff.split("\n").length > largeDiffSettings.chunkSize;
             if (!requiresChunking) {
                 try {
@@ -420,13 +434,16 @@ export async function generateCommitMessage(
                     // Runtime input limits or a smaller fallback can require a new plan.
                     if (classifyGenerationFailure(error, validatedConfig.type) !== "input-limit" && !isOutputTruncation(error)) { throw error; }
                     requiresChunking = true;
-                }
+                } finally { context.allowPromptProbe = false; }
             }
         }
-        if (!largeDiffSettings.enabled || !await SubscriptionManager.getInstance().isProUser()) {
-            throw new ProviderApiError("This diff requires large-diff handling. Enable it with Pro, or stage a smaller change.", { category: "input-limit" });
+        if (!await SubscriptionManager.getInstance().isProUser()) {
+            throw new ProviderApiError("This diff exceeds the model input limit. GitMind Pro can process it automatically in budgeted batches.", { category: "input-limit" });
         }
-        return await processLargeDiff(validatedConfig, diff, customContext, largeDiffSettings, context, promptConfig, recovery);
+        // Pro users get safe automatic processing whenever a prompt exceeds the
+        // model budget. The setting only opts into proactive line-based batching.
+        context.largeDiffEnabled = true;
+        return await processLargeDiff(validatedConfig, diff, customContext, largeDiffSettings, context, promptConfig, initialProvider.getCapabilities(), recovery);
     } catch (error) {
         throw normalizeProviderError(error, config.type);
     } finally {
@@ -941,9 +958,10 @@ async function processLargeDiff(
     settings: LargeDiffSettings,
     context: RequestContext,
     promptConfig: ReturnType<typeof getPromptConfig>,
+    initialCapabilities: ModelCapabilities,
     recovery: RecoveryOperation = createRecoveryOperation(config, { operationId: context.operationId }),
 ): Promise<string> {
-    let capabilities = (await getProviderInstance(config)).getCapabilities();
+    let capabilities = initialCapabilities;
     return vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: "Processing large diff", cancellable: true }, async (progress, token) => {
         const controller = new AbortController();
         const subscription = token.onCancellationRequested(() => controller.abort(new ProviderApiError("Request was cancelled", { category: "cancelled" })));
@@ -953,7 +971,11 @@ async function processLargeDiff(
             return await generateBudgeted(diff, customContext, settings, {
                 signal,
                 capabilities: () => capabilities,
-                renderFinal: text => generateCommitPrompt(text, promptConfig, customContext),
+                renderFinal: async (text, current) => {
+                    const full = await generateCommitPrompt(text, promptConfig, customContext);
+                    if (current.countTokens(full) <= effectiveInputBudget(current)) { return full; }
+                    return generateCompactCommitPrompt(text, promptConfig, customContext);
+                },
                 send: (render, requestSignal) => recovery(async attemptConfig => {
                     requestSignal.throwIfAborted();
                     const provider = await getProviderInstance(attemptConfig);

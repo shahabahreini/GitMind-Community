@@ -18,6 +18,7 @@ const advisories = Object.values(report.advisories);
 const counts = report.metadata?.vulnerabilities;
 assert.ok(counts && ["info", "low", "moderate", "high", "critical"].every(key => Number.isSafeInteger(counts[key]) && counts[key] >= 0), "Dependency audit counts are malformed");
 assert.equal(advisories.length, Object.values(counts).reduce((total, value) => total + value, 0), "Dependency audit count mismatch");
+assert.equal(result.status, advisories.length ? 1 : 0, "Dependency audit exit status does not match its findings");
 const expected = advisory => advisory.github_advisory_id === "GHSA-vfj7-8cjw-p6xm"
   && advisory.module_name === "braces"
   && Array.isArray(advisory.findings)

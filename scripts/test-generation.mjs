@@ -64,8 +64,9 @@ export const LanguageModelChatMessage = { User: content => ({ role: 1, content }
 ${sdkTransport}
 export const lm = { selectChatModels: async () => [{
     id: "mock-copilot", name: "Mock", vendor: "copilot", family: "gpt", maxInputTokens: 2816,
-    countTokens: async message => message.content.length,
-    sendRequest: async (_messages, _options, token) => {
+    countTokens: async message => Math.ceil(message.content.length / 4),
+    sendRequest: async (messages, _options, token) => {
+        globalThis.__generationCopilotPrompts?.push(messages[0].content);
         const body = await invoke(token.signal);
         if (!body.choices) { throw new Error("Invalid response"); }
         const content = body.choices[0].message.content;
@@ -95,7 +96,7 @@ try {
                         : args.path === "google" ? sdkTransport + "export class GoogleGenAI { models = { generateContent: async request => invoke(request.config.abortSignal) }; }"
                             : args.path === "aws" ? sdkTransport + "export class ConverseCommand { constructor(input) { this.input = input; } } export class BedrockRuntimeClient { config = { credentials: async () => ({}) }; async send(_command, options) { return invoke(options.abortSignal); } }"
                                 : args.path === "credentials" ? "export const fromIni = () => async () => ({});"
-                                    : "export class SubscriptionManager { static getInstance() { return { isProUser: async () => false }; } }",
+                                    : "export class SubscriptionManager { static getInstance() { return { isProUser: async () => globalThis.__generationProUser === true }; } }",
                 }));
             },
         }],
