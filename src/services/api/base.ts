@@ -5,6 +5,7 @@ import { RequestContext, requestScope, runRequest } from "./requestContext";
 import { classifyGenerationFailure, normalizeProviderError, ProviderApiError } from "./recovery";
 import { answerText, countPromptTokens, directProbeBudget, effectiveInputBudget, modelCapabilities, ModelCapabilities, UNKNOWN_MODEL_PROBE_BYTES } from "./capabilities";
 import { createHash } from "node:crypto";
+import { estimateTokens } from "../../utils/tokenCounter";
 
 export interface GenerationOptions {
     temperature?: number;
@@ -86,12 +87,12 @@ export abstract class BaseAIProvider implements AIProvider {
     }
 
     async generateWithRawPrompt(prompt: string, context?: RequestContext): Promise<string> {
-        await this.prepareCapabilities(context);
+        if (!context?.capabilitiesPrepared) { await this.prepareCapabilities(context); }
         const capabilities = this.getCapabilities();
         const estimatedTokens = await countPromptTokens(prompt, capabilities);
         if (context) {
             context.diagnosticBudget = {
-                estimatedTokens,
+                estimatedTokens: estimateTokens(prompt),
                 modelLimit: capabilities.isUnknown && context.allowPromptProbe ? 0 : effectiveInputBudget(capabilities),
             };
         }

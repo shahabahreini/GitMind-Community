@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { createReadStream, createWriteStream } from "node:fs";
-import { mkdtemp, rm, stat } from "node:fs/promises";
+import { mkdtemp, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pipeline } from "node:stream/promises";
@@ -9,6 +9,7 @@ import { ProviderApiError } from "../api/recovery";
 export interface DiffSpool extends AsyncIterable<string> {
     size: number;
     append: (args: readonly string[], cwd: string, signal?: AbortSignal, noIndex?: boolean) => Promise<void>;
+    appendText: (text: string, signal?: AbortSignal) => Promise<void>;
     dispose: () => Promise<void>;
 }
 
@@ -45,6 +46,15 @@ export async function createDiffSpool(): Promise<DiffSpool> {
                 await closed.catch(() => undefined);
                 throw error;
             } finally { signal?.removeEventListener("abort", abort); }
+        },
+        async appendText(text, signal) {
+            if (disposed) { throw new Error("Diff spool is closed."); }
+            signal?.throwIfAborted();
+            const file = join(directory, String(paths.length));
+            await writeFile(file, text, { mode: 0o600 });
+            signal?.throwIfAborted();
+            paths.push(file);
+            spool.size += Buffer.byteLength(text, "utf8");
         },
         async *[Symbol.asyncIterator]() {
             if (disposed) { throw new Error("Diff spool is closed."); }

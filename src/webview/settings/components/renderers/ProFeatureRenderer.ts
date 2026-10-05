@@ -688,7 +688,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                 <div class="section-header">
                     <h3 class="section-title">Large Diff Handling ${lockBadge}</h3>
                 </div>
-                <p class="setting-desc">GitMind Pro handles changes that exceed the selected model automatically. It keeps every source span in the analysis and compacts repeated details to fit the available model budget. Provider request and token rate limits may still slow or stop generation.</p>
+                <p class="setting-desc">GitMind Pro handles changes that exceed the selected model automatically. It batches included text changes and compacts repeated details to fit the model budget. Audio, video, and source files over 1 MiB contribute filenames without file content by default. Provider request and token rate limits may still slow or stop generation.</p>
                 <div class="setting-row ${disabledState ? 'locked' : ''}">
                     <div class="setting-info">
                         <div class="setting-label">Process large changes proactively</div>

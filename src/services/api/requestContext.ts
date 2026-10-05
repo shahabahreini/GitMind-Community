@@ -12,6 +12,7 @@ export interface RequestContext {
     allowPromptProbe?: boolean;
     diffByteSize?: number;
     metadataDiscovery?: Map<string, Promise<void>>;
+    capabilitiesPrepared?: boolean;
     diagnosticBudget?: { estimatedTokens: number; modelLimit: number };
 }
 interface AttemptContext extends RequestContext {

@@ -48,7 +48,7 @@ export function splitCovered(part: CoveredText): [CoveredText, CoveredText] {
 export interface BudgetedDependencies {
     capabilities: () => ModelCapabilities;
     renderFinal: (text: string, capabilities: ModelCapabilities) => Promise<string>;
-    send: (render: (capabilities: ModelCapabilities) => Promise<string>, signal: AbortSignal) => Promise<string>;
+    send: (render: (capabilities: ModelCapabilities) => Promise<string>, signal: AbortSignal, summaryOutputTokens?: number) => Promise<string>;
     signal: AbortSignal;
     progress?: (stage: "planning" | "requests" | "reduction", completed: number) => void;
 }
@@ -67,7 +67,7 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
     let pendingLine = "";
 
     const analysisPrompt = (part: CoveredText, metadata: string) =>
-        "Analyze this source span factually. Lead with behavior, interfaces, data, security and other impactful changes. Preserve distinct change intent and relevant filenames; group repeated mechanical changes compactly. Do not invent changes. Return a compact factual summary, not a commit message.\n" +
+        "Analyze this source span factually in at most 120 words. Lead with behavior, interfaces, data, security and other impactful changes. Preserve distinct change intent and relevant filenames; group repeated mechanical changes compactly. Do not invent changes. Return a compact factual summary, not a commit message.\n" +
         customContext + "\nFile/hunk context (may overlap source):\n" + metadata +
         "\nSource UTF-16 offsets " + part.start + ".." + part.end + ":\n" + part.text;
     const analyze = async (part: CoveredText, metadata: string, signal: AbortSignal): Promise<CoveredText[]> => {
@@ -77,7 +77,7 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
                 const prompt = analysisPrompt(part, metadata);
                 await assertPromptFitsAsync(prompt, capabilities);
                 return prompt;
-            }, signal);
+            }, signal, 768);
             deps.progress?.("requests", ++completed);
             return [{ ...part, text }];
         } catch (error) {
@@ -190,10 +190,10 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
             const compress = async (text: string): Promise<string> => {
                 try {
                     return await deps.send(async capabilities => {
-                        const prompt = "Compress these ordered factual change summaries. Keep behavior, interfaces, data, security and distinct change intent. Group repeated mechanical changes and use fewer words. Do not invent changes.\n" + customContext + "\n" + text;
+                        const prompt = "Compress these ordered factual change summaries to at most 120 words. Keep behavior, interfaces, data, security and distinct change intent. Group repeated mechanical changes and use fewer words. Do not invent changes.\n" + customContext + "\n" + text;
                         await assertPromptFitsAsync(prompt, capabilities);
                         return prompt;
-                    }, deps.signal);
+                    }, deps.signal, 768);
                 } catch (error) {
                     if (classifyGenerationFailure(error, "") !== "input-limit" && !isOutputTruncation(error)) { throw error; }
                     const [left, right] = splitCovered({ text, start: 0, end: text.length });

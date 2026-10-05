@@ -2,6 +2,8 @@ import { debugLog } from "../debug/logger";
 import { MistralResponse, MistralRateLimit } from "../../config/types";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
+import { answerText } from "./capabilities";
+import { normalizeProviderError, ProviderApiError } from "./recovery";
 
 function extractRateLimits(headers: Headers): MistralRateLimit {
     return {
@@ -55,65 +57,15 @@ export class MistralProvider extends BaseAIProvider {
                 debugLog("Warning: All Mistral rate limits are 0 - possible auth issue");
             }
 
-            // Check rate limits
-            if (rateLimits.remaining <= 0 && rateLimits.remaining !== 0) {
-                const resetTime = new Date(Date.now() + rateLimits.reset * 1000);
-                throw new Error(`Rate limit exceeded. Reset at ${resetTime.toLocaleString()}`);
-            }
-
-            if (!response.ok) {
-                let errorData: any;
-                try {
-                    errorData = await response.json();
-                    debugLog("Mistral API Error Response:", {
-                        status: response.status,
-                        statusText: response.statusText,
-                        errorData: errorData
-                    });
-                } catch {
-                    errorData = { message: response.statusText };
-                    debugLog("Mistral API Error (no JSON):", {
-                        status: response.status,
-                        statusText: response.statusText
-                    });
-                }
-
-                const userFriendlyError = this.getUserFriendlyErrorMessage(response.status, errorData);
-                throw new Error(userFriendlyError);
-            }
-
             const result = await response.json() as MistralResponse;
             const generatedText = result?.choices?.[0]?.message?.content;
-
-            if (!generatedText) {
-                throw new Error("No generated text in response");
-            }
-
-            const formattedMessage = this.enforceCommitMessageFormat(generatedText);
-            debugLog("Mistral API Response:", formattedMessage);
-            return formattedMessage;
+            const finish = result?.choices?.[0]?.finish_reason;
+            if (finish === "length" || finish === "max_tokens") { throw new ProviderApiError("Provider output was truncated.", { category: "invalid-response" }); }
+            if (finish === "content_filter") { throw new ProviderApiError("Provider blocked the answer.", { category: "content-filter" }); }
+            return answerText(generatedText);
 
         } catch (error) {
-            // Handle abort error specifically
-            if (error instanceof Error && error.name === 'AbortError') {
-                throw new Error('Request was cancelled');
-            }
-
-            if (error instanceof Error) {
-                debugLog("Mistral API Error Details:", {
-                    message: error.message,
-                    name: error.name,
-                    stack: error.stack
-                });
-
-                if (error.message.includes("Mistral API error") || error.message.includes("Rate limit")) {
-                    throw error;
-                }
-                throw new Error(`Mistral API call failed: ${error.message}`);
-            }
-
-            debugLog("Unknown Mistral API Error:", error);
-            throw new Error(`Unexpected error during Mistral API call: ${String(error)}`);
+            throw normalizeProviderError(error, "mistral");
         }
     }
 
@@ -166,42 +118,6 @@ export class MistralProvider extends BaseAIProvider {
         }
     }
 
-    /**
-     * Converts Mistral API errors to user-friendly messages
-     */
-    private getUserFriendlyErrorMessage(statusCode: number, errorData: any): string {
-        switch (statusCode) {
-            case 401:
-                return "Mistral API key is invalid or missing. Please check your API key in settings.";
-
-            case 422:
-                if (errorData?.message?.includes("context_length")) {
-                    return "The git diff is too large for the selected model. Try:\n• Staging fewer files\n• Using Mistral Large 3 (mistral-large-2512) for larger context\n• Breaking changes into smaller commits";
-                }
-                return `Mistral request validation failed: ${errorData?.message || 'Invalid request'}`;
-
-            case 429:
-                const resetTime = errorData?.reset_time ? new Date(errorData.reset_time * 1000).toLocaleTimeString() : 'soon';
-                return `Mistral rate limit exceeded. Reset at ${resetTime}. Please wait and try again.`;
-
-            case 400:
-                return `Mistral API request error: ${errorData?.message || 'Bad request'}. Please check your model selection.`;
-
-            case 403:
-                return "Access denied to Mistral API. Please check your API key permissions.";
-
-            case 404:
-                return "Mistral model not found. Please select a different model in settings.";
-
-            case 500:
-            case 502:
-            case 503:
-                return "Mistral AI service is temporarily unavailable. Please try again later.";
-
-            default:
-                return `Mistral API error (${statusCode}): ${errorData?.message || 'Unknown error'}`;
-        }
-    }
 }
 
 export async function fetchMistralModels(apiKey: string): Promise<string[]> {

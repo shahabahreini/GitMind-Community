@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Message Generator",
   "description": "AI commit message generator for VS Code. Write clear Conventional Commits from your diff with GitHub Copilot, local Ollama, or 22 built-in AI providers.",
-  "version": "6.3.0",
+  "version": "6.4.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -1021,7 +1021,7 @@
         "gitmind.pro.largeDiffHandling.enabled": {
           "type": "boolean",
           "default": false,
-          "description": "Analyze every source span in large diffs (Pro)."
+          "description": "Process included text changes in large diffs proactively (Pro). Audio, video, and source files over 1 MiB are represented by filename only by default; provider rate limits still apply."
         },
         "gitmind.pro.largeDiffHandling.chunkSize": {
           "type": "integer",

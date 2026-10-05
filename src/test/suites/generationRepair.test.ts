@@ -19,6 +19,7 @@ import { OpenRouterProvider } from "../../services/api/openrouter";
 import { TogetherAIProvider } from "../../services/api/together";
 import { LMStudioProvider } from "../../services/api/lmstudio";
 import { CustomProvider } from "../../services/api/custom";
+import { MistralProvider } from "../../services/api/mistral";
 import { formatSafeProviderError } from "../../utils/errorHandler";
 import * as vscode from "vscode";
 import { getDiffInput, setCommitMessage } from "../../services/git/repository";
@@ -50,6 +51,69 @@ suite("Generation repair", () => {
         assert.strictEqual((message.match(/Technical Details:/g) ?? []).length, 1);
         assert.doesNotMatch(message, /Unknown|private provider detail/);
         assert.doesNotMatch(formatSafeProviderError(error, "gemini", { diffSize: 500000, largeDiffEnabled: false }), /Unknown/);
+    });
+
+    test("Gemini HTTP 429 with generic billing wording stays a quota error without misleading input details", async () => {
+        const state = globalThis as typeof globalThis & { __generationSettings?: Record<string, unknown>; __generationSdkMock?: any };
+        const previous = { settings: state.__generationSettings, mock: state.__generationSdkMock, show: vscode.window.showInformationMessage };
+        state.__generationSettings = { showDiagnostics: true };
+        state.__generationSdkMock = { transport: async () => new Response(JSON.stringify({ error: { message: "You exceeded your current quota. Check your plan and billing details.", code: "RESOURCE_EXHAUSTED" } }), { status: 429 }) };
+        let notice = "";
+        (vscode.window as any).showInformationMessage = (message: string) => { notice = message; return new Promise(() => {}); };
+        try {
+            const raw = Object.assign(new Error("You exceeded your current quota. Check your plan and billing details."), { status: 429, code: "RESOURCE_EXHAUSTED" });
+            assert.strictEqual(classifyGenerationFailure(raw, "gemini"), "rate-limit");
+            assert.strictEqual(classifyGenerationFailure(Object.assign(new Error("Payment required"), { status: 402 }), "gemini"), "account-limit");
+            if (previous.mock) {
+                await assert.rejects(() => generateCommitMessage({ type: "gemini", apiKey: "mock-key", model: "gemini-2.5-pro" } as any, "x".repeat(29900)), (error: any) => {
+                    assert.strictEqual(error.status, 429);
+                    assert.strictEqual(error.category, "rate-limit");
+                    const message = formatSafeProviderError(error, "gemini", { diffSize: 29900, estimatedTokens: 37739, modelLimit: 1047296 });
+                    assert.match(message, /HTTP 429/);
+                    assert.doesNotMatch(message, /billing issue|Estimated tokens|Model limit|Diff size|Technical Details/);
+                    return true;
+                });
+                assert.match(notice, /Approximate Input Tokens: [\d,]+/);
+                assert.doesNotMatch(notice, /Would you like to proceed/);
+            }
+        } finally {
+            state.__generationSettings = previous.settings;
+            state.__generationSdkMock = previous.mock;
+            (vscode.window as any).showInformationMessage = previous.show;
+        }
+    });
+
+    test("Mistral keeps documented text blocks and structured errors without truncating summaries", async () => {
+        const originalFetch = globalThis.fetch;
+        let maxTokens = 0;
+        globalThis.fetch = (async (_input, init) => {
+            maxTokens = JSON.parse(String(init?.body)).max_tokens;
+            return new Response(JSON.stringify({ choices: [{ message: { content: [{ type: "thinking", text: "private" }, { type: "text", text: "Useful " }, { type: "text", text: "summary." }] }, finish_reason: "stop" }] }), { status: 200 });
+        }) as typeof fetch;
+        try {
+            const provider = new MistralProvider("mock-key", "mistral-large-2512");
+            assert.strictEqual(await provider.generateWithRawPrompt("Analyze a change", { generationOptions: { maxTokens: 768 } }), "Useful summary.");
+            assert.strictEqual(maxTokens, 768);
+            globalThis.fetch = (async () => new Response(JSON.stringify({ error: { message: "Rate limit reached", code: "rate_limit" } }), { status: 429 })) as typeof fetch;
+            await assert.rejects(() => provider.generateWithRawPrompt("Analyze a change"), (error: any) => error.status === 429 && error.category === "rate-limit");
+        } finally { globalThis.fetch = originalFetch; }
+    });
+
+    test("budgeted generation bounds intermediate output but leaves the final request uncapped", async () => {
+        const budgets: Array<number | undefined> = [];
+        const capabilities = modelCapabilities("large");
+        const result = await generateBudgeted("diff --git a/a.ts b/a.ts\n@@ -1 +1 @@\n-old\n+new\n", "", settings, {
+            signal: new AbortController().signal,
+            capabilities: () => capabilities,
+            renderFinal: async text => `Write a commit message about ${text}`,
+            send: async (render, _signal, summaryOutputTokens) => {
+                budgets.push(summaryOutputTokens);
+                await render(capabilities);
+                return summaryOutputTokens ? "Changed a.ts behavior." : "fix: change a.ts behavior";
+            },
+        });
+        assert.strictEqual(result, "fix: change a.ts behavior");
+        assert.deepStrictEqual(budgets, [768, undefined]);
     });
 
     test("unknown selected models get a bounded direct trial before local input-limit guidance", async () => {
@@ -573,6 +637,30 @@ suite("Generation repair", () => {
                 assert.match(diff, /\+new behavior/);
                 assert.doesNotMatch(diff, /^ unchanged before|^ unchanged after/m);
                 assert.doesNotMatch(diff, /unchanged after/);
+            } finally { await spool.dispose(); }
+        } finally { await rm(directory, { recursive: true, force: true }); }
+    });
+
+    test("media and exceptionally large source content is omitted while ordinary TypeScript edits remain", async () => {
+        const directory = await mkdtemp(join(tmpdir(), "gitmind-content-defaults-"));
+        const run = async (...args: string[]) => { await promisify(execFile)("git", args, { cwd: directory }); };
+        try {
+            await run("init", "-q");
+            await writeFile(join(directory, "voice.mp3"), Buffer.from([0, 1, 2, 3, 4]));
+            await writeFile(join(directory, "movie.mp4"), Buffer.from([0, 1, 2, 3, 4]));
+            await writeFile(join(directory, "giant.ts"), `const payload = "${"X".repeat(1024 * 1024 + 1)}";\n`);
+            await writeFile(join(directory, "small.ts"), "export const usefulChange = true;\n");
+            await run("add", ".");
+            const spool = await getDiffInput({ uri: vscode.Uri.file(directory), name: "test", index: 0 }, directory);
+            try {
+                let diff = "";
+                for await (const block of spool) { diff += block; }
+                assert.match(diff, /voice\.mp3.*audio\/video content omitted/s);
+                assert.match(diff, /movie\.mp4.*audio\/video content omitted/s);
+                assert.match(diff, /giant\.ts.*source file over 1 MiB omitted/s);
+                assert.match(diff, /\+export const usefulChange = true/);
+                assert.doesNotMatch(diff, /X{100}/);
+                assert.ok(Buffer.byteLength(diff) < 10000);
             } finally { await spool.dispose(); }
         } finally { await rm(directory, { recursive: true, force: true }); }
     });

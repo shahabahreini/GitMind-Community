@@ -112,16 +112,19 @@ export function classifyGenerationFailure(error: unknown, _provider: string): Ge
     if (code?.includes("invalid_api_key") || code?.includes("unrecognizedclient") || code?.includes("invalidsignature") || status === 401 || message.includes("invalid api key") || message.includes("authentication failed") || message.includes("unauthorized")) {
         return "authentication";
     }
+    // Gemini and other providers mention billing in their generic 429 quota
+    // text. A 429 only establishes a request/token/spend rate limit; it does
+    // not establish a payment failure. Preserve explicit billing codes.
     if (
         status === 402 ||
         code?.includes("insufficient_quota") ||
-        message.includes("billing") ||
+        code?.includes("billing") ||
+        ((status !== 429 && code !== "resource_exhausted") && message.includes("billing")) ||
         message.includes("insufficient balance") ||
-        message.includes("insufficient quota") ||
-        message.includes("insufficient_quota") ||
+        ((status !== 429 && code !== "resource_exhausted") && (message.includes("insufficient quota") || message.includes("insufficient_quota"))) ||
         message.includes("account quota") ||
         message.includes("organization quota") ||
-        message.includes("credits")
+        message.includes("credits exhausted")
     ) {
         return "account-limit";
     }
@@ -130,6 +133,9 @@ export function classifyGenerationFailure(error: unknown, _provider: string): Ge
     }
     if (message.includes("content filter") || message.includes("content policy") || message.includes("safety filter")) {
         return "content-filter";
+    }
+    if (code?.includes("throttl") || code === "resource_exhausted" || status === 429 || message.includes("rate limit") || message.includes("too many requests") || message.includes("limit reached")) {
+        return code?.includes("model") || /\bmodel (?:rate )?limit\b|\bmodel quota\b/.test(message) ? "model-limit" : "rate-limit";
     }
     if (
         status === 413 ||
@@ -144,9 +150,6 @@ export function classifyGenerationFailure(error: unknown, _provider: string): Ge
         message.includes("maximum token")
     ) {
         return "input-limit";
-    }
-    if (code?.includes("throttl") || code === "resource_exhausted" || status === 429 || message.includes("rate limit") || message.includes("too many requests") || message.includes("limit reached")) {
-        return message.includes("model") || code?.includes("model") ? "model-limit" : "rate-limit";
     }
     if (status === 404 || message.includes("model not found") || message.includes("invalid model") || message.includes("configuration is invalid")) {
         return "configuration";

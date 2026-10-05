@@ -112,7 +112,7 @@ suite("NVIDIA Provider and Generation Recovery", () => {
             (error: Error) => {
                 assert.ok(error instanceof ProviderApiError);
                 assert.strictEqual(error.status, 429);
-                assert.strictEqual(classifyGenerationFailure(error, "nvidia"), "model-limit");
+                assert.strictEqual(classifyGenerationFailure(error, "nvidia"), "rate-limit");
                 return true;
             }
         );

@@ -134,7 +134,9 @@ export class APIErrorHandler {
             originalMessage: error.message,
             userMessage: error.message,
             suggestions: [],
-            technicalDetails: context
+            // Source size and model context are relevant to input-limit errors
+            // only. Showing them for a 429 incorrectly implicates the diff.
+            technicalDetails: undefined
         };
 
         if (error instanceof ProviderApiError && error.userFacing) {
@@ -217,11 +219,11 @@ export class APIErrorHandler {
     }
 
     private static handleRateLimitError(_error: Error, errorInfo: ErrorInfo, provider: string): ErrorInfo {
-        errorInfo.userMessage = `${provider} rate limit exceeded.`;
+        errorInfo.userMessage = `${provider} quota or rate limit reached${errorInfo.statusCode === 429 ? " (HTTP 429)" : ""}.`;
         errorInfo.suggestions = [
-            "Wait for your provider's request or token quota to reset, then try again",
-            "GitMind already packs large changes to reduce requests; provider rate limits can still stop generation",
-            "If this repeats, choose another available provider or check your account quota",
+            "Check this model's current usage and quota in your provider dashboard",
+            "Wait for the provider's quota window to reset, then try again",
+            "If this persists, use another available model or provider",
         ];
         return errorInfo;
     }

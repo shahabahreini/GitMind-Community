@@ -409,13 +409,16 @@ export async function generateCommitMessage(
         }
         let requiresChunking = typeof diff !== "string";
         if (typeof diff === "string") {
-            await showDiagnosticsInfo(validatedConfig, diff);
             const prompt = await generateCommitPrompt(diff, promptConfig, customContext);
             const capabilities = initialProvider.getCapabilities();
+            // The budget counter may intentionally count UTF-8 bytes as a safe
+            // upper bound. It is not a token estimate for user diagnostics.
+            const approximateTokens = estimateTokens(prompt);
             context.diagnosticBudget = {
-                estimatedTokens: await countPromptTokens(prompt, capabilities),
+                estimatedTokens: approximateTokens,
                 modelLimit: capabilities.isUnknown ? 0 : effectiveInputBudget(capabilities),
             };
+            showDiagnosticsInfo(validatedConfig, approximateTokens);
             try { await assertPromptFitsAsync(prompt, capabilities); }
             catch (error) {
                 if (classifyGenerationFailure(error, validatedConfig.type) !== "input-limit") { throw error; }
@@ -871,14 +874,13 @@ async function getApiKeyFromUser(providerConfig: ProviderConfig): Promise<string
     return null;
 }
 
-async function showDiagnosticsInfo(config: ApiConfig, diff: string, repositoryName?: string): Promise<void> {
+function showDiagnosticsInfo(config: ApiConfig, estimatedTokens: number, repositoryName?: string): void {
     const showDiagnostics = vscode.workspace.getConfiguration('gitmind').get('showDiagnostics');
 
     if (!showDiagnostics) {
         return;
     }
 
-    const estimatedTokens = estimateTokens(diff);
     const providerName = getProviderDisplayName(config.type);
     const modelName = getModelName(config);
 
@@ -888,7 +890,7 @@ async function showDiagnosticsInfo(config: ApiConfig, diff: string, repositoryNa
         '',
         `Provider: ${providerName}`,
         `Model: ${modelName}`,
-        `Estimated Tokens: ${estimatedTokens.toLocaleString()}`
+        `Approximate Input Tokens: ${estimatedTokens.toLocaleString()}`
     ];
 
     // Add repository name if available
@@ -896,20 +898,8 @@ async function showDiagnosticsInfo(config: ApiConfig, diff: string, repositoryNa
         messageLines.push(`Repository: ${repositoryName}`);
     }
 
-    messageLines.push('', 'Would you like to proceed with this request?');
-
     const message = messageLines.join('\n');
-
-    // Show information message and wait for user confirmation
-    const proceed = await vscode.window.showInformationMessage(
-        message,
-        { modal: true },
-        'Proceed'
-    );
-
-    if (proceed !== 'Proceed') {
-        throw new Error('User cancelled token count confirmation');
-    }
+    void vscode.window.showInformationMessage(message);
 }
 
 function showModelInfo(config: ApiConfig): void {
@@ -976,12 +966,23 @@ async function processLargeDiff(
                     if (current.countTokens(full) <= effectiveInputBudget(current)) { return full; }
                     return generateCompactCommitPrompt(text, promptConfig, customContext);
                 },
-                send: (render, requestSignal) => recovery(async attemptConfig => {
+                send: (render, requestSignal, summaryOutputTokens) => recovery(async attemptConfig => {
                     requestSignal.throwIfAborted();
                     const provider = await getProviderInstance(attemptConfig);
-                    await provider.prepareCapabilities({ ...context, signal: requestSignal });
+                    const requestContext = {
+                        ...context,
+                        signal: requestSignal,
+                        generationOptions: summaryOutputTokens === undefined ? context.generationOptions : {
+                            ...context.generationOptions,
+                            maxTokens: Math.min(
+                                context.generationOptions?.maxTokens ?? Number.MAX_SAFE_INTEGER,
+                                attemptConfig.type === "gemini" || attemptConfig.type === "vertexai" ? 2048 : summaryOutputTokens,
+                            ),
+                        },
+                    };
+                    await provider.prepareCapabilities(requestContext);
                     capabilities = provider.getCapabilities();
-                    return provider.generateWithRawPrompt(await render(capabilities), { ...context, signal: requestSignal });
+                    return provider.generateWithRawPrompt(await render(capabilities), { ...requestContext, capabilitiesPrepared: true });
                 }),
                 progress: (stage, completed) => {
                     progress.report({ message: stage === "requests" ? `Analyzed ${completed} source spans` : stage === "reduction" ? `Reducing summaries (round ${completed})` : "Planning source spans" });
