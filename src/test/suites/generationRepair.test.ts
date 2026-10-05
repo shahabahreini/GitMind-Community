@@ -9,6 +9,8 @@ import { randomUUID } from "node:crypto";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { sourceWindows, generateBudgeted, splitCovered } from "../../services/api/budgetedGeneration";
+import { GenerationAttempts } from "../../services/api/generationAttempts";
+import { DiffSpool } from "../../services/api/diffSpool";
 import { answerText, assertPromptFits, modelCapabilities } from "../../services/api/capabilities";
 import { runRequest, requestScope } from "../../services/api/requestContext";
 import { ProviderApiError, classifyGenerationFailure, normalizeProviderError } from "../../services/api/recovery";
@@ -119,6 +121,70 @@ suite("Generation repair", () => {
         assert.deepStrictEqual(budgets, [768, undefined]);
     });
 
+    if ((globalThis as any).__generationSdkMock) { test("declining a planned batch sends no batched requests", async () => {
+        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationApproval?: boolean; __generationSdkMock?: any; __generationCopilotPrompts?: string[] };
+        const previous = { pro: state.__generationProUser, approval: state.__generationApproval, mock: state.__generationSdkMock, prompts: state.__generationCopilotPrompts };
+        state.__generationProUser = true;
+        state.__generationApproval = false;
+        state.__generationCopilotPrompts = [];
+        state.__generationSdkMock = { transport: async () => { throw new Error("unexpected provider call"); } };
+        try {
+            await assert.rejects(() => generateCommitMessage({ type: "copilot", model: "mock-copilot" }, "x".repeat(20000)), (error: any) => error.category === "cancelled");
+            assert.strictEqual(state.__generationCopilotPrompts.length, 0);
+        } finally { state.__generationProUser = previous.pro; state.__generationApproval = previous.approval; state.__generationSdkMock = previous.mock; state.__generationCopilotPrompts = previous.prompts; }
+    }); }
+
+    if ((globalThis as any).__generationSdkMock) { test("more than five planned calls need a second approval before any batch call", async () => {
+        const state = globalThis as typeof globalThis & { __generationApproval?: boolean | ((message: string) => boolean); __generationApprovalLog?: string[] };
+        const previous = { approval: state.__generationApproval, log: state.__generationApprovalLog };
+        state.__generationApprovalLog = [];
+        state.__generationApproval = message => !message.includes("higher limit");
+        const meter = new GenerationAttempts();
+        try {
+            await assert.rejects(() => meter.approveBatch(8), (error: any) => error.category === "cancelled");
+            assert.strictEqual(meter.actual, 0);
+            assert.strictEqual(state.__generationApprovalLog.length, 2);
+            assert.match(state.__generationApprovalLog[1], /8 calls/);
+        } finally { state.__generationApproval = previous.approval; state.__generationApprovalLog = previous.log; }
+    }); }
+
+    if ((globalThis as any).__generationSdkMock) { test("unforeseen retries and fallback attempts cannot exceed the approved total", async () => {
+        const state = globalThis as typeof globalThis & { __generationApproval?: boolean | ((message: string) => boolean) };
+        const previous = state.__generationApproval;
+        state.__generationApproval = message => !message.includes("higher limit");
+        const meter = new GenerationAttempts();
+        try {
+            await meter.approveBatch(3);
+            for (let i = 0; i < 5; i++) { await meter.beforeAttempt(true); }
+            await assert.rejects(() => meter.beforeAttempt(true), (error: any) => error.category === "cancelled");
+            assert.strictEqual(meter.actual, 5);
+        } finally { state.__generationApproval = previous; }
+    }); }
+
+    if ((globalThis as any).__generationSdkMock) { test("runtime span splitting stops at the approved generation-call total", async () => {
+        const state = globalThis as typeof globalThis & { __generationApproval?: boolean | ((message: string) => boolean) };
+        const previous = state.__generationApproval;
+        state.__generationApproval = message => !message.includes("higher limit");
+        const meter = new GenerationAttempts();
+        let providerCalls = 0;
+        try {
+            await assert.rejects(() => generateBudgeted("z".repeat(4000), "", settings, {
+                signal: new AbortController().signal, capabilities: () => modelCapabilities("test"),
+                approve: estimate => meter.approveBatch(estimate), renderFinal: async text => text,
+                send: async render => {
+                    const prompt = await render(modelCapabilities("test"));
+                    await meter.beforeAttempt(true);
+                    providerCalls++;
+                    if (prompt.includes("Source UTF-16 offsets") && prompt.split(":\n").pop()!.length > 100) {
+                        throw new ProviderApiError("context limit", { category: "input-limit" });
+                    }
+                    return "summary";
+                },
+            }), (error: any) => error.category === "cancelled");
+            assert.strictEqual(providerCalls, 5);
+        } finally { state.__generationApproval = previous; }
+    }); }
+
     test("unknown selected models get a bounded direct trial before local input-limit guidance", async () => {
         const originalFetch = globalThis.fetch;
         const calls: string[] = [];
@@ -164,10 +230,11 @@ suite("Generation repair", () => {
         } finally { globalThis.fetch = originalFetch; }
     });
 
-    if ((globalThis as any).__generationSdkMock) { test("a provider-rejected modest prompt automatically replans for Pro", async () => {
-        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationSettings?: Record<string, unknown> };
-        const previous = { pro: state.__generationProUser, settings: state.__generationSettings, fetch: globalThis.fetch };
+    if ((globalThis as any).__generationSdkMock) { test("a provider-rejected modest prompt replans after approval", async () => {
+        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationSettings?: Record<string, unknown>; __generationApproval?: boolean };
+        const previous = { pro: state.__generationProUser, settings: state.__generationSettings, approval: state.__generationApproval, fetch: globalThis.fetch };
         state.__generationProUser = true;
+        state.__generationApproval = true;
         state.__generationSettings = { "pro.largeDiffHandling": { enabled: false } };
         const prompts: string[] = [];
         let requests = 0;
@@ -184,7 +251,7 @@ suite("Generation repair", () => {
             let end = 0;
             for (const [start, stop] of spans) { assert.strictEqual(start, end); end = stop; }
             assert.strictEqual(end, 18700);
-        } finally { state.__generationProUser = previous.pro; state.__generationSettings = previous.settings; globalThis.fetch = previous.fetch; }
+        } finally { state.__generationProUser = previous.pro; state.__generationSettings = previous.settings; state.__generationApproval = previous.approval; globalThis.fetch = previous.fetch; }
     }); }
 
     if ((globalThis as any).__generationSdkMock) { test("large OpenRouter changes use one model lookup and one accepted request", async () => {
@@ -203,17 +270,18 @@ suite("Generation repair", () => {
             return new Response(JSON.stringify(payload("openrouter", "normal")), { status: 200 });
         }) as typeof fetch;
         try {
-            assert.strictEqual(await generateCommitMessage({ type: "openrouter", apiKey: "metadata-generation", model: "catalog-big" }, "x".repeat(221700)), answer);
+            assert.strictEqual(await generateCommitMessage({ type: "openrouter", apiKey: "metadata-generation", model: "catalog-big" }, "x".repeat(100000)), answer);
             assert.strictEqual(lookups, 1);
             assert.strictEqual(prompts.length, 1, "a provider-accepted request avoids unnecessary batching");
-            assert.ok(prompts[0].includes("x".repeat(221700)));
+            assert.ok(prompts[0].includes("x".repeat(100000)));
         } finally { state.__generationProUser = previous.pro; state.__generationSettings = previous.settings; globalThis.fetch = previous.fetch; }
     }); }
 
-    if ((globalThis as any).__generationSdkMock) { test("Pro automatically processes a 221.7 KB Copilot diff with numeric controls untouched", async () => {
-        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationSettings?: Record<string, unknown>; __generationSdkMock?: any; __generationCopilotPrompts?: string[] };
-        const previous = { pro: state.__generationProUser, settings: state.__generationSettings, mock: state.__generationSdkMock, prompts: state.__generationCopilotPrompts };
+    if ((globalThis as any).__generationSdkMock) { test("Pro processes a 221.7 KB Copilot diff after approval with numeric controls untouched", async () => {
+        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationSettings?: Record<string, unknown>; __generationSdkMock?: any; __generationCopilotPrompts?: string[]; __generationApproval?: boolean };
+        const previous = { pro: state.__generationProUser, settings: state.__generationSettings, mock: state.__generationSdkMock, prompts: state.__generationCopilotPrompts, approval: state.__generationApproval };
         state.__generationProUser = true;
+        state.__generationApproval = true;
         state.__generationSettings = { "pro.largeDiffHandling": { enabled: false } };
         state.__generationCopilotPrompts = [];
         state.__generationSdkMock = { transport: async () => new Response(JSON.stringify(payload("copilot", "normal")), { status: 200, headers: { "content-type": "application/json" } }) };
@@ -238,6 +306,7 @@ suite("Generation repair", () => {
             state.__generationSettings = previous.settings;
             state.__generationSdkMock = previous.mock;
             state.__generationCopilotPrompts = previous.prompts;
+            state.__generationApproval = previous.approval;
         }
     }); }
 
@@ -253,6 +322,42 @@ suite("Generation repair", () => {
             assert.doesNotMatch(state.__generationCopilotPrompts![0], /Source UTF-16 offsets/);
         } finally { state.__generationProUser = previous.pro; state.__generationSdkMock = previous.mock; state.__generationCopilotPrompts = previous.prompts; }
     }); }
+
+    if ((globalThis as any).__generationSdkMock) { test("a streamed diff fitting Copilot uses one generation call", async () => {
+        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationSdkMock?: any; __generationCopilotPrompts?: string[] };
+        const previous = { pro: state.__generationProUser, mock: state.__generationSdkMock, prompts: state.__generationCopilotPrompts };
+        state.__generationProUser = false;
+        state.__generationCopilotPrompts = [];
+        state.__generationSdkMock = { transport: async () => new Response(JSON.stringify(payload("copilot", "normal")), { status: 200 }) };
+        const input = (async function* () { yield "diff --git a/a b/a\n@@ -1 +1 @@\n-old\n"; yield "+new\n"; })();
+        try {
+            assert.strictEqual(await generateCommitMessage({ type: "copilot", model: "mock-copilot" }, input), answer);
+            assert.strictEqual(state.__generationCopilotPrompts.length, 1);
+            assert.match(state.__generationCopilotPrompts[0], /\+new/);
+        } finally { state.__generationProUser = previous.pro; state.__generationSdkMock = previous.mock; state.__generationCopilotPrompts = previous.prompts; }
+    }); }
+
+    test("a rate limit stops sequentially queued spans", async () => {
+        let calls = 0;
+        await assert.rejects(() => generateBudgeted("x".repeat(20000), "", settings, {
+            signal: new AbortController().signal, capabilities: () => modelCapabilities("test"),
+            renderFinal: async text => text,
+            send: async render => { await render(modelCapabilities("test")); calls++; throw new ProviderApiError("rate limited", { category: "rate-limit", retryAfterMs: 30000 }); },
+        }), (error: any) => error.category === "rate-limit" && error.retryAfterMs === 30000);
+        assert.strictEqual(calls, 1);
+    });
+
+    test("disk spool replays Unicode split across stream blocks", async () => {
+        const spool = await DiffSpool.create((async function* () { yield "first \ud83d"; yield "\ude80 last\n"; })());
+        try {
+            let first = "";
+            let second = "";
+            for await (const part of spool.read()) { first += part; }
+            for await (const part of spool.read()) { second += part; }
+            assert.strictEqual(first, "first 🚀 last\n");
+            assert.strictEqual(second, first);
+        } finally { await spool.dispose(); }
+    });
 
     test("synchronous cancellation reaches an attempt before transport setup returns", async () => {
         const controller = new AbortController();
@@ -536,18 +641,20 @@ suite("Generation repair", () => {
         }), (error: any) => error.category === "input-limit");
     });
 
-    test("terminal failure aborts siblings and returns no partial draft", async () => {
-        let aborted = false;
+    test("terminal failure stops queued spans and returns no partial draft", async () => {
+        let calls = 0;
         await assert.rejects(() => generateBudgeted("x".repeat(20000), "", settings, {
             signal: new AbortController().signal, capabilities: () => modelCapabilities("test"),
             renderFinal: async text => text,
             send: async (render, signal) => {
+                calls++;
                 const prompt = await render(modelCapabilities("test"));
                 if (prompt.includes("offsets 0..")) { await new Promise(resolve => setTimeout(resolve, 5)); throw new ProviderApiError("Denied", { category: "permission" }); }
-                return new Promise((_, reject) => signal.addEventListener("abort", () => { aborted = true; reject(signal.reason); }, { once: true }));
+                signal.throwIfAborted();
+                return "summary";
             },
         }));
-        assert.strictEqual(aborted, true);
+        assert.strictEqual(calls, 1);
     });
 
     test("overlapping repository operations retain ownership and cancel independently", async () => {

@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import { RequestContext } from "./requestContext";
 import { modelCapabilities, assertPromptFitsAsync, countPromptTokens, directProbeBudget, effectiveInputBudget, ModelCapabilities } from "./capabilities";
 import { generateBudgeted, DiffInput, isOutputTruncation } from "./budgetedGeneration";
+import { DiffSpool } from "./diffSpool";
+import { GenerationAttempts } from "./generationAttempts";
 import { readLargeDiffSettings, LargeDiffSettings } from "../../config/largeDiffSettings";
 // src/services/api/index.ts
 import * as vscode from "vscode";
@@ -361,7 +363,11 @@ export async function generateCommitMessage(
     context ??= owned!.context;
     context.diffByteSize ??= typeof diff === "string" ? Buffer.byteLength(diff, "utf8") : undefined;
     const promptConfig = context.promptConfig ?? getPromptConfig();
-    let inputIterator: AsyncIterator<string> | undefined;
+    let spool: DiffSpool | undefined;
+    const attempts = new GenerationAttempts(context.signal, () => {
+        diagnosticLog({ subsystem: "provider", event: "generation.calls", functionName: "generateCommitMessage", operationId: context?.operationId,
+            data: { planned: attempts.planned, actual: attempts.actual } });
+    });
     try {
         context.signal?.throwIfAborted();
         const validatedConfig = await validateAndUpdateConfig(config);
@@ -376,36 +382,11 @@ export async function generateCommitMessage(
         context.generationOptions ??= initialProvider.getDefaultGenerationOptions() ?? {};
         const recovery = createRecoveryOperation(validatedConfig, { operationId: context.operationId });
         if (typeof diff !== "string") {
-            const iterator = diff[Symbol.asyncIterator]();
-            inputIterator = iterator;
-            let prefix = "";
-            let exhausted = false;
-            let nextBlock: string | undefined;
+            spool = await DiffSpool.create(diff, context.signal);
+            context.diffByteSize = spool.bytes;
             const capabilities = initialProvider.getCapabilities();
-            const budget = Math.min(1024 * 1024, Math.max(effectiveInputBudget(capabilities), directProbeBudget(capabilities)));
-            while (prefix.length < budget) {
-                context.signal?.throwIfAborted();
-                const next = await iterator.next();
-                if (next.done) { exhausted = true; break; }
-                prefix += next.value;
-                if (largeDiffSettings.enabled && prefix.split("\n").length > largeDiffSettings.chunkSize) { break; }
-            }
-            if (!exhausted && prefix.length >= budget) {
-                const next = await iterator.next();
-                if (next.done) { exhausted = true; }
-                else { nextBlock = next.value; }
-            }
-            diff = exhausted ? prefix : (async function* () {
-                try {
-                    yield prefix;
-                    if (nextBlock !== undefined) { yield nextBlock; }
-                    while (true) {
-                        const next = await iterator.next();
-                        if (next.done) { break; }
-                        yield next.value;
-                    }
-                } finally { await iterator.return?.(); }
-            })();
+            const directBound = capabilities.isUnknown ? 1024 * 1024 : Math.min(16 * 1024 * 1024, Math.max(1024 * 1024, effectiveInputBudget(capabilities) * 4));
+            diff = await spool.boundedString(directBound) ?? spool.asInput();
         }
         let requiresChunking = typeof diff !== "string";
         if (typeof diff === "string") {
@@ -419,18 +400,21 @@ export async function generateCommitMessage(
                 modelLimit: capabilities.isUnknown ? 0 : effectiveInputBudget(capabilities),
             };
             showDiagnosticsInfo(validatedConfig, approximateTokens);
-            try { await assertPromptFitsAsync(prompt, capabilities); }
+            try {
+                if (capabilities.isUnknown) {
+                    if (Buffer.byteLength(prompt, "utf8") > 1024 * 1024) { throw new ProviderApiError("Prompt exceeds the bounded unknown-model attempt.", { category: "input-limit" }); }
+                    context.allowPromptProbe = true;
+                } else { await assertPromptFitsAsync(prompt, capabilities); }
+            }
             catch (error) {
                 if (classifyGenerationFailure(error, validatedConfig.type) !== "input-limit") { throw error; }
-                if (capabilities.countTokens(prompt) <= directProbeBudget(capabilities)) {
-                    context.allowPromptProbe = true;
-                } else { requiresChunking = true; }
+                requiresChunking = true;
             }
-            requiresChunking ||= largeDiffSettings.enabled && diff.split("\n").length > largeDiffSettings.chunkSize;
             if (!requiresChunking) {
                 try {
                     return await recovery(async attemptConfig => {
                         const provider = await getProviderInstance(attemptConfig);
+                        await attempts.beforeAttempt(false);
                         return provider.generateWithRawPrompt(prompt, context);
                     });
                 } catch (error) {
@@ -441,16 +425,14 @@ export async function generateCommitMessage(
             }
         }
         if (!await SubscriptionManager.getInstance().isProUser()) {
-            throw new ProviderApiError("This diff exceeds the model input limit. GitMind Pro can process it automatically in budgeted batches.", { category: "input-limit" });
+            throw new ProviderApiError("This diff exceeds the model input limit. GitMind Pro can offer budgeted batches with your approval.", { category: "input-limit" });
         }
-        // Pro users get safe automatic processing whenever a prompt exceeds the
-        // model budget. The setting only opts into proactive line-based batching.
         context.largeDiffEnabled = true;
-        return await processLargeDiff(validatedConfig, diff, customContext, largeDiffSettings, context, promptConfig, initialProvider.getCapabilities(), recovery);
+        return await processLargeDiff(validatedConfig, spool?.asInput() ?? diff, customContext, largeDiffSettings, context, promptConfig, initialProvider.getCapabilities(), recovery, attempts);
     } catch (error) {
         throw normalizeProviderError(error, config.type);
     } finally {
-        try { await inputIterator?.return?.(); }
+        try { await spool?.dispose(); }
         finally { owned?.dispose(); }
     }
 }
@@ -950,6 +932,7 @@ async function processLargeDiff(
     promptConfig: ReturnType<typeof getPromptConfig>,
     initialCapabilities: ModelCapabilities,
     recovery: RecoveryOperation = createRecoveryOperation(config, { operationId: context.operationId }),
+    attempts: GenerationAttempts = new GenerationAttempts(context.signal),
 ): Promise<string> {
     let capabilities = initialCapabilities;
     return vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: "Processing large diff", cancellable: true }, async (progress, token) => {
@@ -961,6 +944,11 @@ async function processLargeDiff(
             return await generateBudgeted(diff, customContext, settings, {
                 signal,
                 capabilities: () => capabilities,
+                approve: async estimated => {
+                    await attempts.approveBatch(estimated + attempts.actual);
+                    signal.throwIfAborted();
+                    progress.report({ message: `Planned ${attempts.planned} generation calls; completed ${attempts.actual}` });
+                },
                 renderFinal: async (text, current) => {
                     const full = await generateCommitPrompt(text, promptConfig, customContext);
                     if (current.countTokens(full) <= effectiveInputBudget(current)) { return full; }
@@ -982,13 +970,23 @@ async function processLargeDiff(
                     };
                     await provider.prepareCapabilities(requestContext);
                     capabilities = provider.getCapabilities();
-                    return provider.generateWithRawPrompt(await render(capabilities), { ...requestContext, capabilitiesPrepared: true });
+                    const prompt = await render(capabilities);
+                    await attempts.beforeAttempt(true);
+                    progress.report({ message: `Generation calls: ${attempts.actual} of ${attempts.planned} planned` });
+                    return provider.generateWithRawPrompt(prompt, { ...requestContext, capabilitiesPrepared: true });
                 }),
                 progress: (stage, completed) => {
-                    progress.report({ message: stage === "requests" ? `Analyzed ${completed} source spans` : stage === "reduction" ? `Reducing summaries (round ${completed})` : "Planning source spans" });
-                    diagnosticLog({ subsystem: "provider", event: `generation.${stage}`, functionName: "processLargeDiff", operationId: context.operationId, data: { stage, completed: Math.min(completed, 1000000) }, support: { name: "operation_progress", operation: "generate_commit", stage, completed: Math.min(completed, 1000000) } });
+                    progress.report({ message: stage === "requests" ? `Analyzed ${completed} source spans; ${attempts.actual}/${attempts.planned} calls` : stage === "reduction" ? `Reducing summaries; ${attempts.actual}/${attempts.planned} calls` : `Planning source spans: ${completed}` });
+                    diagnosticLog({ subsystem: "provider", event: `generation.${stage}`, functionName: "processLargeDiff", operationId: context.operationId, data: { stage, completed: Math.min(completed, 1000000), plannedCalls: attempts.planned, actualCalls: attempts.actual }, support: { name: "operation_progress", operation: "generate_commit", stage, completed: Math.min(completed, 1000000) } });
                 },
             });
+        } catch (error) {
+            const normalized = normalizeProviderError(error, config.type);
+            if (normalized.category === "rate-limit") {
+                const delay = normalized.retryAfterMs ? ` Retry after ${Math.ceil(normalized.retryAfterMs / 1000)} seconds.` : "";
+                void vscode.window.showWarningMessage(`Generation stopped after a rate limit.${delay}`);
+            }
+            throw error;
         } finally { subscription.dispose(); }
     });
 }

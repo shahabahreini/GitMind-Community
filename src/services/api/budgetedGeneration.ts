@@ -3,7 +3,7 @@ import { LargeDiffSettings } from "../../config/largeDiffSettings";
 import { ModelCapabilities, assertPromptFitsAsync, countPromptTokens, effectiveInputBudget } from "./capabilities";
 import { ProviderApiError, classifyGenerationFailure } from "./recovery";
 
-export interface CoveredText { text: string; start: number; end: number; }
+export interface CoveredText { text: string; start: number; end: number; metadata?: string; }
 export type DiffInput = string | AsyncIterable<string>;
 
 /** Lossless, bounded source windows, including opaque patches and very long lines. */
@@ -51,13 +51,14 @@ export interface BudgetedDependencies {
     send: (render: (capabilities: ModelCapabilities) => Promise<string>, signal: AbortSignal, summaryOutputTokens?: number) => Promise<string>;
     signal: AbortSignal;
     progress?: (stage: "planning" | "requests" | "reduction", completed: number) => void;
+    approve?: (estimatedTotal: number) => Promise<void>;
 }
 
 export function isOutputTruncation(error: unknown): boolean {
     return error instanceof ProviderApiError && error.category === "invalid-response" && /\btruncated\b/i.test(error.message);
 }
 
-export async function generateBudgeted(input: DiffInput, customContext: string, settings: LargeDiffSettings, deps: BudgetedDependencies): Promise<string> {
+export async function generateBudgeted(input: DiffInput, customContext: string, _settings: LargeDiffSettings, deps: BudgetedDependencies): Promise<string> {
     let store = await CoverageStore.create();
     let covered = 0;
     try {
@@ -70,6 +71,18 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
         "Analyze this source span factually in at most 120 words. Lead with behavior, interfaces, data, security and other impactful changes. Preserve distinct change intent and relevant filenames; group repeated mechanical changes compactly. Do not invent changes. Return a compact factual summary, not a commit message.\n" +
         customContext + "\nFile/hunk context (may overlap source):\n" + metadata +
         "\nSource UTF-16 offsets " + part.start + ".." + part.end + ":\n" + part.text;
+    const fitToCurrentBudget = async function* (part: CoveredText, metadata: string): AsyncGenerator<{ part: CoveredText; metadata: string }> {
+        deps.signal.throwIfAborted();
+        if (await countPromptTokens(analysisPrompt(part, metadata), deps.capabilities()) <= effectiveInputBudget(deps.capabilities())) {
+            yield { part, metadata };
+            return;
+        }
+        try { await assertPromptFitsAsync(analysisPrompt({ ...part, text: "" }, metadata), deps.capabilities()); }
+        catch { throw new ProviderApiError("Prompt overhead cannot fit the model budget. Shorten custom context or choose a larger-context model.", { category: "input-limit" }); }
+        const [left, right] = splitCovered(part);
+        yield* fitToCurrentBudget(left, metadata);
+        yield* fitToCurrentBudget(right, continuationContext(left.text, metadata));
+    };
     const analyze = async (part: CoveredText, metadata: string, signal: AbortSignal): Promise<CoveredText[]> => {
         signal.throwIfAborted();
         try {
@@ -89,43 +102,21 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
             return [...await analyze(left, metadata, signal), ...await analyze(right, rightContext, signal)];
         }
     };
-    let batch: Array<{ part: CoveredText; metadata: string }> = [];
+    const plan = await CoverageStore.create();
     let pending: { part: CoveredText; metadata: string; bytes: number } | undefined;
     let planned = 0;
-    const flush = async () => {
-        const controller = new AbortController();
-        const signal = AbortSignal.any([controller.signal, deps.signal]);
-        const results: CoveredText[][] = new Array(batch.length);
-        let next = 0;
-        let failure: unknown;
-        const worker = async () => {
-            while (!signal.aborted && next < batch.length) {
-                const index = next++;
-                try { results[index] = await analyze(batch[index].part, batch[index].metadata, signal); }
-                catch (error) { failure ??= error; controller.abort(error); }
-            }
-        };
-        await Promise.allSettled(Array.from({ length: Math.min(settings.concurrency, batch.length) }, worker));
-        if (failure) { throw failure; }
-        deps.signal.throwIfAborted();
-        for (const result of results.flat()) {
-            if (result.start !== covered || result.end <= result.start) { throw new ProviderApiError("Diff coverage is incomplete.", { category: "invalid-response" }); }
-            covered = result.end;
-            await store.append(result);
-        }
-        batch = [];
-    };
     const queuePending = async () => {
         if (!pending) { return; }
-        batch.push({ part: pending.part, metadata: pending.metadata });
+        await plan.append({ ...pending.part, metadata: pending.metadata });
         pending = undefined;
-        deps.progress?.("planning", ++planned);
-        if (batch.length >= settings.batchSize) { await flush(); }
+        planned++;
+        deps.progress?.("planning", planned);
     };
     const initialCapabilities = deps.capabilities();
     const emptyPromptCost = initialCapabilities.countTokens(analysisPrompt({ text: "", start: 0, end: 0 }, ""));
-    const windowUnits = Math.max(256, Math.min(8192, (initialCapabilities.countTokensAsync ? effectiveInputBudget(initialCapabilities) * 4 : effectiveInputBudget(initialCapabilities)) - emptyPromptCost - 64));
-    for await (const part of sourceWindows(input, settings.chunkSize, windowUnits)) {
+    const windowUnits = Math.max(2, Math.min(512 * 1024, (initialCapabilities.countTokensAsync ? effectiveInputBudget(initialCapabilities) * 4 : effectiveInputBudget(initialCapabilities)) - emptyPromptCost - 64));
+    try {
+    for await (const part of sourceWindows(input, Number.MAX_SAFE_INTEGER, windowUnits)) {
         deps.signal.throwIfAborted();
         const metadata = context;
         // Capture complete diff metadata and latest hunk across window boundaries.
@@ -146,10 +137,13 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
             const framing = capabilities.countTokens(analysisPrompt({ text: "", start: pending.part.start, end: part.end }, pending.metadata));
             // Bounded memory while using most of the effective input budget.
             const available = Math.min(512 * 1024, effectiveInputBudget(capabilities) - framing - 64);
-            const candidate = pending.part.text + part.text;
-            if (pending.bytes + bytes > 512 * 1024 || (capabilities.countTokensAsync
-                ? await countPromptTokens(analysisPrompt({ ...pending.part, text: candidate, end: part.end }, pending.metadata), capabilities) > effectiveInputBudget(capabilities) - 64
-                : pending.bytes + bytes > available)) { await queuePending(); }
+            if (pending.bytes + bytes > 512 * 1024) { await queuePending(); }
+            else {
+                const candidate = pending.part.text + part.text;
+                if (capabilities.countTokensAsync
+                    ? await countPromptTokens(analysisPrompt({ ...pending.part, text: candidate, end: part.end }, pending.metadata), capabilities) > effectiveInputBudget(capabilities) - 64
+                    : pending.bytes + bytes > available) { await queuePending(); }
+            }
         }
         if (pending) {
             pending.part.text += part.text;
@@ -158,7 +152,28 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
         } else { pending = { part: { ...part }, metadata, bytes }; }
     }
     await queuePending();
-    if (batch.length) { await flush(); }
+    if (!planned) { throw new ProviderApiError("Diff coverage is incomplete.", { category: "invalid-response" }); }
+    // Each analysis asks for at most 120 words. Include likely reduction rounds
+    // and the final generation in the count shown before any provider call.
+    const summariesPerCall = Math.max(2, Math.floor((effectiveInputBudget(deps.capabilities()) - 320) / 768));
+    let remaining = planned;
+    let reductions = 0;
+    while (remaining > summariesPerCall && reductions < 1000000) {
+        remaining = Math.ceil(remaining / summariesPerCall);
+        reductions += remaining;
+    }
+    await deps.approve?.(planned + reductions + 1);
+    for await (const entry of plan.read()) {
+        deps.signal.throwIfAborted();
+        const part = entry as CoveredText & { metadata?: string };
+        for await (const fitting of fitToCurrentBudget(part, part.metadata ?? "")) {
+            for (const result of await analyze(fitting.part, fitting.metadata, deps.signal)) {
+                if (result.start !== covered || result.end <= result.start) { throw new ProviderApiError("Diff coverage is incomplete.", { category: "invalid-response" }); }
+                covered = result.end;
+                await store.append(result);
+            }
+        }
+    }
     if (!covered || covered !== expectedEnd) { throw new ProviderApiError("Diff coverage is incomplete.", { category: "invalid-response" }); }
 
     for (let round = 0; round < 32; round++) {
@@ -218,6 +233,7 @@ export async function generateBudgeted(input: DiffInput, customContext: string, 
         deps.progress?.("reduction", round + 1);
     }
     throw new ProviderApiError("Summary reduction exceeded its bounded rounds.", { category: "input-limit" });
+    } finally { await plan.dispose(); }
     } finally { await store.dispose(); }
 }
 

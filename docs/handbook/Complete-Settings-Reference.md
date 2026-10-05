@@ -94,10 +94,10 @@ Open **GitMind Setting** for the guided UI. The table below covers user-configur
 | `gitmind.pro.changelog.maxVersions` | `10` | 1-25 |
 | `gitmind.pro.changelog.versionOrder` | `newest-first` | `newest-first`, `oldest-first` |
 | `gitmind.pro.changelog.overwriteExisting` | `false` | Preserve existing entries by default |
-| `gitmind.pro.largeDiffHandling.enabled` | `false` | Enable proactive large-diff handling; Pro |
-| `gitmind.pro.largeDiffHandling.chunkSize` | `1000` | 10-10000 source lines per chunk; Pro |
-| `gitmind.pro.largeDiffHandling.batchSize` | `5` | 1-100 chunks per batch; Pro |
-| `gitmind.pro.largeDiffHandling.concurrency` | `3` | 1-8 concurrent requests; Pro |
+| `gitmind.pro.largeDiffHandling.enabled` | `false` | Offer batching proactively; each generation still requires approval; Pro |
+| `gitmind.pro.largeDiffHandling.chunkSize` | `1000` | Legacy source-window preference; planner uses model budget; Pro |
+| `gitmind.pro.largeDiffHandling.batchSize` | `5` | Legacy batch preference, not a total request limit; Pro |
+| `gitmind.pro.largeDiffHandling.concurrency` | `3` | Legacy preference; approved requests run sequentially; Pro |
 | `gitmind.pro.largeDiffHandling.maxChunks` | `null` | Legacy alias for batchSize; Pro |
 
 ## Custom API (Pro)

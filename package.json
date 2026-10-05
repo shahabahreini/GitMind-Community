@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Message Generator",
   "description": "AI commit message generator for VS Code. Write clear Conventional Commits from your diff with GitHub Copilot, local Ollama, or 22 built-in AI providers.",
-  "version": "6.4.0",
+  "version": "6.4.1",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",
@@ -1021,27 +1021,27 @@
         "gitmind.pro.largeDiffHandling.enabled": {
           "type": "boolean",
           "default": false,
-          "description": "Process included text changes in large diffs proactively (Pro). Audio, video, and source files over 1 MiB are represented by filename only by default; provider rate limits still apply."
+          "description": "Offer large-diff batching proactively (Pro). Every batched generation still asks for approval; fitting diffs use one request."
         },
         "gitmind.pro.largeDiffHandling.chunkSize": {
           "type": "integer",
           "default": 1000,
           "minimum": 10,
           "maximum": 10000,
-          "description": "Preferred source lines per chunk; model budgets may require smaller chunks."
+          "description": "Legacy preferred source window. Generation spans now follow the selected model's input budget."
         },
         "gitmind.pro.largeDiffHandling.batchSize": {
           "type": "integer",
           "minimum": 1,
           "maximum": 100,
-          "description": "Chunks per batch. Defaults to five; legacy maxChunks is used when unset. Subsequent batches run automatically."
+          "description": "Legacy batch size preference. This is not a total request limit; each generation shows its planned call count for approval."
         },
         "gitmind.pro.largeDiffHandling.concurrency": {
           "type": "integer",
           "default": 3,
           "minimum": 1,
           "maximum": 8,
-          "description": "Concurrent requests within each large-diff batch."
+          "description": "Legacy concurrency preference. Approved large-diff generation sends one request at a time."
         },
         "gitmind.pro.largeDiffHandling.maxChunks": {
           "type": "integer",

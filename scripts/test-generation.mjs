@@ -37,7 +37,12 @@ export const workspace = { workspaceFolders: [], getConfiguration: () => ({
 }), onDidChangeConfiguration: () => ({ dispose() {} }) };
 export const window = {
     withProgress: async (_options, work) => work({ report() {} }, { isCancellationRequested: false, onCancellationRequested: () => ({ dispose() {} }) }),
-    showInformationMessage: async () => undefined, showErrorMessage: async () => undefined, showWarningMessage: async () => undefined,
+    showInformationMessage: async () => undefined, showErrorMessage: async () => undefined,
+    showWarningMessage: async (message, _options, choice) => {
+        globalThis.__generationApprovalLog?.push(message);
+        const approval = globalThis.__generationApproval;
+        return (typeof approval === 'function' ? approval(message) : approval) ? choice : undefined;
+    },
     createOutputChannel: () => ({ appendLine() {}, dispose() {} }),
 };
 export const ExtensionMode = { Development: 2 };
