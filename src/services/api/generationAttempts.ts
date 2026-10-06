@@ -6,6 +6,9 @@ export class GenerationAttempts {
     private approved = 0;
     public actual = 0;
     public planned = 1;
+    /** When set, exceeding the approved total stops the plan instead of asking again. */
+    public strict = false;
+    public overrun = false;
 
     constructor(private readonly signal?: AbortSignal, private readonly changed?: () => void) {}
 
@@ -13,13 +16,14 @@ export class GenerationAttempts {
         this.signal?.throwIfAborted();
         this.planned = Math.max(estimate, this.actual + 1);
         this.changed?.();
+        // One approval states the whole plan; a separate "up to 5" step would only add a prompt.
+        if (this.planned > 5) { await this.approveHigher(this.planned); return; }
         const initial = await vscode.window.showWarningMessage(
             `This diff needs about ${this.planned} generation calls, including the final message. Allow up to 5 calls for this generation?`,
             { modal: true }, "Allow up to 5 calls",
         );
         if (initial !== "Allow up to 5 calls") { throw this.cancelled(); }
         this.approved = 5;
-        if (this.planned > 5) { await this.approveHigher(this.planned); }
     }
 
     private async approveHigher(total: number): Promise<void> {
@@ -37,7 +41,10 @@ export class GenerationAttempts {
 
     async beforeAttempt(batched: boolean): Promise<void> {
         this.signal?.throwIfAborted();
-        if (batched && this.actual >= this.approved) { await this.approveHigher(this.actual + 1); }
+        if (batched && this.actual >= this.approved) {
+            if (this.strict) { this.overrun = true; throw this.cancelled(); }
+            await this.approveHigher(this.actual + 1);
+        }
         this.signal?.throwIfAborted();
         this.actual++;
         this.changed?.();

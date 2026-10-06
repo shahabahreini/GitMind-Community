@@ -35,6 +35,11 @@ import * as vscode from "vscode";
 import { getDiffInput, setCommitMessage } from "../../services/git/repository";
 
 const settings = resolveLargeDiffSettings({ enabled: true, batchSize: 5 });
+/** A multi-file unified diff of ordinary source changes. */
+function bigDiff(files: number, lines: number): string {
+    return Array.from({ length: files }, (_, f) => `diff --git a/src/module${f}.ts b/src/module${f}.ts\nindex 1111111..2222222 100644\n--- a/src/module${f}.ts\n+++ b/src/module${f}.ts\n@@ -1,0 +1,${lines} @@ function module${f}\n`
+        + Array.from({ length: lines }, (_, i) => `+const value${f}_${i} = compute(input${i}, "detail ${i}");\n`).join("")).join("");
+}
 const sdkProviders = ["gemini", "vertexai", "bedrock", "copilot"];
 const answer = "A factual answer longer than seventy two characters retains every word without any adapter truncating it.\nSecond detail.";
 const textBlocks = [{ type: "thinking", thinking: "private" }, { type: "text", text: answer.slice(0, 40) }, { type: "text", text: answer.slice(40) }];
@@ -55,7 +60,7 @@ suite("Generation repair", () => {
     test("input-limit guidance shows a useful local estimate and Pro handling without unknown placeholders", () => {
         const error = new ProviderApiError("private provider detail", { category: "input-limit" });
         const message = formatSafeProviderError(error, "gemini", { diffSize: 2048, estimatedTokens: 7300, modelLimit: 2816, largeDiffEnabled: false });
-        assert.match(message, /GitMind Pro automatically analyzes oversized changes/);
+        assert.match(message, /GitMind Pro condenses oversized changes/);
         assert.match(message, /7,300/);
         assert.match(message, /2,816/);
         assert.strictEqual((message.match(/Technical Details:/g) ?? []).length, 1);
@@ -245,20 +250,25 @@ suite("Generation repair", () => {
         assert.doesNotMatch(prompt, /huge-json-and-video-body-must-not-enter/);
     });
 
-    if ((globalThis as any).__generationSdkMock) { test("declining a planned batch sends no batched requests", async () => {
-        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationApproval?: boolean; __generationSdkMock?: any; __generationCopilotPrompts?: string[] };
-        const previous = { pro: state.__generationProUser, approval: state.__generationApproval, mock: state.__generationSdkMock, prompts: state.__generationCopilotPrompts };
+    if ((globalThis as any).__generationSdkMock) { test("declining deep analysis falls back to one condensed request and sends no batch calls", async () => {
+        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationApproval?: boolean; __generationApprovalLog?: string[]; __generationSettings?: Record<string, unknown>; __generationSdkMock?: any; __generationCopilotPrompts?: string[] };
+        const previous = { pro: state.__generationProUser, approval: state.__generationApproval, log: state.__generationApprovalLog, settings: state.__generationSettings, mock: state.__generationSdkMock, prompts: state.__generationCopilotPrompts };
         state.__generationProUser = true;
         state.__generationApproval = false;
+        state.__generationApprovalLog = [];
+        state.__generationSettings = { "pro.largeDiffHandling": { enabled: true, maxCalls: 50 } };
         state.__generationCopilotPrompts = [];
-        state.__generationSdkMock = { transport: async () => { throw new Error("unexpected provider call"); } };
+        state.__generationSdkMock = { transport: async () => new Response(JSON.stringify(payload("copilot", "normal")), { status: 200 }) };
         try {
-            await assert.rejects(() => generateCommitMessage({ type: "copilot", model: "mock-copilot" }, "x".repeat(20000)), (error: any) => error.category === "cancelled");
-            assert.strictEqual(state.__generationCopilotPrompts.length, 0);
-        } finally { state.__generationProUser = previous.pro; state.__generationApproval = previous.approval; state.__generationSdkMock = previous.mock; state.__generationCopilotPrompts = previous.prompts; }
+            assert.strictEqual(await generateCommitMessage({ type: "copilot", model: "mock-copilot" }, bigDiff(30, 60)), answer);
+            assert.strictEqual(state.__generationApprovalLog.length, 1, "the plan is shown once");
+            assert.strictEqual(state.__generationCopilotPrompts!.length, 1);
+            assert.doesNotMatch(state.__generationCopilotPrompts![0], /Source UTF-16 offsets/);
+            assert.match(state.__generationCopilotPrompts![0], /src\/module29\.ts/);
+        } finally { state.__generationProUser = previous.pro; state.__generationApproval = previous.approval; state.__generationApprovalLog = previous.log; state.__generationSettings = previous.settings; state.__generationSdkMock = previous.mock; state.__generationCopilotPrompts = previous.prompts; }
     }); }
 
-    if ((globalThis as any).__generationSdkMock) { test("more than five planned calls need a second approval before any batch call", async () => {
+    if ((globalThis as any).__generationSdkMock) { test("more than five planned calls need one approval for the whole plan before any batch call", async () => {
         const state = globalThis as typeof globalThis & { __generationApproval?: boolean | ((message: string) => boolean); __generationApprovalLog?: string[] };
         const previous = { approval: state.__generationApproval, log: state.__generationApprovalLog };
         state.__generationApprovalLog = [];
@@ -267,8 +277,8 @@ suite("Generation repair", () => {
         try {
             await assert.rejects(() => meter.approveBatch(8), (error: any) => error.category === "cancelled");
             assert.strictEqual(meter.actual, 0);
-            assert.strictEqual(state.__generationApprovalLog.length, 2);
-            assert.match(state.__generationApprovalLog[1], /8 calls/);
+            assert.strictEqual(state.__generationApprovalLog.length, 1, "one approval states the whole plan");
+            assert.match(state.__generationApprovalLog[0], /8 calls/);
         } finally { state.__generationApproval = previous.approval; state.__generationApprovalLog = previous.log; }
     }); }
 
@@ -354,11 +364,12 @@ suite("Generation repair", () => {
         } finally { globalThis.fetch = originalFetch; }
     });
 
-    if ((globalThis as any).__generationSdkMock) { test("a provider-rejected modest prompt replans after approval", async () => {
-        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationSettings?: Record<string, unknown>; __generationApproval?: boolean };
-        const previous = { pro: state.__generationProUser, settings: state.__generationSettings, approval: state.__generationApproval, fetch: globalThis.fetch };
+    if ((globalThis as any).__generationSdkMock) { test("a provider-rejected modest prompt is retried once, condensed, without approval", async () => {
+        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationSettings?: Record<string, unknown>; __generationApproval?: boolean; __generationApprovalLog?: string[] };
+        const previous = { pro: state.__generationProUser, settings: state.__generationSettings, approval: state.__generationApproval, log: state.__generationApprovalLog, fetch: globalThis.fetch };
         state.__generationProUser = true;
         state.__generationApproval = true;
+        state.__generationApprovalLog = [];
         state.__generationSettings = { "pro.largeDiffHandling": { enabled: false } };
         const prompts: string[] = [];
         let requests = 0;
@@ -369,13 +380,59 @@ suite("Generation repair", () => {
             return new Response(JSON.stringify(payload("openrouter", "normal")), { status: 200, headers: { "content-type": "application/json" } });
         }) as typeof fetch;
         try {
-            assert.strictEqual(await generateCommitMessage({ type: "openrouter", apiKey: "probe-fallback", model: "unlisted-probe" }, "x".repeat(18700)), answer);
-            const spans = prompts.map(prompt => /offsets (\d+)\.\.(\d+):/.exec(prompt)).filter((match): match is RegExpExecArray => !!match).map(match => [Number(match[1]), Number(match[2])]);
-            assert.ok(spans.length > 1);
-            let end = 0;
-            for (const [start, stop] of spans) { assert.strictEqual(start, end); end = stop; }
-            assert.strictEqual(end, 18700);
-        } finally { state.__generationProUser = previous.pro; state.__generationSettings = previous.settings; state.__generationApproval = previous.approval; globalThis.fetch = previous.fetch; }
+            assert.strictEqual(await generateCommitMessage({ type: "openrouter", apiKey: "probe-fallback", model: "unlisted-probe" }, bigDiff(12, 30)), answer);
+            assert.strictEqual(requests, 2, "one rejected attempt and one condensed attempt");
+            assert.ok(prompts[1].length < prompts[0].length / 1.5, "the retry is condensed below half of the rejected prompt");
+            assert.strictEqual(state.__generationApprovalLog.length, 0, "no approval prompt");
+        } finally { state.__generationProUser = previous.pro; state.__generationSettings = previous.settings; state.__generationApproval = previous.approval; state.__generationApprovalLog = previous.log; globalThis.fetch = previous.fetch; }
+    }); }
+
+    if ((globalThis as any).__generationSdkMock) { test("an unlisted model that rejects large prompts converges within three requests and no approvals", async () => {
+        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationSettings?: Record<string, unknown>; __generationApprovalLog?: string[] };
+        const previous = { pro: state.__generationProUser, settings: state.__generationSettings, log: state.__generationApprovalLog, fetch: globalThis.fetch };
+        state.__generationProUser = true;
+        state.__generationApprovalLog = [];
+        state.__generationSettings = { "pro.largeDiffHandling": { enabled: false } };
+        const sizes: number[] = [];
+        let accept = 60 * 1024;
+        globalThis.fetch = (async (_input, init) => {
+            const content = JSON.parse(String(init?.body)).messages[0].content as string;
+            sizes.push(Buffer.byteLength(content, "utf8"));
+            if (Buffer.byteLength(content, "utf8") > accept) { return new Response(JSON.stringify({ error: { message: "Input tokens exceed model context", code: "context_length_exceeded" } }), { status: 422 }); }
+            return new Response(JSON.stringify(payload("openrouter", "normal")), { status: 200, headers: { "content-type": "application/json" } });
+        }) as typeof fetch;
+        try {
+            const diff = bigDiff(400, 40);
+            assert.ok(diff.length > 700000);
+            assert.strictEqual(await generateCommitMessage({ type: "openrouter", apiKey: "ladder", model: "unlisted-ladder" }, diff), answer);
+            assert.strictEqual(sizes.length, 3, "attempt ladder: target, half, quarter");
+            assert.ok(sizes[0] > sizes[1] && sizes[1] > sizes[2] && sizes[2] <= accept, sizes.join(","));
+            assert.strictEqual(state.__generationApprovalLog.length, 0);
+            sizes.length = 0;
+            accept = 1024;
+            await assert.rejects(() => generateCommitMessage({ type: "openrouter", apiKey: "ladder", model: "unlisted-ladder-2" }, diff), (error: any) => error.category === "input-limit");
+            assert.strictEqual(sizes.length, 3, "never more than three provider requests");
+        } finally { state.__generationProUser = previous.pro; state.__generationSettings = previous.settings; state.__generationApprovalLog = previous.log; globalThis.fetch = previous.fetch; }
+    }); }
+
+    if ((globalThis as any).__generationSdkMock) { test("Ollama requests carry a context window that matches the local prompt ceiling", async () => {
+        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationSettings?: Record<string, unknown> };
+        const previous = { pro: state.__generationProUser, settings: state.__generationSettings, fetch: globalThis.fetch };
+        state.__generationProUser = true;
+        state.__generationSettings = { "pro.largeDiffHandling": { enabled: false } };
+        const bodies: any[] = [];
+        globalThis.fetch = (async (_input, init) => {
+            bodies.push(JSON.parse(String(init?.body)));
+            return new Response(JSON.stringify(payload("ollama", "normal")), { status: 200, headers: { "content-type": "application/json" } });
+        }) as typeof fetch;
+        try {
+            const diff = bigDiff(40, 40);
+            assert.strictEqual(await generateCommitMessage({ type: "ollama", url: "http://127.0.0.1:11434", model: "llama3" } as any, diff), answer);
+            assert.strictEqual(bodies.length, 1);
+            assert.strictEqual(bodies[0].options.num_ctx, 8048 > 4096 ? 8048 : 4096);
+            assert.ok(Buffer.byteLength(bodies[0].prompt, "utf8") <= 6000 * 3, "the local default keeps the prompt near 6k tokens");
+            assert.match(bodies[0].prompt, /src\/module39\.ts/);
+        } finally { state.__generationProUser = previous.pro; state.__generationSettings = previous.settings; globalThis.fetch = previous.fetch; }
     }); }
 
     if ((globalThis as any).__generationSdkMock) { test("large OpenRouter changes use one model lookup and one accepted request", async () => {
@@ -401,29 +458,31 @@ suite("Generation repair", () => {
         } finally { state.__generationProUser = previous.pro; state.__generationSettings = previous.settings; globalThis.fetch = previous.fetch; }
     }); }
 
-    if ((globalThis as any).__generationSdkMock) { test("Pro processes a 221.7 KB Copilot diff after approval with numeric controls untouched", async () => {
-        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationSettings?: Record<string, unknown>; __generationSdkMock?: any; __generationCopilotPrompts?: string[]; __generationApproval?: boolean };
-        const previous = { pro: state.__generationProUser, settings: state.__generationSettings, mock: state.__generationSdkMock, prompts: state.__generationCopilotPrompts, approval: state.__generationApproval };
+    if ((globalThis as any).__generationSdkMock) { test("Pro condenses a 221.7 KB Copilot diff into one request with file totals, and free access is unchanged", async () => {
+        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationSettings?: Record<string, unknown>; __generationSdkMock?: any; __generationCopilotPrompts?: string[]; __generationApproval?: boolean; __generationApprovalLog?: string[] };
+        const previous = { pro: state.__generationProUser, settings: state.__generationSettings, mock: state.__generationSdkMock, prompts: state.__generationCopilotPrompts, approval: state.__generationApproval, log: state.__generationApprovalLog };
         state.__generationProUser = true;
         state.__generationApproval = true;
+        state.__generationApprovalLog = [];
         state.__generationSettings = { "pro.largeDiffHandling": { enabled: false } };
         state.__generationCopilotPrompts = [];
         state.__generationSdkMock = { transport: async () => new Response(JSON.stringify(payload("copilot", "normal")), { status: 200, headers: { "content-type": "application/json" } }) };
         try {
-            const result = await generateCommitMessage({ type: "copilot", model: "mock-copilot" }, "x".repeat(221700));
-            assert.strictEqual(result, answer);
-            const spans = state.__generationCopilotPrompts!.map(prompt => /offsets (\d+)\.\.(\d+):/.exec(prompt)).filter((match): match is RegExpExecArray => !!match).map(match => [Number(match[1]), Number(match[2])]);
-            assert.ok(spans.length > 1);
-            assert.ok(spans.length < 40, `the model tokenizer should pack source into fewer requests than byte counting; got ${spans.length}`);
-            spans.sort((a, b) => a[0] - b[0]);
-            let end = 0;
-            for (const [start, stop] of spans) { assert.strictEqual(start, end); end = stop; }
-            assert.strictEqual(end, 221700);
-            assert.ok(state.__generationCopilotPrompts!.some(prompt => prompt.startsWith("Write one accurate git commit message")), "small model uses compact final framing");
+            const diff = bigDiff(140, 30);
+            assert.ok(diff.length > 221000);
+            assert.strictEqual(await generateCommitMessage({ type: "copilot", model: "mock-copilot" }, diff), answer);
+            assert.strictEqual(state.__generationCopilotPrompts!.length, 1, "one request, no span batching");
+            assert.strictEqual(state.__generationApprovalLog.length, 0, "no approval prompt on the default path");
+            const prompt = state.__generationCopilotPrompts![0];
+            assert.doesNotMatch(prompt, /Source UTF-16 offsets/);
+            assert.ok(prompt.length < 2816 * 4, "the prompt fits the model's tokenizer budget");
+            // The list alone would exceed half of this tiny budget, so files are counted per directory.
+            assert.match(prompt, /140 files changed/);
+            assert.match(prompt, /src\/ \(140 files, \+4200 -0\)/);
             assert.strictEqual((state.__generationSettings!["pro.largeDiffHandling"] as any).enabled, false);
             const requestCount = state.__generationCopilotPrompts!.length;
             state.__generationProUser = false;
-            await assert.rejects(() => generateCommitMessage({ type: "copilot", model: "mock-copilot" }, "x".repeat(221700)), (error: any) => error.category === "input-limit");
+            await assert.rejects(() => generateCommitMessage({ type: "copilot", model: "mock-copilot" }, diff), (error: any) => error.category === "input-limit");
             assert.strictEqual(state.__generationCopilotPrompts!.length, requestCount, "free access remains gated");
         } finally {
             state.__generationProUser = previous.pro;
@@ -431,6 +490,55 @@ suite("Generation repair", () => {
             state.__generationSdkMock = previous.mock;
             state.__generationCopilotPrompts = previous.prompts;
             state.__generationApproval = previous.approval;
+            state.__generationApprovalLog = previous.log;
+        }
+    }); }
+
+    if ((globalThis as any).__generationSdkMock) { test("a condensed diff shows one notice and a fitting diff shows none,", async () => {
+        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationSettings?: Record<string, unknown>; __generationSdkMock?: any; __generationCopilotPrompts?: string[]; __generationInfoLog?: string[] };
+        const previous = { pro: state.__generationProUser, settings: state.__generationSettings, mock: state.__generationSdkMock, prompts: state.__generationCopilotPrompts, info: state.__generationInfoLog };
+        state.__generationProUser = true;
+        state.__generationSettings = { "pro.largeDiffHandling": { enabled: false } };
+        state.__generationCopilotPrompts = [];
+        state.__generationInfoLog = [];
+        state.__generationSdkMock = { transport: async () => new Response(JSON.stringify(payload("copilot", "normal")), { status: 200, headers: { "content-type": "application/json" } }) };
+        try {
+            assert.strictEqual(await generateCommitMessage({ type: "copilot", model: "mock-copilot" }, bigDiff(1, 3)), answer);
+            assert.strictEqual(state.__generationInfoLog.length, 0, "tier 0 is silent");
+            assert.strictEqual(await generateCommitMessage({ type: "copilot", model: "mock-copilot" }, bigDiff(30, 60)), answer);
+            assert.strictEqual(state.__generationInfoLog.length, 1);
+            assert.match(state.__generationInfoLog[0], /Large diff condensed to fit the model: \d+ of 30 files/);
+            assert.strictEqual(state.__generationCopilotPrompts!.length, 2);
+        } finally { state.__generationProUser = previous.pro; state.__generationSettings = previous.settings; state.__generationSdkMock = previous.mock; state.__generationCopilotPrompts = previous.prompts; state.__generationInfoLog = previous.info; }
+    }); }
+
+    if ((globalThis as any).__generationSdkMock) { test("deep analysis opt-in batches only when the planned calls fit maxCalls, otherwise one condensed request", async () => {
+        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationSettings?: Record<string, unknown>; __generationSdkMock?: any; __generationCopilotPrompts?: string[]; __generationApproval?: boolean; __generationApprovalLog?: string[] };
+        const previous = { pro: state.__generationProUser, settings: state.__generationSettings, mock: state.__generationSdkMock, prompts: state.__generationCopilotPrompts, approval: state.__generationApproval, log: state.__generationApprovalLog };
+        state.__generationProUser = true;
+        state.__generationApproval = true;
+        state.__generationCopilotPrompts = [];
+        state.__generationSdkMock = { transport: async () => new Response(JSON.stringify(payload("copilot", "normal")), { status: 200, headers: { "content-type": "application/json" } }) };
+        try {
+            const diff = bigDiff(30, 60);
+            state.__generationApprovalLog = [];
+            state.__generationSettings = { "pro.largeDiffHandling": { enabled: true, maxCalls: 2 } };
+            assert.strictEqual(await generateCommitMessage({ type: "copilot", model: "mock-copilot" }, diff), answer);
+            assert.strictEqual(state.__generationCopilotPrompts!.length, 1, "a plan above maxCalls never starts");
+            assert.strictEqual(state.__generationApprovalLog.length, 0);
+            state.__generationCopilotPrompts = [];
+            state.__generationSettings = { "pro.largeDiffHandling": { enabled: true, maxCalls: 50 } };
+            assert.strictEqual(await generateCommitMessage({ type: "copilot", model: "mock-copilot" }, diff), answer);
+            assert.ok(state.__generationCopilotPrompts!.length > 1, "approved deep analysis uses several calls");
+            assert.strictEqual(state.__generationApprovalLog.length, 1, "one approval for the whole plan");
+            assert.match(state.__generationApprovalLog[0], /calls/);
+        } finally {
+            state.__generationProUser = previous.pro;
+            state.__generationSettings = previous.settings;
+            state.__generationSdkMock = previous.mock;
+            state.__generationCopilotPrompts = previous.prompts;
+            state.__generationApproval = previous.approval;
+            state.__generationApprovalLog = previous.log;
         }
     }); }
 
@@ -816,7 +924,7 @@ suite("Generation repair", () => {
     });
 
     test("settings migrate explicit legacy values and validate numeric boundaries", () => {
-        assert.deepStrictEqual(resolveLargeDiffSettings(undefined), { enabled: false, chunkSize: 1000, batchSize: 5, concurrency: 3 });
+        assert.deepStrictEqual(resolveLargeDiffSettings(undefined), { enabled: false, chunkSize: 1000, batchSize: 5, concurrency: 3, maxCalls: 6, perFileLines: 400, maxPromptTokens: 0 });
         assert.strictEqual(resolveLargeDiffSettings({ maxChunks: 9 }).batchSize, 9);
         assert.strictEqual(resolveLargeDiffSettings({ batchSize: 7, maxChunks: 9 }).batchSize, 7);
         for (const bad of [NaN, Infinity, -1, 0, 1.5, "3", null]) {

@@ -1,7 +1,7 @@
 {
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Message Generator",
-  "description": "AI commit message generator for VS Code. Write clear Conventional Commits from your diff with GitHub Copilot, local Ollama, or 22 built-in AI providers.",
+  "description": "AI commit message generator for VS Code. Write clear Conventional Commits from your diff with GitHub Copilot, local Ollama, or 23 built-in AI providers.",
   "version": "6.4.1",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
@@ -39,6 +39,7 @@
             "gemini",
             "huggingface",
             "ollama",
+            "ollamacloud",
             "mistral",
             "cohere",
             "openai",
@@ -64,6 +65,7 @@
             "Use Google's Gemini AI for generating commit messages",
             "Use Hugging Face models for generating commit messages",
             "Use local Ollama models for generating commit messages",
+            "Use Ollama Cloud hosted models for generating commit messages",
             "Use Mistral AI for generating commit messages",
             "Use Cohere AI for generating commit messages",
             "Use OpenAI for generating commit messages",
@@ -124,6 +126,16 @@
           "description": "Model name for Ollama",
           "markdownDescription": "Model name for Ollama. [Available models](https://ollama.ai/library)",
           "order": 7
+        },
+        "gitmind.ollamacloud.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API key for Ollama Cloud [Learn more](https://ollama.com/settings/keys)"
+        },
+        "gitmind.ollamacloud.model": {
+          "type": "string",
+          "default": "gpt-oss:120b-cloud",
+          "description": "Ollama Cloud model to use for generating commit messages"
         },
         "gitmind.mistral.apiKey": {
           "type": "string",
@@ -1021,19 +1033,21 @@
         "gitmind.pro.largeDiffHandling.enabled": {
           "type": "boolean",
           "default": false,
-          "description": "Offer large-diff batching proactively (Pro). Every batched generation still asks for approval; fitting diffs use one request."
+          "description": "Deep analysis for very large diffs (Pro). By default, a diff that exceeds the model input limit is condensed locally and sent in one request. When enabled and the condensed diff would drop content, GitMind first offers multi-request analysis (approval required, up to the call limit below)."
         },
         "gitmind.pro.largeDiffHandling.chunkSize": {
           "type": "integer",
           "default": 1000,
           "minimum": 10,
           "maximum": 10000,
+          "deprecationMessage": "Deprecated: spans follow the selected model's input budget.",
           "description": "Legacy preferred source window. Generation spans now follow the selected model's input budget."
         },
         "gitmind.pro.largeDiffHandling.batchSize": {
           "type": "integer",
           "minimum": 1,
           "maximum": 100,
+          "deprecationMessage": "Deprecated: use maxCalls to cap deep analysis.",
           "description": "Legacy batch size preference. This is not a total request limit; each generation shows its planned call count for approval."
         },
         "gitmind.pro.largeDiffHandling.concurrency": {
@@ -1041,6 +1055,7 @@
           "default": 3,
           "minimum": 1,
           "maximum": 8,
+          "deprecationMessage": "Deprecated: approved deep analysis sends one request at a time.",
           "description": "Legacy concurrency preference. Approved large-diff generation sends one request at a time."
         },
         "gitmind.pro.largeDiffHandling.maxChunks": {
@@ -1048,6 +1063,27 @@
           "minimum": 1,
           "maximum": 100,
           "deprecationMessage": "Use batchSize instead. All chunks are now processed."
+        },
+        "gitmind.pro.largeDiffHandling.maxCalls": {
+          "type": "integer",
+          "default": 6,
+          "minimum": 2,
+          "maximum": 50,
+          "description": "Most generation calls deep analysis may plan. If the plan needs more, GitMind uses the one-request condensed diff instead."
+        },
+        "gitmind.pro.largeDiffHandling.perFileLines": {
+          "type": "integer",
+          "default": 400,
+          "minimum": 20,
+          "maximum": 5000,
+          "description": "When a diff is condensed, the most changed lines kept per file before the rest is summarized by hunk headers."
+        },
+        "gitmind.pro.largeDiffHandling.maxPromptTokens": {
+          "type": "integer",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1000000,
+          "description": "Estimated-token ceiling for one prompt. 0 chooses automatically: 60000, or 6000 for Ollama and LM Studio. Raise it only if your local model runs a larger context."
         }
       }
     },
@@ -1487,7 +1523,7 @@
           {
             "id": "gitmind.choose-provider",
             "title": "Choose your AI provider",
-            "description": "Choose from 22 built-in providers, including local LM Studio and Ollama, OpenAI, Azure OpenAI, Bedrock, Vertex AI, Cloudflare Workers AI, NVIDIA NIM, and Copilot.\n[Open Settings](command:gitmind.openSettings)",
+            "description": "Choose from 23 built-in providers, including local LM Studio and Ollama, OpenAI, Azure OpenAI, Bedrock, Vertex AI, Cloudflare Workers AI, NVIDIA NIM, and Copilot.\n[Open Settings](command:gitmind.openSettings)",
             "media": {
               "markdown": "media/walkthroughs/choose-provider.md"
             },
@@ -1659,7 +1695,7 @@
       "description": "GitHub Stars"
     },
     {
-      "url": "https://img.shields.io/badge/Provider_Options-23-purple?style=for-the-badge&logo=openai",
+      "url": "https://img.shields.io/badge/Provider_Options-24-purple?style=for-the-badge&logo=openai",
       "href": "https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant",
       "description": "Supported AI Providers"
     },

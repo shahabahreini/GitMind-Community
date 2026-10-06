@@ -37,7 +37,7 @@ const internalSettings = [
 ];
 const internalCommands = /^(Internal:|Debug:)|gitmind\.(acceptInput|loadingIndicator|loadingIndicatorPro|handleUserStatusChange|cleanupLegacySettings|forceDeactivatePro|checkApiConfig|claimFreeLicense|openAccountPortal)$/;
 const providerNames = {
-  gemini: "Google Gemini", huggingface: "Hugging Face", ollama: "Ollama", mistral: "Mistral AI",
+  gemini: "Google Gemini", huggingface: "Hugging Face", ollama: "Ollama", ollamacloud: "Ollama Cloud", mistral: "Mistral AI",
   cohere: "Cohere", openai: "OpenAI", together: "Together AI", openrouter: "OpenRouter",
   anthropic: "Anthropic", minimax: "MiniMax", copilot: "GitHub Copilot", deepseek: "DeepSeek",
   grok: "xAI Grok", groq: "Groq", perplexity: "Perplexity", zai: "Z.ai", nvidia: "NVIDIA hosted NIM",
@@ -47,7 +47,7 @@ const providerNames = {
 };
 const setupLinks = {
   gemini: "https://aistudio.google.com/app/apikey", huggingface: "https://huggingface.co/settings/tokens",
-  ollama: "https://ollama.com/library", mistral: "https://console.mistral.ai/", cohere: "https://dashboard.cohere.com/api-keys",
+  ollama: "https://ollama.com/library", ollamacloud: "https://ollama.com/settings/keys", mistral: "https://console.mistral.ai/", cohere: "https://dashboard.cohere.com/api-keys",
   openai: "https://platform.openai.com/api-keys", together: "https://api.together.xyz/settings/api-keys",
   openrouter: "https://openrouter.ai/keys", anthropic: "https://console.anthropic.com/", minimax: "https://platform.minimax.io/",
   deepseek: "https://platform.deepseek.com/api_keys", grok: "https://console.x.ai/", groq: "https://console.groq.com/keys",
@@ -62,7 +62,7 @@ const providerAuthentication = {
   azureopenai: "API key or Microsoft Entra token", bedrock: "AWS credential chain or profile",
   vertexai: "Google Application Default Credentials", cloudflare: "Cloudflare API token", 
 };
-const modelDiscoveryProviders = new Set(["gemini", "huggingface", "ollama", "mistral", "cohere", "openai", "together", "openrouter", "anthropic", "minimax", "copilot", "deepseek", "grok", "groq", "perplexity", "zai", "nvidia", "lmstudio", "cloudflare"]);
+const modelDiscoveryProviders = new Set(["gemini", "huggingface", "ollama", "ollamacloud", "mistral", "cohere", "openai", "together", "openrouter", "anthropic", "minimax", "copilot", "deepseek", "grok", "groq", "perplexity", "zai", "nvidia", "lmstudio", "cloudflare"]);
 
 function settingRecord([id, setting]) {
   const record = {

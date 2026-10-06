@@ -313,7 +313,7 @@ export class ModelSettingsRenderer extends BaseRenderer {
     private renderModelWithLoadField(field: any, value: string): string {
         const isHuggingFace = field.id.includes('huggingface');
         const isOpenRouter = field.id.includes('openrouter');
-        const isOllama = field.id.includes('ollama');
+        const isOllama = field.id === 'ollamaModel';
         const isNvidia = field.id.includes('nvidia');
 
         if (isHuggingFace || isOpenRouter || isOllama || isNvidia) {

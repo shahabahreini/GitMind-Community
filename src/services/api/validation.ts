@@ -8,6 +8,7 @@ import { validateGroqAPIKey } from "./groq";
 import { validatePerplexityAPIKey } from "./perplexity";
 import { validateZaiAPIKey } from "./zai";
 import { validateMiniMaxAPIKey } from "./minimax";
+import { validateOllamaCloudAPIKey } from "./ollamacloud";
 import { validateNvidiaAPIKey } from "./nvidia";
 import { LMStudioProvider } from "./lmstudio";
 import { AzureOpenAIProvider } from "./azureopenai";
@@ -195,6 +196,17 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
         defaultModel: getProviderDefaultModel("ollama"),
         responseTime: 200,
         rateLimits: { limit: 0, remaining: 0, notes: "Ollama is a local service with no API rate limits" }
+    },
+    ollamacloud: {
+        requiresApiKey: requiresApiKey("ollamacloud"),
+        validator: validateOllamaCloudAPIKey,
+        defaultModel: getProviderDefaultModel("ollamacloud"),
+        responseTime: 400,
+        rateLimits: {
+            limit: 0,
+            remaining: 0,
+            notes: "Ollama Cloud limits depend on your account tier and plan"
+        }
     },
     mistral: {
         requiresApiKey: requiresApiKey("mistral"),

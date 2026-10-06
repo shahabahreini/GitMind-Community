@@ -15,6 +15,10 @@ export interface RequestContext {
     rejectedPromptBytes?: number;
     metadataDiscovery?: Map<string, Promise<void>>;
     capabilitiesPrepared?: boolean;
+    /** Estimated-token ceiling for this operation's prompts; also bounds unknown-model probes. */
+    promptTokenCap?: number;
+    /** Count prompts with the byte heuristic instead of one token per byte (single-call generation). */
+    heuristicTokens?: boolean;
     diagnosticBudget?: { estimatedTokens: number; modelLimit: number };
 }
 interface AttemptContext extends RequestContext {

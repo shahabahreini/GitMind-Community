@@ -37,7 +37,7 @@ export const workspace = { workspaceFolders: [], getConfiguration: () => ({
 }), onDidChangeConfiguration: () => ({ dispose() {} }) };
 export const window = {
     withProgress: async (_options, work) => work({ report() {} }, { isCancellationRequested: false, onCancellationRequested: () => ({ dispose() {} }) }),
-    showInformationMessage: async () => undefined, showErrorMessage: async () => undefined,
+    showInformationMessage: async message => { globalThis.__generationInfoLog?.push(message); return undefined; }, showErrorMessage: async () => undefined,
     showWarningMessage: async (message, _options, choice) => {
         globalThis.__generationApprovalLog?.push(message);
         const approval = globalThis.__generationApproval;
@@ -86,7 +86,7 @@ export const lm = { selectChatModels: async () => [{
 const directory = await mkdtemp(join(tmpdir(), "gitmind-conformance-"));
 try {
     const result = await build({
-        entryPoints: ["src/test/suites/generationRepair.test.ts", "src/test/suites/nvidiaAndRecovery.test.ts", "src/test/suites/diffProcessor.test.ts", "src/test/suites/supportSession.test.ts"],
+        entryPoints: ["src/test/suites/generationRepair.test.ts", "src/test/suites/diffDigest.test.ts", "src/test/suites/nvidiaAndRecovery.test.ts", "src/test/suites/diffProcessor.test.ts", "src/test/suites/supportSession.test.ts"],
         outdir: directory, bundle: true, platform: "node", format: "cjs", write: false,
         plugins: [{
             name: "deterministic-transports",

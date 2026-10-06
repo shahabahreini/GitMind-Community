@@ -62,7 +62,7 @@ export async function loggedFetch(input: RequestInfo | URL, init?: RequestInit, 
             if (["content_filter", "safety", "recitation", "content_filtered", "guardrail_intervened"].includes(finish) || body?.promptFeedback?.blockReason) {
                 throw new ProviderApiError("Provider blocked the answer.", { category: "content-filter", provider });
             }
-            if (body?.status === "incomplete" || body?.incomplete_details || (meta?.provider === "ollama" && body?.done_reason === "length")) {
+            if (body?.status === "incomplete" || body?.incomplete_details || ((meta?.provider === "ollama" || meta?.provider === "ollamacloud") && body?.done_reason === "length")) {
                 throw new ProviderApiError("Provider output was truncated.", { category: "invalid-response", provider });
             }
             // Normalize documented chat text blocks for adapters sharing this shape.

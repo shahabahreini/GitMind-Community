@@ -8,7 +8,8 @@ export function getModelHandlingScript(): string {
         'deepseek': 'loadDeepSeekModels',
         'huggingface': 'loadHuggingFaceModels',
         'openrouter': 'loadOpenRouterModels',
-        'minimax': 'loadMiniMaxModels'
+        'minimax': 'loadMiniMaxModels',
+        'ollamacloud': 'loadOllamaCloudModels'
       };
 
       // Use mapped ID if exists, otherwise use standard capitalization

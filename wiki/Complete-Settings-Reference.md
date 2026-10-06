@@ -1,6 +1,6 @@
 # Complete Settings Reference
 
-> Verified against GitMind `6.4.0` on October 5, 2026
+> Verified against GitMind `6.4.1` on October 5, 2026
 
 Open **GitMind Setting** for the guided UI. The table below covers user-configurable settings. API keys and auth tokens have no default. Developer-only environment settings and automatically managed license/subscription state are intentionally omitted.
 
@@ -8,7 +8,7 @@ Open **GitMind Setting** for the guided UI. The table below covers user-configur
 
 | Setting | Default | Values / notes |
 | --- | --- | --- |
-| `gitmind.apiProvider` | `gemini` | 22 built-ins plus Pro `custom` (23 total) |
+| `gitmind.apiProvider` | `gemini` | 23 built-ins plus Pro `custom` (24 total) |
 | `gitmind.showOnboarding` | `true` | Show onboarding |
 | `gitmind.commit.verbose` | `true` | Include body |
 | `gitmind.commit.detailMode` | `auto` | `auto`, `concise`, `detailed`; legacy verbosity migrates |
@@ -37,6 +37,7 @@ Open **GitMind Setting** for the guided UI. The table below covers user-configur
 | Gemini | `gitmind.gemini.apiKey`, `gitmind.gemini.model` | `gemini-3.8-flash` |
 | Hugging Face | `gitmind.huggingface.apiKey`, `gitmind.huggingface.model` | `meta-llama/Llama-3.3-70B-Instruct` |
 | Ollama | `gitmind.ollama.url`, `gitmind.ollama.model` | `http://localhost:11434`, `phi4` |
+| Ollama Cloud | `gitmind.ollamacloud.apiKey`, `gitmind.ollamacloud.model` | `gpt-oss:120b-cloud` |
 | Mistral | `gitmind.mistral.apiKey`, `gitmind.mistral.model` | `mistral-small-2603` |
 | Cohere | `gitmind.cohere.apiKey`, `gitmind.cohere.model` | `command-a-plus-05-2026` |
 | OpenAI | `gitmind.openai.apiKey`, `gitmind.openai.model` | `gpt-6-sol` |
@@ -94,9 +95,12 @@ Open **GitMind Setting** for the guided UI. The table below covers user-configur
 | `gitmind.pro.changelog.maxVersions` | `10` | 1-25 |
 | `gitmind.pro.changelog.versionOrder` | `newest-first` | `newest-first`, `oldest-first` |
 | `gitmind.pro.changelog.overwriteExisting` | `false` | Preserve existing entries by default |
-| `gitmind.pro.largeDiffHandling.enabled` | `false` | Offer batching proactively; each generation still requires approval; Pro |
+| `gitmind.pro.largeDiffHandling.enabled` | `false` | Offer multi-request deep analysis when condensing would drop content; each run requires approval; Pro |
 | `gitmind.pro.largeDiffHandling.chunkSize` | `1000` | Legacy source-window preference; planner uses model budget; Pro |
-| `gitmind.pro.largeDiffHandling.batchSize` | `5` | Legacy batch preference, not a total request limit; Pro |
+| `gitmind.pro.largeDiffHandling.batchSize` | `5` | Deprecated legacy batch preference; Pro |
+| `gitmind.pro.largeDiffHandling.maxCalls` | `6` | Most calls deep analysis may plan; above it the condensed single request is used; Pro |
+| `gitmind.pro.largeDiffHandling.perFileLines` | `400` | Most changed lines kept per file when a diff is condensed; Pro |
+| `gitmind.pro.largeDiffHandling.maxPromptTokens` | `0` | Estimated-token ceiling for one prompt; `0` = automatic (60000, or 6000 for Ollama and LM Studio) |
 | `gitmind.pro.largeDiffHandling.concurrency` | `3` | Legacy preference; approved requests run sequentially; Pro |
 | `gitmind.pro.largeDiffHandling.maxChunks` | `null` | Legacy alias for batchSize; Pro |
 

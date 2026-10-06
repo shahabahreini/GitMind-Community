@@ -211,6 +211,30 @@ export class ProviderConfig {
             ]
         },
         {
+            id: 'ollamacloud',
+            fields: [
+                {
+                    id: 'ollamacloudApiKey',
+                    key: 'apiKey',
+                    label: 'API Key',
+                    type: 'password',
+                    tooltip: 'Your Ollama Cloud API key for accessing the API',
+                    link: { url: 'https://ollama.com/settings/keys', text: 'Get an Ollama Cloud API key' }
+                },
+                {
+                    id: 'ollamacloudModel',
+                    key: 'model',
+                    label: 'Model',
+                    type: 'model-with-load',
+                    tooltip: '',
+                    loadButtonText: 'Load Available Models',
+                    loadButtonId: 'loadOllamaCloudModels',
+                    loadCommand: 'gitmind.loadOllamaCloudModels',
+                    options: modelOptions('ollamacloud')
+                }
+            ]
+        },
+        {
             id: 'mistral',
             fields: [
                 {

@@ -688,11 +688,11 @@ export class ProFeatureRenderer extends BaseRenderer {
                 <div class="section-header">
                     <h3 class="section-title">Large Diff Handling ${lockBadge}</h3>
                 </div>
-                <p class="setting-desc">GitMind tries one request when the diff fits the selected model. Larger diffs can be split only after you approve the planned generation-call count. Audio, video, and source files over 1 MiB contribute filenames without file content by default.</p>
+                <p class="setting-desc">GitMind sends one request. When a diff is larger than the selected model accepts, Pro condenses it locally (generated files, deletions, and very long files are summarized; every changed file is still listed) and still makes one request. Audio, video, and source files over 1 MiB contribute filenames without file content by default.</p>
                 <div class="setting-row ${disabledState ? 'locked' : ''}">
                     <div class="setting-info">
-                        <div class="setting-label">Process large changes proactively</div>
-                        <div class="setting-desc">Offer batching for large changes. This setting never authorizes generation calls; each batch asks for approval.</div>
+                        <div class="setting-label">Deep analysis for very large changes</div>
+                        <div class="setting-desc">When condensing would drop content, offer multi-request analysis instead. Each run asks for approval and stays within the call limit in settings.</div>
                     </div>
                     <div class="setting-control">
                         <div class="switch-container ${disabledState ? 'disabled' : ''}">

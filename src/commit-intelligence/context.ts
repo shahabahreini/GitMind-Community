@@ -79,7 +79,7 @@ function providerDestination(config: ApiConfig): string {
     cohere: "api.cohere.com", openai: "api.openai.com", together: "api.together.xyz", openrouter: "openrouter.ai",
     anthropic: "api.anthropic.com", minimax: "api.minimax.io", copilot: "GitHub Copilot language model service",
     deepseek: "api.deepseek.com", grok: "api.x.ai", groq: "api.groq.com", perplexity: "api.perplexity.ai",
-    zai: "api.z.ai", nvidia: "integrate.api.nvidia.com"
+    zai: "api.z.ai", nvidia: "integrate.api.nvidia.com", ollamacloud: "ollama.com"
   };
   if (config.type === "ollama") {return new URL(config.url).host;}
   if (config.type === "custom") { try { return new URL(config.baseUrl).host; } catch { return config.baseUrl || "custom endpoint"; } }
