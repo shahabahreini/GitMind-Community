@@ -3,7 +3,7 @@ import { generateCommitPrompt, getPromptConfig, generateCommitHistoryAnalysisPro
 import { debugLog, diagnosticLog } from "../debug/logger";
 import { RequestContext, requestScope, runRequest } from "./requestContext";
 import { classifyGenerationFailure, normalizeProviderError, ProviderApiError } from "./recovery";
-import { answerText, countPromptTokens, directProbeBudget, effectiveInputBudget, modelCapabilities, ModelCapabilities, UNKNOWN_MODEL_PROBE_BYTES } from "./capabilities";
+import { answerText, countPromptTokens, directProbeBudget, effectiveInputBudget, measurePrompt, modelCapabilities, ModelCapabilities, UNKNOWN_MODEL_PROBE_BYTES } from "./capabilities";
 import { createHash } from "node:crypto";
 import { estimateTokens } from "../../utils/tokenCounter";
 
@@ -89,14 +89,14 @@ export abstract class BaseAIProvider implements AIProvider {
     async generateWithRawPrompt(prompt: string, context?: RequestContext): Promise<string> {
         if (!context?.capabilitiesPrepared) { await this.prepareCapabilities(context); }
         const capabilities = this.getCapabilities();
-        const estimatedTokens = await countPromptTokens(prompt, capabilities);
+        const estimatedTokens = context?.heuristicTokens ? await measurePrompt(prompt, capabilities) : await countPromptTokens(prompt, capabilities);
         if (context) {
             context.diagnosticBudget = {
                 estimatedTokens: estimateTokens(prompt),
                 modelLimit: capabilities.isUnknown && context.allowPromptProbe ? 0 : effectiveInputBudget(capabilities),
             };
         }
-        if (estimatedTokens > effectiveInputBudget(capabilities) && !(context?.allowPromptProbe && !capabilities.countTokensAsync && capabilities.countTokens(prompt) <= directProbeBudget(capabilities))) {
+        if (estimatedTokens > effectiveInputBudget(capabilities) && !(context?.allowPromptProbe && !capabilities.countTokensAsync && estimatedTokens <= directProbeBudget(capabilities, context.promptTokenCap))) {
             throw new ProviderApiError("Prompt exceeds the model input budget. Shorten custom context or choose a larger-context model.", { category: "input-limit" });
         }
         const merged = context?.generationOptions ?? this.getMergedGenerationOptions();

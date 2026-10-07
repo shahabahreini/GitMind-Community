@@ -30,6 +30,10 @@ export interface ExtensionSettings {
         url: string;
         model: string;
     };
+    ollamacloud?: {
+        apiKey: string;
+        model: string;
+    };
     mistral: {
         apiKey: string;
         model: string;
@@ -143,6 +147,9 @@ export interface ExtensionSettings {
             batchSize?: number;
             maxChunks?: number; // Legacy batch-size fallback
             concurrency?: number;
+            maxCalls?: number;
+            perFileLines?: number;
+            maxPromptTokens?: number;
         };
         commitBodyOptions?: {
             enabled: boolean;

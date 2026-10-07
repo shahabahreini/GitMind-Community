@@ -11,8 +11,14 @@ export interface RequestContext {
     largeDiffEnabled?: boolean;
     allowPromptProbe?: boolean;
     diffByteSize?: number;
+    /** Smallest prompt an unlisted model rejected as too large during this operation. */
+    rejectedPromptBytes?: number;
     metadataDiscovery?: Map<string, Promise<void>>;
     capabilitiesPrepared?: boolean;
+    /** Estimated-token ceiling for this operation's prompts; also bounds unknown-model probes. */
+    promptTokenCap?: number;
+    /** Count prompts with the byte heuristic instead of one token per byte (single-call generation). */
+    heuristicTokens?: boolean;
     diagnosticBudget?: { estimatedTokens: number; modelLimit: number };
 }
 interface AttemptContext extends RequestContext {

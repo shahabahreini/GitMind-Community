@@ -336,5 +336,6 @@ export function getUiManagerScript(): string {
     setupApiKeyAutoLoading('gemini', 'gitmind.loadGeminiModels');
     setupApiKeyAutoLoading('anthropic', 'gitmind.loadAnthropicModels');
     setupApiKeyAutoLoading('huggingface', 'gitmind.loadHuggingFaceModels');
+    setupApiKeyAutoLoading('ollamacloud', 'gitmind.loadOllamaCloudModels');
   `;
 }

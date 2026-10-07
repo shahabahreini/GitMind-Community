@@ -1,6 +1,6 @@
 **GitMind 5.x Handbook**
 
-Verified against GitMind `6.4.0` on October 5, 2026.
+Verified against GitMind `6.4.1` on October 5, 2026.
 
 - [Home](Home)
 - [Activation And License Management](Activation-And-License-Management)
@@ -39,6 +39,7 @@ Verified against GitMind `6.4.0` on October 5, 2026.
 - [providers mistral](providers-mistral)
 - [providers nvidia](providers-nvidia)
 - [providers ollama](providers-ollama)
+- [providers ollamacloud](providers-ollamacloud)
 - [providers openai](providers-openai)
 - [providers openrouter](providers-openrouter)
 - [providers perplexity](providers-perplexity)

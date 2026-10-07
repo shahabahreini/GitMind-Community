@@ -1,23 +1,28 @@
 import { execFile } from "child_process";
 import { createHash } from "crypto";
 import { promisify } from "util";
-import { readFile } from "fs/promises";
+import { open } from "fs/promises";
 import * as path from "path";
 import { ChangeAtom, ChangeKind, ChangeOrigin, ChangeSet, RepositorySnapshot } from "./models";
 
 const execFileAsync = promisify(execFile);
 const MAX_BUFFER = 20 * 1024 * 1024;
+/** Binary patches (base85) are only needed when Composer re-applies changes; staged media can be hundreds of MB. */
+const BINARY_PATCH_BUFFER = 1024 * 1024 * 1024;
 
-export async function runGit(repositoryRoot: string, args: readonly string[], allowedExitCodes: readonly number[] = [0]): Promise<string> {
+export async function runGit(repositoryRoot: string, args: readonly string[], allowedExitCodes: readonly number[] = [0], maxBuffer = MAX_BUFFER): Promise<string> {
   try {
-    const result = await execFileAsync("git", [...args], { cwd: repositoryRoot, maxBuffer: MAX_BUFFER, encoding: "utf8" });
+    const result = await execFileAsync("git", [...args], { cwd: repositoryRoot, maxBuffer, encoding: "utf8" });
     return result.stdout;
   } catch (error) {
-    const result = error as { code?: number; stdout?: string; stderr?: string };
+    const result = error as { code?: number | string; stdout?: string; stderr?: string; message?: string };
     if (typeof result.code === "number" && allowedExitCodes.includes(result.code)) {
       return result.stdout ?? "";
     }
-    throw new Error(`Git command failed: ${result.stderr?.trim() || "unknown error"}`);
+    if (result.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER") {
+      throw new Error(`Git output for "git ${args[0]}" exceeded ${Math.round(maxBuffer / 1024 / 1024)} MB. Large binary files are usually the cause.`);
+    }
+    throw new Error(`Git command failed: ${result.stderr?.trim() || result.message?.trim() || "unknown error"}`);
   }
 }
 
@@ -86,8 +91,12 @@ async function untrackedPatch(repositoryRoot: string, filePath: string): Promise
   const absolute = path.resolve(repositoryRoot, filePath);
   const relative = path.relative(repositoryRoot, absolute);
   if (relative.startsWith("..") || path.isAbsolute(relative)) {throw new Error("Untracked path escaped repository");}
-  const data = await readFile(absolute);
-  if (data.includes(0)) {return `diff --git a/${filePath} b/${filePath}\nnew file mode 100644\nBinary files /dev/null and b/${filePath} differ\n`;}
+  // Sniff the start of the file like Git does instead of loading large media into memory.
+  const handle = await open(absolute, "r");
+  const head = Buffer.alloc(8000);
+  let read = 0;
+  try { read = (await handle.read(head, 0, head.length, 0)).bytesRead; } finally { await handle.close(); }
+  if (head.subarray(0, read).includes(0)) {return `diff --git a/${filePath} b/${filePath}\nnew file mode 100644\nBinary files /dev/null and b/${filePath} differ\n`;}
   return runGit(repositoryRoot, ["diff", "--no-index", "--", "/dev/null", filePath], [0, 1]);
 }
 
@@ -101,10 +110,21 @@ export async function captureSnapshot(repositoryRoot: string): Promise<Repositor
   return { head: head.trim(), branch: branch.trim() || undefined, indexTree: indexTree.trim(), statusHash: stableId("status", status) };
 }
 
-export async function collectChangeSet(repositoryRoot: string, captureAll = true): Promise<ChangeSet> {
+export interface ChangeSetOptions {
+  /**
+   * Include applyable binary patches. Composer needs them to re-apply changes; scoring and
+   * previews do not, and binary patches of staged media can exceed any reasonable buffer.
+   */
+  binaryPatches?: boolean;
+}
+
+export async function collectChangeSet(repositoryRoot: string, captureAll = true, options: ChangeSetOptions = {}): Promise<ChangeSet> {
+  const binary = options.binaryPatches ?? true;
+  const diffArgs = [...(binary ? ["--binary"] : []), "--find-renames", "--submodule=short", "--", "."];
+  const buffer = binary ? BINARY_PATCH_BUFFER : MAX_BUFFER;
   const snapshot = await captureSnapshot(repositoryRoot);
-  const staged = await runGit(repositoryRoot, ["diff", "--cached", "--binary", "--find-renames", "--submodule=short", "--", "."]);
-  const unstaged = captureAll ? await runGit(repositoryRoot, ["diff", "--binary", "--find-renames", "--submodule=short", "--", "."]) : "";
+  const staged = await runGit(repositoryRoot, ["diff", "--cached", ...diffArgs], [0], buffer);
+  const unstaged = captureAll ? await runGit(repositoryRoot, ["diff", ...diffArgs], [0], buffer) : "";
   const untracked = captureAll ? (await runGit(repositoryRoot, ["ls-files", "--others", "--exclude-standard", "-z"]))
     .split("\0").filter(Boolean) : [];
   const patches = await Promise.all(untracked.map(file => untrackedPatch(repositoryRoot, file)));

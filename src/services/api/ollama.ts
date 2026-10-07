@@ -3,6 +3,7 @@ import { OllamaResponse } from "../../config/types";
 import { debugLog } from "../debug/logger";
 import { generateCommitPrompt, getPromptConfig } from './prompts';
 import { BaseAIProvider, GenerationOptions } from "./base";
+import { requestScope } from "./requestContext";
 import { loggedFetch } from "./loggedFetch";
 
 interface OllamaModel {
@@ -35,6 +36,7 @@ export class OllamaProvider extends BaseAIProvider {
         debugLog("Calling Ollama API", { baseUrl: this.apiKey, model: this.model });
         debugLog("Prompt:", prompt);
 
+        const promptTokenCap = requestScope.getStore()?.promptTokenCap;
         try {
             const response = await loggedFetch(`${this.apiKey}/api/generate`, {
                 method: "POST",
@@ -49,6 +51,8 @@ export class OllamaProvider extends BaseAIProvider {
                         system: "You analyze source changes and follow the requested output format.",
                         temperature: options?.temperature,
                         num_predict: options?.maxTokens ?? 1024,
+                        // Without num_ctx the server's default window silently truncates long prompts.
+                        ...(promptTokenCap ? { num_ctx: Math.max(4096, promptTokenCap + 2048) } : {}),
                     },
                 }),
             }, { provider: "ollama", operation: "generate" });

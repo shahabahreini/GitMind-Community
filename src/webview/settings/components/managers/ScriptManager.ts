@@ -501,6 +501,12 @@ export class ScriptManager {
                         dropdownId: 'ollamaModelDropdown'
                     },
                     {
+                        buttonId: 'loadOllamaCloudModels',
+                        commandId: 'gitmind.loadOllamaCloudModels',
+                        name: 'Ollama Cloud',
+                        loadingFlag: 'ollamacloudModelsLoading'
+                    },
+                    {
                         buttonId: 'loadNvidiaModels',
                         commandId: 'gitmind.loadNvidiaModels',
                         name: 'NVIDIA',

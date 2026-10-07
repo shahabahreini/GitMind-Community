@@ -1,10 +1,23 @@
 # Advanced Pro Features
 
-> Verified against GitMind `6.4.0` on October 5, 2026
+> Verified against GitMind `6.4.1` on October 5, 2026
 
 ## Large Diff Processing
 
-GitMind Pro estimates available model context and splits substantial diffs into manageable chunks. Chunk summaries are combined into the final commit message. Large diffs still cost more, take longer, and may omit low-priority detail; review the result. Pro users can configure large diff handling via `gitmind.pro.largeDiffHandling.enabled`, `gitmind.pro.largeDiffHandling.chunkSize`, `gitmind.pro.largeDiffHandling.batchSize`, `gitmind.pro.largeDiffHandling.concurrency`, and `gitmind.pro.largeDiffHandling.maxChunks`. Audio, video, and source files over 1 MiB are represented by filename only to protect model context.
+GitMind tries one request first. A diff that fits the selected model is sent as it is. When a diff is larger than the model accepts, Pro condenses it locally and still makes **one** request, with no approval prompt:
+
+1. Generated and vendored files (lockfiles, minified bundles, source maps, snapshots, build output, generated code) are replaced by a one-line note.
+2. Pure renames, mode changes, and deleted files shrink to a name plus line counts.
+3. Very long files keep their first and last hunks and the headers of the hunks between them (`gitmind.pro.largeDiffHandling.perFileLines`).
+4. If the diff still does not fit, every changed file is listed with its line counts and the remaining space goes to full hunks, manifests and source before tests and docs. If the list alone would use half of a tiny budget, files are counted per directory.
+
+A short notice states how many files were summarized. The target size is the smaller of the model's input limit and `gitmind.pro.largeDiffHandling.maxPromptTokens` (automatic: 60,000 estimated tokens; 6,000 for Ollama and LM Studio, which also receive a matching `num_ctx`). If a provider rejects the prompt as too large, GitMind retries with half the size and then a quarter, for at most three provider requests in total, without approval. Token counts are estimates (about three bytes per token plus a margin) unless the provider offers an exact counter. Free access is unchanged: a diff over the model limit still returns the input-limit message.
+
+**Deep analysis (optional).** Turn on `gitmind.pro.largeDiffHandling.enabled` to let GitMind offer multi-request analysis when condensing would drop content. The plan shows the number of calls, including the final message and expected summary reductions, and needs modal approval each time. A plan larger than `gitmind.pro.largeDiffHandling.maxCalls` (default 6) is never started; GitMind uses the condensed single request instead, as it does if you decline, if the approved total is exceeded, or if a call fails with an input limit. Approved calls run one at a time and stop on a rate limit; cancelling returns no partial commit message. `batchSize`, `chunkSize`, `concurrency`, and `maxChunks` are deprecated compatibility settings; the planner uses the model budget and sequential calls. Review results for large changes: condensed diffs omit low-priority detail by design. Audio, video, and image bodies are omitted from AI input. Source files over 1 MiB are represented by filename only. JSON record collections, JSON Lines, CSV, and TSV files from 64 KiB through 1 MiB receive a local structural summary with record or row counts, field names, size, and a short content fingerprint; larger ones use filename and size. Ordinary JSON configuration objects keep their normal diff. Generated lockfiles from 32 KiB through 1 MiB receive a size and fingerprint note. Smaller files keep their normal diff. For staged changes, these notes use the staged file content.
+
+## Changelog Generation
+
+Changelog generation reads committed messages and bodies from Git history. It does not read staged diffs or file contents, so large structured data and media files do not add their bodies to a changelog prompt. Its prompt asks the model to describe only changes supported by those commits.
 
 ## Commit Composer
 

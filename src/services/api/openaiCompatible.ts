@@ -1,4 +1,5 @@
 import { BaseAIProvider, GenerationOptions } from "./base";
+import { RequestContext } from "./requestContext";
 import { loggedFetch } from "./loggedFetch";
 import { ProviderApiError } from "./recovery";
 
@@ -83,11 +84,16 @@ export abstract class OpenAICompatibleProvider extends BaseAIProvider {
         return this.enforceCommitMessageFormat(content.trim());
     }
 
-    async getModels(): Promise<string[]> {
+    override async prepareCapabilities(context?: RequestContext): Promise<void> {
+        await this.discoverLargeModel(context, signal => this.getModels(signal));
+    }
+
+    async getModels(signal?: AbortSignal): Promise<string[]> {
         if (!this.endpoint) {
             return [];
         }
         const response = await loggedFetch(`${this.endpoint}/models`, {
+            signal,
             headers: { Accept: "application/json", ...this.headers },
         }, { provider: this.provider, operation: "models.list" });
         if (!response.ok) {

@@ -1,6 +1,6 @@
 # Troubleshooting And FAQ
 
-> Verified against GitMind `6.4.0` on October 5, 2026
+> Verified against GitMind `6.4.1` on October 5, 2026
 
 ## Provider And Model Problems
 
@@ -16,7 +16,7 @@
 
 - Stage changes, or enable Capture All Changes.
 - In a multi-repository workspace, select the intended repository.
-- For large changes, split the work into focused commits or use Pro large-diff processing.
+- For large changes, split the work into focused commits. GitMind Pro also condenses oversized diffs locally into a single request (see Advanced Pro Features).
 - If generation appears stuck, use **Cancel Generation** and retry. Pro users can capture a sanitized Support Report while reproducing persistent failures.
 
 ## Activation

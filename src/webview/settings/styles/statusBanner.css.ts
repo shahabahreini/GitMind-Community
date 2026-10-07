@@ -206,6 +206,12 @@ export function getStatusBannerStyles(): string {
         box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3);
       }
 
+      .provider-icon.ollamacloud {
+        background: linear-gradient(135deg, #0ea5e9, #0284c7);
+        color: white;
+        box-shadow: 0 2px 6px rgba(14, 165, 233, 0.3);
+      }
+
       .provider-icon.copilot {
         background: linear-gradient(135deg, #1ed5a9, #00b894);
         color: white;
@@ -421,6 +427,12 @@ export function getStatusBannerStyles(): string {
         background: linear-gradient(135deg, #7c3aed, #5b21b6);
         color: white;
         box-shadow: 0 1px 3px rgba(124, 58, 237, 0.3);
+      }
+
+      .status-badge.ollamacloud {
+        background: linear-gradient(135deg, #0ea5e9, #0284c7);
+        color: white;
+        box-shadow: 0 1px 3px rgba(14, 165, 233, 0.3);
       }
 
       .status-badge.copilot {

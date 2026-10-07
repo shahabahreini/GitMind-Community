@@ -1,7 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { RequestContext } from "./requestContext";
-import { modelCapabilities, assertPromptFitsAsync, countPromptTokens, directProbeBudget, effectiveInputBudget, ModelCapabilities } from "./capabilities";
+import { modelCapabilities, assertPromptFitsAsync, batchInputBudget, defaultPromptTokenCap, effectiveInputBudget, measurePrompt, MIN_PROMPT_TOKENS, ModelCapabilities } from "./capabilities";
+import { digestDiff, tokensToBytes } from "../git/diffDigest";
 import { generateBudgeted, DiffInput, isOutputTruncation } from "./budgetedGeneration";
+import { DiffSpool } from "./diffSpool";
+import { GenerationAttempts } from "./generationAttempts";
 import { readLargeDiffSettings, LargeDiffSettings } from "../../config/largeDiffSettings";
 // src/services/api/index.ts
 import * as vscode from "vscode";
@@ -10,6 +13,7 @@ import {
     GeminiApiConfig,
     HuggingFaceApiConfig,
     OllamaApiConfig,
+    OllamaCloudApiConfig,
     MistralApiConfig,
     CohereApiConfig,
     OpenAIApiConfig,
@@ -112,6 +116,10 @@ async function loadProviderModule(provider: string): Promise<ProviderClass> {
             case 'ollama':
                 const ollamaModule = await import('./ollama.js');
                 providerClass = ollamaModule.OllamaProvider;
+                break;
+            case 'ollamacloud':
+                const ollamaCloudModule = await import('./ollamacloud.js');
+                providerClass = ollamaCloudModule.OllamaCloudProvider;
                 break;
             case 'mistral':
                 const mistralModule = await import('./mistral.js');
@@ -361,7 +369,11 @@ export async function generateCommitMessage(
     context ??= owned!.context;
     context.diffByteSize ??= typeof diff === "string" ? Buffer.byteLength(diff, "utf8") : undefined;
     const promptConfig = context.promptConfig ?? getPromptConfig();
-    let inputIterator: AsyncIterator<string> | undefined;
+    let spool: DiffSpool | undefined;
+    const attempts = new GenerationAttempts(context.signal, () => {
+        diagnosticLog({ subsystem: "provider", event: "generation.calls", functionName: "generateCommitMessage", operationId: context?.operationId,
+            data: { planned: attempts.planned, actual: attempts.actual } });
+    });
     try {
         context.signal?.throwIfAborted();
         const validatedConfig = await validateAndUpdateConfig(config);
@@ -372,85 +384,67 @@ export async function generateCommitMessage(
         const largeDiffSettings = readLargeDiffSettings(settings);
         context.largeDiffEnabled = largeDiffSettings.enabled;
         const initialProvider = await getProviderInstance(validatedConfig);
-        await initialProvider.prepareCapabilities(context);
         context.generationOptions ??= initialProvider.getDefaultGenerationOptions() ?? {};
         const recovery = createRecoveryOperation(validatedConfig, { operationId: context.operationId });
         if (typeof diff !== "string") {
-            const iterator = diff[Symbol.asyncIterator]();
-            inputIterator = iterator;
-            let prefix = "";
-            let exhausted = false;
-            let nextBlock: string | undefined;
-            const capabilities = initialProvider.getCapabilities();
-            const budget = Math.min(1024 * 1024, Math.max(effectiveInputBudget(capabilities), directProbeBudget(capabilities)));
-            while (prefix.length < budget) {
-                context.signal?.throwIfAborted();
-                const next = await iterator.next();
-                if (next.done) { exhausted = true; break; }
-                prefix += next.value;
-                if (largeDiffSettings.enabled && prefix.split("\n").length > largeDiffSettings.chunkSize) { break; }
-            }
-            if (!exhausted && prefix.length >= budget) {
-                const next = await iterator.next();
-                if (next.done) { exhausted = true; }
-                else { nextBlock = next.value; }
-            }
-            diff = exhausted ? prefix : (async function* () {
-                try {
-                    yield prefix;
-                    if (nextBlock !== undefined) { yield nextBlock; }
-                    while (true) {
-                        const next = await iterator.next();
-                        if (next.done) { break; }
-                        yield next.value;
-                    }
-                } finally { await iterator.return?.(); }
-            })();
+            spool = await DiffSpool.create(diff, context.signal);
+            context.diffByteSize = spool.bytes;
         }
-        let requiresChunking = typeof diff !== "string";
+        const promptTokenCap = largeDiffSettings.maxPromptTokens || defaultPromptTokenCap(validatedConfig.type);
+        context.promptTokenCap = promptTokenCap;
+        context.heuristicTokens = true;
+        // Discovery is size-gated, so it runs only once the diff size is known.
+        await initialProvider.prepareCapabilities(context);
+        const read = (): AsyncIterable<string> => spool ? spool.read() : (async function* () { yield diff as string; })();
+        if (spool) {
+            const capabilities = initialProvider.getCapabilities();
+            const directBound = capabilities.isUnknown ? tokensToBytes(promptTokenCap) : Math.min(16 * 1024 * 1024, Math.max(1024 * 1024, tokensToBytes(effectiveInputBudget(capabilities))));
+            diff = await spool.boundedString(directBound) ?? spool.asInput();
+        }
+        let rejectedTokens: number | undefined;
+        let attemptsUsed = 0;
         if (typeof diff === "string") {
             const prompt = await generateCommitPrompt(diff, promptConfig, customContext);
             const capabilities = initialProvider.getCapabilities();
-            // The budget counter may intentionally count UTF-8 bytes as a safe
-            // upper bound. It is not a token estimate for user diagnostics.
+            // Prompt size is a conservative estimate (about 3 bytes per token) unless
+            // the provider has an exact tokenizer; it is not a user-facing token count.
             const approximateTokens = estimateTokens(prompt);
             context.diagnosticBudget = {
                 estimatedTokens: approximateTokens,
                 modelLimit: capabilities.isUnknown ? 0 : effectiveInputBudget(capabilities),
             };
             showDiagnosticsInfo(validatedConfig, approximateTokens);
-            try { await assertPromptFitsAsync(prompt, capabilities); }
-            catch (error) {
-                if (classifyGenerationFailure(error, validatedConfig.type) !== "input-limit") { throw error; }
-                if (capabilities.countTokens(prompt) <= directProbeBudget(capabilities)) {
-                    context.allowPromptProbe = true;
-                } else { requiresChunking = true; }
-            }
-            requiresChunking ||= largeDiffSettings.enabled && diff.split("\n").length > largeDiffSettings.chunkSize;
-            if (!requiresChunking) {
+            const measured = await measurePrompt(prompt, capabilities);
+            if (measured > (capabilities.isUnknown ? promptTokenCap : effectiveInputBudget(capabilities))) {
+                // Larger than the model accepts: continue to condensing below.
+            } else {
+                context.allowPromptProbe = capabilities.isUnknown === true;
                 try {
+                    attemptsUsed = 1;
                     return await recovery(async attemptConfig => {
                         const provider = await getProviderInstance(attemptConfig);
+                        await attempts.beforeAttempt(false);
                         return provider.generateWithRawPrompt(prompt, context);
                     });
                 } catch (error) {
-                    // Runtime input limits or a smaller fallback can require a new plan.
+                    // Runtime input limits or a smaller fallback can require a condensed prompt.
                     if (classifyGenerationFailure(error, validatedConfig.type) !== "input-limit" && !isOutputTruncation(error)) { throw error; }
-                    requiresChunking = true;
+                    rejectedTokens = measured;
+                    if (capabilities.isUnknown && classifyGenerationFailure(error, validatedConfig.type) === "input-limit") { rememberRejectedPrompt(context, prompt); }
                 } finally { context.allowPromptProbe = false; }
             }
         }
         if (!await SubscriptionManager.getInstance().isProUser()) {
-            throw new ProviderApiError("This diff exceeds the model input limit. GitMind Pro can process it automatically in budgeted batches.", { category: "input-limit" });
+            throw new ProviderApiError("This diff exceeds the model input limit. GitMind Pro condenses oversized diffs into a single request.", { category: "input-limit" });
         }
-        // Pro users get safe automatic processing whenever a prompt exceeds the
-        // model budget. The setting only opts into proactive line-based batching.
-        context.largeDiffEnabled = true;
-        return await processLargeDiff(validatedConfig, diff, customContext, largeDiffSettings, context, promptConfig, initialProvider.getCapabilities(), recovery);
+        return await generateCondensed({
+            config: validatedConfig, diff, read, customContext, settings: largeDiffSettings, context, promptConfig,
+            capabilities: initialProvider.getCapabilities(), recovery, attempts, rejectedTokens, attemptsUsed, promptTokenCap,
+        });
     } catch (error) {
         throw normalizeProviderError(error, config.type);
     } finally {
-        try { await inputIterator?.return?.(); }
+        try { await spool?.dispose(); }
         finally { owned?.dispose(); }
     }
 }
@@ -941,6 +935,107 @@ function getModelName(config: ApiConfig): string {
  * @param customContext Custom context for the commit message
  * @param settings Settings for large diff handling
  */
+function rememberRejectedPrompt(context: RequestContext, prompt: string): void {
+    const bytes = Buffer.byteLength(prompt, "utf8");
+    context.rejectedPromptBytes = Math.min(context.rejectedPromptBytes ?? bytes, bytes);
+}
+
+/** An unlisted model that rejected a prompt is planned below half of that size. */
+function observedCapabilities(capabilities: ModelCapabilities, context: RequestContext): ModelCapabilities {
+    if (!capabilities.isUnknown || !context.rejectedPromptBytes) { return capabilities; }
+    const ceiling = Math.max(1024, Math.floor(context.rejectedPromptBytes / 2));
+    return { ...capabilities, isUnknown: false, maxInputTokens: Math.min(batchInputBudget(capabilities), ceiling) };
+}
+
+/** The multi-request plan was too large or was declined; the condensed single request takes over. */
+class DeepAnalysisDeclined extends Error {}
+
+interface CondensedRequest {
+    config: ApiConfig;
+    diff: DiffInput;
+    read: () => AsyncIterable<string>;
+    customContext: string;
+    settings: LargeDiffSettings;
+    context: RequestContext;
+    promptConfig: ReturnType<typeof getPromptConfig>;
+    capabilities: ModelCapabilities;
+    recovery: RecoveryOperation;
+    attempts: GenerationAttempts;
+    /** Estimated size of a prompt the provider already rejected in this operation. */
+    rejectedTokens?: number;
+    attemptsUsed: number;
+    promptTokenCap: number;
+}
+
+/**
+ * One request for an oversized diff: compact generated/vendored noise, then keep every
+ * file name plus the highest-priority hunks. A provider input-limit rejection halves the
+ * prompt target; at most three attempts are made in total, with no approval prompt.
+ */
+async function generateCondensed(request: CondensedRequest): Promise<string> {
+    const { config, diff, read, customContext, settings, context, promptConfig, capabilities, recovery, attempts } = request;
+    const modelBudget = capabilities.isUnknown ? Number.MAX_SAFE_INTEGER : effectiveInputBudget(capabilities);
+    let limit = Math.min(request.promptTokenCap, modelBudget);
+    if (request.rejectedTokens) { limit = Math.min(limit, Math.floor(request.rejectedTokens / 2)); }
+    if (settings.enabled) {
+        try {
+            const probe = await digestDiff(read, { budgetTokens: Math.max(500, limit - 512), perFileLines: settings.perFileLines });
+            if (probe.tier === 2) {
+                attempts.strict = true;
+                return await processLargeDiff(config, typeof diff === "string" ? diff : read(), customContext, settings, context, promptConfig, capabilities, recovery, attempts, settings.maxCalls);
+            }
+        } catch (error) {
+            if (!(error instanceof DeepAnalysisDeclined) && !attempts.overrun) { throw error; }
+            void vscode.window.showInformationMessage?.("Deep analysis did not run to completion; using one condensed request instead.");
+        } finally { attempts.strict = false; }
+    }
+    const overhead = await measurePrompt(await generateCommitPrompt("", promptConfig, customContext), capabilities);
+    for (let attempt = request.attemptsUsed; attempt < 3; attempt++) {
+        context.signal?.throwIfAborted();
+        let target = limit - overhead - 128;
+        if (target < 500) { throw new ProviderApiError("Prompt overhead cannot fit the model budget. Shorten custom context or choose a larger-context model.", { category: "input-limit" }); }
+        let digest = await digestDiff(read, { budgetTokens: target, perFileLines: settings.perFileLines });
+        let prompt = await generateCommitPrompt(digest.tier === 0 ? await joinInput(read()) : digest.text, promptConfig, customContext);
+        // An exact tokenizer can disagree with the byte heuristic; shrink the target before spending a call.
+        for (let refine = 0; refine < 2; refine++) {
+            const measured = await measurePrompt(prompt, capabilities);
+            if (measured <= limit) { break; }
+            target = Math.floor(target * limit / measured * 0.95);
+            digest = await digestDiff(read, { budgetTokens: target, perFileLines: settings.perFileLines });
+            prompt = await generateCommitPrompt(digest.tier === 0 ? await joinInput(read()) : digest.text, promptConfig, customContext);
+        }
+        if (digest.tier > 0) {
+            context.diagnosticBudget = { estimatedTokens: estimateTokens(prompt), modelLimit: capabilities.isUnknown ? 0 : effectiveInputBudget(capabilities) };
+            diagnosticLog({ subsystem: "provider", event: "generation.condensed", functionName: "generateCondensed", operationId: context.operationId,
+                data: { tier: digest.tier, attempt: attempt + 1, condensedFiles: digest.condensedFiles, totalFiles: digest.totalFiles, condensedLines: digest.condensedLines, limit } });
+            if (attempt === request.attemptsUsed) {
+                void vscode.window.showInformationMessage?.(`Large diff condensed to fit the model: ${digest.condensedFiles} of ${digest.totalFiles} files were summarized (${digest.condensedLines} changed lines). Every file is still listed.`);
+            }
+        }
+        context.allowPromptProbe = capabilities.isUnknown === true;
+        try {
+            return await recovery(async attemptConfig => {
+                const provider = await getProviderInstance(attemptConfig);
+                await attempts.beforeAttempt(false);
+                return provider.generateWithRawPrompt(prompt, context);
+            });
+        } catch (error) {
+            if (classifyGenerationFailure(error, config.type) !== "input-limit" || attempt >= 2) { throw error; }
+            if (capabilities.isUnknown) { rememberRejectedPrompt(context, prompt); }
+            const smaller = Math.floor(limit / 2);
+            if (smaller < Math.min(MIN_PROMPT_TOKENS, limit)) { throw error; }
+            limit = Math.max(smaller, Math.min(MIN_PROMPT_TOKENS, limit));
+        } finally { context.allowPromptProbe = false; }
+    }
+    throw new ProviderApiError("The condensed prompt was rejected by the model. Choose a larger-context model.", { category: "input-limit" });
+}
+
+async function joinInput(input: AsyncIterable<string>): Promise<string> {
+    let text = "";
+    for await (const block of input) { text += block; }
+    return text;
+}
+
 async function processLargeDiff(
     config: ApiConfig,
     diff: DiffInput,
@@ -950,6 +1045,8 @@ async function processLargeDiff(
     promptConfig: ReturnType<typeof getPromptConfig>,
     initialCapabilities: ModelCapabilities,
     recovery: RecoveryOperation = createRecoveryOperation(config, { operationId: context.operationId }),
+    attempts: GenerationAttempts = new GenerationAttempts(context.signal),
+    maxCalls = Number.MAX_SAFE_INTEGER,
 ): Promise<string> {
     let capabilities = initialCapabilities;
     return vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: "Processing large diff", cancellable: true }, async (progress, token) => {
@@ -960,10 +1057,21 @@ async function processLargeDiff(
         try {
             return await generateBudgeted(diff, customContext, settings, {
                 signal,
-                capabilities: () => capabilities,
+                capabilities: () => observedCapabilities(capabilities, context),
+                approve: async estimated => {
+                    if (estimated + attempts.actual > maxCalls) { throw new DeepAnalysisDeclined(); }
+                    try { await attempts.approveBatch(estimated + attempts.actual); }
+                    catch (error) {
+                        // Declining the plan falls back to the single-request condensed diff; cancelling the operation does not.
+                        if (!signal.aborted && normalizeProviderError(error, config.type).category === "cancelled") { throw new DeepAnalysisDeclined(); }
+                        throw error;
+                    }
+                    signal.throwIfAborted();
+                    progress.report({ message: `Planned ${attempts.planned} generation calls; completed ${attempts.actual}` });
+                },
                 renderFinal: async (text, current) => {
                     const full = await generateCommitPrompt(text, promptConfig, customContext);
-                    if (current.countTokens(full) <= effectiveInputBudget(current)) { return full; }
+                    if (current.countTokens(full) <= batchInputBudget(current)) { return full; }
                     return generateCompactCommitPrompt(text, promptConfig, customContext);
                 },
                 send: (render, requestSignal, summaryOutputTokens) => recovery(async attemptConfig => {
@@ -982,13 +1090,29 @@ async function processLargeDiff(
                     };
                     await provider.prepareCapabilities(requestContext);
                     capabilities = provider.getCapabilities();
-                    return provider.generateWithRawPrompt(await render(capabilities), { ...requestContext, capabilitiesPrepared: true });
+                    const prompt = await render(capabilities);
+                    await attempts.beforeAttempt(true);
+                    progress.report({ message: `Generation calls: ${attempts.actual} of ${attempts.planned} planned` });
+                    try {
+                        return await provider.generateWithRawPrompt(prompt, { ...requestContext, capabilitiesPrepared: true, allowPromptProbe: capabilities.isUnknown === true });
+                    } catch (error) {
+                        // Later spans then fit below what this model actually accepts.
+                        if (capabilities.isUnknown && classifyGenerationFailure(error, attemptConfig.type) === "input-limit") { rememberRejectedPrompt(context, prompt); }
+                        throw error;
+                    }
                 }),
                 progress: (stage, completed) => {
-                    progress.report({ message: stage === "requests" ? `Analyzed ${completed} source spans` : stage === "reduction" ? `Reducing summaries (round ${completed})` : "Planning source spans" });
-                    diagnosticLog({ subsystem: "provider", event: `generation.${stage}`, functionName: "processLargeDiff", operationId: context.operationId, data: { stage, completed: Math.min(completed, 1000000) }, support: { name: "operation_progress", operation: "generate_commit", stage, completed: Math.min(completed, 1000000) } });
+                    progress.report({ message: stage === "requests" ? `Analyzed ${completed} source spans; ${attempts.actual}/${attempts.planned} calls` : stage === "reduction" ? `Reducing summaries; ${attempts.actual}/${attempts.planned} calls` : `Planning source spans: ${completed}` });
+                    diagnosticLog({ subsystem: "provider", event: `generation.${stage}`, functionName: "processLargeDiff", operationId: context.operationId, data: { stage, completed: Math.min(completed, 1000000), plannedCalls: attempts.planned, actualCalls: attempts.actual }, support: { name: "operation_progress", operation: "generate_commit", stage, completed: Math.min(completed, 1000000) } });
                 },
             });
+        } catch (error) {
+            const normalized = normalizeProviderError(error, config.type);
+            if (normalized.category === "rate-limit") {
+                const delay = normalized.retryAfterMs ? ` Retry after ${Math.ceil(normalized.retryAfterMs / 1000)} seconds.` : "";
+                void vscode.window.showWarningMessage(`Generation stopped after a rate limit.${delay}`);
+            }
+            throw error;
         } finally { subscription.dispose(); }
     });
 }
@@ -1091,6 +1215,13 @@ export async function generateWithRawPrompt(
 
         debugLog(`[${featureName}] Calling ${provider} with prompt length: ${prompt.length}`);
 
+        // Raw prompts (changelog, history analysis) use discovered model limits;
+        // an unlisted model gets the bounded probe instead of the 4K fallback.
+        owned.context.diffByteSize = Buffer.byteLength(prompt, "utf8");
+        const initialProvider = await getProviderInstance(validatedConfig);
+        await initialProvider.prepareCapabilities(owned.context);
+        owned.context.allowPromptProbe = initialProvider.getCapabilities().isUnknown === true;
+
         // Generate the content using the raw prompt
         const supportOperation: SupportOperation = featureName === "changelog"
             ? "generate_changelog"
@@ -1119,6 +1250,23 @@ export async function generateWithRawPrompt(
     } finally {
         // Clean up request tracking
         owned.dispose();
+    }
+}
+
+/** Effective input budget of the selected model, or undefined when no trustworthy limit is known. */
+export async function getModelInputBudget(config: ApiConfig): Promise<number | undefined> {
+    try {
+        const provider = await getProviderInstance(config);
+        const { context, dispose } = beginGenerationOperation("global");
+        try {
+            // Any size above the probe threshold enables the one bounded metadata lookup.
+            await provider.prepareCapabilities({ ...context, diffByteSize: Number.MAX_SAFE_INTEGER });
+        } finally { dispose(); }
+        const capabilities = provider.getCapabilities();
+        return capabilities.isUnknown ? undefined : effectiveInputBudget(capabilities);
+    } catch (error) {
+        debugLog("Model input budget lookup failed:", error);
+        return undefined;
     }
 }
 

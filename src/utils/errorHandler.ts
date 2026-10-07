@@ -207,9 +207,9 @@ export class APIErrorHandler {
         const modelSuggestion = (this.PROVIDER_SUGGESTIONS && this.PROVIDER_SUGGESTIONS[provider]) || this.PROVIDER_SUGGESTIONS?.default || 'Check available models with larger limits';
         errorInfo.suggestions = [
             ...(context?.largeDiffEnabled === false
-                ? ["GitMind Pro automatically analyzes oversized changes in budgeted batches. Provider rate limits may still apply."]
+                ? ["GitMind Pro condenses oversized changes locally and sends them in one request. Generated files, deletions and very long files are summarized; every changed file stays listed."]
                 : context?.largeDiffEnabled === true
-                    ? ["Large Diff Processing is enabled; shorten custom instructions or choose a larger-context model if a single analysis prompt still cannot fit."]
+                    ? ["Deep analysis is enabled; shorten custom instructions or choose a larger-context model if a single analysis prompt still cannot fit."]
                     : []),
             modelSuggestion,
             "Stage fewer files or commit changes in smaller logical groups."

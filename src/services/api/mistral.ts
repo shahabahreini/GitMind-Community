@@ -1,6 +1,7 @@
 import { debugLog } from "../debug/logger";
 import { MistralResponse, MistralRateLimit } from "../../config/types";
 import { BaseAIProvider, GenerationOptions } from "./base";
+import { RequestContext } from "./requestContext";
 import { loggedFetch } from "./loggedFetch";
 import { answerText } from "./capabilities";
 import { normalizeProviderError, ProviderApiError } from "./recovery";
@@ -69,10 +70,15 @@ export class MistralProvider extends BaseAIProvider {
         }
     }
 
-    async getModels(): Promise<string[]> {
+    override async prepareCapabilities(context?: RequestContext): Promise<void> {
+        await this.discoverLargeModel(context, signal => this.getModels(signal));
+    }
+
+    async getModels(signal?: AbortSignal): Promise<string[]> {
         try {
             const response = await loggedFetch("https://api.mistral.ai/v1/models", {
                 method: "GET",
+                signal,
                 headers: {
                     "Authorization": `Bearer ${this.apiKey}`,
                     "Accept": "application/json"

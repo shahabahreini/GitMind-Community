@@ -2,16 +2,16 @@
   "schemaVersion": 1,
   "product": {
     "name": "GitMind",
-    "version": "6.4.0",
+    "version": "6.4.1",
     "auditDate": "2026-10-05",
     "source": "package.json",
     "minimumVSCode": "^1.101.0"
   },
   "counts": {
-    "providerChoices": 23,
-    "builtInProviders": 22,
-    "settingsRegistered": 127,
-    "settingsDocumented": 117,
+    "providerChoices": 24,
+    "builtInProviders": 23,
+    "settingsRegistered": 129,
+    "settingsDocumented": 119,
     "commandsRegistered": 55,
     "publicCommands": 44,
     "commitStyles": 12,
@@ -54,6 +54,19 @@
       "fields": [
         "gitmind.ollama.url",
         "gitmind.ollama.model"
+      ],
+      "modelDiscovery": true
+    },
+    {
+      "id": "ollamacloud",
+      "name": "Ollama Cloud",
+      "availability": "Free",
+      "authentication": "API key",
+      "setupUrl": "https://ollama.com/settings/keys",
+      "defaultModel": "gpt-oss:120b-cloud",
+      "fields": [
+        "gitmind.ollamacloud.apiKey",
+        "gitmind.ollamacloud.model"
       ],
       "modelDiscovery": true
     },
@@ -342,6 +355,7 @@
         "gemini",
         "huggingface",
         "ollama",
+        "ollamacloud",
         "mistral",
         "cohere",
         "openai",
@@ -405,6 +419,20 @@
       "default": "phi4",
       "availability": "Free",
       "description": "Model name for Ollama"
+    },
+    {
+      "id": "gitmind.ollamacloud.apiKey",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "API key for Ollama Cloud [Learn more](https://ollama.com/settings/keys)"
+    },
+    {
+      "id": "gitmind.ollamacloud.model",
+      "type": "string",
+      "default": "gpt-oss:120b-cloud",
+      "availability": "Free",
+      "description": "Ollama Cloud model to use for generating commit messages"
     },
     {
       "id": "gitmind.mistral.apiKey",
@@ -1290,14 +1318,14 @@
       "type": "boolean",
       "default": false,
       "availability": "Pro",
-      "description": "Process included text changes in large diffs proactively (Pro). Audio, video, and source files over 1 MiB are represented by filename only by default; provider rate limits still apply."
+      "description": "Offer large-diff batching proactively (Pro). Every batched generation still asks for approval; fitting diffs use one request."
     },
     {
       "id": "gitmind.pro.largeDiffHandling.chunkSize",
       "type": "integer",
       "default": 1000,
       "availability": "Pro",
-      "description": "Preferred source lines per chunk; model budgets may require smaller chunks.",
+      "description": "Legacy preferred source window. Generation spans now follow the selected model's input budget.",
       "minimum": 10,
       "maximum": 10000
     },
@@ -1306,7 +1334,7 @@
       "type": "integer",
       "default": null,
       "availability": "Pro",
-      "description": "Chunks per batch. Defaults to five; legacy maxChunks is used when unset. Subsequent batches run automatically.",
+      "description": "Legacy batch size preference. This is not a total request limit; each generation shows its planned call count for approval.",
       "minimum": 1,
       "maximum": 100
     },
@@ -1315,7 +1343,7 @@
       "type": "integer",
       "default": 3,
       "availability": "Pro",
-      "description": "Concurrent requests within each large-diff batch.",
+      "description": "Legacy concurrency preference. Approved large-diff generation sends one request at a time.",
       "minimum": 1,
       "maximum": 8
     },
@@ -1725,7 +1753,7 @@
       "type": "integer",
       "default": 1000,
       "availability": "Pro",
-      "description": "Preferred source lines per chunk; model budgets may require smaller chunks.",
+      "description": "Legacy preferred source window. Generation spans now follow the selected model's input budget.",
       "minimum": 10,
       "maximum": 10000
     },
@@ -1734,7 +1762,7 @@
       "type": "integer",
       "default": null,
       "availability": "Pro",
-      "description": "Chunks per batch. Defaults to five; legacy maxChunks is used when unset. Subsequent batches run automatically.",
+      "description": "Legacy batch size preference. This is not a total request limit; each generation shows its planned call count for approval.",
       "minimum": 1,
       "maximum": 100
     },
@@ -1743,7 +1771,7 @@
       "type": "integer",
       "default": 3,
       "availability": "Pro",
-      "description": "Concurrent requests within each large-diff batch.",
+      "description": "Legacy concurrency preference. Approved large-diff generation sends one request at a time.",
       "minimum": 1,
       "maximum": 8
     },

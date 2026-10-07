@@ -41,6 +41,7 @@ const testSuites = [
       "Together",
       "OpenRouter",
       "Ollama",
+      "Ollama Cloud",
       "GitHub Copilot",
     ],
   },
@@ -167,6 +168,7 @@ const providers = [
   "Z.ai",
   "NVIDIA hosted NIM",
   "Ollama (local)",
+  "Ollama Cloud",
   "GitHub Copilot",
   "Custom API (Pro)",
 ];

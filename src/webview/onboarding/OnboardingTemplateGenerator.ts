@@ -121,6 +121,7 @@ export class OnboardingTemplateGenerator {
             { id: 'zai', category: 'Alternative', tier: 'Paid', desc: 'GLM models from Z.ai' },
             { id: 'groq', category: 'Alternative', tier: 'Free Tier', desc: 'Fast inference for open models' },
             { id: 'nvidia', category: 'Alternative', tier: 'Free Tier', desc: 'Hosted NVIDIA NIM models' },
+            { id: 'ollamacloud', category: 'Alternative', tier: 'Free Tier', desc: 'Hosted cloud models from Ollama' },
 
             // Aggregators
             { id: 'together', category: 'Aggregator', tier: 'Paid', desc: 'Access multiple open-source models' },
