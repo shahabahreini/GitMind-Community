@@ -688,11 +688,11 @@ export class ProFeatureRenderer extends BaseRenderer {
                 <div class="section-header">
                     <h3 class="section-title">Large Diff Handling ${lockBadge}</h3>
                 </div>
-                <p class="setting-desc">GitMind Pro handles changes that exceed the selected model automatically. It batches included text changes and compacts repeated details to fit the model budget. Audio, video, and source files over 1 MiB contribute filenames without file content by default. Provider request and token rate limits may still slow or stop generation.</p>
+                <p class="setting-desc">GitMind sends one request. When a diff is larger than the selected model accepts, Pro condenses it locally (generated files, deletions, and very long files are summarized; every changed file is still listed) and still makes one request. Audio, video, and source files over 1 MiB contribute filenames without file content by default.</p>
                 <div class="setting-row ${disabledState ? 'locked' : ''}">
                     <div class="setting-info">
-                        <div class="setting-label">Process large changes proactively</div>
-                        <div class="setting-desc">Optional: start batching at the preferred source window size, before reaching the model limit.</div>
+                        <div class="setting-label">Deep analysis for very large changes</div>
+                        <div class="setting-desc">When condensing would drop content, offer multi-request analysis instead. Each run asks for approval and stays within the call limit in settings.</div>
                     </div>
                     <div class="setting-control">
                         <div class="switch-container ${disabledState ? 'disabled' : ''}">
@@ -711,7 +711,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                     <summary>Advanced controls (optional)</summary>
                 <div class="compact-settings">
                     <div class="compact-setting ${disabledState ? 'locked' : ''}">
-                        <span>Preferred Source Window (lines)</span>
+                        <span>Legacy source window preference</span>
                         <input type="number" id="chunkSize" 
                             class="input-field" 
                             value="${largeDiffHandling.chunkSize}" 
@@ -720,7 +720,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                             data-setting="pro.largeDiffHandling.chunkSize" />
                     </div>
                     <div class="compact-setting ${disabledState ? 'locked' : ''}">
-                        <span>Batch Size (all batches run automatically)</span>
+                        <span>Legacy batch size (not a call limit)</span>
                         <input type="number" id="batchSize"
                             class="input-field" 
                             value="${largeDiffHandling.batchSize}"
@@ -731,7 +731,7 @@ export class ProFeatureRenderer extends BaseRenderer {
                 </div>
                 
                 <div class="compact-setting">
-                        <span>Concurrent Requests (lower this if rate limited)</span>
+                        <span>Legacy concurrency preference (requests run one at a time)</span>
                     <input type="number" id="largeDiffConcurrency" value="${largeDiffHandling.concurrency}" min="1" max="8" step="1" data-setting="pro.largeDiffHandling.concurrency" ${disabledState ? 'disabled' : ''}/>
                 </div>
                 </details>

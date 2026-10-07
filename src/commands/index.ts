@@ -35,6 +35,7 @@ import { fetchOpenAIModels } from "../services/api/openai";
 import { fetchZaiModels } from "../services/api/zai";
 import { fetchPerplexityModels } from "../services/api/perplexity";
 import { fetchNvidiaModels } from "../services/api/nvidia";
+import { fetchOllamaCloudModels } from "../services/api/ollamacloud";
 import { PromptManager } from "../services/promptManager";
 import { SecureKeyManager } from "../services/encryption/SecureKeyManager";
 import { isLegacyProUser } from "../utils/proHelpers";
@@ -296,7 +297,14 @@ async function handleGenerateCommit(repository?: any): Promise<void> {
       const gitmindConfig = vscode.workspace.getConfiguration("gitmind");
       const candidatesEnabled = gitmindConfig.get("commitIntelligence.enabled", false) && gitmindConfig.get("commit.candidates.enabled", false);
       const healthEnabled = gitmindConfig.get("commit.health.enabled", false) && await SubscriptionManager.getInstance().isProUser();
-      const health = healthEnabled ? scoreCommitHealth(await collectChangeSet(repoRoot, false)) : undefined;
+      // Health is advisory: a scan failure must never discard a generated message.
+      let health: ReturnType<typeof scoreCommitHealth> | undefined;
+      if (healthEnabled) {
+        try { health = scoreCommitHealth(await collectChangeSet(repoRoot, false, { binaryPatches: false })); }
+        catch (error) {
+          diagnosticLog({ subsystem: "command", event: "health.scan_failed", functionName: "handleGenerateCommit", operationId: diagnostics.id, outcome: "failure", data: { reason: error instanceof Error && /exceeded/.test(error.message) ? "git-output-limit" : "git-failure" } });
+        }
+      }
       if (health) {recordHealthScan(repoRoot, health);}
       // Health is a separate report, not part of the generated commit message.
       // Keep the normal success feedback short; only surface Health here when it
@@ -601,7 +609,7 @@ function clampCommitBodyDescription(description: string, maxBodyLines?: number):
 }
 
 async function handleLoadModels(
-  modelType: 'mistral' | 'huggingface' | 'cohere' | 'together' | 'openrouter' | 'grok' | 'groq' | 'deepseek' | 'gemini' | 'anthropic' | 'minimax' | 'openai' | 'zai' | 'perplexity' | 'nvidia',
+  modelType: 'mistral' | 'huggingface' | 'cohere' | 'together' | 'openrouter' | 'grok' | 'groq' | 'deepseek' | 'gemini' | 'anthropic' | 'minimax' | 'openai' | 'zai' | 'perplexity' | 'nvidia' | 'ollamacloud',
   fetchFunction: (apiKey: string) => Promise<any[]>
 ): Promise<void> {
   // Prevent duplicate concurrent calls for the same provider
@@ -666,6 +674,9 @@ async function handleLoadModels(
         case 'zai':
           commandSuffix = 'zaiModelsLoaded';
           break;
+        case 'ollamacloud':
+          commandSuffix = 'ollamacloudModelsLoaded';
+          break;
         default:
           commandSuffix = `${modelType}ModelsLoaded`;
       }
@@ -728,6 +739,9 @@ async function handleLoadModels(
           case 'zai':
             commandSuffix = 'zaiModelsLoaded';
             break;
+          case 'ollamacloud':
+            commandSuffix = 'ollamacloudModelsLoaded';
+            break;
           default:
             commandSuffix = `${modelType}ModelsLoaded`;
         }
@@ -781,6 +795,9 @@ async function handleLoadModels(
             break;
           case 'zai':
             commandSuffix = 'zaiModelsLoaded';
+            break;
+          case 'ollamacloud':
+            commandSuffix = 'ollamacloudModelsLoaded';
             break;
           default:
             commandSuffix = `${modelType}ModelsLoaded`;
@@ -1205,6 +1222,10 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
 
     vscode.commands.registerCommand("gitmind.loadNvidiaModels", () =>
       handleLoadModels('nvidia', fetchNvidiaModels)
+    ),
+
+    vscode.commands.registerCommand("gitmind.loadOllamaCloudModels", () =>
+      handleLoadModels('ollamacloud', fetchOllamaCloudModels)
     ),
 
     vscode.commands.registerCommand("gitmind.loadCopilotModels", handleLoadCopilotModels),

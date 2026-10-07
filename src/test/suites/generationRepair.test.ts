@@ -9,6 +9,8 @@ import { randomUUID } from "node:crypto";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { sourceWindows, generateBudgeted, splitCovered } from "../../services/api/budgetedGeneration";
+import { GenerationAttempts } from "../../services/api/generationAttempts";
+import { DiffSpool } from "../../services/api/diffSpool";
 import { answerText, assertPromptFits, modelCapabilities } from "../../services/api/capabilities";
 import { runRequest, requestScope } from "../../services/api/requestContext";
 import { ProviderApiError, classifyGenerationFailure, normalizeProviderError } from "../../services/api/recovery";
@@ -16,18 +18,28 @@ import { beginGenerationOperation, cancelCurrentRequest, createRecoveryOperation
 import { PROVIDER_IDS, PROVIDER_CATALOG } from "../../config/providerCatalog";
 import { resolveLargeDiffSettings } from "../../config/largeDiffSettings";
 import { createDiffSpool } from "../../services/git/diffSpool";
+import { describeStructuredData } from "../../services/git/structuredData";
 import { SupportSessionService } from "../../services/support/SupportSessionService";
+import { ChangelogService } from "../../services/changelog/ChangelogService";
 import { NvidiaProvider } from "../../services/api/nvidia";
 import { OpenRouterProvider } from "../../services/api/openrouter";
 import { TogetherAIProvider } from "../../services/api/together";
 import { LMStudioProvider } from "../../services/api/lmstudio";
 import { CustomProvider } from "../../services/api/custom";
 import { MistralProvider } from "../../services/api/mistral";
+import { GeminiProvider } from "../../services/api/gemini";
+import { CohereProvider } from "../../services/api/cohere";
+import { SupportRenderer } from "../../webview/settings/components/renderers/SupportRenderer";
 import { formatSafeProviderError } from "../../utils/errorHandler";
 import * as vscode from "vscode";
 import { getDiffInput, setCommitMessage } from "../../services/git/repository";
 
 const settings = resolveLargeDiffSettings({ enabled: true, batchSize: 5 });
+/** A multi-file unified diff of ordinary source changes. */
+function bigDiff(files: number, lines: number): string {
+    return Array.from({ length: files }, (_, f) => `diff --git a/src/module${f}.ts b/src/module${f}.ts\nindex 1111111..2222222 100644\n--- a/src/module${f}.ts\n+++ b/src/module${f}.ts\n@@ -1,0 +1,${lines} @@ function module${f}\n`
+        + Array.from({ length: lines }, (_, i) => `+const value${f}_${i} = compute(input${i}, "detail ${i}");\n`).join("")).join("");
+}
 const sdkProviders = ["gemini", "vertexai", "bedrock", "copilot"];
 const answer = "A factual answer longer than seventy two characters retains every word without any adapter truncating it.\nSecond detail.";
 const textBlocks = [{ type: "thinking", thinking: "private" }, { type: "text", text: answer.slice(0, 40) }, { type: "text", text: answer.slice(40) }];
@@ -48,7 +60,7 @@ suite("Generation repair", () => {
     test("input-limit guidance shows a useful local estimate and Pro handling without unknown placeholders", () => {
         const error = new ProviderApiError("private provider detail", { category: "input-limit" });
         const message = formatSafeProviderError(error, "gemini", { diffSize: 2048, estimatedTokens: 7300, modelLimit: 2816, largeDiffEnabled: false });
-        assert.match(message, /GitMind Pro automatically analyzes oversized changes/);
+        assert.match(message, /GitMind Pro condenses oversized changes/);
         assert.match(message, /7,300/);
         assert.match(message, /2,816/);
         assert.strictEqual((message.match(/Technical Details:/g) ?? []).length, 1);
@@ -119,6 +131,194 @@ suite("Generation repair", () => {
         assert.deepStrictEqual(budgets, [768, undefined]);
     });
 
+    test("unlisted models plan probe-sized batches instead of the 4K fallback", async () => {
+        // About 190 KB of source left after media, data, and lockfiles are omitted.
+        const source = ("diff --git a/src/a.ts b/src/a.ts\n@@ -0,0 +1,40 @@\n" + "+const value = compute(input);\n".repeat(40)).repeat(150);
+        const capabilities = modelCapabilities("mistral-unlisted-model");
+        assert.strictEqual(capabilities.isUnknown, true);
+        let approved = 0;
+        let end = 0;
+        const result = await generateBudgeted(source, "", settings, {
+            signal: new AbortController().signal, capabilities: () => capabilities,
+            approve: async total => { approved = total; },
+            renderFinal: async text => "FINAL " + text,
+            send: async render => {
+                const prompt = await render(capabilities);
+                if (prompt.startsWith("FINAL")) { return "feat: covered"; }
+                const [, first, last] = /offsets (\d+)\.\.(\d+):/.exec(prompt)!;
+                assert.strictEqual(Number(first), end);
+                end = Number(last);
+                return "fact";
+            },
+        });
+        assert.strictEqual(result, "feat: covered");
+        assert.strictEqual(end, source.length);
+        assert.ok(approved > 1 && approved <= 5, `expected at most 5 planned calls, got ${approved}`);
+    });
+
+    test("unlisted models that reject a probe-sized batch split it and stay covered", async () => {
+        const source = "y".repeat(150000);
+        const capabilities = modelCapabilities("unlisted-small-model");
+        let end = 0;
+        await generateBudgeted(source, "", settings, {
+            signal: new AbortController().signal, capabilities: () => capabilities,
+            renderFinal: async text => "FINAL " + text,
+            send: async render => {
+                const prompt = await render(capabilities);
+                if (prompt.startsWith("FINAL")) { return "feat: covered"; }
+                const [, first, last] = /offsets (\d+)\.\.(\d+):/.exec(prompt)!;
+                if (Number(last) - Number(first) > 20000) { throw new ProviderApiError("Prompt exceeds the model context window.", { category: "input-limit" }); }
+                assert.strictEqual(Number(first), end);
+                end = Number(last);
+                return "fact";
+            },
+        });
+        assert.strictEqual(end, source.length);
+    });
+
+    test("Mistral, Gemini, and Cohere discover the selected model's limits for large diffs", async () => {
+        const originalFetch = globalThis.fetch;
+        let lookups = 0;
+        globalThis.fetch = (async input => {
+            const url = String(input);
+            lookups++;
+            const body = url.includes("mistral") ? { data: [{ id: "mistral-new", max_context_length: 131072, capabilities: { completion_chat: true } }] }
+                : url.includes("generativelanguage") ? { models: [{ name: "models/gemini-new", inputTokenLimit: 1048576, outputTokenLimit: 8192, supportedGenerationMethods: ["generateContent"] }] }
+                : { models: [{ name: "command-new", context_length: 128000, endpoints: ["chat"] }] };
+            return new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
+        }) as typeof fetch;
+        try {
+            const cases: Array<[{ prepareCapabilities: (context?: any) => Promise<void>; getCapabilities: () => any }, number]> = [
+                [new MistralProvider("discovery-key", "mistral-new"), 131072],
+                [new GeminiProvider("discovery-key", "gemini-new"), 1048576],
+                [new CohereProvider("discovery-key", "command-new"), 128000],
+            ];
+            for (const [provider, contextTokens] of cases) {
+                assert.strictEqual(provider.getCapabilities().isUnknown, true);
+                await provider.prepareCapabilities({ diffByteSize: 1024 });
+                assert.strictEqual(provider.getCapabilities().isUnknown, true, "small diffs skip the metadata lookup");
+                await provider.prepareCapabilities({ diffByteSize: 200 * 1024 });
+                assert.strictEqual(provider.getCapabilities().isUnknown, false);
+                assert.strictEqual(provider.getCapabilities().contextTokens, contextTokens);
+            }
+            assert.strictEqual(lookups, 3);
+        } finally { globalThis.fetch = originalFetch; }
+    });
+
+    test("changelog commit trimming follows the selected model's input budget", () => {
+        const service = ChangelogService.getInstance() as any;
+        const summary = "### Commit: abc1234\nMessage: feat: add things\n".repeat(4000);
+        const unlimited = service.estimateChangelogTokens(summary, null, "");
+        const limited = service.estimateChangelogTokens(summary, null, "", 16000);
+        assert.ok(unlimited.totalTokens < 100000 || !unlimited.isWithinLimit);
+        assert.strictEqual(limited.isWithinLimit, false);
+        assert.ok(limited.recommendedMaxCommits > 0 && limited.recommendedMaxCommits < 4000);
+    });
+
+    test("support report buttons rely on the shared command binding only", () => {
+        const html = new SupportRenderer({ subscription: {} } as any).render();
+        assert.ok(html.includes('data-command="gitmind.saveSupportReport"'));
+        assert.ok(!html.includes("addEventListener"), "an extra listener would run each command twice");
+    });
+
+    test("Cohere Command A plans a large text diff against its verified context", async () => {
+        const capabilities = modelCapabilities("command-a-03-2025");
+        assert.strictEqual(capabilities.contextTokens, 256000);
+        assert.strictEqual(capabilities.isUnknown, false);
+        let estimate = 0;
+        let sent = 0;
+        await assert.rejects(() => generateBudgeted("x".repeat(810000), "", settings, {
+            signal: new AbortController().signal,
+            capabilities: () => capabilities,
+            renderFinal: async text => text,
+            approve: async total => { estimate = total; throw new ProviderApiError("declined", { category: "cancelled" }); },
+            send: async () => { sent++; return "unexpected"; },
+        }), (error: any) => error.category === "cancelled");
+        assert.strictEqual(estimate, 5, "the 810 KB source needs four spans and one final call");
+        assert.strictEqual(sent, 0);
+    });
+
+    test("changelog prompts use commit text without staged data or media bodies", () => {
+        const service = ChangelogService.getInstance() as any;
+        const summary = service.prepareCommitSummary([{ version: "1.0.0", date: "2026-10-05", commits: [{
+            hash: "abcdef123456", author: "Test", date: "2026-10-05", message: "feat: add outline demo", body: "Adds a labelled sample dataset",
+            fileBody: "huge-json-and-video-body-must-not-enter",
+        }] }]);
+        const prompt = service.buildChangelogPrompt(summary, null, null);
+        assert.match(prompt, /Adds a labelled sample dataset/);
+        assert.match(prompt, /commit messages and bodies, not file contents/);
+        assert.doesNotMatch(prompt, /huge-json-and-video-body-must-not-enter/);
+    });
+
+    if ((globalThis as any).__generationSdkMock) { test("declining deep analysis falls back to one condensed request and sends no batch calls", async () => {
+        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationApproval?: boolean; __generationApprovalLog?: string[]; __generationSettings?: Record<string, unknown>; __generationSdkMock?: any; __generationCopilotPrompts?: string[] };
+        const previous = { pro: state.__generationProUser, approval: state.__generationApproval, log: state.__generationApprovalLog, settings: state.__generationSettings, mock: state.__generationSdkMock, prompts: state.__generationCopilotPrompts };
+        state.__generationProUser = true;
+        state.__generationApproval = false;
+        state.__generationApprovalLog = [];
+        state.__generationSettings = { "pro.largeDiffHandling": { enabled: true, maxCalls: 50 } };
+        state.__generationCopilotPrompts = [];
+        state.__generationSdkMock = { transport: async () => new Response(JSON.stringify(payload("copilot", "normal")), { status: 200 }) };
+        try {
+            assert.strictEqual(await generateCommitMessage({ type: "copilot", model: "mock-copilot" }, bigDiff(30, 60)), answer);
+            assert.strictEqual(state.__generationApprovalLog.length, 1, "the plan is shown once");
+            assert.strictEqual(state.__generationCopilotPrompts!.length, 1);
+            assert.doesNotMatch(state.__generationCopilotPrompts![0], /Source UTF-16 offsets/);
+            assert.match(state.__generationCopilotPrompts![0], /src\/module29\.ts/);
+        } finally { state.__generationProUser = previous.pro; state.__generationApproval = previous.approval; state.__generationApprovalLog = previous.log; state.__generationSettings = previous.settings; state.__generationSdkMock = previous.mock; state.__generationCopilotPrompts = previous.prompts; }
+    }); }
+
+    if ((globalThis as any).__generationSdkMock) { test("more than five planned calls need one approval for the whole plan before any batch call", async () => {
+        const state = globalThis as typeof globalThis & { __generationApproval?: boolean | ((message: string) => boolean); __generationApprovalLog?: string[] };
+        const previous = { approval: state.__generationApproval, log: state.__generationApprovalLog };
+        state.__generationApprovalLog = [];
+        state.__generationApproval = message => !message.includes("higher limit");
+        const meter = new GenerationAttempts();
+        try {
+            await assert.rejects(() => meter.approveBatch(8), (error: any) => error.category === "cancelled");
+            assert.strictEqual(meter.actual, 0);
+            assert.strictEqual(state.__generationApprovalLog.length, 1, "one approval states the whole plan");
+            assert.match(state.__generationApprovalLog[0], /8 calls/);
+        } finally { state.__generationApproval = previous.approval; state.__generationApprovalLog = previous.log; }
+    }); }
+
+    if ((globalThis as any).__generationSdkMock) { test("unforeseen retries and fallback attempts cannot exceed the approved total", async () => {
+        const state = globalThis as typeof globalThis & { __generationApproval?: boolean | ((message: string) => boolean) };
+        const previous = state.__generationApproval;
+        state.__generationApproval = message => !message.includes("higher limit");
+        const meter = new GenerationAttempts();
+        try {
+            await meter.approveBatch(3);
+            for (let i = 0; i < 5; i++) { await meter.beforeAttempt(true); }
+            await assert.rejects(() => meter.beforeAttempt(true), (error: any) => error.category === "cancelled");
+            assert.strictEqual(meter.actual, 5);
+        } finally { state.__generationApproval = previous; }
+    }); }
+
+    if ((globalThis as any).__generationSdkMock) { test("runtime span splitting stops at the approved generation-call total", async () => {
+        const state = globalThis as typeof globalThis & { __generationApproval?: boolean | ((message: string) => boolean) };
+        const previous = state.__generationApproval;
+        state.__generationApproval = message => !message.includes("higher limit");
+        const meter = new GenerationAttempts();
+        let providerCalls = 0;
+        try {
+            await assert.rejects(() => generateBudgeted("z".repeat(4000), "", settings, {
+                signal: new AbortController().signal, capabilities: () => modelCapabilities("test"),
+                approve: estimate => meter.approveBatch(estimate), renderFinal: async text => text,
+                send: async render => {
+                    const prompt = await render(modelCapabilities("test"));
+                    await meter.beforeAttempt(true);
+                    providerCalls++;
+                    if (prompt.includes("Source UTF-16 offsets") && prompt.split(":\n").pop()!.length > 100) {
+                        throw new ProviderApiError("context limit", { category: "input-limit" });
+                    }
+                    return "summary";
+                },
+            }), (error: any) => error.category === "cancelled");
+            assert.strictEqual(providerCalls, 5);
+        } finally { state.__generationApproval = previous; }
+    }); }
+
     test("unknown selected models get a bounded direct trial before local input-limit guidance", async () => {
         const originalFetch = globalThis.fetch;
         const calls: string[] = [];
@@ -164,10 +364,12 @@ suite("Generation repair", () => {
         } finally { globalThis.fetch = originalFetch; }
     });
 
-    if ((globalThis as any).__generationSdkMock) { test("a provider-rejected modest prompt automatically replans for Pro", async () => {
-        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationSettings?: Record<string, unknown> };
-        const previous = { pro: state.__generationProUser, settings: state.__generationSettings, fetch: globalThis.fetch };
+    if ((globalThis as any).__generationSdkMock) { test("a provider-rejected modest prompt is retried once, condensed, without approval", async () => {
+        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationSettings?: Record<string, unknown>; __generationApproval?: boolean; __generationApprovalLog?: string[] };
+        const previous = { pro: state.__generationProUser, settings: state.__generationSettings, approval: state.__generationApproval, log: state.__generationApprovalLog, fetch: globalThis.fetch };
         state.__generationProUser = true;
+        state.__generationApproval = true;
+        state.__generationApprovalLog = [];
         state.__generationSettings = { "pro.largeDiffHandling": { enabled: false } };
         const prompts: string[] = [];
         let requests = 0;
@@ -178,12 +380,58 @@ suite("Generation repair", () => {
             return new Response(JSON.stringify(payload("openrouter", "normal")), { status: 200, headers: { "content-type": "application/json" } });
         }) as typeof fetch;
         try {
-            assert.strictEqual(await generateCommitMessage({ type: "openrouter", apiKey: "probe-fallback", model: "unlisted-probe" }, "x".repeat(18700)), answer);
-            const spans = prompts.map(prompt => /offsets (\d+)\.\.(\d+):/.exec(prompt)).filter((match): match is RegExpExecArray => !!match).map(match => [Number(match[1]), Number(match[2])]);
-            assert.ok(spans.length > 1);
-            let end = 0;
-            for (const [start, stop] of spans) { assert.strictEqual(start, end); end = stop; }
-            assert.strictEqual(end, 18700);
+            assert.strictEqual(await generateCommitMessage({ type: "openrouter", apiKey: "probe-fallback", model: "unlisted-probe" }, bigDiff(12, 30)), answer);
+            assert.strictEqual(requests, 2, "one rejected attempt and one condensed attempt");
+            assert.ok(prompts[1].length < prompts[0].length / 1.5, "the retry is condensed below half of the rejected prompt");
+            assert.strictEqual(state.__generationApprovalLog.length, 0, "no approval prompt");
+        } finally { state.__generationProUser = previous.pro; state.__generationSettings = previous.settings; state.__generationApproval = previous.approval; state.__generationApprovalLog = previous.log; globalThis.fetch = previous.fetch; }
+    }); }
+
+    if ((globalThis as any).__generationSdkMock) { test("an unlisted model that rejects large prompts converges within three requests and no approvals", async () => {
+        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationSettings?: Record<string, unknown>; __generationApprovalLog?: string[] };
+        const previous = { pro: state.__generationProUser, settings: state.__generationSettings, log: state.__generationApprovalLog, fetch: globalThis.fetch };
+        state.__generationProUser = true;
+        state.__generationApprovalLog = [];
+        state.__generationSettings = { "pro.largeDiffHandling": { enabled: false } };
+        const sizes: number[] = [];
+        let accept = 60 * 1024;
+        globalThis.fetch = (async (_input, init) => {
+            const content = JSON.parse(String(init?.body)).messages[0].content as string;
+            sizes.push(Buffer.byteLength(content, "utf8"));
+            if (Buffer.byteLength(content, "utf8") > accept) { return new Response(JSON.stringify({ error: { message: "Input tokens exceed model context", code: "context_length_exceeded" } }), { status: 422 }); }
+            return new Response(JSON.stringify(payload("openrouter", "normal")), { status: 200, headers: { "content-type": "application/json" } });
+        }) as typeof fetch;
+        try {
+            const diff = bigDiff(400, 40);
+            assert.ok(diff.length > 700000);
+            assert.strictEqual(await generateCommitMessage({ type: "openrouter", apiKey: "ladder", model: "unlisted-ladder" }, diff), answer);
+            assert.strictEqual(sizes.length, 3, "attempt ladder: target, half, quarter");
+            assert.ok(sizes[0] > sizes[1] && sizes[1] > sizes[2] && sizes[2] <= accept, sizes.join(","));
+            assert.strictEqual(state.__generationApprovalLog.length, 0);
+            sizes.length = 0;
+            accept = 1024;
+            await assert.rejects(() => generateCommitMessage({ type: "openrouter", apiKey: "ladder", model: "unlisted-ladder-2" }, diff), (error: any) => error.category === "input-limit");
+            assert.strictEqual(sizes.length, 3, "never more than three provider requests");
+        } finally { state.__generationProUser = previous.pro; state.__generationSettings = previous.settings; state.__generationApprovalLog = previous.log; globalThis.fetch = previous.fetch; }
+    }); }
+
+    if ((globalThis as any).__generationSdkMock) { test("Ollama requests carry a context window that matches the local prompt ceiling", async () => {
+        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationSettings?: Record<string, unknown> };
+        const previous = { pro: state.__generationProUser, settings: state.__generationSettings, fetch: globalThis.fetch };
+        state.__generationProUser = true;
+        state.__generationSettings = { "pro.largeDiffHandling": { enabled: false } };
+        const bodies: any[] = [];
+        globalThis.fetch = (async (_input, init) => {
+            bodies.push(JSON.parse(String(init?.body)));
+            return new Response(JSON.stringify(payload("ollama", "normal")), { status: 200, headers: { "content-type": "application/json" } });
+        }) as typeof fetch;
+        try {
+            const diff = bigDiff(40, 40);
+            assert.strictEqual(await generateCommitMessage({ type: "ollama", url: "http://127.0.0.1:11434", model: "llama3" } as any, diff), answer);
+            assert.strictEqual(bodies.length, 1);
+            assert.strictEqual(bodies[0].options.num_ctx, 8048 > 4096 ? 8048 : 4096);
+            assert.ok(Buffer.byteLength(bodies[0].prompt, "utf8") <= 6000 * 3, "the local default keeps the prompt near 6k tokens");
+            assert.match(bodies[0].prompt, /src\/module39\.ts/);
         } finally { state.__generationProUser = previous.pro; state.__generationSettings = previous.settings; globalThis.fetch = previous.fetch; }
     }); }
 
@@ -203,41 +451,94 @@ suite("Generation repair", () => {
             return new Response(JSON.stringify(payload("openrouter", "normal")), { status: 200 });
         }) as typeof fetch;
         try {
-            assert.strictEqual(await generateCommitMessage({ type: "openrouter", apiKey: "metadata-generation", model: "catalog-big" }, "x".repeat(221700)), answer);
+            assert.strictEqual(await generateCommitMessage({ type: "openrouter", apiKey: "metadata-generation", model: "catalog-big" }, "x".repeat(100000)), answer);
             assert.strictEqual(lookups, 1);
             assert.strictEqual(prompts.length, 1, "a provider-accepted request avoids unnecessary batching");
-            assert.ok(prompts[0].includes("x".repeat(221700)));
+            assert.ok(prompts[0].includes("x".repeat(100000)));
         } finally { state.__generationProUser = previous.pro; state.__generationSettings = previous.settings; globalThis.fetch = previous.fetch; }
     }); }
 
-    if ((globalThis as any).__generationSdkMock) { test("Pro automatically processes a 221.7 KB Copilot diff with numeric controls untouched", async () => {
-        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationSettings?: Record<string, unknown>; __generationSdkMock?: any; __generationCopilotPrompts?: string[] };
-        const previous = { pro: state.__generationProUser, settings: state.__generationSettings, mock: state.__generationSdkMock, prompts: state.__generationCopilotPrompts };
+    if ((globalThis as any).__generationSdkMock) { test("Pro condenses a 221.7 KB Copilot diff into one request with file totals, and free access is unchanged", async () => {
+        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationSettings?: Record<string, unknown>; __generationSdkMock?: any; __generationCopilotPrompts?: string[]; __generationApproval?: boolean; __generationApprovalLog?: string[] };
+        const previous = { pro: state.__generationProUser, settings: state.__generationSettings, mock: state.__generationSdkMock, prompts: state.__generationCopilotPrompts, approval: state.__generationApproval, log: state.__generationApprovalLog };
         state.__generationProUser = true;
+        state.__generationApproval = true;
+        state.__generationApprovalLog = [];
         state.__generationSettings = { "pro.largeDiffHandling": { enabled: false } };
         state.__generationCopilotPrompts = [];
         state.__generationSdkMock = { transport: async () => new Response(JSON.stringify(payload("copilot", "normal")), { status: 200, headers: { "content-type": "application/json" } }) };
         try {
-            const result = await generateCommitMessage({ type: "copilot", model: "mock-copilot" }, "x".repeat(221700));
-            assert.strictEqual(result, answer);
-            const spans = state.__generationCopilotPrompts!.map(prompt => /offsets (\d+)\.\.(\d+):/.exec(prompt)).filter((match): match is RegExpExecArray => !!match).map(match => [Number(match[1]), Number(match[2])]);
-            assert.ok(spans.length > 1);
-            assert.ok(spans.length < 40, `the model tokenizer should pack source into fewer requests than byte counting; got ${spans.length}`);
-            spans.sort((a, b) => a[0] - b[0]);
-            let end = 0;
-            for (const [start, stop] of spans) { assert.strictEqual(start, end); end = stop; }
-            assert.strictEqual(end, 221700);
-            assert.ok(state.__generationCopilotPrompts!.some(prompt => prompt.startsWith("Write one accurate git commit message")), "small model uses compact final framing");
+            const diff = bigDiff(140, 30);
+            assert.ok(diff.length > 221000);
+            assert.strictEqual(await generateCommitMessage({ type: "copilot", model: "mock-copilot" }, diff), answer);
+            assert.strictEqual(state.__generationCopilotPrompts!.length, 1, "one request, no span batching");
+            assert.strictEqual(state.__generationApprovalLog.length, 0, "no approval prompt on the default path");
+            const prompt = state.__generationCopilotPrompts![0];
+            assert.doesNotMatch(prompt, /Source UTF-16 offsets/);
+            assert.ok(prompt.length < 2816 * 4, "the prompt fits the model's tokenizer budget");
+            // The list alone would exceed half of this tiny budget, so files are counted per directory.
+            assert.match(prompt, /140 files changed/);
+            assert.match(prompt, /src\/ \(140 files, \+4200 -0\)/);
             assert.strictEqual((state.__generationSettings!["pro.largeDiffHandling"] as any).enabled, false);
             const requestCount = state.__generationCopilotPrompts!.length;
             state.__generationProUser = false;
-            await assert.rejects(() => generateCommitMessage({ type: "copilot", model: "mock-copilot" }, "x".repeat(221700)), (error: any) => error.category === "input-limit");
+            await assert.rejects(() => generateCommitMessage({ type: "copilot", model: "mock-copilot" }, diff), (error: any) => error.category === "input-limit");
             assert.strictEqual(state.__generationCopilotPrompts!.length, requestCount, "free access remains gated");
         } finally {
             state.__generationProUser = previous.pro;
             state.__generationSettings = previous.settings;
             state.__generationSdkMock = previous.mock;
             state.__generationCopilotPrompts = previous.prompts;
+            state.__generationApproval = previous.approval;
+            state.__generationApprovalLog = previous.log;
+        }
+    }); }
+
+    if ((globalThis as any).__generationSdkMock) { test("a condensed diff shows one notice and a fitting diff shows none,", async () => {
+        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationSettings?: Record<string, unknown>; __generationSdkMock?: any; __generationCopilotPrompts?: string[]; __generationInfoLog?: string[] };
+        const previous = { pro: state.__generationProUser, settings: state.__generationSettings, mock: state.__generationSdkMock, prompts: state.__generationCopilotPrompts, info: state.__generationInfoLog };
+        state.__generationProUser = true;
+        state.__generationSettings = { "pro.largeDiffHandling": { enabled: false } };
+        state.__generationCopilotPrompts = [];
+        state.__generationInfoLog = [];
+        state.__generationSdkMock = { transport: async () => new Response(JSON.stringify(payload("copilot", "normal")), { status: 200, headers: { "content-type": "application/json" } }) };
+        try {
+            assert.strictEqual(await generateCommitMessage({ type: "copilot", model: "mock-copilot" }, bigDiff(1, 3)), answer);
+            assert.strictEqual(state.__generationInfoLog.length, 0, "tier 0 is silent");
+            assert.strictEqual(await generateCommitMessage({ type: "copilot", model: "mock-copilot" }, bigDiff(30, 60)), answer);
+            assert.strictEqual(state.__generationInfoLog.length, 1);
+            assert.match(state.__generationInfoLog[0], /Large diff condensed to fit the model: \d+ of 30 files/);
+            assert.strictEqual(state.__generationCopilotPrompts!.length, 2);
+        } finally { state.__generationProUser = previous.pro; state.__generationSettings = previous.settings; state.__generationSdkMock = previous.mock; state.__generationCopilotPrompts = previous.prompts; state.__generationInfoLog = previous.info; }
+    }); }
+
+    if ((globalThis as any).__generationSdkMock) { test("deep analysis opt-in batches only when the planned calls fit maxCalls, otherwise one condensed request", async () => {
+        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationSettings?: Record<string, unknown>; __generationSdkMock?: any; __generationCopilotPrompts?: string[]; __generationApproval?: boolean; __generationApprovalLog?: string[] };
+        const previous = { pro: state.__generationProUser, settings: state.__generationSettings, mock: state.__generationSdkMock, prompts: state.__generationCopilotPrompts, approval: state.__generationApproval, log: state.__generationApprovalLog };
+        state.__generationProUser = true;
+        state.__generationApproval = true;
+        state.__generationCopilotPrompts = [];
+        state.__generationSdkMock = { transport: async () => new Response(JSON.stringify(payload("copilot", "normal")), { status: 200, headers: { "content-type": "application/json" } }) };
+        try {
+            const diff = bigDiff(30, 60);
+            state.__generationApprovalLog = [];
+            state.__generationSettings = { "pro.largeDiffHandling": { enabled: true, maxCalls: 2 } };
+            assert.strictEqual(await generateCommitMessage({ type: "copilot", model: "mock-copilot" }, diff), answer);
+            assert.strictEqual(state.__generationCopilotPrompts!.length, 1, "a plan above maxCalls never starts");
+            assert.strictEqual(state.__generationApprovalLog.length, 0);
+            state.__generationCopilotPrompts = [];
+            state.__generationSettings = { "pro.largeDiffHandling": { enabled: true, maxCalls: 50 } };
+            assert.strictEqual(await generateCommitMessage({ type: "copilot", model: "mock-copilot" }, diff), answer);
+            assert.ok(state.__generationCopilotPrompts!.length > 1, "approved deep analysis uses several calls");
+            assert.strictEqual(state.__generationApprovalLog.length, 1, "one approval for the whole plan");
+            assert.match(state.__generationApprovalLog[0], /calls/);
+        } finally {
+            state.__generationProUser = previous.pro;
+            state.__generationSettings = previous.settings;
+            state.__generationSdkMock = previous.mock;
+            state.__generationCopilotPrompts = previous.prompts;
+            state.__generationApproval = previous.approval;
+            state.__generationApprovalLog = previous.log;
         }
     }); }
 
@@ -253,6 +554,42 @@ suite("Generation repair", () => {
             assert.doesNotMatch(state.__generationCopilotPrompts![0], /Source UTF-16 offsets/);
         } finally { state.__generationProUser = previous.pro; state.__generationSdkMock = previous.mock; state.__generationCopilotPrompts = previous.prompts; }
     }); }
+
+    if ((globalThis as any).__generationSdkMock) { test("a streamed diff fitting Copilot uses one generation call", async () => {
+        const state = globalThis as typeof globalThis & { __generationProUser?: boolean; __generationSdkMock?: any; __generationCopilotPrompts?: string[] };
+        const previous = { pro: state.__generationProUser, mock: state.__generationSdkMock, prompts: state.__generationCopilotPrompts };
+        state.__generationProUser = false;
+        state.__generationCopilotPrompts = [];
+        state.__generationSdkMock = { transport: async () => new Response(JSON.stringify(payload("copilot", "normal")), { status: 200 }) };
+        const input = (async function* () { yield "diff --git a/a b/a\n@@ -1 +1 @@\n-old\n"; yield "+new\n"; })();
+        try {
+            assert.strictEqual(await generateCommitMessage({ type: "copilot", model: "mock-copilot" }, input), answer);
+            assert.strictEqual(state.__generationCopilotPrompts.length, 1);
+            assert.match(state.__generationCopilotPrompts[0], /\+new/);
+        } finally { state.__generationProUser = previous.pro; state.__generationSdkMock = previous.mock; state.__generationCopilotPrompts = previous.prompts; }
+    }); }
+
+    test("a rate limit stops sequentially queued spans", async () => {
+        let calls = 0;
+        await assert.rejects(() => generateBudgeted("x".repeat(20000), "", settings, {
+            signal: new AbortController().signal, capabilities: () => modelCapabilities("test"),
+            renderFinal: async text => text,
+            send: async render => { await render(modelCapabilities("test")); calls++; throw new ProviderApiError("rate limited", { category: "rate-limit", retryAfterMs: 30000 }); },
+        }), (error: any) => error.category === "rate-limit" && error.retryAfterMs === 30000);
+        assert.strictEqual(calls, 1);
+    });
+
+    test("disk spool replays Unicode split across stream blocks", async () => {
+        const spool = await DiffSpool.create((async function* () { yield "first \ud83d"; yield "\ude80 last\n"; })());
+        try {
+            let first = "";
+            let second = "";
+            for await (const part of spool.read()) { first += part; }
+            for await (const part of spool.read()) { second += part; }
+            assert.strictEqual(first, "first 🚀 last\n");
+            assert.strictEqual(second, first);
+        } finally { await spool.dispose(); }
+    });
 
     test("synchronous cancellation reaches an attempt before transport setup returns", async () => {
         const controller = new AbortController();
@@ -379,7 +716,8 @@ suite("Generation repair", () => {
     });
 
     test("ordered reduction is budgeted, preserves coverage, and requires measurable progress", async () => {
-        const capabilities = modelCapabilities("unknown");
+        // A verified small-context model; unlisted models are probed with larger batches.
+        const capabilities = { ...modelCapabilities("unknown"), isUnknown: false };
         let reductions = 0;
         let final = "";
         const analyzedStarts: number[] = [];
@@ -466,7 +804,7 @@ suite("Generation repair", () => {
     test("analysis continuations retain file and hunk context for oversized hunks", async () => {
         const source = "diff --git a/file b/file\nindex abc..def 100644\n--- a/file\n+++ b/file\n@@ -1 +1 @@\n" + "+line\n".repeat(2000);
         let continuations = 0;
-        const capabilities = { ...modelCapabilities("context-test"), contextTokens: 4000 };
+        const capabilities = { ...modelCapabilities("context-test"), contextTokens: 4000, isUnknown: false };
         await generateBudgeted(source, "", settings, {
             signal: new AbortController().signal, capabilities: () => capabilities,
             renderFinal: async text => "FINAL " + text,
@@ -536,18 +874,20 @@ suite("Generation repair", () => {
         }), (error: any) => error.category === "input-limit");
     });
 
-    test("terminal failure aborts siblings and returns no partial draft", async () => {
-        let aborted = false;
+    test("terminal failure stops queued spans and returns no partial draft", async () => {
+        let calls = 0;
         await assert.rejects(() => generateBudgeted("x".repeat(20000), "", settings, {
             signal: new AbortController().signal, capabilities: () => modelCapabilities("test"),
             renderFinal: async text => text,
             send: async (render, signal) => {
+                calls++;
                 const prompt = await render(modelCapabilities("test"));
                 if (prompt.includes("offsets 0..")) { await new Promise(resolve => setTimeout(resolve, 5)); throw new ProviderApiError("Denied", { category: "permission" }); }
-                return new Promise((_, reject) => signal.addEventListener("abort", () => { aborted = true; reject(signal.reason); }, { once: true }));
+                signal.throwIfAborted();
+                return "summary";
             },
         }));
-        assert.strictEqual(aborted, true);
+        assert.strictEqual(calls, 1);
     });
 
     test("overlapping repository operations retain ownership and cancel independently", async () => {
@@ -584,7 +924,7 @@ suite("Generation repair", () => {
     });
 
     test("settings migrate explicit legacy values and validate numeric boundaries", () => {
-        assert.deepStrictEqual(resolveLargeDiffSettings(undefined), { enabled: false, chunkSize: 1000, batchSize: 5, concurrency: 3 });
+        assert.deepStrictEqual(resolveLargeDiffSettings(undefined), { enabled: false, chunkSize: 1000, batchSize: 5, concurrency: 3, maxCalls: 6, perFileLines: 400, maxPromptTokens: 0 });
         assert.strictEqual(resolveLargeDiffSettings({ maxChunks: 9 }).batchSize, 9);
         assert.strictEqual(resolveLargeDiffSettings({ batchSize: 7, maxChunks: 9 }).batchSize, 7);
         for (const bad of [NaN, Infinity, -1, 0, 1.5, "3", null]) {
@@ -617,6 +957,41 @@ suite("Generation repair", () => {
             try { await assert.rejects(() => collection, (error: any) => error.category === "cancelled"); }
             finally { clearTimeout(timer); }
         } finally { await spool.dispose(); await rm(directory, { recursive: true, force: true }); }
+    });
+
+    test("large staged JSON, CSV, and lockfiles use bounded structural notes from the index", async () => {
+        assert.strictEqual(describeStructuredData("settings.json", JSON.stringify({ description: "important-config-value".repeat(5000) })), undefined);
+        const directory = await mkdtemp(join(tmpdir(), "gitmind-structured-test-"));
+        const run = async (...args: string[]) => { await promisify(execFile)("git", args, { cwd: directory }); };
+        try {
+            await run("init", "-q");
+            await run("config", "user.name", "GitMind Test");
+            await run("config", "user.email", "test@example.invalid");
+            await run("config", "commit.gpgsign", "false");
+            await writeFile(join(directory, "config.json"), '{"feature":true}\n');
+            await run("add", "config.json");
+            await run("commit", "-qm", "baseline");
+            const records = Array.from({ length: 3000 }, (_, id) => ({ id, label: "bulk-json-value", score: 1 }));
+            await writeFile(join(directory, "records.json"), JSON.stringify(records, null, 2));
+            await writeFile(join(directory, "records.csv"), "id,label\n" + Array.from({ length: 7000 }, (_, id) => `${id},bulk-csv-value`).join("\n"));
+            await writeFile(join(directory, "Cargo.lock"), "[[package]]\nname = \"bulk-lock-value\"\n".repeat(1200));
+            await writeFile(join(directory, "icon.svg"), '<svg><text>image-secret-value</text></svg>\n');
+            await writeFile(join(directory, "config.json"), '{"feature":false}\n');
+            await run("add", ".");
+            await writeFile(join(directory, "records.json"), "[]\n"); // Staged snapshot must win over the working tree.
+            const spool = await getDiffInput({ uri: vscode.Uri.file(directory), name: "test", index: 0 }, directory);
+            try {
+                let diff = "";
+                for await (const block of spool) { diff += block; }
+                assert.match(diff, /records\.json.*JSON array with 3000 records/);
+                assert.match(diff, /records\.csv.*CSV with 7000 data rows/);
+                assert.match(diff, /Cargo\.lock.*generated dependency lockfile/);
+                assert.match(diff, /icon\.svg.*media content/);
+                assert.match(diff, /-\{"feature":true\}/);
+                assert.doesNotMatch(diff, /bulk-json-value|bulk-csv-value|bulk-lock-value|image-secret-value/);
+                assert.ok(Buffer.byteLength(diff) < 3000);
+            } finally { await spool.dispose(); }
+        } finally { await rm(directory, { recursive: true, force: true }); }
     });
 
     test("collected diff includes changed lines without unrelated source context", async () => {
@@ -716,8 +1091,8 @@ suite("Generation repair", () => {
             try {
                 let diff = "";
                 for await (const block of spool) { diff += block; }
-                assert.match(diff, /voice\.mp3.*audio\/video content omitted/s);
-                assert.match(diff, /movie\.mp4.*audio\/video content omitted/s);
+                assert.match(diff, /voice\.mp3.*media content omitted/s);
+                assert.match(diff, /movie\.mp4.*media content omitted/s);
                 assert.match(diff, /giant\.ts.*source file over 1 MiB omitted/s);
                 assert.match(diff, /\+export const usefulChange = true/);
                 assert.doesNotMatch(diff, /X{100}/);

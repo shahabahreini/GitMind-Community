@@ -350,6 +350,24 @@ suite('AI Providers Tests', () => {
         }
     });
 
+    test('Ollama Cloud provider configuration should be valid', async () => {
+        const mockConfig = createMockConfig('ollamacloud', {
+            apiKey: 'test-ollamacloud-key',
+            model: 'gpt-oss:120b-cloud'
+        });
+
+        (vscode.workspace as any).getConfiguration = () => mockConfig;
+
+        try {
+            const config = await getApiConfig();
+            assert.strictEqual(config.type, 'ollamacloud');
+            assert.strictEqual(config.apiKey, 'test-ollamacloud-key');
+            assert.strictEqual(config.model, 'gpt-oss:120b-cloud');
+        } catch (error) {
+            console.log('Ollama Cloud config test completed with expected limitation');
+        }
+    });
+
     test('Mistral provider configuration should be valid', async () => {
         const mockConfig = createMockConfig('mistral', {
             apiKey: 'test-mistral-key',

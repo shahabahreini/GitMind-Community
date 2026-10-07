@@ -2,6 +2,7 @@ import { normalizeProviderError, ProviderApiError } from "./recovery";
 import { debugLog } from "../debug/logger";
 import { GeminiModel } from "../../config/types";
 import { BaseAIProvider, GenerationOptions } from "./base";
+import { RequestContext } from "./requestContext";
 import { loggedFetch } from "./loggedFetch";
 import { getProviderDefaultModel } from "../../config/providerCatalog";
 
@@ -149,12 +150,17 @@ export class GeminiProvider extends BaseAIProvider {
         }
     }
 
-    async getModels(): Promise<string[]> {
+    override async prepareCapabilities(context?: RequestContext): Promise<void> {
+        await this.discoverLargeModel(context, signal => this.getModels(signal));
+    }
+
+    async getModels(signal?: AbortSignal): Promise<string[]> {
         debugLog("Fetching Gemini models...");
 
         try {
             const response = await loggedFetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${this.apiKey}`, {
                 method: 'GET',
+                signal,
                 headers: {
                     'Content-Type': 'application/json',
                 },

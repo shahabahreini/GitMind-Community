@@ -1,8 +1,8 @@
 # Providers And Models
 
-> Verified against GitMind `6.4.0` on October 5, 2026
+> Verified against GitMind `6.4.1` on October 5, 2026
 
-GitMind has 22 built-in providers plus the Pro-only Custom API provider (23 total). Cloud providers receive the selected diff and prompt. Provider catalogs change; use **Load Available Models** and the searchable model picker when available. Account- and region-scoped providers intentionally use manual model IDs rather than a stale bundled list.
+GitMind has 23 built-in providers plus the Pro-only Custom API provider (24 total). Cloud providers receive the selected diff and prompt. Provider catalogs change; use **Load Available Models** and the searchable model picker when available. Account- and region-scoped providers intentionally use manual model IDs rather than a stale bundled list.
 
 ![GitMind model settings and Automatic Recovery](assets/model-settings-and-recovery.png)
 
@@ -11,6 +11,7 @@ GitMind has 22 built-in providers plus the Pro-only Custom API provider (23 tota
 | [Google Gemini](https://aistudio.google.com/app/apikey) | API key | `gemini-3.8-flash` | Yes |
 | [Hugging Face](https://huggingface.co/settings/tokens) | Access token | User-selected hosted model | Hub suggestions |
 | [Ollama](https://ollama.com/library) | Local server; no key | `phi4`, `http://localhost:11434` | Local models |
+| [Ollama Cloud](https://ollama.com/settings/keys) | API key | `gpt-oss:120b-cloud` | Yes |
 | [Mistral](https://console.mistral.ai/) | API key | `mistral-small-2603` | Yes |
 | [Cohere](https://dashboard.cohere.com/api-keys) | API key | `command-a-plus-05-2026` | Yes |
 | [OpenAI](https://platform.openai.com/api-keys) | API key | `gpt-6-sol` | Yes |

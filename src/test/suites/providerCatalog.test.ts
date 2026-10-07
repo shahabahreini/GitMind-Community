@@ -119,7 +119,7 @@ suite("Provider registry parity guard", () => {
   });
 
   test("every catalog entry is complete", () => {
-    assert.strictEqual(PROVIDER_IDS.length, 23);
+    assert.strictEqual(PROVIDER_IDS.length, 24);
     for (const id of PROVIDER_IDS) {
       const entry = PROVIDER_CATALOG[id];
       assert.ok(entry.name && entry.displayName, `${id} needs names`);

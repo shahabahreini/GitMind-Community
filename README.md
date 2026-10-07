@@ -1,6 +1,6 @@
 # GitMind — AI Commit Message Generator for VS Code
 
-GitMind reads your Git diff and writes a clear, well-formatted commit message for you. Use GitHub Copilot, a local model in Ollama or LM Studio, or any of 22 built-in AI providers, and get Conventional Commits, Gitmoji, or your team's style in one click.
+GitMind reads your Git diff and writes a clear, well-formatted commit message for you. Use GitHub Copilot, a local model in Ollama or LM Studio, or any of 23 built-in AI providers, and get Conventional Commits, Gitmoji, or your team's style in one click.
 
 <div align="center">
   <img src="https://raw.githubusercontent.com/shahabahreini/GitMind-Community/main/images/screenshots/hero-generate.gif" alt="GitMind product advertisement: turn code changes into clear commits, choose your AI provider, and build readable Git history" width="100%"/>
@@ -99,12 +99,13 @@ GitMind reads your Git diff and writes a clear, well-formatted commit message fo
 
 ## Supported Providers
 
-<img src="https://raw.githubusercontent.com/shahabahreini/GitMind-Community/main/images/all_providers.png" alt="GitMind: 22 built-in AI providers, including local Ollama and LM Studio, plus Custom API with Pro" width="100%"/>
+<img src="https://raw.githubusercontent.com/shahabahreini/GitMind-Community/main/images/all_providers.png" alt="GitMind: 23 built-in AI providers, including local Ollama and LM Studio, plus Custom API with Pro" width="100%"/>
 
 | Provider              | Setup                                  | Model selection                          |
 | --------------------- | -------------------------------------- | ---------------------------------------- |
 | GitHub Copilot        | Active Copilot subscription            | Available Copilot models                 |
 | Ollama                | Local server, no API key               | Local model discovery                    |
+| Ollama Cloud          | API key                                | Dynamic model discovery                  |
 | LM Studio             | Local loopback server, no API key      | Local OpenAI-compatible model discovery  |
 | OpenAI                | API key                                | Dynamic model discovery                  |
 | Anthropic Claude      | API key                                | Dynamic model discovery                  |
@@ -133,7 +134,7 @@ Provider catalogs change often. GitMind loads current model lists where the prov
 
 | Feature                                  | Free             | Pro                                                |
 | ---------------------------------------- | ---------------- | -------------------------------------------------- |
-| Built-in AI providers                    | 22               | 22                                                 |
+| Built-in AI providers                    | 23               | 23                                                 |
 | Custom API provider                      | Locked           | Included                                           |
 | Searchable provider and model pickers    | Included         | Included                                           |
 | Basic and Conventional commit styles     | Included         | Included                                           |

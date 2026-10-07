@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 // Core types
-export type ApiProvider = "gemini" | "huggingface" | "ollama" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic" | "minimax" | "copilot" | "deepseek" | "grok" | "groq" | "perplexity" | "zai" | "nvidia" | "lmstudio" | "azureopenai" | "bedrock" | "vertexai" | "cloudflare" | "custom";
+export type ApiProvider = "gemini" | "huggingface" | "ollama" | "ollamacloud" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic" | "minimax" | "copilot" | "deepseek" | "grok" | "groq" | "perplexity" | "zai" | "nvidia" | "lmstudio" | "azureopenai" | "bedrock" | "vertexai" | "cloudflare" | "custom";
 export type CommitStyle =
     | 'basic'
     | 'conventional'
@@ -180,6 +180,10 @@ export interface OllamaApiConfig extends BaseApiConfig {
     url: string;
 }
 
+export interface OllamaCloudApiConfig extends ApiKeyConfig {
+    type: "ollamacloud";
+}
+
 export interface MistralApiConfig extends ApiKeyConfig {
     type: "mistral";
 }
@@ -287,7 +291,7 @@ export interface CustomApiConfig extends BaseApiConfig {
 }
 
 export type ApiConfig =
-    | GeminiApiConfig | HuggingFaceApiConfig | OllamaApiConfig | MistralApiConfig
+    | GeminiApiConfig | HuggingFaceApiConfig | OllamaApiConfig | OllamaCloudApiConfig | MistralApiConfig
     | CohereApiConfig | OpenAIApiConfig | TogetherApiConfig | OpenRouterApiConfig
     | AnthropicApiConfig | MiniMaxApiConfig | CopilotApiConfig | DeepSeekApiConfig | GrokApiConfig
     | GroqApiConfig | PerplexityApiConfig | ZaiApiConfig | NvidiaApiConfig | LMStudioApiConfig

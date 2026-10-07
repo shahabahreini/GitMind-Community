@@ -1,4 +1,5 @@
 import { ProviderApiError } from "./recovery";
+import { estimateByteTokens } from "../git/diffDigest";
 
 export interface ModelCapabilities {
     contextTokens: number;
@@ -12,10 +13,20 @@ export interface ModelCapabilities {
     countTokensAsync?: (text: string) => PromiseLike<number>;
 }
 
-/** Bounds a direct request when conservative byte counting may overestimate tokens. */
+/** Diffs above this size ask the provider for the selected model's real limits first. */
 export const UNKNOWN_MODEL_PROBE_BYTES = 64 * 1024;
-export function directProbeBudget(capabilities: ModelCapabilities): number {
-    return capabilities.isUnknown ? UNKNOWN_MODEL_PROBE_BYTES
+/** Default prompt size, in estimated tokens, for models without a verified limit and for condensed diffs. */
+export const DEFAULT_PROMPT_TOKEN_CAP = 60_000;
+/** Local servers commonly run small contexts, so they start lower. */
+export const LOCAL_PROMPT_TOKEN_CAP = 6_000;
+export const MIN_PROMPT_TOKENS = 4_000;
+export function defaultPromptTokenCap(provider: string): number {
+    return provider === "ollama" || provider === "lmstudio" ? LOCAL_PROMPT_TOKEN_CAP : DEFAULT_PROMPT_TOKEN_CAP;
+}
+
+/** Bounds a direct request to a model whose limit is unknown; the provider may still reject it. */
+export function directProbeBudget(capabilities: ModelCapabilities, cap = DEFAULT_PROMPT_TOKEN_CAP): number {
+    return capabilities.isUnknown ? cap
         : Math.min(512 * 1024, Math.max(UNKNOWN_MODEL_PROBE_BYTES, effectiveInputBudget(capabilities) * 4));
 }
 
@@ -23,16 +34,38 @@ export function effectiveInputBudget(capabilities: ModelCapabilities): number {
     return capabilities.maxInputTokens ?? Math.max(0, capabilities.contextTokens - capabilities.outputTokens - 256);
 }
 
+/** Batched requests probe unknown models with bounded windows; provider input-limit errors still split them. */
+export function batchInputBudget(capabilities: ModelCapabilities): number {
+    return capabilities.isUnknown ? Math.max(directProbeBudget(capabilities), effectiveInputBudget(capabilities)) : effectiveInputBudget(capabilities);
+}
+
+export async function assertBatchPromptFits(prompt: string, capabilities: ModelCapabilities): Promise<void> {
+    if (await countPromptTokens(prompt, capabilities) > batchInputBudget(capabilities)) {
+        throw new ProviderApiError("Prompt exceeds the model input budget. Shorten custom context or choose a larger-context model.", { category: "input-limit" });
+    }
+}
+
 /** UTF-8 bytes bound token usage conservatively for unknown tokenizers. */
 export function conservativeTokenCount(text: string): number {
     return Buffer.byteLength(text, "utf8");
 }
 
+/**
+ * Prompt size used to choose between direct, condensed, and batched generation.
+ * Counting every byte as a token over-counts code 3-4x, so single-call decisions use
+ * the byte heuristic unless the provider has an exact tokenizer.
+ */
+export async function measurePrompt(prompt: string, capabilities: ModelCapabilities): Promise<number> {
+    return capabilities.countTokensAsync ? countPromptTokens(prompt, capabilities) : estimateByteTokens(Buffer.byteLength(prompt, "utf8"));
+}
+
 // Verified 2026-10-04: https://platform.claude.com/docs/en/models/overview
 // https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash
 // https://docs.mistral.ai/models/mistral-small-4-0-26-03
+// https://docs.cohere.com/docs/command-a
 // Output values below are generation reservations, not advertised output maxima.
 const VERIFIED_LIMITS: Record<string, [number, number]> = {
+    "command-a-03-2025": [256000, 1024],
     "gemini-3.8-flash": [1048576, 4096],
     "mistral-small-2603": [256000, 1024],
     "claude-fable-5-1": [1000000, 8000],

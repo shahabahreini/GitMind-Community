@@ -1,5 +1,6 @@
 import { MEDIA_FILE } from "./media";
 import { createDiffSpool, DiffSpool } from "./diffSpool";
+import { describeStructuredData, isGeneratedLockfile, isStructuredData, LOCKFILE_BYTES, STRUCTURED_DATA_BYTES } from "./structuredData";
 import { RequestContext } from "../api/requestContext";
 import * as vscode from "vscode";
 import * as path from "path";
@@ -24,8 +25,30 @@ const lstat = promisify(fs.lstat);
 const SOURCE_FILE = /\.(?:c|cc|cpp|cs|css|dart|go|h|hpp|html?|java|js|jsx|json|kt|kts|lua|m|mm|php|py|rb|rs|scala|scss|sh|sql|svelte|swift|ts|tsx|vue|xml|ya?ml)$/i;
 const LARGE_SOURCE_BYTES = 1024 * 1024;
 
+async function structuredDataNote(repoRoot: string, file: string, staged: boolean, deleted: boolean, signal?: AbortSignal): Promise<string | undefined> {
+    const lockfile = isGeneratedLockfile(file);
+    if (!lockfile && !isStructuredData(file)) { return undefined; }
+    signal?.throwIfAborted();
+    const reference = staged && !deleted ? `:${file}` : `HEAD:${file}`;
+    let bytes: number;
+    try {
+        bytes = staged || deleted
+            ? Number((await execGit(["cat-file", "-s", reference], repoRoot)).stdout.trim())
+            : (await lstat(path.join(repoRoot, file))).size;
+    } catch { return undefined; }
+    if (!Number.isSafeInteger(bytes) || bytes < (lockfile ? LOCKFILE_BYTES : STRUCTURED_DATA_BYTES)) { return undefined; }
+    if (bytes > LARGE_SOURCE_BYTES) { return `${lockfile ? "generated dependency lockfile" : "large structured data"}; ${bytes} bytes; content summarized by filename and size`; }
+    signal?.throwIfAborted();
+    try {
+        const text = staged || deleted
+            ? (await execGit(["show", reference], repoRoot, LARGE_SOURCE_BYTES + 4096)).stdout
+            : await fs.promises.readFile(path.join(repoRoot, file), "utf8");
+        return describeStructuredData(file, text);
+    } catch { return `${lockfile ? "generated dependency lockfile" : "structured data"}; ${bytes} bytes; content summarized by filename and size`; }
+}
+
 async function omittedContentReason(repoRoot: string, file: string): Promise<string | undefined> {
-    if (MEDIA_FILE.test(file)) { return "audio/video content"; }
+    if (MEDIA_FILE.test(file)) { return "media content"; }
     if (!SOURCE_FILE.test(file)) { return undefined; }
     try {
         const info = await lstat(path.join(repoRoot, file));
@@ -47,12 +70,14 @@ async function omittedFiles(repoRoot: string, args: string[], signal?: AbortSign
             const second = renamed ? await fields.next() : first;
             if (second.done) { throw new Error("Git returned an incomplete rename record."); }
             const file = second.value;
+            const structured = await structuredDataNote(repoRoot, file, args.includes("--staged"), status.startsWith("D"), signal)
+                ?? (renamed ? await structuredDataNote(repoRoot, first.value, args.includes("--staged"), status.startsWith("D"), signal) : undefined);
             const reason = await omittedContentReason(repoRoot, first.value) || await omittedContentReason(repoRoot, file);
-            if (reason) {
+            if (structured || reason) {
                 excludes.push(...[...new Set([first.value, file])].map(name => `:(exclude,literal)${name}`));
                 const kind = ({ A: "added", D: "deleted", M: "modified", R: "renamed", C: "copied", T: "type changed" } as Record<string, string>)[status[0]] ?? status;
                 const names = renamed ? `${JSON.stringify(first.value)} -> ${JSON.stringify(file)}` : JSON.stringify(file);
-                notes.push(`Changed file ${names} (${kind}): ${reason} omitted from AI input.\n`);
+                notes.push(`Changed file ${names} (${kind}): ${structured ? `${structured}; detailed records omitted from AI input` : `${reason} omitted from AI input`}.\n`);
             }
         }
     } finally { await fields.return(undefined); }
@@ -255,8 +280,10 @@ export async function getDiffInput(workspaceFolder: vscode.WorkspaceFolder, repo
         }
         if (captureAllChanges) {
             for await (const file of gitNames(["ls-files", "--others", "--exclude-standard", "-z", ...excludeArgs], repoRoot, signal)) {
+                const structured = await structuredDataNote(repoRoot, file, false, false, signal);
                 const reason = await omittedContentReason(repoRoot, file);
-                if (reason) { await spool.appendText(`Changed file ${JSON.stringify(file)} (added, untracked): ${reason} omitted from AI input.\n`, signal); }
+                if (structured) { await spool.appendText(`Changed file ${JSON.stringify(file)} (added, untracked): ${structured}; detailed records omitted from AI input.\n`, signal); }
+                else if (reason) { await spool.appendText(`Changed file ${JSON.stringify(file)} (added, untracked): ${reason} omitted from AI input.\n`, signal); }
                 else { await spool.append(["diff", "--no-ext-diff", "--no-textconv", "--unified=0", "--no-index", "--", "/dev/null", file], repoRoot, signal, true); }
             }
         }

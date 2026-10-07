@@ -144,6 +144,7 @@ suite('Settings UI Tests', () => {
                     // Include all required provider settings
                     huggingface: { apiKey: '', model: '' },
                     ollama: { url: '', model: '' },
+                    ollamacloud: { apiKey: '', model: '' },
                     mistral: { apiKey: '', model: '' },
                     cohere: { apiKey: '', model: '' },
                     together: { apiKey: '', model: '' },

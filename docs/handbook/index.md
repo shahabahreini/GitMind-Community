@@ -1,8 +1,8 @@
 # GitMind 5.x User Handbook
 
-> Verified against GitMind `6.4.0` on October 5, 2026
+> Verified against GitMind `6.4.1` on October 5, 2026
 
-GitMind generates professional Git commit messages from your changes without leaving VS Code. It supports **23 provider choices**: 22 built-in AI providers, including local Ollama and LM Studio, GitHub Copilot, Azure OpenAI, Bedrock, Vertex AI, and Cloudflare Workers AI, plus a **Pro Custom API** option.
+GitMind generates professional Git commit messages from your changes without leaving VS Code. It supports **24 provider choices**: 23 built-in AI providers, including local Ollama and LM Studio, GitHub Copilot, Azure OpenAI, Bedrock, Vertex AI, and Cloudflare Workers AI, plus a **Pro Custom API** option.
 
 ![GitMind logo](/assets/logo.png)
 

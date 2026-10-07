@@ -7,7 +7,7 @@ export type HistoryHealthOptions = { mode: "last-n"; count: number } | { mode: "
 const lastScans = new Map<string, { score: HealthScore; scannedAt: number }>();
 
 export async function analyzeCurrentHealth(repositoryRoot: string): Promise<HealthScore> {
-  const score = scoreCommitHealth(await collectChangeSet(repositoryRoot, false));
+  const score = scoreCommitHealth(await collectChangeSet(repositoryRoot, false, { binaryPatches: false }));
   recordHealthScan(repositoryRoot, score);
   return score;
 }

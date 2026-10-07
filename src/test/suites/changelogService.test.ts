@@ -520,6 +520,7 @@ Some text without versions`;
 
         assert.ok(prompt.includes('REQUIRED MARKDOWN GRAMMAR'), 'Should include explicit output grammar');
         assert.ok(prompt.includes('Keep a Changelog'), 'Should reference Keep a Changelog');
+        assert.ok(prompt.includes('commit messages and bodies, not file contents'), 'Should not imply access to media or structured-data bodies');
         assert.ok(prompt.includes('"Added", "Changed", "Deprecated", "Removed", "Fixed", and "Security"'),
             'Should limit output to standard categories');
         assert.ok(!prompt.includes('EXISTING CHANGELOG POLICY'), 'Should not include the removed legacy-policy contract');

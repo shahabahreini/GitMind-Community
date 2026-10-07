@@ -33,6 +33,7 @@ export function getMessageHandlersScript(): string {
         openrouterModelsLoaded: () => handleAdvancedModelsLoaded('openrouter', message, ${JSON.stringify(DEFAULT_MODELS.openrouter)}, 100),
         huggingfaceModelsLoaded: () => handleAdvancedModelsLoaded('huggingface', message, ${JSON.stringify(DEFAULT_MODELS.huggingface)}, 2000),
         ollamaModelsLoaded: () => handleAdvancedModelsLoaded('ollama', message, [], 2000),
+        ollamacloudModelsLoaded: () => handleModelsLoaded('ollamacloud', message, ${JSON.stringify(DEFAULT_MODELS.ollamacloud)}),
         
         switchTab: () => {
           const tabId = message.tabId;
@@ -141,6 +142,7 @@ export function getMessageHandlersScript(): string {
         gemini: 'Google Gemini',
         huggingface: 'Hugging Face',
         ollama: 'Ollama',
+        ollamacloud: 'Ollama Cloud',
         mistral: 'Mistral AI',
         cohere: 'Cohere',
         openai: 'OpenAI',

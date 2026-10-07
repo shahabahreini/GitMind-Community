@@ -67,7 +67,7 @@ export class SettingsManager {
         let health = { currentChangeStatus: "No active workspace", stagedChanges: 0, lastScanAt: undefined as number | undefined, lastScore: undefined as number | undefined };
         if (workspaceRoot) {
             try {
-                const changeSet = await collectChangeSet(workspaceRoot, false);
+                const changeSet = await collectChangeSet(workspaceRoot, false, { binaryPatches: false });
                 const previous = getLastHealthScan(workspaceRoot);
                 health = {
                     currentChangeStatus: changeSet.atoms.length ? `${changeSet.atoms.length} staged change${changeSet.atoms.length === 1 ? '' : 's'} available` : "No staged changes available",

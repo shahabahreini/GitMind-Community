@@ -1,6 +1,7 @@
 import { debugLog } from "../debug/logger";
 import { AnthropicModel } from "../../config/types";
 import { BaseAIProvider, GenerationOptions } from "./base";
+import { RequestContext } from "./requestContext";
 import { loggedFetch } from "./loggedFetch";
 
 // Configuration for different Anthropic models
@@ -208,12 +209,17 @@ export class AnthropicProvider extends BaseAIProvider {
         }
     }
 
-    async getModels(): Promise<string[]> {
+    override async prepareCapabilities(context?: RequestContext): Promise<void> {
+        await this.discoverLargeModel(context, signal => this.getModels(signal));
+    }
+
+    async getModels(signal?: AbortSignal): Promise<string[]> {
         debugLog("Fetching Anthropic models...");
 
         try {
             const response = await loggedFetch(`https://api.anthropic.com/v1/models`, {
                 method: 'GET',
+                signal,
                 headers: {
                     'x-api-key': this.apiKey,
                     'anthropic-version': '2023-06-01',
