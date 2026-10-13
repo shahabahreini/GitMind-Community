@@ -229,14 +229,32 @@ export function getSubscriptionStyles(): string {
         color: var(--vscode-foreground);
     }
     
-    .feature-item::before {
-        content: '';
-        display: inline-block;
-        width: 4px;
-        height: 4px;
-        background: #10b981;
-        border-radius: 50%;
-        margin-right: 0.5rem;
+    .feature-check {
+        color: #10b981;
+        font-weight: 700;
+        font-size: 0.95rem;
+        flex-shrink: 0;
+        line-height: 1;
+    }
+    
+    .active-plan-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 0.65rem 1rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.35);
+        box-sizing: border-box;
+    }
+    
+    .active-plan-badge svg {
+        flex-shrink: 0;
     }
     
     .plan-action {

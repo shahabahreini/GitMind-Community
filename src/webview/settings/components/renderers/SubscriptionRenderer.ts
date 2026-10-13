@@ -338,18 +338,22 @@ export class SubscriptionRenderer extends BaseRenderer {
                             <div class="plan-price">One-time purchase</div>
                         </div>
                         <div class="plan-features">
-                            <div class="feature-item">✓ Encrypted API Key Storage</div>
-                            <div class="feature-item">✓ Large Diff Processing</div>
-                            <div class="feature-item">✓ Custom Commit Message Options</div>
-                            <div class="feature-item">✓ Commit History Analysis</div>
-                            <div class="feature-item">✓ Advanced Commit Styles</div>
-                            <div class="feature-item">✓ Priority Support</div>
+                            <div class="feature-item"><span class="feature-check">✓</span><span>Encrypted API Key Storage</span></div>
+                            <div class="feature-item"><span class="feature-check">✓</span><span>Large Diff Processing</span></div>
+                            <div class="feature-item"><span class="feature-check">✓</span><span>Custom Commit Message Options</span></div>
+                            <div class="feature-item"><span class="feature-check">✓</span><span>Commit History Analysis</span></div>
+                            <div class="feature-item"><span class="feature-check">✓</span><span>Advanced Commit Styles</span></div>
+                            <div class="feature-item"><span class="feature-check">✓</span><span>Priority Support</span></div>
                         </div>
                         <div class="plan-action">
-                            ${FormUtils.createButton('subscribeBtn', hasValidLicense ? 'Already Purchased' : 'Buy GitMind Pro',
-            `btn ${hasValidLicense ? 'btn-success' : 'btn-primary'}`,
-            hasValidLicense,
-            hasValidLicense ? 'You already have GitMind Pro' : 'Purchase a GitMind Pro subscription')}
+                            ${hasValidLicense ? `
+                                <div class="active-plan-badge" role="status" aria-label="GitMind Pro is active">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                                        <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/>
+                                    </svg>
+                                    <span>GitMind Pro Active</span>
+                                </div>
+                            ` : FormUtils.createButton('subscribeBtn', 'Buy GitMind Pro', 'btn btn-primary', false, 'Purchase a GitMind Pro subscription')}
                         </div>
                     </div>
                 </div>

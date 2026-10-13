@@ -808,49 +808,52 @@ export class MessageHandler {
                             structure
                         });
 
-                        // Build formatted HTML message
+                        // Build formatted HTML message with modern diagnostics
+                        const latencyClass = duration < 300 ? 'fast' : duration < 1000 ? 'medium' : 'slow';
                         const messageHtml = `
-                            <div class="test-result-header">Connection Successful</div>
-                            <div class="test-result-section">
-                                <div class="test-result-label">Endpoint</div>
-                                <div class="test-result-value">${baseUrl}${endpoint}</div>
-                            </div>
-                            <div class="test-result-row">
-                                <div class="test-result-item">
-                                    <span class="test-result-label">HTTP Status:</span>
-                                    <span class="test-result-value">${status}</span>
+                            <div class="test-result-header success">
+                                <div class="test-result-title">
+                                    <span class="test-status-badge success">✓ Connected</span>
+                                    <span class="test-result-endpoint">${baseUrl}${endpoint}</span>
                                 </div>
-                                <div class="test-result-item">
-                                    <span class="test-result-label">Latency:</span>
-                                    <span class="test-result-value">${duration}ms</span>
+                                <span class="test-status-pill success">HTTP ${status}</span>
+                            </div>
+                            <div class="test-kpi-row">
+                                <div class="test-kpi-chip">
+                                    <span class="kpi-label">Latency</span>
+                                    <span class="kpi-value ${latencyClass}">${duration}ms</span>
+                                </div>
+                                <div class="test-kpi-chip">
+                                    <span class="kpi-label">HTTP Status</span>
+                                    <span class="kpi-value">${status}</span>
+                                </div>
+                                <div class="test-kpi-chip">
+                                    <span class="kpi-label">Detected Schema</span>
+                                    <span class="kpi-value format">${structure.format}</span>
+                                </div>
+                                <div class="test-kpi-chip">
+                                    <span class="kpi-label">Payload Size</span>
+                                    <span class="kpi-value">${responseSize} B</span>
                                 </div>
                             </div>
-                            <div class="test-result-row">
-                                <div class="test-result-item">
-                                    <span class="test-result-label">Content-Type:</span>
-                                    <span class="test-result-value">${contentType}</span>
+                            <div class="test-diagnostics-table">
+                                <div class="test-diagnostic-row">
+                                    <span class="diagnostic-label">Content-Type</span>
+                                    <span class="diagnostic-code">${contentType}</span>
                                 </div>
-                                <div class="test-result-item">
-                                    <span class="test-result-label">Response Size:</span>
-                                    <span class="test-result-value">${responseSize} bytes</span>
+                                ${structure.path ? `
+                                <div class="test-diagnostic-row">
+                                    <span class="diagnostic-label">Suggested Response Path</span>
+                                    <span class="diagnostic-code highlight">${structure.path}</span>
                                 </div>
+                                ` : ''}
+                                ${structure.valuePreview ? `
+                                <div class="test-diagnostic-row preview-row">
+                                    <span class="diagnostic-label">Response Preview</span>
+                                    <div class="diagnostic-preview">${structure.valuePreview}</div>
+                                </div>
+                                ` : ''}
                             </div>
-                            <div class="test-result-section">
-                                <div class="test-result-label">Detected Format</div>
-                                <div class="test-result-value test-result-format">${structure.format}</div>
-                            </div>
-                            ${structure.path ? `
-                            <div class="test-result-section">
-                                <div class="test-result-label">Suggested Response Path</div>
-                                <div class="test-result-value test-result-path">${structure.path}</div>
-                            </div>
-                            ` : ''}
-                            ${structure.valuePreview ? `
-                            <div class="test-result-section">
-                                <div class="test-result-label">Response Preview</div>
-                                <div class="test-result-value test-result-preview">${structure.valuePreview}</div>
-                            </div>
-                            ` : ''}
                         `;
 
                         if (SettingsWebview.isWebviewOpen()) {
@@ -862,24 +865,35 @@ export class MessageHandler {
                         }
                     } catch (apiError: any) {
                         // API call failed
-                        let errorMessage = 'Connection failed: ';
+                        let errorTitle = 'Connection Failed';
+                        let errorDetail = 'Unknown error occurred';
+                        let hint = '';
 
                         if (apiError?.name === 'AbortError') {
-                            errorMessage += 'Request timed out after 5 seconds.';
+                            errorTitle = 'Request Timed Out';
+                            errorDetail = 'The API endpoint did not respond within the 5-second timeout window.';
+                            hint = 'Check your network connection and ensure your API server is reachable.';
                         } else if (typeof apiError?.message === 'string') {
-                            errorMessage += apiError.message;
-                        } else {
-                            errorMessage += 'Unknown error occurred';
-                        }
-
-                        // Common actionable hints for network-level failures
-                        if (typeof apiError?.message === 'string') {
-                            if (apiError.message.includes('ENOTFOUND') || apiError.message.includes('getaddrinfo')) {
-                                errorMessage += '\nHint: Host not reachable. Check Base URL and network connectivity.';
-                            } else if (apiError.message.includes('ECONNREFUSED')) {
-                                errorMessage += '\nHint: Connection refused. Ensure the server is running and accessible.';
-                            } else if (apiError.message.includes('EAI_AGAIN')) {
-                                errorMessage += '\nHint: DNS lookup timed out. Try again or verify DNS configuration.';
+                            const rawMsg = apiError.message;
+                            errorDetail = rawMsg;
+                            if (rawMsg.includes('ENOTFOUND') || rawMsg.includes('getaddrinfo')) {
+                                errorTitle = 'Host Not Found';
+                                hint = 'Check the Base URL domain name for typos and ensure your DNS can resolve it.';
+                            } else if (rawMsg.includes('ECONNREFUSED')) {
+                                errorTitle = 'Connection Refused';
+                                hint = 'The server refused the connection. Ensure the port is correct and service is running.';
+                            } else if (rawMsg.includes('401') || rawMsg.includes('403')) {
+                                errorTitle = 'Authentication Failed';
+                                hint = 'Verify your Authentication Token, Auth Type (Bearer vs API Key), and Header Key Name.';
+                            } else if (rawMsg.includes('404')) {
+                                errorTitle = 'Endpoint Not Found (404)';
+                                hint = 'The endpoint route does not exist. Check Base URL and Endpoint Path (e.g. /v1/chat/completions).';
+                            } else if (rawMsg.includes('400')) {
+                                errorTitle = 'Bad Request (400)';
+                                hint = 'The server rejected the payload format. Check your Request Format template and Model Identifier.';
+                            } else if (rawMsg.includes('415')) {
+                                errorTitle = 'Unsupported Media Type (415)';
+                                hint = 'Ensure your endpoint accepts Content-Type: application/json.';
                             }
                         }
 
@@ -889,11 +903,32 @@ export class MessageHandler {
                             endpoint: `${baseUrl}${endpoint}`
                         });
 
+                        const errorHtml = `
+                            <div class="test-result-header error">
+                                <div class="test-result-title">
+                                    <span class="test-status-badge error">✕ ${errorTitle}</span>
+                                    <span class="test-result-endpoint">${baseUrl}${endpoint}</span>
+                                </div>
+                                <span class="test-status-pill error">Failed</span>
+                            </div>
+                            <div class="test-error-body">
+                                <div class="test-error-message">${errorDetail.replace(/\n/g, '<br/>')}</div>
+                                ${hint ? `
+                                    <div class="test-error-hint">
+                                        <span class="hint-icon">💡</span>
+                                        <div class="hint-content">
+                                            <strong>Suggested Solution:</strong> ${hint}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+
                         if (SettingsWebview.isWebviewOpen()) {
                             SettingsWebview.postMessageToWebview({
                                 command: 'customApiTestResult',
                                 success: false,
-                                message: errorMessage
+                                message: errorHtml
                             });
                         }
                     } finally {
@@ -906,11 +941,23 @@ export class MessageHandler {
                         stack: error.stack
                     });
 
+                    const configErrorHtml = `
+                        <div class="test-result-header error">
+                            <div class="test-result-title">
+                                <span class="test-status-badge error">✕ Configuration Error</span>
+                            </div>
+                            <span class="test-status-pill error">Invalid</span>
+                        </div>
+                        <div class="test-error-body">
+                            <div class="test-error-message">${(error.message || 'Unknown error').replace(/\n/g, '<br/>')}</div>
+                        </div>
+                    `;
+
                     if (SettingsWebview.isWebviewOpen()) {
                         SettingsWebview.postMessageToWebview({
                             command: 'customApiTestResult',
                             success: false,
-                            message: `Configuration error: ${error.message || 'Unknown error'}`
+                            message: configErrorHtml
                         });
                     }
                 }

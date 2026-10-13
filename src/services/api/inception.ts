@@ -5,6 +5,7 @@ import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
 import { ProviderApiError } from "./recovery";
 import { stripThinking } from "./nvidia";
+import { answerText } from "./capabilities";
 import { PROVIDER_CATALOG } from "../../config/providerCatalog";
 
 export const INCEPTION_BASE_URL = "https://api.inceptionlabs.ai";
@@ -128,7 +129,8 @@ export class InceptionProvider extends BaseAIProvider {
                             content: prompt,
                         },
                     ],
-                    max_tokens: options?.maxTokens ?? 1024,
+                    max_tokens: options?.maxTokens ?? 2048,
+                    max_completion_tokens: options?.maxTokens ?? 2048,
                     temperature: options?.temperature ?? 0.2,
                 }),
                 signal: controller.signal,
@@ -140,9 +142,44 @@ export class InceptionProvider extends BaseAIProvider {
                 throw parseInceptionError(response.status, errorText);
             }
 
-            const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
-            const message = data.choices?.[0]?.message?.content;
-            if (!message) {
+            const data = await response.json() as {
+                choices?: Array<{
+                    message?: {
+                        content?: unknown;
+                        reasoning_content?: unknown;
+                        role?: string;
+                    };
+                    text?: unknown;
+                    finish_reason?: string;
+                }>;
+                output_text?: unknown;
+                text?: unknown;
+                warning?: unknown;
+            };
+
+            let rawText = "";
+            const firstChoice = data.choices?.[0];
+            const content = firstChoice?.message?.content;
+
+            if (typeof content === "string" && content.trim()) {
+                rawText = content;
+            } else if (Array.isArray(content)) {
+                try {
+                    rawText = answerText(content);
+                } catch {
+                    rawText = "";
+                }
+            } else if (typeof firstChoice?.text === "string" && firstChoice.text.trim()) {
+                rawText = firstChoice.text;
+            } else if (typeof (data as any)?.output_text === "string" && (data as any).output_text.trim()) {
+                rawText = (data as any).output_text;
+            } else if (typeof (data as any)?.text === "string" && (data as any).text.trim()) {
+                rawText = (data as any).text;
+            } else if (typeof firstChoice?.message?.reasoning_content === "string" && firstChoice.message.reasoning_content.trim()) {
+                rawText = firstChoice.message.reasoning_content;
+            }
+
+            if (!rawText.trim()) {
                 debugLog("Unexpected Inception Labs API response shape:", data);
                 throw new ProviderApiError("No valid response from Inception Labs API", {
                     status: response.status,
@@ -152,7 +189,9 @@ export class InceptionProvider extends BaseAIProvider {
             }
 
             debugLog("Inception Labs API response received successfully");
-            return this.enforceCommitMessageFormat(stripThinking(message).trim());
+            const cleaned = stripThinking(rawText).trim();
+            const result = cleaned || rawText.replace(/^<think>/i, "").trim();
+            return this.enforceCommitMessageFormat(result);
         } catch (error) {
             debugLog(`Inception Labs API call failed: ${error}`);
             if (error instanceof Error && error.name === 'AbortError') {

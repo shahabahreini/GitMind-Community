@@ -40,6 +40,7 @@ const PROVIDER_TOKENS = new Set<string>([...PROVIDER_IDS, ...PROVIDER_NAMES]);
 /** Files allowed to hold arrays of provider tokens, with the reason. */
 const ARRAY_ALLOWLIST: Record<string, string> = {
   "src/webview/settings/components/config/ProviderConfig.ts": "request/response format options ('openai', 'anthropic', 'custom') are wire formats, not provider lists",
+  "src/webview/settings/components/renderers/ModelSettingsRenderer.ts": "request/response wire formats in custom API settings",
   "src/webview/settings/components/managers/ScriptManager.ts": "Load Models button wiring keyed by DOM ids; every id is a catalog id",
   "src/webview/onboarding/OnboardingTemplateGenerator.ts": "onboarding card copy typed by ProviderCatalogId; names come from the catalog",
 };

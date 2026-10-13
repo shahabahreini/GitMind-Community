@@ -1,4 +1,5 @@
 import { answerText } from "./capabilities";
+import { stripThinking } from "./nvidia";
 import { ModelCapabilities } from "./capabilities";
 import { normalizeProviderError, ProviderApiError } from "./recovery";
 import { debugLog } from "../debug/logger";
@@ -50,9 +51,22 @@ export class CustomProvider extends BaseAIProvider {
 
             // Build request body using the template
             const requestBody = this.buildRequestBody(this.requestFormat, prompt, this.model);
-            if (this.requestFormat === "openai") { requestBody.max_tokens = _options?.maxTokens ?? 1024; }
-            if (this.requestFormat === "anthropic") { requestBody.max_tokens = _options?.maxTokens ?? 1024; }
-            if (this.requestFormat === "gemini") { requestBody.generationConfig = { ...requestBody.generationConfig, maxOutputTokens: _options?.maxTokens ?? 1024 }; }
+            const temp = _options?.temperature ?? 0.2;
+            const maxTok = _options?.maxTokens ?? 2048;
+            const fmt = (this.requestFormat || "").trim().toLowerCase();
+            if (!fmt || fmt === "openai") {
+                requestBody.max_tokens = maxTok;
+                requestBody.temperature = temp;
+            } else if (fmt === "anthropic") {
+                requestBody.max_tokens = maxTok;
+                requestBody.temperature = temp;
+            } else if (fmt === "gemini") {
+                requestBody.generationConfig = {
+                    ...requestBody.generationConfig,
+                    maxOutputTokens: maxTok,
+                    temperature: temp,
+                };
+            }
 
             const response = await loggedFetch(`${this.baseUrl}${this.endpoint}`, {
                 method: 'POST',
@@ -114,7 +128,8 @@ export class CustomProvider extends BaseAIProvider {
                     messages: [
                         { role: 'system', content: 'You analyze source changes and follow the requested output format.' },
                         { role: 'user', content: prompt }
-                    ]
+                    ],
+                    temperature: 0.2
                 };
             }
 
@@ -144,7 +159,8 @@ export class CustomProvider extends BaseAIProvider {
                 messages: [
                     { role: 'system', content: 'You analyze source changes and follow the requested output format.' },
                     { role: 'user', content: prompt }
-                ]
+                ],
+                temperature: 0.2
             };
         }
     }
@@ -159,9 +175,11 @@ export class CustomProvider extends BaseAIProvider {
             // Known formats
             if (!fmt || fmt === 'openai') {
                 const openai = data?.choices?.[0];
-                const text = openai?.message?.content ?? openai?.text;
+                const raw = openai?.message?.content ?? openai?.text;
+                const text = typeof raw === 'string' ? raw : (Array.isArray(raw) ? answerText(raw) : '');
                 if (typeof text === 'string' && text.length > 0) {
-                    return text;
+                    const stripped = stripThinking(text).trim();
+                    return stripped || text.replace(/^<think>/i, '').trim();
                 }
             } else if (fmt === 'anthropic') {
                 // Claude streaming or messages API often returns content as array of blocks
