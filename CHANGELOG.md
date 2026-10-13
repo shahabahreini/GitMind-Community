@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v6.5.0] - 2026-10-13
+
+### Added
+
+- Added Inception Labs AI provider with model discovery, API key validation, and UI integration.
+- Added custom API form with quick presets and real-time connection diagnostics.
+
+### Changed
+
+- Redesigned settings screens to use responsive grid rows and SVG icons.
+- Replaced unicode emojis with CSS spinners and SVG icons across the UI.
+
+### Fixed
+
+- Fixed Inception model loading and updated the encryption report layout.
+
+## [v6.4.1] - 2026-10-07
+
+### Added
+
+- Added Ollama Cloud provider to the provider list and documentation.
+- Added model input limit discovery to adjust budgets for large diffs.
+- Added structured data summarization for large JSON, CSV, TSV, and lockfiles.
+- Added user-approved large-diff batching with modal confirmation before calls.
+
+### Changed
+
+- Changed large diff processing to run approved requests sequentially and stop on rate limits.
+
 ## v6.4.0 - 2026-10-05
 
 ### Highlights
@@ -106,6 +135,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - NVIDIA `nvidia/nemotron-3-super-120b-a12b`
 
   A saved model equal to a retired default moves to the new default. Other saved choices are kept.
+
 - Refreshed fallback model lists for all providers from current provider documentation.
 - Provider names, sign-in types, default models, and model lists now come from a single provider catalog. Onboarding offers all 23 providers.
 

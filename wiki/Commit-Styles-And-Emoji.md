@@ -1,6 +1,6 @@
 # Commit Styles And Emoji
 
-> Verified against GitMind `6.4.1` on October 5, 2026
+> Verified against GitMind `6.5.0` on October 13, 2026
 
 Basic is available in Free. The other 11 styles and Emoji Enhancement require Pro.
 

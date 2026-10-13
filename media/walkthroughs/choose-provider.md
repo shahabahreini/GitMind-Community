@@ -2,10 +2,10 @@
 
 GitMind generates commit messages with the provider **you** choose. Bring your own key, run a local Ollama model, or reuse your GitHub Copilot subscription.
 
-GitMind includes **23 built-in providers**:
+GitMind includes **24 built-in providers**:
 
 - **OpenAI**, **Anthropic**, **Google Gemini**, **NVIDIA NIM**, **MiniMax**
-- **DeepSeek**, **xAI Grok**, **Groq**, **Perplexity**, **Z.ai**, **Ollama Cloud**
+- **DeepSeek**, **xAI Grok**, **Groq**, **Perplexity**, **Z.ai**, **Ollama Cloud**, **Inception Labs**
 - **Mistral**, **Cohere**, **Together AI**, **OpenRouter**, **Hugging Face**
 - **Ollama** and **LM Studio** for local generation, **Azure OpenAI**, **Bedrock**, **Vertex AI**, **Cloudflare Workers AI**, and **GitHub Copilot**
 

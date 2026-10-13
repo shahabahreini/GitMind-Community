@@ -1,6 +1,6 @@
 # Advanced Pro Features
 
-> Verified against GitMind `6.4.1` on October 5, 2026
+> Verified against GitMind `6.5.0` on October 13, 2026
 
 ## Large Diff Processing
 

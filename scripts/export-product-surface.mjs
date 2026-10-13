@@ -11,7 +11,7 @@ const output = path.join(root, "docs/reference/gitmind-user-surface.json");
 const sourceDate = process.env.SOURCE_DATE_EPOCH
   ? new Date(Number(process.env.SOURCE_DATE_EPOCH) * 1000)
   : new Date();
-const auditDate = process.env.GITMIND_AUDIT_DATE || "2026-10-05";
+const auditDate = process.env.GITMIND_AUDIT_DATE || "2026-10-13";
 
 function loadPackage(source) {
   const absolute = path.resolve(root, source);
