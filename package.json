@@ -1,7 +1,7 @@
 {
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Message Generator",
-  "description": "AI commit message generator for VS Code. Write clear Conventional Commits from your diff with GitHub Copilot, local Ollama, or 23 built-in AI providers.",
+  "description": "AI commit message generator for VS Code. Write clear Conventional Commits from your diff with GitHub Copilot, local Ollama, or 24 built-in AI providers.",
   "version": "6.4.1",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
@@ -40,6 +40,7 @@
             "huggingface",
             "ollama",
             "ollamacloud",
+            "inception",
             "mistral",
             "cohere",
             "openai",
@@ -66,6 +67,7 @@
             "Use Hugging Face models for generating commit messages",
             "Use local Ollama models for generating commit messages",
             "Use Ollama Cloud hosted models for generating commit messages",
+            "Use Inception Labs models (Mercury) for generating commit messages",
             "Use Mistral AI for generating commit messages",
             "Use Cohere AI for generating commit messages",
             "Use OpenAI for generating commit messages",
@@ -136,6 +138,16 @@
           "type": "string",
           "default": "gpt-oss:120b-cloud",
           "description": "Ollama Cloud model to use for generating commit messages"
+        },
+        "gitmind.inception.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API key for Inception Labs [Get API key](https://platform.inceptionlabs.ai)"
+        },
+        "gitmind.inception.model": {
+          "type": "string",
+          "default": "mercury-2.5",
+          "description": "Inception Labs model to use for generating commit messages"
         },
         "gitmind.mistral.apiKey": {
           "type": "string",
@@ -1523,7 +1535,7 @@
           {
             "id": "gitmind.choose-provider",
             "title": "Choose your AI provider",
-            "description": "Choose from 23 built-in providers, including local LM Studio and Ollama, OpenAI, Azure OpenAI, Bedrock, Vertex AI, Cloudflare Workers AI, NVIDIA NIM, and Copilot.\n[Open Settings](command:gitmind.openSettings)",
+            "description": "Choose from 24 built-in providers, including local LM Studio and Ollama, OpenAI, Azure OpenAI, Bedrock, Vertex AI, Cloudflare Workers AI, NVIDIA NIM, and Copilot.\n[Open Settings](command:gitmind.openSettings)",
             "media": {
               "markdown": "media/walkthroughs/choose-provider.md"
             },
@@ -1695,7 +1707,7 @@
       "description": "GitHub Stars"
     },
     {
-      "url": "https://img.shields.io/badge/Provider_Options-24-purple?style=for-the-badge&logo=openai",
+      "url": "https://img.shields.io/badge/Provider_Options-25-purple?style=for-the-badge&logo=openai",
       "href": "https://marketplace.visualstudio.com/items?itemName=ShahabBahreiniJangjoo.ai-commit-assistant",
       "description": "Supported AI Providers"
     },

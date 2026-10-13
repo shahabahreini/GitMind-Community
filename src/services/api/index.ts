@@ -121,6 +121,10 @@ async function loadProviderModule(provider: string): Promise<ProviderClass> {
                 const ollamaCloudModule = await import('./ollamacloud.js');
                 providerClass = ollamaCloudModule.OllamaCloudProvider;
                 break;
+            case 'inception':
+                const inceptionModule = await import('./inception.js');
+                providerClass = inceptionModule.InceptionProvider;
+                break;
             case 'mistral':
                 const mistralModule = await import('./mistral.js');
                 providerClass = mistralModule.MistralProvider;

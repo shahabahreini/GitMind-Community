@@ -489,6 +489,12 @@ export function getStatusBannerStyles(): string {
         box-shadow: 0 1px 3px rgba(0, 212, 170, 0.3);
       }
 
+      .status-badge.inception {
+        background: linear-gradient(135deg, #2c9af2, #1d72b8);
+        color: white;
+        box-shadow: 0 1px 3px rgba(44, 154, 242, 0.3);
+      }
+
       .status-value.configured {
         color: #10b981;
       }

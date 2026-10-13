@@ -61,7 +61,7 @@ suite("Expanded provider contracts", () => {
 
     test("new provider marks render in both Settings UI paths", () => {
         const settingsScript = getUiManagerScript();
-        for (const provider of ["lmstudio", "azureopenai", "bedrock", "vertexai", "cloudflare", "ollamacloud"]) {
+        for (const provider of ["lmstudio", "azureopenai", "bedrock", "vertexai", "cloudflare", "ollamacloud", "inception"]) {
             const icon = ProviderIcon.renderIcon(provider);
             assert.match(icon, new RegExp(`provider-icon ${provider}`));
             assert.doesNotMatch(icon, /provider-icon-placeholder/);

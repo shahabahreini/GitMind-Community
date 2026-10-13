@@ -8,7 +8,7 @@ Open **GitMind Setting** for the guided UI. The table below covers user-configur
 
 | Setting | Default | Values / notes |
 | --- | --- | --- |
-| `gitmind.apiProvider` | `gemini` | 23 built-ins plus Pro `custom` (24 total) |
+| `gitmind.apiProvider` | `gemini` | 24 built-ins plus Pro `custom` (25 total) |
 | `gitmind.showOnboarding` | `true` | Show onboarding |
 | `gitmind.commit.verbose` | `true` | Include body |
 | `gitmind.commit.detailMode` | `auto` | `auto`, `concise`, `detailed`; legacy verbosity migrates |
@@ -57,6 +57,7 @@ Open **GitMind Setting** for the guided UI. The table below covers user-configur
 | Amazon Bedrock | `gitmind.bedrock.region`, `.profile`, `.model` | `us-east-1`; account/region model ID |
 | Vertex AI | `gitmind.vertexai.project`, `.location`, `.model` | `us-central1`; project/location model ID |
 | Cloudflare Workers AI | `gitmind.cloudflare.apiKey`, `.accountId`, `.gatewayId`, `.model` | Account-scoped model ID |
+| Inception Labs | `gitmind.inception.apiKey`, `gitmind.inception.model` | `mercury-2.5` |
 
 ## Commit Style And Pro Output
 

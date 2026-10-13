@@ -368,6 +368,24 @@ suite('AI Providers Tests', () => {
         }
     });
 
+    test('Inception provider configuration should be valid', async () => {
+        const mockConfig = createMockConfig('inception', {
+            apiKey: 'test-inception-key',
+            model: 'mercury-2.5'
+        });
+
+        (vscode.workspace as any).getConfiguration = () => mockConfig;
+
+        try {
+            const config = await getApiConfig();
+            assert.strictEqual(config.type, 'inception');
+            assert.strictEqual(config.apiKey, 'test-inception-key');
+            assert.strictEqual(config.model, 'mercury-2.5');
+        } catch (error) {
+            console.log('Inception config test completed with expected limitation');
+        }
+    });
+
     test('Mistral provider configuration should be valid', async () => {
         const mockConfig = createMockConfig('mistral', {
             apiKey: 'test-mistral-key',
@@ -532,7 +550,7 @@ suite('AI Providers Tests', () => {
         const providers = [
             'gemini', 'openai', 'anthropic', 'huggingface', 'ollama',
             'mistral', 'cohere', 'together', 'openrouter', 'minimax', 'copilot',
-            'deepseek', 'grok', 'perplexity', 'zai', 'custom'
+            'deepseek', 'grok', 'perplexity', 'zai', 'inception', 'custom'
         ];
 
         for (const provider of providers) {

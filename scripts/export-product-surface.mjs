@@ -11,7 +11,7 @@ const output = path.join(root, "docs/reference/gitmind-user-surface.json");
 const sourceDate = process.env.SOURCE_DATE_EPOCH
   ? new Date(Number(process.env.SOURCE_DATE_EPOCH) * 1000)
   : new Date();
-const auditDate = process.env.GITMIND_AUDIT_DATE || sourceDate.toISOString().slice(0, 10);
+const auditDate = process.env.GITMIND_AUDIT_DATE || "2026-10-05";
 
 function loadPackage(source) {
   const absolute = path.resolve(root, source);
@@ -42,7 +42,7 @@ const providerNames = {
   anthropic: "Anthropic", minimax: "MiniMax", copilot: "GitHub Copilot", deepseek: "DeepSeek",
   grok: "xAI Grok", groq: "Groq", perplexity: "Perplexity", zai: "Z.ai", nvidia: "NVIDIA hosted NIM",
   lmstudio: "LM Studio", azureopenai: "Azure OpenAI", bedrock: "Amazon Bedrock", vertexai: "Vertex AI",
-  cloudflare: "Cloudflare Workers AI",
+  cloudflare: "Cloudflare Workers AI", inception: "Inception Labs",
   custom: "Custom API",
 };
 const setupLinks = {
@@ -56,13 +56,14 @@ const setupLinks = {
   bedrock: "https://docs.aws.amazon.com/bedrock/latest/userguide/apis.html",
   vertexai: "https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstart",
   cloudflare: "https://developers.cloudflare.com/workers-ai/configuration/openai-compatibility/",
+  inception: "https://platform.inceptionlabs.ai",
 };
 const providerAuthentication = {
   ollama: "Local server", copilot: "GitHub Copilot sign-in", custom: "Configurable", lmstudio: "Local server",
   azureopenai: "API key or Microsoft Entra token", bedrock: "AWS credential chain or profile",
   vertexai: "Google Application Default Credentials", cloudflare: "Cloudflare API token", 
 };
-const modelDiscoveryProviders = new Set(["gemini", "huggingface", "ollama", "ollamacloud", "mistral", "cohere", "openai", "together", "openrouter", "anthropic", "minimax", "copilot", "deepseek", "grok", "groq", "perplexity", "zai", "nvidia", "lmstudio", "cloudflare"]);
+const modelDiscoveryProviders = new Set(["gemini", "huggingface", "ollama", "ollamacloud", "mistral", "cohere", "openai", "together", "openrouter", "anthropic", "minimax", "copilot", "deepseek", "grok", "groq", "perplexity", "zai", "nvidia", "lmstudio", "cloudflare", "inception"]);
 
 function settingRecord([id, setting]) {
   const record = {

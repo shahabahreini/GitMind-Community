@@ -2,7 +2,7 @@
 
 > Verified against GitMind `6.4.1` on October 5, 2026
 
-GitMind exposes **24 provider choices**: 23 built-in providers and the Pro Custom API. Each page documents authentication, defaults, model discovery, privacy boundaries, and first-line troubleshooting.
+GitMind exposes **25 provider choices**: 24 built-in providers and the Pro Custom API. Each page documents authentication, defaults, model discovery, privacy boundaries, and first-line troubleshooting.
 
 - [Google Gemini](providers-gemini)
 - [Hugging Face](providers-huggingface)
@@ -27,4 +27,5 @@ GitMind exposes **24 provider choices**: 23 built-in providers and the Pro Custo
 - [Amazon Bedrock](providers-bedrock)
 - [Vertex AI](providers-vertexai)
 - [Cloudflare Workers AI](providers-cloudflare)
+- [Inception Labs](providers-inception)
 - [Custom API](providers-custom)

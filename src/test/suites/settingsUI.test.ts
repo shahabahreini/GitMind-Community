@@ -145,6 +145,7 @@ suite('Settings UI Tests', () => {
                     huggingface: { apiKey: '', model: '' },
                     ollama: { url: '', model: '' },
                     ollamacloud: { apiKey: '', model: '' },
+                    inception: { apiKey: '', model: '' },
                     mistral: { apiKey: '', model: '' },
                     cohere: { apiKey: '', model: '' },
                     together: { apiKey: '', model: '' },

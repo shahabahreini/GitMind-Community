@@ -1572,6 +1572,7 @@ export function validatePromptLength(prompt: string, provider: string): { valid:
     'huggingface': 16000,    // HuggingFace: varies widely, conservative estimate
     'ollama': 128000,        // Ollama: depends on model, ~32k typical
     'ollamacloud': 512000,   // Ollama Cloud: cloud models (gpt-oss, qwen3-coder, etc.), ~128k tokens
+    'inception': 512000,     // Inception Labs: Mercury models (260k context window), ~128k tokens
     'copilot': 512000,       // GitHub Copilot: GPT-4 based, 128k tokens
     'custom': 128000,        // Custom API: conservative default
     'default': 128000        // Default conservative limit

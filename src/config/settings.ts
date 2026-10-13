@@ -72,6 +72,7 @@ const PROVIDER_DEFAULTS: Record<string, ProviderDefaults> = {
         extras: { url: "http://localhost:11434" }
     },
     ollamacloud: { model: getProviderDefaultModel("ollamacloud"), enabled: false },
+    inception: { model: getProviderDefaultModel("inception"), enabled: false },
     mistral: { model: getProviderDefaultModel("mistral"), enabled: false },
     cohere: { model: getProviderDefaultModel("cohere"), enabled: false },
     openai: { model: getProviderDefaultModel("openai"), enabled: false },

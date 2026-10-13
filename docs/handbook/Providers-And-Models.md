@@ -2,7 +2,7 @@
 
 > Verified against GitMind `6.4.1` on October 5, 2026
 
-GitMind has 23 built-in providers plus the Pro-only Custom API provider (24 total). Cloud providers receive the selected diff and prompt. Provider catalogs change; use **Load Available Models** and the searchable model picker when available. Account- and region-scoped providers intentionally use manual model IDs rather than a stale bundled list.
+GitMind has 24 built-in providers plus the Pro-only Custom API provider (25 total). Cloud providers receive the selected diff and prompt. Provider catalogs change; use **Load Available Models** and the searchable model picker when available. Account- and region-scoped providers intentionally use manual model IDs rather than a stale bundled list.
 
 ![GitMind model settings and Automatic Recovery](/assets/model-settings-and-recovery.png)
 
@@ -31,6 +31,7 @@ GitMind has 23 built-in providers plus the Pro-only Custom API provider (24 tota
 | [Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/apis.html) | AWS credential chain or profile | Model ID | Region/account-specific |
 | [Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstart) | Application Default Credentials | Model ID | Project/location-specific |
 | [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/configuration/openai-compatibility/) | API token and account ID | Model ID | Account-specific |
+| [Inception Labs](https://platform.inceptionlabs.ai) | API key | `mercury-2.5` | Yes |
 | Custom API | Pro; endpoint-specific auth | None | User configured |
 
 ## Setup And Checks

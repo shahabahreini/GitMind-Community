@@ -8,10 +8,10 @@
     "minimumVSCode": "^1.101.0"
   },
   "counts": {
-    "providerChoices": 24,
-    "builtInProviders": 23,
-    "settingsRegistered": 129,
-    "settingsDocumented": 119,
+    "providerChoices": 25,
+    "builtInProviders": 24,
+    "settingsRegistered": 134,
+    "settingsDocumented": 124,
     "commandsRegistered": 55,
     "publicCommands": 44,
     "commitStyles": 12,
@@ -67,6 +67,19 @@
       "fields": [
         "gitmind.ollamacloud.apiKey",
         "gitmind.ollamacloud.model"
+      ],
+      "modelDiscovery": true
+    },
+    {
+      "id": "inception",
+      "name": "Inception Labs",
+      "availability": "Free",
+      "authentication": "API key",
+      "setupUrl": "https://platform.inceptionlabs.ai",
+      "defaultModel": "mercury-2.5",
+      "fields": [
+        "gitmind.inception.apiKey",
+        "gitmind.inception.model"
       ],
       "modelDiscovery": true
     },
@@ -356,6 +369,7 @@
         "huggingface",
         "ollama",
         "ollamacloud",
+        "inception",
         "mistral",
         "cohere",
         "openai",
@@ -433,6 +447,20 @@
       "default": "gpt-oss:120b-cloud",
       "availability": "Free",
       "description": "Ollama Cloud model to use for generating commit messages"
+    },
+    {
+      "id": "gitmind.inception.apiKey",
+      "type": "string",
+      "default": "",
+      "availability": "Free",
+      "description": "API key for Inception Labs [Get API key](https://platform.inceptionlabs.ai)"
+    },
+    {
+      "id": "gitmind.inception.model",
+      "type": "string",
+      "default": "mercury-2.5",
+      "availability": "Free",
+      "description": "Inception Labs model to use for generating commit messages"
     },
     {
       "id": "gitmind.mistral.apiKey",
@@ -1318,7 +1346,7 @@
       "type": "boolean",
       "default": false,
       "availability": "Pro",
-      "description": "Offer large-diff batching proactively (Pro). Every batched generation still asks for approval; fitting diffs use one request."
+      "description": "Deep analysis for very large diffs (Pro). By default, a diff that exceeds the model input limit is condensed locally and sent in one request. When enabled and the condensed diff would drop content, GitMind first offers multi-request analysis (approval required, up to the call limit below)."
     },
     {
       "id": "gitmind.pro.largeDiffHandling.chunkSize",
@@ -1355,6 +1383,33 @@
       "description": "",
       "minimum": 1,
       "maximum": 100
+    },
+    {
+      "id": "gitmind.pro.largeDiffHandling.maxCalls",
+      "type": "integer",
+      "default": 6,
+      "availability": "Pro",
+      "description": "Most generation calls deep analysis may plan. If the plan needs more, GitMind uses the one-request condensed diff instead.",
+      "minimum": 2,
+      "maximum": 50
+    },
+    {
+      "id": "gitmind.pro.largeDiffHandling.perFileLines",
+      "type": "integer",
+      "default": 400,
+      "availability": "Pro",
+      "description": "When a diff is condensed, the most changed lines kept per file before the rest is summarized by hunk headers.",
+      "minimum": 20,
+      "maximum": 5000
+    },
+    {
+      "id": "gitmind.pro.largeDiffHandling.maxPromptTokens",
+      "type": "integer",
+      "default": 0,
+      "availability": "Pro",
+      "description": "Estimated-token ceiling for one prompt. 0 chooses automatically: 60000, or 6000 for Ollama and LM Studio. Raise it only if your local model runs a larger context.",
+      "minimum": 0,
+      "maximum": 1000000
     }
   ],
   "commands": [
@@ -1783,6 +1838,33 @@
       "description": "",
       "minimum": 1,
       "maximum": 100
+    },
+    {
+      "id": "gitmind.pro.largeDiffHandling.maxCalls",
+      "type": "integer",
+      "default": 6,
+      "availability": "Pro",
+      "description": "Most generation calls deep analysis may plan. If the plan needs more, GitMind uses the one-request condensed diff instead.",
+      "minimum": 2,
+      "maximum": 50
+    },
+    {
+      "id": "gitmind.pro.largeDiffHandling.perFileLines",
+      "type": "integer",
+      "default": 400,
+      "availability": "Pro",
+      "description": "When a diff is condensed, the most changed lines kept per file before the rest is summarized by hunk headers.",
+      "minimum": 20,
+      "maximum": 5000
+    },
+    {
+      "id": "gitmind.pro.largeDiffHandling.maxPromptTokens",
+      "type": "integer",
+      "default": 0,
+      "availability": "Pro",
+      "description": "Estimated-token ceiling for one prompt. 0 chooses automatically: 60000, or 6000 for Ollama and LM Studio. Raise it only if your local model runs a larger context.",
+      "minimum": 0,
+      "maximum": 1000000
     }
   ],
   "excluded": {

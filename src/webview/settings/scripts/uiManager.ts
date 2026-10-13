@@ -17,7 +17,7 @@ export function getUiManagerScript(): string {
           return \`<div class="provider-icon-placeholder" style="width: \${size}px; height: \${size}px;"></div>\`;
         }
         return \`
-          <svg class="provider-icon \${provider}" width="\${size}" height="\${size}" viewBox="\${provider === 'nvidia' ? '0 0 163.3 108' : '0 0 24 24'}"
+          <svg class="provider-icon \${provider}" width="\${size}" height="\${size}" viewBox="\${provider === 'nvidia' ? '0 0 163.3 108' : provider === 'inception' ? '0 0 140 145' : '0 0 24 24'}"
                fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path d="\${iconPath}" />
           </svg>
@@ -337,5 +337,6 @@ export function getUiManagerScript(): string {
     setupApiKeyAutoLoading('anthropic', 'gitmind.loadAnthropicModels');
     setupApiKeyAutoLoading('huggingface', 'gitmind.loadHuggingFaceModels');
     setupApiKeyAutoLoading('ollamacloud', 'gitmind.loadOllamaCloudModels');
+    setupApiKeyAutoLoading('inception', 'gitmind.loadInceptionModels');
   `;
 }

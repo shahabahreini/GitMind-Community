@@ -34,6 +34,7 @@ export function getMessageHandlersScript(): string {
         huggingfaceModelsLoaded: () => handleAdvancedModelsLoaded('huggingface', message, ${JSON.stringify(DEFAULT_MODELS.huggingface)}, 2000),
         ollamaModelsLoaded: () => handleAdvancedModelsLoaded('ollama', message, [], 2000),
         ollamacloudModelsLoaded: () => handleModelsLoaded('ollamacloud', message, ${JSON.stringify(DEFAULT_MODELS.ollamacloud)}),
+        inceptionModelsLoaded: () => handleModelsLoaded('inception', message, ${JSON.stringify(DEFAULT_MODELS.inception)}),
         
         switchTab: () => {
           const tabId = message.tabId;
@@ -156,6 +157,7 @@ export function getMessageHandlersScript(): string {
         groq: 'Groq',
         perplexity: 'Perplexity',
         zai: 'Z.ai',
+        inception: 'Inception Labs',
         custom: 'Custom API'
       };
       return displayNames[provider] || provider;
