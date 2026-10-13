@@ -241,7 +241,7 @@ export function getButtonStyles(): string {
       /* Disabled Button States */
       button[disabled],
       button.disabled {
-        opacity: 0.6;
+        opacity: 0.75;
         cursor: not-allowed;
         pointer-events: none;
         /* Use a subtle background with a dimmed-but-visible foreground. Previously both

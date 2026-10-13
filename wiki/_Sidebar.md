@@ -34,6 +34,7 @@ Verified against GitMind `6.4.1` on October 5, 2026.
 - [providers grok](providers-grok)
 - [providers groq](providers-groq)
 - [providers huggingface](providers-huggingface)
+- [providers inception](providers-inception)
 - [providers lmstudio](providers-lmstudio)
 - [providers minimax](providers-minimax)
 - [providers mistral](providers-mistral)

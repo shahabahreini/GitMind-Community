@@ -36,6 +36,7 @@ import { fetchZaiModels } from "../services/api/zai";
 import { fetchPerplexityModels } from "../services/api/perplexity";
 import { fetchNvidiaModels } from "../services/api/nvidia";
 import { fetchOllamaCloudModels } from "../services/api/ollamacloud";
+import { fetchInceptionModels } from "../services/api/inception";
 import { PromptManager } from "../services/promptManager";
 import { SecureKeyManager } from "../services/encryption/SecureKeyManager";
 import { isLegacyProUser } from "../utils/proHelpers";
@@ -609,7 +610,7 @@ function clampCommitBodyDescription(description: string, maxBodyLines?: number):
 }
 
 async function handleLoadModels(
-  modelType: 'mistral' | 'huggingface' | 'cohere' | 'together' | 'openrouter' | 'grok' | 'groq' | 'deepseek' | 'gemini' | 'anthropic' | 'minimax' | 'openai' | 'zai' | 'perplexity' | 'nvidia' | 'ollamacloud',
+  modelType: 'mistral' | 'huggingface' | 'cohere' | 'together' | 'openrouter' | 'grok' | 'groq' | 'deepseek' | 'gemini' | 'anthropic' | 'minimax' | 'openai' | 'zai' | 'perplexity' | 'nvidia' | 'ollamacloud' | 'inception',
   fetchFunction: (apiKey: string) => Promise<any[]>
 ): Promise<void> {
   // Prevent duplicate concurrent calls for the same provider
@@ -677,6 +678,9 @@ async function handleLoadModels(
         case 'ollamacloud':
           commandSuffix = 'ollamacloudModelsLoaded';
           break;
+        case 'inception':
+          commandSuffix = 'inceptionModelsLoaded';
+          break;
         default:
           commandSuffix = `${modelType}ModelsLoaded`;
       }
@@ -742,6 +746,9 @@ async function handleLoadModels(
           case 'ollamacloud':
             commandSuffix = 'ollamacloudModelsLoaded';
             break;
+          case 'inception':
+            commandSuffix = 'inceptionModelsLoaded';
+            break;
           default:
             commandSuffix = `${modelType}ModelsLoaded`;
         }
@@ -798,6 +805,9 @@ async function handleLoadModels(
             break;
           case 'ollamacloud':
             commandSuffix = 'ollamacloudModelsLoaded';
+            break;
+          case 'inception':
+            commandSuffix = 'inceptionModelsLoaded';
             break;
           default:
             commandSuffix = `${modelType}ModelsLoaded`;
@@ -1226,6 +1236,10 @@ export function registerCommands(context: vscode.ExtensionContext): vscode.Dispo
 
     vscode.commands.registerCommand("gitmind.loadOllamaCloudModels", () =>
       handleLoadModels('ollamacloud', fetchOllamaCloudModels)
+    ),
+
+    vscode.commands.registerCommand("gitmind.loadInceptionModels", () =>
+      handleLoadModels('inception', fetchInceptionModels)
     ),
 
     vscode.commands.registerCommand("gitmind.loadCopilotModels", handleLoadCopilotModels),

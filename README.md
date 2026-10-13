@@ -1,6 +1,6 @@
 # GitMind — AI Commit Message Generator for VS Code
 
-GitMind reads your Git diff and writes a clear, well-formatted commit message for you. Use GitHub Copilot, a local model in Ollama or LM Studio, or any of 23 built-in AI providers, and get Conventional Commits, Gitmoji, or your team's style in one click.
+GitMind reads your Git diff and writes a clear, well-formatted commit message for you. Use GitHub Copilot, a local model in Ollama or LM Studio, or any of 24 built-in AI providers, and get Conventional Commits, Gitmoji, or your team's style in one click.
 
 <div align="center">
   <img src="https://raw.githubusercontent.com/shahabahreini/GitMind-Community/main/images/screenshots/hero-generate.gif" alt="GitMind product advertisement: turn code changes into clear commits, choose your AI provider, and build readable Git history" width="100%"/>
@@ -99,7 +99,7 @@ GitMind reads your Git diff and writes a clear, well-formatted commit message fo
 
 ## Supported Providers
 
-<img src="https://raw.githubusercontent.com/shahabahreini/GitMind-Community/main/images/all_providers.png" alt="GitMind: 23 built-in AI providers, including local Ollama and LM Studio, plus Custom API with Pro" width="100%"/>
+<img src="https://raw.githubusercontent.com/shahabahreini/GitMind-Community/main/images/all_providers.png" alt="GitMind: 24 built-in AI providers, including local Ollama and LM Studio, plus Custom API with Pro" width="100%"/>
 
 | Provider              | Setup                                  | Model selection                          |
 | --------------------- | -------------------------------------- | ---------------------------------------- |
@@ -126,6 +126,7 @@ GitMind reads your Git diff and writes a clear, well-formatted commit message fo
 | Amazon Bedrock        | AWS credential chain or named profile  | Model ID available in selected region    |
 | Vertex AI             | Google Application Default Credentials | Model ID available to project/location   |
 | Cloudflare Workers AI | API token and account ID               | Workers AI or AI Gateway model ID        |
+| Inception Labs        | API key                                | Dynamic model discovery                  |
 | Custom API (Pro)      | Any OpenAI-compatible endpoint         | Your endpoint and model                  |
 
 Provider catalogs change often. GitMind loads current model lists where the provider supports discovery and falls back to known compatible models when it can't. Setup guides for each provider are in [Providers and Models](https://github.com/shahabahreini/GitMind-Community/wiki/Providers-And-Models).
@@ -134,7 +135,7 @@ Provider catalogs change often. GitMind loads current model lists where the prov
 
 | Feature                                  | Free             | Pro                                                |
 | ---------------------------------------- | ---------------- | -------------------------------------------------- |
-| Built-in AI providers                    | 23               | 23                                                 |
+| Built-in AI providers                    | 24               | 24                                                 |
 | Custom API provider                      | Locked           | Included                                           |
 | Searchable provider and model pickers    | Included         | Included                                           |
 | Basic and Conventional commit styles     | Included         | Included                                           |

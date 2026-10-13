@@ -23,116 +23,440 @@ export function getCustomApiStyles(): string {
     .custom-api-header .pro-feature-badge {
         margin-left: 0.5rem;
     }
-    
-    .custom-api-url-container {
+
+    /* Modern Flat Layout */
+    .custom-api-settings-panel {
         display: flex;
-        gap: 0.5rem;
         flex-direction: column;
+        gap: 0.25rem;
     }
-    
-    @media (min-width: 768px) {
-        .custom-api-url-container {
-            flex-direction: row;
-        }
-        .custom-api-url-container input[type="text"]:first-child {
-            flex: 3;
-        }
-        .custom-api-url-container input[type="text"]:last-child {
-            flex: 2;
-        }
-    }
-    
-    .custom-api-test-result {
-        margin-top: 0.5rem;
-        padding: 0.75rem;
-        border-radius: 4px;
-        font-size: 0.9rem;
-        line-height: 1.5;
-    }
-    
-    .custom-api-test-success {
-        background-color: rgba(0, 128, 0, 0.1);
-        color: var(--vscode-testing-iconPassed);
-        border: 1px solid var(--vscode-testing-iconPassed);
-    }
-    
-    .custom-api-test-error {
-        background-color: rgba(255, 0, 0, 0.1);
-        color: var(--vscode-testing-iconFailed);
-        border: 1px solid var(--vscode-testing-iconFailed);
-    }
-    
-    .custom-api-test-loading {
-        color: var(--vscode-foreground);
-        opacity: 0.7;
-    }
-    
-    /* Test result formatting */
-    .test-result-header {
-        font-weight: 600;
-        font-size: 1rem;
-        margin-bottom: 0.75rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 1px solid currentColor;
-        opacity: 0.9;
-    }
-    
-    .test-result-section {
-        margin-bottom: 0.5rem;
-    }
-    
-    .test-result-row {
+
+    /* Compact Preset Toolbar */
+    .custom-preset-toolbar {
         display: flex;
-        gap: 1rem;
-        margin-bottom: 0.5rem;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.15));
         flex-wrap: wrap;
     }
-    
-    .test-result-item {
-        flex: 1;
-        min-width: 150px;
+
+    .custom-preset-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        color: var(--vscode-descriptionForeground);
     }
-    
-    .test-result-label {
+
+    .custom-preset-chips {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .custom-preset-btn {
+        padding: 2px 10px;
+        font-size: 11px;
         font-weight: 500;
-        opacity: 0.8;
-        font-size: 0.85rem;
-        display: block;
-        margin-bottom: 0.15rem;
+        height: 26px;
+        border-radius: 4px;
+        border: 1px solid var(--vscode-input-border, rgba(128, 128, 128, 0.25));
+        background: var(--vscode-editor-background);
+        color: var(--vscode-foreground);
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
     }
-    
-    .test-result-value {
+
+    .custom-preset-btn:hover {
+        border-color: var(--vscode-focusBorder);
+        background: var(--vscode-list-hoverBackground);
+    }
+
+    .custom-preset-btn:active {
+        transform: translateY(1px);
+    }
+
+    /* Responsive Grid Rows */
+    .custom-form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+
+    .custom-form-row.endpoint-row {
+        grid-template-columns: 2fr 1fr;
+        margin-bottom: 2px;
+    }
+
+    .custom-form-row.auth-row {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .custom-form-row.formats-row {
+        grid-template-columns: 1fr 1fr 1.2fr;
+    }
+
+    @media (max-width: 520px) {
+        .custom-form-row,
+        .custom-form-row.endpoint-row,
+        .custom-form-row.auth-row,
+        .custom-form-row.formats-row {
+            grid-template-columns: 1fr;
+            gap: 6px;
+        }
+    }
+
+    /* Compact Inline Target URL */
+    .custom-url-inline-preview {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        margin-bottom: 12px;
+        margin-top: 2px;
+        color: var(--vscode-descriptionForeground);
+    }
+
+    .preview-tag {
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .compact-url-code {
         font-family: var(--vscode-editor-font-family, monospace);
-        opacity: 1;
+        font-size: 11px;
+        color: var(--vscode-textLink-foreground);
         word-break: break-all;
     }
-    
-    .test-result-format {
-        display: inline-block;
-        padding: 0.15rem 0.4rem;
-        background-color: rgba(255, 255, 255, 0.1);
-        border-radius: 3px;
-        font-size: 0.85rem;
+
+    /* Test Connection Actions */
+    .custom-test-section {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.15));
     }
-    
-    .test-result-path {
-        font-size: 0.85rem;
-        background-color: rgba(255, 255, 255, 0.05);
-        padding: 0.25rem 0.4rem;
-        border-radius: 3px;
-        display: inline-block;
+
+    .custom-test-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
     }
-    
-    .test-result-preview {
+
+    .custom-test-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 500;
+        padding: 5px 12px;
+        cursor: pointer;
+        height: 28px;
+        font-size: 12px;
+    }
+
+    .test-hint-text {
+        font-size: 11px;
+        color: var(--vscode-descriptionForeground);
+    }
+
+    /* Diagnostics & Test Results */
+    .custom-api-test-result {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        line-height: 1.4;
+        animation: testFadeIn 0.2s ease;
+    }
+
+    @keyframes testFadeIn {
+        from { opacity: 0; transform: translateY(-3px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .custom-api-test-loading {
+        background-color: var(--vscode-editor-inactiveSelectionBackground, rgba(128, 128, 128, 0.1));
+        border: 1px dashed var(--vscode-focusBorder);
+    }
+
+    .test-loading-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--vscode-foreground);
+        font-size: 12px;
+    }
+
+    .test-spinner {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border: 2px solid var(--vscode-focusBorder);
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: testSpin 0.8s linear infinite;
+    }
+
+    @keyframes testSpin {
+        100% { transform: rotate(360deg); }
+    }
+
+    .custom-api-test-success {
+        background-color: rgba(46, 160, 67, 0.1);
+        border: 1px solid var(--vscode-testing-iconPassed, #2ea043);
+    }
+
+    .custom-api-test-error {
+        background-color: rgba(248, 81, 73, 0.1);
+        border: 1px solid var(--vscode-testing-iconFailed, #f85149);
+    }
+
+    /* Diagnostic Card Header & Pills */
+    .test-result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        padding-bottom: 0.6rem;
+        border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+        margin-bottom: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .test-result-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .test-status-badge {
+        font-weight: 700;
+        font-size: 0.88rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .test-status-badge.success {
+        color: var(--vscode-testing-iconPassed, #2ea043);
+    }
+
+    .test-status-badge.error {
+        color: var(--vscode-testing-iconFailed, #f85149);
+    }
+
+    .test-result-endpoint {
+        font-family: var(--vscode-editor-font-family, monospace);
+        font-size: 0.78rem;
+        opacity: 0.85;
+        word-break: break-all;
+    }
+
+    .test-status-pill {
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .test-status-pill.success {
+        background: rgba(46, 160, 67, 0.2);
+        color: var(--vscode-testing-iconPassed, #2ea043);
+        border: 1px solid rgba(46, 160, 67, 0.4);
+    }
+
+    .test-status-pill.error {
+        background: rgba(248, 81, 73, 0.2);
+        color: var(--vscode-testing-iconFailed, #f85149);
+        border: 1px solid rgba(248, 81, 73, 0.4);
+    }
+
+    /* KPI Row & Metric Chips */
+    .test-kpi-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .test-kpi-chip {
+        background: var(--vscode-editor-background, rgba(0, 0, 0, 0.2));
+        border: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.15));
+        border-radius: 4px;
+        padding: 0.4rem 0.6rem;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .kpi-label {
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--vscode-descriptionForeground);
+    }
+
+    .kpi-value {
         font-size: 0.85rem;
-        font-style: italic;
-        opacity: 0.9;
-        margin-top: 0.25rem;
-        display: block;
-        padding: 0.4rem;
-        background-color: rgba(255, 255, 255, 0.05);
-        border-radius: 3px;
-        border-left: 2px solid currentColor;
+        font-weight: 600;
+        font-family: var(--vscode-editor-font-family, monospace);
+        color: var(--vscode-foreground);
+    }
+
+    .kpi-value.fast {
+        color: var(--vscode-testing-iconPassed, #2ea043);
+    }
+
+    .kpi-value.medium {
+        color: var(--vscode-editorWarning-foreground, #cca700);
+    }
+
+    .kpi-value.slow {
+        color: var(--vscode-testing-iconFailed, #f85149);
+    }
+
+    .kpi-value.format {
+        text-transform: capitalize;
+    }
+
+    /* Diagnostics Table & Rows */
+    .test-diagnostics-table {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        font-size: 0.8rem;
+    }
+
+    .test-diagnostic-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.35rem 0.5rem;
+        background: var(--vscode-editor-background, rgba(0, 0, 0, 0.15));
+        border-radius: 4px;
+    }
+
+    .test-diagnostic-row.preview-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.35rem;
+    }
+
+    .diagnostic-label {
+        color: var(--vscode-descriptionForeground);
+        font-weight: 500;
+        font-size: 0.74rem;
+    }
+
+    .diagnostic-code {
+        font-family: var(--vscode-editor-font-family, monospace);
+        font-size: 0.78rem;
+        color: var(--vscode-foreground);
+    }
+
+    .diagnostic-code.highlight {
+        color: var(--vscode-textLink-foreground);
+        font-weight: 600;
+    }
+
+    .diagnostic-preview {
+        width: 100%;
+        box-sizing: border-box;
+        font-family: var(--vscode-editor-font-family, monospace);
+        font-size: 0.78rem;
+        padding: 0.4rem 0.6rem;
+        background: var(--vscode-textCodeBlock-background, rgba(0, 0, 0, 0.25));
+        border-radius: 4px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 120px;
+        overflow-y: auto;
+    }
+
+    /* Error Details & Solution Hints */
+    .test-error-body {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 0.4rem;
+    }
+
+    .test-error-message {
+        font-family: var(--vscode-editor-font-family, monospace);
+        font-size: 0.78rem;
+        color: var(--vscode-foreground);
+        background: var(--vscode-editor-background, rgba(0, 0, 0, 0.2));
+        padding: 0.5rem 0.75rem;
+        border-radius: 4px;
+        border-left: 3px solid var(--vscode-testing-iconFailed, #f85149);
+        word-break: break-word;
+    }
+
+    .test-error-hint {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        background: rgba(234, 179, 8, 0.1);
+        border: 1px solid rgba(234, 179, 8, 0.3);
+        border-radius: 4px;
+        color: var(--vscode-foreground);
+    }
+
+    .hint-icon {
+        font-size: 0.95rem;
+        line-height: 1.2;
+    }
+
+    .hint-content {
+        font-size: 0.78rem;
+        line-height: 1.4;
+    }
+
+    /* Custom Guidelines Collapsible */
+    .custom-guidelines-details {
+        margin-top: 1rem;
+        font-size: 0.82rem;
+        border: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.2));
+        border-radius: 6px;
+        padding: 0.5rem 0.75rem;
+        background: var(--vscode-editor-background, rgba(0, 0, 0, 0.1));
+    }
+
+    .custom-guidelines-details summary {
+        cursor: pointer;
+        font-weight: 500;
+        color: var(--vscode-textLink-foreground);
+    }
+
+    .guidelines-content {
+        margin-top: 0.5rem;
+        font-size: 0.78rem;
+        color: var(--vscode-foreground);
+        line-height: 1.5;
+    }
+
+    .guidelines-content ul {
+        padding-left: 1.2rem;
+        margin: 0.4rem 0 0 0;
+    }
+
+    .guidelines-content li {
+        margin-bottom: 0.25rem;
     }
     
     /* Show/hide header key field based on auth type */

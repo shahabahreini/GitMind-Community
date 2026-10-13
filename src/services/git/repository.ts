@@ -250,8 +250,9 @@ export async function getDiff(workspaceFolder: vscode.WorkspaceFolder, repositor
 export async function getDiffInput(workspaceFolder: vscode.WorkspaceFolder, repositoryRoot?: string, context?: RequestContext): Promise<DiffSpool> {
     const repoRoot = repositoryRoot || await validateGitRepository(workspaceFolder);
     const config = vscode.workspace.getConfiguration("gitmind");
-    const captureAllChanges = config.get<boolean>("commit.captureAllChanges", false);
-    const excludePatterns = config.get<string[]>("commit.excludeFiles", []);
+    const testSettings = (globalThis as any).__generationSettings;
+    const captureAllChanges = testSettings && "commit.captureAllChanges" in testSettings ? Boolean(testSettings["commit.captureAllChanges"]) : config.get<boolean>("commit.captureAllChanges", false);
+    const excludePatterns = testSettings && "commit.excludeFiles" in testSettings ? testSettings["commit.excludeFiles"] : config.get<string[]>("commit.excludeFiles", []);
     const excludeArgs = diffPathspec(excludePatterns, []);
     const signal = context?.signal;
     signal?.throwIfAborted();

@@ -122,6 +122,7 @@ export class OnboardingTemplateGenerator {
             { id: 'groq', category: 'Alternative', tier: 'Free Tier', desc: 'Fast inference for open models' },
             { id: 'nvidia', category: 'Alternative', tier: 'Free Tier', desc: 'Hosted NVIDIA NIM models' },
             { id: 'ollamacloud', category: 'Alternative', tier: 'Free Tier', desc: 'Hosted cloud models from Ollama' },
+            { id: 'inception', category: 'Alternative', tier: 'Free Tier', desc: 'Fast diffusion-based reasoning and code models' },
 
             // Aggregators
             { id: 'together', category: 'Aggregator', tier: 'Paid', desc: 'Access multiple open-source models' },

@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 // Core types
-export type ApiProvider = "gemini" | "huggingface" | "ollama" | "ollamacloud" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic" | "minimax" | "copilot" | "deepseek" | "grok" | "groq" | "perplexity" | "zai" | "nvidia" | "lmstudio" | "azureopenai" | "bedrock" | "vertexai" | "cloudflare" | "custom";
+export type ApiProvider = "gemini" | "huggingface" | "ollama" | "ollamacloud" | "inception" | "mistral" | "cohere" | "openai" | "together" | "openrouter" | "anthropic" | "minimax" | "copilot" | "deepseek" | "grok" | "groq" | "perplexity" | "zai" | "nvidia" | "lmstudio" | "azureopenai" | "bedrock" | "vertexai" | "cloudflare" | "custom";
 export type CommitStyle =
     | 'basic'
     | 'conventional'
@@ -85,6 +85,8 @@ export type GeminiModel =
 
 export type AnthropicModel =
     | "claude-sonnet-5" | "claude-opus-5-5" | "claude-fable-5-1" | "claude-haiku-4-5";
+
+export type InceptionModel = "mercury-2.5" | "mercury-2" | string;
 
 export type MiniMaxModel = "MiniMax-M3" | "MiniMax-M2.7" | "MiniMax-M2.7-highspeed" | "MiniMax-M2.5" | "MiniMax-M2.5-highspeed" | "MiniMax-M2";
 
@@ -182,6 +184,10 @@ export interface OllamaApiConfig extends BaseApiConfig {
 
 export interface OllamaCloudApiConfig extends ApiKeyConfig {
     type: "ollamacloud";
+}
+
+export interface InceptionApiConfig extends ApiKeyConfig {
+    type: "inception";
 }
 
 export interface MistralApiConfig extends ApiKeyConfig {
@@ -291,7 +297,7 @@ export interface CustomApiConfig extends BaseApiConfig {
 }
 
 export type ApiConfig =
-    | GeminiApiConfig | HuggingFaceApiConfig | OllamaApiConfig | OllamaCloudApiConfig | MistralApiConfig
+    | GeminiApiConfig | HuggingFaceApiConfig | OllamaApiConfig | OllamaCloudApiConfig | InceptionApiConfig | MistralApiConfig
     | CohereApiConfig | OpenAIApiConfig | TogetherApiConfig | OpenRouterApiConfig
     | AnthropicApiConfig | MiniMaxApiConfig | CopilotApiConfig | DeepSeekApiConfig | GrokApiConfig
     | GroqApiConfig | PerplexityApiConfig | ZaiApiConfig | NvidiaApiConfig | LMStudioApiConfig

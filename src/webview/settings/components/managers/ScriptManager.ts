@@ -512,6 +512,12 @@ export class ScriptManager {
                         name: 'NVIDIA',
                         loadingFlag: 'nvidiaModelsLoading',
                         dropdownId: 'nvidiaModelDropdown'
+                    },
+                    {
+                        buttonId: 'loadInceptionModels',
+                        commandId: 'gitmind.loadInceptionModels',
+                        name: 'Inception',
+                        loadingFlag: 'inceptionModelsLoading'
                     }
                 ];
 

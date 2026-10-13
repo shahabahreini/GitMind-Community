@@ -16,6 +16,73 @@ function getCustomApiHandlerScript(): string {
     function initCustomApiHandler(vscode) {
       // Find the test connection button
       const testButton = document.getElementById('customTestConnection');
+
+      // Helper to update live target URL preview
+      function updateLiveUrlPreview() {
+        const base = document.getElementById('customBaseUrl')?.value?.trim() || '';
+        const ep = document.getElementById('customEndpoint')?.value?.trim() || '';
+        const previewEl = document.getElementById('customLiveUrlPreview');
+        if (previewEl) {
+          previewEl.textContent = (base || 'https://api.example.com') + (ep || '/v1/chat/completions');
+        }
+      }
+
+      // Helper to toggle header key container visibility
+      function updateHeaderKeyVisibility() {
+        const authTypeSelector = document.getElementById('customAuthType');
+        const container = document.getElementById('customHeaderKeyContainer') || document.getElementById('customHeaderKey')?.closest('.form-group');
+        if (authTypeSelector && container) {
+          const isApiKey = authTypeSelector.value === 'apikey';
+          container.classList.toggle('hidden', !isApiKey);
+          container.style.display = isApiKey ? 'block' : 'none';
+        }
+      }
+
+      // Live URL preview listeners
+      document.getElementById('customBaseUrl')?.addEventListener('input', updateLiveUrlPreview);
+      document.getElementById('customEndpoint')?.addEventListener('input', updateLiveUrlPreview);
+
+      // Auth type change listener
+      const authTypeSelector = document.getElementById('customAuthType');
+      if (authTypeSelector) {
+        authTypeSelector.addEventListener('change', updateHeaderKeyVisibility);
+      }
+      updateHeaderKeyVisibility();
+      updateLiveUrlPreview();
+
+      // Quick presets buttons
+      const presetBtns = document.querySelectorAll('.custom-preset-btn');
+      presetBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const base = btn.getAttribute('data-base');
+          const ep = btn.getAttribute('data-endpoint');
+          const auth = btn.getAttribute('data-auth');
+          const header = btn.getAttribute('data-header') || '';
+          const model = btn.getAttribute('data-model');
+          const req = btn.getAttribute('data-req');
+          const res = btn.getAttribute('data-res');
+
+          const baseEl = document.getElementById('customBaseUrl');
+          const epEl = document.getElementById('customEndpoint');
+          const authEl = document.getElementById('customAuthType');
+          const headerEl = document.getElementById('customHeaderKey');
+          const modelEl = document.getElementById('customModel');
+          const reqEl = document.getElementById('customRequestFormat');
+          const resEl = document.getElementById('customResponseFormat');
+
+          if (baseEl && base) { baseEl.value = base; baseEl.dispatchEvent(new Event('input', { bubbles: true })); }
+          if (epEl && ep) { epEl.value = ep; epEl.dispatchEvent(new Event('input', { bubbles: true })); }
+          if (authEl && auth) { authEl.value = auth; authEl.dispatchEvent(new Event('change', { bubbles: true })); }
+          if (headerEl) { headerEl.value = header; headerEl.dispatchEvent(new Event('input', { bubbles: true })); }
+          if (modelEl && model) { modelEl.value = model; modelEl.dispatchEvent(new Event('input', { bubbles: true })); }
+          if (reqEl && req) { reqEl.value = req; reqEl.dispatchEvent(new Event('change', { bubbles: true })); }
+          if (resEl && res) { resEl.value = res; resEl.dispatchEvent(new Event('change', { bubbles: true })); }
+
+          updateLiveUrlPreview();
+          updateHeaderKeyVisibility();
+        });
+      });
+
       if (!testButton) {
         return;
       }
@@ -53,12 +120,13 @@ function getCustomApiHandlerScript(): string {
         }
         
         // Show loading state
+        resultDiv.classList.remove('hidden');
         resultDiv.className = 'custom-api-test-result custom-api-test-loading';
-        resultDiv.textContent = 'Testing connection...';
+        resultDiv.innerHTML = '<div class="test-loading-row"><span class="test-spinner"></span><span>Verifying endpoint connection and measuring latency...</span></div>';
         
         // Disable the button during testing
         testButton.disabled = true;
-        testButton.textContent = 'Testing...';
+        testButton.innerHTML = '<span class="test-spinner"></span> Testing...';
         
         try {
           // Send message to extension
@@ -69,11 +137,11 @@ function getCustomApiHandlerScript(): string {
         } catch (error) {
           // Handle error directly in UI
           resultDiv.className = 'custom-api-test-result custom-api-test-error';
-          resultDiv.textContent = \`Error: \${error.message || 'Failed to send test request'}\`;
+          resultDiv.innerHTML = \`<div class="test-result-header error"><span class="test-status-badge error">Client Error</span></div><div class="test-error-body">\${error.message || 'Failed to send test request'}</div>\`;
           
           // Re-enable the button
           testButton.disabled = false;
-          testButton.textContent = 'Test Connection';
+          testButton.innerHTML = 'Test Connection';
         }
       });
       
@@ -95,6 +163,7 @@ function getCustomApiHandlerScript(): string {
             }
           }
           
+          resultDiv.classList.remove('hidden');
           // Update UI based on success or failure
           if (message.success) {
             resultDiv.className = 'custom-api-test-result custom-api-test-success';
@@ -102,40 +171,16 @@ function getCustomApiHandlerScript(): string {
             resultDiv.className = 'custom-api-test-result custom-api-test-error';
           }
           
-          // Use innerHTML for success messages (formatted HTML), textContent for errors (plain text)
-          if (message.success) {
-            resultDiv.innerHTML = message.message;
-          } else {
-            resultDiv.textContent = message.message;
-          }
+          resultDiv.innerHTML = message.message;
           
           // Re-enable the test button
           const testButton = document.getElementById('customTestConnection');
           if (testButton) {
             testButton.disabled = false;
-            testButton.textContent = 'Test Connection';
+            testButton.innerHTML = 'Test Connection';
           }
         }
       });
-      
-      // Also add change handlers to show/hide header key field based on auth type
-      const authTypeSelector = document.getElementById('customAuthType');
-      if (authTypeSelector) {
-        const headerKeyField = document.getElementById('customHeaderKey')?.closest('.form-group') || null;
-        
-        // Initial state
-        if (headerKeyField) {
-          headerKeyField.classList.toggle('header-key-field', true);
-          headerKeyField.style.display = authTypeSelector.value === 'apikey' ? 'block' : 'none';
-        }
-        
-        // Change handler
-        authTypeSelector.addEventListener('change', () => {
-          if (headerKeyField) {
-            headerKeyField.style.display = authTypeSelector.value === 'apikey' ? 'block' : 'none';
-          }
-        });
-      }
     }
   `;
 }

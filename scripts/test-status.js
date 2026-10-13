@@ -43,6 +43,7 @@ const testSuites = [
       "Ollama",
       "Ollama Cloud",
       "GitHub Copilot",
+      "Inception Labs",
     ],
   },
   {

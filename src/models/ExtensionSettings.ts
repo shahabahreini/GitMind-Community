@@ -34,6 +34,10 @@ export interface ExtensionSettings {
         apiKey: string;
         model: string;
     };
+    inception?: {
+        apiKey: string;
+        model: string;
+    };
     mistral: {
         apiKey: string;
         model: string;

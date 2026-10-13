@@ -275,9 +275,133 @@ export class ModelSettingsRenderer extends BaseRenderer {
             `;
         }
 
+        if (provider.id === 'custom') {
+            return this.renderCustomProviderSettings(provider, providerSettings, isVisible);
+        }
+
         return `
             <div id="${provider.id}Settings" class="api-settings ${isVisible ? '' : 'hidden'}">
                 ${provider.fields.map((field: any) => this.renderProviderField(field, providerSettings)).join('')}
+            </div>
+        `;
+    }
+
+    private renderCustomProviderSettings(_provider: any, providerSettings: any, isVisible: boolean): string {
+        const baseUrl = providerSettings?.baseUrl || 'https://api.openai.com';
+        const endpoint = providerSettings?.endpoint || '/v1/chat/completions';
+        const authType = providerSettings?.authType || 'bearer';
+        const authToken = providerSettings?.authToken || '';
+        const headerKey = providerSettings?.headerKey || '';
+        const requestFormat = providerSettings?.requestFormat || 'openai';
+        const responseFormat = providerSettings?.responseFormat || 'openai';
+        const model = providerSettings?.model || '';
+
+        const openaiPresetModel = getProviderDefaultModel('openai');
+        const anthropicPresetModel = getProviderDefaultModel('anthropic');
+        const inceptionPresetModel = getProviderDefaultModel('inception');
+
+        return `
+            <div id="customSettings" class="api-settings custom-api-settings-panel ${isVisible ? '' : 'hidden'}">
+                <!-- Preset Quick Selection Bar -->
+                <div class="custom-preset-toolbar">
+                    <span class="custom-preset-label">Templates:</span>
+                    <div class="custom-preset-chips">
+                        <button type="button" class="custom-preset-btn" data-preset="openai"
+                            data-base="https://api.openai.com" data-endpoint="/v1/chat/completions"
+                            data-auth="bearer" data-model="${openaiPresetModel}" data-req="openai" data-res="openai">
+                            OpenAI
+                        </button>
+                        <button type="button" class="custom-preset-btn" data-preset="anthropic"
+                            data-base="https://api.anthropic.com" data-endpoint="/v1/messages"
+                            data-auth="apikey" data-header="x-api-key" data-model="${anthropicPresetModel}" data-req="anthropic" data-res="anthropic">
+                            Anthropic
+                        </button>
+                        <button type="button" class="custom-preset-btn" data-preset="inception"
+                            data-base="https://api.inceptionlabs.ai" data-endpoint="/v1/chat/completions"
+                            data-auth="bearer" data-model="${inceptionPresetModel}" data-req="openai" data-res="openai">
+                            Inception Labs
+                        </button>
+                        <button type="button" class="custom-preset-btn" data-preset="local"
+                            data-base="http://localhost:11434" data-endpoint="/v1/chat/completions"
+                            data-auth="none" data-model="llama3" data-req="openai" data-res="openai">
+                            Local (vLLM / Ollama)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Endpoint Row -->
+                <div class="custom-form-row endpoint-row">
+                    ${FormUtils.createTextField('customBaseUrl', 'Base URL', 'Root URL of custom inference provider (e.g. https://api.openai.com)', baseUrl, 'https://api.example.com')}
+                    ${FormUtils.createTextField('customEndpoint', 'Endpoint Path', 'Route for chat completions (e.g. /v1/chat/completions)', endpoint, '/v1/chat/completions')}
+                </div>
+                <div class="custom-url-inline-preview">
+                    <span class="preview-tag">Target:</span>
+                    <code id="customLiveUrlPreview" class="compact-url-code">${baseUrl}${endpoint}</code>
+                </div>
+
+                <!-- Authentication Row -->
+                <div class="custom-form-row auth-row">
+                    ${FormUtils.createFormGroup(
+                        'Authentication Type',
+                        'Authentication method for your API',
+                        FormUtils.createSearchableSelect('customAuthType', [
+                            { value: 'bearer', label: 'Bearer Token (Authorization: Bearer ...)', selected: authType === 'bearer' },
+                            { value: 'apikey', label: 'API Key (Custom Header)', selected: authType === 'apikey' },
+                            { value: 'basic', label: 'Basic Authentication (Username/Password)', selected: authType === 'basic' },
+                            { value: 'none', label: 'No Authentication (Local/Intranet)', selected: authType === 'none' }
+                        ], 'Select authentication type...')
+                    )}
+                    ${FormUtils.createPasswordField('customAuthToken', 'Authentication Token', 'Your API key or token (encrypted via VS Code SecretStorage)', authToken)}
+                </div>
+                <div id="customHeaderKeyContainer" class="header-key-field ${authType === 'apikey' ? '' : 'hidden'}">
+                    ${FormUtils.createTextField('customHeaderKey', 'Header Key Name', 'Custom header key (e.g. x-api-key or Authorization)', headerKey, 'X-API-Key')}
+                </div>
+
+                <!-- Formats & Model Row -->
+                <div class="custom-form-row formats-row">
+                    ${FormUtils.createFormGroup(
+                        'Request Format',
+                        'Request payload schema',
+                        FormUtils.createSearchableSelect('customRequestFormat', [
+                            { value: 'openai', label: 'OpenAI-compatible', selected: requestFormat === 'openai' },
+                            { value: 'anthropic', label: 'Anthropic-compatible', selected: requestFormat === 'anthropic' },
+                            { value: 'custom', label: 'Custom Template', selected: requestFormat === 'custom' }
+                        ], 'Select request format...')
+                    )}
+                    ${FormUtils.createFormGroup(
+                        'Response Format',
+                        'Response JSON parsing schema',
+                        FormUtils.createSearchableSelect('customResponseFormat', [
+                            { value: 'openai', label: 'OpenAI-compatible', selected: responseFormat === 'openai' },
+                            { value: 'anthropic', label: 'Anthropic-compatible', selected: responseFormat === 'anthropic' },
+                            { value: 'custom', label: 'Custom JSON Path', selected: responseFormat === 'custom' }
+                        ], 'Select response format...')
+                    )}
+                    ${FormUtils.createTextField('customModel', 'Model Identifier', 'Model ID sent in payload (e.g. gpt-4o, mercury-2.5)', model, 'e.g., gpt-4o or mercury-2.5')}
+                </div>
+
+                <!-- Test Connection & Diagnostics -->
+                <div class="custom-test-section">
+                    <div class="custom-test-actions">
+                        <button type="button" id="customTestConnection" class="btn btn-primary custom-test-btn">
+                            Test Connection
+                        </button>
+                        <span class="test-hint-text">Validates round-trip connectivity, latency, and response parsing</span>
+                    </div>
+                    <div id="customApiTestResult" class="custom-api-test-result hidden" aria-live="polite"></div>
+                </div>
+
+                <details class="custom-guidelines-details">
+                    <summary>Custom API Guidelines & Variables</summary>
+                    <div class="guidelines-content">
+                        <p>Custom API integration allows connecting GitMind to any OpenAI-compatible, Anthropic-compatible, or private inference server.</p>
+                        <ul>
+                            <li><strong>Placeholder Variables</strong>: You can use <code>{{model}}</code>, <code>{{prompt}}</code>, and <code>{{messages}}</code> in custom request formats.</li>
+                            <li><strong>Response Extraction</strong>: Specify known formats (<code>openai</code>, <code>anthropic</code>) or dot/bracket path notations like <code>choices[0].message.content</code> or <code>candidates[0].content.parts[0].text</code>.</li>
+                            <li><strong>Security</strong>: Authentication credentials are encrypted in your OS keychain via VS Code SecretStorage and never shared.</li>
+                        </ul>
+                    </div>
+                </details>
             </div>
         `;
     }

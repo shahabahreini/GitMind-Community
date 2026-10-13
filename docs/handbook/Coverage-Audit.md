@@ -8,9 +8,9 @@ This page records the public surface checked directly against the current `packa
 
 | Surface | GitMind 6.4.1 |
 | --- | ---: |
-| Provider choices | 24: 23 built-in plus Pro Custom API |
-| Registered settings | 129 |
-| User-documentable settings | 101 |
+| Provider choices | 25: 24 built-in plus Pro Custom API |
+| Registered settings | 134 |
+| User-documentable settings | 124 |
 | Registered commands | 55 |
 | Supported public commands | 44 |
 | Commit styles | 12 |
@@ -18,7 +18,7 @@ This page records the public surface checked directly against the current `packa
 
 ## User-Facing Settings
 
-- Model Settings: provider selection, all 23 built-in provider key/model/endpoint fields, Custom API, model loading, API checks, and rate-limit checks.
+- Model Settings: provider selection, all 24 built-in provider key/model/endpoint fields, Custom API, model loading, API checks, and rate-limit checks.
 - Free Features: verbose output, Capture All Changes, custom context/saved prompt behavior, diagnostics, onboarding, and the default-off Commit Intelligence (Preview) controls.
 - Commit Styles: all 12 styles and all Emoji Enhancement settings.
 - Pro Features: encryption, target language, summary/body limits, advanced model parameters, Automatic Recovery, history learning, changelog settings, large-diff handling, and sanitized Support Reports.
@@ -47,4 +47,4 @@ Internal status, migration, test, and debug-state commands are intentionally not
 - Sanitized contract: `docs/reference/gitmind-user-surface.json`
 - Screenshots: current files under `images/screenshots/`
 
-The provider selector exposes 24 choices: 23 built-in providers plus the Pro-only Custom API provider.
+The provider selector exposes 25 choices: 24 built-in providers plus the Pro-only Custom API provider.

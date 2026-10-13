@@ -9,6 +9,7 @@ import { validatePerplexityAPIKey } from "./perplexity";
 import { validateZaiAPIKey } from "./zai";
 import { validateMiniMaxAPIKey } from "./minimax";
 import { validateOllamaCloudAPIKey } from "./ollamacloud";
+import { validateInceptionAPIKey } from "./inception";
 import { validateNvidiaAPIKey } from "./nvidia";
 import { LMStudioProvider } from "./lmstudio";
 import { AzureOpenAIProvider } from "./azureopenai";
@@ -206,6 +207,17 @@ const VALIDATOR_CONFIGS: Record<string, ValidatorConfig> = {
             limit: 0,
             remaining: 0,
             notes: "Ollama Cloud limits depend on your account tier and plan"
+        }
+    },
+    inception: {
+        requiresApiKey: requiresApiKey("inception"),
+        validator: validateInceptionAPIKey,
+        defaultModel: getProviderDefaultModel("inception"),
+        responseTime: 300,
+        rateLimits: {
+            limit: 0,
+            remaining: 0,
+            notes: "Rate limits vary by Inception tier (Free / Pay-As-You-Go / Enterprise)"
         }
     },
     mistral: {

@@ -9,7 +9,8 @@ export function getModelHandlingScript(): string {
         'huggingface': 'loadHuggingFaceModels',
         'openrouter': 'loadOpenRouterModels',
         'minimax': 'loadMiniMaxModels',
-        'ollamacloud': 'loadOllamaCloudModels'
+        'ollamacloud': 'loadOllamaCloudModels',
+        'inception': 'loadInceptionModels'
       };
 
       // Use mapped ID if exists, otherwise use standard capitalization

@@ -34,7 +34,7 @@ suite("Large diff settings round trip", () => {
             assert.deepStrictEqual(after.pro?.largeDiffHandling, before.pro?.largeDiffHandling);
             after.pro!.largeDiffHandling = { enabled: true, chunkSize: NaN, batchSize: -2, concurrency: 1000 };
             await (SettingsManager as any).updateConfigurationSettings(config, after);
-            assert.deepStrictEqual(readLargeDiffSettings(config), { enabled: true, chunkSize: 1000, batchSize: 5, concurrency: 3 });
+            assert.deepStrictEqual(readLargeDiffSettings(config), { enabled: true, chunkSize: 1000, batchSize: 5, concurrency: 3, maxCalls: 6, perFileLines: 400, maxPromptTokens: 0 });
             const form = generateSettingsCollection();
             const script = getSettingsScript(after, "test-nonce");
             for (const id of ["largeDiffEnabled", "chunkSize", "batchSize", "largeDiffConcurrency"]) {

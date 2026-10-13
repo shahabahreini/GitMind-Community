@@ -34,6 +34,7 @@ export function getMessageHandlersScript(): string {
         huggingfaceModelsLoaded: () => handleAdvancedModelsLoaded('huggingface', message, ${JSON.stringify(DEFAULT_MODELS.huggingface)}, 2000),
         ollamaModelsLoaded: () => handleAdvancedModelsLoaded('ollama', message, [], 2000),
         ollamacloudModelsLoaded: () => handleModelsLoaded('ollamacloud', message, ${JSON.stringify(DEFAULT_MODELS.ollamacloud)}),
+        inceptionModelsLoaded: () => handleModelsLoaded('inception', message, ${JSON.stringify(DEFAULT_MODELS.inception)}),
         
         switchTab: () => {
           const tabId = message.tabId;
@@ -156,6 +157,7 @@ export function getMessageHandlersScript(): string {
         groq: 'Groq',
         perplexity: 'Perplexity',
         zai: 'Z.ai',
+        inception: 'Inception Labs',
         custom: 'Custom API'
       };
       return displayNames[provider] || provider;
@@ -459,15 +461,25 @@ export function getMessageHandlersScript(): string {
         const { status } = message;
         const detailed = message.detailedStatus;
         
-        const createProviderSection = (providers, title, iconClass) => {
+        const createProviderSection = (providers, title, type) => {
           if (providers.length === 0) return '';
-          
+          const isEncrypted = type === 'encrypted';
           return \`
             <div class="encryption-providers-section">
-              <h2 class="encryption-providers-title">\${title}</h2>
+              <div class="encryption-section-title">
+                <span>\${title}</span>
+                <span class="encryption-count-pill \${type}">\${providers.length}</span>
+              </div>
               <div class="encryption-providers-list">
                 \${providers.map(p => \`
-                  <span class="encryption-provider-tag \${iconClass}">\${p}</span>
+                  <span class="encryption-provider-chip \${type}">
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                      \${isEncrypted
+                        ? '<path d="M4 6V4a4 4 0 1 1 8 0v2h1a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h1zm2 0h4V4a2 2 0 1 0-4 0v2zm2 4a1.25 1.25 0 1 0 0 2.5A1.25 1.25 0 0 0 8 10z"/>'
+                        : '<path d="M11 1a3 3 0 0 0-3 3v2H3a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-1V4a1 1 0 0 1 2 0v1h2V4a3 3 0 0 0-3-3zM8 10a1.25 1.25 0 1 1 2.5 0A1.25 1.25 0 0 1 8 10z"/>'}
+                    </svg>
+                    <span>\${p}</span>
+                  </span>
                 \`).join('')}
               </div>
             </div>
@@ -477,77 +489,82 @@ export function getMessageHandlersScript(): string {
         const statusHtml = \`
           <div class="encryption-status-report">
             
-            <!-- Main Grid Layout -->
-            <div class="encryption-status-grid">
-              
-              <!-- Encryption Status Card -->
-              <div class="encryption-status-card">
-                <div class="encryption-status-card-header">
-                  <svg class="encryption-icon \${status.enabled ? '' : 'inactive'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="\${status.enabled ? 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' : 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'}"></path>
-                  </svg>
-                  <span class="encryption-status-card-title">Encryption: \${status.enabled ? 'Active' : 'Inactive'}</span>
-                </div>
-                <div class="encryption-status-card-subtitle">\${detailed.userType.toUpperCase()} USER</div>
+            <!-- Security Hero Banner -->
+            <div class="encryption-hero \${status.enabled ? 'hero-active' : 'hero-inactive'}">
+              <div class="encryption-hero-icon-container">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  \${status.enabled
+                    ? '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>'
+                    : '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'}
+                </svg>
               </div>
-
-              <!-- API Keys Card -->
-              <div class="encryption-status-card">
-                <div class="encryption-status-card-header">
-                  <svg class="key-icon \${detailed.totalProviders > 0 ? '' : 'empty'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1721 9z"></path>
-                  </svg>
-                  <span class="encryption-status-card-title">API Keys: \${detailed.totalProviders}</span>
+              <div class="encryption-hero-text">
+                <div class="encryption-hero-title-row">
+                  <span class="encryption-hero-title">\${status.enabled ? 'API Key Encryption Active' : 'API Key Encryption Inactive'}</span>
+                  <span class="encryption-tier-pill">\${detailed.userType.toUpperCase()} USER</span>
                 </div>
-                <div class="encryption-status-card-subtitle">\${detailed.encryptedProviders.length} Encrypted</div>
-              </div>
-
-              <!-- VS Code Version Card -->
-              <div class="encryption-status-card">
-                <div class="encryption-status-card-header">
-                  <svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
-                  </svg>
-                  <span class="encryption-status-card-title">VS Code: \${detailed.vscodeVersion}</span>
+                <div class="encryption-hero-desc">
+                  \${status.enabled
+                    ? 'Credentials are saved securely in SecretStorage via your operating system keychain.'
+                    : 'Credential encryption is currently inactive on this system.'}
                 </div>
               </div>
-
-              <!-- Status Card -->
-              <div class="encryption-status-card">
-                <div class="encryption-status-card-header">
-                  <svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  <span class="encryption-status-card-title">Status: \${status.available ? 'Available' : 'Unavailable'}</span>
-                </div>
-              </div>
-
             </div>
 
-            <!-- Status Details -->
+            <!-- 4 KPI Metrics Grid -->
+            <div class="encryption-kpi-grid">
+              <div class="encryption-kpi-card">
+                <span class="encryption-kpi-label">Status</span>
+                <span class="encryption-kpi-value \${status.enabled ? 'active' : 'inactive'}">
+                  \${status.enabled ? '● Active' : '○ Inactive'}
+                </span>
+              </div>
+              <div class="encryption-kpi-card">
+                <span class="encryption-kpi-label">Configured Keys</span>
+                <span class="encryption-kpi-value">\${detailed.totalProviders}</span>
+              </div>
+              <div class="encryption-kpi-card">
+                <span class="encryption-kpi-label">Encrypted Keys</span>
+                <span class="encryption-kpi-value active">\${detailed.encryptedProviders.length}</span>
+              </div>
+              <div class="encryption-kpi-card">
+                <span class="encryption-kpi-label">VS Code Engine</span>
+                <span class="encryption-kpi-value">\${detailed.vscodeVersion}</span>
+              </div>
+            </div>
+
+            <!-- Status Details / Diagnostics if available -->
             \${status.reason ? \`
               <div class="encryption-status-details">
                 <div class="encryption-status-details-header">
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
-                  <span class="encryption-status-details-title">Status Details</span>
+                  <span>Diagnostic Detail</span>
                 </div>
                 <div class="encryption-status-details-content">\${status.reason}</div>
               </div>
             \` : ''}
 
             <!-- Provider Lists -->
-            \${createProviderSection(detailed.encryptedProviders, 'Encrypted Providers', 'encrypted')}
-            \${createProviderSection(detailed.plainTextProviders, 'Plain Text Providers', 'plain-text')}
+            \${createProviderSection(detailed.encryptedProviders, 'Encrypted Provider Keys', 'encrypted')}
+            \${createProviderSection(detailed.plainTextProviders, 'Plain Text Provider Keys', 'plain-text')}
             
             \${detailed.totalProviders === 0 ? \`
               <div class="encryption-no-keys">
                 <div class="encryption-no-keys-icon">🔑</div>
-                <div class="encryption-no-keys-title">No API Keys Found</div>
-                <div class="encryption-no-keys-description">Configure your first API key to see encryption status</div>
+                <div class="encryption-no-keys-title">No API Keys Configured</div>
+                <div class="encryption-no-keys-description">Configure your provider API keys in Model Settings to enable encrypted storage.</div>
               </div>
             \` : ''}
+
+            <!-- Security Architecture Note -->
+            <div class="encryption-security-note">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm.75 4.75a.75.75 0 0 0-1.5 0v4.5a.75.75 0 0 0 1.5 0v-4.5zM8 12.2a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+              </svg>
+              <span>Protected by VS Code SecretStorage backed by macOS Keychain, Windows Credential Manager, or Linux Secret Service / Keyring.</span>
+            </div>
 
           </div>
         \`;

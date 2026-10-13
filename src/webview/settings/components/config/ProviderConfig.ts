@@ -235,6 +235,30 @@ export class ProviderConfig {
             ]
         },
         {
+            id: 'inception',
+            fields: [
+                {
+                    id: 'inceptionApiKey',
+                    key: 'apiKey',
+                    label: 'API Key',
+                    type: 'password',
+                    tooltip: 'Your Inception Labs API key for accessing the API',
+                    link: { url: 'https://platform.inceptionlabs.ai', text: 'Get an Inception API key' }
+                },
+                {
+                    id: 'inceptionModel',
+                    key: 'model',
+                    label: 'Model',
+                    type: 'model-with-load',
+                    tooltip: '',
+                    loadButtonText: 'Load Available Models',
+                    loadButtonId: 'loadInceptionModels',
+                    loadCommand: 'gitmind.loadInceptionModels',
+                    options: modelOptions('inception')
+                }
+            ]
+        },
+        {
             id: 'mistral',
             fields: [
                 {
