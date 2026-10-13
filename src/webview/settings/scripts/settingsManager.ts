@@ -126,7 +126,7 @@ function getCustomApiHandlerScript(): string {
         
         // Disable the button during testing
         testButton.disabled = true;
-        testButton.innerHTML = '<span class="test-btn-icon rotating">⏳</span> Testing...';
+        testButton.innerHTML = '<span class="test-spinner"></span> Testing...';
         
         try {
           // Send message to extension
@@ -137,11 +137,11 @@ function getCustomApiHandlerScript(): string {
         } catch (error) {
           // Handle error directly in UI
           resultDiv.className = 'custom-api-test-result custom-api-test-error';
-          resultDiv.innerHTML = \`<div class="test-result-header error"><span class="test-status-badge error">✕ Client Error</span></div><div class="test-error-body">\${error.message || 'Failed to send test request'}</div>\`;
+          resultDiv.innerHTML = \`<div class="test-result-header error"><span class="test-status-badge error">Client Error</span></div><div class="test-error-body">\${error.message || 'Failed to send test request'}</div>\`;
           
           // Re-enable the button
           testButton.disabled = false;
-          testButton.innerHTML = '<span class="test-btn-icon">⚡</span> Test Connection';
+          testButton.innerHTML = 'Test Connection';
         }
       });
       
@@ -177,7 +177,7 @@ function getCustomApiHandlerScript(): string {
           const testButton = document.getElementById('customTestConnection');
           if (testButton) {
             testButton.disabled = false;
-            testButton.innerHTML = '<span class="test-btn-icon">⚡</span> Test Connection';
+            testButton.innerHTML = 'Test Connection';
           }
         }
       });

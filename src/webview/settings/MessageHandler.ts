@@ -813,7 +813,7 @@ export class MessageHandler {
                         const messageHtml = `
                             <div class="test-result-header success">
                                 <div class="test-result-title">
-                                    <span class="test-status-badge success">✓ Connected</span>
+                                    <span class="test-status-badge success">Connected</span>
                                     <span class="test-result-endpoint">${baseUrl}${endpoint}</span>
                                 </div>
                                 <span class="test-status-pill success">HTTP ${status}</span>
@@ -906,7 +906,7 @@ export class MessageHandler {
                         const errorHtml = `
                             <div class="test-result-header error">
                                 <div class="test-result-title">
-                                    <span class="test-status-badge error">✕ ${errorTitle}</span>
+                                    <span class="test-status-badge error">${errorTitle}</span>
                                     <span class="test-result-endpoint">${baseUrl}${endpoint}</span>
                                 </div>
                                 <span class="test-status-pill error">Failed</span>
@@ -915,7 +915,11 @@ export class MessageHandler {
                                 <div class="test-error-message">${errorDetail.replace(/\n/g, '<br/>')}</div>
                                 ${hint ? `
                                     <div class="test-error-hint">
-                                        <span class="hint-icon">💡</span>
+                                        <svg class="hint-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                        </svg>
                                         <div class="hint-content">
                                             <strong>Suggested Solution:</strong> ${hint}
                                         </div>

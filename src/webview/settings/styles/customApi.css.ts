@@ -24,184 +24,163 @@ export function getCustomApiStyles(): string {
         margin-left: 0.5rem;
     }
 
-    /* Modern Card Layout */
+    /* Modern Flat Layout */
     .custom-api-settings-panel {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.25rem;
     }
 
-    .custom-card {
-        background: var(--vscode-editorWidget-background, rgba(30, 30, 30, 0.4));
-        border: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.2));
-        border-radius: 8px;
-        padding: 1rem 1.25rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        transition: border-color 0.2s ease;
-    }
-
-    .custom-card:hover {
-        border-color: var(--vscode-focusBorder, rgba(0, 122, 204, 0.4));
-    }
-
-    .custom-card-header {
+    /* Compact Preset Toolbar */
+    .custom-preset-toolbar {
         display: flex;
-        align-items: flex-start;
-        gap: 0.75rem;
-        margin-bottom: 0.85rem;
-        padding-bottom: 0.65rem;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
         border-bottom: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.15));
+        flex-wrap: wrap;
     }
 
-    .custom-card-icon {
-        font-size: 1.15rem;
-        line-height: 1.2;
-    }
-
-    .custom-card-title-group {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-    }
-
-    .custom-card-title {
-        font-size: 0.95rem;
+    .custom-preset-label {
+        font-size: 11px;
+        text-transform: uppercase;
         font-weight: 600;
-        color: var(--vscode-foreground);
-    }
-
-    .custom-card-desc {
-        font-size: 0.8rem;
+        letter-spacing: 0.5px;
         color: var(--vscode-descriptionForeground);
     }
 
-    .custom-card-content {
+    .custom-preset-chips {
         display: flex;
-        flex-direction: column;
-        gap: 0.85rem;
-    }
-
-    /* Quick Configuration Presets */
-    .custom-presets-card {
-        background: linear-gradient(135deg, rgba(0, 122, 204, 0.05), rgba(218, 165, 32, 0.05));
-        border-color: rgba(0, 122, 204, 0.25);
-    }
-
-    .custom-presets-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-        gap: 0.65rem;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
     }
 
     .custom-preset-btn {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 0.55rem 0.75rem;
-        border-radius: 6px;
+        padding: 2px 10px;
+        font-size: 11px;
+        font-weight: 500;
+        height: 26px;
+        border-radius: 4px;
         border: 1px solid var(--vscode-input-border, rgba(128, 128, 128, 0.25));
         background: var(--vscode-editor-background);
         color: var(--vscode-foreground);
         cursor: pointer;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        text-align: left;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
     }
 
     .custom-preset-btn:hover {
         border-color: var(--vscode-focusBorder);
         background: var(--vscode-list-hoverBackground);
-        transform: translateY(-1px);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
 
     .custom-preset-btn:active {
-        transform: translateY(0);
+        transform: translateY(1px);
     }
 
-    .custom-preset-btn .preset-name {
-        font-weight: 600;
-        font-size: 0.85rem;
-        color: var(--vscode-foreground);
+    /* Responsive Grid Rows */
+    .custom-form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 8px;
     }
 
-    .custom-preset-btn .preset-desc {
-        font-size: 0.72rem;
-        color: var(--vscode-descriptionForeground);
-        margin-top: 2px;
+    .custom-form-row.endpoint-row {
+        grid-template-columns: 2fr 1fr;
+        margin-bottom: 2px;
     }
 
-    /* Real-Time Live URL Preview */
-    .custom-target-preview {
+    .custom-form-row.auth-row {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .custom-form-row.formats-row {
+        grid-template-columns: 1fr 1fr 1.2fr;
+    }
+
+    @media (max-width: 520px) {
+        .custom-form-row,
+        .custom-form-row.endpoint-row,
+        .custom-form-row.auth-row,
+        .custom-form-row.formats-row {
+            grid-template-columns: 1fr;
+            gap: 6px;
+        }
+    }
+
+    /* Compact Inline Target URL */
+    .custom-url-inline-preview {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        background: var(--vscode-textCodeBlock-background, rgba(0, 0, 0, 0.15));
-        padding: 0.45rem 0.65rem;
-        border-radius: 4px;
-        border: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.2));
-        margin-top: 0.2rem;
-        overflow-x: auto;
+        gap: 6px;
+        font-size: 11px;
+        margin-bottom: 12px;
+        margin-top: 2px;
+        color: var(--vscode-descriptionForeground);
     }
 
-    .target-preview-label {
-        font-size: 0.72rem;
+    .preview-tag {
+        font-size: 10px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        color: var(--vscode-descriptionForeground);
-        white-space: nowrap;
     }
 
-    .target-preview-code {
+    .compact-url-code {
         font-family: var(--vscode-editor-font-family, monospace);
-        font-size: 0.82rem;
+        font-size: 11px;
         color: var(--vscode-textLink-foreground);
         word-break: break-all;
     }
 
     /* Test Connection Actions */
+    .custom-test-section {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.15));
+    }
+
     .custom-test-actions {
         display: flex;
         align-items: center;
-        gap: 0.85rem;
+        gap: 10px;
         flex-wrap: wrap;
     }
 
     .custom-test-btn {
         display: inline-flex;
         align-items: center;
-        gap: 0.4rem;
-        font-weight: 600;
-        padding: 6px 14px;
+        gap: 6px;
+        font-weight: 500;
+        padding: 5px 12px;
         cursor: pointer;
-    }
-
-    .test-btn-icon.rotating {
-        display: inline-block;
-        animation: testSpin 1s linear infinite;
-    }
-
-    @keyframes testSpin {
-        100% { transform: rotate(360deg); }
+        height: 28px;
+        font-size: 12px;
     }
 
     .test-hint-text {
-        font-size: 0.8rem;
+        font-size: 11px;
         color: var(--vscode-descriptionForeground);
     }
 
     /* Diagnostics & Test Results */
     .custom-api-test-result {
-        margin-top: 0.85rem;
-        padding: 0.85rem 1rem;
-        border-radius: 6px;
-        font-size: 0.85rem;
-        line-height: 1.5;
-        animation: testFadeIn 0.25s ease;
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        line-height: 1.4;
+        animation: testFadeIn 0.2s ease;
     }
 
     @keyframes testFadeIn {
-        from { opacity: 0; transform: translateY(-4px); }
+        from { opacity: 0; transform: translateY(-3px); }
         to { opacity: 1; transform: translateY(0); }
     }
 
@@ -213,18 +192,23 @@ export function getCustomApiStyles(): string {
     .test-loading-row {
         display: flex;
         align-items: center;
-        gap: 0.65rem;
+        gap: 8px;
         color: var(--vscode-foreground);
+        font-size: 12px;
     }
 
     .test-spinner {
         display: inline-block;
-        width: 14px;
-        height: 14px;
+        width: 12px;
+        height: 12px;
         border: 2px solid var(--vscode-focusBorder);
         border-top-color: transparent;
         border-radius: 50%;
         animation: testSpin 0.8s linear infinite;
+    }
+
+    @keyframes testSpin {
+        100% { transform: rotate(360deg); }
     }
 
     .custom-api-test-success {

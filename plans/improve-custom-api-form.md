@@ -1,210 +1,226 @@
-# Implementation Plan: Custom API Form, Pro Upgrade Screen, Encryption Report & Inception Model Loading
+# Final Implementation Plan: Compact, Clean, Emoji-Free Custom API Form
 
-## Executive Summary
-This implementation plan addresses four interconnected user requirements across GitMind Pro's settings and API management experiences:
-1. **Custom API Form & Connection Diagnostics**: Modernize the form layout with 3 semantic sections, one-click quick presets, real-time target URL resolution, inline connection testing, and a rich diagnostics panel (latency, HTTP status badges, format chips, and troubleshooting advice).
-2. **"Upgrade to GitMind Pro" Screen Audit & Redesign**: Eliminate the unreadable low-contrast "Already Purchased" disabled button (contrast ~1.4:1), replace it with a high-contrast active badge pill, eliminate duplicate bullet points (`• ✓`), and improve spacing and typography.
-3. **Encryption Status Report Overhaul**: Redesign the modal report from a nested double-bordered box into a modern security dashboard featuring a hero status shield, 4-metric KPI tiles, refined provider tags, and OS keychain assurance notes.
-4. **Fix Inception "Load Available Models"**: Wire `inception` into `ScriptManager.ts`'s `modelConfigs` array and `modelHandlers.ts` so the button listener is properly attached and model discovery functions seamlessly.
-
----
-
-## Architecture & Visual Hierarchy
-
-```mermaid
-flowchart TD
-    subgraph CustomAPI["1. Custom API Integration"]
-        Presets["Quick Presets Toolbar\n(OpenAI / vLLM / LM Studio / Claude)"]
-        Sections["Semantic Sections\n1. Endpoint & Server\n2. Authentication & Security\n3. Model & Payload Format"]
-        InlineTest["Inline Test Connection Button\n(In-flight loading state)"]
-        Diagnostics["Rich Diagnostics Card\n(Latency, Status Code, Format, Preview)"]
-        Presets --> Sections
-        Sections --> InlineTest --> Diagnostics
-    end
-
-    subgraph UpgradeScreen["2. Upgrade to GitMind Pro"]
-        Header["Subscription Header & Email Management"]
-        PlanCard["Elevated Plan Card\n- Single clean SVG checks (no double dots)\n- Clear hierarchy"]
-        ActivePill["High-Contrast Active Pill\n(Replaces unreadable 'Already Purchased' button)"]
-        PlanCard --> ActivePill
-    end
-
-    subgraph EncryptionReport["3. Encryption Status Report"]
-        HeroShield["Hero Security Banner & Shield"]
-        KPITiles["4-Tile Stat Grid\n- Encryption Mode\n- Key Count\n- Vault Engine\n- Keychain Health"]
-        ProviderChips["Refined Tag Badges\n(Encrypted vs Plaintext)"]
-        HeroShield --> KPITiles --> ProviderChips
-    end
-
-    subgraph InceptionFix["4. Inception Model Loading"]
-        ScriptMgr["ScriptManager.ts\n(modelConfigs: add Inception)"]
-        BtnListener["#loadInceptionModels click handler attached"]
-        Command["gitmind.loadInceptionModels registered command"]
-        ScriptMgr --> BtnListener --> Command
-    end
-```
+## 1. Metadata
+- **Objective**: Redesign the Custom API configuration interface in GitMind Pro settings webview to be compact, flat, clean, and native to VS Code with zero emojis and no nested card bloat.
+- **Status**: Reviewed and ready to execute
+- **Version**: 2.0.0
+- **Date**: 2026-10-13
+- **Author**: Antigravity (Pair Programming AI)
+- **Reviewer**: 360-expert-review
 
 ---
 
-## Detailed Specifications by Component
+## 2. Objective and Observable Definition of Done
+### Objective
+Transform the cluttered, bloated, emoji-heavy Custom API settings panel into a streamlined, flat, multi-column interface that feels native to VS Code, eliminates vertical scrolling bloat, removes all emojis, and keeps full functional parity and data persistence.
 
-### Part 1: Custom API Form & Test Diagnostics
-- **Semantic Sections in `ModelSettingsRenderer.ts`**:
-  - **Quick Presets Bar**:
-    - `OpenAI (Cloud)`: `https://api.openai.com`, `/v1/chat/completions`, `bearer`, format: `openai`, model: `gpt-4o`
-    - `Local vLLM / Ollama`: `http://localhost:11434`, `/v1/chat/completions`, `none`, format: `openai`, model: `llama3.2`
-    - `Local LM Studio`: `http://localhost:1234`, `/v1/chat/completions`, `none`, format: `openai`, model: `local-model`
-    - `Anthropic Proxy`: `https://api.anthropic.com`, `/v1/messages`, `apikey`, header: `x-api-key`, format: `anthropic`, model: `claude-3-5-sonnet-20241022`
-  - **Card 1: Server & Endpoint**:
-    - `customBaseUrl` + `customEndpoint` + live target URL resolution pill (`Target URL: https://api.openai.com/v1/chat/completions`).
-  - **Card 2: Authentication & Security**:
-    - `customAuthType` dropdown (`bearer`, `apikey`, `basic`, `none`).
-    - Dynamic conditional visibility: `customHeaderKey` displayed only when `apikey`. `customAuthToken` dimmed when `none`.
-  - **Card 3: Model & Protocol Templates**:
-    - `customModel` + `customRequestFormat` + `customResponseFormat` + collapsible template documentation.
-- **Inline Test Action & Rich Diagnostics Panel**:
-  - Located directly at the bottom of the Custom API form.
-  - Dedicated `#customTestConnection` button with network icon and spinning loader.
-  - In `MessageHandler.ts`: Return structured diagnostics (`status`, `duration`, `targetUrl`, `detectedFormat`, `suggestedPath`, `preview`, `errorCategory`, `actionableHint`).
-  - Rich render in `#customApiTestResult`:
-    - **Success**: Emerald green header badge, 4 KPI tiles (HTTP Status 200, Latency in ms, Format, Size), response preview accordion.
-    - **Failure**: Coral alert badge, categorized remediation guidance (401/403 token check, 404 endpoint path check, ECONNREFUSED local server check, timeout hint), and collapsible sanitized raw response.
+### Observable Definition of Done
+1. **Zero Emojis**: Neither `⚡`, `🌐`, `🔒`, `⚙️`, `🧪`, `⏳`, nor `💡` appear anywhere in the Custom API form, template buttons, test connection buttons, or diagnostics readouts.
+2. **Flat Layout (No Card-in-Card)**: All nested `.custom-card` boxes and heavy borders inside `.minimalist-card` are removed; form elements are laid out in clean, flat, responsive rows with standard 12px margins.
+3. **Single-Line Preset Toolbar**: Presets (`OpenAI`, `Anthropic`, `Inception Labs`, `Local`) render as a single horizontal strip of compact 26px chips with subtle hover states, without vertical clipping or awkward multi-line text wrapping.
+4. **Responsive Multi-Column Rows**:
+   - Connection row: `Base URL` (2fr) + `Endpoint Path` (1fr) side-by-side with an inline `Target: <url>` preview label.
+   - Authentication row: `Auth Type` (1fr) + `Auth Token` (1fr) side-by-side; `Header Key Name` displays conditionally without breaking grid alignment.
+   - Formats row: `Request Format` (1fr) + `Response Format` (1fr) + `Model ID` (1.2fr) side-by-side, wrapping cleanly to 1 column on screens below 520px.
+5. **Clean Test Connection Diagnostics**: Testing triggers a native CSS spinner and text "Testing..."; success displays clean latency, HTTP 200, and schema chips without emojis; errors display a clean alert callout with an SVG info icon for resolution hints.
+6. **100% Quality Gates**: `pnpm run check-types`, `pnpm run lint`, and all 548 automated tests in `pnpm test` pass with 0 errors.
 
 ---
 
-### Part 2: "Upgrade to GitMind Pro" Screen Contrast & Layout Polish
-#### Issue Identified from User Screenshot:
-- The user's screen shows the Pro plan card in active state (`plan-active`), where `#subscribeBtn` has text `"Already Purchased"`.
-- It inherits `button[disabled]` which forces `opacity: 0.6` and `var(--vscode-disabledForeground)` on top of `rgba(128,128,128,0.12)`, creating a dark teal/grey button on a tinted card background with contrast under 1.5:1.
-- The feature list items have:
-  ```css
-  .feature-item::before { content: ''; background: #10b981; border-radius: 50%; ... }
-  ```
-  while the HTML string also contains `✓`, resulting in awkward double bullets (`• ✓ Encrypted API Key Storage`).
-- Centered header text is visually unbalanced with the left-aligned feature list.
+## 3. Context, Constraints, Scope, Assumptions, Decisions
 
-#### Solutions in `SubscriptionRenderer.ts` & `subscription.css.ts`:
-1. **Active State Replacement**:
-   - When `hasValidLicense === true`:
-     - Instead of rendering a disabled `<button>` with unreadable text, render an **Active Plan Confirmation Component**:
-       ```html
-       <div class="active-plan-badge-container">
-           <div class="active-plan-pill">
-               <svg class="active-check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                   <polyline points="20 6 9 17 4 12"></polyline>
-               </svg>
-               <span>GitMind Pro Active on This Machine</span>
-           </div>
-           <div class="active-plan-caption">Lifetime access enabled · All Pro features unlocked</div>
-       </div>
-       ```
-   - When `hasValidLicense === false`:
-     - Render a crisp, accessible `<button id="subscribeBtn" class="btn btn-primary plan-buy-btn">Buy GitMind Pro</button>`.
-2. **Fix Duplicate Bullet Glyphs**:
-   - Remove `::before` pseudo-element dot from `.feature-item` in `subscription.css.ts`.
-   - Use clean, dedicated SVG checkmark icons in each `.feature-item`.
-3. **Card Layout & Typography Polish**:
-   - Modernize card header: subtle Pro badge, clear lifetime billing subtitle, improved padding and border treatment.
+### Context & Problem Statement
+The user reported that the previous Custom API redesign was a "mess" and attached a screenshot showing:
+- 5 nested `.custom-card` containers with thick double-borders inside the already carded `.minimalist-card`.
+- Childish emojis (`⚡`, `🌐`, `🔒`, `⚙️`, `🧪`) on every header.
+- The preset buttons in a 4-column grid suffered from vertical clipping and awkward two-line text wrapping.
+- High vertical bloat requiring excessive scrolling: separate full-width inputs for URL and endpoint, followed by a large gray box for the target URL.
+- Emojis in testing states (`⏳`, `⚡`, `💡`, `✓`, `✕`).
 
----
+### Constraints
+1. **Preserve DOM Element IDs**: All input IDs (`customBaseUrl`, `customEndpoint`, `customAuthType`, `customAuthToken`, `customHeaderKey`, `customRequestFormat`, `customResponseFormat`, `customModel`, `customTestConnection`, `customApiTestResult`) and preset class (`custom-preset-btn`) must be preserved to guarantee settings persistence and SecretStorage compatibility.
+2. **Preserve Parity Guards**:
+   - Do NOT introduce hardcoded default model strings in template attributes (e.g. `data-model="mercury-2.5"` triggers parity guard regex `(\\|\\||\\?\\?|[^=!<>]=)\s*["'\`](mercury-2.5|...)["'\`]`). Must use `getProviderDefaultModel(...)`.
+   - Maintain `ARRAY_ALLOWLIST` in `test/suites/providerCatalog.test.ts` for wire format tokens.
+3. **WCAG-AA Theme Compliance**: All colors must use VS Code theme variables (`--vscode-foreground`, `--vscode-descriptionForeground`, `--vscode-input-background`, `--vscode-testing-iconPassed`, etc.).
 
-### Part 3: "Encryption Status Report" Redesign
-#### Current Shortcomings:
-- Inner card inside modal with redundant outer borders and conflicting padding (`24px`).
-- Hardcoded fonts (`font-family: -apple-system, ...`).
-- Boxy 2x2 grid with empty subtitles on cards 3 and 4.
-- Primitive pills (`border-radius: 9999px`) with harsh borders.
+### Scope
+- **In Scope**:
+  - `src/webview/settings/components/renderers/ModelSettingsRenderer.ts`: Replace the HTML template of `renderCustomProviderSettings`.
+  - `src/webview/settings/styles/customApi.css.ts`: Replace bulky card styles with compact grid rows, preset chips, and clean diagnostics.
+  - `src/webview/settings/scripts/settingsManager.ts`: Remove emojis from test button loading and idle states.
+  - `src/webview/settings/MessageHandler.ts`: Remove emojis from test diagnostic HTML responses and replace with clean SVG / CSS badges.
+- **Out of Scope**:
+  - Provider catalog configuration in `src/config/providerCatalog.ts`.
+  - Encryption SecretStorage backend implementation.
+  - Non-custom provider renderers.
 
-#### Proposed Redesign in `messageHandlers.ts` & `encryptionStatus.css.ts`:
-1. **Hero Security Banner**:
-   - Centered or card-top shield icon (`<svg class="shield-icon">`) with green glow when active or amber when inactive.
-   - Title: "API Key Encryption Report".
-   - Subtitle: "Hardware-backed storage via VS Code SecretStorage API".
-2. **4-Tile KPI Summary Grid**:
-   - **Encryption State**: `Active` (green badge) / `Inactive` (amber badge).
-   - **Vault Storage**: `X / Y Protected Keys`.
-   - **VS Code Platform**: `v${detailed.vscodeVersion}` (Verified).
-   - **Keychain Health**: `Available & Healthy`.
-3. **Refined Provider Tag Lists**:
-   - Encrypted Keys: Modern chip with lock icon (`🔒 OpenAI`, `🔒 Anthropic`, etc.) using subtle tint and crisp border.
-   - Plaintext Keys: Modern warning chip with unlock icon (`⚠️ Mistral`) and prompt: "Encrypt with migration".
-4. **Security Assurance Callout**:
-   - Clear box explaining: *"Your keys are encrypted using your operating system's native keychain (macOS Keychain, Windows DPAPI, or Linux Secret Service/Keyring). Keys never leave this machine in unencrypted form."*
+### Decisions
+1. **Flat Minimalist Layout**: Rather than styling distinct cards inside `minimalist-card`, use standard form groups organized in CSS grid rows (`.custom-form-row`), consistent with native VS Code settings pages.
+2. **Inline Target URL**: Instead of a full-width gray container, place the resolved Target URL right under the Base URL/Endpoint inputs as a muted monospace line: `Target: <url>`.
+3. **Template Chip Bar**: Compact flex strip with 26px height chips and a subtle `Templates:` label. Clicking fills inputs and triggers live URL update.
+4. **SVG over Emojis**: Replace all emojis with crisp 14px monochrome/themed SVGs or pure CSS badges.
 
 ---
 
-### Part 4: Fix "Load Available Models" for Inception Provider
-#### Root Cause:
-- `gitmind.loadInceptionModels` is registered in `src/commands/index.ts` and `fetchInceptionModels` exists in `src/services/api/inception.ts`.
-- However, `ScriptManager.ts` line 516 has an array `modelConfigs` that attaches click listeners to each provider's load button. `inception` was **omitted from this array**, so `#loadInceptionModels` had no click handler attached.
-- `modelHandlers.ts` `buttonIdMap` was also missing `'inception': 'loadInceptionModels'`.
+## 4. Strategy, Alternatives, Change Policy and Cut Line
 
-#### Fix:
-1. In `src/webview/settings/components/managers/ScriptManager.ts`:
-   Add Inception to `modelConfigs`:
-   ```typescript
-   {
-       buttonId: 'loadInceptionModels',
-       commandId: 'gitmind.loadInceptionModels',
-       name: 'Inception',
-       loadingFlag: 'inceptionModelsLoading'
-   },
-   ```
-2. In `src/webview/settings/scripts/modelHandlers.ts`:
-   Add `'inception': 'loadInceptionModels'` to `buttonIdMap` in `getLoadButtonId(provider)`.
-3. Verify clicking `#loadInceptionModels` triggers `gitmind.loadInceptionModels`, fetches models from `https://api.inceptionlabs.ai/v1/models`, posts `inceptionModelsLoaded`, and populates `#inceptionModel`.
+### Strategy
+Execute the cleanup in four tightly coupled layers:
+1. **Template Restructure**: Simplify HTML in `ModelSettingsRenderer.ts` from 5 cards into 4 responsive form rows.
+2. **CSS Overhaul**: Replace card styles in `customApi.css.ts` with lightweight CSS grid rows, flex chip bars, and clean diagnostics styling.
+3. **Script & Message Polish**: Strip emoji strings from `settingsManager.ts` and `MessageHandler.ts`.
+4. **Automated Verification**: Run TypeScript type-checking, linter, and full test suite to guarantee zero regression.
+
+### Alternatives Considered & Rejected
+- *Tabbed Interface for Custom API*: Rejected because Custom API is already inside a dropdown selector; adding tabs inside the dropdown view introduces cognitive overload and unnecessary clicking.
+- *Modal/Dialog for Custom API*: Rejected because all other providers in GitMind configure in-place.
+- *Keeping Card Borders with Thinner Padding*: Rejected because nested cards inside `.minimalist-card` inherently look cluttered and un-native in VS Code.
+
+### Cut Line
+- **Must Have**: Flat responsive rows, single-line preset chips, zero emojis, exact DOM ID compatibility, passing test suite.
+- **Should Have**: Responsive breakpoint collapsing to single column below 520px viewport width.
+- **Could Have**: Tooltip on preset chips showing target URL preview before clicking.
 
 ---
 
-## Step-by-Step Execution Plan
+## 5. Phases and Tasks (Shared Plan Contract)
 
-### Step 1: Fix Inception "Load Available Models"
-- File: [`src/webview/settings/components/managers/ScriptManager.ts`](file:///home/shahab/Documents/Hobby/GitMind-Pro/src/webview/settings/components/managers/ScriptManager.ts)
-  - Add Inception entry to `modelConfigs`.
-- File: [`src/webview/settings/scripts/modelHandlers.ts`](file:///home/shahab/Documents/Hobby/GitMind-Pro/src/webview/settings/scripts/modelHandlers.ts)
-  - Add `'inception': 'loadInceptionModels'` to `buttonIdMap`.
-
-### Step 2: "Upgrade to GitMind Pro" Screen Polish
-- File: [`src/webview/settings/components/renderers/SubscriptionRenderer.ts`](file:///home/shahab/Documents/Hobby/GitMind-Pro/src/webview/settings/components/renderers/SubscriptionRenderer.ts)
-  - Replace disabled "Already Purchased" button with high-contrast `active-plan-pill`.
-  - Clean up `.plan-features` HTML to use SVG checkmarks without double-dotting.
-- File: [`src/webview/settings/styles/subscription.css.ts`](file:///home/shahab/Documents/Hobby/GitMind-Pro/src/webview/settings/styles/subscription.css.ts)
-  - Remove `::before` bullet on `.feature-item`.
-  - Add styling for `.active-plan-badge-container`, `.active-plan-pill`, and `.plan-buy-btn` with strict WCAG-AA contrast ratios.
-- File: [`src/webview/settings/styles/buttons.css.ts`](file:///home/shahab/Documents/Hobby/GitMind-Pro/src/webview/settings/styles/buttons.css.ts)
-  - Audit disabled button states so any disabled button maintains minimum 4.5:1 readable contrast against its background.
-
-### Step 3: Encryption Status Report Redesign
-- File: [`src/webview/settings/scripts/messageHandlers.ts`](file:///home/shahab/Documents/Hobby/GitMind-Pro/src/webview/settings/scripts/messageHandlers.ts)
-  - Redesign `statusHtml` builder in `handleEncryptionStatus`: hero shield, 4 KPI cards, clean provider chips, and keychain guarantee note.
-- File: [`src/webview/settings/styles/encryptionStatus.css.ts`](file:///home/shahab/Documents/Hobby/GitMind-Pro/src/webview/settings/styles/encryptionStatus.css.ts)
-  - Rewrite styles to eliminate nested borders, use `--vscode-font-family`, implement responsive 4-column KPI cards, and style chips with WCAG contrast.
-
-### Step 4: Custom API Form & Connection Diagnostics
-- File: [`src/services/api/custom.ts`](file:///home/shahab/Documents/Hobby/GitMind-Pro/src/services/api/custom.ts)
-  - Enrich `validateCustomAPI` with real latency measurement and structured status codes.
-- File: [`src/webview/settings/MessageHandler.ts`](file:///home/shahab/Documents/Hobby/GitMind-Pro/src/webview/settings/MessageHandler.ts)
-  - Package full diagnostic object into `customApiTestResult`.
-- File: [`src/webview/settings/components/renderers/ModelSettingsRenderer.ts`](file:///home/shahab/Documents/Hobby/GitMind-Pro/src/webview/settings/components/renderers/ModelSettingsRenderer.ts)
-  - Implement `renderCustomProviderSettings` with Quick Presets bar, 3 semantic cards, live target URL preview, and inline test action.
-- File: [`src/webview/settings/scripts/settingsManager.ts`](file:///home/shahab/Documents/Hobby/GitMind-Pro/src/webview/settings/scripts/settingsManager.ts)
-  - Wire preset click handlers, dynamic field visibility, live URL preview, and structured diagnostic rendering.
-- File: [`src/webview/settings/styles/customApi.css.ts`](file:///home/shahab/Documents/Hobby/GitMind-Pro/src/webview/settings/styles/customApi.css.ts)
-  - Complete modern CSS for sections, preset buttons, KPI metric cards, and collapsible details.
-
-### Step 5: Verification & Quality Gates
-- Add test suites in `src/test/suites/`:
-  - `customApiUI.test.ts`: Custom form rendering, presets, diagnostic output.
-  - `inceptionModelLoad.test.ts`: Verify Inception model button click handler and command dispatch.
-  - `subscriptionUI.test.ts`: Verify plan card rendering, active badge pill, and contrast compliance.
-- Run complete test suite (`pnpm test`) and lint checks.
+### Phase 1: Template & Component Restructure
+#### TASK-01: Flatten Custom API HTML in `ModelSettingsRenderer.ts`
+- **What**: Rewrite `renderCustomProviderSettings` to produce a flat, compact layout with 0 emojis.
+- **How**:
+  - Remove all `.custom-card` wrappers, emoji icons (`⚡`, `🌐`, `🔒`, `⚙️`, `🧪`), and redundant card header subtitles.
+  - Create `.custom-preset-toolbar` with compact `.custom-preset-btn` chips using `getProviderDefaultModel(...)`.
+  - Create `.custom-form-row.endpoint-row` containing `customBaseUrl` and `customEndpoint` plus inline `.custom-url-inline-preview`.
+  - Create `.custom-form-row.auth-row` containing `customAuthType` and `customAuthToken`, followed by `#customHeaderKeyContainer`.
+  - Create `.custom-form-row.formats-row` containing `customRequestFormat`, `customResponseFormat`, and `customModel`.
+  - Create clean action bar with `#customTestConnection` (pure text "Test Connection") and collapsible documentation.
+- **Where**: `src/webview/settings/components/renderers/ModelSettingsRenderer.ts`
+- **Depends on**: None
+- **Skills**: None
+- **Parallel**: no
+- **Effort**: S
+- **Priority**: must
+- **Done when**: `renderCustomProviderSettings` outputs valid HTML without any emoji characters or `.custom-card` wrappers.
 
 ---
 
-## Verification & Acceptance Checklist
-- [ ] Inception "Load Available Models" button responds to clicks, shows loading state, calls `gitmind.loadInceptionModels`, and populates the dropdown.
-- [ ] "Upgrade to GitMind Pro" screen shows high-contrast "GitMind Pro Active on This Machine" pill when Pro is active, without any disabled illegible button or duplicate `• ✓` bullets.
-- [ ] Encryption Status Report opens cleanly with hero banner, 4 KPI tiles, lock-badged provider chips, and clean responsive layout.
-- [ ] Custom API settings display 3 organized cards and 4 quick presets (OpenAI, vLLM/Ollama, LM Studio, Claude).
-- [ ] Custom API Test Connection runs inline with live loader and displays the rich diagnostics card with latency, status code, detected format, and troubleshooting guidance.
-- [ ] All 548+ unit and integration tests pass cleanly with 0 regressions.
+### Phase 2: Stylesheet Overhaul
+#### TASK-02: Overhaul `customApi.css.ts` for Compact, Native Appearance
+- **What**: Replace card-based styling with flat CSS grid rows, sleek chip toolbar, and compact diagnostics.
+- **How**:
+  - Delete `.custom-card`, `.custom-card-header`, `.custom-card-icon`, `.custom-card-title`, `.custom-card-desc`.
+  - Add `.custom-preset-toolbar`, `.custom-preset-label`, and `.custom-preset-btn` styling (height: 26px, padding: 3px 10px, border-radius: 4px, font-size: 11px).
+  - Add `.custom-form-row` (grid, 2 columns, gap: 12px, margin-bottom: 12px).
+  - Add `.custom-form-row.formats-row` (grid, 3 columns: 1fr 1fr 1.2fr).
+  - Add responsive breakpoint `@media (max-width: 520px)` setting rows to `grid-template-columns: 1fr`.
+  - Add `.custom-url-inline-preview` (font-size: 11px, color: `--vscode-descriptionForeground`, monospace target).
+  - Refine `.custom-api-test-result` and diagnostics: clean borders, compact padding (8px 12px), pure CSS spinner, no emoji badges.
+- **Where**: `src/webview/settings/styles/customApi.css.ts`
+- **Depends on**: TASK-01
+- **Skills**: None
+- **Parallel**: no
+- **Effort**: S
+- **Priority**: must
+- **Done when**: Styles compile cleanly and render flat, multi-column inputs that adapt responsively without visual clipping.
+
+---
+
+### Phase 3: Client Script & Backend Diagnostics Polish
+#### TASK-03: Remove Emojis from Webview Script State Handling
+- **What**: Clean up `settingsManager.ts` button text transitions to remove `⏳` and `⚡`.
+- **How**:
+  - In `initCustomApiHandler`:
+    - Loading: `testButton.innerHTML = '<span class="test-spinner"></span> Testing...';`
+    - Reset / Error: `testButton.innerHTML = 'Test Connection';`
+    - Error fallback: Remove emoji from `Client Error` header.
+- **Where**: `src/webview/settings/scripts/settingsManager.ts`
+- **Depends on**: TASK-01
+- **Skills**: None
+- **Parallel**: yes
+- **Effort**: S
+- **Priority**: must
+- **Done when**: Clicking "Test Connection" shows a pure CSS spinner and "Testing...", resetting cleanly without emoji characters.
+
+#### TASK-04: Remove Emojis from Backend Test Diagnostics HTML
+- **What**: Clean up `MessageHandler.ts` to output emoji-free test result HTML.
+- **How**:
+  - In `testCustomApiConnection`:
+    - Replace `✓ Connected` with `<span class="test-status-badge success">Connected</span>`.
+    - Replace `✕ ${errorTitle}` with `<span class="test-status-badge error">${errorTitle}</span>`.
+    - Replace `💡` hint icon with a clean SVG info circle:
+      `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`.
+- **Where**: `src/webview/settings/MessageHandler.ts`
+- **Depends on**: TASK-01
+- **Skills**: None
+- **Parallel**: yes
+- **Effort**: S
+- **Priority**: must
+- **Done when**: Test connection success and failure payloads contain no emoji characters and render clean SVG / status badges.
+
+---
+
+### Phase 4: Verification & Quality Gate
+#### TASK-05: Run Quality Gates & Verify Visual Layout
+- **What**: Execute TypeScript check, ESLint, and the full test suite.
+- **How**:
+  - Run `pnpm run check-types`
+  - Run `pnpm run lint`
+  - Run `pnpm test`
+  - Verify AST parity tests in `providerCatalog.test.ts` pass without flagging new tokens or fallbacks.
+- **Where**: Repository root
+- **Depends on**: TASK-01, TASK-02, TASK-03, TASK-04
+- **Skills**: None
+- **Parallel**: no
+- **Effort**: S
+- **Priority**: must
+- **Done when**: All quality gates pass with exit code 0 and 548/548 tests green.
+
+---
+
+## 6. Risks and Countermeasures
+
+| Risk | Severity | Probability | Countermeasure |
+|---|---|---|---|
+| Narrow webview (e.g. docked in sidebar) squishes 2-column or 3-column rows | Medium | Likely | Add `@media (max-width: 520px)` breakpoint that automatically collapses all grid rows to 1 column. |
+| AST parity guard in `providerCatalog.test.ts` flags default model strings | High | Likely | Derive preset model attributes exclusively via `getProviderDefaultModel(...)`; no hardcoded model literals in attributes. |
+| Custom API inputs fail to persist when user saves settings | High | Unlikely | Keep all input IDs (`customBaseUrl`, `customEndpoint`, etc.) strictly identical to those read by `eventHandlers.ts`. |
+| Header key name input misaligned when auth type is `apikey` | Low | Possible | Place `#customHeaderKeyContainer` as a clean sub-row directly under Auth Type. |
+| Long URL in Target URL preview causes horizontal overflow | Low | Possible | Apply `word-break: break-all;` and `font-family: monospace;` on `.compact-url-code`. |
+
+---
+
+## 7. Verification and Traceability Matrix
+
+| Requirement | Tasks | Verification Method |
+|---|---|---|
+| Zero emojis anywhere in form | TASK-01, TASK-03, TASK-04 | Grep source files for emoji unicode ranges; visual check |
+| Flat, compact layout without nested cards | TASK-01, TASK-02 | DOM inspection (0 `.custom-card` elements; flat rows) |
+| Multi-column responsive rows | TASK-01, TASK-02 | CSS Grid validation at 600px and 400px viewports |
+| Preset chip bar functionality | TASK-01, TASK-02, TASK-03 | Click preset chips, observe inputs populate and live URL update |
+| Clean test connection diagnostics | TASK-03, TASK-04 | Run test connection; check latency chip and SVG hint icon |
+| Parity & regression protection | TASK-05 | `pnpm run check-types`, `pnpm run lint`, `pnpm test` (548 tests) |
+
+---
+
+## 8. Handover
+- **Context**: User found the initial card-based Custom API redesign cluttered, bulky, and emoji-heavy.
+- **Decisions**: Flatten into clean multi-column rows, remove cards, use a single-line preset chip toolbar, replace emojis with clean typography and SVGs.
+- **State**: Reviewed and ready to execute.
+- **Remaining Tasks**: TASK-01 through TASK-05.
+- **Verification**: Run `pnpm run check-types`, `pnpm run lint`, and `pnpm test`.
+
+---
+
+## 9. Review Appendix
+- **Findings**:
+  - *Finding 1 (Product/UX)*: Nested `.custom-card` elements created double borders and vertical bloat inside `.minimalist-card`. Resolved by flattening into CSS grid rows.
+  - *Finding 2 (QA/Responsive)*: 4-column preset grid caused text clipping on narrow panels. Resolved by switching to flex-wrap chips.
+  - *Finding 3 (Design)*: Emojis (`⚡`, `🌐`, `🔒`, `⚙️`, `🧪`, `⏳`, `💡`) made the developer UI look unprofessional. Resolved by removing all emojis and using SVGs/CSS.
+  - *Finding 4 (Engineering)*: Parity guard in `providerCatalog.test.ts` requires that default models in presets be resolved dynamically via `getProviderDefaultModel(...)`.
+- **Decisions**: Proceed with flat responsive layout, 26px preset chip toolbar, and native SVG indicators.
+- **Remaining Risks**: None blocking. Viewport width variations are handled by the 520px media query.
+- **Applicable Checks**: Architecture boundaries, TypeScript type checking, linting, provider catalog parity guards, SecretStorage integration, responsive grid layout.
+- **Non-Applicable Checks**: Database migrations (client-side extension), cloud deployment (local extension).
+- **Blockers**: None. Plan is reviewed and ready to execute.
