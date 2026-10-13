@@ -963,7 +963,9 @@ suite("Generation repair", () => {
         assert.strictEqual(describeStructuredData("settings.json", JSON.stringify({ description: "important-config-value".repeat(5000) })), undefined);
         const directory = await mkdtemp(join(tmpdir(), "gitmind-structured-test-"));
         const run = async (...args: string[]) => { await promisify(execFile)("git", args, { cwd: directory }); };
+        const prevSettings = (globalThis as any).__generationSettings;
         try {
+            (globalThis as any).__generationSettings = { "commit.excludeFiles": [] };
             await run("init", "-q");
             await run("config", "user.name", "GitMind Test");
             await run("config", "user.email", "test@example.invalid");
@@ -991,7 +993,10 @@ suite("Generation repair", () => {
                 assert.doesNotMatch(diff, /bulk-json-value|bulk-csv-value|bulk-lock-value|image-secret-value/);
                 assert.ok(Buffer.byteLength(diff) < 3000);
             } finally { await spool.dispose(); }
-        } finally { await rm(directory, { recursive: true, force: true }); }
+        } finally {
+            (globalThis as any).__generationSettings = prevSettings;
+            await rm(directory, { recursive: true, force: true });
+        }
     });
 
     test("collected diff includes changed lines without unrelated source context", async () => {
