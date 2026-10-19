@@ -174,6 +174,15 @@ export class APIErrorHandler {
                 errorInfo.userMessage = `${provider} is temporarily unavailable.`;
                 errorInfo.suggestions = ["Try again in a few minutes", "Check the provider status page", "Select another provider temporarily"];
                 return errorInfo;
+            case "invalid-response":
+                if (/truncat/i.test(error.message)) {
+                    errorInfo.userMessage = `${provider} stopped before finishing the answer (output limit reached).`;
+                    errorInfo.suggestions = ["If Advanced Model Configuration sets Max Tokens, raise it or turn it off", "Choose a model with a larger output limit", "For changelogs, narrow the version or commit range"];
+                } else {
+                    errorInfo.userMessage = `${provider} returned an empty or malformed answer.`;
+                    errorInfo.suggestions = ["Try again", "Choose another model or provider"];
+                }
+                return errorInfo;
         }
 
         // Find matching error pattern

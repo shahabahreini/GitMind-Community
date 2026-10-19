@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { RequestContext } from "./requestContext";
-import { modelCapabilities, assertPromptFitsAsync, batchInputBudget, defaultPromptTokenCap, effectiveInputBudget, measurePrompt, MIN_PROMPT_TOKENS, ModelCapabilities } from "./capabilities";
+import { modelCapabilities, assertPromptFitsAsync, batchInputBudget, defaultPromptTokenCap, effectiveInputBudget, LONG_FORM_OUTPUT_TOKENS, LONG_FORM_TIMEOUT_MS, measurePrompt, MIN_PROMPT_TOKENS, ModelCapabilities } from "./capabilities";
 import { digestDiff, tokensToBytes } from "../git/diffDigest";
 import { generateBudgeted, DiffInput, isOutputTruncation } from "./budgetedGeneration";
 import { DiffSpool } from "./diffSpool";
@@ -1232,6 +1232,11 @@ export async function generateWithRawPrompt(
             : featureName.includes("history") || featureName.includes("analysis")
                 ? "learn_history"
                 : "generate_commit";
+        // Changelogs are long answers; the commit reservation truncates them.
+        if (supportOperation === "generate_changelog") {
+            owned.context.outputTokens = LONG_FORM_OUTPUT_TOKENS;
+            owned.context.requestTimeoutMs = LONG_FORM_TIMEOUT_MS;
+        }
         const result = allowRecovery
             ? await createRecoveryOperation(validatedConfig, { supportOperation })((attemptConfig) => generateWithRawPromptInternal(attemptConfig, prompt, owned.context))
             : await generateWithRawPromptInternal(validatedConfig, prompt, owned.context);
@@ -1305,6 +1310,8 @@ export async function generateCommitHistoryAnalysis(
         showModelInfo(validatedConfig);
 
         // Generate the analysis using the dedicated function
+        owned.context.outputTokens = LONG_FORM_OUTPUT_TOKENS;
+        owned.context.requestTimeoutMs = LONG_FORM_TIMEOUT_MS;
         const recovery = createRecoveryOperation(validatedConfig, { supportOperation: "learn_history" });
         const result = await recovery((attemptConfig) =>
             generateAnalysisWithConfig(attemptConfig, commitHistory, maxCommits, includeAuthorInfo, owned.context)

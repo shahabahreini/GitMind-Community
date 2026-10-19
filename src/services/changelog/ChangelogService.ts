@@ -4,6 +4,7 @@ import { promisify } from 'util';
 import { debugLog } from '../debug/logger';
 import { getApiConfig } from '../../config/settings';
 import { estimateTokens } from '../../utils/tokenCounter';
+import { LONG_FORM_OUTPUT_TOKENS } from '../api/capabilities';
 import { ApiConfig } from '../../config/types';
 
 const execAsync = promisify(exec);
@@ -766,13 +767,13 @@ export class ChangelogService {
         const basePromptTokens = 1500;
         const promptTokens = basePromptTokens + commitTokens + changelogTokens + policyTokens;
 
-        // Reserve tokens for response (typical changelog entry is 500-2000 tokens)
-        const responseReserve = 2500;
+        // Reserve the output budget the changelog request asks for, so the answer fits the context
+        const responseReserve = LONG_FORM_OUTPUT_TOKENS;
         const totalTokens = promptTokens + responseReserve;
 
         // Stay within 100k for consistent output quality, and within the
         // selected model's discovered input budget when it is smaller.
-        const maxTokenLimit = Math.min(100000, modelInputBudget ? modelInputBudget + responseReserve : 100000);
+        const maxTokenLimit = Math.min(100000, modelInputBudget || 100000);
         const isWithinLimit = totalTokens <= maxTokenLimit;
 
         // Calculate recommended max commits if over limit

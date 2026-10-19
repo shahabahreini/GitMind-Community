@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v6.6.0]
+
+### Fixed
+
+- Fixed changelog generation failing on every provider with "could not complete the request": changelogs and commit-history analysis now get an 8K output budget (up to 16K when the model reports a larger limit) instead of the commit-message reservation, and a 3-minute request timeout.
+- Changelog prompt sizing now reserves room in the model's context for the answer.
+- Answers cut off by an output limit now show a specific message instead of a generic configuration error.
+- Support logs now record the real failure category instead of `network` for every failed request.
+
 ## [v6.5.0] - 2026-10-13
 
 ### Added

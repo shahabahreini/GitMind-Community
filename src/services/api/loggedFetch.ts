@@ -1,7 +1,7 @@
 import { requestScope } from "./requestContext";
 import { normalizeProviderError, ProviderApiError } from "./recovery";
 import { diagnosticLog } from "../debug/logger";
-import { SupportProvider } from "../support/SupportSessionService";
+import { SupportProvider, supportErrorCategory } from "../support/SupportSessionService";
 
 type LoggedFetchMeta = {
     provider?: SupportProvider;
@@ -80,7 +80,7 @@ export async function loggedFetch(input: RequestInfo | URL, init?: RequestInit, 
             level: "ERROR", subsystem: "provider", event: "provider.request_failed", functionName: "loggedFetch",
             operationId: meta?.operationId, provider, outcome: "failure", durationMs,
             data: { method, errorName: error instanceof Error ? error.name : "UnknownError" },
-            support: { name: "operation_progress", operation, outcome: "failure", errorCategory: "network" },
+            support: { name: "operation_progress", operation, outcome: "failure", errorCategory: error instanceof ProviderApiError ? supportErrorCategory(error, provider ?? "") : "network" },
         });
         throw error;
     }

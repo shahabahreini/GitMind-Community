@@ -20,6 +20,10 @@ export interface RequestContext {
     /** Count prompts with the byte heuristic instead of one token per byte (single-call generation). */
     heuristicTokens?: boolean;
     diagnosticBudget?: { estimatedTokens: number; modelLimit: number };
+    /** Output ceiling for long-form answers (changelog, history analysis); unset uses the model's commit reservation. */
+    outputTokens?: number;
+    /** Per-request timeout; long-form answers need more than commit messages. */
+    requestTimeoutMs?: number;
 }
 interface AttemptContext extends RequestContext {
     controller: AbortController;
@@ -28,7 +32,7 @@ interface AttemptContext extends RequestContext {
 export const requestScope = new AsyncLocalStorage<AttemptContext>();
 
 /** Each invocation owns its transport, including overlapping calls on one provider. */
-export async function runRequest<T>(context: RequestContext | undefined, task: () => Promise<T>, timeoutMs = 55_000): Promise<T> {
+export async function runRequest<T>(context: RequestContext | undefined, task: () => Promise<T>, timeoutMs = context?.requestTimeoutMs ?? 55_000): Promise<T> {
     const controller = new AbortController();
     const scope: AttemptContext = { ...context, controller };
     const cancel = () => controller.abort(new ProviderApiError("Request was cancelled", { category: "cancelled" }));

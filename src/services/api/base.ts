@@ -3,8 +3,9 @@ import { generateCommitPrompt, getPromptConfig, generateCommitHistoryAnalysisPro
 import { debugLog, diagnosticLog } from "../debug/logger";
 import { RequestContext, requestScope, runRequest } from "./requestContext";
 import { classifyGenerationFailure, normalizeProviderError, ProviderApiError } from "./recovery";
-import { answerText, countPromptTokens, directProbeBudget, effectiveInputBudget, measurePrompt, modelCapabilities, ModelCapabilities, UNKNOWN_MODEL_PROBE_BYTES } from "./capabilities";
+import { answerText, countPromptTokens, directProbeBudget, effectiveInputBudget, LONG_FORM_MAX_OUTPUT_TOKENS, measurePrompt, modelCapabilities, ModelCapabilities, UNKNOWN_MODEL_PROBE_BYTES } from "./capabilities";
 import { createHash } from "node:crypto";
+import { supportErrorCategory } from "../support/SupportSessionService";
 import { estimateTokens } from "../../utils/tokenCounter";
 
 export interface GenerationOptions {
@@ -60,10 +61,11 @@ export abstract class BaseAIProvider implements AIProvider {
 
     protected rememberModelLimits(model: string, inputTokens: unknown, outputTokens: unknown, inputOnly = false): void {
         if (typeof inputTokens !== "number" || !Number.isSafeInteger(inputTokens) || inputTokens < 512) { return; }
-        const reserved = typeof outputTokens === "number" && Number.isSafeInteger(outputTokens) && outputTokens > 0 ? Math.min(modelCapabilities(model).outputTokens, outputTokens) : 1024;
+        const reported = typeof outputTokens === "number" && Number.isSafeInteger(outputTokens) && outputTokens > 0 ? outputTokens : undefined;
+        const reserved = reported ? Math.min(modelCapabilities(model).outputTokens, reported) : 1024;
         let registry = BaseAIProvider.runtimeCapabilities.get(this.constructor);
         if (!registry) { registry = new Map(); BaseAIProvider.runtimeCapabilities.set(this.constructor, registry); }
-        registry.set(this.capabilityKey(model), { ...modelCapabilities(model), contextTokens: inputOnly ? inputTokens + reserved + 256 : inputTokens, outputTokens: reserved, isUnknown: false, ...(inputOnly ? { maxInputTokens: inputTokens } : {}) });
+        registry.set(this.capabilityKey(model), { ...modelCapabilities(model), contextTokens: inputOnly ? inputTokens + reserved + 256 : inputTokens, outputTokens: reserved, maxOutputTokens: reported, isUnknown: false, ...(inputOnly ? { maxInputTokens: inputTokens } : {}) });
     }
 
     async prepareCapabilities(_context?: RequestContext): Promise<void> {}
@@ -100,9 +102,10 @@ export abstract class BaseAIProvider implements AIProvider {
             throw new ProviderApiError("Prompt exceeds the model input budget. Shorten custom context or choose a larger-context model.", { category: "input-limit" });
         }
         const merged = context?.generationOptions ?? this.getMergedGenerationOptions();
+        const outputCeiling = context?.outputTokens ? await this.longFormOutputTokens(prompt, capabilities, context.outputTokens) : capabilities.outputTokens;
         const options = {
             ...merged,
-            maxTokens: Math.min(capabilities.outputTokens, merged?.maxTokens && Number.isFinite(merged.maxTokens) && merged.maxTokens > 0 ? Math.floor(merged.maxTokens) : capabilities.outputTokens),
+            maxTokens: Math.min(outputCeiling, merged?.maxTokens && Number.isFinite(merged.maxTokens) && merged.maxTokens > 0 ? Math.floor(merged.maxTokens) : outputCeiling),
         };
         return runRequest(context, async () => {
             diagnosticLog({ subsystem: "provider", event: "generation.request", functionName: "generateWithRawPrompt", operationId: context?.operationId, support: { name: "operation_progress", operation: "provider_request", stage: "requests" } });
@@ -116,10 +119,20 @@ export abstract class BaseAIProvider implements AIProvider {
             } catch (error) {
                 const normalized = normalizeProviderError(error, "");
                 if (normalized.category === "invalid-response") { stage = "parsing"; }
-                diagnosticLog({ subsystem: "provider", event: "generation.failed", functionName: "generateWithRawPrompt", operationId: context?.operationId, outcome: "failure", data: { category: normalized.category, httpStatus: normalized.status }, support: { name: "operation_failed", operation: "provider_request", stage, outcome: "failure", httpStatus: normalized.status } });
+                diagnosticLog({ subsystem: "provider", event: "generation.failed", functionName: "generateWithRawPrompt", operationId: context?.operationId, outcome: "failure", data: { category: normalized.category, httpStatus: normalized.status }, support: { name: "operation_failed", operation: "provider_request", stage, outcome: "failure", httpStatus: normalized.status, errorCategory: supportErrorCategory(normalized, "") } });
                 throw normalized;
             }
         });
+    }
+
+    /** Long-form answers use the reported model maximum when known, bounded by the context left after the prompt. */
+    private async longFormOutputTokens(prompt: string, capabilities: ModelCapabilities, requested: number): Promise<number> {
+        let target = capabilities.maxOutputTokens ? Math.min(capabilities.maxOutputTokens, LONG_FORM_MAX_OUTPUT_TOKENS) : requested;
+        if (!capabilities.isUnknown && capabilities.maxInputTokens === undefined) {
+            target = Math.min(target, capabilities.contextTokens - await measurePrompt(prompt, capabilities) - 256);
+        }
+        // Never below the reservation a commit request would get.
+        return Math.max(target, capabilities.outputTokens);
     }
 
     async generateCommitHistoryAnalysis(commitHistory: string, maxCommits: number, includeAuthorInfo: boolean, context?: RequestContext): Promise<string> {

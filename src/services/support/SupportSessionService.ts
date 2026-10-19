@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import { PROVIDER_IDS, ProviderCatalogId } from "../../config/providerCatalog";
+import { classifyGenerationFailure } from "../api/recovery";
 
 export const SUPPORT_REPORT_SCHEMA_VERSION = 3;
 export const SUPPORT_SESSION_DURATION_MS = 30 * 60 * 1000;
@@ -51,6 +52,20 @@ export type SupportProvider = ProviderCatalogId;
 export type SupportOperation = typeof OPERATIONS[number];
 export type SupportEventName = typeof EVENT_NAMES[number];
 export type SupportErrorCategory = typeof ERROR_CATEGORIES[number];
+
+/** Maps any provider failure to the support-log category enum. */
+export function supportErrorCategory(error: unknown, provider: string): SupportErrorCategory {
+  const category = classifyGenerationFailure(error, provider);
+  const mapping: Record<string, SupportErrorCategory> = {
+    cancelled: "cancellation", timeout: "timeout", authentication: "authentication",
+    permission: "permission", "account-limit": "billing_quota", "model-limit": "model_quota",
+    "rate-limit": "provider_rate_limit", "input-limit": "input_limit",
+    configuration: "configuration", "content-filter": "content_filter", network: "network",
+    "temporary-service": "temporary_service", "invalid-response": "invalid_response", unknown: "unknown"
+  };
+  return mapping[category] ?? "unknown";
+}
+
 export type SupportOutcome = typeof OUTCOMES[number];
 export type SupportRecoveryAction = typeof RECOVERY_ACTIONS[number];
 export type SupportModelKind = typeof MODEL_KINDS[number];

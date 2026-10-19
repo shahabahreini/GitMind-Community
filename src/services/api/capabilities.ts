@@ -8,6 +8,8 @@ export interface ModelCapabilities {
     isUnknown?: boolean;
     /** Runtime input-only limit, when the provider reports it separately. */
     maxInputTokens?: number;
+    /** Output maximum the provider reported for the model; `outputTokens` stays the commit reservation. */
+    maxOutputTokens?: number;
     supportedOptions: readonly string[];
     countTokens: (text: string) => number;
     countTokensAsync?: (text: string) => PromiseLike<number>;
@@ -20,6 +22,11 @@ export const DEFAULT_PROMPT_TOKEN_CAP = 60_000;
 /** Local servers commonly run small contexts, so they start lower. */
 export const LOCAL_PROMPT_TOKEN_CAP = 6_000;
 export const MIN_PROMPT_TOKENS = 4_000;
+/** Output budget for long-form answers (changelog, history analysis) when the model reports no maximum. */
+export const LONG_FORM_OUTPUT_TOKENS = 8_192;
+/** Upper bound when the model reports a larger maximum; reasoning models spend part of it thinking. */
+export const LONG_FORM_MAX_OUTPUT_TOKENS = 16_384;
+export const LONG_FORM_TIMEOUT_MS = 180_000;
 export function defaultPromptTokenCap(provider: string): number {
     return provider === "ollama" || provider === "lmstudio" ? LOCAL_PROMPT_TOKEN_CAP : DEFAULT_PROMPT_TOKEN_CAP;
 }

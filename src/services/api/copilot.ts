@@ -231,7 +231,7 @@ export class CopilotProvider extends BaseAIProvider {
         await runRequest(context, async () => {
             const model = resolveCopilotChatModel(this.model, await requireCopilotModels());
             this.selectedModel = model;
-            this.rememberModelLimits(this.model, model.maxInputTokens, 1024, true);
+            this.rememberModelLimits(this.model, model.maxInputTokens, undefined, true);
         });
     }
 

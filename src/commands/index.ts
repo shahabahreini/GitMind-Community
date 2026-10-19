@@ -51,7 +51,7 @@ import { CommitStyleManager } from "../services/commitStyleManager";
 import { GitmojiService } from "../services/gitmoji/GitmojiService";
 import { generateChangelog, updateChangelog } from "../services/changelog/generateChangelog";
 import { registerSupportCommands } from "./support";
-import { recordSupportEvent, SupportErrorCategory, SupportProvider } from "../services/support/SupportSessionService";
+import { recordSupportEvent, supportErrorCategory, SupportProvider } from "../services/support/SupportSessionService";
 import { classifyGenerationFailure } from "../services/api/recovery";
 import { formatSafeProviderError } from "../utils/errorHandler";
 import { registerCommitIntelligenceCommands } from "./commitIntelligence";
@@ -117,18 +117,6 @@ async function handleError(
   const isInputLimit = classifyGenerationFailure(error, provider) === "input-limit";
   const showMethod = isInputLimit ? vscode.window.showWarningMessage : vscode.window.showErrorMessage;
   showMethod(message, { modal: true });
-}
-
-function supportErrorCategory(error: unknown, provider: string): SupportErrorCategory {
-  const category = classifyGenerationFailure(error, provider);
-  const mapping: Record<string, SupportErrorCategory> = {
-    cancelled: "cancellation", timeout: "timeout", authentication: "authentication",
-    permission: "permission", "account-limit": "billing_quota", "model-limit": "model_quota",
-    "rate-limit": "provider_rate_limit", "input-limit": "input_limit",
-    configuration: "configuration", "content-filter": "content_filter", network: "network",
-    "temporary-service": "temporary_service", "invalid-response": "invalid_response", unknown: "unknown"
-  };
-  return mapping[category] ?? "unknown";
 }
 
 async function withProgress<T>(

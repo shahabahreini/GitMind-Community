@@ -146,6 +146,18 @@ suite('Error Handling Tests', () => {
         assert.match(formatted, /could not complete the request/);
     });
 
+    test('truncated answers explain the output limit', () => {
+        const info = APIErrorHandler.handleAPIError(new ProviderApiError('Provider output was truncated.', { category: 'invalid-response', provider: 'inception' }), 'Inception');
+        assert.match(info.userMessage, /output limit reached/);
+        assert.ok(info.suggestions?.some(s => /Max Tokens/.test(s)));
+    });
+
+    test('malformed answers are not reported as configuration problems', () => {
+        const info = APIErrorHandler.handleAPIError(new ProviderApiError('Provider returned malformed JSON.', { category: 'invalid-response' }), 'Mistral');
+        assert.match(info.userMessage, /empty or malformed answer/);
+        assert.ok(!/API key/.test((info.suggestions ?? []).join(' ')));
+    });
+
     test('Request cancellation should be handled correctly', () => {
         const cancellationError = new Error('Request was cancelled');
         cancellationError.name = 'AbortError';
