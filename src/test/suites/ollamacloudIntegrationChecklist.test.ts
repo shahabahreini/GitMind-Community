@@ -97,4 +97,17 @@ suite('Ollama Cloud Integration Checklist', () => {
             'The catalog API-key provider list (used by SettingsManager) should include ollamacloud'
         );
     });
+
+    test('Ollama Cloud models have verified limits and safe output budgets', () => {
+        const { modelCapabilities } = require('../../services/api/capabilities');
+        const gpt = modelCapabilities('gpt-oss:120b-cloud');
+        assert.strictEqual(gpt.contextTokens, 131072);
+        assert.strictEqual(gpt.outputTokens, 4096);
+        assert.strictEqual(gpt.isUnknown, false);
+
+        const deepseek = modelCapabilities('deepseek-v3.1:671b-cloud');
+        assert.strictEqual(deepseek.contextTokens, 131072);
+        assert.strictEqual(deepseek.outputTokens, 8192);
+        assert.strictEqual(deepseek.isUnknown, false);
+    });
 });

@@ -102,10 +102,21 @@ export abstract class BaseAIProvider implements AIProvider {
             throw new ProviderApiError("Prompt exceeds the model input budget. Shorten custom context or choose a larger-context model.", { category: "input-limit" });
         }
         const merged = context?.generationOptions ?? this.getMergedGenerationOptions();
-        const outputCeiling = context?.outputTokens ? await this.longFormOutputTokens(prompt, capabilities, context.outputTokens) : capabilities.outputTokens;
+        const userMaxTokens = merged?.maxTokens && Number.isFinite(merged.maxTokens) && merged.maxTokens > 0 ? Math.floor(merged.maxTokens) : undefined;
+        let maxTokens: number;
+        if (userMaxTokens !== undefined) {
+            let maxAllowed = capabilities.maxOutputTokens ? Math.min(capabilities.maxOutputTokens, LONG_FORM_MAX_OUTPUT_TOKENS) : LONG_FORM_MAX_OUTPUT_TOKENS;
+            if (!capabilities.isUnknown && capabilities.maxInputTokens === undefined) {
+                const room = capabilities.contextTokens - await measurePrompt(prompt, capabilities) - 256;
+                if (room > 0) { maxAllowed = Math.min(maxAllowed, room); }
+            }
+            maxTokens = Math.min(maxAllowed, userMaxTokens);
+        } else {
+            maxTokens = context?.outputTokens ? await this.longFormOutputTokens(prompt, capabilities, context.outputTokens) : capabilities.outputTokens;
+        }
         const options = {
             ...merged,
-            maxTokens: Math.min(outputCeiling, merged?.maxTokens && Number.isFinite(merged.maxTokens) && merged.maxTokens > 0 ? Math.floor(merged.maxTokens) : outputCeiling),
+            maxTokens,
         };
         return runRequest(context, async () => {
             diagnosticLog({ subsystem: "provider", event: "generation.request", functionName: "generateWithRawPrompt", operationId: context?.operationId, support: { name: "operation_progress", operation: "provider_request", stage: "requests" } });

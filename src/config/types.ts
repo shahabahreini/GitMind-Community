@@ -86,7 +86,7 @@ export type GeminiModel =
 export type AnthropicModel =
     | "claude-sonnet-5" | "claude-opus-5-5" | "claude-fable-5-1" | "claude-haiku-4-5";
 
-export type InceptionModel = "mercury-2.5" | "mercury-2" | string;
+export type InceptionModel = "mercury-3" | "mercury-2.5" | "mercury-2" | string;
 
 export type MiniMaxModel = "MiniMax-M3" | "MiniMax-M2.7" | "MiniMax-M2.7-highspeed" | "MiniMax-M2.5" | "MiniMax-M2.5-highspeed" | "MiniMax-M2";
 

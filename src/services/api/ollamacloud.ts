@@ -3,6 +3,7 @@ import { debugLog } from "../debug/logger";
 import { RequestManager } from "../../utils/requestManager";
 import { APIErrorHandler } from "../../utils/errorHandler";
 import { BaseAIProvider, GenerationOptions } from "./base";
+import { RequestContext } from "./requestContext";
 import { loggedFetch } from "./loggedFetch";
 import { ProviderApiError } from "./recovery";
 import { stripThinking } from "./nvidia";
@@ -112,6 +113,10 @@ export class OllamaCloudProvider extends BaseAIProvider {
         super(apiKey, model);
     }
 
+    override async prepareCapabilities(context?: RequestContext): Promise<void> {
+        await this.discoverLargeModel(context, signal => this.getModels(signal));
+    }
+
     protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
         const controller = this.getAbortController();
 
@@ -132,7 +137,7 @@ export class OllamaCloudProvider extends BaseAIProvider {
                             content: prompt,
                         },
                     ],
-                    max_tokens: options?.maxTokens ?? 1024,
+                    max_tokens: options?.maxTokens ?? 4096,
                     temperature: options?.temperature ?? 0.2,
                 }),
                 signal: controller.signal,
@@ -170,7 +175,7 @@ export class OllamaCloudProvider extends BaseAIProvider {
         }
     }
 
-    async getModels(): Promise<string[]> {
+    async getModels(signal?: AbortSignal): Promise<string[]> {
         const curatedFallback = PROVIDER_CATALOG.ollamacloud?.curatedModels
             ? [...PROVIDER_CATALOG.ollamacloud.curatedModels]
             : ["gpt-oss:120b-cloud", "gpt-oss:20b-cloud", "qwen3-coder:480b-cloud", "deepseek-v3.1:671b-cloud"];
@@ -181,6 +186,7 @@ export class OllamaCloudProvider extends BaseAIProvider {
             // First attempt: /api/tags
             let response = await loggedFetch(`${OLLAMA_CLOUD_BASE_URL}/api/tags`, {
                 method: "GET",
+                signal,
                 headers: {
                     Authorization: `Bearer ${this.apiKey}`,
                     Accept: "application/json"
@@ -191,6 +197,7 @@ export class OllamaCloudProvider extends BaseAIProvider {
             if (!response.ok && response.status === 404) {
                 response = await loggedFetch(`${OLLAMA_CLOUD_BASE_URL}/v1/models`, {
                     method: "GET",
+                    signal,
                     headers: {
                         Authorization: `Bearer ${this.apiKey}`,
                         Accept: "application/json"
@@ -210,11 +217,18 @@ export class OllamaCloudProvider extends BaseAIProvider {
             const filtered = filterOllamaCloudModels(data);
             debugLog(`Successfully filtered ${filtered.length} Ollama Cloud models:`, filtered);
 
-            return filtered.length > 0 ? filtered : curatedFallback;
+            const result = filtered.length > 0 ? filtered : curatedFallback;
+            for (const name of result) {
+                this.rememberModelLimits(name, 131072, 4096);
+            }
+            return result;
         } catch (error) {
             debugLog("Error fetching Ollama Cloud models, using curated fallback:", error);
             if (error instanceof ProviderApiError && error.category === "authentication") {
                 throw error;
+            }
+            for (const name of curatedFallback) {
+                this.rememberModelLimits(name, 131072, 4096);
             }
             return curatedFallback;
         }

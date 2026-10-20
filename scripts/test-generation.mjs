@@ -86,7 +86,7 @@ export const lm = { selectChatModels: async () => [{
 const directory = await mkdtemp(join(tmpdir(), "gitmind-conformance-"));
 try {
     const result = await build({
-        entryPoints: ["src/test/suites/generationRepair.test.ts", "src/test/suites/diffDigest.test.ts", "src/test/suites/nvidiaAndRecovery.test.ts", "src/test/suites/diffProcessor.test.ts", "src/test/suites/supportSession.test.ts"],
+        entryPoints: ["src/test/suites/generationRepair.test.ts", "src/test/suites/diffDigest.test.ts", "src/test/suites/nvidiaAndRecovery.test.ts", "src/test/suites/diffProcessor.test.ts", "src/test/suites/supportSession.test.ts", "src/test/suites/longFormOutput.test.ts"],
         outdir: directory, bundle: true, platform: "node", format: "cjs", write: false,
         plugins: [{
             name: "deterministic-transports",

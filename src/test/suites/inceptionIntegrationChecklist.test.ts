@@ -5,6 +5,8 @@ import { API_KEY_PROVIDER_IDS, PROVIDER_CATALOG } from '../../config/providerCat
 import { DEFAULT_MODELS, PROVIDER_DEFAULTS } from '../../webview/settings/scripts/constants';
 import { ProviderConfig } from '../../webview/settings/components/config/ProviderConfig';
 import { ProviderIcon } from '../../webview/settings/components/ProviderIcon';
+import { modelCapabilities } from '../../services/api/capabilities';
+import { filterInceptionModels, InceptionProvider } from '../../services/api/inception';
 
 function readRepoFile(relativePath: string): string {
     const absolutePath = path.join(process.cwd(), relativePath);
@@ -96,5 +98,48 @@ suite('Inception Labs Integration Checklist', () => {
             (API_KEY_PROVIDER_IDS as readonly string[]).includes('inception'),
             'The catalog API-key provider list (used by SettingsManager) should include inception'
         );
+    });
+
+    test('Inception provider catalog includes mercury-3 in curated models', () => {
+        const curated = PROVIDER_CATALOG.inception.curatedModels;
+        assert.ok(curated, 'Inception should have curated models');
+        assert.ok(curated.includes('mercury-3'), 'Curated models should include mercury-3');
+        assert.strictEqual(curated[0], 'mercury-3', 'mercury-3 should be the first curated model');
+    });
+
+    test('Mercury 3 capabilities are registered with 1M context window', () => {
+        const caps = modelCapabilities('mercury-3');
+        assert.strictEqual(caps.contextTokens, 1000000, 'Mercury 3 contextTokens should be 1,000,000');
+        assert.strictEqual(caps.outputTokens, 4096, 'Mercury 3 outputTokens reservation should be 4096');
+        assert.strictEqual(caps.isUnknown, false, 'Mercury 3 should be a known model');
+    });
+
+    test('FilterInceptionModels includes mercury-3 and excludes non-chat models', () => {
+        const raw = {
+            data: [
+                { id: 'mercury-3', supported_endpoints: ['chat.completions'] },
+                { id: 'mercury-2.5' },
+                { id: 'mercury-decide' },
+                { id: 'mercury-edit-2' },
+            ]
+        };
+        const models = filterInceptionModels(raw);
+        assert.ok(models.includes('mercury-3'), 'filterInceptionModels should include mercury-3');
+        assert.ok(models.includes('mercury-2.5'), 'filterInceptionModels should include mercury-2.5');
+        assert.ok(!models.includes('mercury-decide'), 'filterInceptionModels should exclude mercury-decide');
+        assert.ok(!models.includes('mercury-edit-2'), 'filterInceptionModels should exclude mercury-edit-2');
+    });
+
+    test('Inception fallback models include mercury-3 when API returns error', async () => {
+        const originalFetch = globalThis.fetch;
+        try {
+            globalThis.fetch = (async () => new Response('error', { status: 500 })) as typeof globalThis.fetch;
+            const provider = new InceptionProvider('test-key', '');
+            const models = await provider.getModels();
+            assert.ok(models.includes('mercury-3'), 'Fallback models should include mercury-3');
+            assert.strictEqual(models[0], 'mercury-3', 'Fallback models should order mercury-3 first');
+        } finally {
+            globalThis.fetch = originalFetch;
+        }
     });
 });

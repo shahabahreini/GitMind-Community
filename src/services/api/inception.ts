@@ -208,7 +208,7 @@ export class InceptionProvider extends BaseAIProvider {
     async getModels(): Promise<string[]> {
         const curatedFallback = PROVIDER_CATALOG.inception?.curatedModels
             ? [...PROVIDER_CATALOG.inception.curatedModels]
-            : ["mercury-2.5", "mercury-2"];
+            : ["mercury-3", "mercury-2.5", "mercury-2"];
 
         try {
             debugLog("Fetching Inception Labs models from API...");

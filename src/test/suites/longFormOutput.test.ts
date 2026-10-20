@@ -1,6 +1,7 @@
 import * as assert from "node:assert";
 import { BaseAIProvider, GenerationOptions } from "../../services/api/base";
 import { MistralProvider } from "../../services/api/mistral";
+import { OllamaCloudProvider } from "../../services/api/ollamacloud.js";
 import { generateWithRawPrompt, generateCommitHistoryAnalysis } from "../../services/api";
 import { LONG_FORM_OUTPUT_TOKENS, LONG_FORM_MAX_OUTPUT_TOKENS, modelCapabilities } from "../../services/api/capabilities";
 import { ChangelogService } from "../../services/changelog/ChangelogService";
@@ -77,6 +78,16 @@ suite("Long-form output budget", () => {
         assert.strictEqual(provider.sent[0].maxTokens, 500);
     });
 
+    test("an explicit Max Tokens setting on commit requests is not clamped to the 1024 reservation", async () => {
+        const provider = new RecordingProvider("unlisted-commit-override");
+        await provider.generateWithRawPrompt("diff", { generationOptions: { maxTokens: 4000 } });
+        assert.strictEqual(provider.sent[0].maxTokens, 4000);
+
+        const lower = new RecordingProvider("unlisted-commit-lower");
+        await lower.generateWithRawPrompt("diff", { generationOptions: { maxTokens: 500 } });
+        assert.strictEqual(lower.sent[0].maxTokens, 500);
+    });
+
     test("Copilot-style input-only limits do not invent an output maximum", () => {
         const provider = new RecordingProvider("input-only-model");
         provider.remember(128_000, undefined, true);
@@ -100,6 +111,12 @@ suite("Long-form output budget", () => {
         const provider = new MistralProvider("test-key", "mistral-large-2512");
         await provider.generateWithRawPrompt("diff");
         assert.deepStrictEqual(sentMaxTokens, [modelCapabilities("mistral-large-2512").outputTokens]);
+    });
+
+    test("Ollama Cloud commit requests send the 4096 reasoning-safe reservation", async () => {
+        const provider = new OllamaCloudProvider("test-key", "gpt-oss:120b-cloud");
+        await provider.generateWithRawPrompt("diff");
+        assert.deepStrictEqual(sentMaxTokens.slice(-1), [4096]);
     });
 
     test("changelog sizing reserves room for the long-form answer", () => {

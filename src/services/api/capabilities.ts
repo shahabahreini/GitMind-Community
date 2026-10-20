@@ -80,8 +80,13 @@ const VERIFIED_LIMITS: Record<string, [number, number]> = {
     "claude-sonnet-5-5": [1000000, 1000],
     "claude-haiku-4-5": [200000, 1000],
     "claude-haiku-4-5-20251001": [200000, 1000],
+    "mercury-3": [1000000, 4096],
     "mercury-2.5": [128000, 4096],
     "mercury-2": [128000, 4096],
+    "gpt-oss:120b-cloud": [131072, 4096],
+    "gpt-oss:20b-cloud": [131072, 4096],
+    "qwen3-coder:480b-cloud": [131072, 4096],
+    "deepseek-v3.1:671b-cloud": [131072, 8192],
 };
 export function modelCapabilities(model: string): ModelCapabilities {
     return {
