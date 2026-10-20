@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v6.6.0]
+## [v6.6.0] - 2026-10-19
 
 ### Fixed
 
@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changelog prompt sizing now reserves room in the model's context for the answer.
 - Answers cut off by an output limit now show a specific message instead of a generic configuration error.
 - Support logs now record the real failure category instead of `network` for every failed request.
+- Unclamped user-configured `maxTokens` in `BaseAIProvider` to allow overrides of the 1024-token commit reservation.
+- Increased Ollama Cloud default output budget to 4096 tokens to accommodate reasoning models without truncation.
 
 ## [v6.5.0] - 2026-10-13
 
