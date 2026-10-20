@@ -37,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       # pnpm version comes from package.json "packageManager".
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -52,7 +52,7 @@ jobs:
   publish:
     name: Publish Wiki
     needs: validate
-    if: (github.repository == 'shahabahreini/GitMind-Pro' || github.repository == 'shahabahreini/GitMind-Community' || github.repository == 'shahabahreini/AI-Commit-Assistant') && (github.event_name == 'push' || inputs.publish)
+    if: (github.repository == 'shahabahreini/GitMind-Pro' || github.repository == 'shahabahreini/GitMind-Community' || github.repository == 'shahabahreini/AI-Commit-Assistant' || github.repository == 'shahabahreini/Shahab') && (github.event_name == 'push' || inputs.publish)
     runs-on: ubuntu-latest
     permissions:
       contents: write
