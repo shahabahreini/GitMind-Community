@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v6.7.0] - 2026-10-27
+
+### Added
+
+- Real model context and output limit discovery across providers, including `/api/show` metadata inspection and output maximum learning on Ollama Cloud and local Ollama.
+- Minimal-thinking configuration per provider so reasoning models reserve maximum token budget for the actual answer.
+
+### Changed
+
+- Updated Together AI default model to `openai/gpt-oss-120b` and Perplexity default model to `perplexity/sonar` (Agent API), with automatic migration for saved legacy defaults.
+- Filtered non-text models from Ollama Cloud discovery and removed retired models from bundled provider catalogs.
+- Replaced ESLint with Oxlint and streamlined CI/pretest build steps to eliminate duplicate typechecks and packaging passes.
+
+### Fixed
+
+- Fixed thinking models returning empty or truncated responses by using real reported or documented model limits and omitting adapter fallback caps when the API applies the model maximum.
+- Classified prompt-too-long rejections as input-limit errors so oversized diffs automatically split and retry.
+- Removed unsupported sampling parameters on Claude 4.7+ requests.
+
 ## [v6.6.0] - 2026-10-19
 
 ### Fixed

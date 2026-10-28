@@ -1,6 +1,6 @@
 # Troubleshooting And FAQ
 
-> Verified against GitMind `6.6.0` on October 19, 2026
+> Verified against GitMind `6.7.0` on October 27, 2026
 
 ## Provider And Model Problems
 

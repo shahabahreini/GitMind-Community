@@ -1,6 +1,6 @@
 # Vertex AI
 
-> Verified against GitMind `6.6.0` on October 19, 2026
+> Verified against GitMind `6.7.0` on October 27, 2026
 
 Vertex AI uses the Google Gen AI SDK in Vertex mode and Application Default Credentials. Authenticate with your normal Google Cloud workflow before generating a message.
 

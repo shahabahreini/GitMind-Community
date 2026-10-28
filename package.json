@@ -2,7 +2,7 @@
   "name": "ai-commit-assistant",
   "displayName": "GitMind: AI Commit Message Generator",
   "description": "AI commit message generator for VS Code. Write clear Conventional Commits from your diff with GitHub Copilot, local Ollama, or 24 built-in AI providers.",
-  "version": "6.6.0",
+  "version": "6.7.0",
   "publisher": "ShahabBahreiniJangjoo",
   "private": false,
   "icon": "images/logo.png",

@@ -143,7 +143,7 @@ suite("Long-form output budget", () => {
     test("support logs record truncation as invalid_response and transport failures as network", async () => {
         const failures = async (fetchImpl: typeof globalThis.fetch) => {
             globalThis.fetch = fetchImpl;
-            supportSessionService.start({ extensionVersion: "6.6.0", vscodeVersion: "1.101.0", platform: "darwin", architecture: "arm64" });
+            supportSessionService.start({ extensionVersion: "6.7.0", vscodeVersion: "1.101.0", platform: "darwin", architecture: "arm64" });
             try {
                 await assert.rejects(new MistralProvider("test-key", "mistral-large-2512").generateWithRawPrompt("Write a changelog", { outputTokens: LONG_FORM_OUTPUT_TOKENS }));
                 return supportSessionService.buildReport().events.filter(event => event.outcome === "failure").map(event => event.errorCategory);

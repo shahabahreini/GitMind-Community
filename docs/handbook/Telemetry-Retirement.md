@@ -1,6 +1,6 @@
 # Telemetry Retirement
 
-> Verified against GitMind `6.6.0` on October 19, 2026
+> Verified against GitMind `6.7.0` on October 27, 2026
 
 GitMind no longer collects or transmits product telemetry. Current releases do not contain an analytics client, a telemetry setting, or an Application Insights connection string.
 
