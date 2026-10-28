@@ -6,21 +6,14 @@ import { getProviderDefaultModel } from "../../config/providerCatalog";
 
 // Configuration for different DeepSeek models
 interface GenerationConfig {
-    max_tokens: number;
     temperature: number;
 }
 
 const MODEL_CONFIGS: Record<DeepSeekModel, GenerationConfig> = {
     "deepseek-flash": {
-        max_tokens: 350,
-        temperature: 0.2
-    },
-    "deepseek-v4-flash": {
-        max_tokens: 350,
         temperature: 0.2
     },
     "deepseek-v4-pro": {
-        max_tokens: 400,
         temperature: 0.2
     }
 };
@@ -39,7 +32,7 @@ export class DeepSeekProvider extends BaseAIProvider {
         }
 
         // Live discovery is authoritative; unknown IDs are sent as-is and rejected by the API if invalid.
-        const knownModels: DeepSeekModel[] = ["deepseek-flash", "deepseek-v4-pro", "deepseek-v4-flash"];
+        const knownModels: DeepSeekModel[] = ["deepseek-flash", "deepseek-v4-pro"];
         if (!this.model || !this.model.trim()) {
             throw new Error("Please select a DeepSeek model in the settings.");
         }
@@ -67,13 +60,15 @@ export class DeepSeekProvider extends BaseAIProvider {
                 },
                 body: JSON.stringify({
                     model: this.model,
+                    // Thinking is on by default and shares max_tokens with the answer (https://api-docs.deepseek.com/guides/thinking_mode, 2026-10-28).
+                    thinking: { type: "disabled" },
                     messages: [
                         {
                             role: "user",
                             content: prompt
                         }
                     ],
-                    max_tokens: options?.maxTokens ?? config.max_tokens,
+                    ...(options?.maxTokens ? { max_tokens: options.maxTokens } : {}),
                     temperature: options?.temperature ?? config.temperature,
                     stream: false
                 }),
@@ -258,7 +253,6 @@ export class DeepSeekProvider extends BaseAIProvider {
                             content: "Test"
                         }
                     ],
-                    max_tokens: 1,
                     stream: false
                 }),
                 signal: controller.signal

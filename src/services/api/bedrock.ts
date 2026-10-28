@@ -25,7 +25,8 @@ export class BedrockProvider extends BaseAIProvider {
             messages: [{ role: "user", content: [{ text: prompt }] }],
             inferenceConfig: {
                 temperature: options?.temperature ?? 0.2,
-                maxTokens: options?.maxTokens ?? 1000,
+                // Unset means the model's maximum (Bedrock InferenceConfiguration).
+                ...(options?.maxTokens ? { maxTokens: options.maxTokens } : {}),
                 ...(options?.topP === undefined ? {} : { topP: options.topP }),
             },
         }), { abortSignal: this.getAbortController().signal });

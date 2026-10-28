@@ -18,44 +18,47 @@ interface OpenAIError {
  * Configuration for different OpenAI models
  */
 interface ModelConfig {
-    maxTokens: number;
     temperature: number;
     supportsReasoning?: boolean;
+    /** Lowest documented reasoning effort for the model (https://developers.openai.com/api/docs/guides/reasoning, 2026-10-28). */
+    reasoningEffort?: "none" | "low";
 }
 
 const MODEL_CONFIGS: Record<string, ModelConfig> = {
-    "gpt-6-astra": { maxTokens: 4000, temperature: 0.2, supportsReasoning: true },
-    "gpt-6-sol": { maxTokens: 3000, temperature: 0.2, supportsReasoning: true },
-    "gpt-6-luna": { maxTokens: 2000, temperature: 0.2, supportsReasoning: true },
-    "gpt-5.6-sol": { maxTokens: 4000, temperature: 0.2, supportsReasoning: true },
-    "gpt-5.6-terra": { maxTokens: 3000, temperature: 0.2, supportsReasoning: true },
-    "gpt-5.6-luna": { maxTokens: 2000, temperature: 0.2, supportsReasoning: true },
-    "gpt-5.5": { maxTokens: 4000, temperature: 0.2 },
-    "gpt-5.5-pro": { maxTokens: 4000, temperature: 0.2 },
-    "gpt-5.4": { maxTokens: 4000, temperature: 0.2 },
-    "gpt-5.4-pro": { maxTokens: 4000, temperature: 0.2 },
-    "gpt-5.4-mini": { maxTokens: 2000, temperature: 0.2 },
-    "gpt-5.4-nano": { maxTokens: 1000, temperature: 0.2 },
-    "gpt-5-mini": { maxTokens: 2000, temperature: 0.2 },
-    "gpt-5-nano": { maxTokens: 1000, temperature: 0.2 },
-    "gpt-5": { maxTokens: 4000, temperature: 0.2 },
-    "gpt-5-pro": { maxTokens: 4000, temperature: 0.2 },
-    "gpt-5.1": { maxTokens: 4000, temperature: 0.2 },
-    "gpt-5.2": { maxTokens: 4000, temperature: 0.2 },
-    "gpt-5.2-pro": { maxTokens: 4000, temperature: 0.2 },
-    "gpt-4.1": { maxTokens: 2000, temperature: 0.2 },
-    "gpt-4.1-mini": { maxTokens: 1500, temperature: 0.2 },
-    "gpt-5.3-codex": { maxTokens: 4000, temperature: 0.2 },
-    "gpt-oss-120b": { maxTokens: 2000, temperature: 0.2 },
-    "gpt-oss-20b": { maxTokens: 2000, temperature: 0.2 },
-    "o3-pro": { maxTokens: 4000, temperature: 0.1, supportsReasoning: true },
-    "o3": { maxTokens: 2000, temperature: 0.1, supportsReasoning: true },
-    "gpt-4o": { maxTokens: 2000, temperature: 0.2 },
-    "gpt-4o-mini": { maxTokens: 1500, temperature: 0.2 },
-    "gpt-4": { maxTokens: 2000, temperature: 0.2 },
-    "gpt-5.3-chat-latest": { maxTokens: 4000, temperature: 0.2 },
-    "gpt-5.2-chat-latest": { maxTokens: 4000, temperature: 0.2 },
-    "chat-latest": { maxTokens: 2000, temperature: 0.2 }
+    "gpt-6.1-sol": { temperature: 0.2, supportsReasoning: true, reasoningEffort: "low" },
+    "gpt-6.1-terra": { temperature: 0.2, supportsReasoning: true, reasoningEffort: "none" },
+    "gpt-6-astra": { temperature: 0.2, supportsReasoning: true, reasoningEffort: "low" },
+    "gpt-6-sol": { temperature: 0.2, supportsReasoning: true, reasoningEffort: "none" },
+    "gpt-6-luna": { temperature: 0.2, supportsReasoning: true, reasoningEffort: "none" },
+    "gpt-5.6-sol": { temperature: 0.2, supportsReasoning: true, reasoningEffort: "none" },
+    "gpt-5.6-terra": { temperature: 0.2, supportsReasoning: true, reasoningEffort: "none" },
+    "gpt-5.6-luna": { temperature: 0.2, supportsReasoning: true, reasoningEffort: "none" },
+    "gpt-5.5": { temperature: 0.2 },
+    "gpt-5.5-pro": { temperature: 0.2 },
+    "gpt-5.4": { temperature: 0.2 },
+    "gpt-5.4-pro": { temperature: 0.2 },
+    "gpt-5.4-mini": { temperature: 0.2 },
+    "gpt-5.4-nano": { temperature: 0.2 },
+    "gpt-5-mini": { temperature: 0.2 },
+    "gpt-5-nano": { temperature: 0.2 },
+    "gpt-5": { temperature: 0.2 },
+    "gpt-5-pro": { temperature: 0.2 },
+    "gpt-5.1": { temperature: 0.2 },
+    "gpt-5.2": { temperature: 0.2 },
+    "gpt-5.2-pro": { temperature: 0.2 },
+    "gpt-4.1": { temperature: 0.2 },
+    "gpt-4.1-mini": { temperature: 0.2 },
+    "gpt-5.3-codex": { temperature: 0.2 },
+    "gpt-oss-120b": { temperature: 0.2 },
+    "gpt-oss-20b": { temperature: 0.2 },
+    "o3-pro": { temperature: 0.1, supportsReasoning: true, reasoningEffort: "low" },
+    "o3": { temperature: 0.1, supportsReasoning: true, reasoningEffort: "low" },
+    "gpt-4o": { temperature: 0.2 },
+    "gpt-4o-mini": { temperature: 0.2 },
+    "gpt-4": { temperature: 0.2 },
+    "gpt-5.3-chat-latest": { temperature: 0.2 },
+    "gpt-5.2-chat-latest": { temperature: 0.2 },
+    "chat-latest": { temperature: 0.2 }
 };
 
 export class OpenAIProvider extends BaseAIProvider {
@@ -72,7 +75,9 @@ export class OpenAIProvider extends BaseAIProvider {
             // Get model-specific configuration or use provided options
             const modelConfig = MODEL_CONFIGS[this.model] || MODEL_CONFIGS["gpt-6-sol"] || MODEL_CONFIGS["gpt-5.6-terra"];
             const temperature = options?.temperature ?? modelConfig.temperature;
-            const maxTokens = options?.maxTokens ?? modelConfig.maxTokens;
+            // Unset when the model's real limit is unknown, so the API applies the model's own maximum.
+            const maxTokens = options?.maxTokens;
+            const reasoningEffort = MODEL_CONFIGS[this.model]?.reasoningEffort;
             const topP = options?.topP;
 
             const response = await loggedFetch('https://api.openai.com/v1/chat/completions', {
@@ -89,12 +94,13 @@ export class OpenAIProvider extends BaseAIProvider {
                             content: prompt
                         }
                     ],
+                    // max_tokens is deprecated; max_completion_tokens bounds visible and reasoning tokens on every model.
+                    ...(maxTokens ? { max_completion_tokens: maxTokens } : {}),
                     ...(modelConfig.supportsReasoning
-                        ? { max_completion_tokens: maxTokens }
+                        ? (reasoningEffort ? { reasoning_effort: reasoningEffort } : {})
                         : {
                             ...(topP !== undefined && options?.temperature === undefined ? { top_p: topP } : {}),
                             temperature,
-                            max_tokens: maxTokens
                         })
                 }),
                 signal: controller.signal

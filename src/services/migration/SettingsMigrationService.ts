@@ -11,6 +11,7 @@ export const RETIRED_SHIPPED_MODEL_DEFAULTS: Partial<Record<ProviderCatalogId, r
     huggingface: ['mistralai/Mistral-7B-Instruct-v0.3'],
     mistral: ['mistral-small-4'],
     openrouter: ['google/gemma-3-27b-it:free'],
+    together: ['meta-llama/Llama-3.3-70B-Instruct-Turbo'],
     deepseek: ['deepseek-v4-flash'],
     grok: ['grok-4.4'],
     groq: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'meta-llama/llama-4-scout-17b-16e-instruct'],

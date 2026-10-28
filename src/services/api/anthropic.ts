@@ -3,24 +3,32 @@ import { AnthropicModel } from "../../config/types";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { RequestContext } from "./requestContext";
 import { loggedFetch } from "./loggedFetch";
+import { UNKNOWN_LIMIT_OUTPUT_TOKENS } from "./capabilities";
 
-// Configuration for different Anthropic models
+// Per-model request settings from https://platform.claude.com/docs/en/build-with-claude/thinking (verified 2026-10-28).
 interface GenerationConfig {
-    max_tokens: number;
-    temperature: number;
-    top_p: number;
-    top_k?: number;
-    /** Model always uses adaptive thinking; sampling parameters are not sent. */
-    alwaysThinks?: boolean;
+    /** Sampling parameters are accepted; Claude 4.7 and later reject non-default temperature, top_p and top_k. */
+    sampling: boolean;
+    temperature?: number;
+    /** Lowest thinking the model allows; thinking tokens count toward max_tokens. */
+    thinking?: { type: "disabled" };
+    effort?: "low";
 }
 
-const MODEL_CONFIGS: Record<AnthropicModel, GenerationConfig> = {
-    "claude-sonnet-5": { max_tokens: 350, temperature: 0.2, top_p: 0.8 },
-    "claude-haiku-4-5": { max_tokens: 350, temperature: 0.2, top_p: 0.8 },
-    // Adaptive thinking is always on for these models: leave room for thinking and use default sampling.
-    "claude-opus-5-5": { max_tokens: 8000, temperature: 0.2, top_p: 0.8, alwaysThinks: true },
-    "claude-fable-5-1": { max_tokens: 8000, temperature: 0.2, top_p: 0.8, alwaysThinks: true },
+const MODEL_CONFIGS: Record<string, GenerationConfig> = {
+    "claude-sonnet-5": { sampling: false, thinking: { type: "disabled" } },
+    "claude-haiku-5-5": { sampling: false, thinking: { type: "disabled" } },
+    "claude-haiku-4-5": { sampling: true, temperature: 0.2 },
+    // Adaptive thinking cannot be disabled on these models; the lowest effort keeps it short.
+    "claude-sonnet-5-5": { sampling: false, effort: "low" },
+    "claude-opus-5-5": { sampling: false, effort: "low" },
+    "claude-fable-5-1": { sampling: false, effort: "low" },
 };
+/** Models before Claude 4.7 accept sampling parameters; newer unlisted models get the provider defaults. */
+const LEGACY_SAMPLING_MODEL = /^claude-(?:3|(?:opus|sonnet|haiku)-4(?:-[0-6])?(?:-\d{8})?$)/;
+function unlistedModelConfig(model: string): GenerationConfig {
+    return LEGACY_SAMPLING_MODEL.test(model) ? { sampling: true, temperature: 0.2 } : { sampling: false };
+}
 
 export class AnthropicProvider extends BaseAIProvider {
     constructor(apiKey: string, model: string) {
@@ -50,18 +58,15 @@ export class AnthropicProvider extends BaseAIProvider {
             debugLog("Prompt:", prompt);
 
             // Get model-specific configuration
-            const config = MODEL_CONFIGS[this.model as AnthropicModel] || MODEL_CONFIGS["claude-sonnet-5"];
+            const config = MODEL_CONFIGS[this.model] ?? unlistedModelConfig(this.model);
             const temperatureOverride = options?.temperature;
-            // For commit messages we want strict max tokens, for analysis we might want more (handled by option or default)
-            const maxTokens = options?.maxTokens ?? config.max_tokens;
-            const topP = temperatureOverride === undefined ? options?.topP : undefined;
-            const topK = options?.topK;
+            // Messages requires max_tokens; real limits come from /v1/models, with a generous fallback when unknown.
+            const maxTokens = options?.maxTokens ?? UNKNOWN_LIMIT_OUTPUT_TOKENS;
+            const topP = config.sampling && temperatureOverride === undefined ? options?.topP : undefined;
+            const topK = config.sampling ? options?.topK : undefined;
 
             // Anthropic constraint: don't send both temperature and top_p.
-            // If the caller explicitly sets temperature, prefer it and drop top_p.
-            // If top_p is provided (and temperature isn't explicitly overridden), omit temperature.
-            const shouldSendTemperature = topP === undefined && !config.alwaysThinks;
-            const temperature = shouldSendTemperature ? (temperatureOverride ?? config.temperature) : undefined;
+            const temperature = config.sampling && topP === undefined ? (temperatureOverride ?? config.temperature) : undefined;
 
             // Using the Messages API
             const response = await loggedFetch('https://api.anthropic.com/v1/messages', {
@@ -75,8 +80,10 @@ export class AnthropicProvider extends BaseAIProvider {
                     model: this.model,
                     max_tokens: maxTokens,
                     ...(temperature !== undefined ? { temperature } : {}),
-                    ...(topP !== undefined && !config.alwaysThinks ? { top_p: topP } : {}),
-                    ...(topK !== undefined && !config.alwaysThinks ? { top_k: topK } : {}),
+                    ...(topP !== undefined ? { top_p: topP } : {}),
+                    ...(topK !== undefined ? { top_k: topK } : {}),
+                    ...(config.thinking ? { thinking: config.thinking } : {}),
+                    ...(config.effort ? { output_config: { effort: config.effort } } : {}),
                     messages: [
                         {
                             role: "user",

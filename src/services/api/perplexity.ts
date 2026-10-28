@@ -5,6 +5,7 @@ import { PerplexityModel } from "../../config/types";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
 import { getCuratedModels } from "../../config/providerCatalog";
+import { UNKNOWN_LIMIT_OUTPUT_TOKENS } from "./capabilities";
 
 const PERPLEXITY_BASE_URL = "https://api.perplexity.ai";
 /**
@@ -32,22 +33,18 @@ export function extractPerplexityAgentText(data: any): string | undefined {
 
 // Configuration for different Perplexity models
 interface GenerationConfig {
-    max_tokens: number;
     temperature: number;
 }
 
 const MODEL_CONFIGS: Record<PerplexityModel, GenerationConfig> = {
-    // Latest Sonar Models (Recommended)
-    "sonar-pro": {
-        max_tokens: 350,
+    // Agent API models use provider/model IDs (https://docs.perplexity.ai/docs/agent-api/models, 2026-10-28)
+    "perplexity/sonar": {
         temperature: 0.2
     },
-    "sonar-reasoning-pro": {
-        max_tokens: 400,
+    "openai/gpt-6-luna": {
         temperature: 0.2
     },
-    "sonar": {
-        max_tokens: 350,
+    "perplexity/glm-5.3-flash": {
         temperature: 0.2
     }
 };
@@ -76,7 +73,7 @@ export class PerplexityProvider extends BaseAIProvider {
             debugLog("Sending prompt to Perplexity API");
 
             // Get model-specific configuration
-            const config = MODEL_CONFIGS[this.model as PerplexityModel] ?? MODEL_CONFIGS["sonar-pro"];
+            const config = MODEL_CONFIGS[this.model as PerplexityModel] ?? MODEL_CONFIGS["perplexity/sonar"];
 
             const headers = {
                 Authorization: `Bearer ${this.apiKey}`,
@@ -87,7 +84,8 @@ export class PerplexityProvider extends BaseAIProvider {
                 model: this.model,
                 instructions: COMMIT_INSTRUCTIONS,
                 input: prompt,
-                max_output_tokens: options?.maxTokens ?? config.max_tokens,
+                // Optional except for anthropic/* models, which reject a request without it.
+                ...((options?.maxTokens ?? (this.model.startsWith("anthropic/") ? UNKNOWN_LIMIT_OUTPUT_TOKENS : undefined)) ? { max_output_tokens: options?.maxTokens ?? UNKNOWN_LIMIT_OUTPUT_TOKENS } : {}),
             };
 
             const response = await loggedFetch(PERPLEXITY_AGENT_URL, {
@@ -231,7 +229,7 @@ export async function validatePerplexityAPIKey(apiKey: string): Promise<{ succes
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                model: "sonar",
+                model: "perplexity/sonar",
                 input: "Hi",
                 max_output_tokens: 16
             }),

@@ -28,6 +28,9 @@ export function filterOllamaCloudModels(raw: unknown): string[] {
         for (const item of withModels.models) {
             if (item && typeof item === "object") {
                 const name = (item as { name?: unknown; model?: unknown }).name ?? (item as { model?: unknown }).model;
+                // Models that report capabilities but cannot complete text (e.g. decision models) reject chat requests.
+                const capabilities = (item as { capabilities?: unknown }).capabilities;
+                if (Array.isArray(capabilities) && !capabilities.includes("completion")) { continue; }
                 if (typeof name === "string" && name.trim().length > 0) {
                     modelNames.push(name.trim());
                 }
@@ -51,6 +54,82 @@ export function filterOllamaCloudModels(raw: unknown): string[] {
     return [...new Set(modelNames)]
         .filter(name => !NON_CHAT_MARKERS.some(marker => name.toLowerCase().includes(marker)))
         .sort((a, b) => a.localeCompare(b));
+}
+
+export interface OllamaModelDetails {
+    contextTokens?: number;
+    /** Ollama Cloud enforces a per-model output maximum it reports only in a rejection message. */
+    maxOutputTokens?: number;
+    thinkingValues?: Array<string | boolean>;
+    capabilities?: string[];
+}
+
+/** Reads the limits and thinking levels Ollama's /api/show reports for one model. */
+export function parseOllamaModelDetails(raw: unknown): OllamaModelDetails {
+    const data = raw && typeof raw === "object" ? raw as { model_info?: Record<string, unknown>; thinking?: { values?: unknown }; capabilities?: unknown } : {};
+    const contextEntry = Object.entries(data.model_info ?? {}).find(([key, value]) => key.endsWith(".context_length") && typeof value === "number" && Number.isSafeInteger(value) && value > 0);
+    const values = Array.isArray(data.thinking?.values) ? data.thinking.values.filter((value): value is string | boolean => typeof value === "string" || typeof value === "boolean") : undefined;
+    return {
+        contextTokens: contextEntry ? contextEntry[1] as number : undefined,
+        thinkingValues: values,
+        capabilities: Array.isArray(data.capabilities) ? data.capabilities.filter((value): value is string => typeof value === "string") : undefined,
+    };
+}
+
+const THINKING_LEVELS = ["low", "medium", "high", "xhigh", "max"];
+
+/**
+ * Lowest thinking the model supports, in Ollama's native `think` form: false when it can be turned off,
+ * otherwise its lowest named level. Undefined leaves the model default, so a model that does not think is never switched on.
+ */
+export function chooseOllamaThinking(values: ReadonlyArray<string | boolean> | undefined): false | string | undefined {
+    if (!values || values.length === 0) { return undefined; }
+    if (values.includes(false)) { return false; }
+    return THINKING_LEVELS.find(level => values.includes(level));
+}
+
+/** The same choice as an OpenAI-compatible `reasoning_effort`, where "none" requests false. */
+export function ollamaReasoningEffort(values: ReadonlyArray<string | boolean> | undefined): string | undefined {
+    const choice = chooseOllamaThinking(values);
+    return choice === false ? "none" : choice;
+}
+
+const modelDetailsCache = new Map<string, OllamaModelDetails>();
+
+/** Reads the real output maximum from Ollama Cloud's rejection, e.g. "max_tokens (1041414) exceeds model's maximum output tokens (131072)". */
+export function reportedMaxOutputTokens(message: string): number | undefined {
+    const match = /maximum output tokens \((\d+)\)/i.exec(message);
+    const value = match ? Number(match[1]) : NaN;
+    return Number.isSafeInteger(value) && value > 0 ? value : undefined;
+}
+
+/** One bounded /api/show lookup per server and model; failures are not cached so the next request retries. */
+export async function fetchOllamaModelDetails(baseUrl: string, model: string, headers: Record<string, string>, signal: AbortSignal | undefined, provider: "ollama" | "ollamacloud"): Promise<OllamaModelDetails | undefined> {
+    const key = `${baseUrl}\u0000${model}`;
+    const cached = modelDetailsCache.get(key);
+    if (cached) { return cached; }
+    const bounded = signal ? AbortSignal.any([signal, AbortSignal.timeout(5000)]) : AbortSignal.timeout(5000);
+    try {
+        const response = await loggedFetch(`${baseUrl}/api/show`, {
+            method: "POST",
+            headers: { ...headers, "Content-Type": "application/json" },
+            body: JSON.stringify({ model }),
+            signal: bounded,
+        }, { provider, operation: "models.show" });
+        if (!response.ok) {
+            if (provider === "ollamacloud" && [401, 403, 429].includes(response.status)) {
+                throw parseOllamaCloudError(response.status, await response.text());
+            }
+            return undefined;
+        }
+        const details = parseOllamaModelDetails(await response.json());
+        modelDetailsCache.set(key, details);
+        return details;
+    } catch (error) {
+        if (signal?.aborted || (error instanceof ProviderApiError && ["authentication", "permission", "rate-limit"].includes(error.category ?? ""))) { throw error; }
+        debugLog(`Ollama model details unavailable for ${model}:`, error);
+        return undefined;
+    }
 }
 
 export function parseOllamaCloudError(status: number, text: string): ProviderApiError {
@@ -90,6 +169,12 @@ export function parseOllamaCloudError(status: number, text: string): ProviderApi
             { status, code, provider: "ollamacloud", category: "rate-limit", userFacing: true }
         );
     }
+    if (status === 400 && /prompt is too long|maximum context length|context length exceeded/i.test(errorMessage)) {
+        return new ProviderApiError(
+            `Ollama Cloud prompt is too long for the model: ${errorMessage}`,
+            { status, code, provider: "ollamacloud", category: "input-limit", userFacing: true }
+        );
+    }
     if (status === 400) {
         return new ProviderApiError(
             `Ollama Cloud bad request: ${errorMessage}. Please verify your model selection and parameters.`,
@@ -113,8 +198,16 @@ export class OllamaCloudProvider extends BaseAIProvider {
         super(apiKey, model);
     }
 
+    private reasoningEffort?: string;
+    private details?: OllamaModelDetails;
+
+    /** Every request uses the selected model's real context and its lowest thinking level, whatever the diff size. */
     override async prepareCapabilities(context?: RequestContext): Promise<void> {
-        await this.discoverLargeModel(context, signal => this.getModels(signal));
+        const details = await fetchOllamaModelDetails(OLLAMA_CLOUD_BASE_URL, this.model, { Authorization: `Bearer ${this.apiKey}` }, context?.signal, "ollamacloud");
+        this.details = details;
+        this.reasoningEffort = ollamaReasoningEffort(details?.thinkingValues);
+        // The answer may use whatever context the prompt leaves, up to the model's output maximum once the server has reported it.
+        this.rememberModelLimits(this.model, details?.contextTokens ?? 131072, details?.maxOutputTokens, false, true);
     }
 
     protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
@@ -122,26 +215,39 @@ export class OllamaCloudProvider extends BaseAIProvider {
 
         debugLog(`Making API call to Ollama Cloud with model: ${this.model}`);
 
+        const send = (maxTokens: number | undefined) => loggedFetch(`${OLLAMA_CLOUD_BASE_URL}/v1/chat/completions`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${this.apiKey}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                model: this.model,
+                messages: [
+                    {
+                        role: "user",
+                        content: prompt,
+                    },
+                ],
+                ...(maxTokens ? { max_tokens: maxTokens } : {}),
+                ...(this.reasoningEffort ? { reasoning_effort: this.reasoningEffort } : {}),
+                temperature: options?.temperature ?? 0.2,
+            }),
+            signal: controller.signal,
+        }, { provider: "ollamacloud", operation: "chat.completions" });
+
         try {
-            const response = await loggedFetch(`${OLLAMA_CLOUD_BASE_URL}/v1/chat/completions`, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${this.apiKey}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    model: this.model,
-                    messages: [
-                        {
-                            role: "user",
-                            content: prompt,
-                        },
-                    ],
-                    max_tokens: options?.maxTokens ?? 4096,
-                    temperature: options?.temperature ?? 0.2,
-                }),
-                signal: controller.signal,
-            }, { provider: "ollamacloud", operation: "chat.completions" });
+            let response: Response;
+            try {
+                response = await send(options?.maxTokens);
+            } catch (error) {
+                // The output maximum is not in /api/show; learn it from the rejection once, then retry within it.
+                const maxOutput = error instanceof Error ? reportedMaxOutputTokens(error.message) : undefined;
+                if (!maxOutput || !options?.maxTokens || options.maxTokens <= maxOutput) { throw error; }
+                if (this.details) { this.details.maxOutputTokens = maxOutput; }
+                this.rememberModelLimits(this.model, this.getCapabilities().contextTokens, maxOutput, false, true);
+                response = await send(maxOutput);
+            }
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -176,9 +282,7 @@ export class OllamaCloudProvider extends BaseAIProvider {
     }
 
     async getModels(signal?: AbortSignal): Promise<string[]> {
-        const curatedFallback = PROVIDER_CATALOG.ollamacloud?.curatedModels
-            ? [...PROVIDER_CATALOG.ollamacloud.curatedModels]
-            : ["gpt-oss:120b-cloud", "gpt-oss:20b-cloud", "qwen3-coder:480b-cloud", "deepseek-v3.1:671b-cloud"];
+        const curatedFallback = [...(PROVIDER_CATALOG.ollamacloud?.curatedModels ?? [])];
 
         try {
             debugLog("Fetching Ollama Cloud models from API...");
@@ -217,18 +321,12 @@ export class OllamaCloudProvider extends BaseAIProvider {
             const filtered = filterOllamaCloudModels(data);
             debugLog(`Successfully filtered ${filtered.length} Ollama Cloud models:`, filtered);
 
-            const result = filtered.length > 0 ? filtered : curatedFallback;
-            for (const name of result) {
-                this.rememberModelLimits(name, 131072, 4096);
-            }
-            return result;
+            // Limits come from /api/show for the selected model in prepareCapabilities.
+            return filtered.length > 0 ? filtered : curatedFallback;
         } catch (error) {
             debugLog("Error fetching Ollama Cloud models, using curated fallback:", error);
             if (error instanceof ProviderApiError && error.category === "authentication") {
                 throw error;
-            }
-            for (const name of curatedFallback) {
-                this.rememberModelLimits(name, 131072, 4096);
             }
             return curatedFallback;
         }

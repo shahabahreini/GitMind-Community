@@ -3,7 +3,7 @@ import { BaseAIProvider, GenerationOptions } from "../../services/api/base";
 import { MistralProvider } from "../../services/api/mistral";
 import { OllamaCloudProvider } from "../../services/api/ollamacloud.js";
 import { generateWithRawPrompt, generateCommitHistoryAnalysis } from "../../services/api";
-import { LONG_FORM_OUTPUT_TOKENS, LONG_FORM_MAX_OUTPUT_TOKENS, modelCapabilities } from "../../services/api/capabilities";
+import { LONG_FORM_OUTPUT_TOKENS } from "../../services/api/capabilities";
 import { ChangelogService } from "../../services/changelog/ChangelogService";
 import { ApiConfig } from "../../config/types";
 import { supportSessionService } from "../../services/support/SupportSessionService";
@@ -12,7 +12,7 @@ import { supportSessionService } from "../../services/support/SupportSessionServ
 class RecordingProvider extends BaseAIProvider {
     sent: GenerationOptions[] = [];
     constructor(model: string) { super(`key-${model}`, model); }
-    remember(input: number, output: number | undefined, inputOnly = false): void { this.rememberModelLimits(this.model, input, output, inputOnly); }
+    remember(input: number, output: number | undefined, inputOnly = false, remainingContext = false): void { this.rememberModelLimits(this.model, input, output, inputOnly, remainingContext); }
     protected async generateResponse(_prompt: string, options?: GenerationOptions): Promise<string> {
         this.sent.push({ ...options });
         return "ok";
@@ -37,45 +37,54 @@ suite("Long-form output budget", () => {
 
     teardown(() => { globalThis.fetch = originalFetch; });
 
-    test("commit requests keep the model reservation", async () => {
+    test("unknown models send no output cap so the provider applies the model's own maximum", async () => {
         const provider = new RecordingProvider("unlisted-commit-model");
         await provider.generateWithRawPrompt("diff");
-        assert.strictEqual(provider.sent[0].maxTokens, modelCapabilities("unlisted-commit-model").outputTokens);
+        assert.strictEqual(provider.sent[0].maxTokens, undefined);
+
+        const longForm = new RecordingProvider("unlisted-long-model");
+        await longForm.generateWithRawPrompt("history", { outputTokens: LONG_FORM_OUTPUT_TOKENS });
+        assert.strictEqual(longForm.sent[0].maxTokens, undefined);
     });
 
-    test("long-form requests on unknown models get the long-form budget", async () => {
-        const provider = new RecordingProvider("unlisted-long-model");
-        await provider.generateWithRawPrompt("history", { outputTokens: LONG_FORM_OUTPUT_TOKENS });
-        assert.strictEqual(provider.sent[0].maxTokens, LONG_FORM_OUTPUT_TOKENS);
-    });
-
-    test("a reported output maximum bounds the long-form budget", async () => {
+    test("a reported output maximum is used in full, without the old 16k clamp", async () => {
         const small = new RecordingProvider("reported-small-output");
         small.remember(200_000, 4_000);
         await small.generateWithRawPrompt("history", { outputTokens: LONG_FORM_OUTPUT_TOKENS });
         assert.strictEqual(small.sent[0].maxTokens, 4_000);
         assert.strictEqual(small.getCapabilities().maxOutputTokens, 4_000);
-        assert.ok(small.getCapabilities().outputTokens <= 1024, "commit reservation is unchanged");
 
         const large = new RecordingProvider("reported-large-output");
-        large.remember(1_000_000, 65_536);
-        await large.generateWithRawPrompt("history", { outputTokens: LONG_FORM_OUTPUT_TOKENS });
-        assert.strictEqual(large.sent[0].maxTokens, LONG_FORM_MAX_OUTPUT_TOKENS);
+        large.remember(1_000_000, 128_000);
+        await large.generateWithRawPrompt("diff");
+        assert.strictEqual(large.sent[0].maxTokens, 128_000);
     });
 
-    test("a known context leaves room for the prompt but never drops below the reservation", async () => {
+    test("models whose output shares the context get all the room the prompt leaves", async () => {
+        const provider = new RecordingProvider("remaining-context-model");
+        provider.remember(262_144, undefined, false, true);
+        const prompt = "x".repeat(30_000);
+        await provider.generateWithRawPrompt(prompt, { heuristicTokens: true });
+        const promptTokens = Math.ceil(30_000 / 3 * 1.1);
+        assert.strictEqual(provider.sent[0].maxTokens, 262_144 - promptTokens - 256);
+    });
+
+    test("a known context bounds the answer by what the prompt leaves", async () => {
         const provider = new RecordingProvider("reported-32k-context");
-        provider.remember(32_000, 16_000);
-        const reservation = provider.getCapabilities().outputTokens;
-        await provider.generateWithRawPrompt("x".repeat(80_000), { outputTokens: LONG_FORM_OUTPUT_TOKENS, heuristicTokens: true });
-        const sent = provider.sent[0].maxTokens!;
-        assert.ok(sent >= reservation && sent < LONG_FORM_OUTPUT_TOKENS, `sent ${sent}`);
+        provider.remember(32_000, 30_000);
+        await provider.generateWithRawPrompt("x".repeat(60_000), { outputTokens: LONG_FORM_OUTPUT_TOKENS, heuristicTokens: true });
+        assert.strictEqual(provider.sent[0].maxTokens, 32_000 - Math.ceil(60_000 / 3 * 1.1) - 256);
     });
 
-    test("an explicit Max Tokens setting still caps long-form output", async () => {
+    test("an explicit Max Tokens setting wins within the model's real limit", async () => {
         const provider = new RecordingProvider("unlisted-user-cap");
         await provider.generateWithRawPrompt("history", { outputTokens: LONG_FORM_OUTPUT_TOKENS, generationOptions: { maxTokens: 500 } });
         assert.strictEqual(provider.sent[0].maxTokens, 500);
+
+        const known = new RecordingProvider("known-user-cap");
+        known.remember(200_000, 32_000);
+        await known.generateWithRawPrompt("diff", { generationOptions: { maxTokens: 5_000_000 } });
+        assert.strictEqual(known.sent[0].maxTokens, 32_000);
     });
 
     test("an explicit Max Tokens setting on commit requests is not clamped to the 1024 reservation", async () => {
@@ -98,25 +107,26 @@ suite("Long-form output budget", () => {
         const config = { type: "mistral", apiKey: "test-key", model: "mistral-large-2512" } as ApiConfig;
         const changelog = await generateWithRawPrompt(config, "Write a changelog", "changelog", true);
         assert.match(changelog, /Added things/);
-        assert.deepStrictEqual(sentMaxTokens, [LONG_FORM_OUTPUT_TOKENS]);
+        assert.deepStrictEqual(sentMaxTokens, [undefined]);
     });
 
     test("history analysis sends the long-form budget through the real adapter", async () => {
         const config = { type: "mistral", apiKey: "test-key", model: "mistral-large-2512" } as ApiConfig;
         await generateCommitHistoryAnalysis(config, "abc1234 feat: add things", 10, false);
-        assert.deepStrictEqual(sentMaxTokens, [LONG_FORM_OUTPUT_TOKENS]);
+        assert.deepStrictEqual(sentMaxTokens, [undefined]);
     });
 
-    test("commit-size raw prompts through the real adapter keep the reservation", async () => {
+    test("commit-size raw prompts through the real adapter omit the cap for a model with unknown limits", async () => {
         const provider = new MistralProvider("test-key", "mistral-large-2512");
         await provider.generateWithRawPrompt("diff");
-        assert.deepStrictEqual(sentMaxTokens, [modelCapabilities("mistral-large-2512").outputTokens]);
+        assert.deepStrictEqual(sentMaxTokens, [undefined]);
     });
 
-    test("Ollama Cloud commit requests send the 4096 reasoning-safe reservation", async () => {
+    test("Ollama Cloud commit requests may use the whole remaining context", async () => {
         const provider = new OllamaCloudProvider("test-key", "gpt-oss:120b-cloud");
         await provider.generateWithRawPrompt("diff");
-        assert.deepStrictEqual(sentMaxTokens.slice(-1), [4096]);
+        const sent = sentMaxTokens.slice(-1)[0];
+        assert.ok(sent > 100_000, `sent ${sent}`);
     });
 
     test("changelog sizing reserves room for the long-form answer", () => {

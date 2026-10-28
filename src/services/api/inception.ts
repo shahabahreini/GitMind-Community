@@ -104,6 +104,13 @@ export function parseInceptionError(status: number, text: string): ProviderApiEr
     );
 }
 
+/** Lowest documented reasoning effort (https://docs.inceptionlabs.ai/api-reference/chat/create-a-chat-completion, 2026-10-28). */
+const MINIMAL_THINKING: Record<string, Record<string, unknown>> = {
+    "mercury-3": { reasoning_effort: "instant" },
+    "mercury-2.5": { reasoning_effort: "instant" },
+    "mercury-2": { reasoning_effort: "instant" },
+};
+
 export class InceptionProvider extends BaseAIProvider {
     constructor(apiKey: string, model: string) {
         super(apiKey, model);
@@ -123,14 +130,15 @@ export class InceptionProvider extends BaseAIProvider {
                 },
                 body: JSON.stringify({
                     model: this.model,
+                    ...(MINIMAL_THINKING[this.model] ?? {}),
                     messages: [
                         {
                             role: "user",
                             content: prompt,
                         },
                     ],
-                    max_tokens: options?.maxTokens ?? 2048,
-                    max_completion_tokens: options?.maxTokens ?? 2048,
+                    // max_tokens is deprecated; max_completion_tokens covers visible and reasoning tokens.
+                    ...(options?.maxTokens ? { max_completion_tokens: options.maxTokens } : {}),
                     temperature: options?.temperature ?? 0.2,
                 }),
                 signal: controller.signal,

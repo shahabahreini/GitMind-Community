@@ -3,7 +3,7 @@ import { generateCommitPrompt, getPromptConfig, generateCommitHistoryAnalysisPro
 import { debugLog, diagnosticLog } from "../debug/logger";
 import { RequestContext, requestScope, runRequest } from "./requestContext";
 import { classifyGenerationFailure, normalizeProviderError, ProviderApiError } from "./recovery";
-import { answerText, countPromptTokens, directProbeBudget, effectiveInputBudget, LONG_FORM_MAX_OUTPUT_TOKENS, measurePrompt, modelCapabilities, ModelCapabilities, UNKNOWN_MODEL_PROBE_BYTES } from "./capabilities";
+import { answerReservation, answerText, countPromptTokens, directProbeBudget, effectiveInputBudget, measurePrompt, modelCapabilities, ModelCapabilities, realOutputLimit, UNKNOWN_MODEL_PROBE_BYTES } from "./capabilities";
 import { createHash } from "node:crypto";
 import { supportErrorCategory } from "../support/SupportSessionService";
 import { estimateTokens } from "../../utils/tokenCounter";
@@ -59,26 +59,38 @@ export abstract class BaseAIProvider implements AIProvider {
         return createHash("sha256").update(this.capabilityScope()).digest("hex") + ":" + model;
     }
 
-    protected rememberModelLimits(model: string, inputTokens: unknown, outputTokens: unknown, inputOnly = false): void {
+    /** Records limits the provider reported for a model; reported values are the model's real specs and are trusted as given. */
+    protected rememberModelLimits(model: string, inputTokens: unknown, outputTokens: unknown, inputOnly = false, outputUsesRemainingContext = false): void {
         if (typeof inputTokens !== "number" || !Number.isSafeInteger(inputTokens) || inputTokens < 512) { return; }
         const reported = typeof outputTokens === "number" && Number.isSafeInteger(outputTokens) && outputTokens > 0 ? outputTokens : undefined;
-        const reserved = reported ? Math.min(modelCapabilities(model).outputTokens, reported) : 1024;
+        const documented = modelCapabilities(model).maxOutputTokens;
+        // Remaining-context providers report no separate output cap; a catalog reservation must not stand in for one.
+        const maxOutput = reported ?? (outputUsesRemainingContext ? undefined : documented);
+        const reserved = answerReservation(inputTokens, maxOutput ?? (outputUsesRemainingContext ? inputTokens : undefined));
         let registry = BaseAIProvider.runtimeCapabilities.get(this.constructor);
         if (!registry) { registry = new Map(); BaseAIProvider.runtimeCapabilities.set(this.constructor, registry); }
-        registry.set(this.capabilityKey(model), { ...modelCapabilities(model), contextTokens: inputOnly ? inputTokens + reserved + 256 : inputTokens, outputTokens: reserved, maxOutputTokens: reported, isUnknown: false, ...(inputOnly ? { maxInputTokens: inputTokens } : {}) });
+        registry.set(this.capabilityKey(model), {
+            ...modelCapabilities(model),
+            contextTokens: inputOnly ? inputTokens + reserved + 256 : inputTokens,
+            outputTokens: reserved,
+            maxOutputTokens: maxOutput,
+            outputUsesRemainingContext,
+            isUnknown: false,
+            ...(inputOnly ? { maxInputTokens: inputTokens } : {}),
+        });
     }
 
     async prepareCapabilities(_context?: RequestContext): Promise<void> {}
 
-    /** One bounded metadata lookup per selected model and operation, shared by workers. */
+    /** One bounded metadata lookup per selected model, shared by workers; every diff size needs the real limits. */
     protected async discoverLargeModel(context: RequestContext | undefined, load: (signal: AbortSignal) => Promise<unknown>): Promise<void> {
-        if (!context || (context.diffByteSize ?? 0) <= UNKNOWN_MODEL_PROBE_BYTES || !this.getCapabilities().isUnknown) { return; }
+        if (!context || !this.getCapabilities().isUnknown) { return; }
         const pending = context.metadataDiscovery ??= new Map<string, Promise<void>>();
         const key = `${this.constructor.name}:${this.model}`;
         if (!pending.has(key)) {
             const signal = context.signal ? AbortSignal.any([context.signal, AbortSignal.timeout(5000)]) : AbortSignal.timeout(5000);
             pending.set(key, load(signal).then(() => {}).catch(error => {
-                if (context.signal?.aborted) { throw error; }
+                if (context.signal?.aborted) { throw new ProviderApiError("Request was cancelled", { category: "cancelled", cause: error }); }
                 if (["rate-limit", "account-limit", "authentication", "permission"].includes(classifyGenerationFailure(error, ""))) {
                     throw normalizeProviderError(error, "");
                 }
@@ -103,17 +115,9 @@ export abstract class BaseAIProvider implements AIProvider {
         }
         const merged = context?.generationOptions ?? this.getMergedGenerationOptions();
         const userMaxTokens = merged?.maxTokens && Number.isFinite(merged.maxTokens) && merged.maxTokens > 0 ? Math.floor(merged.maxTokens) : undefined;
-        let maxTokens: number;
-        if (userMaxTokens !== undefined) {
-            let maxAllowed = capabilities.maxOutputTokens ? Math.min(capabilities.maxOutputTokens, LONG_FORM_MAX_OUTPUT_TOKENS) : LONG_FORM_MAX_OUTPUT_TOKENS;
-            if (!capabilities.isUnknown && capabilities.maxInputTokens === undefined) {
-                const room = capabilities.contextTokens - await measurePrompt(prompt, capabilities) - 256;
-                if (room > 0) { maxAllowed = Math.min(maxAllowed, room); }
-            }
-            maxTokens = Math.min(maxAllowed, userMaxTokens);
-        } else {
-            maxTokens = context?.outputTokens ? await this.longFormOutputTokens(prompt, capabilities, context.outputTokens) : capabilities.outputTokens;
-        }
+        // Real model limits only: the user's setting wins within them; with no known limit the adapter omits the field.
+        const realLimit = realOutputLimit(capabilities, await measurePrompt(prompt, capabilities));
+        const maxTokens = userMaxTokens !== undefined && realLimit !== undefined ? Math.min(userMaxTokens, realLimit) : userMaxTokens ?? realLimit;
         const options = {
             ...merged,
             maxTokens,
@@ -134,16 +138,6 @@ export abstract class BaseAIProvider implements AIProvider {
                 throw normalized;
             }
         });
-    }
-
-    /** Long-form answers use the reported model maximum when known, bounded by the context left after the prompt. */
-    private async longFormOutputTokens(prompt: string, capabilities: ModelCapabilities, requested: number): Promise<number> {
-        let target = capabilities.maxOutputTokens ? Math.min(capabilities.maxOutputTokens, LONG_FORM_MAX_OUTPUT_TOKENS) : requested;
-        if (!capabilities.isUnknown && capabilities.maxInputTokens === undefined) {
-            target = Math.min(target, capabilities.contextTokens - await measurePrompt(prompt, capabilities) - 256);
-        }
-        // Never below the reservation a commit request would get.
-        return Math.max(target, capabilities.outputTokens);
     }
 
     async generateCommitHistoryAnalysis(commitHistory: string, maxCommits: number, includeAuthorInfo: boolean, context?: RequestContext): Promise<string> {

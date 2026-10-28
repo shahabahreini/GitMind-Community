@@ -51,6 +51,12 @@ export abstract class OpenAICompatibleProvider extends BaseAIProvider {
         }
     }
 
+    /** Output budget when the model's real limit is unknown; undefined omits the field so the server applies the model maximum. */
+    protected unknownLimitOutputTokens(): number | undefined { return undefined; }
+
+    /** Request field that carries the output budget. */
+    protected outputTokensField(): "max_tokens" | "max_completion_tokens" { return "max_tokens"; }
+
     protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
         this.assertConfigured();
         const response = await loggedFetch(`${this.endpoint}/chat/completions`, {
@@ -60,7 +66,7 @@ export abstract class OpenAICompatibleProvider extends BaseAIProvider {
                 model: this.model,
                 messages: [{ role: "user", content: prompt }],
                 temperature: options?.temperature ?? 0.2,
-                max_tokens: options?.maxTokens ?? 1000,
+                ...((options?.maxTokens ?? this.unknownLimitOutputTokens()) ? { [this.outputTokensField()]: options?.maxTokens ?? this.unknownLimitOutputTokens() } : {}),
                 ...(options?.topP === undefined ? {} : { top_p: options.topP }),
             }),
             signal: this.getAbortController().signal,

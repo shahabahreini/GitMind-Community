@@ -44,14 +44,14 @@ suite("Provider refresh 2026-09 (API migrations and model defaults)", () => {
         const captured: CapturedRequest[] = [];
         globalThis.fetch = stubFetch({ status: "completed", output_text: "feat: use the agent api" }, captured);
 
-        const result = await new PerplexityProvider("test-key", "sonar-pro").generateWithRawPrompt("diff");
+        const result = await new PerplexityProvider("test-key", "perplexity/sonar").generateWithRawPrompt("diff");
 
         assert.strictEqual(result, "feat: use the agent api");
         assert.strictEqual(captured[0].url, "https://api.perplexity.ai/v1/agent");
-        assert.strictEqual(captured[0].body.model, "sonar-pro");
+        assert.strictEqual(captured[0].body.model, "perplexity/sonar");
         assert.strictEqual(captured[0].body.input, "diff");
         assert.ok(typeof captured[0].body.instructions === "string");
-        assert.ok(captured[0].body.max_output_tokens > 0);
+        assert.strictEqual(captured[0].body.max_output_tokens, undefined, "unknown limits leave the budget to the model maximum");
         assert.strictEqual(captured[0].body.messages, undefined, "Sonar chat-completions fields must not be sent");
     });
 
@@ -92,33 +92,37 @@ suite("Provider refresh 2026-09 (API migrations and model defaults)", () => {
         await assert.rejects(new HuggingFaceProvider("hf_test", "claude-sonnet-5").generateWithRawPrompt("diff"), /Anthropic/);
     });
 
-    test("DeepSeek accepts the current and legacy model names", async () => {
-        for (const model of ["deepseek-flash", "deepseek-v4-pro", "deepseek-v4-flash"]) {
+    test("DeepSeek accepts the current model names and turns thinking off", async () => {
+        for (const model of ["deepseek-flash", "deepseek-v4-pro"]) {
             const captured: CapturedRequest[] = [];
             globalThis.fetch = stubFetch({ choices: [{ message: { content: "feat: ok" } }] }, captured);
             await new DeepSeekProvider("test-key", model).generateWithRawPrompt("diff");
             assert.strictEqual(captured[0].body.model, model);
+            assert.deepStrictEqual(captured[0].body.thinking, { type: "disabled" });
         }
     });
 
-    test("NVIDIA disables Nemotron thinking and strips reasoning traces from the message", async () => {
+    test("NVIDIA turns Nemotron reasoning off and strips reasoning traces from the message", async () => {
         const captured: CapturedRequest[] = [];
         globalThis.fetch = stubFetch({ choices: [{ message: { content: "<think>plan the message</think>\nfeat: add nemotron default" } }] }, captured);
 
         const result = await new NvidiaProvider("test-key", getProviderDefaultModel("nvidia")).generateWithRawPrompt("diff");
 
         assert.strictEqual(result, "feat: add nemotron default");
-        assert.deepStrictEqual(captured[0].body.chat_template_kwargs, { enable_thinking: false });
+        assert.strictEqual(captured[0].body.reasoning_effort, "none");
+        assert.strictEqual(captured[0].body.chat_template_kwargs, undefined, "the hosted schema rejects unknown fields");
     });
 
-    test("Claude models with always-on thinking get room to think and no sampling parameters", async () => {
-        for (const [model, alwaysThinks] of [["claude-opus-5-5", true], ["claude-sonnet-5", false]] as const) {
+    test("Claude 4.7+ models get the lowest thinking, no sampling parameters, and room to answer", async () => {
+        for (const [model, thinking, effort] of [["claude-opus-5-5", undefined, "low"], ["claude-sonnet-5", { type: "disabled" }, undefined]] as const) {
             const captured: CapturedRequest[] = [];
             globalThis.fetch = stubFetch({ content: [{ type: "thinking", thinking: "..." }, { type: "text", text: "feat: ok" }] }, captured);
             const result = await new AnthropicProvider("test-key", model).generateWithRawPrompt("diff");
             assert.strictEqual(result.trim(), "feat: ok", model);
-            assert.strictEqual(captured[0].body.temperature === undefined, alwaysThinks, `${model} temperature`);
-            assert.ok(alwaysThinks ? captured[0].body.max_tokens >= 4000 : captured[0].body.max_tokens <= 1024, `${model} max_tokens`);
+            assert.strictEqual(captured[0].body.temperature, undefined, `${model} rejects temperature`);
+            assert.deepStrictEqual(captured[0].body.thinking, thinking, `${model} thinking`);
+            assert.strictEqual(captured[0].body.output_config?.effort, effort, `${model} effort`);
+            assert.ok(captured[0].body.max_tokens >= 4000, `${model} max_tokens`);
         }
     });
 

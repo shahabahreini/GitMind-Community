@@ -17,6 +17,11 @@ interface TogetherAIError {
     };
 }
 
+/** Lowest documented reasoning per model (https://docs.together.ai/docs/inference/chat/reasoning, 2026-10-28). */
+const MINIMAL_THINKING: Record<string, Record<string, unknown>> = {
+    "openai/gpt-oss-120b": { reasoning_effort: "low" },
+};
+
 export class TogetherAIProvider extends BaseAIProvider {
     constructor(apiKey: string, model: string) {
         super(apiKey, model);
@@ -47,13 +52,14 @@ export class TogetherAIProvider extends BaseAIProvider {
                 },
                 body: JSON.stringify({
                     model: this.model,
+                    ...(MINIMAL_THINKING[this.model] ?? {}),
                     messages: [
                         {
                             role: "user",
                             content: prompt
                         }
                     ],
-                    max_tokens: options?.maxTokens ?? 1000,
+                    ...(options?.maxTokens ? { max_tokens: options.maxTokens } : {}),
                     temperature: options?.temperature
                 }),
                 signal: controller.signal

@@ -12,18 +12,20 @@ interface GenerationConfig {
     topK: number;
     topP: number;
     maxOutputTokens: number;
+    /** Lowest documented thinkingLevel (https://ai.google.dev/gemini-api/docs/thinking, 2026-10-28); thinking cannot be fully disabled on Gemini 3. */
+    thinkingLevel?: "MINIMAL" | "LOW";
 }
 
 const MODEL_CONFIGS: Record<GeminiModel, GenerationConfig> = {
     // Gemini 3.x series - max output: 65,536 tokens
-    "gemini-3.8-flash": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536 },
-    "gemini-3.7-flash": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536 },
-    "gemini-3.6-flash": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536 },
-    "gemini-3.5-flash": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536 },
-    "gemini-3.5-flash-lite": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536 },
-    "gemini-3.1-flash-lite": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536 },
-    "gemini-3.1-pro-preview": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536 },
-    "gemini-3-flash-preview": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536 },
+    "gemini-3.8-flash": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536, thinkingLevel: "LOW" },
+    "gemini-3.7-flash": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536, thinkingLevel: "LOW" },
+    "gemini-3.6-flash": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536, thinkingLevel: "MINIMAL" },
+    "gemini-3.5-flash": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536, thinkingLevel: "MINIMAL" },
+    "gemini-3.5-flash-lite": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536, thinkingLevel: "MINIMAL" },
+    "gemini-3.1-flash-lite": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536, thinkingLevel: "MINIMAL" },
+    "gemini-3.1-pro-preview": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536, thinkingLevel: "LOW" },
+    "gemini-3-flash-preview": { temperature: 0.2, topK: 40, topP: 0.9, maxOutputTokens: 65536, thinkingLevel: "MINIMAL" },
 };
 
 async function createGeminiClient(apiKey: string) {
@@ -106,14 +108,10 @@ export class GeminiProvider extends BaseAIProvider {
             }
 
             // Get configuration for the selected model or use a reasonable default
-            const config = MODEL_CONFIGS[selectedModel] || {
-                temperature: 0.2,
-                topK: 40,
-                topP: 0.9,
-                maxOutputTokens: 8000,
-            };
+            const config: Partial<GenerationConfig> = MODEL_CONFIGS[selectedModel] ?? { temperature: 0.2, topK: 40, topP: 0.9 };
 
             const temperature = options?.temperature ?? config.temperature;
+            // Unset for unknown models, so the API applies the model's output_token_limit.
             const maxOutputTokens = options?.maxTokens ?? config.maxOutputTokens;
             const topK = options?.topK ?? config.topK;
             const topP = options?.topP ?? config.topP;
@@ -126,7 +124,9 @@ export class GeminiProvider extends BaseAIProvider {
                     temperature: temperature,
                     ...(GeminiProvider.supportsTopK.get(selectedModel) === true ? { topK } : {}),
                     topP: topP,
-                    maxOutputTokens: maxOutputTokens,
+                    ...(maxOutputTokens ? { maxOutputTokens } : {}),
+                    // The SDK's ThinkingLevel enum values are these strings; the enum itself is ESM-only for this CommonJS build.
+                    ...(config.thinkingLevel ? { thinkingConfig: { thinkingLevel: config.thinkingLevel as never } } : {}),
                     abortSignal: controller.signal,
                 },
             });

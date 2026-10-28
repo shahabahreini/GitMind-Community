@@ -1,6 +1,10 @@
 import { OpenAICompatibleProvider } from "./openaiCompatible";
+import { UNKNOWN_LIMIT_OUTPUT_TOKENS } from "./capabilities";
 
 export class CloudflareProvider extends OpenAICompatibleProvider {
+    /** Older Workers AI models default max_tokens to 256 when it is omitted. */
+    protected override unknownLimitOutputTokens(): number { return UNKNOWN_LIMIT_OUTPUT_TOKENS; }
+
     constructor(apiKey: string, model: string, accountId: string, gatewayId = "") {
         if (!apiKey.trim()) {
             throw new Error("Cloudflare API token is required.");

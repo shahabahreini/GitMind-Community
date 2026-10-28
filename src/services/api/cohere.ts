@@ -9,7 +9,7 @@ import { loggedFetch } from "./loggedFetch";
 export enum CohereModel {
     // Command A Models
     COMMAND_A_PLUS_05_2026 = "command-a-plus-05-2026",
-    NORTH_MINI_CODE_1_0 = "north-mini-code-1-0",
+    NORTH_MINI_CODE_1_0 = "north-mini-code-1.0",
     COMMAND_A_03_2025 = "command-a-03-2025",
     COMMAND_A_REASONING_08_2025 = "command-a-reasoning-08-2025",
     COMMAND_A_TRANSLATE_08_2025 = "command-a-translate-08-2025",
@@ -36,14 +36,12 @@ export enum CohereModel {
 // Configuration for different Cohere models
 interface GenerationConfig {
     temperature: number;
-    maxOutputTokens: number;
     topP: number;
     topK: number;
 }
 
 const DEFAULT_CONFIG: GenerationConfig = {
     temperature: 0.2,
-    maxOutputTokens: 350,
     topP: 0.8,
     topK: 40
 };
@@ -73,6 +71,13 @@ const MODEL_CONFIGS: Record<string, GenerationConfig> = {
     [CohereModel.COMMAND]: DEFAULT_CONFIG,
     [CohereModel.COMMAND_LIGHT]: DEFAULT_CONFIG,
     [CohereModel.COMMAND_NIGHTLY]: DEFAULT_CONFIG
+};
+
+/** Reasoning is on by default for models that support it (https://docs.cohere.com/docs/reasoning, 2026-10-28). */
+const MINIMAL_THINKING: Record<string, Record<string, unknown>> = {
+    "command-a-reasoning-08-2025": { thinking: { type: "disabled" } },
+    "command-a-plus-05-2026": { thinking: { type: "disabled" } },
+    "north-mini-code-1.0": { thinking: { type: "disabled" } },
 };
 
 export class CohereProvider extends BaseAIProvider {
@@ -105,7 +110,8 @@ export class CohereProvider extends BaseAIProvider {
             const config = MODEL_CONFIGS[this.model] ?? DEFAULT_CONFIG;
 
             const temperature = options?.temperature ?? config.temperature;
-            const maxOutputTokens = options?.maxTokens ?? config.maxOutputTokens;
+            // Unset means the model's maximum output limit (https://docs.cohere.com/reference/chat).
+            const maxOutputTokens = options?.maxTokens;
 
             // Using the v2 chat API
             const response = await loggedFetch('https://api.cohere.com/v2/chat', {
@@ -117,6 +123,7 @@ export class CohereProvider extends BaseAIProvider {
                 },
                 body: JSON.stringify({
                     model: this.model,
+                    ...(MINIMAL_THINKING[this.model] ?? {}),
                     messages: [
                         {
                             role: "user",
@@ -124,7 +131,7 @@ export class CohereProvider extends BaseAIProvider {
                         }
                     ],
                     temperature: temperature,
-                    max_tokens: maxOutputTokens,
+                    ...(maxOutputTokens ? { max_tokens: maxOutputTokens } : {}),
                     p: options?.topP ?? config.topP,
                     k: options?.topK ?? config.topK
                 }),

@@ -4,6 +4,11 @@ import { loggedFetch } from "./loggedFetch";
 import { ProviderApiError, normalizeProviderError } from "./recovery";
 import { RequestContext } from "./requestContext";
 
+/** Lowest documented reasoning per model (https://openrouter.ai/docs/guides/best-practices/reasoning-tokens, 2026-10-28); mandatory-reasoning models reject "none". */
+const MINIMAL_THINKING: Record<string, Record<string, unknown>> = {
+    "google/gemini-3.8-flash": { reasoning: { effort: "low" } },
+};
+
 export class OpenRouterProvider extends BaseAIProvider {
     constructor(apiKey: string, model: string) {
         super(apiKey, model);
@@ -29,6 +34,7 @@ export class OpenRouterProvider extends BaseAIProvider {
                 },
                 body: JSON.stringify({
                     model: this.model,
+                    ...(MINIMAL_THINKING[this.model] ?? {}),
                     messages: [
                         {
                             role: "user",
@@ -36,7 +42,7 @@ export class OpenRouterProvider extends BaseAIProvider {
                         }
                     ],
                     temperature: options?.temperature ?? 0.7,
-                    max_tokens: options?.maxTokens ?? 500
+                    ...(options?.maxTokens ? { max_tokens: options.maxTokens } : {}),
                 }),
                 signal: controller.signal
             }, { provider: "openrouter", operation: "chat.completions" });

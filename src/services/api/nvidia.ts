@@ -4,6 +4,7 @@ import { loggedFetch } from "./loggedFetch";
 import { ProviderApiError } from "./recovery";
 import { getProviderDefaultModel } from "../../config/providerCatalog";
 import { RequestContext } from "./requestContext";
+import { UNKNOWN_LIMIT_OUTPUT_TOKENS } from "./capabilities";
 
 const NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1";
 const DEFAULT_MODELS = [
@@ -71,6 +72,15 @@ export function isNemotronReasoningModel(model: string): boolean {
     return /^nvidia\/nemotron-3/i.test(model);
 }
 
+/**
+ * Lowest documented reasoning per model. The hosted schema rejects unknown fields, so chat_template_kwargs is not sent;
+ * Nemotron 3 documents reasoning_effort "none" (https://docs.api.nvidia.com/nim/reference/nvidia-nemotron-3-super-120b-a12b, 2026-10-28).
+ */
+function minimalThinking(model: string): Record<string, unknown> {
+    if (isNemotronReasoningModel(model)) { return { reasoning_effort: "none" }; }
+    return ["openai/gpt-oss-20b", "openai/gpt-oss-120b", "moonshotai/kimi-k3"].includes(model) ? { reasoning_effort: "low" } : {};
+}
+
 /** Removes <think>…</think> traces some hosted models emit in `content`. */
 export function stripThinking(text: string): string {
     return text.replace(/<think>[\s\S]*?<\/think>/gi, "").replace(/^[\s\S]*?<\/think>/i, "");
@@ -97,10 +107,11 @@ export class NvidiaProvider extends BaseAIProvider {
                     model: this.model,
                     messages: [{ role: "user", content: prompt }],
                     temperature: options?.temperature ?? 0.2,
-                    max_tokens: options?.maxTokens ?? 1000,
+                    // Some hosted NIM models default to 1024 when the field is omitted, which a thinking model can exhaust.
+                    max_tokens: options?.maxTokens ?? UNKNOWN_LIMIT_OUTPUT_TOKENS,
                     ...(options?.topP !== undefined ? { top_p: options.topP } : {}),
                     // Nemotron reasons by default and returns the trace inside `content`; commit messages need only the answer.
-                    ...(isNemotronReasoningModel(this.model) ? { chat_template_kwargs: { enable_thinking: false } } : {}),
+                    ...minimalThinking(this.model),
                 }),
                 signal: this.getAbortController().signal,
             }, { provider: "nvidia", operation: "chat.completions" });

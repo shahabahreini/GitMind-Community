@@ -6,6 +6,7 @@ import { debugLog } from "../debug/logger";
 import { RequestManager } from "../../utils/requestManager";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
+import { UNKNOWN_LIMIT_OUTPUT_TOKENS } from "./capabilities";
 
 export class CustomProvider extends BaseAIProvider {
     constructor(
@@ -52,18 +53,19 @@ export class CustomProvider extends BaseAIProvider {
             // Build request body using the template
             const requestBody = this.buildRequestBody(this.requestFormat, prompt, this.model);
             const temp = _options?.temperature ?? 0.2;
-            const maxTok = _options?.maxTokens ?? 2048;
+            // Anthropic-format endpoints require a budget; the others apply the model maximum when it is unset.
+            const maxTok = _options?.maxTokens;
             const fmt = (this.requestFormat || "").trim().toLowerCase();
             if (!fmt || fmt === "openai") {
-                requestBody.max_tokens = maxTok;
+                if (maxTok) { requestBody.max_tokens = maxTok; }
                 requestBody.temperature = temp;
             } else if (fmt === "anthropic") {
-                requestBody.max_tokens = maxTok;
+                requestBody.max_tokens = maxTok ?? UNKNOWN_LIMIT_OUTPUT_TOKENS;
                 requestBody.temperature = temp;
             } else if (fmt === "gemini") {
                 requestBody.generationConfig = {
                     ...requestBody.generationConfig,
-                    maxOutputTokens: maxTok,
+                    ...(maxTok ? { maxOutputTokens: maxTok } : {}),
                     temperature: temp,
                 };
             }

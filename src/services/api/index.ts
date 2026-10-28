@@ -394,11 +394,13 @@ export async function generateCommitMessage(
             spool = await DiffSpool.create(diff, context.signal);
             context.diffByteSize = spool.bytes;
         }
-        const promptTokenCap = largeDiffSettings.maxPromptTokens || defaultPromptTokenCap(validatedConfig.type);
-        context.promptTokenCap = promptTokenCap;
+        context.promptTokenCap = largeDiffSettings.maxPromptTokens || defaultPromptTokenCap(validatedConfig.type);
         context.heuristicTokens = true;
         // Discovery is size-gated, so it runs only once the diff size is known.
         await initialProvider.prepareCapabilities(context);
+        // The default cap follows the model's real limit once discovery has reported it.
+        const promptTokenCap = largeDiffSettings.maxPromptTokens || defaultPromptTokenCap(validatedConfig.type, initialProvider.getCapabilities());
+        context.promptTokenCap = promptTokenCap;
         const read = (): AsyncIterable<string> => spool ? spool.read() : (async function* () { yield diff as string; })();
         if (spool) {
             const capabilities = initialProvider.getCapabilities();

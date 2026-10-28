@@ -4,22 +4,18 @@ import type { MiniMaxModel } from "../../config/types";
 import { BaseAIProvider, GenerationOptions } from "./base";
 import { loggedFetch } from "./loggedFetch";
 import { getProviderDefaultModel, getCuratedModels } from "../../config/providerCatalog";
+import { UNKNOWN_LIMIT_OUTPUT_TOKENS } from "./capabilities";
 
 const MINIMAX_ANTHROPIC_BASE_URL = "https://api.minimax.io/anthropic";
 
 interface GenerationConfig {
-    max_tokens: number;
     temperature: number;
     top_p: number;
 }
 
 const MODEL_CONFIGS: Record<MiniMaxModel, GenerationConfig> = {
-    "MiniMax-M3": { max_tokens: 2000, temperature: 0.2, top_p: 0.8 },
-    "MiniMax-M2.7": { max_tokens: 350, temperature: 0.2, top_p: 0.8 },
-    "MiniMax-M2.7-highspeed": { max_tokens: 350, temperature: 0.2, top_p: 0.8 },
-    "MiniMax-M2.5": { max_tokens: 350, temperature: 0.2, top_p: 0.8 },
-    "MiniMax-M2.5-highspeed": { max_tokens: 350, temperature: 0.2, top_p: 0.8 },
-    "MiniMax-M2": { max_tokens: 350, temperature: 0.2, top_p: 0.8 },
+    "MiniMax-M3": { temperature: 0.2, top_p: 0.8 },
+    "MiniMax-M3.1-Flash": { temperature: 0.2, top_p: 0.8 },
 };
 
 function extractTextFromAnthropicContent(content: unknown): string {
@@ -43,6 +39,11 @@ function extractTextFromAnthropicContent(content: unknown): string {
 
     return fullText;
 }
+
+/** MiniMax-M3.1-Flash always thinks; the lowest effort keeps it short (https://platform.minimax.io/docs/api-reference/text-anthropic-api, 2026-10-28). */
+const MINIMAL_THINKING: Record<string, Record<string, unknown>> = {
+    "MiniMax-M3.1-Flash": { output_config: { effort: "low" } },
+};
 
 export class MiniMaxProvider extends BaseAIProvider {
     constructor(apiKey: string, model: string) {
@@ -79,7 +80,9 @@ export class MiniMaxProvider extends BaseAIProvider {
                 },
                 body: JSON.stringify({
                     model: selectedModel,
-                    max_tokens: options?.maxTokens ?? config.max_tokens,
+                    ...(MINIMAL_THINKING[selectedModel] ?? {}),
+                    // The Anthropic-compatible API counts thinking toward max_tokens; a small fixed value can leave no text.
+                    max_tokens: options?.maxTokens ?? UNKNOWN_LIMIT_OUTPUT_TOKENS,
                     temperature: options?.temperature ?? config.temperature,
                     top_p: options?.topP ?? config.top_p,
                     messages: [
@@ -282,7 +285,6 @@ export async function validateMiniMaxAPIKey(
             },
             body: JSON.stringify({
                 model: getProviderDefaultModel("minimax", "MiniMax-M3"),
-                max_tokens: 10,
                 messages: [{ role: "user", content: "Test" }],
             }),
             signal: controller.signal,
@@ -355,6 +357,6 @@ export async function validateMiniMaxAPIKey(
 }
 
 export async function fetchMiniMaxModels(apiKey: string): Promise<string[]> {
-    const provider = new MiniMaxProvider(apiKey, "MiniMax-M2.7");
+    const provider = new MiniMaxProvider(apiKey, "MiniMax-M3");
     return provider.getModels();
 }

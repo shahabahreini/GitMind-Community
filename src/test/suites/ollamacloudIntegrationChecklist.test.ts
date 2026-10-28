@@ -98,16 +98,10 @@ suite('Ollama Cloud Integration Checklist', () => {
         );
     });
 
-    test('Ollama Cloud models have verified limits and safe output budgets', () => {
+    test('Ollama Cloud limits come from /api/show, not a bundled table', () => {
         const { modelCapabilities } = require('../../services/api/capabilities');
-        const gpt = modelCapabilities('gpt-oss:120b-cloud');
-        assert.strictEqual(gpt.contextTokens, 131072);
-        assert.strictEqual(gpt.outputTokens, 4096);
-        assert.strictEqual(gpt.isUnknown, false);
-
-        const deepseek = modelCapabilities('deepseek-v3.1:671b-cloud');
-        assert.strictEqual(deepseek.contextTokens, 131072);
-        assert.strictEqual(deepseek.outputTokens, 8192);
-        assert.strictEqual(deepseek.isUnknown, false);
+        // A bundled reservation would cap thinking models; every Ollama Cloud model is sized from its reported context.
+        assert.strictEqual(modelCapabilities('gpt-oss:120b-cloud').isUnknown, true);
+        assert.strictEqual(modelCapabilities('glm-5.3:cloud').isUnknown, true);
     });
 });

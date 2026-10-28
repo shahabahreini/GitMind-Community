@@ -176,7 +176,7 @@ suite("Generation repair", () => {
         assert.strictEqual(end, source.length);
     });
 
-    test("Mistral, Gemini, and Cohere discover the selected model's limits for large diffs", async () => {
+    test("Mistral, Gemini, and Cohere discover the selected model's real limits for every diff size", async () => {
         const originalFetch = globalThis.fetch;
         let lookups = 0;
         globalThis.fetch = (async input => {
@@ -196,9 +196,8 @@ suite("Generation repair", () => {
             for (const [provider, contextTokens] of cases) {
                 assert.strictEqual(provider.getCapabilities().isUnknown, true);
                 await provider.prepareCapabilities({ diffByteSize: 1024 });
-                assert.strictEqual(provider.getCapabilities().isUnknown, true, "small diffs skip the metadata lookup");
+                assert.strictEqual(provider.getCapabilities().isUnknown, false, "small diffs also get the real limits");
                 await provider.prepareCapabilities({ diffByteSize: 200 * 1024 });
-                assert.strictEqual(provider.getCapabilities().isUnknown, false);
                 assert.strictEqual(provider.getCapabilities().contextTokens, contextTokens);
             }
             assert.strictEqual(lookups, 3);
@@ -333,7 +332,7 @@ suite("Generation repair", () => {
             }
             const streamed = (async function* () { yield "x".repeat(10000); yield "x".repeat(8700); })();
             assert.strictEqual(await generateCommitMessage({ type: "openrouter", apiKey: "bounded-probe", model: "unlisted-stream" }, streamed), answer);
-            assert.strictEqual(calls.length, 4, "a modest streamed prompt also uses one provider request");
+            assert.strictEqual(calls.filter(url => !/\/models(?:[/?]|$)/.test(url)).length, 4, "a modest streamed prompt also uses one provider request");
         } finally { globalThis.fetch = originalFetch; }
     });
 
@@ -639,7 +638,7 @@ suite("Generation repair", () => {
         assert.strictEqual(end, source.length);
     });
     test("custom framing participates in budgeting and generic text remains compatible", () => {
-        const provider = new CustomProvider("https://example.invalid", "/chat", "bearer", "mock", "", JSON.stringify({ system: "x".repeat(4000), prompt: "{{prompt}}" }), "openai", "unknown");
+        const provider = new CustomProvider("https://example.invalid", "/chat", "bearer", "mock", "", JSON.stringify({ system: "x".repeat(12000), prompt: "{{prompt}}" }), "openai", "unknown");
         assert.throws(() => assertPromptFits("small", provider.getCapabilities()), (error: any) => error.category === "input-limit");
         assert.strictEqual((provider as any).extractResponse({ text: "generic answer" }, "openai"), "generic answer");
         const source = 'quoted "file"\nUnicode 🌱 and literal $& {{model}}';
@@ -664,6 +663,8 @@ suite("Generation repair", () => {
             signal.addEventListener("abort", () => reject(signal.reason), { once: true });
         })) as typeof fetch;
         const provider = new NvidiaProvider("mock", "test");
+        // Known limits skip the metadata lookup, so only the three transports under test are in flight.
+        (provider as any).rememberModelLimits("test", 128000, 4096);
         const first = new AbortController();
         const second = new AbortController();
         try {
@@ -721,9 +722,9 @@ suite("Generation repair", () => {
         let reductions = 0;
         let final = "";
         const analyzedStarts: number[] = [];
-        const result = await generateBudgeted("x".repeat(30000), "", settings, {
+        const result = await generateBudgeted("x".repeat(90000), "", settings, {
             signal: new AbortController().signal, capabilities: () => capabilities,
-            renderFinal: async text => "FINAL " + "framing ".repeat(150) + text,
+            renderFinal: async text => "FINAL " + "framing ".repeat(450) + text,
             send: async render => {
                 const prompt = await render(capabilities);
                 assertPromptFits(prompt, capabilities);
@@ -734,7 +735,7 @@ suite("Generation repair", () => {
                 }
                 const match = /offsets (\d+)\.\./.exec(prompt)!;
                 analyzedStarts.push(Number(match[1]));
-                return "change" + match[1] + " " + "detail ".repeat(100);
+                return "change" + match[1] + " " + "detail ".repeat(300);
             },
         });
         assert.strictEqual(result, "feat: reduced");
@@ -744,7 +745,7 @@ suite("Generation repair", () => {
         for (const start of analyzedStarts) { assert.ok(final.includes("change" + start)); }
         await assert.rejects(() => generateBudgeted("source", "", settings, {
             signal: new AbortController().signal, capabilities: () => capabilities,
-            renderFinal: async text => "x".repeat(5000) + text,
+            renderFinal: async text => "x".repeat(15000) + text,
             send: async render => {
                 const prompt = await render(capabilities);
                 assertPromptFits(prompt, capabilities);
@@ -768,17 +769,17 @@ suite("Generation repair", () => {
             const controller = new AbortController();
             let calls = 0;
             const cancellation = new ProviderApiError("Request was cancelled", { category: "cancelled" });
-            await assert.rejects(() => generateBudgeted("x".repeat(10000), "", settings, {
+            await assert.rejects(() => generateBudgeted("x".repeat(30000), "", settings, {
                 signal: controller.signal, capabilities: () => modelCapabilities("unknown"),
                 progress: phase => { if (stage === "planning" && phase === "planning") { controller.abort(cancellation); } },
-                renderFinal: async text => "FINAL " + "x".repeat(2000) + text,
+                renderFinal: async text => "FINAL " + "x".repeat(6000) + text,
                 send: async render => {
                     controller.signal.throwIfAborted();
                     const prompt = await render(modelCapabilities("unknown"));
                     assertPromptFits(prompt, modelCapabilities("unknown"));
                     calls++;
                     if (prompt.startsWith("Compress")) { controller.abort(cancellation); controller.signal.throwIfAborted(); }
-                    return "summary ".repeat(100);
+                    return "summary ".repeat(300);
                 },
             }), (error: any) => error.category === "cancelled");
             if (stage === "planning") { assert.strictEqual(calls, 0); }
@@ -855,7 +856,7 @@ suite("Generation repair", () => {
     test("input-limit rejection splits strictly smaller spans and rejects oversized overhead", async () => {
         const sizes: number[] = [];
         const capabilities = modelCapabilities("unknown");
-        await generateBudgeted("z".repeat(8000), "", settings, {
+        await generateBudgeted("z".repeat(24000), "", settings, {
             signal: new AbortController().signal, capabilities: () => capabilities,
             renderFinal: async text => "FINAL " + text,
             send: async render => {
@@ -868,7 +869,7 @@ suite("Generation repair", () => {
             },
         });
         assert.ok(Math.max(...sizes) > 512 && Math.min(...sizes) <= 512 && sizes.length > 3);
-        await assert.rejects(() => generateBudgeted("a", "x".repeat(5000), settings, {
+        await assert.rejects(() => generateBudgeted("a", "x".repeat(15000), settings, {
             signal: new AbortController().signal, capabilities: () => capabilities,
             renderFinal: async text => text, send: async render => { assertPromptFits(await render(capabilities), capabilities); return ""; },
         }), (error: any) => error.category === "input-limit");
@@ -1168,7 +1169,7 @@ suite("Generation repair", () => {
                     await assert.rejects(() => provider.generateWithRawPrompt("Analyze changes."), (error: any) => error.status === entry.status && error.code === entry.code && error.category === entry.category && Boolean(error.cause));
                 }
                 const capabilities = provider.getCapabilities();
-                const oversized = capabilities.countTokensAsync ? (capabilities.maxInputTokens ?? capabilities.contextTokens) * 4 + 1 : capabilities.contextTokens + 1;
+                const oversized = capabilities.countTokensAsync ? (capabilities.maxInputTokens ?? capabilities.contextTokens) * 4 + 1 : capabilities.contextTokens * 3 + 3;
                 await assert.rejects(() => provider.generateWithRawPrompt("x".repeat(oversized)), (error: any) => error.category === "input-limit");
                 mode = "wait";
                 const controller = new AbortController();

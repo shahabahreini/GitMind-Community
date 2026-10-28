@@ -83,6 +83,14 @@ export function parseGroqError(status: number, text: string): ProviderApiError {
     );
 }
 
+/** Lowest documented reasoning per model (https://console.groq.com/docs/reasoning, 2026-10-28); other values return 400. */
+const MINIMAL_THINKING: Record<string, Record<string, unknown>> = {
+    "openai/gpt-oss-120b": { reasoning_effort: "low" },
+    "openai/gpt-oss-20b": { reasoning_effort: "low" },
+    "qwen/qwen3.8-27b": { reasoning_effort: "none" },
+    "meta-models/muse-spark-open": { reasoning_effort: "low" },
+};
+
 export class GroqProvider extends BaseAIProvider {
     constructor(apiKey: string, model: string) {
         super(apiKey, model);
@@ -102,13 +110,14 @@ export class GroqProvider extends BaseAIProvider {
                 },
                 body: JSON.stringify({
                     model: this.model,
+                    ...(MINIMAL_THINKING[this.model] ?? {}),
                     messages: [
                         {
                             role: "user",
                             content: prompt,
                         },
                     ],
-                    max_completion_tokens: options?.maxTokens ?? 1000,
+                    ...(options?.maxTokens ? { max_completion_tokens: options.maxTokens } : {}),
                     temperature: options?.temperature ?? 0.2,
                 }),
                 signal: controller.signal,

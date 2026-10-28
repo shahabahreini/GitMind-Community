@@ -110,7 +110,7 @@ suite('Inception Labs Integration Checklist', () => {
     test('Mercury 3 capabilities are registered with 1M context window', () => {
         const caps = modelCapabilities('mercury-3');
         assert.strictEqual(caps.contextTokens, 1000000, 'Mercury 3 contextTokens should be 1,000,000');
-        assert.strictEqual(caps.outputTokens, 4096, 'Mercury 3 outputTokens reservation should be 4096');
+        assert.strictEqual(caps.maxOutputTokens, 131072, 'Mercury 3 documented maximum output is 131,072');
         assert.strictEqual(caps.isUnknown, false, 'Mercury 3 should be a known model');
     });
 

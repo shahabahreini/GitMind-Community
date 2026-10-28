@@ -20,7 +20,8 @@ export class VertexAIProvider extends BaseAIProvider {
             contents: prompt,
             config: {
                 temperature: options?.temperature ?? 0.2,
-                maxOutputTokens: options?.maxTokens ?? 1000,
+                // Unset for unknown models, so Vertex applies the model's own output limit.
+                ...(options?.maxTokens ? { maxOutputTokens: options.maxTokens } : {}),
                 ...(options?.topP === undefined ? {} : { topP: options.topP }),
                 abortSignal: this.getAbortController().signal,
             },

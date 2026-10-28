@@ -3,8 +3,11 @@ import { OllamaResponse } from "../../config/types";
 import { debugLog } from "../debug/logger";
 import { generateCommitPrompt, getPromptConfig } from './prompts';
 import { BaseAIProvider, GenerationOptions } from "./base";
-import { requestScope } from "./requestContext";
+import { RequestContext, requestScope } from "./requestContext";
 import { loggedFetch } from "./loggedFetch";
+import { chooseOllamaThinking, fetchOllamaModelDetails } from "./ollamacloud";
+import { conservativeTokenCount } from "./capabilities";
+import { ProviderApiError } from "./recovery";
 
 interface OllamaModel {
     name: string;
@@ -32,11 +35,28 @@ export class OllamaProvider extends BaseAIProvider {
         super(baseUrl, model);
     }
 
+    private think?: false | string;
+
+    /** Reads the model's real context and lowest thinking level from the local server; without them the conservative local defaults stay. */
+    override async prepareCapabilities(context?: RequestContext): Promise<void> {
+        const details = await fetchOllamaModelDetails(this.apiKey, this.model, {}, context?.signal, "ollama");
+        this.think = chooseOllamaThinking(details?.thinkingValues);
+        if (details?.contextTokens) {
+            this.rememberModelLimits(this.model, details.contextTokens, undefined, false, true);
+        }
+    }
+
     protected async generateResponse(prompt: string, options?: GenerationOptions): Promise<string> {
         debugLog("Calling Ollama API", { baseUrl: this.apiKey, model: this.model });
         debugLog("Prompt:", prompt);
 
-        const promptTokenCap = requestScope.getStore()?.promptTokenCap;
+        const scope = requestScope.getStore();
+        const capabilities = this.getCapabilities();
+        // A local server allocates memory for the whole window, so size it to the prompt plus the answer, not the model maximum.
+        const answerTokens = scope?.generationOptions?.maxTokens ?? (capabilities.isUnknown ? undefined : capabilities.outputTokens);
+        const numCtx = capabilities.isUnknown
+            ? (scope?.promptTokenCap ? Math.max(4096, scope.promptTokenCap + 2048) : undefined)
+            : Math.min(capabilities.contextTokens, conservativeTokenCount(prompt) + (answerTokens ?? 0) + 256);
         try {
             const response = await loggedFetch(`${this.apiKey}/api/generate`, {
                 method: "POST",
@@ -46,13 +66,15 @@ export class OllamaProvider extends BaseAIProvider {
                 body: JSON.stringify({
                     model: this.model,
                     prompt: prompt,
+                    system: "You analyze source changes and follow the requested output format.",
                     stream: false,
+                    ...(this.think === undefined ? {} : { think: this.think }),
                     options: {
-                        system: "You analyze source changes and follow the requested output format.",
                         temperature: options?.temperature,
-                        num_predict: options?.maxTokens ?? 1024,
+                        // Unset num_predict lets the model answer until it finishes, bounded by num_ctx.
+                        ...(answerTokens ? { num_predict: answerTokens } : {}),
                         // Without num_ctx the server's default window silently truncates long prompts.
-                        ...(promptTokenCap ? { num_ctx: Math.max(4096, promptTokenCap + 2048) } : {}),
+                        ...(numCtx ? { num_ctx: numCtx } : {}),
                     },
                 }),
             }, { provider: "ollama", operation: "generate" });
@@ -64,6 +86,9 @@ export class OllamaProvider extends BaseAIProvider {
             }
 
             const result = (await response.json()) as OllamaResponse;
+            if (!result?.response?.trim() && result?.thinking?.trim()) {
+                throw new ProviderApiError("The model spent its whole output budget thinking and returned no answer. Raise GitMind Max Tokens or choose another model.", { category: "invalid-response", provider: "ollama" });
+            }
             if (!result || !result.response) {
                 throw new Error("Invalid response from Ollama API");
             }

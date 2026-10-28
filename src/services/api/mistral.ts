@@ -43,7 +43,7 @@ export class MistralProvider extends BaseAIProvider {
                     messages: [
                         { role: "user", content: prompt }
                     ],
-                    max_tokens: options?.maxTokens ?? 1024,
+                    ...(options?.maxTokens ? { max_tokens: options.maxTokens } : {}),
                     temperature: options?.temperature
                 }),
                 signal: controller.signal

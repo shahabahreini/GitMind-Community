@@ -88,15 +88,14 @@ export type AnthropicModel =
 
 export type InceptionModel = "mercury-3" | "mercury-2.5" | "mercury-2" | string;
 
-export type MiniMaxModel = "MiniMax-M3" | "MiniMax-M2.7" | "MiniMax-M2.7-highspeed" | "MiniMax-M2.5" | "MiniMax-M2.5-highspeed" | "MiniMax-M2";
+export type MiniMaxModel = "MiniMax-M3" | "MiniMax-M3.1-Flash";
 
 /** Copilot models are discovered live from the editor; "auto" lets Copilot choose. */
 export type KnownCopilotModel = "auto";
 
 export type CopilotModel = KnownCopilotModel | string;
 
-/** "deepseek-v4-flash" is a legacy name DeepSeek still accepts (served by V4.1 Flash). */
-export type DeepSeekModel = "deepseek-flash" | "deepseek-v4-pro" | "deepseek-v4-flash";
+export type DeepSeekModel = "deepseek-flash" | "deepseek-v4-pro";
 
 export type GrokModel =
     | "grok-4.7" | "grok-4.6" | "grok-4.5" | "grok-4.3"
@@ -107,7 +106,7 @@ export type GroqModel =
     | "llama-3.3-70b-versatile" | "llama-3.1-8b-instant";
 
 export type PerplexityModel =
-    | "sonar-pro" | "sonar-reasoning-pro" | "sonar";
+    | "perplexity/sonar" | "openai/gpt-6-luna" | "perplexity/glm-5.3-flash";
 
 export type ZaiModel =
     | "glm-5.3" | "glm-5.3-flash" | "glm-5.3-flashx" | "glm-5.2"
@@ -310,6 +309,8 @@ export interface HuggingFaceResponse {
 
 export interface OllamaResponse {
     response: string;
+    /** Reasoning from thinking models, kept apart from the answer. */
+    thinking?: string;
     done: boolean;
 }
 

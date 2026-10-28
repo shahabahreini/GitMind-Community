@@ -27,7 +27,7 @@ suite("Webview Script Compilation", () => {
             gemini: { apiKey: "", model: "gemini-3.1-flash" },
             openai: { apiKey: "", model: "gpt-5.5-instant" },
             anthropic: { apiKey: "", model: "claude-3-5-sonnet-20241022" },
-            minimax: { apiKey: "", model: "MiniMax-M2" },
+            minimax: { apiKey: "", model: "MiniMax-M3.1-Flash" },
             copilot: { model: "auto" },
             ollama: { url: "http://localhost:11434", model: "phi4" },
         } as any;

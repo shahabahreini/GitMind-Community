@@ -1,5 +1,7 @@
 import { ProviderApiError } from "./recovery";
 import { estimateByteTokens } from "../git/diffDigest";
+import { PROVIDER_CATALOG, ProviderCatalogEntry } from "../../config/providerCatalog";
+import type { ApiProvider } from "../../config/types";
 
 export interface ModelCapabilities {
     contextTokens: number;
@@ -10,6 +12,8 @@ export interface ModelCapabilities {
     maxInputTokens?: number;
     /** Output maximum the provider reported for the model; `outputTokens` stays the commit reservation. */
     maxOutputTokens?: number;
+    /** The answer may use whatever context the prompt leaves (Ollama caps output at the context length). */
+    outputUsesRemainingContext?: boolean;
     supportedOptions: readonly string[];
     countTokens: (text: string) => number;
     countTokensAsync?: (text: string) => PromiseLike<number>;
@@ -24,10 +28,19 @@ export const LOCAL_PROMPT_TOKEN_CAP = 6_000;
 export const MIN_PROMPT_TOKENS = 4_000;
 /** Output budget for long-form answers (changelog, history analysis) when the model reports no maximum. */
 export const LONG_FORM_OUTPUT_TOKENS = 8_192;
-/** Upper bound when the model reports a larger maximum; reasoning models spend part of it thinking. */
-export const LONG_FORM_MAX_OUTPUT_TOKENS = 16_384;
+/**
+ * Output budget for a model whose real limit is unknown, used only by APIs that require the field or whose
+ * documented default when it is omitted is too small for a thinking model (e.g. Cloudflare's 256).
+ */
+export const UNKNOWN_LIMIT_OUTPUT_TOKENS = 16_384;
+/** Context held back for the answer (thinking plus message) when sizing the prompt; never caps the answer itself. */
+export const ANSWER_RESERVE_TOKENS = 16_384;
 export const LONG_FORM_TIMEOUT_MS = 180_000;
-export function defaultPromptTokenCap(provider: string): number {
+/** Providers without per-token billing default to the model's real input limit once it is known. */
+export function defaultPromptTokenCap(provider: string, capabilities?: ModelCapabilities): number {
+    if (capabilities && !capabilities.isUnknown && (PROVIDER_CATALOG[provider as ApiProvider] as ProviderCatalogEntry | undefined)?.realPromptLimit) {
+        return Math.max(MIN_PROMPT_TOKENS, effectiveInputBudget(capabilities));
+    }
     return provider === "ollama" || provider === "lmstudio" ? LOCAL_PROMPT_TOKEN_CAP : DEFAULT_PROMPT_TOKEN_CAP;
 }
 
@@ -52,9 +65,9 @@ export async function assertBatchPromptFits(prompt: string, capabilities: ModelC
     }
 }
 
-/** UTF-8 bytes bound token usage conservatively for unknown tokenizers. */
+/** Code diffs measure about 3.9 UTF-8 bytes per token; 3 keeps a margin, and provider input-limit errors still split. */
 export function conservativeTokenCount(text: string): number {
-    return Buffer.byteLength(text, "utf8");
+    return Math.ceil(Buffer.byteLength(text, "utf8") / 3);
 }
 
 /**
@@ -66,36 +79,93 @@ export async function measurePrompt(prompt: string, capabilities: ModelCapabilit
     return capabilities.countTokensAsync ? countPromptTokens(prompt, capabilities) : estimateByteTokens(Buffer.byteLength(prompt, "utf8"));
 }
 
-// Verified 2026-10-04: https://platform.claude.com/docs/en/models/overview
-// https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash
-// https://docs.mistral.ai/models/mistral-small-4-0-26-03
-// https://docs.cohere.com/docs/command-a
-// Output values below are generation reservations, not advertised output maxima.
+// Real [context window, maximum output] from official model documentation, verified 2026-10-28.
+// Sources per value: docs/research/provider-models-2026-10.md. Provider metadata, when reported, takes precedence.
+// Models with no documented maximum output are deliberately absent: their adapters omit the field or discover limits.
 const VERIFIED_LIMITS: Record<string, [number, number]> = {
-    "command-a-03-2025": [256000, 1024],
-    "gemini-3.8-flash": [1048576, 4096],
-    "mistral-small-2603": [256000, 1024],
-    "claude-fable-5-1": [1000000, 8000],
-    "claude-opus-5-5": [1000000, 8000],
-    "claude-sonnet-5-5": [1000000, 1000],
-    "claude-haiku-4-5": [200000, 1000],
-    "claude-haiku-4-5-20251001": [200000, 1000],
-    "mercury-3": [1000000, 4096],
-    "mercury-2.5": [128000, 4096],
-    "mercury-2": [128000, 4096],
-    "gpt-oss:120b-cloud": [131072, 4096],
-    "gpt-oss:20b-cloud": [131072, 4096],
-    "qwen3-coder:480b-cloud": [131072, 4096],
-    "deepseek-v3.1:671b-cloud": [131072, 8192],
+    // OpenAI (https://developers.openai.com/api/docs/models)
+    "gpt-6.1-sol": [1050000, 128000],
+    "gpt-6.1-terra": [1050000, 128000],
+    "gpt-6-sol": [1050000, 128000],
+    "gpt-6-luna": [1050000, 128000],
+    "gpt-6-astra": [1050000, 128000],
+    "gpt-5.6-sol": [1050000, 128000],
+    "gpt-5.6-terra": [1050000, 128000],
+    "gpt-5.6-luna": [1050000, 128000],
+    // Anthropic (https://platform.claude.com/docs/en/about-claude/models/overview)
+    "claude-sonnet-5": [1000000, 128000],
+    "claude-sonnet-5-5": [1000000, 128000],
+    "claude-opus-5-5": [1000000, 128000],
+    "claude-fable-5-1": [1000000, 128000],
+    "claude-haiku-5-5": [1000000, 128000],
+    "claude-haiku-4-5": [200000, 64000],
+    "claude-haiku-4-5-20251001": [200000, 64000],
+    // Gemini (https://ai.google.dev/gemini-api/docs/models)
+    "gemini-3.8-flash": [1048576, 65536],
+    "gemini-3.6-flash": [1048576, 65536],
+    "gemini-3.5-flash-lite": [1048576, 65536],
+    "gemini-3.1-flash-lite": [1048576, 65536],
+    "gemini-3.1-pro-preview": [1048576, 65536],
+    // Cohere (https://docs.cohere.com/docs/models)
+    "command-a-plus-05-2026": [128000, 64000],
+    "north-mini-code-1.0": [256000, 64000],
+    "command-a-reasoning-08-2025": [256000, 32000],
+    "command-a-03-2025": [256000, 8000],
+    // Z.ai (https://docs.z.ai/guides/llm)
+    "glm-5.3": [1000000, 128000],
+    "glm-5.3-flash": [1000000, 128000],
+    "glm-5.3-flashx": [1000000, 128000],
+    "glm-5.2": [1000000, 128000],
+    "glm-5.1": [200000, 128000],
+    "glm-5": [200000, 128000],
+    "glm-4.7": [200000, 128000],
+    "glm-4.7-flashx": [200000, 128000],
+    "glm-4.7-flash": [200000, 128000],
+    "glm-4.6": [200000, 128000],
+    "glm-4.5": [128000, 96000],
+    "glm-4.5-air": [128000, 96000],
+    "glm-4.5-flash": [128000, 96000],
+    // MiniMax (https://platform.minimax.io/docs/api-reference/text-chat-openai)
+    "MiniMax-M3": [1000000, 131072],
+    // Inception (https://docs.inceptionlabs.ai/api-reference/chat/create-a-chat-completion)
+    "mercury-3": [1000000, 131072],
+    "mercury-2.5": [260000, 65536],
+    "mercury-2": [128000, 50000],
+    // NVIDIA hosted NIM; /v1/models reports no limits (https://docs.api.nvidia.com/nim/reference)
+    "nvidia/nemotron-3-super-120b-a12b": [256000, 32768],
+    "openai/gpt-oss-20b": [131072, 4096],
+    "moonshotai/kimi-k3": [1048576, 65536],
+    // DeepSeek (https://api-docs.deepseek.com/api/create-chat-completion)
+    "deepseek-flash": [1000000, 393216],
+    "deepseek-v4-pro": [1000000, 393216],
 };
 export function modelCapabilities(model: string): ModelCapabilities {
+    const verified = VERIFIED_LIMITS[model];
     return {
-        contextTokens: VERIFIED_LIMITS[model]?.[0] ?? 4096,
-        outputTokens: VERIFIED_LIMITS[model]?.[1] ?? 1024,
-        isUnknown: !VERIFIED_LIMITS[model],
+        contextTokens: verified?.[0] ?? 4096,
+        outputTokens: verified ? answerReservation(verified[0], verified[1]) : 1024,
+        maxOutputTokens: verified?.[1],
+        isUnknown: !verified,
         supportedOptions: ["maxTokens"],
         countTokens: conservativeTokenCount,
     };
+}
+
+/** Context kept free for the answer when sizing prompts: the real maximum, bounded so small contexts keep room for input. */
+export function answerReservation(contextTokens: number, maxOutputTokens?: number): number {
+    return Math.max(256, Math.min(maxOutputTokens ?? ANSWER_RESERVE_TOKENS, ANSWER_RESERVE_TOKENS, Math.floor(contextTokens / 4)));
+}
+
+/**
+ * Output budget from the model's real limits: its maximum output, bounded by the context the prompt leaves.
+ * Undefined means no trustworthy limit is known, so adapters omit the field and the provider applies its own maximum.
+ */
+export function realOutputLimit(capabilities: ModelCapabilities, promptTokens: number): number | undefined {
+    if (capabilities.isUnknown) { return undefined; }
+    const cap = capabilities.maxOutputTokens ?? (capabilities.outputUsesRemainingContext ? capabilities.contextTokens : undefined);
+    if (cap === undefined) { return undefined; }
+    if (capabilities.maxInputTokens !== undefined) { return cap; }
+    return Math.max(256, Math.min(cap, capabilities.contextTokens - promptTokens - 256));
 }
 
 export function assertPromptFits(prompt: string, capabilities: ModelCapabilities): void {

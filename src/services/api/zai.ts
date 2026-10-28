@@ -14,6 +14,20 @@ interface ZaiError {
     };
 }
 
+/** Lowest documented thinking per model (https://docs.z.ai/guides/capabilities/thinking-mode, 2026-10-28); GLM-5.3 models reject "disabled". */
+const MINIMAL_THINKING: Record<string, Record<string, unknown>> = {
+    "glm-5.3": { reasoning_effort: "low" },
+    "glm-5.3-flash": { reasoning_effort: "low" },
+    "glm-5.3-flashx": { reasoning_effort: "low" },
+    "glm-5.2": { thinking: { type: "disabled" } },
+    "glm-5.1": { thinking: { type: "disabled" } },
+    "glm-5": { thinking: { type: "disabled" } },
+    "glm-4.7": { thinking: { type: "disabled" } },
+    "glm-4.7-flashx": { thinking: { type: "disabled" } },
+    "glm-4.7-flash": { thinking: { type: "disabled" } },
+    "glm-4.6": { thinking: { type: "disabled" } },
+};
+
 export class ZaiProvider extends BaseAIProvider {
     private endpoint: string;
 
@@ -44,6 +58,7 @@ export class ZaiProvider extends BaseAIProvider {
                 },
                 body: JSON.stringify({
                     model: this.model,
+                    ...(MINIMAL_THINKING[this.model] ?? {}),
                     messages: [
                         {
                             role: "user",

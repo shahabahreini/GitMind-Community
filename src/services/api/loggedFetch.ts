@@ -57,13 +57,13 @@ export async function loggedFetch(input: RequestInfo | URL, init?: RequestInit, 
             if (body?.choices?.[0]?.message?.refusal) { throw new ProviderApiError("Provider blocked the answer.", { category: "content-filter", provider }); }
             const finish = String(body?.choices?.[0]?.finish_reason ?? body?.stop_reason ?? body?.finish_reason ?? body?.candidates?.[0]?.finishReason ?? "").toLowerCase();
             if (["length", "max_tokens"].includes(finish)) {
-                throw new ProviderApiError("Provider output was truncated.", { category: "invalid-response", provider });
+                throw new ProviderApiError(onlyReasoning(body) ? THINKING_EXHAUSTED : "Provider output was truncated.", { category: "invalid-response", provider });
             }
             if (["content_filter", "safety", "recitation", "content_filtered", "guardrail_intervened"].includes(finish) || body?.promptFeedback?.blockReason) {
                 throw new ProviderApiError("Provider blocked the answer.", { category: "content-filter", provider });
             }
             if (body?.status === "incomplete" || body?.incomplete_details || ((meta?.provider === "ollama" || meta?.provider === "ollamacloud") && body?.done_reason === "length")) {
-                throw new ProviderApiError("Provider output was truncated.", { category: "invalid-response", provider });
+                throw new ProviderApiError(onlyReasoning(body) ? THINKING_EXHAUSTED : "Provider output was truncated.", { category: "invalid-response", provider });
             }
             // Normalize documented chat text blocks for adapters sharing this shape.
             if (Array.isArray(body?.choices?.[0]?.message?.content)) {
@@ -84,6 +84,18 @@ export async function loggedFetch(input: RequestInfo | URL, init?: RequestInit, 
         });
         throw error;
     }
+}
+
+const THINKING_EXHAUSTED = "The model spent its whole output budget thinking and returned no answer. Raise GitMind Max Tokens or choose another model.";
+
+/** True when a response carries reasoning but no answer text, in the shapes providers document. */
+function onlyReasoning(body: any): boolean {
+    const message = body?.choices?.[0]?.message;
+    const answer = typeof message?.content === "string" ? message.content : typeof body?.response === "string" ? body.response
+        : Array.isArray(body?.content) ? body.content.filter((block: any) => block?.type === "text").map((block: any) => block.text ?? "").join("") : "";
+    const reasoning = message?.reasoning ?? message?.reasoning_content ?? body?.thinking
+        ?? (Array.isArray(body?.content) ? body.content.filter((block: any) => block?.type === "thinking").map((block: any) => block.thinking ?? "").join("") : "");
+    return !String(answer ?? "").replace(/<think>[\s\S]*?(<\/think>|$)/gi, "").trim() && (Boolean(String(reasoning ?? "").trim()) || /<think>/i.test(String(answer ?? "")));
 }
 
 function retryDelay(value: string | null): number | undefined {

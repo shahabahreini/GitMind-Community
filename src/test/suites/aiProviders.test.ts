@@ -263,7 +263,7 @@ suite('AI Providers Tests', () => {
     test('MiniMax provider configuration should be valid', async () => {
         const mockConfig = createMockConfig('minimax', {
             apiKey: 'test-minimax-key',
-            model: 'MiniMax-M2'
+            model: 'MiniMax-M3.1-Flash'
         });
 
         (vscode.workspace as any).getConfiguration = () => mockConfig;
@@ -272,7 +272,7 @@ suite('AI Providers Tests', () => {
             const config = await getApiConfig();
             assert.strictEqual(config.type, 'minimax');
             assert.strictEqual(config.apiKey, 'test-minimax-key');
-            assert.strictEqual(config.model, 'MiniMax-M2');
+            assert.strictEqual(config.model, 'MiniMax-M3.1-Flash');
         } catch (error) {
             console.log('MiniMax config test completed with expected limitation');
         }
@@ -425,7 +425,7 @@ suite('AI Providers Tests', () => {
     test('Together AI provider configuration should be valid', async () => {
         const mockConfig = createMockConfig('together', {
             apiKey: 'test-together-key',
-            model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo'
+            model: 'openai/gpt-oss-120b'
         });
 
         (vscode.workspace as any).getConfiguration = () => mockConfig;
@@ -434,7 +434,7 @@ suite('AI Providers Tests', () => {
             const config = await getApiConfig();
             assert.strictEqual(config.type, 'together');
             assert.strictEqual(config.apiKey, 'test-together-key');
-            assert.strictEqual(config.model, 'meta-llama/Llama-3.3-70B-Instruct-Turbo');
+            assert.strictEqual(config.model, 'openai/gpt-oss-120b');
         } catch (error) {
             console.log('Together AI config test completed with expected limitation');
         }
@@ -477,7 +477,7 @@ suite('AI Providers Tests', () => {
     test('DeepSeek provider configuration should be valid', async () => {
         const mockConfig = createMockConfig('deepseek', {
             apiKey: 'test-deepseek-key',
-            model: "deepseek-v4-flash"
+            model: "deepseek-flash"
         });
 
         (vscode.workspace as any).getConfiguration = () => mockConfig;
@@ -486,7 +486,7 @@ suite('AI Providers Tests', () => {
             const config = await getApiConfig();
             assert.strictEqual(config.type, 'deepseek');
             assert.strictEqual(config.apiKey, 'test-deepseek-key');
-            assert.strictEqual(config.model, "deepseek-v4-flash");
+            assert.strictEqual(config.model, "deepseek-flash");
         } catch (error) {
             console.log('DeepSeek config test completed with expected limitation');
         }
@@ -663,7 +663,7 @@ index 123..456 789
                 'claude-opus-4', "claude-sonnet-4.6", 'claude-3-5-sonnet-20241022',
                 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229'
             ],
-            deepseek: ["deepseek-v4-flash", "deepseek-v4-pro"],
+            deepseek: ["deepseek-flash", "deepseek-v4-pro"],
             grok: ["grok-4.4", 'grok-3-fast', "grok-4.4", 'grok-2'],
             perplexity: ["gpt-5.5-computer", "gpt-5.4-thinking", "gpt-5.5-computer"]
         };

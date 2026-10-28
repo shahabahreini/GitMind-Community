@@ -67,6 +67,14 @@ function extractGrokResponsesText(data: unknown): string | undefined {
     return chunks.join("");
 }
 
+/** Lowest documented reasoning per model (https://docs.x.ai/docs/guides/reasoning, 2026-10-28); grok-4.5 and later cannot disable it. */
+const MINIMAL_THINKING: Record<string, Record<string, unknown>> = {
+    "grok-4.7": { reasoning: { effort: "low" } },
+    "grok-4.6": { reasoning: { effort: "low" } },
+    "grok-4.5": { reasoning: { effort: "low" } },
+    "grok-4.3": { reasoning: { effort: "none" } },
+};
+
 export class GrokProvider extends BaseAIProvider {
     constructor(apiKey: string, model: string) {
         super(apiKey, model);
@@ -87,6 +95,7 @@ export class GrokProvider extends BaseAIProvider {
                 },
                 body: JSON.stringify({
                     model: this.model,
+                    ...(MINIMAL_THINKING[this.model] ?? {}),
                     input: [
                         {
                             role: "user",
@@ -95,7 +104,7 @@ export class GrokProvider extends BaseAIProvider {
                     ],
                     // Keep requests stateless / privacy-friendly (default store behavior is server-side)
                     store: false,
-                    max_output_tokens: options?.maxTokens ?? 150,
+                    ...(options?.maxTokens ? { max_output_tokens: options.maxTokens } : {}),
                     temperature: options?.temperature ?? 0.2,
                 }),
                 signal: controller.signal,

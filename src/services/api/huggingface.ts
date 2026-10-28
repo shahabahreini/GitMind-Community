@@ -60,7 +60,7 @@ export class HuggingFaceProvider extends BaseAIProvider {
                     body: JSON.stringify({
                         model: this.model,
                         messages: [{ role: "user", content: prompt }],
-                        max_tokens: options?.maxTokens ?? 500,
+                        ...(options?.maxTokens ? { max_tokens: options.maxTokens } : {}),
                         ...(options?.temperature === undefined ? {} : { temperature: options.temperature }),
                         stream: false,
                     }),

@@ -66,7 +66,7 @@ suite('MiniMax API Setup Error Handling', () => {
                     return apiKey;
                 }
                 if (key === 'minimax.model') {
-                    return 'MiniMax-M2';
+                    return 'MiniMax-M3.1-Flash';
                 }
                 return defaultValue;
             },
