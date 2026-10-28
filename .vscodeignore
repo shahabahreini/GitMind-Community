@@ -13,7 +13,7 @@ src/**
 esbuild.js
 vsc-extension-quickstart.md
 **/tsconfig.json
-**/eslint.config.mjs
+**/.oxlintrc.json
 **/*.map
 **/*.ts
 **/.vscode-test.*
@@ -54,7 +54,6 @@ azure-deployment/**
 **/test/**
 **/*.test.ts
 **/*.test.js
-**/.eslintrc.json
 .npmrc
 .vscode-test.mjs
 yarn-upgrade-all/**
@@ -83,4 +82,4 @@ images/all_providers_GitMind.jpg
 **/tsconfig.*.json
 .editorconfig
 .gitattributes
-.eslintignore
+
