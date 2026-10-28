@@ -1592,7 +1592,7 @@
     "lint:listing": "node scripts/lint-listing.mjs",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
-    "pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
+    "pretest": "pnpm run compile-tests && pnpm run lint && node esbuild.js",
     "check-types": "tsc --noEmit",
     "lint": "oxlint src/",
     "test": "vscode-test --skip-extension-dependencies",
