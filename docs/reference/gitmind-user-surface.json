@@ -128,7 +128,7 @@
       "availability": "Free",
       "authentication": "API key",
       "setupUrl": "https://api.together.xyz/settings/api-keys",
-      "defaultModel": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+      "defaultModel": "openai/gpt-oss-120b",
       "fields": [
         "gitmind.together.apiKey",
         "gitmind.together.model"
@@ -231,7 +231,7 @@
       "availability": "Free",
       "authentication": "API key",
       "setupUrl": "https://www.perplexity.ai/settings/api",
-      "defaultModel": "sonar-pro",
+      "defaultModel": "perplexity/sonar",
       "fields": [
         "gitmind.perplexity.apiKey",
         "gitmind.perplexity.model"
@@ -767,7 +767,7 @@
     {
       "id": "gitmind.together.model",
       "type": "string",
-      "default": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+      "default": "openai/gpt-oss-120b",
       "availability": "Free",
       "description": "Together AI model to use for generating commit messages"
     },
@@ -872,7 +872,7 @@
     {
       "id": "gitmind.perplexity.model",
       "type": "string",
-      "default": "sonar-pro",
+      "default": "perplexity/sonar",
       "availability": "Free",
       "description": "Perplexity model to use for generating commit messages"
     },

@@ -15,7 +15,7 @@ GitMind has 24 built-in providers plus the Pro-only Custom API provider (25 tota
 | [Mistral](https://console.mistral.ai/) | API key | `mistral-small-2603` | Yes |
 | [Cohere](https://dashboard.cohere.com/api-keys) | API key | `command-a-plus-05-2026` | Yes |
 | [OpenAI](https://platform.openai.com/api-keys) | API key | `gpt-6-sol` | Yes |
-| [Together AI](https://api.together.xyz/settings/api-keys) | API key | `meta-llama/Llama-3.3-70B-Instruct-Turbo` | Yes |
+| [Together AI](https://api.together.xyz/settings/api-keys) | API key | `openai/gpt-oss-120b` | Yes |
 | [OpenRouter](https://openrouter.ai/keys) | API key | `openrouter/free` | Yes |
 | [Anthropic](https://console.anthropic.com/) | API key | `claude-sonnet-5` | Yes |
 | [MiniMax](https://platform.minimax.io/docs/api-reference/text-anthropic-api) | API key | `MiniMax-M3` | Yes |
@@ -23,7 +23,7 @@ GitMind has 24 built-in providers plus the Pro-only Custom API provider (25 tota
 | [DeepSeek](https://platform.deepseek.com/api_keys) | API key | `deepseek-flash` | Yes |
 | [xAI Grok](https://console.x.ai/) | API key | `grok-4.7` | Yes |
 | [Groq](https://console.groq.com/keys) | API key | `openai/gpt-oss-120b` | Yes |
-| [Perplexity](https://www.perplexity.ai/settings/api) | API key | `sonar-pro` | Curated Sonar choices |
+| [Perplexity](https://www.perplexity.ai/settings/api) | API key | `perplexity/sonar` | Curated Agent API choices |
 | [Z.ai](https://z.ai/) | API key; regular or coding endpoint | `glm-5.3`, coding endpoint | Yes |
 | [NVIDIA hosted NIM](https://build.nvidia.com/models) | NVIDIA Build API key | `nvidia/nemotron-3-super-120b-a12b` | Yes |
 | [LM Studio](https://lmstudio.ai/docs/app) | Local loopback server; no key | User-loaded local model | Yes |
@@ -43,5 +43,13 @@ GitMind has 24 built-in providers plus the Pro-only Custom API provider (25 tota
 5. Use **Check Rate Limits** for provider-reported limits. Results vary by provider and the check itself may consume a small request.
 
 Ollama must be running and the selected model must already be pulled. GitHub Copilot must be installed, signed in, and licensed. Z.ai's `gitmind.zai.endpoint` selects `regular` or `coding`.
+
+## Output Budgets And Thinking
+
+GitMind sizes each request from the selected model's real limits: the limits the provider reports, otherwise the documented values, otherwise the provider's own maximum. The answer may use the model's full output maximum, bounded by the context the prompt leaves, so thinking models no longer run out of room. A **Max Tokens** setting still wins within the model's limit.
+
+Where a model documents a thinking control, GitMind sends the lowest level it supports (off when allowed). Models whose thinking is off by default stay off. Ollama and Ollama Cloud read each model's limits and thinking levels from Ollama's model details, and Ollama Cloud learns a model's output maximum the first time the server reports it.
+
+Prompt size follows the model's real input limit for Ollama, Ollama Cloud, LM Studio, and GitHub Copilot. For per-token paid APIs, models with unknown limits keep a 60,000-token default; `gitmind.largeDiff.maxPromptTokens` overrides either.
 
 For private gateways and compatible endpoints, see [Custom API Guide](Custom-API-Guide). For provider failures, see [Troubleshooting And FAQ](Troubleshooting-And-FAQ).
