@@ -10,11 +10,14 @@ minimumReleaseAgeExclude:
   - '@aws-sdk/credential-providers@3.1137.0'
   - '@aws-sdk/token-providers@3.1137.0'
   - '@google/genai@2.24.0'
+  - '@azure/msal-common@16.15.0'
+  - '@azure/msal-node@7.1.2'
 
 overrides:
+  '@azure/msal-node': '>=7.1.2'
   diff: '>=8.0.3'
   serialize-javascript: '>=7.0.5'
-  vite: 6.4.3
+  vite: 6.4.5
 
 patchedDependencies:
   braces@3.0.3: patches/braces@3.0.3.patch
