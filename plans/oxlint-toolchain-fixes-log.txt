@@ -1,0 +1,445 @@
+=== 21:07:54 1.1 lint: pnpm run lint
+$ oxlint src/
+=== 21:07:54 1.1 types: pnpm run check-types
+$ tsc --noEmit
+=== 21:08:22 2.1 grep: ! grep -nE "run package\$|Build extension" .github/workflows/*.yml
+=== 21:08:22 2.1 yaml: ruby -e "require %q(yaml); ARGV.each{|f| YAML.load_file(f)}" .github/workflows/validate-extension.yml .github/workflows/release.yml
+=== 21:08:23 2.1 pipeline: pnpm run package:vsce --out /tmp/gm.vsix && pnpm run package:audit && pnpm run lint:listing && pnpm run lint:listing --vsix /tmp/gm.vsix
+$ vsce package --no-dependencies --out /tmp/gm.vsix
+Executing prepublish script 'npm run vscode:prepublish'...
+
+> ai-commit-assistant@6.6.0 vscode:prepublish
+> pnpm run package
+
+$ pnpm run clean && pnpm run check-types && pnpm run lint && node esbuild.js --production
+$ rimraf dist out
+$ tsc --noEmit
+$ oxlint src/
+[watch] build started
+[watch] build finished
+✓ Production build completed
+✓ Tree shaking enabled
+✓ Console statements dropped
+ INFO  Files included in the VSIX:
+gm.vsix
+├─ [Content_Types].xml 
+├─ extension.vsixmanifest 
+└─ extension/
+   ├─ .ignore [0.18 KB]
+   ├─ LICENSE.md [1.06 KB]
+   ├─ changelog.md [128.68 KB]
+   ├─ package.json [68.07 KB]
+   ├─ readme.md [14.21 KB]
+   ├─ dist/
+   │  └─ extension.js [2.77 MB]
+   ├─ images/
+   │  ├─ icon-dark.png [33.4 KB]
+   │  ├─ icon-light.png [33.4 KB]
+   │  ├─ logo.png [40.3 KB]
+   │  └─ screenshots/ (6 files) [1.1 MB]
+   ├─ media/
+   │  └─ walkthroughs/ (4 files) [3.24 KB]
+   └─ resources/
+      ├─ dark/ (7 files) [5.89 KB]
+      └─ light/ (7 files) [5.88 KB]
+
+=> Run vsce ls --tree to see all included files.
+
+ DONE  Packaged: /tmp/gm.vsix (35 files, 1.8 MB)
+$ node scripts/audit-vsix.mjs
+VSIX content audit passed: 33 files.
+$ node scripts/lint-listing.mjs
+Listing lint passed: 29 keywords, 24 built-in providers, 25 README URLs.
+$ node scripts/lint-listing.mjs --vsix /tmp/gm.vsix
+Listing lint passed: 29 keywords, 24 built-in providers, 25 README URLs.
+=== 21:08:50 3.1 clean: pnpm run pretest && test -f dist/extension.js
+$ pnpm run compile-tests && pnpm run lint && node esbuild.js
+$ tsc -p . --outDir out
+$ oxlint src/
+[watch] build started
+[watch] build finished
+=== 21:08:53 3.1 injected-should-fail: pnpm run pretest
+$ pnpm run compile-tests && pnpm run lint && node esbuild.js
+$ tsc -p . --outDir out
+src/extension.ts(296,7): error TS2322: Type 'string' is not assignable to type 'number'.
+[ELIFECYCLE] Command failed with exit code 2.
+[ELIFECYCLE] Command failed with exit code 2.
+=== 21:09:08 4.1 add: pnpm add -D oxlint@1.89.0
+? Verifying lockfile against supply-chain policies (771 entries)...
+✗ Lockfile failed supply-chain policy check (771 entries in 909ms)
+Lockfile is up to date, resolution step is skipped
+Error: ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION
+
+  × adding a new package
+  ╰─▶ 20 lockfile entries failed verification:
+        @oxlint/binding-android-arm-eabi@1.90.0 was published at 2026-10-
+      27T05:42:25.221Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:08.515Z)
+        @oxlint/binding-android-arm64@1.90.0 was published at 2026-10-
+      27T05:42:38.555Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:08.515Z)
+        @oxlint/binding-darwin-arm64@1.90.0 was published at 2026-10-
+      27T05:41:34.344Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:08.515Z)
+        @oxlint/binding-darwin-x64@1.90.0 was published at 2026-10-
+      27T05:50:14.458Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:08.515Z)
+        @oxlint/binding-freebsd-x64@1.90.0 was published at 2026-10-
+      27T05:44:39.845Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:08.515Z)
+        @oxlint/binding-linux-arm-gnueabihf@1.90.0 was published at 2026-10-
+      27T05:43:03.562Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:08.515Z)
+        @oxlint/binding-linux-arm-musleabihf@1.90.0 was published at 2026-10-
+      27T05:43:12.193Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:08.515Z)
+        @oxlint/binding-linux-arm64-gnu@1.90.0 was published at 2026-10-
+      27T05:42:30.246Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:08.515Z)
+        @oxlint/binding-linux-arm64-musl@1.90.0 was published at 2026-10-
+      27T05:43:41.156Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:08.515Z)
+        @oxlint/binding-linux-ppc64-gnu@1.90.0 was published at 2026-10-
+      27T05:43:33.838Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:08.515Z)
+        @oxlint/binding-linux-riscv64-gnu@1.90.0 was published at 2026-10-
+      27T05:43:48.917Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:08.515Z)
+        @oxlint/binding-linux-riscv64-musl@1.90.0 was published at 2026-10-
+      27T05:43:59.488Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:08.515Z)
+        @oxlint/binding-linux-s390x-gnu@1.90.0 was published at 2026-10-
+      27T05:44:11.108Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:08.515Z)
+        @oxlint/binding-linux-x64-gnu@1.90.0 was published at 2026-10-
+      27T05:47:45.609Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:08.515Z)
+        @oxlint/binding-linux-x64-musl@1.90.0 was published at 2026-10-
+      27T05:45:06.678Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:08.515Z)
+        @oxlint/binding-openharmony-arm64@1.90.0 was published at 2026-10-
+      27T05:42:29.492Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:08.515Z)
+        @oxlint/binding-win32-arm64-msvc@1.90.0 was published at 2026-10-
+      27T05:42:48.731Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:08.515Z)
+        @oxlint/binding-win32-ia32-msvc@1.90.0 was published at 2026-10-
+      27T05:43:20.987Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:08.515Z)
+        @oxlint/binding-win32-x64-msvc@1.90.0 was published at 2026-10-
+      27T05:45:52.079Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:08.515Z)
+        oxlint@1.90.0 was published at 2026-10-27T05:50:19.000Z, within the
+      minimumReleaseAge cutoff (2026-10-27T03:09:08.515Z)
+  help: The lockfile contains entries that the active policies reject. This
+        can mean the lockfile is stale, or that someone committed a lockfile
+        that bypassed the policy locally — inspect recent changes to pnpm-
+        lock.yaml before trusting it. If the changes look expected, run "pnpm
+        clean --lockfile" and then "pnpm install" to rebuild from a fresh
+        resolution. Alternatively, relax the policy that flagged them.
+
+=== 21:09:25 4.1 add: pnpm add -D oxlint@1.89.0
+✓ Lockfile passes supply-chain policies (verified 3h ago)
+Lockfile is up to date, resolution step is skipped
+Already up to date
+.../node_modules/@vscode/vsce-sign postinstall$ node ./src/postinstall.js
+.../node_modules/protobufjs postinstall$ node scripts/postinstall
+.../keytar@7.9.0/node_modules/keytar install$ prebuild-install || npm run build
+.../esbuild@0.28.2/node_modules/esbuild postinstall$ node install.js
+.../node_modules/protobufjs postinstall: Done
+.../node_modules/@vscode/vsce-sign postinstall: Done
+.../esbuild@0.25.12/node_modules/esbuild postinstall$ node install.js
+.../keytar@7.9.0/node_modules/keytar install: (node:27170) [DEP0176] DeprecationWarning: fs.R_OK is deprecated, use fs.constants.R_OK instead
+.../keytar@7.9.0/node_modules/keytar install: (Use `node --trace-deprecation ...` to show where the warning was created)
+.../keytar@7.9.0/node_modules/keytar install: Done
+.../node_modules/@google/genai preinstall$ echo 'preinstall: no-op'
+.../node_modules/@google/genai preinstall: preinstall: no-op
+.../node_modules/@google/genai preinstall: Done
+.../esbuild@0.28.2/node_modules/esbuild postinstall: Done
+.../esbuild@0.25.12/node_modules/esbuild postinstall: Done
+Done in 620ms using pnpm v12.5.1
+=== 21:09:26 4.1 frozen: pnpm install --frozen-lockfile
+? Verifying lockfile against supply-chain policies (771 entries)...
+✗ Lockfile failed supply-chain policy check (771 entries in 933ms)
+Error: ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION
+
+  × installing dependencies
+  ╰─▶ 20 lockfile entries failed verification:
+        @oxlint/binding-android-arm-eabi@1.90.0 was published at 2026-10-
+      27T05:42:25.221Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:26.544Z)
+        @oxlint/binding-android-arm64@1.90.0 was published at 2026-10-
+      27T05:42:38.555Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:26.544Z)
+        @oxlint/binding-darwin-arm64@1.90.0 was published at 2026-10-
+      27T05:41:34.344Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:26.544Z)
+        @oxlint/binding-darwin-x64@1.90.0 was published at 2026-10-
+      27T05:50:14.458Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:26.544Z)
+        @oxlint/binding-freebsd-x64@1.90.0 was published at 2026-10-
+      27T05:44:39.845Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:26.544Z)
+        @oxlint/binding-linux-arm-gnueabihf@1.90.0 was published at 2026-10-
+      27T05:43:03.562Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:26.544Z)
+        @oxlint/binding-linux-arm-musleabihf@1.90.0 was published at 2026-10-
+      27T05:43:12.193Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:26.544Z)
+        @oxlint/binding-linux-arm64-gnu@1.90.0 was published at 2026-10-
+      27T05:42:30.246Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:26.544Z)
+        @oxlint/binding-linux-arm64-musl@1.90.0 was published at 2026-10-
+      27T05:43:41.156Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:26.544Z)
+        @oxlint/binding-linux-ppc64-gnu@1.90.0 was published at 2026-10-
+      27T05:43:33.838Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:26.544Z)
+        @oxlint/binding-linux-riscv64-gnu@1.90.0 was published at 2026-10-
+      27T05:43:48.917Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:26.544Z)
+        @oxlint/binding-linux-riscv64-musl@1.90.0 was published at 2026-10-
+      27T05:43:59.488Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:26.544Z)
+        @oxlint/binding-linux-s390x-gnu@1.90.0 was published at 2026-10-
+      27T05:44:11.108Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:26.544Z)
+        @oxlint/binding-linux-x64-gnu@1.90.0 was published at 2026-10-
+      27T05:47:45.609Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:26.544Z)
+        @oxlint/binding-linux-x64-musl@1.90.0 was published at 2026-10-
+      27T05:45:06.678Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:26.544Z)
+        @oxlint/binding-openharmony-arm64@1.90.0 was published at 2026-10-
+      27T05:42:29.492Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:26.544Z)
+        @oxlint/binding-win32-arm64-msvc@1.90.0 was published at 2026-10-
+      27T05:42:48.731Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:26.544Z)
+        @oxlint/binding-win32-ia32-msvc@1.90.0 was published at 2026-10-
+      27T05:43:20.987Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:26.544Z)
+        @oxlint/binding-win32-x64-msvc@1.90.0 was published at 2026-10-
+      27T05:45:52.079Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:26.544Z)
+        oxlint@1.90.0 was published at 2026-10-27T05:50:19.000Z, within the
+      minimumReleaseAge cutoff (2026-10-27T03:09:26.544Z)
+  help: The lockfile contains entries that the active policies reject. This
+        can mean the lockfile is stale, or that someone committed a lockfile
+        that bypassed the policy locally — inspect recent changes to pnpm-
+        lock.yaml before trusting it. If the changes look expected, run "pnpm
+        clean --lockfile" and then "pnpm install" to rebuild from a fresh
+        resolution. Alternatively, relax the policy that flagged them.
+
+=== 21:09:27 4.1 lint: pnpm run lint
+? Verifying lockfile against supply-chain policies (771 entries)...
+✗ Lockfile failed supply-chain policy check (771 entries in 817ms)
+Lockfile is up to date, resolution step is skipped
+Error: ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION
+
+  × installing dependencies
+  ╰─▶ 20 lockfile entries failed verification:
+        @oxlint/binding-android-arm-eabi@1.90.0 was published at 2026-10-
+      27T05:42:25.221Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:27.872Z)
+        @oxlint/binding-android-arm64@1.90.0 was published at 2026-10-
+      27T05:42:38.555Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:27.872Z)
+        @oxlint/binding-darwin-arm64@1.90.0 was published at 2026-10-
+      27T05:41:34.344Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:27.872Z)
+        @oxlint/binding-darwin-x64@1.90.0 was published at 2026-10-
+      27T05:50:14.458Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:27.872Z)
+        @oxlint/binding-freebsd-x64@1.90.0 was published at 2026-10-
+      27T05:44:39.845Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:27.872Z)
+        @oxlint/binding-linux-arm-gnueabihf@1.90.0 was published at 2026-10-
+      27T05:43:03.562Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:27.872Z)
+        @oxlint/binding-linux-arm-musleabihf@1.90.0 was published at 2026-10-
+      27T05:43:12.193Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:27.872Z)
+        @oxlint/binding-linux-arm64-gnu@1.90.0 was published at 2026-10-
+      27T05:42:30.246Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:27.872Z)
+        @oxlint/binding-linux-arm64-musl@1.90.0 was published at 2026-10-
+      27T05:43:41.156Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:27.872Z)
+        @oxlint/binding-linux-ppc64-gnu@1.90.0 was published at 2026-10-
+      27T05:43:33.838Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:27.872Z)
+        @oxlint/binding-linux-riscv64-gnu@1.90.0 was published at 2026-10-
+      27T05:43:48.917Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:27.872Z)
+        @oxlint/binding-linux-riscv64-musl@1.90.0 was published at 2026-10-
+      27T05:43:59.488Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:27.872Z)
+        @oxlint/binding-linux-s390x-gnu@1.90.0 was published at 2026-10-
+      27T05:44:11.108Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:27.872Z)
+        @oxlint/binding-linux-x64-gnu@1.90.0 was published at 2026-10-
+      27T05:47:45.609Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:27.872Z)
+        @oxlint/binding-linux-x64-musl@1.90.0 was published at 2026-10-
+      27T05:45:06.678Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:27.872Z)
+        @oxlint/binding-openharmony-arm64@1.90.0 was published at 2026-10-
+      27T05:42:29.492Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:27.872Z)
+        @oxlint/binding-win32-arm64-msvc@1.90.0 was published at 2026-10-
+      27T05:42:48.731Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:27.872Z)
+        @oxlint/binding-win32-ia32-msvc@1.90.0 was published at 2026-10-
+      27T05:43:20.987Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:27.872Z)
+        @oxlint/binding-win32-x64-msvc@1.90.0 was published at 2026-10-
+      27T05:45:52.079Z, within the minimumReleaseAge cutoff (2026-10-
+      27T03:09:27.872Z)
+        oxlint@1.90.0 was published at 2026-10-27T05:50:19.000Z, within the
+      minimumReleaseAge cutoff (2026-10-27T03:09:27.872Z)
+  help: The lockfile contains entries that the active policies reject. This
+        can mean the lockfile is stale, or that someone committed a lockfile
+        that bypassed the policy locally — inspect recent changes to pnpm-
+        lock.yaml before trusting it. If the changes look expected, run "pnpm
+        clean --lockfile" and then "pnpm install" to rebuild from a fresh
+        resolution. Alternatively, relax the policy that flagged them.
+
+=== 21:09:40 4.1 add-exact: pnpm add -D --save-exact oxlint@1.89.0
+✓ Lockfile passes supply-chain policies (verified 3h ago)
+Lockfile is up to date, resolution step is skipped
+Already up to date
+.../node_modules/@vscode/vsce-sign postinstall$ node ./src/postinstall.js
+.../node_modules/protobufjs postinstall$ node scripts/postinstall
+.../keytar@7.9.0/node_modules/keytar install$ prebuild-install || npm run build
+.../esbuild@0.28.2/node_modules/esbuild postinstall$ node install.js
+.../node_modules/protobufjs postinstall: Done
+.../esbuild@0.25.12/node_modules/esbuild postinstall$ node install.js
+.../node_modules/@vscode/vsce-sign postinstall: Done
+.../node_modules/@google/genai preinstall$ echo 'preinstall: no-op'
+.../node_modules/@google/genai preinstall: preinstall: no-op
+.../node_modules/@google/genai preinstall: Done
+.../keytar@7.9.0/node_modules/keytar install: (node:27766) [DEP0176] DeprecationWarning: fs.R_OK is deprecated, use fs.constants.R_OK instead
+.../keytar@7.9.0/node_modules/keytar install: (Use `node --trace-deprecation ...` to show where the warning was created)
+.../keytar@7.9.0/node_modules/keytar install: Done
+.../esbuild@0.28.2/node_modules/esbuild postinstall: Done
+.../esbuild@0.25.12/node_modules/esbuild postinstall: Done
+Done in 534ms using pnpm v12.5.1
+=== 21:09:50 4.1 exact-install: pnpm install
+? Verifying lockfile against supply-chain policies (771 entries)...
+[WARN] 4 deprecated subdependencies found: glob@10.5.0, node-domexception@1.0.0, prebuild-install@7.1.3, whatwg-encoding@3.1.1
+Downloading @oxlint/binding-darwin-arm64@1.89.0: 0.00 B/5.54 MB
+✓ Lockfile passes supply-chain policies (771 entries in 855ms)
+Packages: +2 -20
+++--------------------
+Progress: resolved 2, reused 14, downloaded 2, added 2, done
+.../node_modules/@vscode/vsce-sign postinstall$ node ./src/postinstall.js
+.../node_modules/protobufjs postinstall$ node scripts/postinstall
+.../keytar@7.9.0/node_modules/keytar install$ prebuild-install || npm run build
+.../esbuild@0.28.2/node_modules/esbuild postinstall$ node install.js
+.../node_modules/protobufjs postinstall: Done
+.../esbuild@0.25.12/node_modules/esbuild postinstall$ node install.js
+.../node_modules/@vscode/vsce-sign postinstall: Done
+.../node_modules/@google/genai preinstall$ echo 'preinstall: no-op'
+.../node_modules/@google/genai preinstall: preinstall: no-op
+.../node_modules/@google/genai preinstall: Done
+.../keytar@7.9.0/node_modules/keytar install: (node:28172) [DEP0176] DeprecationWarning: fs.R_OK is deprecated, use fs.constants.R_OK instead
+.../keytar@7.9.0/node_modules/keytar install: (Use `node --trace-deprecation ...` to show where the warning was created)
+.../keytar@7.9.0/node_modules/keytar install: Done
+.../esbuild@0.28.2/node_modules/esbuild postinstall: Done
+.../esbuild@0.25.12/node_modules/esbuild postinstall: Done
+. prepare$ pnpm run compile
+. prepare: $ pnpm run check-types && pnpm run lint && node esbuild.js
+. prepare: $ tsc --noEmit
+. prepare: $ oxlint src/
+. prepare: [watch] build started
+. prepare: [watch] build finished
+. prepare: Done
+
+devDependencies:
+- oxlint 1.90.0
++ oxlint 1.89.0
+
+Done in 4s using pnpm v12.5.1
+=== 21:09:54 4.1 caret-install: pnpm install
+✓ Lockfile passes supply-chain policies (verified 2s ago)
+Lockfile is up to date, resolution step is skipped
+Already up to date
+.../node_modules/@vscode/vsce-sign postinstall$ node ./src/postinstall.js
+.../keytar@7.9.0/node_modules/keytar install$ prebuild-install || npm run build
+.../node_modules/protobufjs postinstall$ node scripts/postinstall
+.../esbuild@0.28.2/node_modules/esbuild postinstall$ node install.js
+.../node_modules/protobufjs postinstall: Done
+.../esbuild@0.25.12/node_modules/esbuild postinstall$ node install.js
+.../node_modules/@vscode/vsce-sign postinstall: Done
+.../node_modules/@google/genai preinstall$ echo 'preinstall: no-op'
+.../node_modules/@google/genai preinstall: preinstall: no-op
+.../node_modules/@google/genai preinstall: Done
+.../keytar@7.9.0/node_modules/keytar install: (node:28296) [DEP0176] DeprecationWarning: fs.R_OK is deprecated, use fs.constants.R_OK instead
+.../keytar@7.9.0/node_modules/keytar install: (Use `node --trace-deprecation ...` to show where the warning was created)
+.../keytar@7.9.0/node_modules/keytar install: Done
+.../esbuild@0.28.2/node_modules/esbuild postinstall: Done
+.../esbuild@0.25.12/node_modules/esbuild postinstall: Done
+. prepare$ pnpm run compile
+. prepare: $ pnpm run check-types && pnpm run lint && node esbuild.js
+. prepare: $ tsc --noEmit
+. prepare: $ oxlint src/
+. prepare: [watch] build started
+. prepare: [watch] build finished
+. prepare: Done
+Done in 2.6s using pnpm v12.5.1
+=== 21:10:10 4.1 frozen: pnpm install --frozen-lockfile
+? Verifying lockfile against supply-chain policies (771 entries)...
+✓ Lockfile passes supply-chain policies (771 entries in 837ms)
+Lockfile is up to date, resolution step is skipped
+Done in 864ms using pnpm v12.5.1
+=== 21:10:11 4.1 lint: pnpm run lint && ./node_modules/.bin/oxlint --version | grep -q 1.89.0
+$ oxlint src/
+=== 21:10:12 4.1 neg-1.90-should-fail: pnpm add -D oxlint@1.90.0
+✓ Lockfile passes supply-chain policies (verified 1s ago)
+Added 20 entries to minimumReleaseAgeExclude in pnpm-workspace.yaml (set minimumReleaseAgeStrict to true to gate these updates with a prompt):
+  @oxlint/binding-android-arm-eabi@1.90.0
+  @oxlint/binding-android-arm64@1.90.0
+  @oxlint/binding-darwin-arm64@1.90.0
+  @oxlint/binding-darwin-x64@1.90.0
+  @oxlint/binding-freebsd-x64@1.90.0
+  @oxlint/binding-linux-arm-gnueabihf@1.90.0
+  @oxlint/binding-linux-arm-musleabihf@1.90.0
+  @oxlint/binding-linux-arm64-gnu@1.90.0
+  @oxlint/binding-linux-arm64-musl@1.90.0
+  @oxlint/binding-linux-ppc64-gnu@1.90.0
+  @oxlint/binding-linux-riscv64-gnu@1.90.0
+  @oxlint/binding-linux-riscv64-musl@1.90.0
+  @oxlint/binding-linux-s390x-gnu@1.90.0
+  @oxlint/binding-linux-x64-gnu@1.90.0
+  @oxlint/binding-linux-x64-musl@1.90.0
+  @oxlint/binding-openharmony-arm64@1.90.0
+  @oxlint/binding-win32-arm64-msvc@1.90.0
+  @oxlint/binding-win32-ia32-msvc@1.90.0
+  @oxlint/binding-win32-x64-msvc@1.90.0
+  oxlint@1.90.0
+[WARN] 4 deprecated subdependencies found: glob@10.5.0, node-domexception@1.0.0, prebuild-install@7.1.3, whatwg-encoding@3.1.1
+Packages: +2 -20
+++--------------------
+Progress: resolved 2, reused 16, downloaded 0, added 2, done
+.../node_modules/@vscode/vsce-sign postinstall$ node ./src/postinstall.js
+.../node_modules/protobufjs postinstall$ node scripts/postinstall
+.../keytar@7.9.0/node_modules/keytar install$ prebuild-install || npm run build
+.../esbuild@0.28.2/node_modules/esbuild postinstall$ node install.js
+.../node_modules/protobufjs postinstall: Done
+.../esbuild@0.25.12/node_modules/esbuild postinstall$ node install.js
+.../node_modules/@vscode/vsce-sign postinstall: Done
+.../node_modules/@google/genai preinstall$ echo 'preinstall: no-op'
+.../keytar@7.9.0/node_modules/keytar install: (node:29022) [DEP0176] DeprecationWarning: fs.R_OK is deprecated, use fs.constants.R_OK instead
+.../keytar@7.9.0/node_modules/keytar install: (Use `node --trace-deprecation ...` to show where the warning was created)
+.../node_modules/@google/genai preinstall: preinstall: no-op
+.../node_modules/@google/genai preinstall: Done
+.../keytar@7.9.0/node_modules/keytar install: Done
+.../esbuild@0.28.2/node_modules/esbuild postinstall: Done
+.../esbuild@0.25.12/node_modules/esbuild postinstall: Done
+
+devDependencies:
+- oxlint 1.89.0
++ oxlint 1.90.0
+
+Done in 599ms using pnpm v12.5.1

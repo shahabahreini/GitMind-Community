@@ -1,0 +1,113 @@
+=== 21:50:31 1.1 tests: pnpm test 2>&1 | tail -80
+
+ProviderApiError: content filter blocked request
+  	at async Context.<anonymous> (out/test/suites/generationRepair.test.js:1395:17)
+
+  27) Generation repair
+       catalog conformance: groq success, blocks, malformed, errors, limits, cancellation, timeout:
+     AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+Caught error:
+
+ProviderApiError: content filter blocked request
+  	at async Context.<anonymous> (out/test/suites/generationRepair.test.js:1395:17)
+
+  28) Generation repair
+       catalog conformance: perplexity success, blocks, malformed, errors, limits, cancellation, timeout:
+     AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+Caught error:
+
+ProviderApiError: content filter blocked request
+  	at async Context.<anonymous> (out/test/suites/generationRepair.test.js:1395:17)
+
+  29) Generation repair
+       catalog conformance: zai success, blocks, malformed, errors, limits, cancellation, timeout:
+     AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+Caught error:
+
+ProviderApiError: content filter blocked request
+  	at async Context.<anonymous> (out/test/suites/generationRepair.test.js:1395:17)
+
+  30) Generation repair
+       catalog conformance: nvidia success, blocks, malformed, errors, limits, cancellation, timeout:
+     AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+Caught error:
+
+ProviderApiError: content filter blocked request
+  	at async Context.<anonymous> (out/test/suites/generationRepair.test.js:1395:17)
+
+  31) Generation repair
+       catalog conformance: lmstudio success, blocks, malformed, errors, limits, cancellation, timeout:
+     AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+Caught error:
+
+ProviderApiError: content filter blocked request
+  	at async Context.<anonymous> (out/test/suites/generationRepair.test.js:1395:17)
+
+  32) Generation repair
+       catalog conformance: azureopenai success, blocks, malformed, errors, limits, cancellation, timeout:
+     AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+Caught error:
+
+ProviderApiError: content filter blocked request
+  	at async Context.<anonymous> (out/test/suites/generationRepair.test.js:1395:17)
+
+  33) Generation repair
+       catalog conformance: cloudflare success, blocks, malformed, errors, limits, cancellation, timeout:
+     AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+Caught error:
+
+ProviderApiError: content filter blocked request
+  	at async Context.<anonymous> (out/test/suites/generationRepair.test.js:1395:17)
+
+  34) Generation repair
+       catalog conformance: custom success, blocks, malformed, errors, limits, cancellation, timeout:
+     AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+Caught error:
+
+ProviderApiError: content filter blocked request
+  	at async Context.<anonymous> (out/test/suites/generationRepair.test.js:1395:17)
+
+34 tests failed.
+[90m[main 2026-10-28T03:50:59.469Z][0m Extension host with pid 18086 exited with code: 0, signal: unknown.
+Exit code:   1
+[ELIFECYCLE] Test failed. See above for more details.
+=== 22:22:03 4.3 lint: pnpm run lint
+$ oxlint src/
+=== 22:22:03 4.3 types: pnpm run check-types
+$ tsc --noEmit
+=== 22:22:05 4.3 package: pnpm run package
+$ pnpm run clean && pnpm run check-types && pnpm run lint && node esbuild.js --production
+$ rimraf dist out
+$ tsc --noEmit
+$ oxlint src/
+[watch] build started
+[watch] build finished
+✓ Production build completed
+✓ Tree shaking enabled
+✓ Console statements dropped
+=== 22:22:15 4.4 export: pnpm run docs:export-product-surface
+$ node scripts/export-product-surface.mjs
+Exported GitMind 6.6.0: 25 providers, 124/134 settings, 55 registered/44 public commands, 12 styles.
+=== 22:22:15 4.4 sync: pnpm run docs:sync-wiki
+$ node scripts/sync-wiki.mjs
+Generated Wiki mirror: 55 files.
+=== 22:22:54 4.4 export: pnpm run docs:export-product-surface
+$ node scripts/export-product-surface.mjs
+Exported GitMind 6.6.0: 25 providers, 124/134 settings, 55 registered/44 public commands, 12 styles.
+=== 22:22:55 4.4 sync: pnpm run docs:sync-wiki
+$ node scripts/sync-wiki.mjs
+Generated Wiki mirror: 55 files.
+=== 22:22:55 4.4 validate: pnpm run docs:validate
+$ node scripts/validate-docs.mjs
+Documentation validation passed: 47 handbook pages; 25 providers; 124 public settings; 44 public commands.
+=== 22:22:55 4.4 wiki: pnpm run validate:wiki
+$ node scripts/sync-wiki.mjs --check
+Wiki mirror is current: 55 files.
