@@ -57,9 +57,7 @@ jobs:
           fi
           echo "✅ Version match: $PKG_VERSION"
 
-      - name: Build extension (production)
-        run: pnpm run package
-
+      # vsce package runs vscode:prepublish (the production build) itself.
       - name: Package VSIX
         run: pnpm run package:vsce --out "ai-commit-assistant-${{ steps.version.outputs.VERSION }}.vsix"
 

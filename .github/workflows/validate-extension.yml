@@ -28,8 +28,8 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run package
+      # vsce package runs vscode:prepublish (the production build) itself.
+      - run: pnpm run package:vsce --out /tmp/gitmind-validation.vsix
       - run: pnpm run package:audit
       - run: pnpm run lint:listing
-      - run: pnpm run package:vsce --out /tmp/gitmind-validation.vsix
       - run: pnpm run lint:listing --vsix /tmp/gitmind-validation.vsix
